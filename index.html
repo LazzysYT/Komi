@@ -604,11 +604,11 @@
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 400px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
-            <h2 id="authTitle" style="margin-bottom: 20px; text-align: center;">Авторизация</h2>
+            <h2 id="authTitle" style="margin-bottom: 20px; text-align: center;">Авторизация / Регистрация</h2>
             <form onsubmit="handleAuthSubmit(event)">
                 <div class="form-group">
-                    <label>Имя пользователя</label>
-                    <input type="text" class="form-control" id="authUsername" required placeholder="Введите имя (введите Admin для админки)...">
+                    <label>Имя пользователя (уникальное)</label>
+                    <input type="text" class="form-control" id="authUsername" required placeholder="Введите имя...">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
@@ -642,14 +642,12 @@
             } catch(e) {}
         }
 
-        // ВЕРСИЯ БАЗЫ ДАННЫХ: измените ее, если захотите принудительно обновить список у всех
-        const DB_VERSION = 'v2_komi';
+        const DB_VERSION = 'v3_secure_auth';
         if (localStorage.getItem('komi_db_ver') !== DB_VERSION) {
             localStorage.removeItem('komi_anime');
             localStorage.setItem('komi_db_ver', DB_VERSION);
         }
 
-        // Стартовые аниме (теперь тут несколько примеров, и вы можете добавлять сюда свои тайтлы навсегда!)
         let defaultAnime = [
             {
                 id: 'anime_1',
@@ -688,6 +686,7 @@
         }
 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
+        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {}; // Хранит пароли в зашифрованном виде (хеши)
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
         let userAchievements = JSON.parse(localStorage.getItem('komi_achievements')) || {};
         let animeComments = JSON.parse(localStorage.getItem('komi_comments')) || {};
@@ -712,6 +711,7 @@
         function saveData() {
             localStorage.setItem('komi_anime', JSON.stringify(animeList));
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
+            localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             localStorage.setItem('komi_profiles', JSON.stringify(userProfiles));
             localStorage.setItem('komi_achievements', JSON.stringify(userAchievements));
             localStorage.setItem('komi_comments', JSON.stringify(animeComments));
@@ -719,6 +719,14 @@
             localStorage.setItem('komi_history', JSON.stringify(userWatchHistory));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
+        }
+
+        // Функция шифрования пароля (SHA-256)
+        async function hashPassword(password) {
+            const msgBuffer = new TextEncoder().encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
         function unlockAchievement(username, title) {
@@ -740,7 +748,6 @@
             const adminBtn = document.getElementById('adminPanelBtn');
             const addBtn = document.getElementById('addAnimeBtn');
 
-            // Админка доступна только если введено имя "Admin" (регистр не важен)
             const isAdmin = currentUser && currentUser.username.toLowerCase() === 'admin';
 
             if (isAdmin) {
@@ -757,11 +764,18 @@
                     <div class="user-pill" onclick="playSound(); openProfileModal()">
                         <img src="${p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'}" class="user-avatar-small">
                         <span>${currentUser.username}</span>
+                        <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; margin-left:5px;" title="Выйти">🚪</button>
                     </div>
                 `;
             } else {
                 area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="playSound(); openAuthModal()">Войти</button>`;
             }
+        }
+
+        function logoutUser() {
+            currentUser = null;
+            saveData();
+            render();
         }
 
         function render() {
@@ -1103,17 +1117,38 @@
         function openAuthModal() { document.getElementById('authModal').classList.add('active'); }
         function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
 
-        function handleAuthSubmit(e) {
+        // Логика авторизации с шифрованием пароля и проверкой занятости имени
+        async function handleAuthSubmit(e) {
             e.preventDefault();
             const username = document.getElementById('authUsername').value.trim();
-            if (!username) return;
-            currentUser = { username };
-            if (!userProfiles[username]) {
-                userProfiles[username] = { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Новичок на платформе ⭐' };
+            const passwordInput = document.getElementById('authPassword').value;
+            if (!username || !passwordInput) return;
+
+            const passwordHash = await hashPassword(passwordInput);
+
+            // Если такой пользователь уже зарегистрирован
+            if (registeredUsers[username]) {
+                if (registeredUsers[username] === passwordHash) {
+                    // Пароль верный — входим
+                    currentUser = { username };
+                    saveData();
+                    closeAuthModal();
+                    render();
+                } else {
+                    alert('Неверный пароль для этого имени пользователя!');
+                }
+            } else {
+                // Имя свободно — регистрируем нового пользователя
+                registeredUsers[username] = passwordHash;
+                currentUser = { username };
+                if (!userProfiles[username]) {
+                    userProfiles[username] = { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Новичок на платформе ⭐' };
+                }
+                saveData();
+                closeAuthModal();
+                render();
+                alert('Аккаунт успешно создан и вы вошли в систему!');
             }
-            saveData();
-            closeAuthModal();
-            render();
         }
 
         function toggleFavorite(id, category) {
