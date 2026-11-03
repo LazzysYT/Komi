@@ -209,11 +209,79 @@
             background: var(--primary);
         }
 
-        main {
-            max-width: 1400px;
+        /* Основной макет с правым сайдбаром */
+        .app-layout {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 30px;
+            max-width: 1600px;
             margin: 0 auto;
             padding: 30px 40px;
             flex: 1;
+            width: 100%;
+        }
+        @media (max-width: 1100px) {
+            .app-layout { grid-template-columns: 1fr; }
+            .right-sidebar { display: none; }
+        }
+
+        .right-sidebar {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            height: fit-content;
+            position: sticky;
+            top: 90px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .sidebar-section h3 {
+            font-size: 15px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            color: var(--text-main);
+        }
+
+        .sidebar-users-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 220px;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+
+        .sidebar-user-item {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 600;
+        }
+        .sidebar-user-item:hover {
+            border-color: var(--accent);
+            background: rgba(139, 92, 246, 0.15);
+        }
+        .sidebar-user-avatar {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            object-fit: cover;
+            background: var(--primary);
+        }
+
+        main {
             width: 100%;
         }
 
@@ -573,7 +641,25 @@
         </div>
     </header>
 
-    <main id="mainContainer"></main>
+    <!-- Обертка с правым сайдбаром -->
+    <div class="app-layout">
+        <main id="mainContainer"></main>
+        
+        <aside class="right-sidebar">
+            <div class="sidebar-section">
+                <h3>👥 Мои друзья</h3>
+                <div class="sidebar-users-list" id="sidebarFriendsList">
+                    <span style="color:var(--text-muted); font-size:12px;">Войдите, чтобы видеть друзей</span>
+                </div>
+            </div>
+            <div class="sidebar-section" style="border-top: 1px solid var(--border); padding-top: 15px;">
+                <h3>🟢 На сайте онлайн</h3>
+                <div class="sidebar-users-list" id="sidebarOnlineList">
+                    <span style="color:var(--text-muted); font-size:12px;">Загрузка...</span>
+                </div>
+            </div>
+        </aside>
+    </div>
 
     <!-- Modals -->
     <div class="modal-overlay" id="addModal">
@@ -760,7 +846,7 @@
             await _supabase.from('animes').upsert({ id: 2, content: JSON.stringify(animeComments) });
         }
 
-        // --- СИСТЕМА РЕАЛЬНОГО ОНЛАЙНА ---
+        // --- СИСТЕМА РЕАЛЬНОГО ОНЛАЙНА И САЙДБАРА ---
         async function updateOnlinePresence() {
             try {
                 const now = Date.now();
@@ -771,15 +857,61 @@
                 const expireTime = now - 15000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
-                const { data, error } = await _supabase.from('online_users').select('session_id');
+                const { data, error } = await _supabase.from('online_users').select('*');
                 if (data) {
                     const count = data.length || 1;
                     const el = document.getElementById('onlineCountText');
                     if (el) el.innerText = `Онлайн: ${count}`;
+
+                    renderSidebarLists(data);
                 }
             } catch(e) {}
         }
-        setInterval(updateOnlinePresence, 5000);
+        setInterval(updateOnlinePresence, 4000);
+
+        function renderSidebarLists(onlineRows) {
+            const onlineContainer = document.getElementById('sidebarOnlineList');
+            const friendsContainer = document.getElementById('sidebarFriendsList');
+
+            // Рендер онлайн пользователей
+            if (onlineRows && onlineRows.length > 0) {
+                onlineContainer.innerHTML = onlineRows.map(u => {
+                    const p = userProfiles[u.username] || {};
+                    const avatar = p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
+                    return `
+                        <div class="sidebar-user-item" onclick="openProfileModal('${u.username}')">
+                            <img src="${avatar}" class="sidebar-user-avatar">
+                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.username}</span>
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                onlineContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Никого нет онлайн</span>`;
+            }
+
+            // Рендер друзей
+            if (currentUser) {
+                const myFriends = userFriends[currentUser.username] || [];
+                if (myFriends.length > 0) {
+                    friendsContainer.innerHTML = myFriends.map(f => {
+                        const p = userProfiles[f] || {};
+                        const avatar = p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
+                        const isOnline = onlineRows.some(row => row.username === f);
+                        return `
+                            <div class="sidebar-user-item" onclick="openProfileModal('${f}')">
+                                <img src="${avatar}" class="sidebar-user-avatar">
+                                <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
+                                <span style="width:8px; height:8px; border-radius:50%; background:${isOnline ? '#34d399' : '#64748b'};" title="${isOnline ? 'В сети' : 'Не в сети'}"></span>
+                            </div>
+                        `;
+                    }).join('');
+                } else {
+                    friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Список друзей пуст</span>`;
+                }
+            } else {
+                friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Войдите, чтобы видеть друзей</span>`;
+            }
+        }
 
         async function hashPassword(password) {
             const msgBuffer = new TextEncoder().encode(password);
@@ -1229,6 +1361,7 @@
             }
             saveData();
             openProfileModal(targetUsername);
+            updateOnlinePresence();
         }
 
         function openProfileModal(username) {
