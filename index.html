@@ -628,7 +628,7 @@
     <script>
         // --- ПОДКЛЮЧЕНИЕ SUPABASE ---
         const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
-        const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs'; // Вставлен твой реальный ключ
+        const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -702,26 +702,24 @@
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
         }
 
-        // --- ЗАГРУЗКА И СОХРАНЕНИЕ АНИМЕ В ОБЛАКО SUPABASE ---
+        // --- НАДЕЖНАЯ ЗАГРУЗКА И СОХРАНЕНИЕ ЧЕРЕЗ SUPABASE (КОЛОНКА content) ---
         async function loadAnimeFromCloud() {
             const { data, error } = await _supabase.from('animes').select('*');
             if (data && data.length > 0) {
-                animeList = data.map(item => item.data);
+                try {
+                    animeList = JSON.parse(data[0].content);
+                } catch(e) {
+                    animeList = defaultAnime;
+                }
             } else {
                 animeList = defaultAnime;
-                // Записываем дефолтное аниме в облако, если база пустая
-                for (let anime of animeList) {
-                    await _supabase.from('animes').insert([{ id: anime.id, data: anime }]);
-                }
+                await _supabase.from('animes').insert([{ id: 1, content: JSON.stringify(animeList) }]);
             }
             render();
         }
 
         async function saveAnimeToCloud() {
-            await _supabase.from('animes').delete().neq('id', '0'); // Очищаем старые
-            for (let anime of animeList) {
-                await _supabase.from('animes').insert([{ id: anime.id, data: anime }]);
-            }
+            await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
             saveData();
             render();
         }
