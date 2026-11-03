@@ -6,6 +6,8 @@
     <title>Komi Anime Hub — Платформа нового поколения</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='var(--primary)'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- Подключаем библиотеку Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-base: #000000;
@@ -624,6 +626,11 @@
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
 
     <script>
+        // --- ПОДКЛЮЧЕНИЕ SUPABASE ---
+        const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
+        const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHW...'; // Твой ключ из панели Supabase
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound() {
             try {
@@ -642,12 +649,6 @@
             } catch(e) {}
         }
 
-        const DB_VERSION = 'v3_secure_auth';
-        if (localStorage.getItem('komi_db_ver') !== DB_VERSION) {
-            localStorage.removeItem('komi_anime');
-            localStorage.setItem('komi_db_ver', DB_VERSION);
-        }
-
         let defaultAnime = [
             {
                 id: 'anime_1',
@@ -662,31 +663,12 @@
                     { season: 1, title: 'Фильм', voice: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
                 ratings: { Admin: 9.8 }
-            },
-            {
-                id: 'anime_2',
-                title: 'Киберпанк: Бегущие по краю',
-                poster: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop',
-                trailer: '',
-                genre: 'Киберпанк',
-                year: '2022',
-                type: 'Сериал',
-                desc: 'Парень с улицы пытается выжить в мире будущего, одержимом технологиями и модификациями тела.',
-                episodes: [
-                    { season: 1, title: 'Эпизод 1', voice: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
-                ],
-                ratings: { Admin: 9.5 }
             }
         ];
 
-        let animeList = JSON.parse(localStorage.getItem('komi_anime'));
-        if (!animeList || animeList.length === 0) {
-            animeList = defaultAnime;
-            localStorage.setItem('komi_anime', JSON.stringify(animeList));
-        }
-
+        let animeList = [];
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
-        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {}; // Хранит пароли в зашифрованном виде (хеши)
+        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {};
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
         let userAchievements = JSON.parse(localStorage.getItem('komi_achievements')) || {};
         let animeComments = JSON.parse(localStorage.getItem('komi_comments')) || {};
@@ -709,7 +691,6 @@
         if (savedTheme) { document.body.className = 'theme-' + savedTheme; document.getElementById('themeSelect').value = savedTheme; }
 
         function saveData() {
-            localStorage.setItem('komi_anime', JSON.stringify(animeList));
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             localStorage.setItem('komi_profiles', JSON.stringify(userProfiles));
@@ -721,7 +702,30 @@
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
         }
 
-        // Функция шифрования пароля (SHA-256)
+        // --- ЗАГРУЗКА И СОХРАНЕНИЕ АНИМЕ В ОБЛАКО SUPABASE ---
+        async function loadAnimeFromCloud() {
+            const { data, error } = await _supabase.from('animes').select('*');
+            if (data && data.length > 0) {
+                animeList = data.map(item => item.data);
+            } else {
+                animeList = defaultAnime;
+                // Записываем дефолтное аниме в облако, если база пустая
+                for (let anime of animeList) {
+                    await _supabase.from('animes').insert([{ id: anime.id, data: anime }]);
+                }
+            }
+            render();
+        }
+
+        async function saveAnimeToCloud() {
+            await _supabase.from('animes').delete().neq('id', '0'); // Очищаем старые
+            for (let anime of animeList) {
+                await _supabase.from('animes').insert([{ id: anime.id, data: anime }]);
+            }
+            saveData();
+            render();
+        }
+
         async function hashPassword(password) {
             const msgBuffer = new TextEncoder().encode(password);
             const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
@@ -991,13 +995,12 @@
             const file = event.target.files[0];
             if (!file) return;
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     animeList = JSON.parse(e.target.result);
-                    saveData();
-                    alert('Бэкап успешно загружен!');
+                    await saveAnimeToCloud();
+                    alert('Бэкап успешно загружен в облако!');
                     openAdminPanel();
-                    render();
                 } catch(err) {
                     alert('Ошибка при чтении JSON файла.');
                 }
@@ -1005,12 +1008,11 @@
             reader.readAsText(file);
         }
 
-        function deleteAnime(id) {
+        async function deleteAnime(id) {
             if (confirm('Удалить это аниме?')) {
                 animeList = animeList.filter(a => a.id !== id);
-                saveData();
+                await saveAnimeToCloud();
                 openAdminPanel();
-                render();
             }
         }
 
@@ -1074,7 +1076,7 @@
             document.getElementById('episodesList').appendChild(div);
         }
 
-        function saveAnimeForm(e) {
+        async function saveAnimeForm(e) {
             e.preventDefault();
             const editId = document.getElementById('editAnimeId').value;
             const title = document.getElementById('animeTitle').value;
@@ -1109,15 +1111,13 @@
                 animeList.push({ id: 'anime_' + Date.now(), title, poster, trailer, genre, year, type, desc, episodes, ratings: {} });
             }
 
-            saveData();
+            await saveAnimeToCloud();
             closeAddModal();
-            render();
         }
 
         function openAuthModal() { document.getElementById('authModal').classList.add('active'); }
         function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
 
-        // Логика авторизации с шифрованием пароля и проверкой занятости имени
         async function handleAuthSubmit(e) {
             e.preventDefault();
             const username = document.getElementById('authUsername').value.trim();
@@ -1126,10 +1126,8 @@
 
             const passwordHash = await hashPassword(passwordInput);
 
-            // Если такой пользователь уже зарегистрирован
             if (registeredUsers[username]) {
                 if (registeredUsers[username] === passwordHash) {
-                    // Пароль верный — входим
                     currentUser = { username };
                     saveData();
                     closeAuthModal();
@@ -1138,7 +1136,6 @@
                     alert('Неверный пароль для этого имени пользователя!');
                 }
             } else {
-                // Имя свободно — регистрируем нового пользователя
                 registeredUsers[username] = passwordHash;
                 currentUser = { username };
                 if (!userProfiles[username]) {
@@ -1147,7 +1144,7 @@
                 saveData();
                 closeAuthModal();
                 render();
-                alert('Аккаунт успешно создан и вы вошли в систему!');
+                alert('Аккаунт успешно создан!');
             }
         }
 
@@ -1413,7 +1410,8 @@
             }
         }
 
-        render();
+        // Запускаем загрузку данных из облака при старте страницы
+        loadAnimeFromCloud();
     </script>
 </body>
 </html>
