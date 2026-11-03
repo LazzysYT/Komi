@@ -9,29 +9,35 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-base: #0b0b0f;
-            --bg-card: #13131a;
-            --bg-input: #1a1a24;
-            --primary: #EF4444;
-            --primary-hover: #DC2626;
-            --accent: #FCA5A5;
+            --bg-base: #07070a;
+            --bg-card: #111118;
+            --bg-input: #181822;
+            --primary: #9147FF;
+            --primary-hover: #7b2cbf;
+            --accent: #c4b5fd;
             --text-main: #FFFFFF;
             --text-muted: #94A3B8;
-            --border: #232333;
-            --glow: rgba(239, 68, 68, 0.4);
+            --border: #222233;
+            --glow: rgba(145, 71, 255, 0.45);
         }
 
-        body.theme-purple { --primary: #8B5CF6; --primary-hover: #7c3aed; --accent: #C084FC; --glow: rgba(139, 92, 246, 0.4); }
-        body.theme-mint { --primary: #10B981; --primary-hover: #059669; --accent: #6EE7B7; --glow: rgba(16, 185, 129, 0.4); }
-        body.theme-blue { --primary: #3B82F6; --primary-hover: #2563EB; --accent: #93C5FD; --glow: rgba(59, 130, 246, 0.4); }
-        body.theme-gold { --primary: #F59E0B; --primary-hover: #D97706; --accent: #FDE68A; --glow: rgba(245, 158, 11, 0.4); }
+        body.theme-red { --primary: #EF4444; --primary-hover: #DC2626; --accent: #FCA5A5; --glow: rgba(239, 68, 68, 0.45); }
+        body.theme-mint { --primary: #10B981; --primary-hover: #059669; --accent: #6EE7B7; --glow: rgba(16, 185, 129, 0.45); }
+        body.theme-blue { --primary: #3B82F6; --primary-hover: #2563EB; --accent: #93C5FD; --glow: rgba(59, 130, 246, 0.45); }
+        body.theme-gold { --primary: #F59E0B; --primary-hover: #D97706; --accent: #FDE68A; --glow: rgba(245, 158, 11, 0.45); }
+
+        /* Тонкий кастомный скроллбар */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: var(--bg-base); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+            transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
         }
 
         body {
@@ -44,23 +50,23 @@
         }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes modalScale {
-            from { opacity: 0; transform: scale(0.95); }
+            from { opacity: 0; transform: scale(0.96); }
             to { opacity: 1; transform: scale(1); }
         }
 
         @keyframes neonGlow {
-            0% { box-shadow: 0 0 10px var(--glow); }
-            50% { box-shadow: 0 0 25px var(--glow); }
-            100% { box-shadow: 0 0 10px var(--glow); }
+            0% { box-shadow: 0 0 12px var(--glow); }
+            50% { box-shadow: 0 0 28px var(--glow); }
+            100% { box-shadow: 0 0 12px var(--glow); }
         }
 
         header {
-            background: rgba(11, 11, 15, 0.9);
+            background: rgba(7, 7, 10, 0.85);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -76,9 +82,9 @@
         .logo-area { display: flex; align-items: center; gap: 15px; }
         .logo-container { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .logo-box {
-            width: 42px; height: 42px;
+            width: 44px; height: 44px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            border-radius: 14px; display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 24px; color: white;
             animation: neonGlow 3s infinite;
         }
@@ -155,20 +161,23 @@
 
         main { width: 100%; animation: fadeInUp 0.3s ease; }
 
+        /* Улучшенный главный баннер */
         .hero-banner {
             border-radius: 24px; overflow: hidden; background-size: cover; background-position: center;
             border: 1px solid var(--border); padding: 50px; display: flex; flex-direction: column;
-            justify-content: center; min-height: 420px; margin-bottom: 40px; position: relative;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.8);
+            justify-content: center; min-height: 440px; margin-bottom: 40px; position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.85);
+            animation: neonGlow 6s infinite alternate;
         }
         .hero-banner::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, rgba(11,11,15,0.95) 40%, rgba(11,11,15,0.6) 75%, rgba(11,11,15,0.3) 100%);
+            background: linear-gradient(90deg, rgba(7,7,10,0.96) 35%, rgba(7,7,10,0.65) 70%, rgba(7,7,10,0.3) 100%),
+                        radial-gradient(circle at top right, rgba(145, 71, 255, 0.25), transparent 50%);
             z-index: 1;
         }
         .hero-banner > * { position: relative; z-index: 2; }
         .hero-banner h1 {
-            font-size: 42px; font-weight: 800; max-width: 650px; margin-bottom: 16px; line-height: 1.15;
+            font-size: 44px; font-weight: 800; max-width: 650px; margin-bottom: 16px; line-height: 1.15;
             background: linear-gradient(to right, #FFFFFF, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
         .hero-banner p { color: var(--text-muted); font-size: 15px; max-width: 550px; margin-bottom: 24px; line-height: 1.5; }
@@ -185,31 +194,38 @@
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 35px; }
         .section-title { font-size: 22px; font-weight: 700; }
 
-        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
+        /* Карточки аниме с увеличенными постерами и неоновым свечением */
+        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
         .anime-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
             cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
             display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.4s ease;
         }
-        .anime-card:hover { transform: translateY(-8px) scale(1.02); border-color: var(--accent); box-shadow: 0 15px 35px var(--glow); }
+        .anime-card:hover { transform: translateY(-10px) scale(1.03); border-color: var(--accent); box-shadow: 0 18px 40px var(--glow); }
         .anime-rating-badge {
-            position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--border);
+            position: absolute; top: 12px; left: 12px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--border);
             color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; z-index: 2; backdrop-filter: blur(4px);
         }
-        .anime-poster { width: 100%; height: 310px; object-fit: cover; background: var(--bg-input); transition: transform 0.4s ease; }
-        .anime-card:hover .anime-poster { transform: scale(1.06); }
+        .anime-poster { width: 100%; height: 330px; object-fit: cover; background: var(--bg-input); transition: transform 0.4s ease; }
+        .anime-card:hover .anime-poster { transform: scale(1.07); }
         .anime-info { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; background: var(--bg-card); z-index: 2; }
         .anime-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .anime-meta-card { font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; }
 
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border); }
 
+        /* Улучшенный профиль пользователя с рамкой уровня и карточками */
         .profile-container { max-width: 1300px; margin: 0 auto; width: 100%; animation: fadeInUp 0.3s ease; }
         .profile-header-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 25px;
             display: grid; grid-template-columns: 200px 1fr; gap: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            position: relative; overflow: hidden;
         }
-        .profile-avatar-box { width: 200px; height: 260px; border-radius: 14px; object-fit: cover; border: 1px solid var(--border); background: var(--bg-input); }
+        .profile-header-card::after {
+            content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 200px;
+            background: radial-gradient(circle, var(--glow) 0%, transparent 70%); pointer-events: none; opacity: 0.6;
+        }
+        .profile-avatar-box { width: 200px; height: 260px; border-radius: 14px; object-fit: cover; border: 2px solid var(--primary); background: var(--bg-input); box-shadow: 0 0 20px var(--glow); }
         .profile-info-grid { display: flex; flex-direction: column; gap: 12px; }
         .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
         .profile-name-row h2 { font-size: 24px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 10px; }
@@ -224,7 +240,7 @@
         }
         .profile-stat-tab:last-child { border-right: none; }
         .profile-stat-tab:hover { background: rgba(255,255,255,0.05); color: white; }
-        .profile-stat-tab.active { background: var(--primary); color: white; box-shadow: inset 0 0 15px rgba(0,0,0,0.2); }
+        .profile-stat-tab.active { background: var(--primary); color: white; box-shadow: inset 0 0 15px rgba(0,0,0,0.3); }
         .profile-stat-tab .num { font-size: 16px; font-weight: 800; }
 
         .profile-layout-grid { display: grid; grid-template-columns: 1fr 280px; gap: 25px; align-items: start; }
@@ -250,7 +266,7 @@
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
             background: #0d0d12; border: 1px solid var(--border); border-radius: 24px;
-            width: 96%; max-width: 1350px; padding: 30px; max-height: 94vh; overflow-y: auto;
+            width: 96%; max-width: 1350px; padding: 28px; max-height: 94vh; overflow-y: auto;
             position: relative; box-shadow: 0 30px 70px rgba(0,0,0,0.95); animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .modal-close {
@@ -276,14 +292,14 @@
             margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;
         }
 
-        /* Улучшенное ультра-модерн меню просмотра */
-        .watch-cinema-layout { display: grid; grid-template-columns: 1fr 380px; gap: 30px; align-items: start; }
+        /* Компактное и красивое модальное окно просмотра в стиле AnimeLib */
+        .watch-cinema-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
         .watch-cinema-layout.theater { grid-template-columns: 1fr; }
         .watch-cinema-layout.theater .watch-sidebar { display: none; }
-        .watch-main-col { display: flex; flex-direction: column; gap: 20px; }
+        .watch-main-col { display: flex; flex-direction: column; gap: 16px; }
         
         .player-wrapper { position: relative; width: 100%; }
-        .player-box { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
+        .player-box { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
         
         .skip-intro-btn {
             position: absolute; bottom: 25px; right: 25px; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
@@ -291,26 +307,25 @@
         }
         .skip-intro-btn:hover { background: var(--primary); border-color: var(--primary); }
 
-        /* Галерея кадров (скриншотов) */
-        .anime-screenshots-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; margin-top: 5px; }
-        .screenshots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 10px; }
-        .screenshot-thumb { width: 100%; height: 90px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
+        .anime-screenshots-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+        .screenshots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
+        .screenshot-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
         .screenshot-thumb:hover { transform: scale(1.05); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
 
-        .watch-sidebar { background: #101015; border: 1px solid var(--border); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
-        .season-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 5px; }
+        .watch-sidebar { background: #101015; border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
+        .season-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 2px; }
         .season-tab-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
         .season-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
-        .episodes-list-grid { display: flex; flex-direction: column; gap: 10px; max-height: 280px; overflow-y: auto; padding-right: 6px; }
+        .episodes-list-grid { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; padding-right: 4px; }
         .ep-card-side {
-            background: var(--bg-input); border: 1px solid var(--border); padding: 12px 14px; border-radius: 12px;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px;
             color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;
         }
         .ep-card-side:hover, .ep-card-side.active { background: var(--primary); border-color: var(--accent); color: white; }
 
-        .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 15px; }
-        .comment-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
+        .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 12px; }
+        .comment-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; }
         .comment-author { font-weight: 700; font-size: 13px; color: var(--accent); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .comment-reactions { display: flex; gap: 6px; margin-top: 4px; }
         .reaction-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: white; display: flex; align-items: center; gap: 4px; }
@@ -340,8 +355,8 @@
             .hero-banner { padding: 25px; min-height: 320px; }
             .hero-banner h1 { font-size: 28px; }
             .anime-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-            .anime-poster { height: 230px; }
-            .modal-content { padding: 20px 15px; width: 100%; max-height: 95vh; border-radius: 16px; }
+            .anime-poster { height: 250px; }
+            .modal-content { padding: 18px 12px; width: 100%; max-height: 95vh; border-radius: 16px; }
         }
     </style>
 </head>
@@ -377,8 +392,8 @@
             <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="background: var(--primary); border-color: var(--primary); display: none;">+ Добавить</button>
 
             <select class="action-icon-btn" id="themeSelect" onchange="changeTheme(this.value)" style="background: var(--bg-input); padding: 8px;">
-                <option value="default">🔴 Красная (Shikimori)</option>
-                <option value="purple">💜 Фиолетовая</option>
+                <option value="default">💜 Фиолетовая (#9147FF)</option>
+                <option value="red">🔴 Красная (Shikimori)</option>
                 <option value="mint">🟢 Мятная</option>
                 <option value="blue">💙 Кибер-синяя</option>
                 <option value="gold">🟡 Золотая</option>
@@ -484,7 +499,7 @@
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
-        // Более сочный, громкий и приятный звук клика (двойной приятный щелчок)
+        // Более сочный, громкий и премиальный звук клика
         function playSound() {
             try {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -493,10 +508,10 @@
                 const gain = audioCtx.createGain();
                 osc.type = 'triangle';
                 
-                osc.frequency.setValueAtTime(650, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(320, audioCtx.currentTime + 0.05);
+                osc.frequency.setValueAtTime(680, audioCtx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(340, audioCtx.currentTime + 0.05);
                 
-                gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
                 
                 osc.connect(gain);
@@ -828,7 +843,7 @@
 
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
-            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Участник сообщества' };
+            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Элитный Отаку ⭐' };
             const myFriends = userFriends[username] || [];
             const myRequests = friendRequests[username] || [];
             const isMe = currentUser && currentUser.username === username;
@@ -870,7 +885,10 @@
                                       `<button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
-                            <p style="color:var(--text-muted); font-size:13px;">Статус: <b>${p.status}</b></p>
+                            <div style="display:flex; gap:12px; align-items:center;">
+                                <span style="background:var(--primary); color:white; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700;">Уровень 42 ⚡</span>
+                                <span style="color:var(--text-muted); font-size:13px;">Статус: <b>${p.status}</b></span>
+                            </div>
                             <p style="color:var(--text-muted); font-size:13px;">Дата регистрации: <b>05 октября 2025 года</b></p>
 
                             ${isMe ? `
@@ -923,7 +941,7 @@
                             <div class="profile-menu-item"><span>💬 Комментарии</span> <b>0</b></div>
                             <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${Object.keys(userFavorites[username]||{}).length}</b></div>
                             ${isMe && myRequests.length > 0 ? `
-                                <div style="margin-top:10px; background:rgba(239,68,68,0.1); border:1px solid var(--primary); padding:10px; border-radius:10px;">
+                                <div style="margin-top:10px; background:rgba(145,71,255,0.15); border:1px solid var(--primary); padding:10px; border-radius:10px;">
                                     <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки (${myRequests.length})</div>
                                     ${myRequests.map(req => `
                                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:4px;">
@@ -948,7 +966,7 @@
                     <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'">
                     <div class="anime-info">
                         <div class="anime-title">${anime.title}</div>
-                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px;">${gText}</span><span>${anime.episodes.length} сер.</span></div>
+                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${gText}</span><span>${anime.episodes.length} сер.</span></div>
                     </div>
                 </div>
             `;
@@ -1365,9 +1383,9 @@
                             <button class="skip-intro-btn" id="skipIntroBtn" onclick="playSound(); skipIntro()">Пропустить опенинг ⏭</button>
                         </div>
 
-                        <!-- Кадры из аниме (показываются всегда до/во время просмотра) -->
+                        <!-- Галерея кадров (отображается всегда!) -->
                         <div class="anime-screenshots-section">
-                            <h3 style="font-size:14px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры из аниме</h3>
+                            <h3 style="font-size:13px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры из аниме</h3>
                             <div class="screenshots-grid">
                                 ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
                             </div>
