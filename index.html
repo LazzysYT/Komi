@@ -6,30 +6,32 @@
     <title>Komi Anime Hub — Платформа нового поколения</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='var(--primary)'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <!-- Подключаем библиотеку Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-base: #000000;
-            --bg-card: #121218;
+            --bg-base: #0b0b0f;
+            --bg-card: #13131a;
             --bg-input: #1a1a24;
-            --primary: #8B5CF6;
-            --primary-hover: #7c3aed;
-            --accent: #C084FC;
+            --primary: #EF4444;
+            --primary-hover: #DC2626;
+            --accent: #FCA5A5;
             --text-main: #FFFFFF;
             --text-muted: #94A3B8;
-            --border: #1F1F2E;
+            --border: #232333;
+            --glow: rgba(239, 68, 68, 0.4);
         }
 
-        body.theme-cyberpunk { --primary: #EF4444; --primary-hover: #DC2626; --accent: #FCA5A5; }
-        body.theme-mint { --primary: #10B981; --primary-hover: #059669; --accent: #6EE7B7; }
+        body.theme-purple { --primary: #8B5CF6; --primary-hover: #7c3aed; --accent: #C084FC; --glow: rgba(139, 92, 246, 0.4); }
+        body.theme-mint { --primary: #10B981; --primary-hover: #059669; --accent: #6EE7B7; --glow: rgba(16, 185, 129, 0.4); }
+        body.theme-blue { --primary: #3B82F6; --primary-hover: #2563EB; --accent: #93C5FD; --glow: rgba(59, 130, 246, 0.4); }
+        body.theme-gold { --primary: #F59E0B; --primary-hover: #D97706; --accent: #FDE68A; --glow: rgba(245, 158, 11, 0.4); }
 
         * {
             box-sizing: border-box;
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+            transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
         }
 
         body {
@@ -41,19 +43,24 @@
             overflow-x: hidden;
         }
 
-        /* Плавные анимации */
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes modalScale {
-            from { opacity: 0; transform: scale(0.94); }
+            from { opacity: 0; transform: scale(0.92); }
             to { opacity: 1; transform: scale(1); }
         }
 
+        @keyframes neonGlow {
+            0% { box-shadow: 0 0 10px var(--glow); }
+            50% { box-shadow: 0 0 25px var(--glow); }
+            100% { box-shadow: 0 0 10px var(--glow); }
+        }
+
         header {
-            background: rgba(0, 0, 0, 0.85);
+            background: rgba(11, 11, 15, 0.85);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -66,466 +73,199 @@
             gap: 15px;
         }
 
-        .logo-area {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo-container {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            cursor: pointer;
-        }
-
+        .logo-area { display: flex; align-items: center; gap: 15px; }
+        .logo-container { display: flex; align-items: center; gap: 12px; cursor: pointer; }
         .logo-box {
-            width: 42px;
-            height: 42px;
+            width: 42px; height: 42px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 800;
-            font-size: 24px;
-            color: white;
-            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
+            border-radius: 12px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 24px; color: white;
+            animation: neonGlow 3s infinite;
         }
-        .logo-box:hover { transform: scale(1.05); }
-
+        .logo-box:hover { transform: scale(1.1) rotate(5deg); }
         .logo-text {
-            font-size: 22px;
-            font-weight: 800;
+            font-size: 22px; font-weight: 800;
             background: linear-gradient(to right, #FFFFFF, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
 
         .online-counter {
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #34d399;
-            padding: 5px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
+            color: #34d399; padding: 5px 12px; border-radius: 20px;
+            font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;
         }
-        .online-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; animation: pulse 2s infinite; }
-        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .online-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
 
-        .search-container {
-            position: relative;
-            flex: 0 1 340px;
-        }
-
+        .search-container { position: relative; flex: 0 1 340px; }
         .search-bar input {
-            width: 100%;
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 12px 16px 12px 44px;
-            color: white;
-            font-size: 14px;
-            outline: none;
+            width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+            border-radius: 12px; padding: 12px 16px 12px 44px; color: white; font-size: 14px; outline: none;
         }
-
-        .search-bar input:focus {
-            border-color: var(--accent);
-            box-shadow: 0 0 15px rgba(192, 132, 252, 0.3);
-        }
-
-        .search-bar svg {
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            fill: var(--text-muted);
-            width: 18px;
-            height: 18px;
-        }
+        .search-bar input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--glow); }
+        .search-bar svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 18px; height: 18px; }
 
         .search-dropdown {
-            position: absolute;
-            top: 100%;
-            left: 0;
-            width: 100%;
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            margin-top: 5px;
-            display: none;
-            z-index: 200;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
-            max-height: 250px;
-            overflow-y: auto;
+            position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 12px; margin-top: 5px; display: none; z-index: 200;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-height: 250px; overflow-y: auto;
         }
         .search-dropdown.active { display: block; animation: fadeInUp 0.2s ease; }
         .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
-        .search-dropdown-item:hover { background: rgba(139,92,246,0.15); color: var(--accent); }
+        .search-dropdown-item:hover { background: var(--primary); color: white; }
 
-        .nav-actions {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
+        .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
         .nav-btn {
-            background: transparent;
-            border: 1px solid transparent;
-            color: var(--text-muted);
-            font-weight: 600;
-            font-size: 14px;
-            cursor: pointer;
-            padding: 8px 14px;
-            border-radius: 10px;
+            background: transparent; border: 1px solid transparent; color: var(--text-muted);
+            font-weight: 600; font-size: 14px; cursor: pointer; padding: 8px 14px; border-radius: 10px;
         }
-
-        .nav-btn:hover, .nav-btn.active {
-            color: white;
-            background: rgba(139, 92, 246, 0.15);
-            border-color: var(--accent);
-        }
+        .nav-btn:hover, .nav-btn.active { color: white; background: var(--primary); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
 
         .action-icon-btn {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 9px 14px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
+            background: var(--bg-card); border: 1px solid var(--border); color: white;
+            padding: 9px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
         }
-        .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); transform: translateY(-1px); }
+        .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.08); transform: translateY(-2px); }
 
         .user-pill {
-            background: rgba(139, 92, 246, 0.15);
-            border: 1px solid var(--border);
-            padding: 6px 14px;
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
         }
-        .user-pill:hover { border-color: var(--accent); }
-
-        .user-avatar-small {
-            width: 28px;
-            height: 28px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: var(--primary);
-        }
+        .user-pill:hover { border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
+        .user-avatar-small { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--primary); }
 
         .app-layout {
-            display: grid;
-            grid-template-columns: 1fr 300px;
-            gap: 30px;
-            max-width: 1600px;
-            margin: 0 auto;
-            padding: 30px 40px;
-            flex: 1;
-            width: 100%;
+            display: grid; grid-template-columns: 1fr 300px; gap: 30px;
+            max-width: 1600px; margin: 0 auto; padding: 30px 40px; flex: 1; width: 100%;
         }
 
         .right-sidebar {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 20px;
-            padding: 20px;
-            height: fit-content;
-            position: sticky;
-            top: 90px;
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+            padding: 20px; height: fit-content; position: sticky; top: 90px; display: flex; flex-direction: column; gap: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-
-        .sidebar-section h3 {
-            font-size: 15px;
-            font-weight: 700;
-            margin-bottom: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            color: var(--text-main);
-        }
-
-        .sidebar-users-list {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            max-height: 220px;
-            overflow-y: auto;
-            padding-right: 4px;
-        }
-
+        .sidebar-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
+        .sidebar-users-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px; }
         .sidebar-user-item {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            padding: 8px 12px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            cursor: pointer;
-            font-size: 13px;
-            font-weight: 600;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 8px 12px;
+            border-radius: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
         }
-        .sidebar-user-item:hover {
-            border-color: var(--accent);
-            background: rgba(139, 92, 246, 0.15);
-            transform: translateX(3px);
-        }
-        .sidebar-user-avatar {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            object-fit: cover;
-            background: var(--primary);
-        }
+        .sidebar-user-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); transform: translateX(4px); }
+        .sidebar-user-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--primary); }
 
         main { width: 100%; animation: fadeInUp 0.4s ease; }
 
         .hero-banner {
-            border-radius: 24px;
-            overflow: hidden;
-            background-size: cover;
-            background-position: center;
-            border: 1px solid var(--border);
-            padding: 50px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            min-height: 420px;
-            margin-bottom: 40px;
+            border-radius: 24px; overflow: hidden; background-size: cover; background-position: center;
+            border: 1px solid var(--border); padding: 50px; display: flex; flex-direction: column;
+            justify-content: center; min-height: 420px; margin-bottom: 40px; position: relative;
             box-shadow: 0 20px 40px rgba(0,0,0,0.8);
-            position: relative;
         }
-
         .hero-banner::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(90deg, rgba(0,0,0,0.95) 40%, rgba(0,0,0,0.6) 75%, rgba(0,0,0,0.3) 100%);
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, rgba(11,11,15,0.95) 40%, rgba(11,11,15,0.6) 75%, rgba(11,11,15,0.3) 100%);
             z-index: 1;
         }
-
         .hero-banner > * { position: relative; z-index: 2; }
-
         .hero-banner h1 {
-            font-size: 42px;
-            font-weight: 800;
-            max-width: 650px;
-            margin-bottom: 16px;
-            line-height: 1.15;
-            background: linear-gradient(to right, #FFFFFF, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            font-size: 42px; font-weight: 800; max-width: 650px; margin-bottom: 16px; line-height: 1.15;
+            background: linear-gradient(to right, #FFFFFF, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-
-        .hero-banner p {
-            color: var(--text-muted);
-            font-size: 15px;
-            max-width: 550px;
-            margin-bottom: 24px;
-            line-height: 1.5;
-        }
-
-        .hero-meta {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-        }
-
-        .hero-meta span {
-            background: rgba(255, 255, 255, 0.08);
-            padding: 5px 12px;
-            border-radius: 8px;
-            color: white;
-            border: 1px solid var(--border);
-        }
+        .hero-banner p { color: var(--text-muted); font-size: 15px; max-width: 550px; margin-bottom: 24px; line-height: 1.5; }
+        .hero-meta { display: flex; gap: 12px; align-items: center; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 20px; flex-wrap: wrap; }
+        .hero-meta span { background: rgba(255, 255, 255, 0.08); padding: 5px 12px; border-radius: 8px; color: white; border: 1px solid var(--border); }
 
         .btn-primary {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 12px 26px;
-            border-radius: 12px;
-            font-weight: 700;
-            font-size: 14px;
-            cursor: pointer;
-            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            width: fit-content;
+            background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 12px;
+            font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
+            display: inline-flex; align-items: center; gap: 8px; width: fit-content;
         }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-3px); box-shadow: 0 6px 25px var(--glow); }
 
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 24px;
-            margin-top: 35px;
-        }
-
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 35px; }
         .section-title { font-size: 22px; font-weight: 700; }
 
-        .anime-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 24px;
-        }
-
+        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 24px; }
         .anime-card {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
-            display: flex;
-            flex-direction: column;
-            position: relative;
-            animation: fadeInUp 0.5s ease;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
+            display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.5s ease;
         }
-        .anime-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--accent);
-            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.3);
-        }
-
+        .anime-card:hover { transform: translateY(-8px) scale(1.02); border-color: var(--accent); box-shadow: 0 15px 35px var(--glow); }
         .anime-rating-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0, 0, 0, 0.85);
-            border: 1px solid var(--border);
-            color: #fbbf24;
-            padding: 5px 10px;
-            border-radius: 8px;
-            font-size: 12px;
-            font-weight: 700;
-            z-index: 2;
-            backdrop-filter: blur(4px);
+            position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--border);
+            color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; z-index: 2; backdrop-filter: blur(4px);
         }
+        .anime-poster { width: 100%; height: 310px; object-fit: cover; background: var(--bg-input); transition: transform 0.5s ease; }
+        .anime-card:hover .anime-poster { transform: scale(1.06); }
+        .anime-info { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; background: var(--bg-card); z-index: 2; }
+        .anime-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .anime-meta-card { font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; }
 
-        .anime-poster {
-            width: 100%;
-            height: 310px;
-            object-fit: cover;
-            background: var(--bg-input);
-            transition: transform 0.5s ease;
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border); }
+
+        /* Стили профиля */
+        .profile-container { max-width: 1300px; margin: 0 auto; width: 100%; animation: fadeInUp 0.3s ease; }
+        .profile-header-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 25px;
+            display: grid; grid-template-columns: 200px 1fr; gap: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .anime-card:hover .anime-poster { transform: scale(1.05); }
-
-        .anime-info {
-            padding: 16px;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            flex: 1;
-            background: var(--bg-card);
-            z-index: 2;
+        .profile-avatar-box { width: 200px; height: 260px; border-radius: 14px; object-fit: cover; border: 1px solid var(--border); background: var(--bg-input); }
+        .profile-info-grid { display: flex; flex-direction: column; gap: 12px; }
+        .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .profile-name-row h2 { font-size: 24px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+        
+        .profile-stats-bar {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+            display: flex; overflow: hidden; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
         }
-
-        .anime-title {
-            font-size: 15px;
-            font-weight: 700;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
+        .profile-stat-tab {
+            flex: 1; padding: 14px 10px; text-align: center; cursor: pointer; border-right: 1px solid var(--border);
+            background: var(--bg-card); font-size: 13px; font-weight: 700; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;
         }
+        .profile-stat-tab:last-child { border-right: none; }
+        .profile-stat-tab:hover { background: rgba(255,255,255,0.05); color: white; }
+        .profile-stat-tab.active { background: var(--primary); color: white; box-shadow: inset 0 0 15px rgba(0,0,0,0.2); }
+        .profile-stat-tab .num { font-size: 16px; font-weight: 800; }
 
-        .anime-meta-card {
-            font-size: 13px;
-            color: var(--text-muted);
-            display: flex;
-            justify-content: space-between;
+        .profile-layout-grid { display: grid; grid-template-columns: 1fr 280px; gap: 25px; align-items: start; }
+        .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+        .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 6px; }
+        .profile-menu-item {
+            background: var(--bg-input); border: 1px solid var(--border); padding: 10px 14px; border-radius: 10px;
+            font-size: 13px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white;
         }
+        .profile-menu-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); }
 
-        .empty-state {
-            grid-column: 1 / -1;
-            text-align: center;
-            padding: 60px 20px;
-            color: var(--text-muted);
-            background: var(--bg-card);
-            border-radius: 16px;
-            border: 1px dashed var(--border);
-        }
+        .profile-anime-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .profile-anime-table th, .profile-anime-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .profile-anime-table th { color: var(--text-muted); font-weight: 600; }
+        .profile-anime-table tr:hover { background: rgba(255,255,255,0.03); }
 
-        /* Модальные окна с плавной анимацией */
+        /* Модальные окна */
         .modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.85);
-            backdrop-filter: blur(12px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);
+            display: flex; align-items: center; justify-content: center; z-index: 1000;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s ease;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
-
         .modal-content {
-            background: #0d0d12;
-            border: 1px solid var(--border);
-            border-radius: 24px;
-            width: 95%;
-            max-width: 1250px;
-            padding: 35px;
-            max-height: 92vh;
-            overflow-y: auto;
-            position: relative;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.95);
-            animation: modalScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            background: #0d0d12; border: 1px solid var(--border); border-radius: 24px;
+            width: 95%; max-width: 1250px; padding: 35px; max-height: 92vh; overflow-y: auto;
+            position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.95); animation: modalScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-
         .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border);
-            color: white;
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
+            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border); color: white; width: 38px; height: 38px; border-radius: 50%;
+            cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 10;
         }
         .modal-close:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); transform: rotate(90deg); }
 
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
         .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; font-size: 14px; outline: none; }
-        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
         textarea.form-control { resize: vertical; min-height: 90px; }
 
         .btn-secondary { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; }
@@ -534,72 +274,34 @@
         .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
 
         .catalog-filters-box {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            padding: 20px;
-            border-radius: 16px;
-            margin-bottom: 25px;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-            gap: 15px;
+            background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 16px;
+            margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;
         }
 
-        .watch-cinema-layout {
-            display: grid;
-            grid-template-columns: 1fr 380px;
-            gap: 30px;
-            align-items: start;
-        }
+        .watch-cinema-layout { display: grid; grid-template-columns: 1fr 380px; gap: 30px; align-items: start; }
         .watch-cinema-layout.theater { grid-template-columns: 1fr; }
         .watch-cinema-layout.theater .watch-sidebar { display: none; }
-
         .watch-main-col { display: flex; flex-direction: column; gap: 20px; }
         .player-wrapper { position: relative; width: 100%; }
         .player-box { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.8); }
         
         .skip-intro-btn {
-            position: absolute;
-            bottom: 25px;
-            right: 25px;
-            background: rgba(0, 0, 0, 0.75);
-            backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-size: 13px;
-            font-weight: 700;
-            cursor: pointer;
-            z-index: 20;
-            display: none;
+            position: absolute; bottom: 25px; right: 25px; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
+            border: 1px solid var(--border); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; z-index: 20; display: none;
         }
         .skip-intro-btn:hover { background: var(--primary); border-color: var(--primary); }
 
         .watch-sidebar { background: #101015; border: 1px solid var(--border); border-radius: 16px; padding: 22px; display: flex; flex-direction: column; gap: 20px; }
-        
         .season-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 5px; }
         .season-tab-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-        .season-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+        .season-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
         .episodes-list-grid { display: flex; flex-direction: column; gap: 10px; max-height: 250px; overflow-y: auto; padding-right: 6px; }
-        
         .ep-card-side {
-            background: var(--bg-input);
-            border: 1px solid var(--border);
-            padding: 12px 14px;
-            border-radius: 12px;
-            color: white;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 13px;
-            font-weight: 600;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 12px 14px; border-radius: 12px;
+            color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;
         }
-        .ep-card-side:hover, .ep-card-side.active {
-            background: rgba(139, 92, 246, 0.25);
-            border-color: var(--accent);
-        }
+        .ep-card-side:hover, .ep-card-side.active { background: var(--primary); border-color: var(--accent); color: white; }
 
         .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 15px; }
         .comment-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
@@ -607,8 +309,7 @@
         .comment-reactions { display: flex; gap: 6px; margin-top: 4px; }
         .reaction-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: white; display: flex; align-items: center; gap: 4px; }
         .reaction-btn:hover { border-color: var(--accent); }
-        .reaction-btn.active { background: rgba(139, 92, 246, 0.3); border-color: var(--accent); }
-        
+        .reaction-btn.active { background: var(--primary); border-color: var(--accent); color: white; }
         .spoiler-text { background: #222; color: #222; border-radius: 4px; cursor: pointer; padding: 2px 6px; user-select: none; }
         .spoiler-text.revealed { background: #333; color: #fff; }
 
@@ -616,11 +317,12 @@
         .admin-table th, .admin-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
         .admin-table th { color: var(--text-muted); font-weight: 600; }
 
-        /* Мобильная адаптация */
         @media (max-width: 1024px) {
             .app-layout { grid-template-columns: 1fr; padding: 20px; }
             .right-sidebar { position: static; margin-top: 20px; }
             .watch-cinema-layout { grid-template-columns: 1fr; }
+            .profile-header-card { grid-template-columns: 1fr; text-align: center; justify-items: center; }
+            .profile-layout-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 768px) {
@@ -664,19 +366,20 @@
             <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
             <button class="action-icon-btn" onclick="playSound(); randomAnime()">🎲 Мне повезет</button>
             
-            <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="background: rgba(139, 92, 246, 0.2); border-color: var(--primary); display: none;">⚙️ Админка</button>
+            <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="background: var(--primary); border-color: var(--primary); display: none;">⚙️ Админка</button>
             <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="background: var(--primary); border-color: var(--primary); display: none;">+ Добавить</button>
 
             <select class="action-icon-btn" id="themeSelect" onchange="changeTheme(this.value)" style="background: var(--bg-input); padding: 8px;">
-                <option value="default">💜 Фиолетовая</option>
-                <option value="cyberpunk">🔴 Киберпанк</option>
+                <option value="default">🔴 Красная (Shikimori)</option>
+                <option value="purple">💜 Фиолетовая</option>
                 <option value="mint">🟢 Мятная</option>
+                <option value="blue">💙 Кибер-синяя</option>
+                <option value="gold">🟡 Золотая</option>
             </select>
             <div id="userHeaderArea"></div>
         </div>
     </header>
 
-    <!-- Обертка с правым сайдбаром -->
     <div class="app-layout">
         <main id="mainContainer"></main>
         
@@ -720,10 +423,8 @@
                     <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
                 </div>
                 <div class="form-group">
-                    <label>Жанры (выберите сколько угодно)</label>
-                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--bg-input); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
-                        <!-- Заполняется JS -->
-                    </div>
+                    <label>Жанры</label>
+                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--bg-input); padding: 12px; border-radius: 12px; border: 1px solid var(--border);"></div>
                 </div>
                 <div class="form-group">
                     <label>Год выпуска / Тип</label>
@@ -737,7 +438,7 @@
                     <textarea class="form-control" id="animeDesc" placeholder="Сюжет аниме..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Сезоны, Несколько озвучек (через запятую), Качество и Ссылка (.mp4)</label>
+                    <label>Эпизоды и Озвучки</label>
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
@@ -764,12 +465,10 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="profileModal"><div class="modal-content" style="max-width: 750px;" id="profileModalContent"></div></div>
     <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 1000px;" id="adminModalContent"></div></div>
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
 
     <script>
-        // --- ПОДКЛЮЧЕНИЕ SUPABASE ---
         const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -826,6 +525,8 @@
         let siteStats = JSON.parse(localStorage.getItem('komi_stats')) || { visits: 1420, views: 8900 };
 
         let currentView = 'home';
+        let profileTargetUser = null;
+        let profileActiveTab = 'Смотрю';
         let catalogFilterGenre = 'Все';
         let catalogFilterYear = 'Все';
         let catalogFilterType = 'Все';
@@ -833,11 +534,11 @@
         const mySessionId = 'user_' + Math.random().toString(36).substring(2, 9);
 
         function changeTheme(theme) {
-            document.body.className = 'theme-' + theme;
+            document.body.className = theme === 'default' ? '' : 'theme-' + theme;
             localStorage.setItem('komi_theme', theme);
         }
         const savedTheme = localStorage.getItem('komi_theme');
-        if (savedTheme) { document.body.className = 'theme-' + savedTheme; document.getElementById('themeSelect').value = savedTheme; }
+        if (savedTheme) { document.body.className = savedTheme === 'default' ? '' : 'theme-' + savedTheme; document.getElementById('themeSelect').value = savedTheme; }
 
         function saveData() {
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
@@ -855,7 +556,7 @@
 
         async function loadDataFromCloud() {
             try {
-                const { data, error } = await _supabase.from('animes').select('*');
+                const { data } = await _supabase.from('animes').select('*');
                 if (data && data.length > 0) {
                     for(let row of data) {
                         if (row.id === 1) animeList = JSON.parse(row.content || '[]');
@@ -909,7 +610,7 @@
                     const p = userProfiles[u.username] || {};
                     const avatar = p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
                     return `
-                        <div class="sidebar-user-item" onclick="openProfileModal('${u.username}')">
+                        <div class="sidebar-user-item" onclick="openProfile('${u.username}')">
                             <img src="${avatar}" class="sidebar-user-avatar">
                             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.username}</span>
                         </div>
@@ -927,7 +628,7 @@
                         const avatar = p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
                         const isOnline = onlineRows.some(row => row.username === f);
                         return `
-                            <div class="sidebar-user-item" onclick="openProfileModal('${f}')">
+                            <div class="sidebar-user-item" onclick="openProfile('${f}')">
                                 <img src="${avatar}" class="sidebar-user-avatar">
                                 <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
                                 <span style="width:8px; height:8px; border-radius:50%; background:${isOnline ? '#34d399' : '#64748b'};" title="${isOnline ? 'В сети' : 'Не в сети'}"></span>
@@ -963,6 +664,13 @@
             renderHeaderUser();
         }
 
+        function openProfile(username) {
+            currentView = 'profile';
+            profileTargetUser = username;
+            render();
+            renderHeaderUser();
+        }
+
         function renderHeaderUser() {
             const area = document.getElementById('userHeaderArea');
             const adminBtn = document.getElementById('adminPanelBtn');
@@ -980,7 +688,7 @@
             if (currentUser) {
                 const p = userProfiles[currentUser.username] || currentUser;
                 area.innerHTML = `
-                    <div class="user-pill" onclick="playSound(); openProfileModal('${currentUser.username}')">
+                    <div class="user-pill" onclick="playSound(); openProfile('${currentUser.username}')">
                         <img src="${p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'}" class="user-avatar-small">
                         <span>${currentUser.username}</span>
                         <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; margin-left:5px;" title="Выйти">🚪</button>
@@ -994,7 +702,7 @@
         function logoutUser() {
             currentUser = null;
             saveData();
-            render();
+            navigate('home');
         }
 
         function render() {
@@ -1082,7 +790,122 @@
                         ${filtered.length === 0 ? `<div class="empty-state"><h3>Ничего не найдено по фильтрам</h3></div>` : filtered.map(a => renderCard(a)).join('')}
                     </div>
                 `;
+            } else if (currentView === 'profile') {
+                renderProfileView(container);
             }
+        }
+
+        function renderProfileView(container) {
+            const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
+            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Участник сообщества' };
+            const myFriends = userFriends[username] || [];
+            const myRequests = friendRequests[username] || [];
+            const isMe = currentUser && currentUser.username === username;
+            
+            const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
+            const isRequestSent = currentUser && (friendRequests[username] || []).includes(currentUser.username);
+
+            const userStatuses = userAnimeStatuses[username] || {};
+            const statsCounts = { 'Смотрю': 0, 'В планах': 0, 'Просмотрено': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
+            
+            const listForTab = [];
+            Object.entries(userStatuses).forEach(([aId, st]) => {
+                if (statsCounts[st] !== undefined) statsCounts[st]++;
+                if (st === profileActiveTab) {
+                    const anObj = animeList.find(x => x.id === aId);
+                    if (anObj) listForTab.push(anObj);
+                }
+            });
+
+            if (profileActiveTab === 'Любимые') {
+                const favs = userFavorites[username] || {};
+                Object.keys(favs).forEach(aId => {
+                    const anObj = animeList.find(x => x.id === aId);
+                    if (anObj && !listForTab.some(x => x.id === aId)) listForTab.push(anObj);
+                });
+                statsCounts['Любимые'] = listForTab.length;
+            }
+
+            container.innerHTML = `
+                <div class="profile-container">
+                    <div class="profile-header-card">
+                        <img src="${p.avatar}" class="profile-avatar-box">
+                        <div class="profile-info-grid">
+                            <div class="profile-name-row">
+                                <h2>👤 ${username} <span style="font-size:12px; color:#34d399; background:rgba(16,185,129,0.15); padding:3px 10px; border-radius:12px;">● Онлайн</span></h2>
+                                ${!isMe && currentUser ? `
+                                    ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="removeFriend('${username}')">Удалить из друзей</button>` : 
+                                      isRequestSent ? `<span style="font-size:12px; color:var(--text-muted);">Заявка отправлена</span>` : 
+                                      `<button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                ` : ''}
+                            </div>
+                            <p style="color:var(--text-muted); font-size:13px;">Статус: <b>${p.status}</b></p>
+                            <p style="color:var(--text-muted); font-size:13px;">Дата регистрации: <b>05 октября 2025 года</b></p>
+
+                            ${isMe ? `
+                            <div style="background:var(--bg-input); padding:12px; border-radius:12px; margin-top:10px;">
+                                <h4 style="font-size:13px; margin-bottom:6px;">Настройки профиля</h4>
+                                <div style="display:flex; gap:8px;">
+                                    <input type="url" id="newAvatarUrl" class="form-control" placeholder="Ссылка на аватар..." value="${p.avatar}">
+                                    <input type="text" id="newStatusText" class="form-control" placeholder="Статус..." value="${p.status}">
+                                    <button class="btn-primary" onclick="updateUserProfile()">Сохранить</button>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+
+                    <div class="profile-stats-bar">
+                        ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено', 'Любимые'].map(tab => `
+                            <div class="profile-stat-tab ${profileActiveTab === tab ? 'active' : ''}" onclick="playSound(); profileActiveTab='${tab}'; render()">
+                                <span class="num">${statsCounts[tab] || 0}</span>
+                                <span>${tab.toUpperCase()}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <div class="profile-layout-grid">
+                        <div class="profile-main-content">
+                            <h3 style="margin-bottom: 15px; font-size:16px;">Список: ${profileActiveTab}</h3>
+                            ${listForTab.length === 0 ? `
+                                <div class="empty-state" style="padding:30px;"><h3>В этой категории пока ничего нет</h3></div>
+                            ` : `
+                                <table class="profile-anime-table">
+                                    <thead><tr><th>Постер</th><th>Название</th><th>Оценка</th><th>Действие</th></tr></thead>
+                                    <tbody>
+                                        ${listForTab.map(an => `
+                                            <tr style="cursor:pointer;" onclick="openWatchModal('${an.id}')">
+                                                <td style="width:60px;"><img src="${an.poster}" style="width:40px; height:55px; object-fit:cover; border-radius:6px;"></td>
+                                                <td><b>${an.title}</b><div style="font-size:11px; color:var(--text-muted);">${(an.genres||[]).join(', ')}</div></td>
+                                                <td><span style="color:#fbbf24; font-weight:700;">⭐ ${calculateAverageRating(an)}</span></td>
+                                                <td><button class="btn-secondary" style="padding:4px 8px; font-size:11px;">Смотреть</button></td>
+                                            </tr>
+                                        `).join('')}
+                                    </tbody>
+                                </table>
+                            `}
+                        </div>
+
+                        <div class="profile-sidebar-menu">
+                            <h3 style="font-size:14px; margin-bottom:8px;">📌 Навигация</h3>
+                            <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
+                            <div class="profile-menu-item"><span>💬 Комментарии</span> <b>0</b></div>
+                            <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${Object.keys(userFavorites[username]||{}).length}</b></div>
+                            ${isMe && myRequests.length > 0 ? `
+                                <div style="margin-top:10px; background:rgba(239,68,68,0.1); border:1px solid var(--primary); padding:10px; border-radius:10px;">
+                                    <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки (${myRequests.length})</div>
+                                    ${myRequests.map(req => `
+                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:4px;">
+                                            <span>${req}</span>
+                                            <button class="btn-primary" style="padding:2px 6px; font-size:10px;" onclick="acceptFriendRequest('${req}')">Принять</button>
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
         }
 
         function renderCard(anime) {
@@ -1176,9 +999,6 @@
                 <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
                     <button class="btn-primary" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal()">+ Добавить аниме</button>
                     <button class="btn-secondary" onclick="exportBackup()">📥 Скачать JSON бэкап</button>
-                    <label class="btn-secondary" style="cursor:pointer; display:inline-flex; align-items:center;">
-                        📤 Загрузить бэкап <input type="file" accept=".json" onchange="importBackup(event)" style="display:none;">
-                    </label>
                 </div>
                 <table class="admin-table">
                     <thead><tr><th>Название</th><th>Жанры</th><th>Эпизодов</th><th>Действия</th></tr></thead>
@@ -1208,23 +1028,6 @@
             document.body.appendChild(dlAnchor);
             dlAnchor.click();
             dlAnchor.remove();
-        }
-
-        function importBackup(event) {
-            const file = event.target.files[0];
-            if (!file) return;
-            const reader = new FileReader();
-            reader.onload = async function(e) {
-                try {
-                    animeList = JSON.parse(e.target.result);
-                    await saveAnimeToCloud();
-                    alert('Бэкап успешно загружен в облако!');
-                    openAdminPanel();
-                } catch(err) {
-                    alert('Ошибка при чтении JSON файла.');
-                }
-            };
-            reader.readAsText(file);
         }
 
         async function deleteAnime(id) {
@@ -1417,13 +1220,12 @@
             } else {
                 alert('Заявка уже отправлена ранее.');
             }
-            openProfileModal(targetUsername);
+            openProfile(targetUsername);
         }
 
         function acceptFriendRequest(senderUsername) {
             if (!currentUser) return;
             const myName = currentUser.username;
-            
             if (friendRequests[myName]) {
                 friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
             }
@@ -1434,122 +1236,16 @@
             if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
 
             saveData();
-            openProfileModal(myName);
-        }
-
-        function declineFriendRequest(senderUsername) {
-            if (!currentUser) return;
-            const myName = currentUser.username;
-            if (friendRequests[myName]) {
-                friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
-            }
-            saveData();
-            openProfileModal(myName);
+            openProfile(myName);
         }
 
         function removeFriend(friendUsername) {
             if (!currentUser) return;
             const myName = currentUser.username;
-            
             if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
             if (userFriends[friendUsername]) userFriends[friendUsername] = userFriends[friendUsername].filter(u => u !== myName);
-
             saveData();
-            openProfileModal(friendUsername);
-        }
-
-        function openProfileModal(username) {
-            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Участник сообщества' };
-            const achs = userAchievements[username] || [];
-            const myFriends = userFriends[username] || [];
-            const myRequests = friendRequests[username] || [];
-            const isMe = currentUser && currentUser.username === username;
-            
-            const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
-            const isRequestSent = currentUser && (friendRequests[username] || []).includes(currentUser.username);
-
-            const userStatuses = userAnimeStatuses[username] || {};
-            const statsCounts = { 'Буду смотреть': 0, 'Смотрю': 0, 'Забросил': 0, 'Просмотрено': 0 };
-            const userAnimeListHTML = [];
-
-            Object.entries(userStatuses).forEach(([aId, st]) => {
-                statsCounts[st] = (statsCounts[st] || 0) + 1;
-                const anObj = animeList.find(x => x.id === aId);
-                if (anObj) {
-                    userAnimeListHTML.push(`<div style="font-size:12px; background:var(--bg-input); padding:6px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><span>${anObj.title}</span><span style="color:var(--accent); font-weight:700;">${st}</span></div>`);
-                }
-            });
-
-            document.getElementById('profileModalContent').innerHTML = `
-                <button class="modal-close" onclick="playSound(); document.getElementById('profileModal').classList.remove('active')">&times;</button>
-                <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
-                    <img src="${p.avatar}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid var(--accent);">
-                    <div style="flex:1;">
-                        <h2>${username}</h2>
-                        <p style="color:var(--text-muted); font-size:13px; margin-bottom:8px;">Статус: ${p.status}</p>
-                        ${!isMe && currentUser ? `
-                            ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="removeFriend('${username}')">Удалить из друзей</button>` : 
-                              isRequestSent ? `<span style="font-size:12px; color:var(--text-muted);">Заявка отправлена</span>` : 
-                              `<button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
-                        ` : ''}
-                    </div>
-                </div>
-
-                ${isMe ? `
-                <div style="background:var(--bg-input); padding:15px; border-radius:12px; margin-bottom:15px;">
-                    <h3 style="font-size:14px; margin-bottom:8px;">Редактировать профиль</h3>
-                    <div style="display:flex; gap:10px; margin-bottom:8px;">
-                        <input type="url" id="newAvatarUrl" class="form-control" placeholder="Ссылка на аватара..." value="${p.avatar}">
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="newStatusText" class="form-control" placeholder="Ваш статус..." value="${p.status}">
-                        <button class="btn-primary" onclick="updateUserProfile()">Сохранить</button>
-                    </div>
-                </div>
-                ` : ''}
-
-                ${isMe && myRequests.length > 0 ? `
-                <div style="background:rgba(139,92,246,0.1); border:1px solid var(--primary); padding:12px; border-radius:12px; margin-bottom:15px;">
-                    <h3 style="font-size:14px; margin-bottom:8px;">🔔 Заявки в друзья (${myRequests.length})</h3>
-                    <div style="display:flex; flex-direction:column; gap:6px;">
-                        ${myRequests.map(req => `
-                            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); padding:8px 12px; border-radius:8px;">
-                                <span style="font-weight:600; font-size:13px;">${req}</span>
-                                <div style="display:flex; gap:6px;">
-                                    <button class="btn-primary" style="padding:4px 10px; font-size:11px;" onclick="acceptFriendRequest('${req}')">Принять</button>
-                                    <button class="btn-danger" style="padding:4px 10px; font-size:11px;" onclick="declineFriendRequest('${req}')">Отклонить</button>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-                ` : ''}
-
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:15px;">
-                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:var(--accent);">${statsCounts['Буду смотреть']}</div><div style="font-size:11px; color:var(--text-muted);">Буду смотреть</div></div>
-                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#34d399;">${statsCounts['Смотрю']}</div><div style="font-size:11px; color:var(--text-muted);">Смотрю</div></div>
-                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#fca5a5;">${statsCounts['Забросил']}</div><div style="font-size:11px; color:var(--text-muted);">Забросил</div></div>
-                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#60a5fa;">${statsCounts['Просмотрено']}</div><div style="font-size:11px; color:var(--text-muted);">Просмотрено</div></div>
-                </div>
-
-                ${userAnimeListHTML.length > 0 ? `
-                <h3 style="font-size:14px; margin-bottom:8px;">📦 Списки аниме пользователя</h3>
-                <div style="max-height:140px; overflow-y:auto; margin-bottom:20px; display:flex; flex-direction:column; gap:4px; padding-right:4px;">
-                    ${userAnimeListHTML.join('')}
-                </div>
-                ` : ''}
-
-                <h3>👥 Друзья (${myFriends.length})</h3>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 20px 0;">
-                    ${myFriends.length === 0 ? '<span style="color:var(--text-muted); font-size:13px;">Список друзей пуст</span>' : myFriends.map(f => `<span style="background:rgba(139,92,246,0.2); border:1px solid var(--primary); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;" onclick="openProfileModal('${f}')">👤 ${f}</span>`).join('')}
-                </div>
-
-                <h3>🏆 Достижения (${achs.length})</h3>
-                <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 10px 0;">
-                    ${achs.length === 0 ? '<span style="color:var(--text-muted); font-size:13px;">Пока нет достижений</span>' : achs.map(ac => `<span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600;">⭐ ${ac}</span>`).join('')}
-                </div>
-            `;
-            document.getElementById('profileModal').classList.add('active');
+            openProfile(friendUsername);
         }
 
         function updateUserProfile() {
@@ -1559,8 +1255,7 @@
             if (avatar) userProfiles[currentUser.username].avatar = avatar;
             if (status) userProfiles[currentUser.username].status = status;
             saveData();
-            openProfileModal(currentUser.username);
-            renderHeaderUser();
+            render();
         }
 
         let isTheaterMode = false;
@@ -1606,7 +1301,6 @@
             const savedTime = userHistoryKey ? (userWatchHistory[userHistoryKey] || 0) : 0;
             const userFavCategory = currentUser ? ((userFavorites[currentUser.username] || {})[anime.id] || '') : '';
             const avgRating = calculateAverageRating(anime);
-
             const myCurrentStatus = currentUser && userAnimeStatuses[currentUser.username] ? (userAnimeStatuses[currentUser.username][anime.id] || '') : '';
 
             document.getElementById('watchModalContent').innerHTML = `
@@ -1617,13 +1311,13 @@
                             <h2>${anime.title} (Сезон ${activeSeason})</h2>
                             <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn-secondary" onclick="toggleTheaterMode('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">🎬 Кинотеатр</button>
-                                <button class="btn-secondary" onclick="toggleFavorite('${anime.id}', 'Смотрю')">⭐ ${userFavCategory || 'В избранное'}</button>
+                                <button class="btn-secondary" onclick="toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
                             </div>
                         </div>
 
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:10px 14px; border-radius:12px;">
                             <span style="font-size:12px; color:var(--text-muted);">Статус:</span>
-                            ${['Буду смотреть', 'Смотрю', 'Забросил', 'Просмотрено'].map(st => `
+                            ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено'].map(st => `
                                 <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
                             `).join('')}
                         </div>
@@ -1679,7 +1373,7 @@
                             <div id="commentsListContainer" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
                                 ${comments.map((c, cIdx) => `
                                     <div class="comment-item">
-                                        <div class="comment-author" onclick="openProfileModal('${c.username}')">
+                                        <div class="comment-author" onclick="openProfile('${c.username}')">
                                             <span>👤 ${c.username}</span>
                                         </div>
                                         <div class="comment-text">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер (нажмите чтобы открыть) <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
@@ -1729,16 +1423,6 @@
                 v.currentTime = savedTime;
                 v.play().catch(() => {});
             }
-
-            if (v) {
-                v.ontimeupdate = function() {
-                    const btn = document.getElementById('skipIntroBtn');
-                    if (btn) {
-                        if (v.currentTime >= 3 && v.currentTime <= 25) btn.style.display = 'block';
-                        else btn.style.display = 'none';
-                    }
-                };
-            }
         }
 
         function handleVideoError() {
@@ -1760,7 +1444,6 @@
             if (!currentUser) return;
             const key = `${currentUser.username}_${id}`;
             userWatchHistory[key] = video.currentTime;
-            unlockAchievement(currentUser.username, 'Киноман (просмотрена серия)');
             saveData();
         }
 
@@ -1774,8 +1457,6 @@
             if (!anime) return;
             if (!anime.ratings) anime.ratings = {};
             anime.ratings[currentUser.username] = score;
-            
-            unlockAchievement(currentUser.username, 'Критик (оценено аниме)');
             saveData();
             document.getElementById('myRating').innerText = score;
             openWatchModal(id);
@@ -1790,7 +1471,6 @@
             if (!animeComments[id]) animeComments[id] = [];
             animeComments[id].unshift({ username: currentUser.username, text, spoiler, reactions: {} });
             
-            unlockAchievement(currentUser.username, 'Оратор (первый комментарий)');
             await saveCommentsToCloud();
             openWatchModal(id, season, epIdx, voice, quality);
         }
