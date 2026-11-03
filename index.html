@@ -3,31 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Komi Anime Hub — Платформа нового поколения</title>
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='var(--primary)'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
+    <title>Komi Anime Hub — Netflix Style</title>
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%234788FF'/><text x='50% ' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-base: #07070a;
-            --bg-card: #111118;
-            --bg-input: #181822;
-            --primary: #9147FF;
-            --primary-hover: #7b2cbf;
-            --accent: #c4b5fd;
+            --bg-base: #0B0D12;
+            --bg-card: #151821;
+            --bg-input: #252A36;
+            --primary: #4788FF;
+            --primary-hover: #3570e6;
+            --accent: #8cb4ff;
             --text-main: #FFFFFF;
             --text-muted: #94A3B8;
-            --border: #222233;
-            --glow: rgba(145, 71, 255, 0.45);
+            --border: #2A303F;
+            --glow: rgba(71, 136, 255, 0.35);
         }
 
-        body.theme-red { --primary: #EF4444; --primary-hover: #DC2626; --accent: #FCA5A5; --glow: rgba(239, 68, 68, 0.45); }
-        body.theme-mint { --primary: #10B981; --primary-hover: #059669; --accent: #6EE7B7; --glow: rgba(16, 185, 129, 0.45); }
-        body.theme-blue { --primary: #3B82F6; --primary-hover: #2563EB; --accent: #93C5FD; --glow: rgba(59, 130, 246, 0.45); }
-        body.theme-gold { --primary: #F59E0B; --primary-hover: #D97706; --accent: #FDE68A; --glow: rgba(245, 158, 11, 0.45); }
-
-        /* Тонкий кастомный скроллбар */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        /* Тонкий скроллбар */
+        ::-webkit-scrollbar { width: 5px; height: 5px; }
         ::-webkit-scrollbar-track { background: var(--bg-base); }
         ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--primary-hover); }
@@ -37,7 +32,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
         }
 
         body {
@@ -50,7 +45,7 @@
         }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -59,15 +54,9 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        @keyframes neonGlow {
-            0% { box-shadow: 0 0 12px var(--glow); }
-            50% { box-shadow: 0 0 28px var(--glow); }
-            100% { box-shadow: 0 0 12px var(--glow); }
-        }
-
         header {
-            background: rgba(7, 7, 10, 0.85);
-            backdrop-filter: blur(16px);
+            background: rgba(11, 13, 18, 0.9);
+            backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
@@ -75,22 +64,20 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 40px;
+            padding: 14px 30px;
             gap: 15px;
         }
 
         .logo-area { display: flex; align-items: center; gap: 15px; }
-        .logo-container { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-box {
-            width: 44px; height: 44px;
+            width: 38px; height: 38px;
             background: linear-gradient(135deg, var(--primary), var(--accent));
-            border-radius: 14px; display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 24px; color: white;
-            animation: neonGlow 3s infinite;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 20px; color: white;
         }
-        .logo-box:hover { transform: scale(1.1) rotate(5deg); }
         .logo-text {
-            font-size: 22px; font-weight: 800;
+            font-size: 20px; font-weight: 800;
             background: linear-gradient(to right, #FFFFFF, var(--accent));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
@@ -98,265 +85,258 @@
         .online-counter {
             background: rgba(16, 185, 129, 0.15);
             border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #34d399; padding: 5px 12px; border-radius: 20px;
-            font-size: 12px; font-weight: 700; display: flex; align-items: center; gap: 6px;
+            color: #34d399; padding: 4px 10px; border-radius: 20px;
+            font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px;
         }
-        .online-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
+        .online-dot { width: 6px; height: 6px; background: #34d399; border-radius: 50%; box-shadow: 0 0 6px #34d399; }
 
-        .search-container { position: relative; flex: 0 1 340px; }
+        .search-container { position: relative; flex: 0 1 300px; }
         .search-bar input {
             width: 100%; background: var(--bg-input); border: 1px solid var(--border);
-            border-radius: 12px; padding: 12px 16px 12px 44px; color: white; font-size: 14px; outline: none;
+            border-radius: 10px; padding: 10px 14px 10px 38px; color: white; font-size: 13px; outline: none;
         }
-        .search-bar input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--glow); }
-        .search-bar svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 18px; height: 18px; }
+        .search-bar input:focus { border-color: var(--primary); box-shadow: 0 0 15px var(--glow); }
+        .search-bar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 16px; height: 16px; }
 
         .search-dropdown {
             position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card);
-            border: 1px solid var(--border); border-radius: 12px; margin-top: 5px; display: none; z-index: 200;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-height: 250px; overflow-y: auto;
+            border: 1px solid var(--border); border-radius: 10px; margin-top: 4px; display: none; z-index: 200;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-height: 220px; overflow-y: auto;
         }
         .search-dropdown.active { display: block; animation: fadeInUp 0.2s ease; }
-        .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
+        .search-dropdown-item { padding: 8px 12px; font-size: 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
         .search-dropdown-item:hover { background: var(--primary); color: white; }
 
-        .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .nav-btn {
             background: transparent; border: 1px solid transparent; color: var(--text-muted);
-            font-weight: 600; font-size: 14px; cursor: pointer; padding: 8px 14px; border-radius: 10px;
+            font-weight: 600; font-size: 13px; cursor: pointer; padding: 6px 12px; border-radius: 8px;
         }
-        .nav-btn:hover, .nav-btn.active { color: white; background: var(--primary); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
+        .nav-btn:hover, .nav-btn.active { color: white; background: var(--primary); border-color: var(--accent); }
 
         .action-icon-btn {
             background: var(--bg-card); border: 1px solid var(--border); color: white;
-            padding: 9px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+            padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
         }
-        .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+        .action-icon-btn:hover { border-color: var(--primary); background: var(--bg-input); }
 
         .user-pill {
             background: var(--bg-card); border: 1px solid var(--border);
-            padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
+            padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
         }
-        .user-pill:hover { border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
-        .user-avatar-small { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--primary); }
+        .user-avatar-small { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--primary); }
 
         .app-layout {
-            display: grid; grid-template-columns: 1fr 300px; gap: 30px;
-            max-width: 1600px; margin: 0 auto; padding: 30px 40px; flex: 1; width: 100%;
+            display: grid; grid-template-columns: 1fr 280px; gap: 20px;
+            max-width: 1550px; margin: 0 auto; padding: 25px 30px; flex: 1; width: 100%;
         }
 
         .right-sidebar {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
-            padding: 20px; height: fit-content; position: sticky; top: 90px; display: flex; flex-direction: column; gap: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+            padding: 16px; height: fit-content; position: sticky; top: 80px; display: flex; flex-direction: column; gap: 15px;
         }
-        .sidebar-section h3 { font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text-main); }
-        .sidebar-users-list { display: flex; flex-direction: column; gap: 8px; max-height: 220px; overflow-y: auto; padding-right: 4px; }
+        .sidebar-section h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
+        .sidebar-users-list { display: flex; flex-direction: column; gap: 6px; max-height: 200px; overflow-y: auto; }
         .sidebar-user-item {
-            background: var(--bg-input); border: 1px solid var(--border); padding: 8px 12px;
-            border-radius: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 6px 10px;
+            border-radius: 10px; display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 12px; font-weight: 600;
         }
-        .sidebar-user-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); transform: translateX(4px); }
-        .sidebar-user-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--primary); }
+        .sidebar-user-item:hover { border-color: var(--primary); transform: translateX(3px); }
+        .sidebar-user-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; }
 
         main { width: 100%; animation: fadeInUp 0.3s ease; }
 
-        /* Улучшенный главный баннер */
+        /* Главный баннер */
         .hero-banner {
-            border-radius: 24px; overflow: hidden; background-size: cover; background-position: center;
-            border: 1px solid var(--border); padding: 50px; display: flex; flex-direction: column;
-            justify-content: center; min-height: 440px; margin-bottom: 40px; position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.85);
-            animation: neonGlow 6s infinite alternate;
+            border-radius: 20px; overflow: hidden; background-size: cover; background-position: center;
+            border: 1px solid var(--border); padding: 40px; display: flex; flex-direction: column;
+            justify-content: center; min-height: 380px; margin-bottom: 30px; position: relative;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.8);
         }
         .hero-banner::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, rgba(7,7,10,0.96) 35%, rgba(7,7,10,0.65) 70%, rgba(7,7,10,0.3) 100%),
-                        radial-gradient(circle at top right, rgba(145, 71, 255, 0.25), transparent 50%);
+            background: linear-gradient(90deg, rgba(11,13,18,0.95) 40%, rgba(11,13,18,0.6) 75%, transparent 100%),
+                        radial-gradient(circle at top right, rgba(71, 136, 255, 0.2), transparent 50%);
             z-index: 1;
         }
         .hero-banner > * { position: relative; z-index: 2; }
         .hero-banner h1 {
-            font-size: 44px; font-weight: 800; max-width: 650px; margin-bottom: 16px; line-height: 1.15;
+            font-size: 38px; font-weight: 800; max-width: 600px; margin-bottom: 12px; line-height: 1.15;
             background: linear-gradient(to right, #FFFFFF, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .hero-banner p { color: var(--text-muted); font-size: 15px; max-width: 550px; margin-bottom: 24px; line-height: 1.5; }
-        .hero-meta { display: flex; gap: 12px; align-items: center; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 20px; flex-wrap: wrap; }
-        .hero-meta span { background: rgba(255, 255, 255, 0.08); padding: 5px 12px; border-radius: 8px; color: white; border: 1px solid var(--border); }
+        .hero-banner p { color: var(--text-muted); font-size: 14px; max-width: 500px; margin-bottom: 20px; line-height: 1.4; }
+        .hero-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; flex-wrap: wrap; }
+        .hero-meta span { background: rgba(255, 255, 255, 0.08); padding: 4px 10px; border-radius: 6px; color: white; border: 1px solid var(--border); }
 
         .btn-primary {
-            background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 12px;
-            font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
-            display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+            background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px;
+            font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 4px 15px var(--glow);
+            display: inline-flex; align-items: center; gap: 6px; width: fit-content;
         }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-3px); box-shadow: 0 6px 25px var(--glow); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
 
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 35px; }
-        .section-title { font-size: 22px; font-weight: 700; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-top: 30px; }
+        .section-title { font-size: 20px; font-weight: 700; }
 
-        /* Карточки аниме с увеличенными постерами и неоновым свечением */
-        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
+        /* Карточки аниме (стиль Netflix) */
+        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 20px; }
         .anime-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
             cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
-            display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.4s ease;
+            display: flex; flex-direction: column; position: relative;
         }
-        .anime-card:hover { transform: translateY(-10px) scale(1.03); border-color: var(--accent); box-shadow: 0 18px 40px var(--glow); }
+        .anime-card:hover { transform: translateY(-6px) scale(1.02); border-color: var(--primary); box-shadow: 0 12px 30px var(--glow); }
         .anime-rating-badge {
-            position: absolute; top: 12px; left: 12px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--border);
-            color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; z-index: 2; backdrop-filter: blur(4px);
+            position: absolute; top: 10px; left: 10px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--border);
+            color: #fbbf24; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; z-index: 2; backdrop-filter: blur(4px);
         }
-        .anime-poster { width: 100%; height: 330px; object-fit: cover; background: var(--bg-input); transition: transform 0.4s ease; }
-        .anime-card:hover .anime-poster { transform: scale(1.07); }
-        .anime-info { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; background: var(--bg-card); z-index: 2; }
-        .anime-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .anime-meta-card { font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; }
+        .anime-poster { width: 100%; height: 300px; object-fit: cover; background: var(--bg-input); transition: transform 0.4s ease; }
+        .anime-card:hover .anime-poster { transform: scale(1.05); }
+        .anime-info { padding: 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; background: var(--bg-card); z-index: 2; }
+        .anime-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .anime-meta-card { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
 
-        .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border); }
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 14px; border: 1px dashed var(--border); }
 
-        /* Улучшенный профиль пользователя с рамкой уровня и карточками */
-        .profile-container { max-width: 1300px; margin: 0 auto; width: 100%; animation: fadeInUp 0.3s ease; }
+        /* Профиль */
+        .profile-container { max-width: 1200px; margin: 0 auto; width: 100%; animation: fadeInUp 0.3s ease; }
         .profile-header-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 25px;
-            display: grid; grid-template-columns: 200px 1fr; gap: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-            position: relative; overflow: hidden;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 22px;
+            display: grid; grid-template-columns: 180px 1fr; gap: 24px; margin-bottom: 20px;
         }
-        .profile-header-card::after {
-            content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 200px;
-            background: radial-gradient(circle, var(--glow) 0%, transparent 70%); pointer-events: none; opacity: 0.6;
-        }
-        .profile-avatar-box { width: 200px; height: 260px; border-radius: 14px; object-fit: cover; border: 2px solid var(--primary); background: var(--bg-input); box-shadow: 0 0 20px var(--glow); }
-        .profile-info-grid { display: flex; flex-direction: column; gap: 12px; }
-        .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
-        .profile-name-row h2 { font-size: 24px; font-weight: 800; color: var(--accent); display: flex; align-items: center; gap: 10px; }
+        .profile-avatar-box { width: 180px; height: 230px; border-radius: 12px; object-fit: cover; border: 2px solid var(--primary); background: var(--bg-input); }
+        .profile-info-grid { display: flex; flex-direction: column; gap: 10px; }
+        .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .profile-name-row h2 { font-size: 22px; font-weight: 800; color: var(--accent); }
         
         .profile-stats-bar {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
-            display: flex; overflow: hidden; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+            display: flex; overflow: hidden; margin-bottom: 20px;
         }
         .profile-stat-tab {
-            flex: 1; padding: 14px 10px; text-align: center; cursor: pointer; border-right: 1px solid var(--border);
-            background: var(--bg-card); font-size: 13px; font-weight: 700; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;
+            flex: 1; padding: 12px 8px; text-align: center; cursor: pointer; border-right: 1px solid var(--border);
+            background: var(--bg-card); font-size: 12px; font-weight: 700; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px;
         }
         .profile-stat-tab:last-child { border-right: none; }
-        .profile-stat-tab:hover { background: rgba(255,255,255,0.05); color: white; }
-        .profile-stat-tab.active { background: var(--primary); color: white; box-shadow: inset 0 0 15px rgba(0,0,0,0.3); }
-        .profile-stat-tab .num { font-size: 16px; font-weight: 800; }
+        .profile-stat-tab:hover { background: var(--bg-input); color: white; }
+        .profile-stat-tab.active { background: var(--primary); color: white; }
+        .profile-stat-tab .num { font-size: 15px; font-weight: 800; }
 
-        .profile-layout-grid { display: grid; grid-template-columns: 1fr 280px; gap: 25px; align-items: start; }
-        .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
-        .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 15px; display: flex; flex-direction: column; gap: 6px; }
+        .profile-layout-grid { display: grid; grid-template-columns: 1fr 260px; gap: 20px; align-items: start; }
+        .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 18px; }
+        .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; display: flex; flex-direction: column; gap: 6px; }
         .profile-menu-item {
-            background: var(--bg-input); border: 1px solid var(--border); padding: 10px 14px; border-radius: 10px;
-            font-size: 13px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 8px 12px; border-radius: 8px;
+            font-size: 12px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white;
         }
-        .profile-menu-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+        .profile-menu-item:hover { border-color: var(--primary); }
 
-        .profile-anime-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .profile-anime-table th, .profile-anime-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .profile-anime-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .profile-anime-table th, .profile-anime-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; }
         .profile-anime-table th { color: var(--text-muted); font-weight: 600; }
-        .profile-anime-table tr:hover { background: rgba(255,255,255,0.03); }
+        .profile-anime-table tr:hover { background: rgba(255,255,255,0.02); }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(14px);
+            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);
             display: flex; align-items: center; justify-content: center; z-index: 1000;
-            opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: #0d0d12; border: 1px solid var(--border); border-radius: 24px;
-            width: 96%; max-width: 1350px; padding: 28px; max-height: 94vh; overflow-y: auto;
-            position: relative; box-shadow: 0 30px 70px rgba(0,0,0,0.95); animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            background: #0D0F16; border: 1px solid var(--border); border-radius: 20px;
+            width: 95%; max-width: 1280px; padding: 24px; max-height: 94vh; overflow-y: auto;
+            position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.9); animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .modal-close {
-            position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.06);
-            border: 1px solid var(--border); color: white; width: 38px; height: 38px; border-radius: 50%;
-            cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; z-index: 10;
+            position: absolute; top: 16px; right: 16px; background: rgba(255,255,255,0.06);
+            border: 1px solid var(--border); color: white; width: 34px; height: 34px; border-radius: 50%;
+            cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10;
         }
-        .modal-close:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); transform: rotate(90deg); }
+        .modal-close:hover { background: rgba(255,255,255,0.12); border-color: var(--primary); transform: rotate(90deg); }
 
-        .form-group { margin-bottom: 20px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
-        .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; font-size: 14px; outline: none; }
-        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
-        textarea.form-control { resize: vertical; min-height: 90px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
+        .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 10px; color: white; font-size: 13px; outline: none; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
+        textarea.form-control { resize: vertical; min-height: 80px; }
 
-        .btn-secondary { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; }
-        .btn-secondary:hover { background: rgba(255,255,255,0.1); border-color: var(--accent); }
-        .btn-danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; }
+        .btn-secondary { background: var(--bg-input); color: white; border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 12px; }
+        .btn-secondary:hover { background: var(--border); border-color: var(--primary); }
+        .btn-danger { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.3); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; }
         .btn-danger:hover { background: rgba(239, 68, 68, 0.3); }
 
         .catalog-filters-box {
-            background: var(--bg-card); border: 1px solid var(--border); padding: 20px; border-radius: 16px;
-            margin-bottom: 25px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;
+            background: var(--bg-card); border: 1px solid var(--border); padding: 16px; border-radius: 14px;
+            margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
         }
 
-        /* Компактное и красивое модальное окно просмотра в стиле AnimeLib */
-        .watch-cinema-layout { display: grid; grid-template-columns: 1fr 360px; gap: 24px; align-items: start; }
+        /* Улучшенное окно просмотра в стиле Netflix */
+        .watch-cinema-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
         .watch-cinema-layout.theater { grid-template-columns: 1fr; }
         .watch-cinema-layout.theater .watch-sidebar { display: none; }
-        .watch-main-col { display: flex; flex-direction: column; gap: 16px; }
+        .watch-main-col { display: flex; flex-direction: column; gap: 14px; }
         
         .player-wrapper { position: relative; width: 100%; }
-        .player-box { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
+        .player-box { background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
         
         .skip-intro-btn {
-            position: absolute; bottom: 25px; right: 25px; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
-            border: 1px solid var(--border); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; z-index: 20; display: none;
+            position: absolute; bottom: 20px; right: 20px; background: rgba(11, 13, 18, 0.85); backdrop-filter: blur(8px);
+            border: 1px solid var(--border); color: white; padding: 7px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; z-index: 20; display: none;
         }
         .skip-intro-btn:hover { background: var(--primary); border-color: var(--primary); }
 
-        .anime-screenshots-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
-        .screenshots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
-        .screenshot-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
-        .screenshot-thumb:hover { transform: scale(1.05); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
+        /* Горизонтальная прокручиваемая галерея кадров */
+        .screenshots-scroll-container {
+            display: flex; gap: 10px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin;
+        }
+        .screenshot-thumb-item {
+            flex: 0 0 160px; height: 95px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease;
+        }
+        .screenshot-thumb-item:hover { transform: scale(1.04); border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
 
-        .watch-sidebar { background: #101015; border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 16px; }
-        .season-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 2px; }
-        .season-tab-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-        .season-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px var(--glow); }
-
-        .episodes-list-grid { display: flex; flex-direction: column; gap: 8px; max-height: 260px; overflow-y: auto; padding-right: 4px; }
+        .watch-sidebar { background: #151821; border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 14px; }
+        
+        /* Список эпизодов и компактные кнопки */
+        .episodes-list-grid { display: flex; flex-direction: column; gap: 6px; max-height: 260px; overflow-y: auto; padding-right: 4px; }
         .ep-card-side {
-            background: var(--bg-input); border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px;
-            color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 8px 10px; border-radius: 8px;
+            color: white; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 600;
         }
         .ep-card-side:hover, .ep-card-side.active { background: var(--primary); border-color: var(--accent); color: white; }
 
-        .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 12px; }
-        .comment-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .comment-author { font-weight: 700; font-size: 13px; color: var(--accent); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
-        .comment-reactions { display: flex; gap: 6px; margin-top: 4px; }
-        .reaction-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: white; display: flex; align-items: center; gap: 4px; }
-        .reaction-btn:hover { border-color: var(--accent); }
-        .reaction-btn.active { background: var(--primary); border-color: var(--accent); color: white; }
-        .spoiler-text { background: #222; color: #222; border-radius: 4px; cursor: pointer; padding: 2px 6px; user-select: none; }
-        .spoiler-text.revealed { background: #333; color: #fff; }
+        .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 14px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
+        .comment-item { background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 10px 12px; border-radius: 8px; display: flex; flex-direction: column; gap: 4px; }
+        .comment-author { font-weight: 700; font-size: 12px; color: var(--accent); cursor: pointer; }
+        .comment-reactions { display: flex; gap: 5px; margin-top: 3px; }
+        .reaction-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: white; display: flex; align-items: center; gap: 3px; }
+        .reaction-btn:hover { border-color: var(--primary); }
+        .reaction-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
+        .spoiler-text { background: #1a1e29; color: #1a1e29; border-radius: 4px; cursor: pointer; padding: 2px 4px; user-select: none; }
+        .spoiler-text.revealed { background: #252a36; color: #fff; }
 
-        .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
-        .admin-table th, .admin-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
+        .admin-table th, .admin-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         .admin-table th { color: var(--text-muted); font-weight: 600; }
 
         @media (max-width: 1024px) {
-            .app-layout { grid-template-columns: 1fr; padding: 20px; }
-            .right-sidebar { position: static; margin-top: 20px; }
+            .app-layout { grid-template-columns: 1fr; padding: 15px; }
+            .right-sidebar { position: static; margin-top: 15px; }
             .watch-cinema-layout { grid-template-columns: 1fr; }
             .profile-header-card { grid-template-columns: 1fr; text-align: center; justify-items: center; }
             .profile-layout-grid { grid-template-columns: 1fr; }
-            .screenshots-grid { grid-template-columns: repeat(2, 1fr); }
         }
 
         @media (max-width: 768px) {
-            header { padding: 12px 16px; flex-direction: column; align-items: stretch; gap: 10px; }
+            header { padding: 10px 14px; flex-direction: column; align-items: stretch; gap: 8px; }
             .logo-area { justify-content: space-between; }
             .search-container { flex: 1; max-width: 100%; }
             .nav-actions { justify-content: center; }
-            .hero-banner { padding: 25px; min-height: 320px; }
-            .hero-banner h1 { font-size: 28px; }
-            .anime-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-            .anime-poster { height: 250px; }
-            .modal-content { padding: 18px 12px; width: 100%; max-height: 95vh; border-radius: 16px; }
+            .hero-banner { padding: 20px; min-height: 280px; }
+            .hero-banner h1 { font-size: 24px; }
+            .anime-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+            .anime-poster { height: 220px; }
+            .modal-content { padding: 14px 10px; width: 100%; max-height: 96vh; border-radius: 14px; }
         }
     </style>
 </head>
@@ -365,7 +345,7 @@
     <!-- Header -->
     <header>
         <div class="logo-area">
-            <div class="logo-container" onclick="playSound(); navigate('home')">
+            <div class="logo-container" onclick="navigate('home')">
                 <div class="logo-box">K</div>
                 <div class="logo-text">Komi Anime</div>
             </div>
@@ -378,26 +358,19 @@
         <div class="search-container">
             <div class="search-bar">
                 <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="searchInput" placeholder="Поиск аниме, жанров..." oninput="handleSearchInput(this.value)" onfocus="showSearchDropdown()">
+                <input type="text" id="searchInput" placeholder="Поиск аниме..." oninput="handleSearchInput(this.value)" onfocus="showSearchDropdown()">
             </div>
             <div class="search-dropdown" id="searchDropdown"></div>
         </div>
 
         <div class="nav-actions">
-            <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
-            <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
-            <button class="action-icon-btn" onclick="playSound(); randomAnime()">🎲 Мне повезет</button>
+            <button class="nav-btn" id="navHomeBtn" onclick="navigate('home')">Главная</button>
+            <button class="nav-btn" id="navCatalogBtn" onclick="navigate('catalog')">Каталог</button>
+            <button class="action-icon-btn" onclick="randomAnime()">🎲 Мне повезет</button>
             
-            <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="background: var(--primary); border-color: var(--primary); display: none;">⚙️ Админка</button>
-            <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="background: var(--primary); border-color: var(--primary); display: none;">+ Добавить</button>
+            <button class="action-icon-btn" id="adminPanelBtn" onclick="openAdminPanel()" style="background: var(--primary); border-color: var(--primary); display: none;">⚙️ Админка</button>
+            <button class="action-icon-btn" id="addAnimeBtn" onclick="openAddModal()" style="background: var(--primary); border-color: var(--primary); display: none;">+ Добавить</button>
 
-            <select class="action-icon-btn" id="themeSelect" onchange="changeTheme(this.value)" style="background: var(--bg-input); padding: 8px;">
-                <option value="default">💜 Фиолетовая (#9147FF)</option>
-                <option value="red">🔴 Красная (Shikimori)</option>
-                <option value="mint">🟢 Мятная</option>
-                <option value="blue">💙 Кибер-синяя</option>
-                <option value="gold">🟡 Золотая</option>
-            </select>
             <div id="userHeaderArea"></div>
         </div>
     </header>
@@ -409,13 +382,13 @@
             <div class="sidebar-section">
                 <h3>👥 Мои друзья</h3>
                 <div class="sidebar-users-list" id="sidebarFriendsList">
-                    <span style="color:var(--text-muted); font-size:12px;">Войдите, чтобы видеть друзей</span>
+                    <span style="color:var(--text-muted); font-size:11px;">Войдите, чтобы видеть друзей</span>
                 </div>
             </div>
-            <div class="sidebar-section" style="border-top: 1px solid var(--border); padding-top: 15px;">
+            <div class="sidebar-section" style="border-top: 1px solid var(--border); padding-top: 12px;">
                 <h3>🟢 На сайте онлайн</h3>
                 <div class="sidebar-users-list" id="sidebarOnlineList">
-                    <span style="color:var(--text-muted); font-size:12px;">Загрузка...</span>
+                    <span style="color:var(--text-muted); font-size:11px;">Загрузка...</span>
                 </div>
             </div>
         </aside>
@@ -423,11 +396,11 @@
 
     <!-- Modals -->
     <div class="modal-overlay" id="addModal">
-        <div class="modal-content" style="max-width: 700px;">
-            <button class="modal-close" onclick="playSound(); closeAddModal()">&times;</button>
-            <h2 id="modalTitleText" style="margin-bottom: 15px;">Добавить / Редактировать аниме</h2>
-            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (например: Naruto)...">
+        <div class="modal-content" style="max-width: 650px;">
+            <button class="modal-close" onclick="closeAddModal()">&times;</button>
+            <h2 id="modalTitleText" style="margin-bottom: 12px; font-size: 18px;">Добавить / Редактировать аниме</h2>
+            <div style="margin-bottom: 16px; display: flex; gap: 8px;">
+                <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (например: Ao Ashi)...">
                 <button type="button" class="btn-secondary" onclick="autoFillFromAPI()">⚡ Заполнить</button>
             </div>
             <form id="animeForm" onsubmit="saveAnimeForm(event)">
@@ -441,16 +414,12 @@
                     <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
                 </div>
                 <div class="form-group">
-                    <label>YouTube Трейлер (в формате embed)</label>
-                    <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
-                </div>
-                <div class="form-group">
                     <label>Жанры</label>
-                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--bg-input); padding: 12px; border-radius: 12px; border: 1px solid var(--border);"></div>
+                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--bg-input); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"></div>
                 </div>
                 <div class="form-group">
                     <label>Год выпуска / Тип</label>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 8px;">
                         <input type="text" class="form-control" id="animeYear" placeholder="2026" style="flex:1;">
                         <input type="text" class="form-control" id="animeType" placeholder="Сериал" style="flex:1;">
                     </div>
@@ -461,33 +430,33 @@
                 </div>
                 <div class="form-group">
                     <label>Эпизоды и Озвучки</label>
-                    <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
-                    <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
+                    <div id="episodesList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;"></div>
+                    <button type="button" class="btn-secondary" onclick="addEpisodeField()">+ Добавить эпизод</button>
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Сохранить аниме</button>
+                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 8px; justify-content: center;">Сохранить аниме</button>
             </form>
         </div>
     </div>
 
     <div class="modal-overlay" id="authModal">
-        <div class="modal-content" style="max-width: 400px;">
-            <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
-            <h2 id="authTitle" style="margin-bottom: 20px; text-align: center;">Авторизация / Регистрация</h2>
+        <div class="modal-content" style="max-width: 380px;">
+            <button class="modal-close" onclick="closeAuthModal()">&times;</button>
+            <h2 id="authTitle" style="margin-bottom: 16px; text-align: center; font-size: 18px;">Авторизация</h2>
             <form onsubmit="handleAuthSubmit(event)">
                 <div class="form-group">
                     <label>Имя пользователя</label>
-                    <input type="text" class="form-control" id="authUsername" required placeholder="Введите имя...">
+                    <input type="text" class="form-control" id="authUsername" required placeholder="Имя...">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="password" class="form-control" id="authPassword" required placeholder="Введите пароль...">
+                    <input type="password" class="form-control" id="authPassword" required placeholder="Пароль...">
                 </div>
-                <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Войти / Зарегистрироваться</button>
+                <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; margin-top: 8px; justify-content: center;">Войти / Создать</button>
             </form>
         </div>
     </div>
 
-    <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 1000px;" id="adminModalContent"></div></div>
+    <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 900px;" id="adminModalContent"></div></div>
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
 
     <script>
@@ -495,52 +464,31 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив'];
-
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        
-        // Более сочный, громкий и премиальный звук клика
-        function playSound() {
-            try {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
-                
-                const osc = audioCtx.createOscillator();
-                const gain = audioCtx.createGain();
-                osc.type = 'triangle';
-                
-                osc.frequency.setValueAtTime(680, audioCtx.currentTime);
-                osc.frequency.exponentialRampToValueAtTime(340, audioCtx.currentTime + 0.05);
-                
-                gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-                
-                osc.connect(gain);
-                gain.connect(audioCtx.destination);
-                osc.start();
-                osc.stop(audioCtx.currentTime + 0.05);
-            } catch(e) {}
-        }
+        const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Спорт', 'Детектив'];
 
         let defaultAnime = [
             {
                 id: 'anime_1',
-                title: 'Форма Голоса',
-                poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop',
+                title: 'Аой Асито (Сезон 1)',
+                poster: 'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=600&auto=format&fit=crop',
                 screenshots: [
-                    'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1508098682722-e99c43a406b2?q=80&w=600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1517649763962-0c6232660102?q=80&w=600&auto=format&fit=crop'
                 ],
-                trailer: 'https://www.youtube.com/embed/9272MmqsjgY',
-                genres: ['Романтика', 'Драма'],
-                year: '2016',
-                type: 'Фильм',
-                desc: 'Молодой человек Сёя Исида раскаявается в том, что в школе издевался над глухой одноклассницей Сёко.',
+                genres: ['Спорт', 'Драма'],
+                year: '2022',
+                type: 'Сериал',
+                desc: 'История одаренного футбольного юноши Асито Аои из провинции.',
                 episodes: [
-                    { season: 1, title: 'Фильм', voices: 'AniLibria, Jaskier', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
+                    { season: 1, title: 'Эпизод 1', duration: '24:30', voices: 'AnimeVost, AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
+                    { season: 1, title: 'Эпизод 2', duration: '24:00', voices: 'AnimeVost', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4' },
+                    { season: 1, title: 'Эпизод 3', duration: '23:45', voices: 'AnimeVost', quality: '720p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
+                    { season: 1, title: 'Эпизод 4', duration: '24:10', voices: 'AnimeVost', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4' },
+                    { season: 1, title: 'Эпизод 5', duration: '24:20', voices: 'AnimeVost', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
-                ratings: { Admin: 9.8 }
+                ratings: { Admin: 8.5 }
             }
         ];
 
@@ -552,10 +500,9 @@
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {};
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
-        let userAchievements = JSON.parse(localStorage.getItem('komi_achievements')) || {};
         let userFavorites = JSON.parse(localStorage.getItem('komi_favorites')) || {};
         let userWatchHistory = JSON.parse(localStorage.getItem('komi_history')) || {};
-        let searchHistory = JSON.parse(localStorage.getItem('komi_search_history')) || ['Экшен', 'Романтика', 'Топ-2026'];
+        let searchHistory = JSON.parse(localStorage.getItem('komi_search_history')) || ['Спорт', 'Экшен'];
         let siteStats = JSON.parse(localStorage.getItem('komi_stats')) || { visits: 1420, views: 8900 };
 
         let currentView = 'home';
@@ -568,18 +515,10 @@
         const mySessionId = 'user_' + Math.random().toString(36).substring(2, 9);
         let onlineTimerRunning = false;
 
-        function changeTheme(theme) {
-            document.body.className = theme === 'default' ? '' : 'theme-' + theme;
-            localStorage.setItem('komi_theme', theme);
-        }
-        const savedTheme = localStorage.getItem('komi_theme');
-        if (savedTheme) { document.body.className = savedTheme === 'default' ? '' : 'theme-' + savedTheme; document.getElementById('themeSelect').value = savedTheme; }
-
         function saveData() {
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             localStorage.setItem('komi_profiles', JSON.stringify(userProfiles));
-            localStorage.setItem('komi_achievements', JSON.stringify(userAchievements));
             localStorage.setItem('komi_favorites', JSON.stringify(userFavorites));
             localStorage.setItem('komi_history', JSON.stringify(userWatchHistory));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
@@ -664,14 +603,14 @@
                     const p = userProfiles[u.username] || {};
                     const avatar = p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
                     return `
-                        <div class="sidebar-user-item" onclick="playSound(); openProfile('${u.username}')">
+                        <div class="sidebar-user-item" onclick="openProfile('${u.username}')">
                             <img src="${avatar}" class="sidebar-user-avatar">
                             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.username}</span>
                         </div>
                     `;
                 }).join('');
             } else {
-                onlineContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Никого нет онлайн</span>`;
+                onlineContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px;">Никого нет онлайн</span>`;
             }
 
             if (currentUser) {
@@ -682,18 +621,18 @@
                         const avatar = p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
                         const isOnline = onlineRows.some(row => row.username === f);
                         return `
-                            <div class="sidebar-user-item" onclick="playSound(); openProfile('${f}')">
+                            <div class="sidebar-user-item" onclick="openProfile('${f}')">
                                 <img src="${avatar}" class="sidebar-user-avatar">
                                 <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
-                                <span style="width:8px; height:8px; border-radius:50%; background:${isOnline ? '#34d399' : '#64748b'};" title="${isOnline ? 'В сети' : 'Не в сети'}"></span>
+                                <span style="width:6px; height:6px; border-radius:50%; background:${isOnline ? '#34d399' : '#64748b'};"></span>
                             </div>
                         `;
                     }).join('');
                 } else {
-                    friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Список друзей пуст</span>`;
+                    friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px;">Список друзей пуст</span>`;
                 }
             } else {
-                friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Войдите, чтобы видеть друзей</span>`;
+                friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px;">Войдите для друзей</span>`;
             }
         }
 
@@ -734,14 +673,14 @@
             if (currentUser) {
                 const p = userProfiles[currentUser.username] || currentUser;
                 area.innerHTML = `
-                    <div class="user-pill" onclick="playSound(); openProfile('${currentUser.username}')">
+                    <div class="user-pill" onclick="openProfile('${currentUser.username}')">
                         <img src="${p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'}" class="user-avatar-small">
                         <span>${currentUser.username}</span>
-                        <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; margin-left:5px;" title="Выйти">🚪</button>
+                        <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:11px; margin-left:4px;" title="Выйти">🚪</button>
                     </div>
                 `;
             } else {
-                area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="playSound(); openAuthModal()">Войти</button>`;
+                area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="openAuthModal()">Войти</button>`;
             }
         }
 
@@ -764,13 +703,13 @@
                     <div class="hero-banner" style="background-image: url('${featured.poster}');">
                         <div class="hero-meta">
                             <span>⭐ ${calculateAverageRating(featured)} MAL</span>
-                            <span>${(featured.genres || [featured.genre || 'Экшен']).join(', ')}</span>
+                            <span>${(featured.genres || [featured.genre || 'Спорт']).join(', ')}</span>
                             <span>${featured.year || '2026'}</span>
                             <span>${featured.type || 'Сериал'}</span>
                         </div>
                         <h1>${featured.title}</h1>
-                        <p>${featured.desc || 'Увлекательная история, захватывающие сражения и незабываемые персонажи ждут вас в новом релизе.'}</p>
-                        <button class="btn-primary" onclick="playSound(); openWatchModal('${featured.id}')">
+                        <p>${featured.desc || 'Увлекательная история и захватывающие спортивные моменты ждут вас.'}</p>
+                        <button class="btn-primary" onclick="openWatchModal('${featured.id}')">
                             ▶ Смотреть сейчас
                         </button>
                     </div>
@@ -778,7 +717,7 @@
 
                     <div class="section-header"><h2 class="section-title">✨ Рекомендуем посмотреть</h2></div>
                     <div class="anime-grid">
-                        ${recommended.length === 0 ? `<div class="empty-state"><h3>Нет доступных аниме в базе</h3></div>` : recommended.map(a => renderCard(a)).join('')}
+                        ${recommended.length === 0 ? `<div class="empty-state"><h3>Нет доступных аниме</h3></div>` : recommended.map(a => renderCard(a)).join('')}
                     </div>
 
                     <div class="section-header"><h2 class="section-title">🔥 Популярные релизы</h2></div>
@@ -788,7 +727,7 @@
                 `;
             } else if (currentView === 'catalog') {
                 const genres = ['Все', ...availableGenresList];
-                const years = ['Все', '2026', '2025', '2024', '2023'];
+                const years = ['Все', '2026', '2025', '2024', '2022'];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA'];
 
                 let filtered = animeList.filter(a => {
@@ -803,7 +742,7 @@
                 else if (catalogSort === 'alphabet') filtered.sort((a,b) => a.title.localeCompare(b.title));
 
                 container.innerHTML = `
-                    <h2 style="margin-bottom: 20px;">Каталог аниме</h2>
+                    <h2 style="margin-bottom: 16px; font-size: 20px;">Каталог аниме</h2>
                     <div class="catalog-filters-box">
                         <div class="form-group" style="margin:0;">
                             <label>Жанр</label>
@@ -833,7 +772,7 @@
                         </div>
                     </div>
                     <div class="anime-grid">
-                        ${filtered.length === 0 ? `<div class="empty-state"><h3>Ничего не найдено по фильтрам</h3></div>` : filtered.map(a => renderCard(a)).join('')}
+                        ${filtered.length === 0 ? `<div class="empty-state"><h3>Ничего не найдено</h3></div>` : filtered.map(a => renderCard(a)).join('')}
                     </div>
                 `;
             } else if (currentView === 'profile') {
@@ -843,7 +782,7 @@
 
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
-            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Элитный Отаку ⭐' };
+            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Элитный зритель ⭐' };
             const myFriends = userFriends[username] || [];
             const myRequests = friendRequests[username] || [];
             const isMe = currentUser && currentUser.username === username;
@@ -878,35 +817,24 @@
                         <img src="${p.avatar}" class="profile-avatar-box">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
-                                <h2>👤 ${username} <span style="font-size:12px; color:#34d399; background:rgba(16,185,129,0.15); padding:3px 10px; border-radius:12px;">● Онлайн</span></h2>
+                                <h2>👤 ${username} <span style="font-size:11px; color:#34d399; background:rgba(16,185,129,0.15); padding:2px 8px; border-radius:10px;">● Онлайн</span></h2>
                                 ${!isMe && currentUser ? `
-                                    ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                      isRequestSent ? `<span style="font-size:12px; color:var(--text-muted);">Заявка отправлена</span>` : 
-                                      `<button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                    ${amIFriend ? `<button class="btn-danger" style="padding:5px 10px; font-size:11px;" onclick="removeFriend('${username}')">Удалить из друзей</button>` : 
+                                      isRequestSent ? `<span style="font-size:11px; color:var(--text-muted);">Заявка отправлена</span>` : 
+                                      `<button class="btn-primary" style="padding:5px 10px; font-size:11px;" onclick="sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
-                            <div style="display:flex; gap:12px; align-items:center;">
-                                <span style="background:var(--primary); color:white; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700;">Уровень 42 ⚡</span>
-                                <span style="color:var(--text-muted); font-size:13px;">Статус: <b>${p.status}</b></span>
+                            <div style="display:flex; gap:10px; align-items:center;">
+                                <span style="background:var(--primary); color:white; padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700;">Уровень 25 ⚡</span>
+                                <span style="color:var(--text-muted); font-size:12px;">Статус: <b>${p.status}</b></span>
                             </div>
-                            <p style="color:var(--text-muted); font-size:13px;">Дата регистрации: <b>05 октября 2025 года</b></p>
-
-                            ${isMe ? `
-                            <div style="background:var(--bg-input); padding:12px; border-radius:12px; margin-top:10px;">
-                                <h4 style="font-size:13px; margin-bottom:6px;">Настройки профиля</h4>
-                                <div style="display:flex; gap:8px;">
-                                    <input type="url" id="newAvatarUrl" class="form-control" placeholder="Ссылка на аватар..." value="${p.avatar}">
-                                    <input type="text" id="newStatusText" class="form-control" placeholder="Статус..." value="${p.status}">
-                                    <button class="btn-primary" onclick="playSound(); updateUserProfile()">Сохранить</button>
-                                </div>
-                            </div>
-                            ` : ''}
+                            <p style="color:var(--text-muted); font-size:12px;">Участник сообщества</p>
                         </div>
                     </div>
 
                     <div class="profile-stats-bar">
                         ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено', 'Любимые'].map(tab => `
-                            <div class="profile-stat-tab ${profileActiveTab === tab ? 'active' : ''}" onclick="playSound(); profileActiveTab='${tab}'; render()">
+                            <div class="profile-stat-tab ${profileActiveTab === tab ? 'active' : ''}" onclick="profileActiveTab='${tab}'; render()">
                                 <span class="num">${statsCounts[tab] || 0}</span>
                                 <span>${tab.toUpperCase()}</span>
                             </div>
@@ -915,19 +843,19 @@
 
                     <div class="profile-layout-grid">
                         <div class="profile-main-content">
-                            <h3 style="margin-bottom: 15px; font-size:16px;">Список: ${profileActiveTab}</h3>
+                            <h3 style="margin-bottom: 12px; font-size:14px;">Список: ${profileActiveTab}</h3>
                             ${listForTab.length === 0 ? `
-                                <div class="empty-state" style="padding:30px;"><h3>В этой категории пока ничего нет</h3></div>
+                                <div class="empty-state" style="padding:25px;"><h3>В этой категории пусто</h3></div>
                             ` : `
                                 <table class="profile-anime-table">
                                     <thead><tr><th>Постер</th><th>Название</th><th>Оценка</th><th>Действие</th></tr></thead>
                                     <tbody>
                                         ${listForTab.map(an => `
-                                            <tr style="cursor:pointer;" onclick="playSound(); openWatchModal('${an.id}')">
-                                                <td style="width:60px;"><img src="${an.poster}" style="width:40px; height:55px; object-fit:cover; border-radius:6px;"></td>
-                                                <td><b>${an.title}</b><div style="font-size:11px; color:var(--text-muted);">${(an.genres||[]).join(', ')}</div></td>
+                                            <tr style="cursor:pointer;" onclick="openWatchModal('${an.id}')">
+                                                <td style="width:50px;"><img src="${an.poster}" style="width:36px; height:50px; object-fit:cover; border-radius:4px;"></td>
+                                                <td><b>${an.title}</b></td>
                                                 <td><span style="color:#fbbf24; font-weight:700;">⭐ ${calculateAverageRating(an)}</span></td>
-                                                <td><button class="btn-secondary" style="padding:4px 8px; font-size:11px;">Смотреть</button></td>
+                                                <td><button class="btn-secondary" style="padding:3px 6px; font-size:10px;">Смотреть</button></td>
                                             </tr>
                                         `).join('')}
                                     </tbody>
@@ -936,17 +864,16 @@
                         </div>
 
                         <div class="profile-sidebar-menu">
-                            <h3 style="font-size:14px; margin-bottom:8px;">📌 Навигация</h3>
+                            <h3 style="font-size:13px; margin-bottom:6px;">📌 Навигация</h3>
                             <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
-                            <div class="profile-menu-item"><span>💬 Комментарии</span> <b>0</b></div>
                             <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${Object.keys(userFavorites[username]||{}).length}</b></div>
                             ${isMe && myRequests.length > 0 ? `
-                                <div style="margin-top:10px; background:rgba(145,71,255,0.15); border:1px solid var(--primary); padding:10px; border-radius:10px;">
-                                    <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки (${myRequests.length})</div>
+                                <div style="margin-top:8px; background:rgba(71,136,255,0.15); border:1px solid var(--primary); padding:8px; border-radius:8px;">
+                                    <div style="font-size:11px; font-weight:700; margin-bottom:4px;">🔔 Заявки (${myRequests.length})</div>
                                     ${myRequests.map(req => `
-                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:4px;">
+                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:11px; margin-bottom:2px;">
                                             <span>${req}</span>
-                                            <button class="btn-primary" style="padding:2px 6px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
+                                            <button class="btn-primary" style="padding:2px 5px; font-size:9px;" onclick="acceptFriendRequest('${req}')">Принять</button>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -961,12 +888,12 @@
             const avg = calculateAverageRating(anime);
             const gText = (anime.genres || [anime.genre || '']).join(', ');
             return `
-                <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
+                <div class="anime-card" onclick="openWatchModal('${anime.id}')">
                     <div class="anime-rating-badge">⭐ ${avg}</div>
-                    <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'">
+                    <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://images.unsplash.com/photo-1518609878373-06d740f60d8b?q=80&w=600&auto=format&fit=crop'">
                     <div class="anime-info">
                         <div class="anime-title">${anime.title}</div>
-                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${gText}</span><span>${anime.episodes.length} сер.</span></div>
+                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px;">${gText}</span><span>${anime.episodes.length} сер.</span></div>
                     </div>
                 </div>
             `;
@@ -994,19 +921,12 @@
                     const anime = data.data[0];
                     document.getElementById('animeTitle').value = anime.title || '';
                     document.getElementById('animePoster').value = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
-                    
-                    if (anime.genres && anime.genres.length > 0) {
-                        const fetchedGenres = anime.genres.map(g => g.name.toLowerCase());
-                        document.querySelectorAll('.genre-checkbox').forEach(cb => {
-                            if (fetchedGenres.includes(cb.value.toLowerCase())) cb.checked = true;
-                        });
-                    }
-                    document.getElementById('animeYear').value = anime.year || (anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '2026');
+                    document.getElementById('animeYear').value = anime.year || '2026';
                     document.getElementById('animeType').value = anime.type || 'Сериал';
                     document.getElementById('animeDesc').value = anime.synopsis || '';
-                    alert('Данные успешно загружены!');
+                    alert('Данные загружены!');
                 } else {
-                    alert('Ничего не найдено в базе MyAnimeList.');
+                    alert('Ничего не найдено.');
                 }
             } catch(e) {
                 alert('Ошибка при запросе к API.');
@@ -1015,7 +935,7 @@
 
         function showSearchDropdown() {
             const dd = document.getElementById('searchDropdown');
-            let html = `<div style="padding:8px 14px; font-size:11px; color:var(--text-muted);">Часто ищут / История</div>`;
+            let html = `<div style="padding:6px 12px; font-size:10px; color:var(--text-muted);">История поиска</div>`;
             searchHistory.forEach(q => {
                 html += `<div class="search-dropdown-item" onclick="selectSearchQuery('${q}')">${q}</div>`;
             });
@@ -1033,9 +953,9 @@
             const dd = document.getElementById('searchDropdown');
             if (!q.trim()) { dd.classList.remove('active'); render(); return; }
             
-            const filtered = animeList.filter(a => a.title.toLowerCase().includes(q.toLowerCase()) || (a.genres && a.genres.some(g => g.toLowerCase().includes(q.toLowerCase()))));
+            const filtered = animeList.filter(a => a.title.toLowerCase().includes(q.toLowerCase()));
             document.getElementById('mainContainer').innerHTML = `
-                <h2 style="margin-bottom:20px;">Результаты поиска: "${q}"</h2>
+                <h2 style="margin-bottom:16px; font-size:20px;">Результаты поиска: "${q}"</h2>
                 <div class="anime-grid">${filtered.length === 0 ? '<div class="empty-state"><h3>Ничего не найдено</h3></div>' : filtered.map(a => renderCard(a)).join('')}</div>
             `;
         }
@@ -1043,23 +963,22 @@
         function openAdminPanel() {
             const modal = document.getElementById('adminModal');
             document.getElementById('adminModalContent').innerHTML = `
-                <button class="modal-close" onclick="playSound(); document.getElementById('adminModal').classList.remove('active')">&times;</button>
-                <h2 style="margin-bottom: 15px;">⚙️ Панель администратора</h2>
-                <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-                    <button class="btn-primary" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal()">+ Добавить аниме</button>
-                    <button class="btn-secondary" onclick="playSound(); exportBackup()">📥 Скачать JSON бэкап</button>
+                <button class="modal-close" onclick="document.getElementById('adminModal').classList.remove('active')">&times;</button>
+                <h2 style="margin-bottom: 12px; font-size: 18px;">⚙️ Панель администратора</h2>
+                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+                    <button class="btn-primary" onclick="document.getElementById('adminModal').classList.remove('active'); openAddModal()">+ Добавить аниме</button>
+                    <button class="btn-secondary" onclick="exportBackup()">📥 Скачать бэкап</button>
                 </div>
                 <table class="admin-table">
-                    <thead><tr><th>Название</th><th>Жанры</th><th>Эпизодов</th><th>Действия</th></tr></thead>
+                    <thead><tr><th>Название</th><th>Эпизодов</th><th>Действия</th></tr></thead>
                     <tbody>
-                        ${animeList.length === 0 ? `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Список аниме пуст</td></tr>` : animeList.map(a => `
+                        ${animeList.length === 0 ? `<tr><td colspan="3" style="text-align:center; color:var(--text-muted);">Пусто</td></tr>` : animeList.map(a => `
                             <tr>
                                 <td><b>${a.title}</b></td>
-                                <td>${(a.genres || [a.genre]).join(', ')}</td>
                                 <td>${a.episodes.length}</td>
                                 <td>
-                                    <button class="btn-secondary" style="padding:5px 10px;" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">✏️ Ред.</button>
-                                    <button class="btn-danger" onclick="playSound(); deleteAnime('${a.id}')">🗑️ Уд.</button>
+                                    <button class="btn-secondary" style="padding:4px 8px;" onclick="document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">✏️ Ред.</button>
+                                    <button class="btn-danger" onclick="deleteAnime('${a.id}')">🗑️ Уд.</button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -1080,7 +999,7 @@
         }
 
         async function deleteAnime(id) {
-            if (confirm('Удалить это аниме?')) {
+            if (confirm('Удалить аниме?')) {
                 animeList = animeList.filter(a => a.id !== id);
                 await saveAnimeToCloud();
                 openAdminPanel();
@@ -1090,7 +1009,7 @@
         function renderGenresCheckboxes(selectedGenres = []) {
             const container = document.getElementById('genresCheckboxList');
             container.innerHTML = availableGenresList.map(g => `
-                <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
+                <label style="display:flex; align-items:center; gap:5px; font-size:12px; cursor:pointer;">
                     <input type="checkbox" class="genre-checkbox" value="${g}" ${selectedGenres.includes(g) ? 'checked' : ''}> ${g}
                 </label>
             `).join('');
@@ -1104,11 +1023,11 @@
 
             document.getElementById('episodesList').innerHTML = `
                 <div style="display:flex; gap:6px; align-items:center;">
-                    <input type="number" class="form-control ep-season" value="1" min="1" style="width:65px;" title="Сезон">
+                    <input type="number" class="form-control ep-season" value="1" min="1" style="width:55px;" title="Сезон">
                     <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1;">
-                    <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria, Jaskier" style="flex:1.5;">
-                    <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                    <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
+                    <input type="text" class="form-control ep-voices" value="AnimeVost" style="flex:1.2;">
+                    <select class="form-control ep-quality" style="width:80px;"><option>1080p</option><option>720p</option></select>
+                    <input type="url" class="form-control ep-url" placeholder="Ссылка .mp4..." style="flex:1.8;" required>
                 </div>
             `;
 
@@ -1118,7 +1037,6 @@
                     document.getElementById('editAnimeId').value = anime.id;
                     document.getElementById('animeTitle').value = anime.title;
                     document.getElementById('animePoster').value = anime.poster;
-                    document.getElementById('animeTrailer').value = anime.trailer || '';
                     document.getElementById('animeYear').value = anime.year || '2026';
                     document.getElementById('animeType').value = anime.type || 'Сериал';
                     document.getElementById('animeDesc').value = anime.desc || '';
@@ -1127,11 +1045,11 @@
                     if (anime.episodes && anime.episodes.length > 0) {
                         document.getElementById('episodesList').innerHTML = anime.episodes.map(ep => `
                             <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
-                                <input type="number" class="form-control ep-season" value="${ep.season || 1}" min="1" style="width:65px;" title="Сезон">
+                                <input type="number" class="form-control ep-season" value="${ep.season || 1}" min="1" style="width:55px;">
                                 <input type="text" class="form-control ep-title" value="${ep.title}" style="flex:1;">
-                                <input type="text" class="form-control ep-voices" value="${ep.voices || ep.voice || 'AniLibria'}" style="flex:1.5;">
-                                <select class="form-control ep-quality" style="width:90px;"><option ${ep.quality==='1080p'?'selected':''}>1080p</option><option ${ep.quality==='720p'?'selected':''}>720p</option><option ${ep.quality==='480p'?'selected':''}>480p</option></select>
-                                <input type="url" class="form-control ep-url" value="${ep.url}" style="flex:2;" required>
+                                <input type="text" class="form-control ep-voices" value="${ep.voices || 'AnimeVost'}" style="flex:1.2;">
+                                <select class="form-control ep-quality" style="width:80px;"><option ${ep.quality==='1080p'?'selected':''}>1080p</option><option ${ep.quality==='720p'?'selected':''}>720p</option></select>
+                                <input type="url" class="form-control ep-url" value="${ep.url}" style="flex:1.8;" required>
                             </div>
                         `).join('');
                     }
@@ -1149,11 +1067,11 @@
             const div = document.createElement('div');
             div.style.cssText = "display:flex; gap:6px; margin-top:6px; align-items:center;";
             div.innerHTML = `
-                <input type="number" class="form-control ep-season" value="${lastSeason}" min="1" style="width:65px;" title="Сезон">
+                <input type="number" class="form-control ep-season" value="${lastSeason}" min="1" style="width:55px;">
                 <input type="text" class="form-control ep-title" value="Эпизод ${count}" style="flex:1;">
-                <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria" style="flex:1.5;">
-                <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
+                <input type="text" class="form-control ep-voices" value="AnimeVost" style="flex:1.2;">
+                <select class="form-control ep-quality" style="width:80px;"><option>1080p</option><option>720p</option></select>
+                <input type="url" class="form-control ep-url" placeholder="Ссылка .mp4..." style="flex:1.8;" required>
             `;
             document.getElementById('episodesList').appendChild(div);
         }
@@ -1163,14 +1081,13 @@
             const editId = document.getElementById('editAnimeId').value;
             const title = document.getElementById('animeTitle').value;
             const poster = document.getElementById('animePoster').value;
-            const trailer = document.getElementById('animeTrailer').value;
             const year = document.getElementById('animeYear').value || '2026';
             const type = document.getElementById('animeType').value || 'Сериал';
             const desc = document.getElementById('animeDesc').value;
 
             const selectedGenres = [];
             document.querySelectorAll('.genre-checkbox:checked').forEach(cb => selectedGenres.push(cb.value));
-            const genres = selectedGenres.length > 0 ? selectedGenres : ['Экшен'];
+            const genres = selectedGenres.length > 0 ? selectedGenres : ['Спорт'];
 
             const episodes = [];
             const seasonsInputs = document.querySelectorAll('.ep-season');
@@ -1185,15 +1102,16 @@
                     title: titles[i].value, 
                     voices: voicesInputs[i].value,
                     quality: qualities[i].value,
-                    url: urls[i].value 
+                    url: urls[i].value,
+                    duration: '24:00'
                 });
             }
 
             if (editId) {
                 const anime = animeList.find(a => a.id === editId);
-                if (anime) Object.assign(anime, { title, poster, trailer, genres, genre: genres[0], year, type, desc, episodes });
+                if (anime) Object.assign(anime, { title, poster, genres, genre: genres[0], year, type, desc, episodes });
             } else {
-                animeList.push({ id: 'anime_' + Date.now(), title, poster, trailer, genres, genre: genres[0], year, type, desc, episodes, ratings: {}, screenshots: [poster, poster, poster, poster] });
+                animeList.push({ id: 'anime_' + Date.now(), title, poster, genres, genre: genres[0], year, type, desc, episodes, ratings: {}, screenshots: [poster, poster, poster, poster] });
             }
 
             await saveAnimeToCloud();
@@ -1218,18 +1136,17 @@
                     closeAuthModal();
                     render();
                 } else {
-                    alert('Неверный пароль для этого имени пользователя!');
+                    alert('Неверный пароль!');
                 }
             } else {
                 registeredUsers[username] = passwordHash;
                 currentUser = { username };
                 if (!userProfiles[username]) {
-                    userProfiles[username] = { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Новичок на платформе ⭐' };
+                    userProfiles[username] = { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Новичок ⭐' };
                 }
                 saveData();
                 closeAuthModal();
                 render();
-                alert('Аккаунт успешно создан!');
             }
         }
 
@@ -1265,9 +1182,7 @@
             if (!friendRequests[targetUsername].includes(currentUser.username)) {
                 friendRequests[targetUsername].push(currentUser.username);
                 saveData();
-                alert('Заявка в друзья отправлена!');
-            } else {
-                alert('Заявка уже отправлена ранее.');
+                alert('Заявка отправлена!');
             }
             openProfile(targetUsername);
         }
@@ -1297,17 +1212,8 @@
             openProfile(friendUsername);
         }
 
-        function updateUserProfile() {
-            const avatar = document.getElementById('newAvatarUrl').value.trim();
-            const status = document.getElementById('newStatusText').value.trim();
-            if (!userProfiles[currentUser.username]) userProfiles[currentUser.username] = {};
-            if (avatar) userProfiles[currentUser.username].avatar = avatar;
-            if (status) userProfiles[currentUser.username].status = status;
-            saveData();
-            render();
-        }
-
         let isTheaterMode = false;
+        let currentPlaybackRate = 1;
 
         async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, selectedVoice = null, selectedQuality = null) {
             siteStats.views++;
@@ -1335,7 +1241,7 @@
             const currentSeasonEpisodes = seasonsMap[activeSeason];
 
             const currentEpForVoices = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
-            const rawVoicesStr = currentEpForVoices.voices || currentEpForVoices.voice || 'AniLibria';
+            const rawVoicesStr = currentEpForVoices.voices || 'AnimeVost';
             const availableVoices = rawVoicesStr.split(',').map(v => v.trim()).filter(Boolean);
             const activeVoice = selectedVoice && availableVoices.includes(selectedVoice) ? selectedVoice : availableVoices[0];
 
@@ -1354,91 +1260,94 @@
             const screenshots = anime.screenshots || [anime.poster, anime.poster, anime.poster, anime.poster];
 
             document.getElementById('watchModalContent').innerHTML = `
-                <button class="modal-close" onclick="playSound(); document.getElementById('watchModal').classList.remove('active')">&times;</button>
+                <button class="modal-close" onclick="document.getElementById('watchModal').classList.remove('active')">&times;</button>
                 <div class="watch-cinema-layout ${isTheaterMode ? 'theater' : ''}" id="cinemaLayout">
                     <div class="watch-main-col">
-                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                            <h2>${anime.title} (Сезон ${activeSeason})</h2>
-                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                <button class="btn-secondary" onclick="playSound(); toggleTheaterMode('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">🎬 Кинотеатр</button>
-                                <button class="btn-secondary" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
+                        <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+                            <h2 style="font-size:18px;">${anime.title}</h2>
+                            <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                                <button class="btn-secondary" onclick="toggleTheaterMode('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">🎬 Театр</button>
+                                <button class="btn-secondary" onclick="toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
                             </div>
                         </div>
 
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:10px 14px; border-radius:12px;">
-                            <span style="font-size:12px; color:var(--text-muted);">Статус:</span>
+                        <!-- Статусы просмотра -->
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:8px 12px; border-radius:10px;">
+                            <span style="font-size:11px; color:var(--text-muted);">Статус:</span>
                             ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено'].map(st => `
-                                <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
+                                <button class="btn-secondary" style="padding:4px 8px; font-size:11px; ${myCurrentStatus === st ? 'background:var(--primary); border-color:var(--primary); color:white;' : ''}" onclick="setAnimeStatus('${anime.id}', '${st}')">${st}</button>
                             `).join('')}
                         </div>
 
                         <!-- Плеер -->
                         <div class="player-wrapper">
                             <div class="player-box">
-                                <video id="animeVideoPlayer" controls preload="metadata" playsinline style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')" onerror="handleVideoError()">
+                                <video id="animeVideoPlayer" controls preload="metadata" playsinline style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">
                                     <source src="${currentEp ? currentEp.url : ''}" type="video/mp4">
-                                    Ваш браузер не поддерживает видео.
                                 </video>
                             </div>
-                            <button class="skip-intro-btn" id="skipIntroBtn" onclick="playSound(); skipIntro()">Пропустить опенинг ⏭</button>
+                            <button class="skip-intro-btn" id="skipIntroBtn" onclick="skipIntro()">Пропустить опенинг ⏭</button>
                         </div>
 
-                        <!-- Галерея кадров (отображается всегда!) -->
-                        <div class="anime-screenshots-section">
-                            <h3 style="font-size:13px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры из аниме</h3>
-                            <div class="screenshots-grid">
-                                ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
-                            </div>
-                        </div>
-
-                        <div id="videoErrorMsg" style="display:none; color:#fca5a5; font-size:13px; background:rgba(239,68,68,0.15); padding:10px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);">
-                            ⚠️ Не удалось загрузить видео. Убедитесь, что ссылка является прямой ссылкой на видеофайл (.mp4).
-                        </div>
-
-                        <div style="display:flex; gap:15px; background:var(--bg-input); padding:12px 16px; border-radius:12px; align-items:center; flex-wrap:wrap;">
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:13px; color:var(--text-muted);">Озвучка:</span>
-                                ${availableVoices.map(v => `<button class="season-tab-btn ${v === activeVoice ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${v}', '${activeQuality}')">${v}</button>`).join('')}
-                            </div>
-                            <div style="display:flex; align-items:center; gap:8px;">
-                                <span style="font-size:13px; color:var(--text-muted);">Качество:</span>
-                                ${availableQualities.map(q => `<button class="season-tab-btn ${q === activeQuality ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${q}')">${q}</button>`).join('')}
-                            </div>
-                        </div>
-
-                        <div style="background:var(--bg-input); padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;">
-                            <span>Оценка MAL: <b>⭐ ${avgRating}</b> (Ваша оценка: <span id="myRating">нет</span>)</span>
-                            <div style="display:flex; gap:4px;">
-                                ${[2,4,6,8,10].map(star => `<button style="background:none; border:none; color:#fbbf24; cursor:pointer; font-size:16px;" onclick="playSound(); rateAnime('${anime.id}', ${star})">⭐${star}</button>`).join('')}
-                            </div>
-                        </div>
-
-                        <div class="comments-section">
-                            <h3>💬 Комментарии (<span id="commentsCount">${comments.length}</span>)</h3>
-                            <div style="display:flex; gap:10px; flex-direction:column;">
-                                <div style="display:flex; gap:10px;">
-                                    <input type="text" id="commentInput" class="form-control" placeholder="Написать комментарий...">
-                                    <button class="btn-primary" onclick="playSound(); addComment('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">Отправить</button>
+                        <!-- Объединенная нижняя панель (Озвучка, качество, рейтинг) -->
+                        <div style="display:flex; gap:12px; background:var(--bg-input); padding:10px 14px; border-radius:10px; align-items:center; justify-content:space-between; flex-wrap:wrap;">
+                            <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span style="font-size:12px; color:var(--text-muted);">Озвучка:</span>
+                                    <select class="form-control" style="padding:4px 8px; font-size:12px; width:auto;" onchange="openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, this.value, '${activeQuality}')">
+                                        ${availableVoices.map(v => `<option ${v===activeVoice?'selected':''}>${v}</option>`).join('')}
+                                    </select>
                                 </div>
-                                <label style="font-size:12px; color:var(--text-muted); cursor:pointer;"><input type="checkbox" id="isSpoiler"> Содержит спойлер</label>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span style="font-size:12px; color:var(--text-muted);">Качество:</span>
+                                    <select class="form-control" style="padding:4px 8px; font-size:12px; width:auto;" onchange="openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', this.value)">
+                                        ${availableQualities.map(q => `<option ${q===activeQuality?'selected':''}>${q}</option>`).join('')}
+                                    </select>
+                                </div>
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <span style="font-size:12px; color:var(--text-muted);">Скорость:</span>
+                                    <select class="form-control" style="padding:4px 8px; font-size:12px; width:auto;" onchange="changePlaybackRate(this.value)">
+                                        <option value="0.75">0.75x</option>
+                                        <option value="1" selected>1x</option>
+                                        <option value="1.25">1.25x</option>
+                                        <option value="1.5">1.5x</option>
+                                        <option value="2">2x</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div id="commentsListContainer" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                            <div style="display:flex; align-items:center; gap:10px; font-size:12px;">
+                                <span>MAL: <b>⭐ ${avgRating}</b></span>
+                                <button class="btn-secondary" style="padding:4px 8px; font-size:11px;" onclick="alert('Жалоба на серию отправлена администрации!')">⚠️ Пожаловаться</button>
+                            </div>
+                        </div>
+
+                        <!-- Горизонтальная прокручиваемая галерея кадров (без дублирования) -->
+                        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:12px; padding:12px;">
+                            <h3 style="font-size:12px; color:var(--text-muted); margin-bottom:8px;">🖼️ Галерея кадров</h3>
+                            <div class="screenshots-scroll-container">
+                                ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb-item" onclick="window.open('${sc}', '_blank')">`).join('')}
+                            </div>
+                        </div>
+
+                        <!-- Комментарии -->
+                        <div class="comments-section">
+                            <h3 style="font-size:14px;">💬 Комментарии (<span id="commentsCount">${comments.length}</span>)</h3>
+                            <div style="display:flex; gap:8px; flex-direction:column;">
+                                <div style="display:flex; gap:8px;">
+                                    <input type="text" id="commentInput" class="form-control" placeholder="Ваш комментарий...">
+                                    <button class="btn-primary" onclick="addComment('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">Отправить</button>
+                                </div>
+                                <label style="font-size:11px; color:var(--text-muted); cursor:pointer;"><input type="checkbox" id="isSpoiler"> Спойлер</label>
+                            </div>
+                            <div id="commentsListContainer" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
                                 ${comments.map((c, cIdx) => `
                                     <div class="comment-item">
-                                        <div class="comment-author" onclick="playSound(); openProfile('${c.username}')">
-                                            <span>👤 ${c.username}</span>
-                                        </div>
-                                        <div class="comment-text">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер (нажмите чтобы открыть) <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
+                                        <div class="comment-author" onclick="openProfile('${c.username}')">👤 ${c.username}</div>
+                                        <div class="comment-text" style="font-size:12px;">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
                                         <div class="comment-reactions">
-                                            ${['🔥', '❤️', '😂', '🤡'].map(emoji => {
+                                            ${['🔥', '❤️', '😂'].map(emoji => {
                                                 const count = (c.reactions && c.reactions[emoji]) ? c.reactions[emoji].length : 0;
-                                                const myUser = currentUser ? currentUser.username : null;
-                                                const hasMyReaction = myUser && c.reactions && c.reactions[emoji] && c.reactions[emoji].includes(myUser);
-                                                return `
-                                                    <button class="reaction-btn ${hasMyReaction ? 'active' : ''}" onclick="playSound(); reactComment('${anime.id}', ${cIdx}, '${emoji}')">
-                                                        <span>${emoji}</span> <span>${count}</span>
-                                                    </button>
-                                                `;
+                                                return `<button class="reaction-btn" onclick="reactComment('${anime.id}', ${cIdx}, '${emoji}')"><span>${emoji}</span> <span>${count}</span></button>`;
                                             }).join('')}
                                         </div>
                                     </div>
@@ -1446,24 +1355,33 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- Компактная боковая панель серий -->
                     <div class="watch-sidebar">
-                        <h3 style="font-size:15px; margin-bottom:8px;">Сезоны</h3>
-                        <div class="season-tabs">
-                            ${seasonNumbers.map(s => `
-                                <button class="season-tab-btn ${s === activeSeason ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${s}, 0, '${activeVoice}', '${activeQuality}')">
-                                    Сезон ${s}
-                                </button>
-                            `).join('')}
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h3 style="font-size:14px;">Сезоны</h3>
+                            <select class="form-control" style="width:110px; padding:4px; font-size:11px;" onchange="openWatchModal('${anime.id}', parseInt(this.value), 0, '${activeVoice}', '${activeQuality}')">
+                                ${seasonNumbers.map(s => `<option value="${s}" ${s===activeSeason?'selected':''}>Сезон ${s}</option>`).join('')}
+                            </select>
                         </div>
 
-                        <h3 style="font-size:15px; margin: 15px 0 8px 0;">Эпизоды (${finalEpList.length})</h3>
-                        <div class="episodes-list-grid">
-                            ${finalEpList.map((ep, i) => `
-                                <div class="ep-card-side ${i === (selectedEpIdx || 0) ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${i}, '${activeVoice}', '${activeQuality}')">
-                                    <span>${ep.title || ('Эпизод ' + (i+1))}</span>
-                                    <span style="font-size:11px; opacity:0.7;">▶</span>
-                                </div>
-                            `).join('')}
+                        <!-- Поиск по номеру эпизода -->
+                        <input type="text" class="form-control" style="font-size:11px; padding:6px;" placeholder="Поиск эпизода..." oninput="filterSidebarEpisodes(this.value)">
+
+                        <h3 style="font-size:13px; margin-top:4px;">Эпизоды (${finalEpList.length})</h3>
+                        <div class="episodes-list-grid" id="sidebarEpisodesListContainer">
+                            ${finalEpList.map((ep, i) => {
+                                const isWatched = currentUser && userAnimeStatuses[currentUser.username] && userAnimeStatuses[currentUser.username][`${anime.id}_ep_${activeSeason}_${i}`];
+                                return `
+                                    <div class="ep-card-side ${i === (selectedEpIdx || 0) ? 'active' : ''}" onclick="openWatchModal('${anime.id}', ${activeSeason}, ${i}, '${activeVoice}', '${activeQuality}')" title="${ep.title} (${ep.duration})">
+                                        <div style="display:flex; align-items:center; gap:6px; overflow:hidden;">
+                                            <input type="checkbox" ${isWatched ? 'checked' : ''} onclick="event.stopPropagation(); toggleEpisodeWatched('${anime.id}', ${activeSeason}, ${i})" style="cursor:pointer;">
+                                            <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${ep.title || ('Эпизод ' + (i+1))}</span>
+                                        </div>
+                                        <span style="font-size:10px; opacity:0.7;">${ep.duration || '24:00'}</span>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 </div>
@@ -1477,9 +1395,32 @@
             }
         }
 
-        function handleVideoError() {
-            const errBox = document.getElementById('videoErrorMsg');
-            if (errBox) errBox.style.display = 'block';
+        function filterSidebarEpisodes(query) {
+            const container = document.getElementById('sidebarEpisodesListContainer');
+            if (!container) return;
+            const cards = container.getElementsByClassName('ep-card-side');
+            for (let card of cards) {
+                const text = card.innerText.toLowerCase();
+                card.style.display = text.includes(query.toLowerCase()) ? 'flex' : 'none';
+            }
+        }
+
+        function toggleEpisodeWatched(animeId, season, epIdx) {
+            if (!currentUser) { openAuthModal(); return; }
+            const key = `${currentUser.username}_${animeId}_ep_${season}_${epIdx}`;
+            if (!userAnimeStatuses[currentUser.username]) userAnimeStatuses[currentUser.username] = {};
+            if (userAnimeStatuses[currentUser.username][key]) {
+                delete userAnimeStatuses[currentUser.username][key];
+            } else {
+                userAnimeStatuses[currentUser.username][key] = true;
+            }
+            saveData();
+        }
+
+        function changePlaybackRate(rate) {
+            currentPlaybackRate = parseFloat(rate);
+            const v = document.getElementById('animeVideoPlayer');
+            if (v) v.playbackRate = currentPlaybackRate;
         }
 
         function toggleTheaterMode(id, season, epIdx, voice, quality) {
@@ -1503,17 +1444,6 @@
             openWatchModal(id, season, currentIdx + 1, voice, quality);
         }
 
-        function rateAnime(id, score) {
-            if (!currentUser) { openAuthModal(); return; }
-            const anime = animeList.find(a => a.id === id);
-            if (!anime) return;
-            if (!anime.ratings) anime.ratings = {};
-            anime.ratings[currentUser.username] = score;
-            saveData();
-            document.getElementById('myRating').innerText = score;
-            openWatchModal(id);
-        }
-
         async function addComment(id, season, epIdx, voice, quality) {
             if (!currentUser) { openAuthModal(); return; }
             const text = document.getElementById('commentInput').value.trim();
@@ -1534,16 +1464,9 @@
 
             const comment = animeComments[id][cIdx];
             if (!comment.reactions) comment.reactions = {};
-
-            Object.keys(comment.reactions).forEach(em => {
-                if (comment.reactions[em]) {
-                    comment.reactions[em] = comment.reactions[em].filter(u => u !== username);
-                }
-            });
-
             if (!comment.reactions[emoji]) comment.reactions[emoji] = [];
+
             const userIndex = comment.reactions[emoji].indexOf(username);
-            
             if (userIndex > -1) {
                 comment.reactions[emoji].splice(userIndex, 1);
             } else {
@@ -1553,6 +1476,20 @@
             await saveCommentsToCloud();
             openWatchModal(id);
         }
+
+        // Горячие клавиши для плеера (Пробел - пауза, Стрелки - перемотка)
+        document.addEventListener('keydown', (e) => {
+            const v = document.getElementById('animeVideoPlayer');
+            if (!v) return;
+            if (e.code === 'Space' && e.target.tagName !== 'INPUT') {
+                e.preventDefault();
+                v.paused ? v.play() : v.pause();
+            } else if (e.code === 'ArrowRight') {
+                v.currentTime += 10;
+            } else if (e.code === 'ArrowLeft') {
+                v.currentTime -= 10;
+            }
+        });
 
         loadDataFromCloud();
     </script>
