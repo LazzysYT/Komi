@@ -82,6 +82,21 @@
             -webkit-text-fill-color: transparent;
         }
 
+        .online-counter {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-left: 10px;
+        }
+        .online-dot { width: 7px; height: 7px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
+
         .search-container {
             position: relative;
             flex: 0 1 340px;
@@ -499,10 +514,11 @@
 
         .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 20px; border-radius: 16px; display: flex; flex-direction: column; gap: 15px; }
         .comment-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; }
-        .comment-author { font-weight: 700; font-size: 13px; color: var(--accent); display: flex; align-items: center; justify-content: space-between; }
+        .comment-author { font-weight: 700; font-size: 13px; color: var(--accent); display: flex; align-items: center; justify-content: space-between; cursor: pointer; }
         .comment-reactions { display: flex; gap: 6px; margin-top: 4px; }
-        .reaction-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 3px 8px; font-size: 12px; cursor: pointer; color: white; }
+        .reaction-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer; color: white; display: flex; align-items: center; gap: 4px; }
         .reaction-btn:hover { border-color: var(--accent); }
+        .reaction-btn.active { background: rgba(139, 92, 246, 0.3); border-color: var(--accent); }
         
         .spoiler-text { background: #222; color: #222; border-radius: 4px; cursor: pointer; padding: 2px 6px; user-select: none; }
         .spoiler-text.revealed { background: #333; color: #fff; }
@@ -516,9 +532,15 @@
 
     <!-- Header -->
     <header>
-        <div class="logo-container" onclick="playSound(); navigate('home')">
-            <div class="logo-box">K</div>
-            <div class="logo-text">Komi Anime</div>
+        <div style="display: flex; align-items: center;">
+            <div class="logo-container" onclick="playSound(); navigate('home')">
+                <div class="logo-box">K</div>
+                <div class="logo-text">Komi Anime</div>
+            </div>
+            <div class="online-counter" id="onlineCounterBox">
+                <div class="online-dot"></div>
+                <span id="onlineCountText">Онлайн: 1</span>
+            </div>
         </div>
         
         <div class="search-container">
@@ -568,7 +590,7 @@
                     <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
                 </div>
                 <div class="form-group">
-                    <label>YouTube Трейлер (в формате embed: https://www.youtube.com/embed/...)</label>
+                    <label>YouTube Трейлер (в формате embed)</label>
                     <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
                 </div>
                 <div class="form-group">
@@ -594,7 +616,7 @@
                     <textarea class="form-control" id="animeDesc" placeholder="Сюжет аниме..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Сезоны, Озвучка, Качество и Прямая ссылка (mp4)</label>
+                    <label>Сезоны, Озвучка, Качество и Ссылка (.mp4)</label>
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
@@ -609,7 +631,7 @@
             <h2 id="authTitle" style="margin-bottom: 20px; text-align: center;">Авторизация / Регистрация</h2>
             <form onsubmit="handleAuthSubmit(event)">
                 <div class="form-group">
-                    <label>Имя пользователя (уникальное)</label>
+                    <label>Имя пользователя</label>
                     <input type="text" class="form-control" id="authUsername" required placeholder="Введите имя...">
                 </div>
                 <div class="form-group">
@@ -667,11 +689,12 @@
         ];
 
         let animeList = [];
+        let animeComments = {}; // Загружаются из облака для всех
+        let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; // списки друзей username -> [friends]
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {};
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
         let userAchievements = JSON.parse(localStorage.getItem('komi_achievements')) || {};
-        let animeComments = JSON.parse(localStorage.getItem('komi_comments')) || {};
         let userFavorites = JSON.parse(localStorage.getItem('komi_favorites')) || {};
         let userWatchHistory = JSON.parse(localStorage.getItem('komi_history')) || {};
         let searchHistory = JSON.parse(localStorage.getItem('komi_search_history')) || ['Экшен', 'Романтика', 'Топ-2026'];
@@ -682,6 +705,7 @@
         let catalogFilterYear = 'Все';
         let catalogFilterType = 'Все';
         let catalogSort = 'popular';
+        const mySessionId = 'user_' + Math.random().toString(36.substring(2, 9));
 
         function changeTheme(theme) {
             document.body.className = 'theme-' + theme;
@@ -695,22 +719,26 @@
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             localStorage.setItem('komi_profiles', JSON.stringify(userProfiles));
             localStorage.setItem('komi_achievements', JSON.stringify(userAchievements));
-            localStorage.setItem('komi_comments', JSON.stringify(animeComments));
             localStorage.setItem('komi_favorites', JSON.stringify(userFavorites));
             localStorage.setItem('komi_history', JSON.stringify(userWatchHistory));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
+            localStorage.setItem('komi_friends', JSON.stringify(userFriends));
         }
 
-        // --- ЗАГРУЗКА И СОХРАНЕНИЕ ЧЕРЕЗ SUPABASE (КОЛОНКА content) ---
-        async function loadAnimeFromCloud() {
+        // --- СИНХРОНИЗАЦИЯ ЧЕРЕЗ SUPABASE (БАЗА АНИМЕ И КОММЕНТАРИИ ДЛЯ ВСЕХ) ---
+        async function loadDataFromCloud() {
             try {
                 const { data, error } = await _supabase.from('animes').select('*');
                 if (data && data.length > 0) {
-                    animeList = JSON.parse(data[0].content);
-                } else {
+                    for(let row of data) {
+                        if (row.id === 1) animeList = JSON.parse(row.content || '[]');
+                        if (row.id === 2) animeComments = JSON.parse(row.content || '{}');
+                    }
+                }
+                if (animeList.length === 0) {
                     animeList = defaultAnime;
-                    await _supabase.from('animes').insert([{ id: 1, content: JSON.stringify(animeList) }]);
+                    await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
                 }
             } catch(err) {
                 animeList = defaultAnime;
@@ -720,9 +748,35 @@
 
         async function saveAnimeToCloud() {
             await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
-            saveData();
             render();
         }
+
+        async function saveCommentsToCloud() {
+            await _supabase.from('animes').upsert({ id: 2, content: JSON.stringify(animeComments) });
+        }
+
+        // --- СИСТЕМА РЕАЛЬНОГО ОНЛАЙНА ЧЕРЕЗ SUPABASE ---
+        async function updateOnlinePresence() {
+            try {
+                const now = Date.now();
+                const userNameGuest = currentUser ? currentUser.username : ('Гость_' + mySessionId.slice(0,4));
+                
+                // Отправляем свой пинг в таблицу online
+                await _supabase.from('online_users').upsert({ session_id: mySessionId, username: userNameGuest, last_seen: now });
+                
+                // Удаляем тех, кто не пинговал более 15 секунд
+                const expireTime = now - 15000;
+                await _supabase.from('online_users').delete().lt('last_seen', expireTime);
+
+                // Считаем сколько всего активных сессий
+                const { data, error } = await _supabase.from('online_users').select('session_id');
+                if (data) {
+                    const count = data.length || 1;
+                    document.getElementById('onlineCountText').innerText = `Онлайн: ${count}`;
+                }
+            } catch(e) {}
+        }
+        setInterval(updateOnlinePresence, 5000);
 
         async function hashPassword(password) {
             const msgBuffer = new TextEncoder().encode(password);
@@ -763,7 +817,7 @@
             if (currentUser) {
                 const p = userProfiles[currentUser.username] || currentUser;
                 area.innerHTML = `
-                    <div class="user-pill" onclick="playSound(); openProfileModal()">
+                    <div class="user-pill" onclick="playSound(); openProfileModal('${currentUser.username}')">
                         <img src="${p.avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'}" class="user-avatar-small">
                         <span>${currentUser.username}</span>
                         <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; margin-left:5px;" title="Выйти">🚪</button>
@@ -1158,25 +1212,45 @@
             openWatchModal(id);
         }
 
-        function openProfileModal() {
+        // --- СИСТЕМА ДРУЗЕЙ И ПРОФИЛЕЙ ---
+        function toggleFriend(targetUsername) {
             if (!currentUser) { openAuthModal(); return; }
-            const p = userProfiles[currentUser.username] || { avatar: '', status: '' };
-            const achs = userAchievements[currentUser.username] || [];
-            const favs = userFavorites[currentUser.username] || {};
-            const favList = Object.keys(favs).map(id => {
-                const a = animeList.find(item => item.id === id);
-                return a ? `<div style="font-size:13px; margin-bottom:4px;"><b>${a.title}</b> — <span style="color:var(--accent)">${favs[id]}</span></div>` : '';
-            }).join('');
+            if (currentUser.username === targetUsername) return;
+            
+            if (!userFriends[currentUser.username]) userFriends[currentUser.username] = [];
+            const idx = userFriends[currentUser.username].indexOf(targetUsername);
+            if (idx > -1) {
+                userFriends[currentUser.username].splice(idx, 1);
+            } else {
+                userFriends[currentUser.username].push(targetUsername);
+            }
+            saveData();
+            openProfileModal(targetUsername);
+        }
+
+        function openProfileModal(username) {
+            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Участник сообщества' };
+            const achs = userAchievements[username] || [];
+            const myFriends = userFriends[username] || [];
+            const isMe = currentUser && currentUser.username === username;
+            const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
 
             document.getElementById('profileModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); document.getElementById('profileModal').classList.remove('active')">&times;</button>
-                <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px;">
+                <div style="display:flex; align-items:center; gap:20px; margin-bottom:20px; flex-wrap:wrap;">
                     <img src="${p.avatar}" style="width:80px; height:80px; border-radius:50%; object-fit:cover; border:2px solid var(--accent);">
                     <div style="flex:1;">
-                        <h2>${currentUser.username}</h2>
-                        <p style="color:var(--text-muted); font-size:13px; margin-bottom:6px;">Статус: ${p.status}</p>
+                        <h2>${username}</h2>
+                        <p style="color:var(--text-muted); font-size:13px; margin-bottom:8px;">Статус: ${p.status}</p>
+                        ${!isMe && currentUser ? `
+                            <button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="toggleFriend('${username}')">
+                                ${amIFriend ? '✓ В друзьях (Удалить)' : '+ Добавить в друзья'}
+                            </button>
+                        ` : ''}
                     </div>
                 </div>
+
+                ${isMe ? `
                 <div style="background:var(--bg-input); padding:15px; border-radius:12px; margin-bottom:15px;">
                     <h3 style="font-size:14px; margin-bottom:8px;">Редактировать профиль</h3>
                     <div style="display:flex; gap:10px; margin-bottom:8px;">
@@ -1187,13 +1261,16 @@
                         <button class="btn-primary" onclick="updateUserProfile()">Сохранить</button>
                     </div>
                 </div>
-                <h3>🏆 Достижения (${achs.length})</h3>
+                ` : ''}
+
+                <h3>👥 Друзья (${myFriends.length})</h3>
                 <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 20px 0;">
-                    ${achs.length === 0 ? '<span style="color:var(--text-muted); font-size:13px;">Пока нет достижений. Смотрите аниме и комментируйте!</span>' : achs.map(ac => `<span style="background:rgba(139,92,246,0.2); border:1px solid var(--primary); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600;">⭐ ${ac}</span>`).join('')}
+                    ${myFriends.length === 0 ? '<span style="color:var(--text-muted); font-size:13px;">Список друзей пуст</span>' : myFriends.map(f => `<span style="background:rgba(139,92,246,0.2); border:1px solid var(--primary); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600; cursor:pointer;" onclick="openProfileModal('${f}')">👤 ${f}</span>`).join('')}
                 </div>
-                <h3>📚 Списки аниме</h3>
-                <div style="margin-top:10px; background:var(--bg-input); padding:15px; border-radius:12px; max-height:150px; overflow-y:auto;">
-                    ${favList || '<span style="color:var(--text-muted); font-size:13px;">Список пуст</span>'}
+
+                <h3>🏆 Достижения (${achs.length})</h3>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; margin:10px 0 10px 0;">
+                    ${achs.length === 0 ? '<span style="color:var(--text-muted); font-size:13px;">Пока нет достижений</span>' : achs.map(ac => `<span style="background:rgba(255,255,255,0.05); border:1px solid var(--border); padding:6px 12px; border-radius:8px; font-size:13px; font-weight:600;">⭐ ${ac}</span>`).join('')}
                 </div>
             `;
             document.getElementById('profileModal').classList.add('active');
@@ -1206,7 +1283,7 @@
             if (avatar) userProfiles[currentUser.username].avatar = avatar;
             if (status) userProfiles[currentUser.username].status = status;
             saveData();
-            openProfileModal();
+            openProfileModal(currentUser.username);
             renderHeaderUser();
         }
 
@@ -1275,7 +1352,7 @@
                         </div>
 
                         <div id="videoErrorMsg" style="display:none; color:#fca5a5; font-size:13px; background:rgba(239,68,68,0.15); padding:10px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);">
-                            ⚠️ Не удалось загрузить видео. Проверьте правильность прямой ссылки (.mp4) или доступность хостинга для всех пользователей.
+                            ⚠️ Не удалось загрузить видео. Проверьте правильность прямой ссылки (.mp4).
                         </div>
 
                         <div style="display:flex; gap:15px; background:var(--bg-input); padding:12px 16px; border-radius:12px; align-items:center; flex-wrap:wrap;">
@@ -1307,14 +1384,21 @@
                             </div>
                             ${comments.map((c, cIdx) => `
                                 <div class="comment-item">
-                                    <div class="comment-author">
+                                    <div class="comment-author" onclick="openProfileModal('${c.username}')">
                                         <span>👤 ${c.username}</span>
                                     </div>
                                     <div class="comment-text">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер (нажмите чтобы открыть) <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
                                     <div class="comment-reactions">
-                                        ${['🔥', '❤️', '😂', '🤡'].map(emoji => `
-                                            <button class="reaction-btn" onclick="reactComment('${anime.id}', ${cIdx}, '${emoji}')">${emoji} ${c.reactions?.[emoji] || 0}</button>
-                                        `).join('')}
+                                        ${['🔥', '❤️', '😂', '🤡'].map(emoji => {
+                                            const count = (c.reactions && c.reactions[emoji]) ? c.reactions[emoji].length : 0;
+                                            const myUser = currentUser ? currentUser.username : null;
+                                            const hasMyReaction = myUser && c.reactions && c.reactions[emoji] && c.reactions[emoji].includes(myUser);
+                                            return `
+                                                <button class="reaction-btn ${hasMyReaction ? 'active' : ''}" onclick="reactComment('${anime.id}', ${cIdx}, '${emoji}')">
+                                                    <span>${emoji}</span> <span>${count}</span>
+                                                </button>
+                                            `;
+                                        }).join('')}
                                     </div>
                                 </div>
                             `).join('')}
@@ -1401,30 +1485,52 @@
             openWatchModal(id);
         }
 
-        function addComment(id, season, epIdx, voice, quality) {
+        async function addComment(id, season, epIdx, voice, quality) {
             if (!currentUser) { openAuthModal(); return; }
             const text = document.getElementById('commentInput').value.trim();
             const spoiler = document.getElementById('isSpoiler').checked;
             if (!text) return;
+            
             if (!animeComments[id]) animeComments[id] = [];
             animeComments[id].unshift({ username: currentUser.username, text, spoiler, reactions: {} });
             
             unlockAchievement(currentUser.username, 'Оратор (первый комментарий)');
-            saveData();
+            await saveCommentsToCloud();
             openWatchModal(id, season, epIdx, voice, quality);
         }
 
-        function reactComment(id, cIdx, emoji) {
-            if (animeComments[id] && animeComments[id][cIdx]) {
-                if (!animeComments[id][cIdx].reactions) animeComments[id][cIdx].reactions = {};
-                animeComments[id][cIdx].reactions[emoji] = (animeComments[id][cIdx].reactions[emoji] || 0) + 1;
-                saveData();
-                openWatchModal(id);
+        // --- ЛИМИТ РЕАКЦИЙ: 1 ЧЕЛОВЕК = 1 РЕАКЦИЯ ---
+        async function reactComment(id, cIdx, emoji) {
+            if (!currentUser) { openAuthModal(); return; }
+            const username = currentUser.username;
+            if (!animeComments[id] || !animeComments[id][cIdx]) return;
+
+            const comment = animeComments[id][cIdx];
+            if (!comment.reactions) comment.reactions = {};
+
+            // Снимаем голос с других эмодзи у этого комментатора
+            Object.keys(comment.reactions).forEach(em => {
+                if (comment.reactions[em]) {
+                    comment.reactions[em] = comment.reactions[em].filter(u => u !== username);
+                }
+            });
+
+            // Если кликнул на тот же самый эмодзи — просто убираем, если на другой — ставим
+            if (!comment.reactions[emoji]) comment.reactions[emoji] = [];
+            const userIndex = comment.reactions[emoji].indexOf(username);
+            
+            if (userIndex > -1) {
+                comment.reactions[emoji].splice(userIndex, 1);
+            } else {
+                comment.reactions[emoji].push(username);
             }
+
+            await saveCommentsToCloud();
+            openWatchModal(id);
         }
 
-        // Запуск загрузки базы данных из Supabase
-        loadAnimeFromCloud();
+        // Запуск загрузки базы данных из Supabase при старте
+        loadDataFromCloud();
     </script>
 </body>
 </html>
