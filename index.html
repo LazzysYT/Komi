@@ -82,21 +82,6 @@
             -webkit-text-fill-color: transparent;
         }
 
-        .online-counter {
-            background: rgba(16, 185, 129, 0.15);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-            color: #34d399;
-            padding: 4px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            margin-left: 10px;
-        }
-        .online-dot { width: 7px; height: 7px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
-
         .search-container {
             position: relative;
             flex: 0 1 340px;
@@ -532,15 +517,9 @@
 
     <!-- Header -->
     <header>
-        <div style="display: flex; align-items: center;">
-            <div class="logo-container" onclick="playSound(); navigate('home')">
-                <div class="logo-box">K</div>
-                <div class="logo-text">Komi Anime</div>
-            </div>
-            <div class="online-counter" id="onlineCounterBox">
-                <div class="online-dot"></div>
-                <span id="onlineCountText">Онлайн: 1</span>
-            </div>
+        <div class="logo-container" onclick="playSound(); navigate('home')">
+            <div class="logo-box">K</div>
+            <div class="logo-text">Komi Anime</div>
         </div>
         
         <div class="search-container">
@@ -689,8 +668,8 @@
         ];
 
         let animeList = [];
-        let animeComments = {}; // Загружаются из облака для всех
-        let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; // списки друзей username -> [friends]
+        let animeComments = {}; 
+        let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {};
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
@@ -705,7 +684,6 @@
         let catalogFilterYear = 'Все';
         let catalogFilterType = 'Все';
         let catalogSort = 'popular';
-        const mySessionId = 'user_' + Math.random().toString(36.substring(2, 9));
 
         function changeTheme(theme) {
             document.body.className = 'theme-' + theme;
@@ -726,7 +704,6 @@
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
         }
 
-        // --- СИНХРОНИЗАЦИЯ ЧЕРЕЗ SUPABASE (БАЗА АНИМЕ И КОММЕНТАРИИ ДЛЯ ВСЕХ) ---
         async function loadDataFromCloud() {
             try {
                 const { data, error } = await _supabase.from('animes').select('*');
@@ -754,29 +731,6 @@
         async function saveCommentsToCloud() {
             await _supabase.from('animes').upsert({ id: 2, content: JSON.stringify(animeComments) });
         }
-
-        // --- СИСТЕМА РЕАЛЬНОГО ОНЛАЙНА ЧЕРЕЗ SUPABASE ---
-        async function updateOnlinePresence() {
-            try {
-                const now = Date.now();
-                const userNameGuest = currentUser ? currentUser.username : ('Гость_' + mySessionId.slice(0,4));
-                
-                // Отправляем свой пинг в таблицу online
-                await _supabase.from('online_users').upsert({ session_id: mySessionId, username: userNameGuest, last_seen: now });
-                
-                // Удаляем тех, кто не пинговал более 15 секунд
-                const expireTime = now - 15000;
-                await _supabase.from('online_users').delete().lt('last_seen', expireTime);
-
-                // Считаем сколько всего активных сессий
-                const { data, error } = await _supabase.from('online_users').select('session_id');
-                if (data) {
-                    const count = data.length || 1;
-                    document.getElementById('onlineCountText').innerText = `Онлайн: ${count}`;
-                }
-            } catch(e) {}
-        }
-        setInterval(updateOnlinePresence, 5000);
 
         async function hashPassword(password) {
             const msgBuffer = new TextEncoder().encode(password);
@@ -1212,7 +1166,6 @@
             openWatchModal(id);
         }
 
-        // --- СИСТЕМА ДРУЗЕЙ И ПРОФИЛЕЙ ---
         function toggleFriend(targetUsername) {
             if (!currentUser) { openAuthModal(); return; }
             if (currentUser.username === targetUsername) return;
@@ -1499,7 +1452,6 @@
             openWatchModal(id, season, epIdx, voice, quality);
         }
 
-        // --- ЛИМИТ РЕАКЦИЙ: 1 ЧЕЛОВЕК = 1 РЕАКЦИЯ ---
         async function reactComment(id, cIdx, emoji) {
             if (!currentUser) { openAuthModal(); return; }
             const username = currentUser.username;
@@ -1508,14 +1460,12 @@
             const comment = animeComments[id][cIdx];
             if (!comment.reactions) comment.reactions = {};
 
-            // Снимаем голос с других эмодзи у этого комментатора
             Object.keys(comment.reactions).forEach(em => {
                 if (comment.reactions[em]) {
                     comment.reactions[em] = comment.reactions[em].filter(u => u !== username);
                 }
             });
 
-            // Если кликнул на тот же самый эмодзи — просто убираем, если на другой — ставим
             if (!comment.reactions[emoji]) comment.reactions[emoji] = [];
             const userIndex = comment.reactions[emoji].indexOf(username);
             
