@@ -53,6 +53,12 @@
             padding: 16px 40px;
         }
 
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
         .logo-container {
             display: flex;
             align-items: center;
@@ -81,6 +87,20 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
+
+        .online-counter {
+            background: rgba(16, 185, 129, 0.15);
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            color: #34d399;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .online-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
 
         .search-container {
             position: relative;
@@ -517,9 +537,15 @@
 
     <!-- Header -->
     <header>
-        <div class="logo-container" onclick="playSound(); navigate('home')">
-            <div class="logo-box">K</div>
-            <div class="logo-text">Komi Anime</div>
+        <div class="logo-area">
+            <div class="logo-container" onclick="playSound(); navigate('home')">
+                <div class="logo-box">K</div>
+                <div class="logo-text">Komi Anime</div>
+            </div>
+            <div class="online-counter">
+                <div class="online-dot"></div>
+                <span id="onlineCountText">Онлайн: 1</span>
+            </div>
         </div>
         
         <div class="search-container">
@@ -684,6 +710,7 @@
         let catalogFilterYear = 'Все';
         let catalogFilterType = 'Все';
         let catalogSort = 'popular';
+        const mySessionId = 'user_' + Math.random().toString(36).substring(2, 9);
 
         function changeTheme(theme) {
             document.body.className = 'theme-' + theme;
@@ -704,6 +731,7 @@
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
         }
 
+        // --- ЗАГРУЗКА БАЗЫ АНИМЕ И КОММЕНТАРИЕВ ИЗ SUPABASE ---
         async function loadDataFromCloud() {
             try {
                 const { data, error } = await _supabase.from('animes').select('*');
@@ -731,6 +759,27 @@
         async function saveCommentsToCloud() {
             await _supabase.from('animes').upsert({ id: 2, content: JSON.stringify(animeComments) });
         }
+
+        // --- СИСТЕМА РЕАЛЬНОГО ОНЛАЙНА ---
+        async function updateOnlinePresence() {
+            try {
+                const now = Date.now();
+                const userNameGuest = currentUser ? currentUser.username : ('Гость_' + mySessionId.slice(0,4));
+                
+                await _supabase.from('online_users').upsert({ session_id: mySessionId, username: userNameGuest, last_seen: now });
+                
+                const expireTime = now - 15000;
+                await _supabase.from('online_users').delete().lt('last_seen', expireTime);
+
+                const { data, error } = await _supabase.from('online_users').select('session_id');
+                if (data) {
+                    const count = data.length || 1;
+                    const el = document.getElementById('onlineCountText');
+                    if (el) el.innerText = `Онлайн: ${count}`;
+                }
+            } catch(e) {}
+        }
+        setInterval(updateOnlinePresence, 5000);
 
         async function hashPassword(password) {
             const msgBuffer = new TextEncoder().encode(password);
@@ -1166,6 +1215,7 @@
             openWatchModal(id);
         }
 
+        // --- СИСТЕМА ДРУЗЕЙ ---
         function toggleFriend(targetUsername) {
             if (!currentUser) { openAuthModal(); return; }
             if (currentUser.username === targetUsername) return;
@@ -1242,9 +1292,17 @@
 
         let isTheaterMode = false;
 
-        function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, selectedVoice = null, selectedQuality = null) {
+        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, selectedVoice = null, selectedQuality = null) {
             siteStats.views++;
             saveData();
+            
+            try {
+                const { data } = await _supabase.from('animes').select('*').eq('id', 2);
+                if (data && data.length > 0) {
+                    animeComments = JSON.parse(data[0].content || '{}');
+                }
+            } catch(e) {}
+
             const anime = animeList.find(a => a.id === id);
             if (!anime || !anime.episodes || anime.episodes.length === 0) return;
 
@@ -1327,7 +1385,7 @@
                         </div>
 
                         <div class="comments-section">
-                            <h3>💬 Комментарии (${comments.length})</h3>
+                            <h3>💬 Комментарии (<span id="commentsCount">${comments.length}</span>)</h3>
                             <div style="display:flex; gap:10px; flex-direction:column;">
                                 <div style="display:flex; gap:10px;">
                                     <input type="text" id="commentInput" class="form-control" placeholder="Написать комментарий...">
@@ -1335,26 +1393,28 @@
                                 </div>
                                 <label style="font-size:12px; color:var(--text-muted); cursor:pointer;"><input type="checkbox" id="isSpoiler"> Содержит спойлер</label>
                             </div>
-                            ${comments.map((c, cIdx) => `
-                                <div class="comment-item">
-                                    <div class="comment-author" onclick="openProfileModal('${c.username}')">
-                                        <span>👤 ${c.username}</span>
+                            <div id="commentsListContainer" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
+                                ${comments.map((c, cIdx) => `
+                                    <div class="comment-item">
+                                        <div class="comment-author" onclick="openProfileModal('${c.username}')">
+                                            <span>👤 ${c.username}</span>
+                                        </div>
+                                        <div class="comment-text">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер (нажмите чтобы открыть) <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
+                                        <div class="comment-reactions">
+                                            ${['🔥', '❤️', '😂', '🤡'].map(emoji => {
+                                                const count = (c.reactions && c.reactions[emoji]) ? c.reactions[emoji].length : 0;
+                                                const myUser = currentUser ? currentUser.username : null;
+                                                const hasMyReaction = myUser && c.reactions && c.reactions[emoji] && c.reactions[emoji].includes(myUser);
+                                                return `
+                                                    <button class="reaction-btn ${hasMyReaction ? 'active' : ''}" onclick="reactComment('${anime.id}', ${cIdx}, '${emoji}')">
+                                                        <span>${emoji}</span> <span>${count}</span>
+                                                    </button>
+                                                `;
+                                            }).join('')}
+                                        </div>
                                     </div>
-                                    <div class="comment-text">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер (нажмите чтобы открыть) <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
-                                    <div class="comment-reactions">
-                                        ${['🔥', '❤️', '😂', '🤡'].map(emoji => {
-                                            const count = (c.reactions && c.reactions[emoji]) ? c.reactions[emoji].length : 0;
-                                            const myUser = currentUser ? currentUser.username : null;
-                                            const hasMyReaction = myUser && c.reactions && c.reactions[emoji] && c.reactions[emoji].includes(myUser);
-                                            return `
-                                                <button class="reaction-btn ${hasMyReaction ? 'active' : ''}" onclick="reactComment('${anime.id}', ${cIdx}, '${emoji}')">
-                                                    <span>${emoji}</span> <span>${count}</span>
-                                                </button>
-                                            `;
-                                        }).join('')}
-                                    </div>
-                                </div>
-                            `).join('')}
+                                `).join('')}
+                            </div>
                         </div>
                     </div>
                     <div class="watch-sidebar">
