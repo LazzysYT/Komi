@@ -568,8 +568,8 @@
                     <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
                 </div>
                 <div class="form-group">
-                    <label>YouTube Трейлер (URL ссылки на видео или embed)</label>
-                    <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/watch?v=...">
+                    <label>YouTube Трейлер (в формате embed: https://www.youtube.com/embed/...)</label>
+                    <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
                 </div>
                 <div class="form-group">
                     <label>Жанр</label>
@@ -594,7 +594,7 @@
                     <textarea class="form-control" id="animeDesc" placeholder="Сюжет аниме..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Сезоны, Озвучка, Качество и Ссылки (mp4)</label>
+                    <label>Сезоны, Озвучка, Качество и Прямая ссылка (mp4)</label>
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
@@ -702,18 +702,18 @@
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
         }
 
-        // --- НАДЕЖНАЯ ЗАГРУЗКА И СОХРАНЕНИЕ ЧЕРЕЗ SUPABASE (КОЛОНКА content) ---
+        // --- ЗАГРУЗКА И СОХРАНЕНИЕ ЧЕРЕЗ SUPABASE (КОЛОНКА content) ---
         async function loadAnimeFromCloud() {
-            const { data, error } = await _supabase.from('animes').select('*');
-            if (data && data.length > 0) {
-                try {
+            try {
+                const { data, error } = await _supabase.from('animes').select('*');
+                if (data && data.length > 0) {
                     animeList = JSON.parse(data[0].content);
-                } catch(e) {
+                } else {
                     animeList = defaultAnime;
+                    await _supabase.from('animes').insert([{ id: 1, content: JSON.stringify(animeList) }]);
                 }
-            } else {
+            } catch(err) {
                 animeList = defaultAnime;
-                await _supabase.from('animes').insert([{ id: 1, content: JSON.stringify(animeList) }]);
             }
             render();
         }
@@ -1024,7 +1024,7 @@
                     <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1;">
                     <select class="form-control ep-voice" style="width:110px;"><option>AniLibria</option><option>Jaskier</option><option>Animedia</option></select>
                     <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                    <input type="url" class="form-control ep-url" placeholder="Ссылка mp4..." style="flex:2;" required>
+                    <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
                 </div>
             `;
 
@@ -1069,7 +1069,7 @@
                 <input type="text" class="form-control ep-title" value="Эпизод ${count}" style="flex:1;">
                 <select class="form-control ep-voice" style="width:110px;"><option>AniLibria</option><option>Jaskier</option><option>Animedia</option></select>
                 <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                <input type="url" class="form-control ep-url" placeholder="Ссылка mp4..." style="flex:2;" required>
+                <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
             `;
             document.getElementById('episodesList').appendChild(div);
         }
@@ -1266,9 +1266,16 @@
 
                         <div class="player-wrapper">
                             <div class="player-box">
-                                <video id="animeVideoPlayer" src="${currentEp ? currentEp.url : ''}" controls autoplay style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')"></video>
+                                <video id="animeVideoPlayer" controls preload="metadata" playsinline style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')" onerror="handleVideoError()">
+                                    <source src="${currentEp ? currentEp.url : ''}" type="video/mp4">
+                                    Ваш браузер не поддерживает видео.
+                                </video>
                             </div>
                             <button class="skip-intro-btn" id="skipIntroBtn" onclick="skipIntro()">Пропустить опенинг ⏭</button>
+                        </div>
+
+                        <div id="videoErrorMsg" style="display:none; color:#fca5a5; font-size:13px; background:rgba(239,68,68,0.15); padding:10px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);">
+                            ⚠️ Не удалось загрузить видео. Проверьте правильность прямой ссылки (.mp4) или доступность хостинга для всех пользователей.
                         </div>
 
                         <div style="display:flex; gap:15px; background:var(--bg-input); padding:12px 16px; border-radius:12px; align-items:center; flex-wrap:wrap;">
@@ -1338,7 +1345,10 @@
             document.getElementById('watchModal').classList.add('active');
 
             const v = document.getElementById('animeVideoPlayer');
-            if (v && savedTime > 0) v.currentTime = savedTime;
+            if (v && savedTime > 0) {
+                v.currentTime = savedTime;
+                v.play().catch(() => {});
+            }
 
             if (v) {
                 v.ontimeupdate = function() {
@@ -1349,6 +1359,11 @@
                     }
                 };
             }
+        }
+
+        function handleVideoError() {
+            const errBox = document.getElementById('videoErrorMsg');
+            if (errBox) errBox.style.display = 'block';
         }
 
         function toggleTheaterMode(id, season, epIdx, voice, quality) {
@@ -1408,7 +1423,7 @@
             }
         }
 
-        // Запускаем загрузку данных из облака при старте страницы
+        // Запуск загрузки базы данных из Supabase
         loadAnimeFromCloud();
     </script>
 </body>
