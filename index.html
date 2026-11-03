@@ -209,7 +209,6 @@
             background: var(--primary);
         }
 
-        /* Основной макет с правым сайдбаром */
         .app-layout {
             display: grid;
             grid-template-columns: 1fr 300px;
@@ -281,9 +280,7 @@
             background: var(--primary);
         }
 
-        main {
-            width: 100%;
-        }
+        main { width: 100%; }
 
         .hero-banner {
             border-radius: 24px;
@@ -685,15 +682,10 @@
                     <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
                 </div>
                 <div class="form-group">
-                    <label>Жанр</label>
-                    <select class="form-control" id="animeGenre">
-                        <option value="Экшен">Экшен</option>
-                        <option value="Романтика">Романтика</option>
-                        <option value="Фэнтези">Фэнтези</option>
-                        <option value="Киберпанк">Киберпанк</option>
-                        <option value="Комедия">Комедия</option>
-                        <option value="Хоррор">Хоррор</option>
-                    </select>
+                    <label>Жанры (выберите сколько угодно)</label>
+                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--bg-input); padding: 12px; border-radius: 12px; border: 1px solid var(--border);">
+                        <!-- Заполняется JS -->
+                    </div>
                 </div>
                 <div class="form-group">
                     <label>Год выпуска / Тип</label>
@@ -707,7 +699,7 @@
                     <textarea class="form-control" id="animeDesc" placeholder="Сюжет аниме..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Сезоны, Озвучка, Качество и Ссылка (.mp4)</label>
+                    <label>Сезоны, Несколько озвучек (через запятую), Качество и Ссылка (.mp4)</label>
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
@@ -734,7 +726,7 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="profileModal"><div class="modal-content" style="max-width: 700px;" id="profileModalContent"></div></div>
+    <div class="modal-overlay" id="profileModal"><div class="modal-content" style="max-width: 750px;" id="profileModalContent"></div></div>
     <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 1000px;" id="adminModalContent"></div></div>
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
 
@@ -743,6 +735,8 @@
         const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs'; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив'];
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         function playSound() {
@@ -768,12 +762,12 @@
                 title: 'Форма Голоса',
                 poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop',
                 trailer: 'https://www.youtube.com/embed/9272MmqsjgY',
-                genre: 'Романтика',
+                genres: ['Романтика', 'Драма'],
                 year: '2016',
                 type: 'Фильм',
                 desc: 'Молодой человек Сёя Исида раскаявается в том, что в школе издевался над глухой одноклассницей Сёко.',
                 episodes: [
-                    { season: 1, title: 'Фильм', voice: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
+                    { season: 1, title: 'Фильм', voices: 'AniLibria, Jaskier', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
                 ratings: { Admin: 9.8 }
             }
@@ -781,7 +775,9 @@
 
         let animeList = [];
         let animeComments = {}; 
-        let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
+        let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; // { user: ['friend1'] }
+        let friendRequests = JSON.parse(localStorage.getItem('komi_friend_requests')) || {}; // { targetUser: ['senderUser'] }
+        let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; // { username: { animeId: 'Смотрю' } }
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {};
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
@@ -815,9 +811,10 @@
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
+            localStorage.setItem('komi_friend_requests', JSON.stringify(friendRequests));
+            localStorage.setItem('komi_anime_statuses', JSON.stringify(userAnimeStatuses));
         }
 
-        // --- ЗАГРУЗКА БАЗЫ АНИМЕ И КОММЕНТАРИЕВ ИЗ SUPABASE ---
         async function loadDataFromCloud() {
             try {
                 const { data, error } = await _supabase.from('animes').select('*');
@@ -846,23 +843,19 @@
             await _supabase.from('animes').upsert({ id: 2, content: JSON.stringify(animeComments) });
         }
 
-        // --- СИСТЕМА РЕАЛЬНОГО ОНЛАЙНА И САЙДБАРА ---
         async function updateOnlinePresence() {
             try {
                 const now = Date.now();
                 const userNameGuest = currentUser ? currentUser.username : ('Гость_' + mySessionId.slice(0,4));
-                
                 await _supabase.from('online_users').upsert({ session_id: mySessionId, username: userNameGuest, last_seen: now });
-                
                 const expireTime = now - 15000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
-                const { data, error } = await _supabase.from('online_users').select('*');
+                const { data } = await _supabase.from('online_users').select('*');
                 if (data) {
                     const count = data.length || 1;
                     const el = document.getElementById('onlineCountText');
                     if (el) el.innerText = `Онлайн: ${count}`;
-
                     renderSidebarLists(data);
                 }
             } catch(e) {}
@@ -873,7 +866,6 @@
             const onlineContainer = document.getElementById('sidebarOnlineList');
             const friendsContainer = document.getElementById('sidebarFriendsList');
 
-            // Рендер онлайн пользователей
             if (onlineRows && onlineRows.length > 0) {
                 onlineContainer.innerHTML = onlineRows.map(u => {
                     const p = userProfiles[u.username] || {};
@@ -889,7 +881,6 @@
                 onlineContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Никого нет онлайн</span>`;
             }
 
-            // Рендер друзей
             if (currentUser) {
                 const myFriends = userFriends[currentUser.username] || [];
                 if (myFriends.length > 0) {
@@ -940,7 +931,6 @@
             const addBtn = document.getElementById('addAnimeBtn');
 
             const isAdmin = currentUser && currentUser.username.toLowerCase() === 'admin';
-
             if (isAdmin) {
                 adminBtn.style.display = 'inline-flex';
                 addBtn.style.display = 'inline-flex';
@@ -982,7 +972,7 @@
                     <div class="hero-banner" style="background-image: url('${featured.poster}');">
                         <div class="hero-meta">
                             <span>⭐ ${calculateAverageRating(featured)} MAL</span>
-                            <span>${featured.genre}</span>
+                            <span>${(featured.genres || [featured.genre || 'Экшен']).join(', ')}</span>
                             <span>${featured.year || '2026'}</span>
                             <span>${featured.type || 'Сериал'}</span>
                         </div>
@@ -1005,12 +995,13 @@
                     </div>
                 `;
             } else if (currentView === 'catalog') {
-                const genres = ['Все', 'Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор'];
+                const genres = ['Все', ...availableGenresList];
                 const years = ['Все', '2026', '2025', '2024', '2023'];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA'];
 
                 let filtered = animeList.filter(a => {
-                    if (catalogFilterGenre !== 'Все' && a.genre !== catalogFilterGenre) return false;
+                    const gList = a.genres || [a.genre];
+                    if (catalogFilterGenre !== 'Все' && !gList.includes(catalogFilterGenre)) return false;
                     if (catalogFilterYear !== 'Все' && a.year !== catalogFilterYear) return false;
                     if (catalogFilterType !== 'Все' && a.type !== catalogFilterType) return false;
                     return true;
@@ -1058,13 +1049,14 @@
 
         function renderCard(anime) {
             const avg = calculateAverageRating(anime);
+            const gText = (anime.genres || [anime.genre || '']).join(', ');
             return `
                 <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
                     <div class="anime-rating-badge">⭐ ${avg}</div>
                     <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'">
                     <div class="anime-info">
                         <div class="anime-title">${anime.title}</div>
-                        <div class="anime-meta-card"><span>${anime.genre}</span><span>${anime.episodes.length} сер.</span></div>
+                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px;">${gText}</span><span>${anime.episodes.length} сер.</span></div>
                     </div>
                 </div>
             `;
@@ -1092,10 +1084,12 @@
                     const anime = data.data[0];
                     document.getElementById('animeTitle').value = anime.title || '';
                     document.getElementById('animePoster').value = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+                    
                     if (anime.genres && anime.genres.length > 0) {
-                        const g = anime.genres[0].name;
-                        const select = document.getElementById('animeGenre');
-                        for(let opt of select.options) { if(opt.value.toLowerCase() === g.toLowerCase() || opt.text.toLowerCase() === g.toLowerCase()) select.value = opt.value; }
+                        const fetchedGenres = anime.genres.map(g => g.name.toLowerCase());
+                        document.querySelectorAll('.genre-checkbox').forEach(cb => {
+                            if (fetchedGenres.includes(cb.value.toLowerCase())) cb.checked = true;
+                        });
                     }
                     document.getElementById('animeYear').value = anime.year || (anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '2026');
                     document.getElementById('animeType').value = anime.type || 'Сериал';
@@ -1129,7 +1123,7 @@
             const dd = document.getElementById('searchDropdown');
             if (!q.trim()) { dd.classList.remove('active'); render(); return; }
             
-            const filtered = animeList.filter(a => a.title.toLowerCase().includes(q.toLowerCase()) || a.genre.toLowerCase().includes(q.toLowerCase()));
+            const filtered = animeList.filter(a => a.title.toLowerCase().includes(q.toLowerCase()) || (a.genres && a.genres.some(g => g.toLowerCase().includes(q.toLowerCase()))));
             document.getElementById('mainContainer').innerHTML = `
                 <h2 style="margin-bottom:20px;">Результаты поиска: "${q}"</h2>
                 <div class="anime-grid">${filtered.length === 0 ? '<div class="empty-state"><h3>Ничего не найдено</h3></div>' : filtered.map(a => renderCard(a)).join('')}</div>
@@ -1149,12 +1143,12 @@
                     </label>
                 </div>
                 <table class="admin-table">
-                    <thead><tr><th>Название</th><th>Жанр</th><th>Эпизодов</th><th>Действия</th></tr></thead>
+                    <thead><tr><th>Название</th><th>Жанры</th><th>Эпизодов</th><th>Действия</th></tr></thead>
                     <tbody>
                         ${animeList.length === 0 ? `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Список аниме пуст</td></tr>` : animeList.map(a => `
                             <tr>
                                 <td><b>${a.title}</b></td>
-                                <td>${a.genre}</td>
+                                <td>${(a.genres || [a.genre]).join(', ')}</td>
                                 <td>${a.episodes.length}</td>
                                 <td>
                                     <button class="btn-secondary" style="padding:5px 10px;" onclick="document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">✏️ Ред.</button>
@@ -1203,15 +1197,26 @@
             }
         }
 
+        function renderGenresCheckboxes(selectedGenres = []) {
+            const container = document.getElementById('genresCheckboxList');
+            container.innerHTML = availableGenresList.map(g => `
+                <label style="display:flex; align-items:center; gap:6px; font-size:13px; cursor:pointer;">
+                    <input type="checkbox" class="genre-checkbox" value="${g}" ${selectedGenres.includes(g) ? 'checked' : ''}> ${g}
+                </label>
+            `).join('');
+        }
+
         function openAddModal(editId = null) {
             const modal = document.getElementById('addModal');
             document.getElementById('editAnimeId').value = '';
             document.getElementById('animeForm').reset();
+            renderGenresCheckboxes();
+
             document.getElementById('episodesList').innerHTML = `
                 <div style="display:flex; gap:6px; align-items:center;">
                     <input type="number" class="form-control ep-season" value="1" min="1" style="width:65px;" title="Сезон">
                     <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1;">
-                    <select class="form-control ep-voice" style="width:110px;"><option>AniLibria</option><option>Jaskier</option><option>Animedia</option></select>
+                    <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria, Jaskier" style="flex:1.5;">
                     <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
                     <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
                 </div>
@@ -1224,17 +1229,17 @@
                     document.getElementById('animeTitle').value = anime.title;
                     document.getElementById('animePoster').value = anime.poster;
                     document.getElementById('animeTrailer').value = anime.trailer || '';
-                    document.getElementById('animeGenre').value = anime.genre;
                     document.getElementById('animeYear').value = anime.year || '2026';
                     document.getElementById('animeType').value = anime.type || 'Сериал';
                     document.getElementById('animeDesc').value = anime.desc || '';
+                    renderGenresCheckboxes(anime.genres || [anime.genre]);
 
                     if (anime.episodes && anime.episodes.length > 0) {
                         document.getElementById('episodesList').innerHTML = anime.episodes.map(ep => `
                             <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
                                 <input type="number" class="form-control ep-season" value="${ep.season || 1}" min="1" style="width:65px;" title="Сезон">
                                 <input type="text" class="form-control ep-title" value="${ep.title}" style="flex:1;">
-                                <select class="form-control ep-voice" style="width:110px;"><option ${ep.voice==='AniLibria'?'selected':''}>AniLibria</option><option ${ep.voice==='Jaskier'?'selected':''}>Jaskier</option><option ${ep.voice==='Animedia'?'selected':''}>Animedia</option></select>
+                                <input type="text" class="form-control ep-voices" value="${ep.voices || ep.voice || 'AniLibria'}" style="flex:1.5;">
                                 <select class="form-control ep-quality" style="width:90px;"><option ${ep.quality==='1080p'?'selected':''}>1080p</option><option ${ep.quality==='720p'?'selected':''}>720p</option><option ${ep.quality==='480p'?'selected':''}>480p</option></select>
                                 <input type="url" class="form-control ep-url" value="${ep.url}" style="flex:2;" required>
                             </div>
@@ -1256,7 +1261,7 @@
             div.innerHTML = `
                 <input type="number" class="form-control ep-season" value="${lastSeason}" min="1" style="width:65px;" title="Сезон">
                 <input type="text" class="form-control ep-title" value="Эпизод ${count}" style="flex:1;">
-                <select class="form-control ep-voice" style="width:110px;"><option>AniLibria</option><option>Jaskier</option><option>Animedia</option></select>
+                <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria" style="flex:1.5;">
                 <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
                 <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
             `;
@@ -1269,15 +1274,18 @@
             const title = document.getElementById('animeTitle').value;
             const poster = document.getElementById('animePoster').value;
             const trailer = document.getElementById('animeTrailer').value;
-            const genre = document.getElementById('animeGenre').value;
             const year = document.getElementById('animeYear').value || '2026';
             const type = document.getElementById('animeType').value || 'Сериал';
             const desc = document.getElementById('animeDesc').value;
 
+            const selectedGenres = [];
+            document.querySelectorAll('.genre-checkbox:checked').forEach(cb => selectedGenres.push(cb.value));
+            const genres = selectedGenres.length > 0 ? selectedGenres : ['Экшен'];
+
             const episodes = [];
             const seasonsInputs = document.querySelectorAll('.ep-season');
             const titles = document.querySelectorAll('.ep-title');
-            const voices = document.querySelectorAll('.ep-voice');
+            const voicesInputs = document.querySelectorAll('.ep-voices');
             const qualities = document.querySelectorAll('.ep-quality');
             const urls = document.querySelectorAll('.ep-url');
             
@@ -1285,7 +1293,7 @@
                 episodes.push({ 
                     season: parseInt(seasonsInputs[i].value) || 1, 
                     title: titles[i].value, 
-                    voice: voices[i].value,
+                    voices: voicesInputs[i].value,
                     quality: qualities[i].value,
                     url: urls[i].value 
                 });
@@ -1293,9 +1301,9 @@
 
             if (editId) {
                 const anime = animeList.find(a => a.id === editId);
-                if (anime) Object.assign(anime, { title, poster, trailer, genre, year, type, desc, episodes });
+                if (anime) Object.assign(anime, { title, poster, trailer, genres, genre: genres[0], year, type, desc, episodes });
             } else {
-                animeList.push({ id: 'anime_' + Date.now(), title, poster, trailer, genre, year, type, desc, episodes, ratings: {} });
+                animeList.push({ id: 'anime_' + Date.now(), title, poster, trailer, genres, genre: genres[0], year, type, desc, episodes, ratings: {} });
             }
 
             await saveAnimeToCloud();
@@ -1347,29 +1355,97 @@
             openWatchModal(id);
         }
 
-        // --- СИСТЕМА ДРУЗЕЙ ---
-        function toggleFriend(targetUsername) {
+        // --- УПРАВЛЕНИЕ СТАТУСАМИ ПРОСМОТРА АНИМЕ ---
+        function setAnimeStatus(animeId, status) {
             if (!currentUser) { openAuthModal(); return; }
-            if (currentUser.username === targetUsername) return;
-            
-            if (!userFriends[currentUser.username]) userFriends[currentUser.username] = [];
-            const idx = userFriends[currentUser.username].indexOf(targetUsername);
-            if (idx > -1) {
-                userFriends[currentUser.username].splice(idx, 1);
+            if (!userAnimeStatuses[currentUser.username]) userAnimeStatuses[currentUser.username] = {};
+            if (userAnimeStatuses[currentUser.username][animeId] === status) {
+                delete userAnimeStatuses[currentUser.username][animeId];
             } else {
-                userFriends[currentUser.username].push(targetUsername);
+                userAnimeStatuses[currentUser.username][animeId] = status;
             }
             saveData();
+            openWatchModal(animeId);
+        }
+
+        // --- УПРАВЛЕНИЕ ЗАЯВКАМИ И ДРУЗЬЯМИ ---
+        function sendFriendRequest(targetUsername) {
+            if (!currentUser) { openAuthModal(); return; }
+            if (currentUser.username === targetUsername) return;
+
+            if (!friendRequests[targetUsername]) friendRequests[targetUsername] = [];
+            if (!friendRequests[targetUsername].includes(currentUser.username)) {
+                friendRequests[targetUsername].push(currentUser.username);
+                saveData();
+                alert('Заявка в друзья отправлена!');
+            } else {
+                alert('Заявка уже отправлена ранее.');
+            }
             openProfileModal(targetUsername);
-            updateOnlinePresence();
+        }
+
+        function acceptFriendRequest(senderUsername) {
+            if (!currentUser) return;
+            const myName = currentUser.username;
+            
+            // Удаляем из заявок
+            if (friendRequests[myName]) {
+                friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
+            }
+            // Добавляем друг другу в друзья
+            if (!userFriends[myName]) userFriends[myName] = [];
+            if (!userFriends[myName].includes(senderUsername)) userFriends[myName].push(senderUsername);
+
+            if (!userFriends[senderUsername]) userFriends[senderUsername] = [];
+            if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
+
+            saveData();
+            openProfileModal(myName);
+        }
+
+        function declineFriendRequest(senderUsername) {
+            if (!currentUser) return;
+            const myName = currentUser.username;
+            if (friendRequests[myName]) {
+                friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
+            }
+            saveData();
+            openProfileModal(myName);
+        }
+
+        function removeFriend(friendUsername) {
+            if (!currentUser) return;
+            const myName = currentUser.username;
+            
+            if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
+            if (userFriends[friendUsername]) userFriends[friendUsername] = userFriends[friendUsername].filter(u => u !== myName);
+
+            saveData();
+            openProfileModal(friendUsername);
         }
 
         function openProfileModal(username) {
             const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Участник сообщества' };
             const achs = userAchievements[username] || [];
             const myFriends = userFriends[username] || [];
+            const myRequests = friendRequests[username] || [];
             const isMe = currentUser && currentUser.username === username;
+            
             const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
+            const isRequestSent = currentUser && (friendRequests[username] || []).includes(currentUser.username);
+
+            // Статистика аниме пользователя
+            const userStatuses = userAnimeStatuses[username] || {};
+            const statsCounts = { 'Буду смотреть': 0, 'Смотрю': 0, 'Забросил': 0, 'Просмотрено': 0 };
+            const userAnimeListHTML = [];
+
+            Object.entries(userStatuses).forEach(([aId, st]) => {
+                statsCounts[st] = (statsCounts[st] || 0) + 1;
+                const anObj = animeList.find(x => x.id === aId);
+                if (anObj) {
+                    userAnimeListHTML.push(`<div style="font-size:12px; background:var(--bg-input); padding:6px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;"><span>${anObj.title}</span><span style="color:var(--accent); font-weight:700;">${st}</span></div>`);
+                }
+            });
 
             document.getElementById('profileModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); document.getElementById('profileModal').classList.remove('active')">&times;</button>
@@ -1379,9 +1455,9 @@
                         <h2>${username}</h2>
                         <p style="color:var(--text-muted); font-size:13px; margin-bottom:8px;">Статус: ${p.status}</p>
                         ${!isMe && currentUser ? `
-                            <button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="toggleFriend('${username}')">
-                                ${amIFriend ? '✓ В друзьях (Удалить)' : '+ Добавить в друзья'}
-                            </button>
+                            ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="removeFriend('${username}')">Удалить из друзей</button>` : 
+                              isRequestSent ? `<span style="font-size:12px; color:var(--text-muted);">Заявка отправлена</span>` : 
+                              `<button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
                         ` : ''}
                     </div>
                 </div>
@@ -1396,6 +1472,38 @@
                         <input type="text" id="newStatusText" class="form-control" placeholder="Ваш статус..." value="${p.status}">
                         <button class="btn-primary" onclick="updateUserProfile()">Сохранить</button>
                     </div>
+                </div>
+                ` : ''}
+
+                ${isMe && myRequests.length > 0 ? `
+                <div style="background:rgba(139,92,246,0.1); border:1px solid var(--primary); padding:12px; border-radius:12px; margin-bottom:15px;">
+                    <h3 style="font-size:14px; margin-bottom:8px;">🔔 Заявки в друзья (${myRequests.length})</h3>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        ${myRequests.map(req => `
+                            <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); padding:8px 12px; border-radius:8px;">
+                                <span style="font-weight:600; font-size:13px;">${req}</span>
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn-primary" style="padding:4px 10px; font-size:11px;" onclick="acceptFriendRequest('${req}')">Принять</button>
+                                    <button class="btn-danger" style="padding:4px 10px; font-size:11px;" onclick="declineFriendRequest('${req}')">Отклонить</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- Статистика и списки аниме -->
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:15px;">
+                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:var(--accent);">${statsCounts['Буду смотреть']}</div><div style="font-size:11px; color:var(--text-muted);">Буду смотреть</div></div>
+                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#34d399;">${statsCounts['Смотрю']}</div><div style="font-size:11px; color:var(--text-muted);">Смотрю</div></div>
+                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#fca5a5;">${statsCounts['Забросил']}</div><div style="font-size:11px; color:var(--text-muted);">Забросил</div></div>
+                    <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#60a5fa;">${statsCounts['Просмотрено']}</div><div style="font-size:11px; color:var(--text-muted);">Просмотрено</div></div>
+                </div>
+
+                ${userAnimeListHTML.length > 0 ? `
+                <h3 style="font-size:14px; margin-bottom:8px;">📦 Списки аниме пользователя</h3>
+                <div style="max-height:140px; overflow-y:auto; margin-bottom:20px; display:flex; flex-direction:column; gap:4px; padding-right:4px;">
+                    ${userAnimeListHTML.join('')}
                 </div>
                 ` : ''}
 
@@ -1450,15 +1558,17 @@
             const activeSeason = selectedSeason !== null && seasonsMap[selectedSeason] ? selectedSeason : seasonNumbers[0];
             const currentSeasonEpisodes = seasonsMap[activeSeason];
 
-            const availableVoices = [...new Set(currentSeasonEpisodes.map(ep => ep.voice || 'AniLibria'))];
+            // Разделяем озвучки через запятую для текущего эпизода
+            const currentEpForVoices = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
+            const rawVoicesStr = currentEpForVoices.voices || currentEpForVoices.voice || 'AniLibria';
+            const availableVoices = rawVoicesStr.split(',').map(v => v.trim()).filter(Boolean);
             const activeVoice = selectedVoice && availableVoices.includes(selectedVoice) ? selectedVoice : availableVoices[0];
 
-            const voiceEpisodes = currentSeasonEpisodes.filter(ep => (ep.voice || 'AniLibria') === activeVoice);
-            const availableQualities = [...new Set(voiceEpisodes.map(ep => ep.quality || '1080p'))];
+            const availableQualities = [...new Set(currentSeasonEpisodes.map(ep => ep.quality || '1080p'))];
             const activeQuality = selectedQuality && availableQualities.includes(selectedQuality) ? selectedQuality : availableQualities[0];
 
-            const finalEpList = voiceEpisodes.filter(ep => (ep.quality || '1080p') === activeQuality);
-            const currentEp = finalEpList[selectedEpIdx] || finalEpList[0] || voiceEpisodes[0];
+            const finalEpList = currentSeasonEpisodes.filter(ep => (ep.quality || '1080p') === activeQuality);
+            const currentEp = finalEpList[selectedEpIdx] || finalEpList[0] || currentSeasonEpisodes[0];
 
             const comments = animeComments[anime.id] || [];
             const userHistoryKey = currentUser ? `${currentUser.username}_${anime.id}` : null;
@@ -1466,16 +1576,26 @@
             const userFavCategory = currentUser ? ((userFavorites[currentUser.username] || {})[anime.id] || '') : '';
             const avgRating = calculateAverageRating(anime);
 
+            const myCurrentStatus = currentUser && userAnimeStatuses[currentUser.username] ? (userAnimeStatuses[currentUser.username][anime.id] || '') : '';
+
             document.getElementById('watchModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); document.getElementById('watchModal').classList.remove('active')">&times;</button>
                 <div class="watch-cinema-layout ${isTheaterMode ? 'theater' : ''}" id="cinemaLayout">
                     <div class="watch-main-col">
                         <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                             <h2>${anime.title} (Сезон ${activeSeason})</h2>
-                            <div style="display:flex; gap:8px;">
+                            <div style="display:flex; gap:8px; flex-wrap:wrap;">
                                 <button class="btn-secondary" onclick="toggleTheaterMode('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">🎬 Кинотеатр</button>
                                 <button class="btn-secondary" onclick="toggleFavorite('${anime.id}', 'Смотрю')">⭐ ${userFavCategory || 'В избранное'}</button>
                             </div>
+                        </div>
+
+                        <!-- Кнопки выбора статуса просмотра аниме -->
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:10px 14px; border-radius:12px;">
+                            <span style="font-size:12px; color:var(--text-muted);">Статус:</span>
+                            ${['Буду смотреть', 'Смотрю', 'Забросил', 'Просмотрено'].map(st => `
+                                <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
+                            `).join('')}
                         </div>
 
                         ${anime.trailer ? `
@@ -1496,17 +1616,17 @@
                         </div>
 
                         <div id="videoErrorMsg" style="display:none; color:#fca5a5; font-size:13px; background:rgba(239,68,68,0.15); padding:10px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);">
-                            ⚠️ Не удалось загрузить видео. Проверьте правильность прямой ссылки (.mp4).
+                            ⚠️ Не удалось загрузить видео. Убедитесь, что ссылка является прямой ссылкой на видеофайл (.mp4).
                         </div>
 
                         <div style="display:flex; gap:15px; background:var(--bg-input); padding:12px 16px; border-radius:12px; align-items:center; flex-wrap:wrap;">
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span style="font-size:13px; color:var(--text-muted);">Озвучка:</span>
-                                ${availableVoices.map(v => `<button class="season-tab-btn ${v === activeVoice ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, 0, '${v}', '${activeQuality}')">${v}</button>`).join('')}
+                                ${availableVoices.map(v => `<button class="season-tab-btn ${v === activeVoice ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${v}', '${activeQuality}')">${v}</button>`).join('')}
                             </div>
                             <div style="display:flex; align-items:center; gap:8px;">
                                 <span style="font-size:13px; color:var(--text-muted);">Качество:</span>
-                                ${availableQualities.map(q => `<button class="season-tab-btn ${q === activeQuality ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, 0, '${activeVoice}', '${q}')">${q}</button>`).join('')}
+                                ${availableQualities.map(q => `<button class="season-tab-btn ${q === activeQuality ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${q}')">${q}</button>`).join('')}
                             </div>
                         </div>
 
