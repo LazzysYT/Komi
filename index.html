@@ -29,7 +29,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
         }
 
         body {
@@ -38,10 +38,22 @@
             min-height: 100vh;
             display: flex;
             flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* Плавные анимации */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(15px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes modalScale {
+            from { opacity: 0; transform: scale(0.94); }
+            to { opacity: 1; transform: scale(1); }
         }
 
         header {
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.85);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -51,6 +63,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 16px 40px;
+            gap: 15px;
         }
 
         .logo-area {
@@ -77,8 +90,9 @@
             font-weight: 800;
             font-size: 24px;
             color: white;
-            box-shadow: 0 0 20px var(--primary);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.4);
         }
+        .logo-box:hover { transform: scale(1.05); }
 
         .logo-text {
             font-size: 22px;
@@ -100,7 +114,8 @@
             align-items: center;
             gap: 6px;
         }
-        .online-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; }
+        .online-dot { width: 8px; height: 8px; background: #34d399; border-radius: 50%; box-shadow: 0 0 8px #34d399; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
 
         .search-container {
             position: relative;
@@ -120,7 +135,7 @@
 
         .search-bar input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 15px var(--accent);
+            box-shadow: 0 0 15px rgba(192, 132, 252, 0.3);
         }
 
         .search-bar svg {
@@ -148,9 +163,9 @@
             max-height: 250px;
             overflow-y: auto;
         }
-        .search-dropdown.active { display: block; }
+        .search-dropdown.active { display: block; animation: fadeInUp 0.2s ease; }
         .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
-        .search-dropdown-item:hover { background: rgba(139,92,246,0.15); }
+        .search-dropdown-item:hover { background: rgba(139,92,246,0.15); color: var(--accent); }
 
         .nav-actions {
             display: flex;
@@ -186,7 +201,7 @@
             font-size: 13px;
             font-weight: 600;
         }
-        .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); }
+        .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); transform: translateY(-1px); }
 
         .user-pill {
             background: rgba(139, 92, 246, 0.15);
@@ -200,6 +215,7 @@
             font-weight: 600;
             cursor: pointer;
         }
+        .user-pill:hover { border-color: var(--accent); }
 
         .user-avatar-small {
             width: 28px;
@@ -219,10 +235,6 @@
             flex: 1;
             width: 100%;
         }
-        @media (max-width: 1100px) {
-            .app-layout { grid-template-columns: 1fr; }
-            .right-sidebar { display: none; }
-        }
 
         .right-sidebar {
             background: var(--bg-card);
@@ -235,6 +247,7 @@
             display: flex;
             flex-direction: column;
             gap: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .sidebar-section h3 {
@@ -271,6 +284,7 @@
         .sidebar-user-item:hover {
             border-color: var(--accent);
             background: rgba(139, 92, 246, 0.15);
+            transform: translateX(3px);
         }
         .sidebar-user-avatar {
             width: 24px;
@@ -280,7 +294,7 @@
             background: var(--primary);
         }
 
-        main { width: 100%; }
+        main { width: 100%; animation: fadeInUp 0.4s ease; }
 
         .hero-banner {
             border-radius: 24px;
@@ -355,13 +369,13 @@
             font-weight: 700;
             font-size: 14px;
             cursor: pointer;
-            box-shadow: 0 4px 20px var(--primary);
+            box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
             display: inline-flex;
             align-items: center;
             gap: 8px;
             width: fit-content;
         }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-2px); box-shadow: 0 6px 25px rgba(139, 92, 246, 0.6); }
 
         .section-header {
             display: flex;
@@ -385,15 +399,16 @@
             border-radius: 16px;
             overflow: hidden;
             cursor: pointer;
-            transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
             display: flex;
             flex-direction: column;
             position: relative;
+            animation: fadeInUp 0.5s ease;
         }
         .anime-card:hover {
-            transform: translateY(-6px);
+            transform: translateY(-8px) scale(1.02);
             border-color: var(--accent);
-            box-shadow: 0 12px 30px rgba(139, 92, 246, 0.25);
+            box-shadow: 0 15px 35px rgba(139, 92, 246, 0.3);
         }
 
         .anime-rating-badge {
@@ -408,6 +423,7 @@
             font-size: 12px;
             font-weight: 700;
             z-index: 2;
+            backdrop-filter: blur(4px);
         }
 
         .anime-poster {
@@ -415,7 +431,9 @@
             height: 310px;
             object-fit: cover;
             background: var(--bg-input);
+            transition: transform 0.5s ease;
         }
+        .anime-card:hover .anime-poster { transform: scale(1.05); }
 
         .anime-info {
             padding: 16px;
@@ -423,6 +441,8 @@
             flex-direction: column;
             gap: 6px;
             flex: 1;
+            background: var(--bg-card);
+            z-index: 2;
         }
 
         .anime-title {
@@ -450,7 +470,7 @@
             border: 1px dashed var(--border);
         }
 
-        /* Modals */
+        /* Модальные окна с плавной анимацией */
         .modal-overlay {
             position: fixed;
             top: 0;
@@ -480,6 +500,7 @@
             overflow-y: auto;
             position: relative;
             box-shadow: 0 25px 60px rgba(0,0,0,0.95);
+            animation: modalScale 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
 
         .modal-close {
@@ -499,12 +520,12 @@
             justify-content: center;
             z-index: 10;
         }
-        .modal-close:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); }
+        .modal-close:hover { background: rgba(255,255,255,0.15); border-color: var(--accent); transform: rotate(90deg); }
 
         .form-group { margin-bottom: 20px; }
         .form-group label { display: block; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 8px; }
         .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 12px; color: white; font-size: 14px; outline: none; }
-        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 10px var(--accent); }
+        .form-control:focus { border-color: var(--accent); box-shadow: 0 0 10px rgba(192, 132, 252, 0.3); }
         textarea.form-control { resize: vertical; min-height: 90px; }
 
         .btn-secondary { background: rgba(255,255,255,0.05); color: white; border: 1px solid var(--border); padding: 10px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 13px; }
@@ -528,11 +549,9 @@
             grid-template-columns: 1fr 380px;
             gap: 30px;
             align-items: start;
-            transition: all 0.3s ease;
         }
         .watch-cinema-layout.theater { grid-template-columns: 1fr; }
         .watch-cinema-layout.theater .watch-sidebar { display: none; }
-        @media (max-width: 1024px) { .watch-cinema-layout { grid-template-columns: 1fr; } }
 
         .watch-main-col { display: flex; flex-direction: column; gap: 20px; }
         .player-wrapper { position: relative; width: 100%; }
@@ -596,6 +615,25 @@
         .admin-table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         .admin-table th, .admin-table td { padding: 14px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14px; }
         .admin-table th { color: var(--text-muted); font-weight: 600; }
+
+        /* Мобильная адаптация */
+        @media (max-width: 1024px) {
+            .app-layout { grid-template-columns: 1fr; padding: 20px; }
+            .right-sidebar { position: static; margin-top: 20px; }
+            .watch-cinema-layout { grid-template-columns: 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            header { padding: 12px 16px; flex-direction: column; align-items: stretch; gap: 10px; }
+            .logo-area { justify-content: space-between; }
+            .search-container { flex: 1; max-width: 100%; }
+            .nav-actions { justify-content: center; }
+            .hero-banner { padding: 25px; min-height: 320px; }
+            .hero-banner h1 { font-size: 28px; }
+            .anime-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
+            .anime-poster { height: 230px; }
+            .modal-content { padding: 20px 15px; width: 100%; max-height: 95vh; border-radius: 16px; }
+        }
     </style>
 </head>
 <body class="theme-default">
@@ -775,9 +813,9 @@
 
         let animeList = [];
         let animeComments = {}; 
-        let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; // { user: ['friend1'] }
-        let friendRequests = JSON.parse(localStorage.getItem('komi_friend_requests')) || {}; // { targetUser: ['senderUser'] }
-        let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; // { username: { animeId: 'Смотрю' } }
+        let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
+        let friendRequests = JSON.parse(localStorage.getItem('komi_friend_requests')) || {}; 
+        let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {};
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
@@ -1355,7 +1393,6 @@
             openWatchModal(id);
         }
 
-        // --- УПРАВЛЕНИЕ СТАТУСАМИ ПРОСМОТРА АНИМЕ ---
         function setAnimeStatus(animeId, status) {
             if (!currentUser) { openAuthModal(); return; }
             if (!userAnimeStatuses[currentUser.username]) userAnimeStatuses[currentUser.username] = {};
@@ -1368,7 +1405,6 @@
             openWatchModal(animeId);
         }
 
-        // --- УПРАВЛЕНИЕ ЗАЯВКАМИ И ДРУЗЬЯМИ ---
         function sendFriendRequest(targetUsername) {
             if (!currentUser) { openAuthModal(); return; }
             if (currentUser.username === targetUsername) return;
@@ -1388,11 +1424,9 @@
             if (!currentUser) return;
             const myName = currentUser.username;
             
-            // Удаляем из заявок
             if (friendRequests[myName]) {
                 friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
             }
-            // Добавляем друг другу в друзья
             if (!userFriends[myName]) userFriends[myName] = [];
             if (!userFriends[myName].includes(senderUsername)) userFriends[myName].push(senderUsername);
 
@@ -1434,7 +1468,6 @@
             const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
             const isRequestSent = currentUser && (friendRequests[username] || []).includes(currentUser.username);
 
-            // Статистика аниме пользователя
             const userStatuses = userAnimeStatuses[username] || {};
             const statsCounts = { 'Буду смотреть': 0, 'Смотрю': 0, 'Забросил': 0, 'Просмотрено': 0 };
             const userAnimeListHTML = [];
@@ -1492,7 +1525,6 @@
                 </div>
                 ` : ''}
 
-                <!-- Статистика и списки аниме -->
                 <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap:10px; margin-bottom:15px;">
                     <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:var(--accent);">${statsCounts['Буду смотреть']}</div><div style="font-size:11px; color:var(--text-muted);">Буду смотреть</div></div>
                     <div style="background:var(--bg-input); padding:10px; border-radius:10px; text-align:center;"><div style="font-size:18px; font-weight:800; color:#34d399;">${statsCounts['Смотрю']}</div><div style="font-size:11px; color:var(--text-muted);">Смотрю</div></div>
@@ -1558,7 +1590,6 @@
             const activeSeason = selectedSeason !== null && seasonsMap[selectedSeason] ? selectedSeason : seasonNumbers[0];
             const currentSeasonEpisodes = seasonsMap[activeSeason];
 
-            // Разделяем озвучки через запятую для текущего эпизода
             const currentEpForVoices = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
             const rawVoicesStr = currentEpForVoices.voices || currentEpForVoices.voice || 'AniLibria';
             const availableVoices = rawVoicesStr.split(',').map(v => v.trim()).filter(Boolean);
@@ -1590,7 +1621,6 @@
                             </div>
                         </div>
 
-                        <!-- Кнопки выбора статуса просмотра аниме -->
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:10px 14px; border-radius:12px;">
                             <span style="font-size:12px; color:var(--text-muted);">Статус:</span>
                             ${['Буду смотреть', 'Смотрю', 'Забросил', 'Просмотрено'].map(st => `
@@ -1792,7 +1822,6 @@
             openWatchModal(id);
         }
 
-        // Запуск загрузки базы данных из Supabase при старте
         loadDataFromCloud();
     </script>
 </body>
