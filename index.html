@@ -18,8 +18,9 @@
             --accent: #FF454F;
             --text-main: #F5F5F7;
             --text-muted: #92929F;
-            --border: #252530;
-            --glow: rgba(255, 69, 79, 0.35);
+            --border: #282832;
+            --success: #36D399;
+            --glow: rgba(255, 69, 79, 0.3);
         }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -45,23 +46,23 @@
         }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(6px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes modalScale {
-            from { opacity: 0; transform: scale(0.97); }
+            from { opacity: 0; transform: scale(0.96); }
             to { opacity: 1; transform: scale(1); }
         }
 
         @keyframes floatUp {
-            0% { transform: translateY(0px) scale(0.5); opacity: 1; }
-            100% { transform: translateY(-350px) scale(1.4); opacity: 0; }
+            0% { transform: translateY(0px) scale(0.6); opacity: 1; }
+            100% { transform: translateY(-380px) scale(1.5); opacity: 0; }
         }
 
-        /* Шапка сайта (ограничение до 1400px для центровки) */
+        /* Шапка сайта */
         header {
-            background: rgba(9, 9, 13, 0.85);
+            background: rgba(9, 9, 13, 0.88);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -83,53 +84,53 @@
         }
 
         .logo-area { display: flex; align-items: center; gap: 14px; }
-        .logo-container { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-box {
-            width: 36px; height: 36px;
+            width: 38px; height: 38px;
             background: linear-gradient(135deg, var(--primary), #FF737B);
             border-radius: 10px; display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 18px; color: white;
-            box-shadow: 0 0 15px var(--glow);
+            box-shadow: 0 0 16px var(--glow);
             transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .logo-box:hover { transform: scale(1.06); box-shadow: 0 0 20px var(--glow); }
+        .logo-box:hover { transform: scale(1.06); box-shadow: 0 0 22px var(--glow); }
         .logo-text {
-            font-size: 17px; font-weight: 800;
+            font-size: 18px; font-weight: 800;
             background: linear-gradient(to right, #FFFFFF, var(--text-muted));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-            letter-spacing: -0.3px;
+            letter-spacing: -0.4px;
         }
 
         .online-counter {
-            background: rgba(16, 185, 129, 0.08);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            color: #34d399; padding: 4px 10px; border-radius: 20px;
+            background: rgba(54, 211, 153, 0.08);
+            border: 1px solid rgba(54, 211, 153, 0.25);
+            color: var(--success); padding: 4px 10px; border-radius: 20px;
             font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px;
         }
-        .online-dot { width: 6px; height: 6px; background: #34d399; border-radius: 50%; box-shadow: 0 0 6px #34d399; }
+        .online-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; box-shadow: 0 0 8px var(--success); }
 
-        .search-container { position: relative; flex: 0 1 260px; }
+        .search-container { position: relative; flex: 0 1 300px; }
         .search-bar input {
             width: 100%; background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 10px; padding: 7px 12px 7px 34px; color: white; font-size: 12px; outline: none;
+            border-radius: 10px; padding: 8px 12px 8px 36px; color: white; font-size: 12px; outline: none;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .search-bar input:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
-        .search-bar svg { position: absolute; left: 11px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 14px; height: 14px; }
+        .search-bar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 14px; height: 14px; }
 
         .search-dropdown {
             position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card);
             border: 1px solid var(--border); border-radius: 10px; margin-top: 6px; display: none; z-index: 200;
-            box-shadow: 0 15px 35px rgba(0,0,0,0.8); max-height: 260px; overflow-y: auto;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.85); max-height: 280px; overflow-y: auto;
         }
         .search-dropdown.active { display: block; animation: fadeInUp 0.15s ease; }
-        .search-dropdown-item { padding: 8px 12px; font-size: 12px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; transition: background 0.15s ease; }
+        .search-dropdown-item { padding: 9px 12px; font-size: 12px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; transition: background 0.15s ease; }
         .search-dropdown-item:hover { background: var(--bg-card-hover); color: white; }
 
-        .nav-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; position: relative; }
+        .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; position: relative; }
         .nav-btn {
             background: transparent; border: 1px solid transparent; color: var(--text-muted);
-            font-weight: 600; font-size: 12px; cursor: pointer; padding: 6px 10px; border-radius: 8px;
+            font-weight: 600; font-size: 12px; cursor: pointer; padding: 6px 12px; border-radius: 8px;
             transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
         .nav-btn:hover, .nav-btn.active { color: white; background: rgba(255,255,255,0.04); border-color: var(--border); }
@@ -143,19 +144,19 @@
 
         .notification-badge {
             position: absolute; top: -4px; right: -4px; background: var(--primary); color: white;
-            font-size: 8px; font-weight: 800; width: 15px; height: 15px; border-radius: 50%;
+            font-size: 9px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%;
             display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px var(--glow);
         }
 
         .notification-dropdown {
-            position: absolute; top: 120%; right: 0; width: 280px; background: var(--bg-card);
-            border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+            position: absolute; top: 120%; right: 0; width: 300px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 20px 40px rgba(0,0,0,0.9);
             display: none; flex-direction: column; z-index: 300; overflow: hidden;
         }
         .notification-dropdown.active { display: flex; animation: fadeInUp 0.15s ease; }
-        .notif-header { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-        .notif-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; }
-        .notif-item { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
+        .notif-header { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .notif-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; }
+        .notif-item { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
         .notif-item:hover { background: var(--bg-card-hover); color: white; }
 
         .user-pill {
@@ -164,20 +165,19 @@
             transition: border-color 0.2s ease;
         }
         .user-pill:hover { border-color: var(--text-muted); }
-        .user-avatar-small { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--primary); }
+        .user-avatar-small { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--primary); }
 
-        /* Общий контейнер контента строго до 1400px с вертикальными отступами 24–32px */
+        /* Контейнер контента */
         .app-layout {
             max-width: 1400px; margin: 0 auto; padding: 28px 24px; flex: 1; width: 100%;
-            display: flex; flex-direction: column; gap: 32px;
+            display: flex; flex-direction: column; gap: 36px;
         }
 
-        /* Верхняя секция: Баннер слева, друзья справа */
+        /* Баннер и блок друзей */
         .top-hero-section-grid {
             display: grid; grid-template-columns: 1fr 300px; gap: 24px; align-items: stretch;
         }
 
-        /* 1. Идеальный кинематографичный баннер (высота 440px) */
         .hero-slider-container {
             position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--border);
             box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7); background: var(--bg-card); height: 440px; display: flex; flex-direction: column; justify-content: flex-end;
@@ -216,7 +216,6 @@
         }
         .btn-glow-secondary:hover { border-color: var(--text-muted); background: var(--bg-card-hover); transform: translateY(-1px); }
 
-        /* Стрелки переключения симметрично по бокам баннера */
         .hero-slider-arrow {
             position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20, 20, 27, 0.7);
             border: 1px solid var(--border); color: white; width: 40px; height: 40px; border-radius: 50%;
@@ -227,12 +226,10 @@
         .hero-arrow-prev { left: 16px; }
         .hero-arrow-next { right: 16px; }
         
-        /* Индикаторы слайдов в нижней части самого изображения */
         .hero-dots { position: absolute; bottom: 16px; right: 36px; display: flex; gap: 5px; z-index: 10; }
         .hero-dot { width: 16px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: width 0.3s ease, background 0.3s ease; }
         .hero-dot.active { width: 36px; background: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
-        /* 5. Компактный блок друзей справа от баннера (без лишней пустоты) */
         .friends-sidebar-panel {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
             padding: 16px; display: flex; flex-direction: column; gap: 12px; height: 440px;
@@ -248,15 +245,14 @@
         .sidebar-friend-item:hover { background: var(--bg-card-hover); border-color: var(--primary); transform: translateX(2px); }
         .sidebar-friend-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--primary); border: 1px solid var(--border); }
 
-        main { width: 100%; display: flex; flex-direction: column; gap: 32px; }
+        main { width: 100%; display: flex; flex-direction: column; gap: 36px; }
 
-        /* 4. Единый дизайн секций: заголовок слева, кнопка «Смотреть все» справа */
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
         .section-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
         .section-see-all { font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; border: none; transition: color 0.2s ease; }
         .section-see-all:hover { color: var(--primary); }
 
-        /* 2 & 3. Идеальная CSS Grid-сетка с соотношением сторон 2:3 без хаотичных переносов */
+        /* Сетка карточек аниме (2:3) */
         .anime-grid { 
             display: grid; 
             grid-template-columns: repeat(7, 1fr); 
@@ -276,31 +272,27 @@
         }
         .anime-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 12px 30px var(--glow); }
         
-        /* Полупрозрачный бейдж рейтинга в левом верхнем углу */
         .anime-rating-badge {
             position: absolute; top: 8px; left: 8px; background: rgba(9, 9, 13, 0.75); border: 1px solid var(--border);
             color: #fbbf24; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 2; backdrop-filter: blur(6px);
         }
         
-        /* Строгое соотношение сторон постера 2:3 */
         .anime-poster-box { position: relative; width: 100%; aspect-ratio: 2 / 3; overflow: hidden; background: var(--bg-input); }
         .anime-poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .anime-card:hover .anime-poster { transform: scale(1.06); }
         
-        /* Красивое затемнение изображения при наведении */
         .anime-quick-view {
             position: absolute; inset: 0; background: rgba(9, 9, 13, 0.6); backdrop-filter: blur(3px);
             display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; z-index: 3;
         }
         .anime-card:hover .anime-quick-view { opacity: 1; }
         
-        /* Компактная и аккуратная нижняя информационная часть */
         .anime-info { padding: 10px 12px; display: flex; flex-direction: column; gap: 3px; flex: 1; background: var(--bg-card); z-index: 2; }
         .anime-title { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
         .anime-meta-card { font-size: 10px; color: var(--text-muted); display: flex; justify-content: space-between; align-items: center; }
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 12px; border: 1px dashed var(--border); }
 
-        /* Страница профиля */
+        /* Профиль */
         .profile-container { max-width: 1200px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
         .profile-header-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 24px;
@@ -337,7 +329,6 @@
         }
         .profile-settings-box h4 { font-size: 11px; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
 
-        /* Статистика профиля */
         .profile-stats-grid {
             display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px;
         }
@@ -487,7 +478,6 @@
         .admin-table th, .admin-table td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 11px; }
         .admin-table th { color: var(--text-muted); font-weight: 600; }
 
-        /* 7. Адаптивность для планшетов и мобильных устройств (разрешения 1024, 768, 375) */
         @media (max-width: 1024px) {
             .top-hero-section-grid { grid-template-columns: 1fr; }
             .friends-sidebar-panel { height: auto; min-height: auto; max-height: 240px; }
@@ -629,7 +619,6 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 360px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
@@ -666,7 +655,6 @@
         </div>
     </div>
 
-    <!-- Roulette Modal -->
     <div class="modal-overlay" id="randomRouletteModal">
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
             <h3 style="margin-bottom: 14px; font-size: 15px;">🎲 Выбираем аниме...</h3>
@@ -692,7 +680,6 @@
         } catch(e) {}
 
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив'];
-
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playSound() {
@@ -988,7 +975,7 @@
                             <div class="sidebar-friend-item" onclick="playSound(); openProfile('${f}')">
                                 <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                 <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
-                                <span style="width:6px; height:6px; border-radius:50%; background:${isOnline ? '#34d399' : '#64748b'};" title="${isOnline ? 'В сети' : 'Не в сети'}"></span>
+                                <span style="width:6px; height:6px; border-radius:50%; background:${isOnline ? 'var(--success)' : 'var(--text-muted)'};" title="${isOnline ? 'В сети' : 'Не в сети'}"></span>
                             </div>
                         `;
                     }).join('');
@@ -1131,6 +1118,8 @@
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 7);
                 const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм');
                 const seasonalNew = [...animeList].reverse().slice(0, 7);
+                const recentlyAdded = [...animeList].slice(0, 7);
+                const popularNow = [...animeList].sort(() => 0.5 - Math.random()).slice(0, 7);
 
                 let continueWatchingHtml = '';
                 if (currentUser) {
@@ -1185,7 +1174,6 @@
                                 `).join('')}
                             </div>
 
-                            <!-- Индикаторы слайдов в нижней части самого изображения -->
                             <div class="hero-dots">
                                 ${sliderItems.map((_, idx) => `
                                     <div class="hero-dot ${idx === currentSlideIndex ? 'active' : ''}" onclick="playSound(); setSlide(${idx})"></div>
@@ -1193,7 +1181,6 @@
                             </div>
                         </div>
 
-                        <!-- Блок друзей справа от баннера -->
                         <div class="friends-sidebar-panel">
                             <h3>👥 Друзья</h3>
                             <div class="sidebar-friends-list" id="sidebarFriendsListContainer">
@@ -1203,6 +1190,16 @@
                     </div>
 
                     ${continueWatchingHtml}
+
+                    <div>
+                        <div class="section-header">
+                            <h2 class="section-title">🔥 Популярное сейчас</h2>
+                            <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                        </div>
+                        <div class="anime-grid">
+                            ${popularNow.map(a => renderCard(a)).join('')}
+                        </div>
+                    </div>
 
                     <div>
                         <div class="section-header">
@@ -1231,6 +1228,16 @@
                         </div>
                         <div class="anime-grid">
                             ${bestMovies.length === 0 ? `<div class="empty-state"><h3>Фильмы пока не добавлены</h3></div>` : bestMovies.map(a => renderCard(a)).join('')}
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="section-header">
+                            <h2 class="section-title">🆕 Недавно добавленные</h2>
+                            <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                        </div>
+                        <div class="anime-grid">
+                            ${recentlyAdded.map(a => renderCard(a)).join('')}
                         </div>
                     </div>
                 `;
@@ -1398,7 +1405,7 @@
                         <img src="${p.avatar}" class="profile-avatar-box" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
-                                <h2>👤 ${username} <span style="font-size:11px; color:#34d399; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:20px; border:1px solid rgba(16,185,129,0.3);">● Онлайн</span></h2>
+                                <h2>👤 ${username} <span style="font-size:11px; color:var(--success); background:rgba(54,211,153,0.1); padding:2px 8px; border-radius:20px; border:1px solid rgba(54,211,153,0.3);">● Онлайн</span></h2>
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
                                      `<button class="btn-glow" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
@@ -1792,7 +1799,7 @@
                                     <div style="flex:1; overflow:hidden;">
                                         <div style="font-weight:700; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${room.name}</div>
                                         <div style="font-size:10px; color:var(--text-muted);">Хост: ${room.host}</div>
-                                        <div style="font-size:10px; color:#34d399; margin-top:2px;">Участников: ${room.members.length}</div>
+                                        <div style="font-size:10px; color:var(--success); margin-top:2px;">Участников: ${room.members.length}</div>
                                     </div>
                                     <button class="btn-glow" style="padding:3px 6px; font-size:10px;" onclick="playSound(); joinWatchPartyRoom('${room.id}')">Войти</button>
                                 </div>
@@ -1922,7 +1929,7 @@
                     </div>
                     <div style="display:flex; gap:6px; align-items:center;">
                         ${isHost ? `<button class="btn-danger" style="padding:3px 6px; font-size:10px;" onclick="playSound(); deleteActiveWatchParty()">🗑️ Удалить</button>` : ''}
-                        <span style="background:rgba(16,185,129,0.1); color:#34d399; padding:3px 6px; border-radius:5px; font-size:10px; font-weight:700;">● Активно</span>
+                        <span style="background:rgba(54,211,153,0.1); color:var(--success); padding:3px 6px; border-radius:5px; font-size:10px; font-weight:700;">● Активно</span>
                         <button class="modal-close" style="position:static;" onclick="playSound(); leaveWatchPartyRoom()">&times;</button>
                     </div>
                 </div>
