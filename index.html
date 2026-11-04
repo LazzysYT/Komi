@@ -799,6 +799,7 @@
         
         let activeWatchPartyRoom = null;
         let partySyncInterval = null;
+        let activePartiesList = JSON.parse(localStorage.getItem('komi_active_parties')) || [];
 
         function changeTheme(theme) {
             document.body.className = theme === 'default' ? '' : 'theme-' + theme;
@@ -819,6 +820,7 @@
             localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
             localStorage.setItem('komi_notifications', JSON.stringify(userNotifications));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
+            localStorage.setItem('komi_active_parties', JSON.stringify(activePartiesList));
             saveStatusesToCloud();
         }
 
@@ -1510,7 +1512,7 @@
         }
 
         // ==========================================
-        // WATCH PARTY (КОМНАТА СОВМЕСТНОГО ПРОСМОТРА)
+        // WATCH PARTY (УЛУЧШЕННАЯ СИСТЕМА)
         // ==========================================
         function openWatchPartyHub() {
             if (!currentUser) { openAuthModal('login'); return; }
@@ -1524,7 +1526,7 @@
                 <button class="modal-close" onclick="playSound(); closeWatchPartyModal()">&times;</button>
                 <h2 style="margin-bottom: 20px;">🎉 Watch Party — Совместный просмотр</h2>
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px; margin-bottom:25px;">
                     <div style="background:var(--bg-input); padding:20px; border-radius:16px; border:1px solid var(--border);">
                         <h3 style="font-size:16px; margin-bottom:15px;">🎬 Создать новую комнату</h3>
                         <div class="form-group">
@@ -1538,7 +1540,7 @@
                         <div class="form-group">
                             <label>Тип доступа</label>
                             <select id="partyRoomType" class="form-control">
-                                <option value="public">🌍 Публичная (видна всем)</option>
+                                <option value="public">🌍 Публичная (видна всем в списке)</option>
                                 <option value="private">🔒 Приватная (только по приглашению)</option>
                             </select>
                         </div>
@@ -1555,9 +1557,26 @@
                                 </div>
                             `).join('')}
                         </div>
-                        <div style="margin-top:auto; font-size:12px; color:var(--text-muted);">
-                            💡 Синхронизируйте паузу, общайтесь в чате комнаты и кидайте эпичные реакции прямо на экран видео!
-                        </div>
+                    </div>
+                </div>
+
+                <div style="background:var(--bg-input); padding:20px; border-radius:16px; border:1px solid var(--border);">
+                    <h3 style="font-size:16px; margin-bottom:12px;">🌍 Активные комнаты (Watch Parties)</h3>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap:12px; max-height:240px; overflow-y:auto;" id="activePartiesGridContainer">
+                        ${activePartiesList.length === 0 ? `<div style="color:var(--text-muted); font-size:13px;">Сейчас нет активных публичных комнат. Создайте свою!</div>` : activePartiesList.map(room => {
+                            const an = animeList.find(x => x.id === room.animeId);
+                            return `
+                                <div style="background:var(--bg-card); border:1px solid var(--border); padding:12px; border-radius:12px; display:flex; gap:12px; align-items:center;">
+                                    <img src="${an ? an.poster : ''}" style="width:50px; height:70px; object-fit:cover; border-radius:8px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
+                                    <div style="flex:1; overflow:hidden;">
+                                        <div style="font-weight:700; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${room.name}</div>
+                                        <div style="font-size:11px; color:var(--text-muted);">Хост: ${room.host}</div>
+                                        <div style="font-size:11px; color:#34d399; margin-top:2px;">Участников: ${room.members.length}</div>
+                                    </div>
+                                    <button class="btn-glow" style="padding:6px 12px; font-size:12px;" onclick="playSound(); joinWatchPartyRoom('${room.id}')">Войти</button>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 </div>
             `;
@@ -1588,8 +1607,44 @@
                 chat: [{ author: 'Система', text: `${currentUser.username} создал комнату совместного просмотра.` }]
             };
 
+            if (roomType === 'public') {
+                activePartiesList.push(activeWatchPartyRoom);
+            }
+
+            saveData();
             closeWatchPartyModal();
             openActiveWatchPartyRoom();
+        }
+
+        function joinWatchPartyRoom(roomId) {
+            if (!currentUser) { openAuthModal('login'); return; }
+            const room = activePartiesList.find(r => r.id === roomId);
+            if (!room) { alert('Комната не найдена или была удалена!'); return; }
+
+            activeWatchPartyRoom = room;
+            if (!activeWatchPartyRoom.members.includes(currentUser.username)) {
+                activeWatchPartyRoom.members.push(currentUser.username);
+                activeWatchPartyRoom.chat.push({ author: 'Система', text: `${currentUser.username} присоединился к комнате.` });
+                saveData();
+            }
+
+            closeWatchPartyModal();
+            openActiveWatchPartyRoom();
+        }
+
+        function deleteActiveWatchParty() {
+            if (!activeWatchPartyRoom || !currentUser) return;
+            if (activeWatchPartyRoom.host !== currentUser.username) {
+                alert('Только создатель комнаты может её удалить!');
+                return;
+            }
+
+            if (confirm('Вы уверены, что хотите удалить эту комнату?')) {
+                activePartiesList = activePartiesList.filter(r => r.id !== activeWatchPartyRoom.id);
+                saveData();
+                leaveWatchPartyRoom();
+                alert('Комната была удалена.');
+            }
         }
 
         function inviteFriendToParty(friendName) {
@@ -1597,7 +1652,7 @@
                 alert('Сначала создайте комнату!');
                 return;
             }
-            addNotification(friendName, `${currentUser.username} приглашает вас в комнату Watch Party "${activeWatchPartyRoom.name}"!`);
+            addNotification(friendName, `${currentUser.username} приглашает вас в Watch Party "${activeWatchPartyRoom.name}"!`);
             alert(`Приглашение отправлено пользователю ${friendName}!`);
         }
 
@@ -1606,23 +1661,45 @@
             const anime = animeList.find(a => a.id === activeWatchPartyRoom.animeId);
             if (!anime) return;
 
+            const currentEp = (anime.episodes && anime.episodes[activeWatchPartyRoom.epIdx]) ? anime.episodes[activeWatchPartyRoom.epIdx] : { sources: { 'Default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' } };
+            const sources = currentEp.sources || { 'Default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' };
+            const activeUrl = Object.values(sources)[0] || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+
+            let playerHtml = '';
+            if (activeUrl.trim().startsWith('<iframe')) {
+                playerHtml = `<div class="party-video-container">${activeUrl}</div>`;
+            } else {
+                playerHtml = `
+                    <div class="party-video-container">
+                        <video id="partyVideoElement" controls crossorigin="anonymous" playsinline ontimeupdate="partyReportTime(this)" onplay="partyReportState(true)" onpause="partyReportState(false)">
+                            <source src="${activeUrl}" type="video/mp4">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                    </div>
+                `;
+            }
+
+            const isHost = currentUser && currentUser.username === activeWatchPartyRoom.host;
+            const friends = userFriends[currentUser.username] || [];
+
             const modal = document.getElementById('watchPartyModal');
             document.getElementById('watchPartyModalContent').innerHTML = `
-                <button class="modal-close" onclick="playSound(); leaveWatchPartyRoom()">&times;</button>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                    <h2>🎉 Watch Party: ${activeWatchPartyRoom.name}</h2>
-                    <span style="background:rgba(16,185,129,0.15); color:#34d399; padding:4px 12px; border-radius:10px; font-size:12px; font-weight:700;">● Сессия активна</span>
+                    <div>
+                        <h2>🎉 Watch Party: ${activeWatchPartyRoom.name}</h2>
+                        <span style="font-size:12px; color:var(--text-muted);">Аниме: <b>${anime.title}</b> | Хост: <b>${activeWatchPartyRoom.host}</b></span>
+                    </div>
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        ${isHost ? `<button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="playSound(); deleteActiveWatchParty()">🗑️ Удалить комнату</button>` : ''}
+                        <span style="background:rgba(16,185,129,0.15); color:#34d399; padding:4px 12px; border-radius:10px; font-size:12px; font-weight:700;">● Сессия активна</span>
+                        <button class="modal-close" style="position:static;" onclick="playSound(); leaveWatchPartyRoom()">&times;</button>
+                    </div>
                 </div>
 
                 <div class="party-room-grid">
                     <div class="party-main-screen">
-                        <div class="party-video-container" id="partyVideoContainer">
-                            <div class="flying-emoji-layer" id="flyingEmojiLayer"></div>
-                            <video id="partyVideoElement" controls crossorigin="anonymous" playsinline ontimeupdate="partyReportTime(this)" onplay="partyReportState(true)" onpause="partyReportState(false)">
-                                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
-                                Ваш браузер не поддерживает видео.
-                            </video>
-                        </div>
+                        ${playerHtml}
+                        <div class="flying-emoji-layer" id="flyingEmojiLayer"></div>
                         <div class="party-reactions-bar">
                             <button class="party-react-btn" onclick="playSound(); sendPartyReaction('🔥')">🔥</button>
                             <button class="party-react-btn" onclick="playSound(); sendPartyReaction('❤️')">❤️</button>
@@ -1633,7 +1710,13 @@
                     </div>
 
                     <div class="party-sidebar-panel">
-                        <h4 style="font-size:13px; color:var(--text-muted);">Участники в комнате</h4>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="font-size:13px; color:var(--text-muted);">Участники (${activeWatchPartyRoom.members.length})</h4>
+                            <select class="form-control" style="font-size:11px; padding:4px; max-width:130px;" onchange="if(this.value) { inviteFriendToParty(this.value); this.value=''; }">
+                                <option value="">+ Пригласить</option>
+                                ${friends.map(f => `<option value="${f}">${f}</option>`).join('')}
+                            </select>
+                        </div>
                         <div class="party-members-list" id="partyMembersList">
                             ${activeWatchPartyRoom.members.map(m => `<div class="party-member-badge">👤 ${m} ${m === activeWatchPartyRoom.host ? '👑' : ''}</div>`).join('')}
                         </div>
@@ -1653,7 +1736,14 @@
             modal.classList.add('active');
 
             if (partySyncInterval) clearInterval(partySyncInterval);
-            partySyncInterval = setInterval(() => {}, 1500);
+            partySyncInterval = setInterval(() => {
+                if (activeWatchPartyRoom) {
+                    const vid = document.getElementById('partyVideoElement');
+                    if (vid && !vid.paused && Math.abs(vid.currentTime - activeWatchPartyRoom.currentTime) > 1.5) {
+                        vid.currentTime = activeWatchPartyRoom.currentTime;
+                    }
+                }
+            }, 2000);
         }
 
         function partyReportTime(video) {
@@ -1675,6 +1765,7 @@
 
             activeWatchPartyRoom.chat.push({ author: currentUser.username, text });
             input.value = '';
+            saveData();
             
             const chatBox = document.getElementById('partyChatBox');
             if (chatBox) {
@@ -1697,6 +1788,7 @@
 
             if (currentUser && activeWatchPartyRoom) {
                 activeWatchPartyRoom.chat.push({ author: 'Реакция', text: `${currentUser.username} отправил(а) ${emoji}` });
+                saveData();
                 const chatBox = document.getElementById('partyChatBox');
                 if (chatBox) {
                     chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
@@ -1727,6 +1819,8 @@
                 members: [currentUser.username],
                 chat: [{ author: 'Система', text: `${currentUser.username} запустил Watch Party.` }]
             };
+            activePartiesList.push(activeWatchPartyRoom);
+            saveData();
             openActiveWatchPartyRoom();
         }
         // ==========================================
