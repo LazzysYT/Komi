@@ -374,12 +374,10 @@
         .crunchy-hero-info { display: flex; flex-direction: column; gap: 10px; flex: 1; }
         .crunchy-hero-info h1 { font-size: 28px; font-weight: 800; color: white; }
         
-        /* Растягиваем плеер на всю ширину модального окна */
         .player-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; gap: 10px; }
         .player-box { background: #000; border-radius: 18px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
         .player-box iframe, .player-box video { width: 100%; height: 100%; border: none; object-fit: contain; }
 
-        /* Стили для выбора плееров/озвучек */
         .players-switcher-bar {
             display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
             background: var(--bg-card); border: 1px solid var(--border); padding: 12px 16px; border-radius: 14px;
@@ -549,6 +547,10 @@
                     <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
                 </div>
                 <div class="form-group">
+                    <label>Рейтинг Shikimori (например: 9.0 или 8.6)</label>
+                    <input type="text" class="form-control" id="animeShikiRating" placeholder="9.0">
+                </div>
+                <div class="form-group">
                     <label>Кадры (скриншоты через запятую)</label>
                     <input type="text" class="form-control" id="animeScreenshots" placeholder="https://img1.jpg, https://img2.jpg...">
                 </div>
@@ -655,6 +657,7 @@
                 id: 'anime_1',
                 title: 'Форма Голоса',
                 poster: 'https://cdn.myanimelist.net/images/anime/1122/96435.jpg',
+                shikiRating: '9.0',
                 screenshots: [
                     'https://cdn.myanimelist.net/images/anime/1122/96435l.jpg',
                     'https://cdn.myanimelist.net/images/anime/1567/104953.jpg',
@@ -683,6 +686,7 @@
                 id: 'anime_2',
                 title: 'Аой Асито',
                 poster: 'https://cdn.myanimelist.net/images/anime/1480/121730.jpg',
+                shikiRating: '8.2',
                 screenshots: [
                     'https://cdn.myanimelist.net/images/anime/1480/121730l.jpg',
                     'https://cdn.myanimelist.net/images/anime/1204/121731.jpg',
@@ -710,6 +714,7 @@
                 id: 'anime_3',
                 title: 'Счастливая Звезда',
                 poster: 'https://s.anixmirai.com/posters/z9skcF06hnw5RGUGYeBwHKpA7JDJos.jpg',
+                shikiRating: '7.8',
                 screenshots: [
                     'https://cdn.myanimelist.net/images/anime/13/35715l.jpg',
                     'https://cdn.myanimelist.net/images/anime/12/35717l.jpg',
@@ -763,7 +768,7 @@
         let onlineTimerRunning = false;
         let currentSlideIndex = 0;
         let slideInterval = null;
-        let activePlayerSource = 'Kodik'; // Активный плеер по умолчанию
+        let activePlayerSource = 'Kodik';
         const myUniqueKey = 'user_' + Math.random().toString(36).substring(2, 9);
 
         function changeTheme(theme) {
@@ -1078,7 +1083,7 @@
                             ${sliderItems.map((anime, idx) => `
                                 <div class="hero-slide ${idx === currentSlideIndex ? 'active' : ''}" style="background-image: url('${anime.poster}');">
                                     <div class="hero-meta">
-                                        <span>⭐ ${calculateAverageRating(anime)} MAL</span>
+                                        <span>⭐ ${anime.shikiRating || '8.5'} Shikimori</span>
                                         <span>${(anime.genres || [anime.genre || 'Экшен']).join(', ')}</span>
                                         <span>${anime.year || '2026'}</span>
                                         <span>${anime.type || 'Сериал'}</span>
@@ -1133,7 +1138,7 @@
                     return true;
                 });
 
-                if (catalogSort === 'rating') filtered.sort((a,b) => calculateAverageRating(b) - calculateAverageRating(a));
+                if (catalogSort === 'rating') filtered.sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0'));
                 else if (catalogSort === 'alphabet') filtered.sort((a,b) => a.title.localeCompare(b.title));
 
                 container.innerHTML = `
@@ -1328,7 +1333,7 @@
                                             <tr style="cursor:pointer;" onclick="playSound(); openWatchModal('${an.id}')">
                                                 <td style="width:60px;"><img src="${an.poster}" style="width:40px; height:55px; object-fit:cover; border-radius:6px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'"></td>
                                                 <td><b>${an.title}</b><div style="font-size:11px; color:var(--text-muted);">${(an.genres||[]).join(', ')}</div></td>
-                                                <td><span style="color:#fbbf24; font-weight:700;">⭐ ${calculateAverageRating(an)}</span></td>
+                                                <td><span style="color:#fbbf24; font-weight:700;">⭐ ${an.shikiRating || '8.5'}</span></td>
                                                 <td><button class="btn-secondary" style="padding:4px 8px; font-size:11px;">Смотреть</button></td>
                                             </tr>
                                         `).join('')}
@@ -1412,11 +1417,11 @@
         }
 
         function renderCard(anime) {
-            const avg = calculateAverageRating(anime);
+            const shiki = anime.shikiRating || '8.5';
             const gText = (anime.genres || [anime.genre || '']).join(', ');
             return `
                 <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
-                    <div class="anime-rating-badge">⭐ ${avg}</div>
+                    <div class="anime-rating-badge">⭐ ${shiki}</div>
                     <div class="anime-poster-box">
                         <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                         <div class="anime-quick-view">
@@ -1429,12 +1434,6 @@
                     </div>
                 </div>
             `;
-        }
-
-        function calculateAverageRating(anime) {
-            if (!anime.ratings || Object.keys(anime.ratings).length === 0) return '8.5';
-            const values = Object.values(anime.ratings);
-            return (values.reduce((a,b)=>a+b,0) / values.length).toFixed(1);
         }
 
         function randomAnime() {
@@ -1453,6 +1452,7 @@
                     const anime = data.data[0];
                     document.getElementById('animeTitle').value = anime.title || '';
                     document.getElementById('animePoster').value = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
+                    if (anime.score) document.getElementById('animeShikiRating').value = anime.score;
                     
                     let shots = [];
                     if (anime.images?.jpg?.large_image_url) shots.push(anime.images.jpg.large_image_url);
@@ -1473,7 +1473,7 @@
                     document.getElementById('animeDesc').value = anime.synopsis || '';
                     alert('Данные успешно загружены!');
                 } else {
-                    alert('Ничего не найдено в базе MyAnimeList.');
+                    alert('Ничего не найдено в базе.');
                 }
             } catch(e) {
                 alert('Ошибка при запросе к API.');
@@ -1518,12 +1518,12 @@
                     <button class="btn-secondary" onclick="playSound(); exportBackup()">📥 Скачать JSON бэкап</button>
                 </div>
                 <table class="admin-table">
-                    <thead><tr><th>Название</th><th>Жанры</th><th>Эпизодов</th><th>Действия</th></tr></thead>
+                    <thead><tr><th>Название</th><th>Рейтинг (Shiki)</th><th>Эпизодов</th><th>Действия</th></tr></thead>
                     <tbody>
                         ${animeList.length === 0 ? `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Список аниме пуст</td></tr>` : animeList.map(a => `
                             <tr>
                                 <td><b>${a.title}</b></td>
-                                <td>${(a.genres || [a.genre]).join(', ')}</td>
+                                <td>⭐ ${a.shikiRating || '8.5'}</td>
                                 <td>${a.episodes.length}</td>
                                 <td>
                                     <button class="btn-secondary" style="padding:5px 10px;" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">✏️ Ред.</button>
@@ -1574,7 +1574,7 @@
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:10px; border-radius:10px;">
                     <input type="number" class="form-control ep-season" value="1" min="1" style="width:65px;" title="Сезон">
                     <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1; min-width:100px;">
-                    <input type="text" class="form-control ep-source-name" placeholder="Плеер (Kodik, AniLibria)" value="Kodik" style="width:120px;">
+                    <input type="text" class="form-control ep-source-name" placeholder="Плеер (Kodik)" value="Kodik" style="width:120px;">
                     <input type="text" class="form-control ep-url" placeholder="iframe код или прямая ссылка..." style="flex:2; min-width:200px;" required>
                 </div>
             `;
@@ -1585,6 +1585,7 @@
                     document.getElementById('editAnimeId').value = anime.id;
                     document.getElementById('animeTitle').value = anime.title;
                     document.getElementById('animePoster').value = anime.poster;
+                    document.getElementById('animeShikiRating').value = anime.shikiRating || '';
                     document.getElementById('animeScreenshots').value = (anime.screenshots || []).join(', ');
                     document.getElementById('animeTrailer').value = anime.trailer || '';
                     document.getElementById('animeYear').value = anime.year || '2026';
@@ -1622,7 +1623,7 @@
             div.innerHTML = `
                 <input type="number" class="form-control ep-season" value="1" min="1" style="width:65px;" title="Сезон">
                 <input type="text" class="form-control ep-title" value="Эпизод" style="flex:1; min-width:100px;">
-                <input type="text" class="form-control ep-source-name" placeholder="Плеер (VideoCDN)" value="VideoCDN" style="width:120px;">
+                <input type="text" class="form-control ep-source-name" placeholder="Плеер" value="VideoCDN" style="width:120px;">
                 <input type="text" class="form-control ep-url" placeholder="iframe код или прямая ссылка..." style="flex:2; min-width:200px;" required>
             `;
             document.getElementById('episodesList').appendChild(div);
@@ -1633,6 +1634,7 @@
             const editId = document.getElementById('editAnimeId').value;
             const title = document.getElementById('animeTitle').value;
             const poster = document.getElementById('animePoster').value;
+            const shikiRating = document.getElementById('animeShikiRating').value.trim() || '8.5';
             const screenshotsInput = document.getElementById('animeScreenshots').value.trim();
             const trailer = document.getElementById('animeTrailer').value;
             const year = document.getElementById('animeYear').value || '2026';
@@ -1673,9 +1675,9 @@
 
             if (editId) {
                 const anime = animeList.find(a => a.id === editId);
-                if (anime) Object.assign(anime, { title, poster, screenshots, trailer, genres, genre: genres[0], year, type, desc, episodes });
+                if (anime) Object.assign(anime, { title, poster, shikiRating, screenshots, trailer, genres, genre: genres[0], year, type, desc, episodes });
             } else {
-                animeList.push({ id: 'anime_' + Date.now(), title, poster, screenshots, trailer, genres, genre: genres[0], year, type, desc, episodes, ratings: {} });
+                animeList.push({ id: 'anime_' + Date.now(), title, poster, shikiRating, screenshots, trailer, genres, genre: genres[0], year, type, desc, episodes, ratings: {} });
             }
 
             await saveAnimeToCloud();
@@ -1858,6 +1860,19 @@
             openWatchModal(animeId, season, epIdx);
         }
 
+        // Функция форматирования секунд в ЧЧ:ММ:СС или ММ:СС
+        function formatVideoDuration(seconds) {
+            if (isNaN(seconds) || seconds <= 0) return '24 мин';
+            const hrs = Math.floor(seconds / 3600);
+            const mins = Math.floor((seconds % 3600) / 60);
+            const secs = Math.floor(seconds % 60);
+
+            if (hrs > 0) {
+                return `${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
+            }
+            return `${mins} мин ${secs} сек`;
+        }
+
         async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0) {
             siteStats.views++;
             saveData();
@@ -1887,7 +1902,6 @@
             const currentSeasonEpisodes = seasonsMap[activeSeason];
             const currentEp = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
 
-            // Получаем источники плееров для выбранного эпизода
             const sources = currentEp.sources || { 'Default': currentEp.url || '' };
             const sourceNames = Object.keys(sources);
             if (!sourceNames.includes(activePlayerSource)) {
@@ -1901,7 +1915,7 @@
             } else {
                 playerHtml = `
                     <div class="player-box">
-                        <video id="animeVideoPlayer" controls preload="metadata" crossorigin="anonymous" playsinline ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0})" onerror="handleVideoError()">
+                        <video id="animeVideoPlayer" controls preload="metadata" crossorigin="anonymous" playsinline onloadedmetadata="updateDurationDisplay(this)" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0})" onerror="handleVideoError()">
                             <source src="${activeUrl}" type="video/mp4">
                             Ваш браузер не поддерживает видео.
                         </video>
@@ -1916,7 +1930,7 @@
             const userHistoryKey = currentUser ? `${currentUser.username}_${anime.id}` : null;
             const savedTime = userHistoryKey ? (userWatchHistory[userHistoryKey] || 0) : 0;
             const userFavCategory = currentUser ? ((userFavorites[currentUser.username] || {})[anime.id] || '') : '';
-            const avgRating = calculateAverageRating(anime);
+            const shikiRating = anime.shikiRating || '8.5';
             const myCurrentStatus = currentUser && userAnimeStatuses[currentUser.username] ? (userAnimeStatuses[currentUser.username][anime.id] || '') : '';
             const myRatingVal = currentUser && anime.ratings ? (anime.ratings[currentUser.username] || 'нет') : 'нет';
             
@@ -1933,7 +1947,7 @@
                             <h1>${anime.title}</h1>
                             <p style="color:var(--text-muted); font-size:13px; line-height:1.4;">${anime.desc || ''}</p>
                             <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-top:5px;">
-                                <span style="color:#fbbf24; font-weight:700;">⭐ ${avgRating} MAL</span>
+                                <span style="color:#fbbf24; font-weight:700;">⭐ ${shikiRating} Shikimori</span>
                                 <span style="background:rgba(255,255,255,0.08); padding:3px 10px; border-radius:6px; font-size:12px;">${(anime.genres||[]).join(', ')}</span>
                                 <span style="background:rgba(255,255,255,0.08); padding:3px 10px; border-radius:6px; font-size:12px;">${anime.year || '2026'}</span>
                                 <button class="btn-secondary" style="padding:6px 14px; font-size:12px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
@@ -1958,7 +1972,6 @@
                         </div>
                     ` : ''}
 
-                    <!-- Блок выбора плеера / озвучки -->
                     <div class="players-switcher-bar">
                         <span style="font-size:12px; color:var(--text-muted); font-weight:700;">Озвучка / Плеер:</span>
                         ${sourceNames.map(srcName => `
@@ -1968,7 +1981,6 @@
                         `).join('')}
                     </div>
 
-                    <!-- Сам плеер на всю ширину -->
                     <div class="player-wrapper">
                         ${playerHtml}
                     </div>
@@ -2003,7 +2015,7 @@
                                             <div class="ep-crunchy-title">${ep.title || ('Эпизод ' + (i+1))}</div>
                                             <div class="ep-crunchy-desc">Эпизод ${i+1}</div>
                                         </div>
-                                        <div class="ep-crunchy-time">24 мин</div>
+                                        <div class="ep-crunchy-time" id="durationBadge_${i}">${ep.sources && Object.values(ep.sources)[0]?.startsWith('<iframe') ? 'Видео' : 'Загрузка...'}</div>
                                     </div>
                                 </div>
                             `).join('')}
@@ -2011,7 +2023,7 @@
                     </div>
 
                     <div style="background:var(--bg-input); padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
-                        <span>Реальный рейтинг: <b>⭐ ${avgRating}</b> (Ваша оценка: <span id="myRating">${myRatingVal}</span>)</span>
+                        <span>Оценка на сайте: <b>⭐ ${shikiRating}</b> (Ваша оценка: <span id="myRating">${myRatingVal}</span>)</span>
                         <div style="display:flex; gap:4px;">
                             ${[2,4,6,8,10].map(star => `<button style="background:none; border:none; color:#fbbf24; cursor:pointer; font-size:16px;" onclick="playSound(); rateAnime('${anime.id}', ${star})">⭐${star}</button>`).join('')}
                         </div>
@@ -2061,6 +2073,16 @@
                 v.currentTime = savedTime;
                 v.play().catch(() => {});
             }
+        }
+
+        // Автоматическое обновление длительности в карточке эпизода при загрузке видео
+        function updateDurationDisplay(videoElement) {
+            const duration = videoElement.duration;
+            const formatted = formatVideoDuration(duration);
+            // Ищем активный бейджик длительности в карточках эпизодов
+            document.querySelectorAll('.ep-crunchy-card.active .ep-crunchy-time').forEach(el => {
+                el.innerText = formatted;
+            });
         }
 
         function handleVideoError() {
