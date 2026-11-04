@@ -670,7 +670,6 @@
         let animeList = [];
         let animeComments = {}; 
         let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
-        let friendRequestsData = []; // Загружается из Supabase (id: 4)
         let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
@@ -726,9 +725,6 @@
                             const cloudStatuses = JSON.parse(row.content || '{}');
                             userAnimeStatuses = { ...userAnimeStatuses, ...cloudStatuses };
                         }
-                        if (row.id === 4) {
-                            friendRequestsData = JSON.parse(row.content || '[]');
-                        }
                     }
                 }
                 if (animeList.length === 0) {
@@ -739,12 +735,6 @@
                 animeList = defaultAnime;
             }
             render();
-        }
-
-        async function saveFriendRequestsToCloud() {
-            try {
-                await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(friendRequestsData) });
-            } catch(e) {}
         }
 
         async function saveAnimeToCloud() {
@@ -789,14 +779,7 @@
                     if (el) el.innerText = `Онлайн: ${count}`;
                     renderSidebarLists(uniqueOnlineList);
                 }
-                
-                // Подтягиваем актуальные заявки из облака
-                const { data: reqData } = await _supabase.from('animes').select('*').eq('id', 4);
-                if (reqData && reqData.length > 0) {
-                    friendRequestsData = JSON.parse(reqData[0].content || '[]');
-                }
                 if (currentView === 'profile') render();
-
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
                 if (el) el.innerText = `Онлайн: 1`;
@@ -1068,11 +1051,8 @@
             };
 
             const myFriends = userFriends[username] || [];
-            const myRequests = friendRequestsData.filter(r => r.to === username).map(r => r.from);
             const isMe = currentUser && currentUser.username === username;
-            
             const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
-            const isRequestSent = currentUser && friendRequestsData.some(r => r.from === currentUser.username && r.to === username);
 
             const userStatuses = userAnimeStatuses[username] || {};
             const statsCounts = { 'Смотрю': 0, 'В планах': 0, 'Просмотрено': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
@@ -1116,8 +1096,7 @@
                                 <h2>👤 ${username} <span style="font-size:12px; color:#34d399; background:rgba(16,185,129,0.15); padding:3px 10px; border-radius:12px;">● Онлайн</span></h2>
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                      isRequestSent ? `<span style="font-size:12px; color:var(--text-muted);">Заявка отправлена</span>` : 
-                                      `<button class="btn-glow" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                      `<button class="btn-glow" style="padding:6px 14px; font-size:12px;" onclick="playSound(); addFriendDirect('${username}')">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             <div style="display:flex; gap:12px; align-items:center;">
@@ -1138,26 +1117,6 @@
                             ` : ''}
                         </div>
                     </div>
-
-                    <!-- ВИДИМЫЙ БЛОК ВХОДЯЩИХ ЗАЯВОК В ДРУЗЬЯ (появляется если есть заявки) -->
-                    ${isMe && myRequests.length > 0 ? `
-                        <div style="background:var(--bg-card); border:1px solid var(--primary); padding:20px; border-radius:16px; margin-bottom:25px; box-shadow:0 0 20px var(--glow);">
-                            <h3 style="font-size:16px; margin-bottom:12px; color:var(--accent);">🔔 Входящие заявки в друзья (${myRequests.length})</h3>
-                            <div style="display:flex; flex-direction:column; gap:10px;">
-                                ${myRequests.map(req => `
-                                    <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:10px 16px; border-radius:12px; border:1px solid var(--border);">
-                                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
-                                            <span>👤 ${req} хочет добавить вас в друзья</span>
-                                        </div>
-                                        <div style="display:flex; gap:8px;">
-                                            <button class="btn-glow" style="padding:6px 16px; font-size:12px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
-                                            <button class="btn-danger" style="padding:6px 16px; font-size:12px;" onclick="playSound(); declineFriendRequest('${req}')">Отклонить</button>
-                                        </div>
-                                    </div>
-                                `).join('')}
-                            </div>
-                        </div>
-                    ` : ''}
 
                     <div class="profile-stats-bar">
                         ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено', 'Любимые'].map(tab => `
@@ -1563,47 +1522,26 @@
             openWatchModal(animeId);
         }
 
-        async function sendFriendRequest(targetUsername) {
+        function addFriendDirect(targetUsername) {
             if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
 
-            const exists = friendRequestsData.some(r => r.from === currentUser.username && r.to === targetUsername);
-            if (!exists) {
-                friendRequestsData.push({ from: currentUser.username, to: targetUsername });
-                await saveFriendRequestsToCloud();
-                alert('Заявка в друзья отправлена!');
-                openProfile(targetUsername);
-            } else {
-                alert('Заявка уже отправлена ранее.');
-            }
-        }
-
-        async function acceptFriendRequest(senderUsername) {
-            if (!currentUser) return;
             const myName = currentUser.username;
-            
-            friendRequestsData = friendRequestsData.filter(r => !(r.from === senderUsername && r.to === myName));
-            await saveFriendRequestsToCloud();
-
             if (!userFriends[myName]) userFriends[myName] = [];
-            if (!userFriends[myName].includes(senderUsername)) userFriends[myName].push(senderUsername);
+            if (!userFriends[myName].includes(targetUsername)) {
+                userFriends[myName].push(targetUsername);
+            }
 
-            if (!userFriends[senderUsername]) userFriends[senderUsername] = [];
-            if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
+            if (!userFriends[targetUsername]) userFriends[targetUsername] = [];
+            if (!userFriends[targetUsername].includes(myName)) {
+                userFriends[targetUsername].push(myName);
+            }
 
             saveData();
-            openProfile(myName);
+            openProfile(targetUsername);
         }
 
-        async function declineFriendRequest(senderUsername) {
-            if (!currentUser) return;
-            const myName = currentUser.username;
-            friendRequestsData = friendRequestsData.filter(r => !(r.from === senderUsername && r.to === myName));
-            await saveFriendRequestsToCloud();
-            openProfile(myName);
-        }
-
-        async function removeFriend(friendUsername) {
+        function removeFriend(friendUsername) {
             if (!currentUser) return;
             const myName = currentUser.username;
             if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
