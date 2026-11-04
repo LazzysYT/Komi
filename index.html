@@ -2081,7 +2081,7 @@
             openWatchModal(id);
         }
 
-        // Авто-заполнение через Shikimori API через стабильный прокси corsproxy.io
+        // Авто-заполнение через Shikimori API через надежный прокси allorigins
         async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
             const resultsContainer = document.getElementById('apiSearchResultsList');
@@ -2096,7 +2096,7 @@
 
             try {
                 const targetUrl = `https://shikimori.me/api/animes?search=${encodeURIComponent(query)}&limit=8`;
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
                 const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error('Ошибка сети');
@@ -2136,7 +2136,7 @@
             }
         }
 
-        // Импорт случайного популярного аниме из топа Shikimori через прокси
+        // Импорт случайного популярного аниме из топа Shikimori через прокси allorigins
         async function importTopSeasonalAnime() {
             const resultsContainer = document.getElementById('apiSearchResultsList');
             resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем случайный хит из топа Shikimori...</div>';
@@ -2144,7 +2144,7 @@
 
             try {
                 const targetUrl = `https://shikimori.me/api/animes?order=popularity&limit=50`;
-                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
+                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
                 const res = await fetch(proxyUrl);
                 if (!res.ok) throw new Error('Ошибка сервера');
@@ -2695,7 +2695,7 @@
                                 return `
                                 <div class="comment-item">
                                     <div class="comment-author" onclick="playSound(); openProfile('${c.username}')">
-                                        <img src="${cUserAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                        <img src="${cUserAvatar}" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                                         <span>${c.username}</span>
                                     </div>
                                     <div class="comment-text">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер (нажмите чтобы открыть) <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
