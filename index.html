@@ -572,7 +572,7 @@
                     <label>Год выпуска / Тип</label>
                     <div style="display: flex; gap: 10px;">
                         <input type="text" class="form-control" id="animeYear" placeholder="2026" style="flex:1;">
-                        <input type="text" class="form-control" id="animeType" placeholder="Сериал" style="flex:1;">
+                        <input type="text" class="form-control" id="animeType" placeholder="Фильм или Сериал" style="flex:1;">
                     </div>
                 </div>
                 <div class="form-group">
@@ -1077,8 +1077,8 @@
                 // Сортировка по рейтингу Shikimori
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 8);
                 
-                // Сортировка по рейтингу на сайте (внутренний пользовательский рейтинг)
-                const bestSite = [...animeList].sort((a,b) => calculateAverageRating(b) - calculateAverageRating(a)).slice(0, 8);
+                // Фильтруем аниме, у которых тип равен «Фильм»
+                const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм');
 
                 let continueWatchingHtml = '';
                 if (currentUser) {
@@ -1144,9 +1144,9 @@
                         ${bestShiki.length === 0 ? `<div class="empty-state"><h3>Нет доступных аниме в базе</h3></div>` : bestShiki.map(a => renderCard(a)).join('')}
                     </div>
 
-                    <div class="section-header"><h2 class="section-title">🔥 Лучшие за рейтингом на сайте</h2></div>
+                    <div class="section-header"><h2 class="section-title">🎬 Лучшие фильмы</h2></div>
                     <div class="anime-grid">
-                        ${bestSite.length === 0 ? `<div class="empty-state"><h3>Каталог пуст</h3></div>` : bestSite.map(a => renderCard(a)).join('')}
+                        ${bestMovies.length === 0 ? `<div class="empty-state"><h3>Фильмы пока не добавлены</h3></div>` : bestMovies.map(a => renderCard(a)).join('')}
                     </div>
                 `;
 
@@ -1484,10 +1484,9 @@
                 counter++;
 
                 if (counter < maxSteps) {
-                    currentInterval += 15; // замедление рулетки
+                    currentInterval += 15; 
                     setTimeout(spinStep, currentInterval);
                 } else {
-                    // Финальный выбор
                     const finalItem = animeList[Math.floor(Math.random() * animeList.length)];
                     imgEl.src = finalItem.poster;
                     titleEl.innerText = finalItem.title;
