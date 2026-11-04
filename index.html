@@ -9,16 +9,16 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-base: #07070a;
-            --bg-card: #111118;
-            --bg-input: #181822;
-            --primary: #9147FF;
-            --primary-hover: #7b2cbf;
-            --accent: #c4b5fd;
+            --bg-base: #09090F;
+            --bg-card: #151520;
+            --bg-input: #1a1a26;
+            --primary: #8B3DFF;
+            --primary-hover: #722fe6;
+            --accent: #B88AFF;
             --text-main: #FFFFFF;
             --text-muted: #94A3B8;
-            --border: #222233;
-            --glow: rgba(145, 71, 255, 0.45);
+            --border: #232336;
+            --glow: rgba(139, 61, 255, 0.45);
         }
 
         body.theme-red { --primary: #EF4444; --primary-hover: #DC2626; --accent: #FCA5A5; --glow: rgba(239, 68, 68, 0.45); }
@@ -65,7 +65,7 @@
         }
 
         header {
-            background: rgba(7, 7, 10, 0.85);
+            background: rgba(9, 9, 15, 0.85);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -145,7 +145,7 @@
         }
 
         .right-sidebar {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px;
             padding: 20px; height: fit-content; position: sticky; top: 90px; display: flex; flex-direction: column; gap: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
@@ -160,51 +160,109 @@
 
         main { width: 100%; animation: fadeInUp 0.3s ease; }
 
-        .hero-banner {
-            border-radius: 24px; overflow: hidden; background-size: cover; background-position: center;
-            border: 1px solid var(--border); padding: 50px; display: flex; flex-direction: column;
-            justify-content: center; min-height: 440px; margin-bottom: 40px; position: relative;
+        /* СТИЛИ СЛАЙДЕРА ГЛАВНОГО БАННЕРА */
+        .hero-slider-container {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            margin-bottom: 40px;
             box-shadow: 0 20px 50px rgba(0,0,0,0.85);
-            animation: neonGlow 6s infinite alternate;
+            background: var(--bg-card);
         }
-        .hero-banner::before {
+        .hero-slide {
+            display: none;
+            background-size: cover;
+            background-position: center;
+            padding: 50px;
+            min-height: 440px;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+        .hero-slide.active {
+            display: flex;
+            animation: fadeInUp 0.5s ease;
+        }
+        .hero-slide::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, rgba(7,7,10,0.96) 35%, rgba(7,7,10,0.65) 70%, rgba(7,7,10,0.3) 100%),
-                        radial-gradient(circle at top right, rgba(145, 71, 255, 0.25), transparent 50%);
+            background: linear-gradient(90deg, rgba(9,9,15,0.96) 35%, rgba(9,9,15,0.65) 70%, rgba(9,9,15,0.3) 100%),
+                        radial-gradient(circle at top right, rgba(139, 61, 255, 0.25), transparent 50%);
             z-index: 1;
         }
-        .hero-banner > * { position: relative; z-index: 2; }
-        .hero-banner h1 {
+        .hero-slide > * { position: relative; z-index: 2; }
+        .hero-slide h1 {
             font-size: 44px; font-weight: 800; max-width: 650px; margin-bottom: 16px; line-height: 1.15;
             background: linear-gradient(to right, #FFFFFF, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent;
         }
-        .hero-banner p { color: var(--text-muted); font-size: 15px; max-width: 550px; margin-bottom: 24px; line-height: 1.5; }
+        .hero-slide p { color: var(--text-muted); font-size: 15px; max-width: 550px; margin-bottom: 24px; line-height: 1.5; }
         .hero-meta { display: flex; gap: 12px; align-items: center; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 20px; flex-wrap: wrap; }
         .hero-meta span { background: rgba(255, 255, 255, 0.08); padding: 5px 12px; border-radius: 8px; color: white; border: 1px solid var(--border); }
+        
+        .hero-buttons { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 
-        .btn-primary {
-            background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 12px;
+        /* Кнопки со свечением и эффектом увеличения */
+        .btn-glow {
+            background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 14px;
             font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
             display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+            transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
         }
-        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-3px); box-shadow: 0 6px 25px var(--glow); }
+        .btn-glow:hover { background: var(--primary-hover); transform: scale(1.05) translateY(-2px); box-shadow: 0 6px 30px var(--glow); }
+
+        .btn-glow-secondary {
+            background: rgba(255, 255, 255, 0.06); color: white; border: 1px solid var(--border); padding: 12px 26px; border-radius: 14px;
+            font-weight: 700; font-size: 14px; cursor: pointer; backdrop-filter: blur(10px);
+            display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+        }
+        .btn-glow-secondary:hover { border-color: var(--accent); background: rgba(255, 255, 255, 0.12); transform: scale(1.05) translateY(-2px); box-shadow: 0 0 20px var(--glow); }
+
+        /* Стрелки слайдера и индикаторы */
+        .hero-slider-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(21, 21, 32, 0.75);
+            border: 1px solid var(--border); color: white; width: 44px; height: 44px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 18px;
+            backdrop-filter: blur(6px); transition: background 0.2s, border-color 0.2s, transform 0.2s;
+        }
+        .hero-slider-arrow:hover { background: var(--primary); border-color: var(--accent); transform: translateY(-50%) scale(1.1); box-shadow: 0 0 15px var(--glow); }
+        .hero-arrow-prev { left: 20px; }
+        .hero-arrow-next { right: 20px; }
+
+        .hero-dots {
+            position: absolute; bottom: 20px; right: 40px; display: flex; gap: 8px; z-index: 10;
+        }
+        .hero-dot {
+            width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: width 0.3s, background 0.3s;
+        }
+        .hero-dot.active { width: 28px; border-radius: 5px; background: var(--accent); box-shadow: 0 0 10px var(--glow); }
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 35px; }
         .section-title { font-size: 22px; font-weight: 700; }
 
+        /* Стильная лента карточек для блока «Рекомендуем посмотреть» и каталога */
         .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
         .anime-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
-            cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+            cursor: pointer; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
             display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.4s ease;
         }
-        .anime-card:hover { transform: translateY(-10px) scale(1.03); border-color: var(--accent); box-shadow: 0 18px 40px var(--glow); }
+        .anime-card:hover { transform: translateY(-8px) scale(1.02); border-color: var(--accent); box-shadow: 0 16px 35px var(--glow); }
         .anime-rating-badge {
-            position: absolute; top: 12px; left: 12px; background: rgba(0, 0, 0, 0.85); border: 1px solid var(--border);
+            position: absolute; top: 12px; left: 12px; background: rgba(9, 9, 15, 0.85); border: 1px solid var(--border);
             color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; z-index: 2; backdrop-filter: blur(4px);
         }
-        .anime-poster { width: 100%; height: 330px; object-fit: cover; background: var(--bg-input); transition: transform 0.4s ease; }
-        .anime-card:hover .anime-poster { transform: scale(1.07); }
+        .anime-poster-box { position: relative; width: 100%; height: 330px; overflow: hidden; background: var(--bg-input); }
+        .anime-poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
+        .anime-card:hover .anime-poster { transform: scale(1.08); }
+        
+        /* Кнопка быстрого просмотра при наведении */
+        .anime-quick-view {
+            position: absolute; inset: 0; background: rgba(9, 9, 15, 0.6); backdrop-filter: blur(4px);
+            display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; z-index: 3;
+        }
+        .anime-card:hover .anime-quick-view { opacity: 1; }
+
         .anime-info { padding: 16px; display: flex; flex-direction: column; gap: 6px; flex: 1; background: var(--bg-card); z-index: 2; }
         .anime-title { font-size: 15px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .anime-meta-card { font-size: 13px; color: var(--text-muted); display: flex; justify-content: space-between; }
@@ -213,7 +271,7 @@
 
         .profile-container { max-width: 1300px; margin: 0 auto; width: 100%; animation: fadeInUp 0.3s ease; }
         .profile-header-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 25px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 25px;
             display: grid; grid-template-columns: 200px 1fr; gap: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
             position: relative; overflow: hidden;
         }
@@ -261,7 +319,7 @@
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: #0d0d12; border: 1px solid var(--border); border-radius: 24px;
+            background: #0e0e16; border: 1px solid var(--border); border-radius: 20px;
             width: 96%; max-width: 1400px; padding: 28px; max-height: 94vh; overflow-y: auto;
             position: relative; box-shadow: 0 30px 70px rgba(0,0,0,0.95); animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -290,8 +348,8 @@
 
         .watch-cinema-layout { display: flex; flex-direction: column; gap: 24px; }
         .crunchy-hero-section {
-            display: flex; gap: 24px; background: linear-gradient(135deg, #111118 0%, #181822 100%);
-            border: 1px solid var(--border); border-radius: 20px; padding: 24px; align-items: center;
+            display: flex; gap: 24px; background: linear-gradient(135deg, #151520 0%, #1a1a26 100%);
+            border: 1px solid var(--border); border-radius: 18px; padding: 24px; align-items: center;
         }
         .crunchy-hero-poster { width: 160px; height: 220px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); }
         .crunchy-hero-info { display: flex; flex-direction: column; gap: 10px; flex: 1; }
@@ -301,7 +359,7 @@
         .player-box { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
         
         .skip-intro-btn {
-            position: absolute; bottom: 25px; right: 25px; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(10px);
+            position: absolute; bottom: 25px; right: 25px; background: rgba(9, 9, 15, 0.75); backdrop-filter: blur(10px);
             border: 1px solid var(--border); color: white; padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; z-index: 20; display: none;
         }
         .skip-intro-btn:hover { background: var(--primary); border-color: var(--primary); }
@@ -330,7 +388,7 @@
         .ep-crunchy-titles { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
         .ep-crunchy-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; }
         .ep-crunchy-desc { font-size: 11px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .ep-crunchy-time { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; background: rgba(145,71,255,0.12); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(145,71,255,0.25); }
+        .ep-crunchy-time { font-size: 12px; font-weight: 700; color: var(--accent); white-space: nowrap; background: rgba(139,61,255,0.12); padding: 4px 8px; border-radius: 6px; border: 1px solid rgba(139,61,255,0.25); }
 
         .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 12px; }
         .comment-item { background: rgba(0,0,0,0.4); border: 1px solid var(--border); padding: 12px 14px; border-radius: 10px; display: flex; flex-direction: column; gap: 6px; }
@@ -360,10 +418,10 @@
             .logo-area { justify-content: space-between; }
             .search-container { flex: 1; max-width: 100%; }
             .nav-actions { justify-content: center; }
-            .hero-banner { padding: 25px; min-height: 320px; }
-            .hero-banner h1 { font-size: 28px; }
+            .hero-slide { padding: 25px; min-height: 320px; }
+            .hero-slide h1 { font-size: 28px; }
             .anime-grid { grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 14px; }
-            .anime-poster { height: 250px; }
+            .anime-poster-box { height: 250px; }
             .modal-content { padding: 18px 12px; width: 100%; max-height: 95vh; border-radius: 16px; }
         }
     </style>
@@ -400,7 +458,7 @@
             <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="background: var(--primary); border-color: var(--primary); display: none;">+ Добавить</button>
 
             <select class="action-icon-btn" id="themeSelect" onchange="changeTheme(this.value)" style="background: var(--bg-input); padding: 8px;">
-                <option value="default">💜 Фиолетовая (#9147FF)</option>
+                <option value="default">💜 Фиолетовая (#8B3DFF)</option>
                 <option value="red">🔴 Красная (Shikimori)</option>
                 <option value="mint">🟢 Мятная</option>
                 <option value="blue">💙 Кибер-синяя</option>
@@ -548,6 +606,40 @@
                     { season: 1, title: 'Фильм', voices: 'AniLibria, Jaskier', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
                 ratings: { Admin: 9.8 }
+            },
+            {
+                id: 'anime_2',
+                title: 'Киберпанк: Бегущие по краю',
+                poster: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop',
+                screenshots: [
+                    'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop'
+                ],
+                trailer: 'https://www.youtube.com/embed/JtqIas3bYhg',
+                genres: ['Киберпанк', 'Экшен'],
+                year: '2022',
+                type: 'Сериал',
+                desc: 'История уличногo паренька, пытающегося выжить в мире будущего, одержимому технологиями и модификациями тела.',
+                episodes: [
+                    { season: 1, title: 'Эпизод 1', voices: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
+                ],
+                ratings: { Admin: 9.6 }
+            },
+            {
+                id: 'anime_3',
+                title: 'Клинок, рассекающий демонов',
+                poster: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop',
+                screenshots: [
+                    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop'
+                ],
+                trailer: 'https://www.youtube.com/embed/VQg7HcSjjzY',
+                genres: ['Фэнтези', 'Экшен'],
+                year: '2019',
+                type: 'Сериал',
+                desc: 'Тандзиро Камадо отправляется в опасный путь, чтобы найти лекарство для сестры и отомстить демонам.',
+                episodes: [
+                    { season: 1, title: 'Эпизод 1', voices: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
+                ],
+                ratings: { Admin: 9.4 }
             }
         ];
 
@@ -572,6 +664,8 @@
         let catalogFilterType = 'Все';
         let catalogSort = 'popular';
         let onlineTimerRunning = false;
+        let currentSlideIndex = 0;
+        let slideInterval = null;
         const myUniqueKey = 'user_' + Math.random().toString(36).substring(2, 9);
 
         function changeTheme(theme) {
@@ -727,12 +821,14 @@
         }
 
         function navigate(view) {
+            if (slideInterval) clearInterval(slideInterval);
             currentView = view;
             render();
             renderHeaderUser();
         }
 
         function openProfile(username) {
+            if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
             profileTargetUser = username;
             render();
@@ -744,7 +840,10 @@
             const adminBtn = document.getElementById('adminPanelBtn');
             const addBtn = document.getElementById('addAnimeBtn');
 
-            const isAdmin = currentUser && currentUser.username.toLowerCase() === 'admin';
+            // Список администраторов (добавлен mellstroy)
+            const adminList = ['admin', 'mellstroy'];
+            const isAdmin = currentUser && adminList.includes(currentUser.username.toLowerCase());
+
             if (isAdmin) {
                 adminBtn.style.display = 'inline-flex';
                 addBtn.style.display = 'inline-flex';
@@ -781,25 +880,44 @@
             const container = document.getElementById('mainContainer');
             
             if (currentView === 'home') {
-                const featured = animeList.length > 0 ? animeList[0] : null;
-                const recommended = animeList.slice(0, 4);
+                const sliderItems = animeList.slice(0, 5);
+                const recommended = animeList.slice(0, 8);
 
                 container.innerHTML = `
-                    ${featured ? `
-                    <div class="hero-banner" style="background-image: url('${featured.poster}');">
-                        <div class="hero-meta">
-                            <span>⭐ ${calculateAverageRating(featured)} MAL</span>
-                            <span>${(featured.genres || [featured.genre || 'Экшен']).join(', ')}</span>
-                            <span>${featured.year || '2026'}</span>
-                            <span>${featured.type || 'Сериал'}</span>
+                    <!-- ГЛАВНЫЙ СЛАЙДЕР С ПЕРЕКЛЮЧЕНИЕМ -->
+                    <div class="hero-slider-container" id="heroSlider">
+                        <button class="hero-slider-arrow hero-arrow-prev" onclick="playSound(); changeSlide(-1)">❮</button>
+                        <button class="hero-slider-arrow hero-arrow-next" onclick="playSound(); changeSlide(1)">❯</button>
+                        
+                        <div class="hero-slides-wrapper">
+                            ${sliderItems.map((anime, idx) => `
+                                <div class="hero-slide ${idx === currentSlideIndex ? 'active' : ''}" style="background-image: url('${anime.poster}');">
+                                    <div class="hero-meta">
+                                        <span>⭐ ${calculateAverageRating(anime)} MAL</span>
+                                        <span>${(anime.genres || [anime.genre || 'Экшен']).join(', ')}</span>
+                                        <span>${anime.year || '2026'}</span>
+                                        <span>${anime.type || 'Сериал'}</span>
+                                    </div>
+                                    <h1>${anime.title}</h1>
+                                    <p>${anime.desc || 'Увлекательная история, захватывающие сражения и незабываемые персонажи ждут вас в новом релизе.'}</p>
+                                    <div class="hero-buttons">
+                                        <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">
+                                            ▶ Смотреть сейчас
+                                        </button>
+                                        <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')">
+                                            ℹ Подробнее
+                                        </button>
+                                    </div>
+                                </div>
+                            `).join('')}
                         </div>
-                        <h1>${featured.title}</h1>
-                        <p>${featured.desc || 'Увлекательная история, захватывающие сражения и незабываемые персонажи ждут вас в новом релизе.'}</p>
-                        <button class="btn-primary" onclick="playSound(); openWatchModal('${featured.id}')">
-                            ▶ Смотреть сейчас
-                        </button>
+
+                        <div class="hero-dots">
+                            ${sliderItems.map((_, idx) => `
+                                <div class="hero-dot ${idx === currentSlideIndex ? 'active' : ''}" onclick="playSound(); setSlide(${idx})"></div>
+                            `).join('')}
+                        </div>
                     </div>
-                    ` : ''}
 
                     <div class="section-header"><h2 class="section-title">✨ Рекомендуем посмотреть</h2></div>
                     <div class="anime-grid">
@@ -811,7 +929,11 @@
                         ${animeList.length === 0 ? `<div class="empty-state"><h3>Каталог пуст</h3></div>` : animeList.map(a => renderCard(a)).join('')}
                     </div>
                 `;
+
+                startHeroAutoSlide();
+
             } else if (currentView === 'catalog') {
+                if (slideInterval) clearInterval(slideInterval);
                 const genres = ['Все', ...availableGenresList];
                 const years = ['Все', '2026', '2025', '2024', '2023'];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA'];
@@ -862,8 +984,46 @@
                     </div>
                 `;
             } else if (currentView === 'profile') {
+                if (slideInterval) clearInterval(slideInterval);
                 renderProfileView(container);
             }
+        }
+
+        function startHeroAutoSlide() {
+            if (slideInterval) clearInterval(slideInterval);
+            slideInterval = setInterval(() => {
+                const maxSlides = Math.min(animeList.length, 5);
+                if (maxSlides > 1) {
+                    currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
+                    updateHeroSlideView();
+                }
+            }, 6000);
+        }
+
+        function changeSlide(direction) {
+            const maxSlides = Math.min(animeList.length, 5);
+            currentSlideIndex = (currentSlideIndex + direction + maxSlides) % maxSlides;
+            updateHeroSlideView();
+            startHeroAutoSlide();
+        }
+
+        function setSlide(index) {
+            currentSlideIndex = index;
+            updateHeroSlideView();
+            startHeroAutoSlide();
+        }
+
+        function updateHeroSlideView() {
+            const slides = document.querySelectorAll('.hero-slide');
+            const dots = document.querySelectorAll('.hero-dot');
+            slides.forEach((slide, idx) => {
+                if (idx === currentSlideIndex) slide.classList.add('active');
+                else slide.classList.remove('active');
+            });
+            dots.forEach((dot, idx) => {
+                if (idx === currentSlideIndex) dot.classList.add('active');
+                else dot.classList.remove('active');
+            });
         }
 
         function renderProfileView(container) {
@@ -902,11 +1062,9 @@
                 statsCounts['Любимые'] = listForTab.length;
             }
 
-            // РАСЧЕТ УРОВНЯ В ЗАВИСИМОСТИ ОТ ПРОСМОТРЕННЫХ АНИМЕ
             const watchedCount = statsCounts['Просмотрено'] || 0;
             const calculatedLevel = 1 + Math.floor(watchedCount / 3);
 
-            // ПОДСЧЕТ КОММЕНТАРИЕВ ПОЛЬЗОВАТЕЛЯ ПО ВСЕЙ БАЗЕ
             let userCommentsCount = 0;
             Object.values(animeComments).forEach(commList => {
                 commList.forEach(c => {
@@ -926,7 +1084,7 @@
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
                                       isRequestSent ? `<span style="font-size:12px; color:var(--text-muted);">Заявка отправлена</span>` : 
-                                      `<button class="btn-primary" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                      `<button class="btn-glow" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             <div style="display:flex; gap:12px; align-items:center;">
@@ -941,7 +1099,7 @@
                                 <div style="display:flex; gap:8px;">
                                     <input type="url" id="newAvatarUrl" class="form-control" placeholder="Ссылка на аватар..." value="${p.avatar}">
                                     <input type="text" id="newStatusText" class="form-control" placeholder="Статус..." value="${p.status}">
-                                    <button class="btn-primary" onclick="playSound(); updateUserProfile()">Сохранить</button>
+                                    <button class="btn-glow" style="padding: 10px 16px;" onclick="playSound(); updateUserProfile()">Сохранить</button>
                                 </div>
                             </div>
                             ` : ''}
@@ -985,12 +1143,12 @@
                             <div class="profile-menu-item"><span>💬 Комментарии</span> <b>${userCommentsCount}</b></div>
                             <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${favoritesCount}</b></div>
                             ${isMe && myRequests.length > 0 ? `
-                                <div style="margin-top:10px; background:rgba(145,71,255,0.15); border:1px solid var(--primary); padding:10px; border-radius:10px;">
+                                <div style="margin-top:10px; background:rgba(139,61,255,0.15); border:1px solid var(--primary); padding:10px; border-radius:10px;">
                                     <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки (${myRequests.length})</div>
                                     ${myRequests.map(req => `
                                         <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:4px;">
                                             <span>${req}</span>
-                                            <button class="btn-primary" style="padding:2px 6px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
+                                            <button class="btn-glow" style="padding:2px 8px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -1007,7 +1165,12 @@
             return `
                 <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
                     <div class="anime-rating-badge">⭐ ${avg}</div>
-                    <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'">
+                    <div class="anime-poster-box">
+                        <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'">
+                        <div class="anime-quick-view">
+                            <span class="btn-glow" style="padding: 8px 16px; font-size:12px;">▶ Быстрый просмотр</span>
+                        </div>
+                    </div>
                     <div class="anime-info">
                         <div class="anime-title">${anime.title}</div>
                         <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${gText}</span><span>${anime.episodes.length} сер.</span></div>
@@ -1078,7 +1241,8 @@
             if (!q.trim()) { dd.classList.remove('active'); render(); return; }
             
             const filtered = animeList.filter(a => a.title.toLowerCase().includes(q.toLowerCase()) || (a.genres && a.genres.some(g => g.toLowerCase().includes(q.toLowerCase()))));
-            document.getElementById('mainContainer').innerHTML = `
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = `
                 <h2 style="margin-bottom:20px;">Результаты поиска: "${q}"</h2>
                 <div class="anime-grid">${filtered.length === 0 ? '<div class="empty-state"><h3>Ничего не найдено</h3></div>' : filtered.map(a => renderCard(a)).join('')}</div>
             `;
@@ -1090,7 +1254,7 @@
                 <button class="modal-close" onclick="playSound(); document.getElementById('adminModal').classList.remove('active')">&times;</button>
                 <h2 style="margin-bottom: 15px;">⚙️ Панель администратора</h2>
                 <div style="display:flex; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
-                    <button class="btn-primary" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal()">+ Добавить аниме</button>
+                    <button class="btn-glow" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal()">+ Добавить аниме</button>
                     <button class="btn-secondary" onclick="playSound(); exportBackup()">📥 Скачать JSON бэкап</button>
                 </div>
                 <table class="admin-table">
@@ -1511,7 +1675,7 @@
                         <div style="display:flex; gap:10px; flex-direction:column;">
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="commentInput" class="form-control" placeholder="Написать комментарий...">
-                                <button class="btn-primary" onclick="playSound(); addComment('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">Отправить</button>
+                                <button class="btn-glow" onclick="playSound(); addComment('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">Отправить</button>
                             </div>
                             <label style="font-size:12px; color:var(--text-muted); cursor:pointer;"><input type="checkbox" id="isSpoiler"> Содержит спойлер</label>
                         </div>
