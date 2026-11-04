@@ -124,10 +124,10 @@
         .search-dropdown {
             position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card);
             border: 1px solid var(--border); border-radius: 12px; margin-top: 5px; display: none; z-index: 200;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-height: 250px; overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-height: 280px; overflow-y: auto;
         }
         .search-dropdown.active { display: block; animation: fadeInUp 0.15s ease; }
-        .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
+        .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
         .search-dropdown-item:hover { background: var(--primary); color: white; }
 
         .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; }
@@ -483,7 +483,7 @@
         <div class="search-container">
             <div class="search-bar">
                 <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                <input type="text" id="searchInput" placeholder="Поиск аниме, жанров..." oninput="handleSearchInput(this.value)" onfocus="showSearchDropdown()">
+                <input type="text" id="searchInput" placeholder="Быстрый поиск аниме..." oninput="handleInstantSearch(this.value)" onfocus="showSearchDropdown()">
             </div>
             <div class="search-dropdown" id="searchDropdown"></div>
         </div>
@@ -553,7 +553,6 @@
                     <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()">🔍 Найти</button>
                     <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()">🔥 Импорт топа сезона</button>
                 </div>
-                <!-- Контейнер для выбора вариантов, если нашлось несколько аниме -->
                 <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; max-height: 180px; overflow-y: auto; padding: 8px;"></div>
             </div>
 
@@ -770,6 +769,43 @@
                     }
                 ],
                 ratings: { Admin: 8.5 }
+            },
+            {
+                id: 'anime_4',
+                title: 'Клинок, рассекающий демонов',
+                poster: 'https://cdn.myanimelist.net/images/anime/1286/99889.jpg',
+                shikiRating: '8.7',
+                screenshots: [
+                    'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg',
+                    'https://cdn.myanimelist.net/images/anime/1193/112613l.jpg'
+                ],
+                trailer: 'https://www.youtube.com/embed/VQGCKyvzIM4',
+                genres: ['Экшен', 'Фэнтези', 'Приключения'],
+                year: '2019',
+                type: 'Сериал',
+                desc: 'Тандзиро Камадо отправляется в опасный путь, чтобы исцелить сестру и отомстить демонам.',
+                episodes: [
+                    { season: 1, title: 'Эпизод 1', sources: { 'Kodik': '<iframe src="https://kodik.info/serial/49733/843198357832?only_episode=true" allowfullscreen></iframe>' } }
+                ],
+                ratings: { Admin: 9.2 }
+            },
+            {
+                id: 'anime_5',
+                title: 'Магическая битва',
+                poster: 'https://cdn.myanimelist.net/images/anime/1171/109222.jpg',
+                shikiRating: '8.6',
+                screenshots: [
+                    'https://cdn.myanimelist.net/images/anime/1171/109222l.jpg'
+                ],
+                trailer: 'https://www.youtube.com/embed/pk1q6YJbbz4',
+                genres: ['Экшен', 'Фэнтези', 'Мистика'],
+                year: '2020',
+                type: 'Сериал',
+                desc: 'Юдзи Итадори проглатывает проклятый палец и оказывается втянут в тайный мир магов и проклятий.',
+                episodes: [
+                    { season: 1, title: 'Эпизод 1', sources: { 'Kodik': '<iframe src="https://kodik.info/serial/49733/843198357832?only_episode=true" allowfullscreen></iframe>' } }
+                ],
+                ratings: { Admin: 9.0 }
             }
         ];
 
@@ -789,7 +825,7 @@
         };
         let userFavorites = JSON.parse(localStorage.getItem('komi_favorites')) || {};
         let userWatchHistory = JSON.parse(localStorage.getItem('komi_history')) || {};
-        let searchHistory = JSON.parse(localStorage.getItem('komi_search_history')) || ['Экшен', 'Романтика', 'Топ-2026'];
+        let searchHistory = JSON.parse(localStorage.getItem('komi_search_history')) || ['Экшен', 'Романтика', 'Магическая битва'];
         let siteStats = JSON.parse(localStorage.getItem('komi_stats')) || { visits: 1420, views: 8900 };
 
         let currentView = 'home';
@@ -806,7 +842,6 @@
         const myUniqueKey = 'user_' + Math.random().toString(36).substring(2, 9);
         
         let activeWatchPartyRoom = null;
-        let partySyncInterval = null;
         let activePartiesList = [];
 
         function changeTheme(theme) {
@@ -1174,7 +1209,7 @@
             if (!container) return;
             
             if (currentView === 'home') {
-                const sliderItems = animeList.slice(0, 5);
+                const sliderItems = animeList.slice(0, Math.min(animeList.length, 5));
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 8);
                 const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм');
 
@@ -1250,7 +1285,7 @@
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
                 const genres = ['Все', ...availableGenresList];
-                const years = ['Все', '2026', '2025', '2024', '2023', '2007'];
+                const years = ['Все', '2026', '2025', '2024', '2023', '2020', '2019', '2007'];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA'];
 
                 let filtered = animeList.filter(a => {
@@ -1552,7 +1587,7 @@
                     </div>
                     <div class="anime-info">
                         <div class="anime-title">${anime.title}</div>
-                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${gText}</span><span>${anime.episodes.length} сер.</span></div>
+                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px;">${gText}</span><span>${anime.episodes ? anime.episodes.length : 1} сер.</span></div>
                     </div>
                 </div>
             `;
@@ -1954,7 +1989,6 @@
         }
 
         function leaveWatchPartyRoom() {
-            if (partySyncInterval) clearInterval(partySyncInterval);
             activeWatchPartyRoom = null;
             closeWatchPartyModal();
         }
@@ -1981,7 +2015,74 @@
         }
         // ==========================================
 
-        // Интегрированный поиск через CORS-прокси с резервной базой
+        // Мгновенный локальный поиск с автодополнением по всей базе
+        function showSearchDropdown() {
+            const dd = document.getElementById('searchDropdown');
+            const query = document.getElementById('searchInput').value.trim();
+            if (query) {
+                handleInstantSearch(query);
+            } else {
+                let html = `<div style="padding:8px 14px; font-size:11px; color:var(--text-muted);">Часто ищут / Популярное</div>`;
+                animeList.slice(0, 5).forEach(a => {
+                    html += `
+                        <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
+                            <img src="${a.poster}" style="width:24px; height:32px; object-fit:cover; border-radius:4px;">
+                            <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${a.title}</b></div>
+                            <span style="font-size:11px; color:#fbbf24;">⭐ ${a.shikiRating || '8.5'}</span>
+                        </div>
+                    `;
+                });
+                dd.innerHTML = html;
+                dd.classList.add('active');
+            }
+        }
+
+        function handleInstantSearch(q) {
+            const dd = document.getElementById('searchDropdown');
+            if (!q.trim()) {
+                showSearchDropdown();
+                render();
+                return;
+            }
+
+            const queryLower = q.toLowerCase();
+            const filtered = animeList.filter(a => 
+                a.title.toLowerCase().includes(queryLower) || 
+                (a.genres && a.genres.some(g => g.toLowerCase().includes(queryLower))) ||
+                (a.type && a.type.toLowerCase().includes(queryLower))
+            );
+
+            if (filtered.length > 0) {
+                dd.innerHTML = filtered.map(a => `
+                    <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
+                        <img src="${a.poster}" style="width:28px; height:38px; object-fit:cover; border-radius:4px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
+                        <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                            <b>${a.title}</b>
+                            <div style="font-size:10px; color:var(--text-muted);">${(a.genres||[]).join(', ')} • ${a.year || '2026'}</div>
+                        </div>
+                        <span style="font-size:11px; color:#fbbf24; font-weight:700;">⭐ ${a.shikiRating || '8.5'}</span>
+                    </div>
+                `).join('');
+                dd.classList.add('active');
+            } else {
+                dd.innerHTML = `<div style="padding:12px 14px; font-size:12px; color:var(--text-muted); text-align:center;">Ничего не найдено</div>`;
+                dd.classList.add('active');
+            }
+
+            // Параллельно обновляем главный экран для мгновенной фильтрации сетки
+            const container = document.getElementById('mainContainer');
+            container.innerHTML = `
+                <h2 style="margin-bottom:20px;">Результаты быстрого поиска: "${q}"</h2>
+                <div class="anime-grid">${filtered.length === 0 ? '<div class="empty-state"><h3>Ничего не найдено</h3></div>' : filtered.map(a => renderCard(a)).join('')}</div>
+            `;
+        }
+
+        function selectAnimeFromSearch(id) {
+            document.getElementById('searchDropdown').classList.remove('active');
+            openWatchModal(id);
+        }
+
+        // Авто-заполнение через Shikimori API с резервом
         async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
             const resultsContainer = document.getElementById('apiSearchResultsList');
@@ -2032,7 +2133,6 @@
                     resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ничего не найдено.</div>';
                 }
             } catch(e) {
-                // Резервный локальный поиск при сбое сети или блокировке прокси
                 const fallbackResults = animeList.filter(a => a.title.toLowerCase().includes(query.toLowerCase()));
                 if (fallbackResults.length > 0) {
                     resultsContainer.innerHTML = fallbackResults.map(anime => `
@@ -2058,7 +2158,6 @@
             }
         }
 
-        // Заполнение формы данными выбранного аниме
         function fillFormWithAnimeData(animeData) {
             document.getElementById('animeTitle').value = animeData.title || '';
             document.getElementById('animePoster').value = animeData.poster || '';
@@ -2079,7 +2178,6 @@
             alert(`Данные аниме "${animeData.title}" успешно загружены в форму!`);
         }
 
-        // Импорт топа через CORS-прокси с резервом
         async function importTopSeasonalAnime() {
             const resultsContainer = document.getElementById('apiSearchResultsList');
             resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем топ аниме...</div>';
@@ -2108,8 +2206,7 @@
                     });
                 }
             } catch(e) {
-                // Резервный локальный импорт
-                const fallback = animeList[0];
+                const fallback = animeList[Math.floor(Math.random() * animeList.length)];
                 fillFormWithAnimeData({
                     title: fallback.title,
                     poster: fallback.poster,
@@ -2121,34 +2218,6 @@
                     images: fallback.screenshots
                 });
             }
-        }
-
-        function showSearchDropdown() {
-            const dd = document.getElementById('searchDropdown');
-            let html = `<div style="padding:8px 14px; font-size:11px; color:var(--text-muted);">Часто ищут / История</div>`;
-            searchHistory.forEach(q => {
-                html += `<div class="search-dropdown-item" onclick="selectSearchQuery('${q}')">${q}</div>`;
-            });
-            dd.innerHTML = html;
-            dd.classList.add('active');
-        }
-
-        function selectSearchQuery(q) {
-            document.getElementById('searchInput').value = q;
-            handleSearchInput(q);
-            document.getElementById('searchDropdown').classList.remove('active');
-        }
-
-        function handleSearchInput(q) {
-            const dd = document.getElementById('searchDropdown');
-            if (!q.trim()) { dd.classList.remove('active'); render(); return; }
-            
-            const filtered = animeList.filter(a => a.title.toLowerCase().includes(q.toLowerCase()) || (a.genres && a.genres.some(g => g.toLowerCase().includes(q.toLowerCase()))));
-            const container = document.getElementById('mainContainer');
-            container.innerHTML = `
-                <h2 style="margin-bottom:20px;">Результаты поиска: "${q}"</h2>
-                <div class="anime-grid">${filtered.length === 0 ? '<div class="empty-state"><h3>Ничего не найдено</h3></div>' : filtered.map(a => renderCard(a)).join('')}</div>
-            `;
         }
 
         function openAdminPanel() {
@@ -2167,7 +2236,7 @@
                             <tr>
                                 <td><b>${a.title}</b></td>
                                 <td>⭐ ${a.shikiRating || '8.5'}</td>
-                                <td>${a.episodes.length}</td>
+                                <td>${a.episodes ? a.episodes.length : 1}</td>
                                 <td>
                                     <button class="btn-secondary" style="padding:5px 10px;" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">✏️ Ред.</button>
                                     <button class="btn-danger" onclick="playSound(); deleteAnime('${a.id}')">🗑️ Уд.</button>
