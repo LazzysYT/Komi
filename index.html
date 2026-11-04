@@ -1598,12 +1598,14 @@
                         anime.episodes.forEach(ep => {
                             const sourcesObj = ep.sources || { 'Default': ep.url || '' };
                             Object.entries(sourcesObj).forEach(([srcName, srcVal]) => {
+                                // Экранируем двойные кавычки для безопасного вывода в value инпута
+                                const safeSrcVal = srcVal.replace(/"/g, '&quot;');
                                 epsHtml += `
                                     <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:10px; border-radius:10px;">
                                         <input type="number" class="form-control ep-season" value="${ep.season || 1}" min="1" style="width:65px;" title="Сезон">
                                         <input type="text" class="form-control ep-title" value="${ep.title}" style="flex:1; min-width:100px;">
                                         <input type="text" class="form-control ep-source-name" value="${srcName}" style="width:120px;">
-                                        <input type="text" class="form-control ep-url" value="${srcVal}" style="flex:2; min-width:200px;" required>
+                                        <input type="text" class="form-control ep-url" value="${safeSrcVal}" style="flex:2; min-width:200px;" required>
                                     </div>
                                 `;
                             });
@@ -1660,10 +1662,7 @@
                 const srcName = sourceNames[i].value.trim() || 'Плеер 1';
                 let rawUrl = urls[i].value.trim();
 
-                if (rawUrl && !rawUrl.startsWith('<iframe') && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://') && !rawUrl.startsWith('data:')) {
-                    rawUrl = 'https://' + rawUrl;
-                }
-
+                // Корректно сохраняем и iframe коды, и ссылки
                 const mapKey = `${season}_${epTitle}`;
                 if (!episodesMap[mapKey]) {
                     episodesMap[mapKey] = { season, title: epTitle, sources: {} };
@@ -1860,7 +1859,6 @@
             openWatchModal(animeId, season, epIdx);
         }
 
-        // Функция форматирования секунд в ЧЧ:ММ:СС или ММ:СС
         function formatVideoDuration(seconds) {
             if (isNaN(seconds) || seconds <= 0) return '24 мин';
             const hrs = Math.floor(seconds / 3600);
@@ -2075,11 +2073,9 @@
             }
         }
 
-        // Автоматическое обновление длительности в карточке эпизода при загрузке видео
         function updateDurationDisplay(videoElement) {
             const duration = videoElement.duration;
             const formatted = formatVideoDuration(duration);
-            // Ищем активный бейджик длительности в карточках эпизодов
             document.querySelectorAll('.ep-crunchy-card.active .ep-crunchy-time').forEach(el => {
                 el.innerText = formatted;
             });
