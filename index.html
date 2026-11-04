@@ -811,7 +811,6 @@
         let catalogFilterYear = 'Все';
         let catalogFilterType = 'Все';
         let catalogSort = 'popular';
-        let onlineTimerRunning = false;
         let currentSlideIndex = 0;
         let slideInterval = null;
         let activePlayerSource = 'Kodik';
@@ -912,8 +911,7 @@
         }
 
         async function updateOnlinePresence() {
-            if (onlineTimerRunning || !_supabase) return;
-            onlineTimerRunning = true;
+            if (!_supabase) return;
             try {
                 const now = Date.now();
                 const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
@@ -949,73 +947,79 @@
                     const count = globalAllOnlineUsersList.length || 1;
                     const el = document.getElementById('onlineCountText');
                     if (el) el.innerText = `Онлайн: ${count}`;
-                    renderSidebarFriendsList(globalAllOnlineUsersList);
                 }
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
                 if (el) el.innerText = `Онлайн: 1`;
-                globalAllOnlineUsersList = [{ username: currentUser ? currentUser.username : 'Гость' }];
-                renderSidebarFriendsList(globalAllOnlineUsersList);
             }
-            setTimeout(() => { onlineTimerRunning = false; }, 4000);
         }
 
-        setInterval(updateOnlinePresence, 4000);
+        setInterval(updateOnlinePresence, 8000);
         updateOnlinePresence();
 
-        function renderSidebarFriendsList(onlineRows) {
+        function handleFriendSearchInput(inputVal) {
+            const listEl = document.getElementById('dynamicFriendSearchResults');
+            if (!listEl) return;
+            const query = inputVal.trim().toLowerCase();
+            
+            if (!query) {
+                listEl.innerHTML = '';
+                listEl.style.display = 'none';
+                return;
+            }
+
+            const myFriends = currentUser ? (userFriends[currentUser.username] || []) : [];
+            const allKnownNames = Object.keys(userProfiles);
+            const allRegNames = Object.keys(registeredUsers);
+            const combinedPool = Array.from(new Set([...allKnownNames, ...allRegNames, ...Object.keys(userFriends)]));
+            const foundResults = combinedPool.filter(n => n.toLowerCase().includes(query) && (!currentUser || n !== currentUser.username));
+
+            if (foundResults.length > 0) {
+                listEl.style.display = 'flex';
+                listEl.innerHTML = foundResults.map(fName => {
+                    const p = userProfiles[fName] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${fName}` };
+                    const isAlreadyFriend = myFriends.includes(fName);
+                    return `
+                        <div class="sidebar-friend-item" style="justify-content:space-between; margin-bottom:4px;">
+                            <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; overflow:hidden;" onclick="playSound(); openProfile('${fName}')">
+                                <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fName}</span>
+                            </div>
+                            ${isAlreadyFriend ? `<span style="font-size:9px; color:var(--success);">В друзьях</span>` : `<button class="btn-glow" style="padding:2px 6px; font-size:9px;" onclick="playSound(); sendFriendRequest('${fName}')">+ Добавить</button>`}
+                        </div>
+                    `;
+                }).join('');
+            } else {
+                listEl.style.display = 'flex';
+                listEl.innerHTML = `<div style="font-size:10px; color:var(--text-muted); padding:4px; text-align:center;">Никого не найдено</div>`;
+            }
+        }
+
+        function renderSidebarFriendsList() {
             const friendsContainer = document.getElementById('sidebarFriendsListContainer');
             if (!friendsContainer) return;
 
             if (currentUser) {
                 const myFriends = userFriends[currentUser.username] || [];
-                const searchInputVal = document.getElementById('friendSearchInputBox') ? document.getElementById('friendSearchInputBox').value.trim().toLowerCase() : '';
-
                 let friendsHtml = `
-                    <div style="margin-bottom:8px; display:flex; gap:4px;">
-                        <input type="text" id="friendSearchInputBox" class="form-control" placeholder="Найти по нику..." value="${searchInputVal}" oninput="renderSidebarFriendsList(globalAllOnlineUsersList)" style="font-size:10px; padding:5px 8px;">
+                    <div style="margin-bottom:8px; display:flex; flex-direction:column; gap:4px;">
+                        <input type="text" id="friendSearchInputBox" class="form-control" placeholder="Найти по нику..." oninput="handleFriendSearchInput(this.value)" style="font-size:10px; padding:6px 8px;">
+                        <div id="dynamicFriendSearchResults" style="display:none; flex-direction:column; max-height:120px; overflow-y:auto;"></div>
                     </div>
                 `;
 
-                if (searchInputVal) {
-                    const allKnownNames = Object.keys(userProfiles);
-                    const allRegNames = Object.keys(registeredUsers);
-                    const combinedPool = Array.from(new Set([...allKnownNames, ...allRegNames, ...Object.keys(userFriends)]));
-                    const foundResults = combinedPool.filter(n => n.toLowerCase().includes(searchInputVal) && n !== currentUser.username);
-
-                    if (foundResults.length > 0) {
-                        friendsHtml += `<div style="font-size:10px; color:var(--text-muted); margin-bottom:4px;">Результаты поиска:</div>`;
-                        foundResults.forEach(fName => {
-                            const p = userProfiles[fName] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${fName}` };
-                            const isAlreadyFriend = myFriends.includes(fName);
-                            friendsHtml += `
-                                <div class="sidebar-friend-item" style="justify-content:space-between;">
-                                    <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; overflow:hidden;" onclick="playSound(); openProfile('${fName}')">
-                                        <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                                        <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fName}</span>
-                                    </div>
-                                    ${isAlreadyFriend ? `<span style="font-size:9px; color:var(--success);">В друзьях</span>` : `<button class="btn-glow" style="padding:2px 6px; font-size:9px;" onclick="playSound(); sendFriendRequest('${fName}')">+ Добавить</button>`}
-                                </div>
-                            `;
-                        });
-                    } else {
-                        friendsHtml += `<div style="font-size:10px; color:var(--text-muted); padding:4px;">Ничего не найдено</div>`;
-                    }
-                }
-
-                if (myFriends.length > 0 && !searchInputVal) {
+                if (myFriends.length > 0) {
                     friendsHtml += myFriends.map(f => {
                         const p = userProfiles[f] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${f}` };
-                        const isOnline = onlineRows && onlineRows.some(row => row.username === f);
                         return `
                             <div class="sidebar-friend-item" onclick="playSound(); openProfile('${f}')">
                                 <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                 <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
-                                <span style="width:6px; height:6px; border-radius:50%; background:${isOnline ? 'var(--success)' : 'var(--text-muted)'};" title="${isOnline ? 'В сети' : 'Не в сети'}"></span>
+                                <span style="width:6px; height:6px; border-radius:50%; background:var(--success);"></span>
                             </div>
                         `;
                     }).join('');
-                } else if (!searchInputVal && myFriends.length === 0) {
+                } else {
                     friendsHtml += `<span style="color:var(--text-muted); font-size:11px; padding:4px;">Список друзей пуст. Введите ник выше для поиска.</span>`;
                 }
 
@@ -1284,7 +1288,7 @@
                 `;
 
                 startHeroAutoSlide();
-                renderSidebarFriendsList(globalAllOnlineUsersList);
+                renderSidebarFriendsList();
 
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
