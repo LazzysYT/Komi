@@ -546,10 +546,17 @@
         <div class="modal-content" style="max-width: 700px;">
             <button class="modal-close" onclick="playSound(); closeAddModal()">&times;</button>
             <h2 id="modalTitleText" style="margin-bottom: 15px;">Добавить / Редактировать аниме</h2>
-            <div style="margin-bottom: 20px; display: flex; gap: 10px;">
-                <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (например: Naruto)...">
-                <button type="button" class="btn-secondary" onclick="autoFillFromAPI()">⚡ Заполнить</button>
+            
+            <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (например: Naruto)...">
+                    <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()">🔍 Найти</button>
+                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()">🔥 Импорт топа сезона</button>
+                </div>
+                <!-- Контейнер для выбора вариантов, если нашлось несколько аниме -->
+                <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; max-height: 180px; overflow-y: auto; padding: 8px;"></div>
             </div>
+
             <form id="animeForm" onsubmit="saveAnimeForm(event)">
                 <input type="hidden" id="editAnimeId">
                 <div class="form-group">
@@ -921,7 +928,6 @@
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
-                // Синхронизация данных из облака в реальном времени
                 const { data: cloudSyncData } = await _supabase.from('animes').select('*').in('id', [5, 6, 7]);
                 if (cloudSyncData) {
                     cloudSyncData.forEach(row => {
@@ -932,7 +938,6 @@
                                 const latestRoom = activePartiesList.find(r => r.id === activeWatchPartyRoom.id);
                                 if (latestRoom) {
                                     activeWatchPartyRoom = latestRoom;
-                                    // Если мы не хост, синхронизируем плеер автоматически по данным хоста
                                     if (currentUser && currentUser.username !== activeWatchPartyRoom.host) {
                                         const vid = document.getElementById('partyVideoElement');
                                         if (vid) {
@@ -947,7 +952,6 @@
                                         }
                                     }
                                 } else {
-                                    // Если комната была удалена хостом
                                     if (activeWatchPartyRoom && activeWatchPartyRoom.host !== currentUser?.username) {
                                         alert('Хост удалил комнату!');
                                         leaveWatchPartyRoom();
@@ -1401,7 +1405,7 @@
                                 <h2>👤 ${username} <span style="font-size:12px; color:#34d399; background:rgba(16,185,129,0.15); padding:3px 10px; border-radius:12px;">● Онлайн</span></h2>
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                      `<button class="btn-glow" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                     `<button class="btn-glow" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             <div style="display:flex; gap:12px; align-items:center;">
@@ -1611,7 +1615,6 @@
 
             await saveFriendsToCloud();
 
-            // Удаляем уведомление о заявке
             if (userNotifications[myName]) {
                 userNotifications[myName].splice(notifIndex, 1);
                 await saveNotificationsToCloud();
@@ -1824,7 +1827,6 @@
             if (activeUrl.trim().startsWith('<iframe')) {
                 playerHtml = `<div class="party-video-container">${activeUrl}</div>`;
             } else {
-                // Если мы НЕ хост, атрибут controls убираем, чтобы участники не могли переключать паузу и перемотку самостоятельно
                 const controlsAttr = isHost ? 'controls' : '';
                 playerHtml = `
                     <div class="party-video-container">
@@ -1894,7 +1896,6 @@
 
         async function partyReportTime(video) {
             if (!currentUser || !activeWatchPartyRoom) return;
-            // Только хост управляет и записывает тайминг в облако для всех остальных
             if (currentUser.username === activeWatchPartyRoom.host) {
                 if (Math.abs(video.currentTime - activeWatchPartyRoom.currentTime) > 1.0) {
                     activeWatchPartyRoom.currentTime = video.currentTime;
@@ -1980,41 +1981,97 @@
         }
         // ==========================================
 
-        async function autoFillFromAPI() {
+        // Поиск аниме через Jikan API с возможностью выбора из списка
+        async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
-            if (!query) { alert('Введите название для поиска!'); return; }
+            const resultsContainer = document.getElementById('apiSearchResultsList');
+            
+            if (!query) {
+                alert('Введите название для поиска!');
+                return;
+            }
+
+            resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ищем в базе MyAnimeList...</div>';
+            resultsContainer.style.display = 'block';
+
             try {
-                const res = await fetch(`https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=1`);
+                const res = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=5`;
+                const response = await fetch(res);
+                const data = await response.json();
+
+                if (data.data && data.data.length > 0) {
+                    resultsContainer.innerHTML = data.data.map(anime => `
+                        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px;" 
+                             onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'"
+                             onclick="fillFormWithAnimeData(${JSON.stringify({
+                                 title: anime.title_english || anime.title,
+                                 poster: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url,
+                                 score: anime.score || 8.5,
+                                 year: anime.year || (anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '2026'),
+                                 type: anime.type || 'Сериал',
+                                 synopsis: anime.synopsis || '',
+                                 genres: (anime.genres || []).map(g => g.name),
+                                 images: [anime.images?.jpg?.large_image_url, anime.images?.jpg?.image_url].filter(Boolean)
+                             }).replace(/"/g, '&quot;')})">
+                            <img src="${anime.images?.jpg?.image_url}" style="width: 30px; height: 40px; object-fit: cover; border-radius: 4px;">
+                            <div style="font-size: 13px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                ${anime.title} (${anime.year || 'N/A'})
+                            </div>
+                            <span style="font-size: 11px; color: #fbbf24;">⭐ ${anime.score || 'N/A'}</span>
+                        </div>
+                    `).join('');
+                } else {
+                    resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ничего не найдено.</div>';
+                }
+            } catch(e) {
+                resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Ошибка соединения с API.</div>';
+            }
+        }
+
+        // Заполнение формы данными выбранного аниме
+        function fillFormWithAnimeData(animeData) {
+            document.getElementById('animeTitle').value = animeData.title || '';
+            document.getElementById('animePoster').value = animeData.poster || '';
+            document.getElementById('animeShikiRating').value = animeData.score || '8.5';
+            document.getElementById('animeScreenshots').value = animeData.images.join(', ');
+            document.getElementById('animeYear').value = animeData.year || '2026';
+            document.getElementById('animeType').value = animeData.type || 'Сериал';
+            document.getElementById('animeDesc').value = animeData.synopsis || '';
+
+            // Отмечаем жанры галочками, если они есть в нашем списке
+            if (animeData.genres && animeData.genres.length > 0) {
+                document.querySelectorAll('.genre-checkbox').forEach(cb => {
+                    const match = animeData.genres.some(g => g.toLowerCase().includes(cb.value.toLowerCase()));
+                    if (match) cb.checked = true;
+                });
+            }
+
+            // Скрываем список выбора
+            document.getElementById('apiSearchResultsList').style.display = 'none';
+            alert(`Данные аниме "${animeData.title}" успешно загружены в форму!`);
+        }
+
+        // Функция быстрого импорта онгоингов/топа сезона
+        async function importTopSeasonalAnime() {
+            try {
+                alert('Загружаем топ аниме из базы данных...');
+                const res = await fetch('https://api.jikan.moe/v4/top/anime?limit=1');
                 const data = await res.json();
                 if (data.data && data.data.length > 0) {
                     const anime = data.data[0];
-                    document.getElementById('animeTitle').value = anime.title || '';
-                    document.getElementById('animePoster').value = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
-                    if (anime.score) document.getElementById('animeShikiRating').value = anime.score;
-                    
-                    let shots = [];
-                    if (anime.images?.jpg?.large_image_url) shots.push(anime.images.jpg.large_image_url);
-                    if (anime.trailer?.images?.maximum_image_url) shots.push(anime.trailer.images.maximum_image_url);
-                    else if (anime.trailer?.images?.large_image_url) shots.push(anime.trailer.images.large_image_url);
-                    if (anime.images?.jpg?.image_url) shots.push(anime.images.jpg.image_url);
-
-                    document.getElementById('animeScreenshots').value = shots.join(', ');
-
-                    if (anime.genres && anime.genres.length > 0) {
-                        const fetchedGenres = anime.genres.map(g => g.name.toLowerCase());
-                        document.querySelectorAll('.genre-checkbox').forEach(cb => {
-                            if (fetchedGenres.includes(cb.value.toLowerCase())) cb.checked = true;
-                        });
-                    }
-                    document.getElementById('animeYear').value = anime.year || (anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '2026');
-                    document.getElementById('animeType').value = anime.type || 'Сериал';
-                    document.getElementById('animeDesc').value = anime.synopsis || '';
-                    alert('Данные успешно загружены!');
-                } else {
-                    alert('Ничего не найдено в базе.');
+                    fillFormWithAnimeData({
+                        title: anime.title_english || anime.title,
+                        poster: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url,
+                        score: anime.score || 9.0,
+                        year: anime.year || '2026',
+                        type: anime.type || 'Сериал',
+                        synopsis: anime.synopsis || '',
+                        genres: (anime.genres || []).map(g => g.name),
+                        images: [anime.images?.jpg?.large_image_url].filter(Boolean)
+                    });
                 }
             } catch(e) {
-                alert('Ошибка при запросе к API.');
+                alert('Не удалось загрузить топ сезона.');
             }
         }
 
