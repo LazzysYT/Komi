@@ -201,7 +201,6 @@
         
         .hero-buttons { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 
-        /* Кнопки со свечением и эффектом увеличения */
         .btn-glow {
             background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 14px;
             font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
@@ -218,7 +217,6 @@
         }
         .btn-glow-secondary:hover { border-color: var(--accent); background: rgba(255, 255, 255, 0.12); transform: scale(1.05) translateY(-2px); box-shadow: 0 0 20px var(--glow); }
 
-        /* Стрелки слайдера и индикаторы */
         .hero-slider-arrow {
             position: absolute; top: 50%; transform: translateY(-50%); background: rgba(21, 21, 32, 0.75);
             border: 1px solid var(--border); color: white; width: 44px; height: 44px; border-radius: 50%;
@@ -240,7 +238,6 @@
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 35px; }
         .section-title { font-size: 22px; font-weight: 700; }
 
-        /* Стильная лента карточек для блока «Рекомендуем посмотреть» и каталога */
         .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
         .anime-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
@@ -256,7 +253,6 @@
         .anime-poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
         .anime-card:hover .anime-poster { transform: scale(1.08); }
         
-        /* Кнопка быстрого просмотра при наведении */
         .anime-quick-view {
             position: absolute; inset: 0; background: rgba(9, 9, 15, 0.6); backdrop-filter: blur(4px);
             display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; z-index: 3;
@@ -507,6 +503,10 @@
                     <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
                 </div>
                 <div class="form-group">
+                    <label>Кадры (скриншоты через запятую или по одному)</label>
+                    <input type="text" class="form-control" id="animeScreenshots" placeholder="https://img1.jpg, https://img2.jpg...">
+                </div>
+                <div class="form-group">
                     <label>YouTube Трейлер (в формате embed)</label>
                     <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
                 </div>
@@ -530,25 +530,47 @@
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
-                <button type="submit" class="btn-primary" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Сохранить аниме</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Сохранить аниме</button>
             </form>
         </div>
     </div>
 
+    <!-- РАЗДЕЛЬНЫЕ МЕНЮ ВХОДА И РЕГИСТРАЦИИ -->
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 400px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
-            <h2 id="authTitle" style="margin-bottom: 20px; text-align: center;">Авторизация / Регистрация</h2>
-            <form onsubmit="handleAuthSubmit(event)">
+            
+            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                <button type="button" class="season-tab-btn active" id="tabLoginBtn" onclick="playSound(); switchAuthTab('login')">Вход</button>
+                <button type="button" class="season-tab-btn" id="tabRegisterBtn" onclick="playSound(); switchAuthTab('register')">Регистрация</button>
+            </div>
+
+            <!-- Форма Входа -->
+            <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)">
+                <h2 style="margin-bottom: 15px; font-size: 20px;">Вход в аккаунт</h2>
                 <div class="form-group">
                     <label>Имя пользователя</label>
-                    <input type="text" class="form-control" id="authUsername" required placeholder="Введите имя...">
+                    <input type="text" class="form-control" id="loginUsername" required placeholder="Введите имя...">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="password" class="form-control" id="authPassword" required placeholder="Введите пароль...">
+                    <input type="password" class="form-control" id="loginPassword" required placeholder="Введите пароль...">
                 </div>
-                <button type="submit" class="btn-primary" id="authSubmitBtn" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Войти / Зарегистрироваться</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Войти</button>
+            </form>
+
+            <!-- Форма Регистрации -->
+            <form id="registerFormContainer" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+                <h2 style="margin-bottom: 15px; font-size: 20px;">Регистрация аккаунта</h2>
+                <div class="form-group">
+                    <label>Имя пользователя</label>
+                    <input type="text" class="form-control" id="regUsername" required placeholder="Придумайте имя (уникальное)...">
+                </div>
+                <div class="form-group">
+                    <label>Пароль</label>
+                    <input type="password" class="form-control" id="regPassword" required placeholder="Придумайте пароль...">
+                </div>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Зарегистрироваться</button>
             </form>
         </div>
     </div>
@@ -568,17 +590,13 @@
         function playSound() {
             try {
                 if (audioCtx.state === 'suspended') audioCtx.resume();
-                
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'triangle';
-                
                 osc.frequency.setValueAtTime(680, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(340, audioCtx.currentTime + 0.05);
-                
                 gain.gain.setValueAtTime(0.09, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
-                
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
                 osc.start();
@@ -612,34 +630,18 @@
                 title: 'Киберпанк: Бегущие по краю',
                 poster: 'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop',
                 screenshots: [
-                    'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop'
+                    'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop',
+                    'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'
                 ],
                 trailer: 'https://www.youtube.com/embed/JtqIas3bYhg',
                 genres: ['Киберпанк', 'Экшен'],
                 year: '2022',
                 type: 'Сериал',
-                desc: 'История уличногo паренька, пытающегося выжить в мире будущего, одержимому технологиями и модификациями тела.',
+                desc: 'История уличного паренька, пытающегося выжить в мире будущего, одержимому технологиями и модификациями тела.',
                 episodes: [
                     { season: 1, title: 'Эпизод 1', voices: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
                 ratings: { Admin: 9.6 }
-            },
-            {
-                id: 'anime_3',
-                title: 'Клинок, рассекающий демонов',
-                poster: 'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop',
-                screenshots: [
-                    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop'
-                ],
-                trailer: 'https://www.youtube.com/embed/VQg7HcSjjzY',
-                genres: ['Фэнтези', 'Экшен'],
-                year: '2019',
-                type: 'Сериал',
-                desc: 'Тандзиро Камадо отправляется в опасный путь, чтобы найти лекарство для сестры и отомстить демонам.',
-                episodes: [
-                    { season: 1, title: 'Эпизод 1', voices: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
-                ],
-                ratings: { Admin: 9.4 }
             }
         ];
 
@@ -765,12 +767,6 @@
         setInterval(updateOnlinePresence, 4000);
         updateOnlinePresence();
 
-        window.addEventListener('beforeunload', () => {
-            try {
-                navigator.sendBeacon ? null : _supabase.from('online_users').delete().eq('session_id', myUniqueKey);
-            } catch(e){}
-        });
-
         function renderSidebarLists(onlineRows) {
             const onlineContainer = document.getElementById('sidebarOnlineList');
             const friendsContainer = document.getElementById('sidebarFriendsList');
@@ -840,7 +836,6 @@
             const adminBtn = document.getElementById('adminPanelBtn');
             const addBtn = document.getElementById('addAnimeBtn');
 
-            // Список администраторов (добавлен mellstroy)
             const adminList = ['admin', 'mellstroy'];
             const isAdmin = currentUser && adminList.includes(currentUser.username.toLowerCase());
 
@@ -862,7 +857,7 @@
                     </div>
                 `;
             } else {
-                area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="playSound(); openAuthModal()">Войти</button>`;
+                area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="playSound(); openAuthModal('login')">Войти</button>`;
             }
         }
 
@@ -884,7 +879,6 @@
                 const recommended = animeList.slice(0, 8);
 
                 container.innerHTML = `
-                    <!-- ГЛАВНЫЙ СЛАЙДЕР С ПЕРЕКЛЮЧЕНИЕМ -->
                     <div class="hero-slider-container" id="heroSlider">
                         <button class="hero-slider-arrow hero-arrow-prev" onclick="playSound(); changeSlide(-1)">❮</button>
                         <button class="hero-slider-arrow hero-arrow-next" onclick="playSound(); changeSlide(1)">❯</button>
@@ -1142,13 +1136,18 @@
                             <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
                             <div class="profile-menu-item"><span>💬 Комментарии</span> <b>${userCommentsCount}</b></div>
                             <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${favoritesCount}</b></div>
+                            
+                            <!-- ПРИНЯТЬ ИЛИ ОТКЛОНИТЬ ЗАЯВКУ В ДРУЗЬЯ -->
                             ${isMe && myRequests.length > 0 ? `
                                 <div style="margin-top:10px; background:rgba(139,61,255,0.15); border:1px solid var(--primary); padding:10px; border-radius:10px;">
-                                    <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки (${myRequests.length})</div>
+                                    <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки в друзья (${myRequests.length})</div>
                                     ${myRequests.map(req => `
-                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:4px;">
-                                            <span>${req}</span>
-                                            <button class="btn-glow" style="padding:2px 8px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
+                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:6px; gap:4px;">
+                                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:90px;" title="${req}">${req}</span>
+                                            <div style="display:flex; gap:4px;">
+                                                <button class="btn-glow" style="padding:3px 8px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
+                                                <button class="btn-danger" style="padding:3px 8px; font-size:10px;" onclick="playSound(); declineFriendRequest('${req}')">Х</button>
+                                            </div>
                                         </div>
                                     `).join('')}
                                 </div>
@@ -1202,6 +1201,14 @@
                     document.getElementById('animeTitle').value = anime.title || '';
                     document.getElementById('animePoster').value = anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url || '';
                     
+                    // Загрузка реальных скриншотов из API (если они есть) подтягиваем картинки персонажей или трейлеров
+                    let shots = [];
+                    if (anime.images?.jpg?.image_url) shots.push(anime.images.jpg.image_url);
+                    if (anime.trailer?.images?.maximum_image_url) shots.push(anime.trailer.images.maximum_image_url);
+                    else if (anime.trailer?.images?.large_image_url) shots.push(anime.trailer.images.large_image_url);
+
+                    document.getElementById('animeScreenshots').value = shots.join(', ');
+
                     if (anime.genres && anime.genres.length > 0) {
                         const fetchedGenres = anime.genres.map(g => g.name.toLowerCase());
                         document.querySelectorAll('.genre-checkbox').forEach(cb => {
@@ -1326,6 +1333,7 @@
                     document.getElementById('editAnimeId').value = anime.id;
                     document.getElementById('animeTitle').value = anime.title;
                     document.getElementById('animePoster').value = anime.poster;
+                    document.getElementById('animeScreenshots').value = (anime.screenshots || []).join(', ');
                     document.getElementById('animeTrailer').value = anime.trailer || '';
                     document.getElementById('animeYear').value = anime.year || '2026';
                     document.getElementById('animeType').value = anime.type || 'Сериал';
@@ -1371,10 +1379,15 @@
             const editId = document.getElementById('editAnimeId').value;
             const title = document.getElementById('animeTitle').value;
             const poster = document.getElementById('animePoster').value;
+            const screenshotsInput = document.getElementById('animeScreenshots').value.trim();
             const trailer = document.getElementById('animeTrailer').value;
             const year = document.getElementById('animeYear').value || '2026';
             const type = document.getElementById('animeType').value || 'Сериал';
             const desc = document.getElementById('animeDesc').value;
+
+            // Корректная обработка реальных ссылок кадров
+            let screenshots = screenshotsInput ? screenshotsInput.split(',').map(s => s.trim()).filter(Boolean) : [poster, poster, poster, poster];
+            if (screenshots.length === 0) screenshots = [poster];
 
             const selectedGenres = [];
             document.querySelectorAll('.genre-checkbox:checked').forEach(cb => selectedGenres.push(cb.value));
@@ -1399,55 +1412,98 @@
 
             if (editId) {
                 const anime = animeList.find(a => a.id === editId);
-                if (anime) Object.assign(anime, { title, poster, trailer, genres, genre: genres[0], year, type, desc, episodes });
+                if (anime) Object.assign(anime, { title, poster, screenshots, trailer, genres, genre: genres[0], year, type, desc, episodes });
             } else {
-                animeList.push({ id: 'anime_' + Date.now(), title, poster, trailer, genres, genre: genres[0], year, type, desc, episodes, ratings: {}, screenshots: [poster, poster, poster, poster] });
+                animeList.push({ id: 'anime_' + Date.now(), title, poster, screenshots, trailer, genres, genre: genres[0], year, type, desc, episodes, ratings: {} });
             }
 
             await saveAnimeToCloud();
             closeAddModal();
         }
 
-        function openAuthModal() { document.getElementById('authModal').classList.add('active'); }
+        // РАЗДЕЛЬНЫЕ МЕНЮ ВХОДА И РЕГИСТРАЦИИ С ЗАЩИТОЙ ИМЕН
+        function openAuthModal(mode = 'login') {
+            switchAuthTab(mode);
+            document.getElementById('authModal').classList.add('active');
+        }
+
         function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
 
-        async function handleAuthSubmit(e) {
-            e.preventDefault();
-            const username = document.getElementById('authUsername').value.trim();
-            const passwordInput = document.getElementById('authPassword').value;
-            if (!username || !passwordInput) return;
+        function switchAuthTab(mode) {
+            const loginBtn = document.getElementById('tabLoginBtn');
+            const regBtn = document.getElementById('tabRegisterBtn');
+            const loginForm = document.getElementById('loginFormContainer');
+            const regForm = document.getElementById('registerFormContainer');
 
-            const passwordHash = await hashPassword(passwordInput);
-
-            if (registeredUsers[username]) {
-                if (registeredUsers[username] === passwordHash) {
-                    currentUser = { username };
-                    saveData();
-                    closeAuthModal();
-                    render();
-                } else {
-                    alert('Неверный пароль для этого имени пользователя!');
-                }
+            if (mode === 'login') {
+                loginBtn.classList.add('active');
+                regBtn.classList.remove('active');
+                loginForm.style.display = 'block';
+                regForm.style.display = 'none';
             } else {
-                registeredUsers[username] = passwordHash;
-                currentUser = { username };
-                if (!userProfiles[username]) {
-                    const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-                    userProfiles[username] = { 
-                        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', 
-                        status: 'Новичок на платформе ⭐',
-                        regDate: nowStr
-                    };
-                }
-                saveData();
-                closeAuthModal();
-                render();
-                alert('Аккаунт успешно создан!');
+                regBtn.classList.add('active');
+                loginBtn.classList.remove('active');
+                regForm.style.display = 'block';
+                loginForm.style.display = 'none';
             }
         }
 
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('loginUsername').value.trim();
+            const passwordInput = document.getElementById('loginPassword').value;
+            if (!usernameInput || !passwordInput) return;
+
+            const passwordHash = await hashPassword(passwordInput);
+
+            // Ищем пользователя с учетом регистра (toLowerCase)
+            const matchedKey = Object.keys(registeredUsers).find(k => k.toLowerCase() === usernameInput.toLowerCase());
+
+            if (matchedKey && registeredUsers[matchedKey] === passwordHash) {
+                currentUser = { username: matchedKey };
+                saveData();
+                closeAuthModal();
+                render();
+            } else {
+                alert('Неверное имя пользователя или пароль!');
+            }
+        }
+
+        async function handleRegisterSubmit(e) {
+            e.preventDefault();
+            const usernameInput = document.getElementById('regUsername').value.trim();
+            const passwordInput = document.getElementById('regPassword').value;
+            if (!usernameInput || !passwordInput) return;
+
+            const lowerInput = usernameInput.toLowerCase();
+
+            // Проверяем, было ли уже зарегистрировано имя в любом регистре
+            const isTaken = Object.keys(registeredUsers).some(k => k.toLowerCase() === lowerInput);
+
+            if (isTaken) {
+                alert('Аккаунт с таким именем (или похожим в другом регистре) уже зарегистрирован! Пожалуйста, выберите другое имя.');
+                return;
+            }
+
+            const passwordHash = await hashPassword(passwordInput);
+            registeredUsers[usernameInput] = passwordHash;
+            currentUser = { username: usernameInput };
+
+            const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+            userProfiles[usernameInput] = { 
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', 
+                status: 'Новичок на платформе ⭐',
+                regDate: nowStr
+            };
+
+            saveData();
+            closeAuthModal();
+            render();
+            alert('Аккаунт успешно создан!');
+        }
+
         function toggleFavorite(id, category) {
-            if (!currentUser) { openAuthModal(); return; }
+            if (!currentUser) { openAuthModal('login'); return; }
             if (!userFavorites[currentUser.username]) userFavorites[currentUser.username] = {};
             if (userFavorites[currentUser.username][id] === category) {
                 delete userFavorites[currentUser.username][id];
@@ -1459,7 +1515,7 @@
         }
 
         function setAnimeStatus(animeId, status) {
-            if (!currentUser) { openAuthModal(); return; }
+            if (!currentUser) { openAuthModal('login'); return; }
             if (!userAnimeStatuses[currentUser.username]) userAnimeStatuses[currentUser.username] = {};
             if (userAnimeStatuses[currentUser.username][animeId] === status) {
                 delete userAnimeStatuses[currentUser.username][animeId];
@@ -1471,7 +1527,7 @@
         }
 
         function sendFriendRequest(targetUsername) {
-            if (!currentUser) { openAuthModal(); return; }
+            if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
 
             if (!friendRequests[targetUsername]) friendRequests[targetUsername] = [];
@@ -1497,6 +1553,17 @@
             if (!userFriends[senderUsername]) userFriends[senderUsername] = [];
             if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
 
+            saveData();
+            openProfile(myName);
+        }
+
+        // ОТКЛОНЕНИЕ ЗАЯВКИ В ДРУЗЬЯ
+        function declineFriendRequest(senderUsername) {
+            if (!currentUser) return;
+            const myName = currentUser.username;
+            if (friendRequests[myName]) {
+                friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
+            }
             saveData();
             openProfile(myName);
         }
@@ -1574,7 +1641,9 @@
             const userFavCategory = currentUser ? ((userFavorites[currentUser.username] || {})[anime.id] || '') : '';
             const avgRating = calculateAverageRating(anime);
             const myCurrentStatus = currentUser && userAnimeStatuses[currentUser.username] ? (userAnimeStatuses[currentUser.username][anime.id] || '') : '';
-            const screenshots = anime.screenshots || [anime.poster, anime.poster, anime.poster, anime.poster];
+            
+            // Гарантируем корректный показ реальных скриншотов из ссылок аниме
+            const screenshots = (anime.screenshots && anime.screenshots.length > 0) ? anime.screenshots : [anime.poster, anime.poster, anime.poster, anime.poster];
 
             document.getElementById('watchModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); closeWatchModal()">&times;</button>
@@ -1614,7 +1683,7 @@
                     <div class="anime-screenshots-section">
                         <h3 style="font-size:13px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры из аниме</h3>
                         <div class="screenshots-grid">
-                            ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
+                            ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onerror="this.src='${anime.poster}'" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
                         </div>
                     </div>
 
@@ -1735,7 +1804,7 @@
         }
 
         function rateAnime(id, score) {
-            if (!currentUser) { openAuthModal(); return; }
+            if (!currentUser) { openAuthModal('login'); return; }
             const anime = animeList.find(a => a.id === id);
             if (!anime) return;
             if (!anime.ratings) anime.ratings = {};
@@ -1746,7 +1815,7 @@
         }
 
         async function addComment(id, season, epIdx, voice, quality) {
-            if (!currentUser) { openAuthModal(); return; }
+            if (!currentUser) { openAuthModal('login'); return; }
             const text = document.getElementById('commentInput').value.trim();
             const spoiler = document.getElementById('isSpoiler').checked;
             if (!text) return;
@@ -1759,7 +1828,7 @@
         }
 
         async function reactComment(id, cIdx, emoji) {
-            if (!currentUser) { openAuthModal(); return; }
+            if (!currentUser) { openAuthModal('login'); return; }
             const username = currentUser.username;
             if (!animeComments[id] || !animeComments[id][cIdx]) return;
 
