@@ -1981,7 +1981,7 @@
         }
         // ==========================================
 
-        // Поиск аниме через Jikan API с возможностью выбора из списка
+        // Исправленный поиск аниме через Jikan API с таймаутом и защитой от лимитов
         async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
             const resultsContainer = document.getElementById('apiSearchResultsList');
@@ -1995,8 +1995,17 @@
             resultsContainer.style.display = 'block';
 
             try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
+
                 const res = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=5`;
-                const response = await fetch(res);
+                const response = await fetch(res, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(response.status === 429 ? 'Превышен лимит запросов. Подождите несколько секунд.' : `Ошибка сервера: ${response.status}`);
+                }
+
                 const data = await response.json();
 
                 if (data.data && data.data.length > 0) {
@@ -2024,7 +2033,8 @@
                     resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ничего не найдено.</div>';
                 }
             } catch(e) {
-                resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Ошибка соединения с API.</div>';
+                const errorMsg = e.name === 'AbortError' ? 'Время ожидания запроса истекло.' : (e.message || 'Ошибка соединения с API.');
+                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">${errorMsg}</div>`;
             }
         }
 
@@ -2038,7 +2048,6 @@
             document.getElementById('animeType').value = animeData.type || 'Сериал';
             document.getElementById('animeDesc').value = animeData.synopsis || '';
 
-            // Отмечаем жанры галочками, если они есть в нашем списке
             if (animeData.genres && animeData.genres.length > 0) {
                 document.querySelectorAll('.genre-checkbox').forEach(cb => {
                     const match = animeData.genres.some(g => g.toLowerCase().includes(cb.value.toLowerCase()));
@@ -2046,16 +2055,22 @@
                 });
             }
 
-            // Скрываем список выбора
             document.getElementById('apiSearchResultsList').style.display = 'none';
             alert(`Данные аниме "${animeData.title}" успешно загружены в форму!`);
         }
 
-        // Функция быстрого импорта онгоингов/топа сезона
+        // Исправленный импорт топа сезона с защитой от лимитов
         async function importTopSeasonalAnime() {
+            const resultsContainer = document.getElementById('apiSearchResultsList');
+            resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем топ аниме...</div>';
+            resultsContainer.style.display = 'block';
+
             try {
-                alert('Загружаем топ аниме из базы данных...');
                 const res = await fetch('https://api.jikan.moe/v4/top/anime?limit=1');
+                if (!res.ok) {
+                    throw new Error(res.status === 429 ? 'Превышен лимит запросов. Подождите пару секунд.' : 'Ошибка сервера');
+                }
+
                 const data = await res.json();
                 if (data.data && data.data.length > 0) {
                     const anime = data.data[0];
@@ -2071,7 +2086,7 @@
                     });
                 }
             } catch(e) {
-                alert('Не удалось загрузить топ сезона.');
+                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">${e.message || 'Не удалось загрузить топ сезона.'}</div>`;
             }
         }
 
