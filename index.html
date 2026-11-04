@@ -37,7 +37,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
+            -webkit-font-smoothing: antialiased;
         }
 
         body {
@@ -50,7 +50,7 @@
         }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(8px); }
+            from { opacity: 0; transform: translateY(6px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
@@ -66,7 +66,7 @@
 
         /* Header */
         header {
-            background: rgba(9, 9, 13, 0.85);
+            background: rgba(9, 9, 13, 0.9);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -163,12 +163,11 @@
             max-width: 1600px; margin: 0 auto; padding: 30px 40px; flex: 1; width: 100%;
         }
 
-        /* Right Sidebar (Friends & Online) */
+        /* Right Sidebar */
         .right-sidebar {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
             padding: 18px; height: fit-content; position: sticky; top: 85px; display: flex; flex-direction: column; gap: 18px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-            animation: fadeInUp 0.3s ease;
         }
         .sidebar-section h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
         .sidebar-users-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; padding-right: 2px; }
@@ -179,7 +178,7 @@
         .sidebar-user-item:hover { background: var(--bg-card-hover); border-color: var(--border); }
         .sidebar-user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--primary); border: 1px solid var(--border); }
 
-        main { width: 100%; animation: fadeInUp 0.2s ease; }
+        main { width: 100%; }
 
         /* Home & Catalog Styles */
         .hero-slider-container {
@@ -237,7 +236,7 @@
         .anime-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
             cursor: pointer; transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
-            display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.3s ease;
+            display: flex; flex-direction: column; position: relative;
         }
         .anime-card:hover { transform: translateY(-4px); border-color: rgba(255, 69, 79, 0.4); box-shadow: 0 12px 30px rgba(0,0,0,0.7); }
         .anime-rating-badge {
@@ -257,12 +256,8 @@
         .anime-meta-card { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border); }
 
-        /* ========================================================== */
-        /* ПРЕМИУМ ДИЗАЙН ПРОФИЛЯ (Согласно заданию)                   */
-        /* ========================================================== */
-        .profile-container { max-width: 1350px; margin: 0 auto; width: 100%; animation: fadeInUp 0.25s ease; display: flex; flex-direction: column; gap: 26px; }
-        
-        /* Карточка профиля (Шапка) */
+        /* Профиль */
+        .profile-container { max-width: 1350px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 26px; }
         .profile-header-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
             display: grid; grid-template-columns: 190px 1fr; gap: 32px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
@@ -320,7 +315,6 @@
         .profile-stat-card .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
         .profile-stat-card.active .stat-label { color: var(--primary); }
 
-        /* Основной контент профиля и боковое меню */
         .profile-layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
         .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
@@ -331,11 +325,6 @@
         }
         .profile-menu-item:hover { border-color: var(--primary); background: var(--bg-card-hover); }
 
-        .profile-anime-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-        .profile-anime-table th, .profile-anime-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
-        .profile-anime-table th { color: var(--text-muted); font-weight: 600; }
-        .profile-anime-table tr:hover { background: var(--bg-card-hover); }
-
         /* Стена сообщений */
         .profile-wall-section { margin-top: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         .wall-message-item { background: var(--bg-input); border: 1px solid var(--border); padding: 14px 16px; border-radius: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
@@ -343,7 +332,7 @@
         .wall-message-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
         .wall-message-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
-        /* Modals & other elements */
+        /* Modals */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);
@@ -394,7 +383,7 @@
         .party-video-container video, .party-video-container iframe { width: 100%; height: 100%; border: none; object-fit: contain; }
 
         .flying-emoji-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
-        .flying-emoji { position: absolute; bottom: 20px; left: calc(50% + (random() * 200px - 100px)); font-size: 28px; animation: floatUp 2s ease-out forwards; }
+        .flying-emoji { position: absolute; bottom: 20px; font-size: 28px; animation: floatUp 2s ease-out forwards; }
 
         .party-sidebar-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; height: 460px; }
         .party-members-list { display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; }
@@ -790,43 +779,6 @@
                     }
                 ],
                 ratings: { Admin: 8.5 }
-            },
-            {
-                id: 'anime_4',
-                title: 'Клинок, рассекающий демонов',
-                poster: 'https://cdn.myanimelist.net/images/anime/1286/99889.jpg',
-                shikiRating: '8.7',
-                screenshots: [
-                    'https://cdn.myanimelist.net/images/anime/1286/99889l.jpg',
-                    'https://cdn.myanimelist.net/images/anime/1193/112613l.jpg'
-                ],
-                trailer: 'https://www.youtube.com/embed/VQGCKyvzIM4',
-                genres: ['Экшен', 'Фэнтези', 'Приключения'],
-                year: '2019',
-                type: 'Сериал',
-                desc: 'Тандзиро Камадо отправляется в опасный путь, чтобы исцелить сестру и отомстить демонам.',
-                episodes: [
-                    { season: 1, title: 'Эпизод 1', sources: { 'Kodik': '<iframe src="https://kodik.info/serial/49733/843198357832?only_episode=true" allowfullscreen></iframe>' } }
-                ],
-                ratings: { Admin: 9.2 }
-            },
-            {
-                id: 'anime_5',
-                title: 'Магическая битва',
-                poster: 'https://cdn.myanimelist.net/images/anime/1171/109222.jpg',
-                shikiRating: '8.6',
-                screenshots: [
-                    'https://cdn.myanimelist.net/images/anime/1171/109222l.jpg'
-                ],
-                trailer: 'https://www.youtube.com/embed/pk1q6YJbbz4',
-                genres: ['Экшен', 'Фэнтези', 'Мистика'],
-                year: '2020',
-                type: 'Сериал',
-                desc: 'Юдзи Итадори проглатывает проклятый палец и оказывается втянут в тайный мир магов и проклятий.',
-                episodes: [
-                    { season: 1, title: 'Эпизод 1', sources: { 'Kodik': '<iframe src="https://kodik.info/serial/49733/843198357832?only_episode=true" allowfullscreen></iframe>' } }
-                ],
-                ratings: { Admin: 9.0 }
             }
         ];
 
@@ -993,25 +945,6 @@
                         if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
                         if (row.id === 6) {
                             activePartiesList = JSON.parse(row.content || '[]');
-                            if (activeWatchPartyRoom) {
-                                const latestRoom = activePartiesList.find(r => r.id === activeWatchPartyRoom.id);
-                                if (latestRoom) {
-                                    activeWatchPartyRoom = latestRoom;
-                                    if (currentUser && currentUser.username !== activeWatchPartyRoom.host) {
-                                        const vid = document.getElementById('partyVideoElement');
-                                        if (vid) {
-                                            if (Math.abs(vid.currentTime - activeWatchPartyRoom.currentTime) > 1.0) {
-                                                vid.currentTime = activeWatchPartyRoom.currentTime;
-                                            }
-                                            if (activeWatchPartyRoom.isPlaying && vid.paused) {
-                                                vid.play().catch(()=>{});
-                                            } else if (!activeWatchPartyRoom.isPlaying && !vid.paused) {
-                                                vid.pause();
-                                            }
-                                        }
-                                    }
-                                }
-                            }
                         }
                         if (row.id === 7) {
                             userFriends = JSON.parse(row.content || '{}');
@@ -1031,16 +964,15 @@
                     if (el) el.innerText = `Онлайн: ${count}`;
                     renderSidebarLists(uniqueOnlineList);
                 }
-                if (currentView === 'profile') render();
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
                 if (el) el.innerText = `Онлайн: 1`;
                 renderSidebarLists([{ username: currentUser ? currentUser.username : 'Гость' }]);
             }
-            setTimeout(() => { onlineTimerRunning = false; }, 3000);
+            setTimeout(() => { onlineTimerRunning = false; }, 4000);
         }
 
-        setInterval(updateOnlinePresence, 2500);
+        setInterval(updateOnlinePresence, 4000);
         updateOnlinePresence();
 
         window.addEventListener('beforeunload', () => {
@@ -1389,7 +1321,6 @@
             });
         }
 
-        /* Отрендерить полностью переработанную страницу профиля */
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
@@ -1445,7 +1376,6 @@
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
             const wallMessages = profileWalls[username] || [];
 
-            // Фильтрация личной коллекции по поиску
             const searchedList = listForTab.filter(an => {
                 if (!profileCollectionSearchQuery) return true;
                 return an.title.toLowerCase().includes(profileCollectionSearchQuery.toLowerCase());
@@ -1453,7 +1383,6 @@
 
             container.innerHTML = `
                 <div class="profile-container">
-                    <!-- Шапка профиля -->
                     <div class="profile-header-card">
                         <img src="${p.avatar}" class="profile-avatar-box" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
@@ -1474,18 +1403,23 @@
 
                             ${isMe ? `
                             <div class="profile-settings-box">
-                                <h4>⚙️ Настройки профиля</h4>
-                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                                    <input type="url" id="newAvatarUrl" class="form-control" placeholder="URL аватара..." value="${p.avatar}" style="flex:2; min-width:200px;">
-                                    <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." value="${p.status}" style="flex:2; min-width:150px;">
-                                    <button class="btn-glow" style="padding: 10px 20px;" onclick="playSound(); updateUserProfile()">Сохранить</button>
+                                <h4>⚙️ Настройки профиля и загрузка аватара</h4>
+                                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                                    <div style="flex:2; min-width:200px;">
+                                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:4px; display:block;">Загрузить фото с устройства</label>
+                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 7px; font-size:12px;" onchange="handleAvatarFileUpload(event)">
+                                    </div>
+                                    <div style="flex:2; min-width:150px;">
+                                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:4px; display:block;">Текст статуса</label>
+                                        <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." value="${p.status}">
+                                    </div>
+                                    <button class="btn-glow" style="padding: 10px 20px; align-self:flex-end;" onclick="playSound(); updateUserProfile()">Сохранить</button>
                                 </div>
                             </div>
                             ` : ''}
                         </div>
                     </div>
 
-                    <!-- Статистика: 6 интерактивных карточек -->
                     <div class="profile-stats-grid">
                         <div class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; render()">
                             <div class="stat-icon">👁</div>
@@ -1519,10 +1453,9 @@
                         </div>
                     </div>
 
-                    <!-- Кастомные папки если есть -->
                     ${customFolderNames.length > 0 || isMe ? `
                         <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:14px 18px; border-radius:16px; border:1px solid var(--border);">
-                            <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Пользовательские папки:</span>
+                            <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Папки:</span>
                             ${customFolderNames.map(fname => `
                                 <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab='${fname}'; render()">📁 ${fname} (${customFolders[fname].length})</button>
                             `).join('')}
@@ -1535,7 +1468,6 @@
                         </div>
                     ` : ''}
 
-                    <!-- Сетка аниме и боковое меню -->
                     <div class="profile-layout-grid">
                         <div class="profile-main-content">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
@@ -1558,9 +1490,8 @@
                             `}
                         </div>
 
-                        <!-- Боковая панель профиля -->
                         <div class="profile-sidebar-menu">
-                            <h3 style="font-size:14px; font-weight:700; margin-bottom:4px;">📌 Общая статистика</h3>
+                            <h3 style="font-size:14px; font-weight:700; margin-bottom:4px;">📌 Статистика</h3>
                             <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span>👁 Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
                             <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Любимые'; render()"><span>❤️ Любимое</span> <b>${favoritesCount}</b></div>
                             <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
@@ -1568,7 +1499,6 @@
                         </div>
                     </div>
 
-                    <!-- Стена сообщений -->
                     <div class="profile-wall-section">
                         <h3 style="font-size:16px; font-weight:800; margin-bottom:14px;">💬 Стена сообщений</h3>
                         <div style="display:flex; gap:10px; margin-bottom:18px;">
@@ -1599,6 +1529,36 @@
                     </div>
                 </div>
             `;
+        }
+
+        let uploadedAvatarBase64 = null;
+        function handleAvatarFileUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                uploadedAvatarBase64 = e.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function updateUserProfile() {
+            if (!currentUser) return;
+            const status = document.getElementById('newStatusText').value.trim();
+            if (!userProfiles[currentUser.username]) {
+                const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+                userProfiles[currentUser.username] = { regDate: nowStr };
+            }
+            if (uploadedAvatarBase64) {
+                userProfiles[currentUser.username].avatar = uploadedAvatarBase64;
+                uploadedAvatarBase64 = null;
+            }
+            if (status) userProfiles[currentUser.username].status = status;
+
+            await saveProfilesToCloud();
+            saveData();
+            render();
+            alert('Профиль успешно обновлен!');
         }
 
         function createCustomFolder() {
@@ -2044,7 +2004,7 @@
             setTimeout(() => { span.remove(); }, 2000);
 
             if (currentUser && activeWatchPartyRoom) {
-                activeWatchPartyRoom.chat.push({ author: 'Реакция', text: `${currentUser.username} отправил(а) ${emoji}` });
+                activeWatchPartyRoom.chat.push({ author: 'Реакция', text: `${currentUser.username} отправл(а) ${emoji}` });
                 await savePartiesToCloud();
                 const chatBox = document.getElementById('partyChatBox');
                 if (chatBox) {
@@ -2527,22 +2487,6 @@
             }
             saveData();
             openWatchModal(animeId);
-        }
-
-        async function updateUserProfile() {
-            const avatar = document.getElementById('newAvatarUrl').value.trim();
-            const status = document.getElementById('newStatusText').value.trim();
-            if (!userProfiles[currentUser.username]) {
-                const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-                userProfiles[currentUser.username] = { regDate: nowStr };
-            }
-            if (avatar) userProfiles[currentUser.username].avatar = avatar;
-            if (status) userProfiles[currentUser.username].status = status;
-
-            await saveProfilesToCloud();
-            saveData();
-            render();
-            alert('Профиль обновлен!');
         }
 
         function closeWatchModal() {
