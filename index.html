@@ -1981,7 +1981,7 @@
         }
         // ==========================================
 
-        // Исправленный поиск через CORS-прокси с резервной базой
+        // Интегрированный поиск через CORS-прокси с резервной базой
         async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
             const resultsContainer = document.getElementById('apiSearchResultsList');
@@ -2011,15 +2011,15 @@
                             <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px;" 
                                  onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'"
                                  onclick="fillFormWithAnimeData(${JSON.stringify({
-                                     title: anime.russian || anime.name,
-                                     poster: posterUrl,
-                                     score: anime.score || '8.5',
-                                     year: anime.aired_on ? anime.aired_on.split('-')[0] : '2026',
-                                     type: anime.kind === 'movie' ? 'Фильм' : 'Сериал',
-                                     synopsis: anime.description || '',
-                                     genres: [],
-                                     images: [posterUrl]
-                                 }).replace(/"/g, '&quot;')})">
+                                    title: anime.russian || anime.name,
+                                    poster: posterUrl,
+                                    score: anime.score || '8.5',
+                                    year: anime.aired_on ? anime.aired_on.split('-')[0] : '2026',
+                                    type: anime.kind === 'movie' ? 'Фильм' : 'Сериал',
+                                    synopsis: anime.description || '',
+                                    genres: [],
+                                    images: [posterUrl]
+                                }).replace(/"/g, '&quot;')})">
                                 <img src="${posterPreview}" style="width: 30px; height: 40px; object-fit: cover; border-radius: 4px;">
                                 <div style="font-size: 13px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     ${anime.russian || anime.name} (${anime.aired_on ? anime.aired_on.split('-')[0] : 'N/A'})
@@ -2032,20 +2032,20 @@
                     resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ничего не найдено.</div>';
                 }
             } catch(e) {
-                // Резервный локальный поиск, если прокси недоступен
+                // Резервный локальный поиск при сбое сети или блокировке прокси
                 const fallbackResults = animeList.filter(a => a.title.toLowerCase().includes(query.toLowerCase()));
                 if (fallbackResults.length > 0) {
                     resultsContainer.innerHTML = fallbackResults.map(anime => `
                         <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px;" 
                              onclick="fillFormWithAnimeData(${JSON.stringify({
-                                 title: anime.title,
-                                 poster: anime.poster,
-                                 score: anime.shikiRating || '8.5',
-                                 year: anime.year || '2026',
-                                 type: anime.type || 'Сериал',
-                                 synopsis: anime.desc || '',
-                                 genres: anime.genres || [],
-                                 images: anime.screenshots || [anime.poster]
+                                title: anime.title,
+                                poster: anime.poster,
+                                score: anime.shikiRating || '8.5',
+                                year: anime.year || '2026',
+                                type: anime.type || 'Сериал',
+                                synopsis: anime.desc || '',
+                                genres: anime.genres || [],
+                                images: anime.screenshots || [anime.poster]
                              }).replace(/"/g, '&quot;')})">
                             <img src="${anime.poster}" style="width: 30px; height: 40px; object-fit: cover; border-radius: 4px;">
                             <div style="font-size: 13px; font-weight: 600; flex: 1;">${anime.title}</div>
@@ -2079,7 +2079,7 @@
             alert(`Данные аниме "${animeData.title}" успешно загружены в форму!`);
         }
 
-        // Исправленный импорт топа через прокси
+        // Импорт топа через CORS-прокси с резервом
         async function importTopSeasonalAnime() {
             const resultsContainer = document.getElementById('apiSearchResultsList');
             resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем топ аниме...</div>';
@@ -2108,7 +2108,7 @@
                     });
                 }
             } catch(e) {
-                // Резервный импорт из локальных данных
+                // Резервный локальный импорт
                 const fallback = animeList[0];
                 fillFormWithAnimeData({
                     title: fallback.title,
