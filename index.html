@@ -64,9 +64,9 @@
             100% { transform: translateY(-350px) scale(1.4); opacity: 0; }
         }
 
-        /* Header */
+        /* Ультракомпактный премиальный Header */
         header {
-            background: rgba(9, 9, 13, 0.9);
+            background: rgba(9, 9, 13, 0.85);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -75,175 +75,189 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 40px;
-            gap: 15px;
+            padding: 12px 32px;
+            gap: 20px;
         }
 
-        .logo-area { display: flex; align-items: center; gap: 18px; }
-        .logo-container { display: flex; align-items: center; gap: 12px; cursor: pointer; }
+        .logo-area { display: flex; align-items: center; gap: 16px; }
+        .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-box {
-            width: 42px; height: 42px;
+            width: 38px; height: 38px;
             background: linear-gradient(135deg, var(--primary), #FF737B);
-            border-radius: 12px; display: flex; align-items: center; justify-content: center;
-            font-weight: 800; font-size: 22px; color: white;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 20px; color: white;
             box-shadow: 0 0 15px var(--glow);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
         }
-        .logo-box:hover { transform: scale(1.06); }
+        .logo-box:hover { transform: scale(1.06); box-shadow: 0 0 20px var(--glow); }
         .logo-text {
-            font-size: 20px; font-weight: 800;
+            font-size: 18px; font-weight: 800;
             background: linear-gradient(to right, #FFFFFF, var(--text-muted));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             letter-spacing: -0.3px;
         }
 
         .online-counter {
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.25);
+            background: rgba(16, 185, 129, 0.08);
+            border: 1px solid rgba(16, 185, 129, 0.2);
             color: #34d399; padding: 4px 10px; border-radius: 20px;
             font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px;
         }
         .online-dot { width: 6px; height: 6px; background: #34d399; border-radius: 50%; box-shadow: 0 0 6px #34d399; }
 
-        .search-container { position: relative; flex: 0 1 320px; }
+        .search-container { position: relative; flex: 0 1 280px; }
         .search-bar input {
             width: 100%; background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: 12px; padding: 10px 16px 10px 40px; color: white; font-size: 13px; outline: none;
+            border-radius: 10px; padding: 8px 14px 8px 36px; color: white; font-size: 12px; outline: none;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
         }
         .search-bar input:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
-        .search-bar svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 16px; height: 16px; }
+        .search-bar svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 14px; height: 14px; }
 
         .search-dropdown {
             position: absolute; top: 100%; left: 0; width: 100%; background: var(--bg-card);
-            border: 1px solid var(--border); border-radius: 12px; margin-top: 5px; display: none; z-index: 200;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-height: 280px; overflow-y: auto;
+            border: 1px solid var(--border); border-radius: 10px; margin-top: 6px; display: none; z-index: 200;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.8); max-height: 280px; overflow-y: auto;
         }
         .search-dropdown.active { display: block; animation: fadeInUp 0.15s ease; }
-        .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+        .search-dropdown-item { padding: 8px 12px; font-size: 12px; cursor: pointer; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 10px; transition: background 0.15s ease; }
         .search-dropdown-item:hover { background: var(--bg-card-hover); color: white; }
 
         .nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; position: relative; }
         .nav-btn {
             background: transparent; border: 1px solid transparent; color: var(--text-muted);
-            font-weight: 600; font-size: 13px; cursor: pointer; padding: 8px 12px; border-radius: 10px;
+            font-weight: 600; font-size: 12px; cursor: pointer; padding: 6px 10px; border-radius: 8px;
+            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
         .nav-btn:hover, .nav-btn.active { color: white; background: rgba(255,255,255,0.04); border-color: var(--border); }
 
         .action-icon-btn {
             background: var(--bg-card); border: 1px solid var(--border); color: var(--text-main);
-            padding: 8px 12px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; position: relative;
+            padding: 6px 10px; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; position: relative;
+            transition: background 0.15s ease, border-color 0.15s ease;
         }
         .action-icon-btn:hover { border-color: var(--text-muted); background: var(--bg-card-hover); }
 
         .notification-badge {
-            position: absolute; top: -5px; right: -5px; background: var(--primary); color: white;
-            font-size: 9px; font-weight: 800; width: 16px; height: 16px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+            position: absolute; top: -4px; right: -4px; background: var(--primary); color: white;
+            font-size: 8px; font-weight: 800; width: 15px; height: 15px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px var(--glow);
         }
 
         .notification-dropdown {
-            position: absolute; top: 115%; right: 0; width: 320px; background: var(--bg-card);
-            border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+            position: absolute; top: 120%; right: 0; width: 300px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 15px 35px rgba(0,0,0,0.9);
             display: none; flex-direction: column; z-index: 300; overflow: hidden;
         }
         .notification-dropdown.active { display: flex; animation: fadeInUp 0.15s ease; }
-        .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-        .notif-list { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; }
-        .notif-item { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; }
+        .notif-header { padding: 10px 14px; border-bottom: 1px solid var(--border); font-size: 12px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .notif-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; }
+        .notif-item { padding: 8px 14px; border-bottom: 1px solid var(--border); font-size: 11px; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px; }
         .notif-item:hover { background: var(--bg-card-hover); color: white; }
 
         .user-pill {
             background: var(--bg-card); border: 1px solid var(--border);
-            padding: 5px 12px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+            padding: 4px 10px; border-radius: 20px; display: flex; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; cursor: pointer;
+            transition: border-color 0.2s ease;
         }
         .user-pill:hover { border-color: var(--text-muted); }
-        .user-avatar-small { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--primary); }
+        .user-avatar-small { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--primary); }
 
         .app-layout {
-            display: grid; grid-template-columns: 1fr 280px; gap: 30px;
-            max-width: 1600px; margin: 0 auto; padding: 30px 40px; flex: 1; width: 100%;
+            display: grid; grid-template-columns: 1fr 280px; gap: 24px;
+            max-width: 1550px; margin: 0 auto; padding: 24px 32px; flex: 1; width: 100%;
         }
 
-        /* Right Sidebar */
+        /* Правая боковая панель с друзьями и онлайном */
         .right-sidebar {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
-            padding: 18px; height: fit-content; position: sticky; top: 85px; display: flex; flex-direction: column; gap: 18px;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
+            padding: 16px; height: fit-content; position: sticky; top: 78px; display: flex; flex-direction: column; gap: 16px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.4);
         }
-        .sidebar-section h3 { font-size: 14px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); }
+        .sidebar-section h3 { font-size: 13px; font-weight: 700; margin-bottom: 10px; color: var(--text-main); display: flex; align-items: center; gap: 6px; }
         .sidebar-users-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; padding-right: 2px; }
         .sidebar-user-item {
             background: transparent; border: 1px solid transparent; padding: 6px 8px;
-            border-radius: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+            border-radius: 8px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 12px; font-weight: 600;
+            transition: background 0.15s ease, border-color 0.15s ease;
         }
         .sidebar-user-item:hover { background: var(--bg-card-hover); border-color: var(--border); }
-        .sidebar-user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--primary); border: 1px solid var(--border); }
+        .sidebar-user-avatar { width: 26px; height: 26px; border-radius: 50%; object-fit: cover; background: var(--primary); border: 1px solid var(--border); }
 
         main { width: 100%; }
 
-        /* Home & Catalog Styles */
+        /* Кинематографичный главный баннер */
         .hero-slider-container {
-            position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--border);
-            margin-bottom: 35px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); background: var(--bg-card);
+            position: relative; border-radius: 20px; overflow: hidden; border: 1px solid var(--border);
+            margin-bottom: 30px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); background: var(--bg-card);
         }
         .hero-slide {
-            display: none; background-size: cover; background-position: center; padding: 60px 70px;
-            min-height: 500px; flex-direction: column; justify-content: center; position: relative;
+            display: none; background-size: cover; background-position: center; padding: 50px 60px;
+            min-height: 460px; flex-direction: column; justify-content: center; position: relative;
         }
         .hero-slide.active { display: flex; animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .hero-slide::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, #09090D 35%, rgba(9, 9, 13, 0.85) 60%, rgba(9, 9, 13, 0.4) 100%),
+            background: linear-gradient(90deg, #09090D 38%, rgba(9, 9, 13, 0.82) 62%, rgba(9, 9, 13, 0.3) 100%),
                         radial-gradient(circle at top right, rgba(255, 69, 79, 0.15), transparent 60%);
             z-index: 1;
         }
         .hero-slide > * { position: relative; z-index: 2; }
-        .hero-slide h1 { font-size: 48px; font-weight: 800; max-width: 600px; margin-bottom: 14px; line-height: 1.1; color: #FFFFFF; letter-spacing: -1px; }
-        .hero-slide p { color: var(--text-muted); font-size: 14px; max-width: 520px; margin-bottom: 24px; line-height: 1.6; }
-        .hero-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 18px; flex-wrap: wrap; }
-        .hero-meta span { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 5px 12px; border-radius: 8px; color: var(--text-main); border: 1px solid var(--border); }
-        .hero-buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        .hero-slide h1 { font-size: 42px; font-weight: 800; max-width: 580px; margin-bottom: 12px; line-height: 1.1; color: #FFFFFF; letter-spacing: -1px; }
+        .hero-slide p { color: var(--text-muted); font-size: 13px; max-width: 500px; margin-bottom: 22px; line-height: 1.6; }
+        .hero-meta { display: flex; gap: 8px; align-items: center; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 16px; flex-wrap: wrap; }
+        .hero-meta span { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 4px 10px; border-radius: 6px; color: var(--text-main); border: 1px solid var(--border); }
+        .hero-buttons { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
         
         .btn-glow {
-            background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 12px;
-            font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
-            display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+            background: var(--primary); color: white; border: none; padding: 10px 22px; border-radius: 10px;
+            font-weight: 700; font-size: 12px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
+            display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+            transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
         }
         .btn-glow:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 25px var(--glow); }
 
         .btn-glow-secondary {
-            background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 12px 26px; border-radius: 12px;
-            font-weight: 700; font-size: 13px; cursor: pointer; backdrop-filter: blur(10px);
-            display: inline-flex; align-items: center; gap: 8px; width: fit-content;
+            background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 10px 22px; border-radius: 10px;
+            font-weight: 700; font-size: 12px; cursor: pointer; backdrop-filter: blur(10px);
+            display: inline-flex; align-items: center; gap: 6px; width: fit-content;
+            transition: border-color 0.2s ease, background 0.2s ease, transform 0.15s ease;
         }
         .btn-glow-secondary:hover { border-color: var(--text-muted); background: var(--bg-card-hover); transform: translateY(-1px); }
 
         .hero-slider-arrow {
-            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20, 20, 27, 0.8);
-            border: 1px solid var(--border); color: white; width: 44px; height: 44px; border-radius: 50%;
-            cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 16px; backdrop-filter: blur(8px);
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20, 20, 27, 0.7);
+            border: 1px solid var(--border); color: white; width: 40px; height: 40px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 14px; backdrop-filter: blur(8px);
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
         }
         .hero-slider-arrow:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-50%) scale(1.05); }
-        .hero-arrow-prev { left: 20px; }
-        .hero-arrow-next { right: 20px; }
-        .hero-dots { position: absolute; bottom: 24px; right: 40px; display: flex; gap: 6px; z-index: 10; }
-        .hero-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); cursor: pointer; }
-        .hero-dot.active { width: 28px; border-radius: 4px; background: var(--primary); box-shadow: 0 0 10px var(--glow); }
+        .hero-arrow-prev { left: 16px; }
+        .hero-arrow-next { right: 16px; }
+        
+        /* Тонкие горизонтальные полосы для индикатора слайдов */
+        .hero-dots { position: absolute; bottom: 20px; right: 40px; display: flex; gap: 5px; z-index: 10; }
+        .hero-dot { width: 16px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.25); cursor: pointer; transition: width 0.3s ease, background 0.3s ease; }
+        .hero-dot.active { width: 36px; background: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
-        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-top: 30px; }
-        .section-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-main); }
+        /* Секции каталога */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; margin-top: 28px; }
+        .section-title { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-main); }
+        .section-see-all { font-size: 12px; font-weight: 600; color: var(--text-muted); cursor: pointer; background: transparent; border: none; }
+        .section-see-all:hover { color: var(--primary); }
 
-        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px; }
+        .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 18px; }
         .anime-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
-            cursor: pointer; transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
+            cursor: pointer; transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.25s ease, box-shadow 0.25s ease;
             display: flex; flex-direction: column; position: relative;
         }
         .anime-card:hover { transform: translateY(-4px); border-color: rgba(255, 69, 79, 0.4); box-shadow: 0 12px 30px rgba(0,0,0,0.7); }
         .anime-rating-badge {
-            position: absolute; top: 12px; left: 12px; background: rgba(9, 9, 13, 0.75); border: 1px solid var(--border);
-            color: #fbbf24; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; z-index: 2; backdrop-filter: blur(6px);
+            position: absolute; top: 10px; left: 10px; background: rgba(9, 9, 13, 0.8); border: 1px solid var(--border);
+            color: #fbbf24; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 2; backdrop-filter: blur(6px);
         }
-        .anime-poster-box { position: relative; width: 100%; height: 310px; overflow: hidden; background: var(--bg-input); }
+        .anime-poster-box { position: relative; width: 100%; height: 280px; overflow: hidden; background: var(--bg-input); }
         .anime-poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .anime-card:hover .anime-poster { transform: scale(1.06); }
         .anime-quick-view {
@@ -251,211 +265,201 @@
             display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; z-index: 3;
         }
         .anime-card:hover .anime-quick-view { opacity: 1; }
-        .anime-info { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; background: var(--bg-card); z-index: 2; }
-        .anime-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
-        .anime-meta-card { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
-        .empty-state { grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border); }
+        .anime-info { padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; background: var(--bg-card); z-index: 2; }
+        .anime-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
+        .anime-meta-card { font-size: 11px; color: var(--text-muted); display: flex; justify-content: space-between; }
+        .empty-state { grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 14px; border: 1px dashed var(--border); }
 
         /* Профиль */
-        .profile-container { max-width: 1350px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 26px; }
+        .profile-container { max-width: 1300px; margin: 0 auto; width: 100%; display: flex; flex-direction: column; gap: 24px; }
         .profile-header-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
-            display: grid; grid-template-columns: 190px 1fr; gap: 32px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 28px;
+            display: grid; grid-template-columns: 170px 1fr; gap: 28px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
             position: relative; overflow: hidden;
         }
         .profile-header-card::after {
-            content: ''; position: absolute; top: 0; right: 0; width: 220px; height: 220px;
+            content: ''; position: absolute; top: 0; right: 0; width: 200px; height: 200px;
             background: radial-gradient(circle, var(--glow) 0%, transparent 70%); pointer-events: none; opacity: 0.6;
         }
         .profile-avatar-box {
-            width: 190px; height: 230px; border-radius: 16px; object-fit: cover; border: 1px solid var(--border); background: var(--bg-input);
+            width: 170px; height: 210px; border-radius: 14px; object-fit: cover; border: 1px solid var(--border); background: var(--bg-input);
             box-shadow: 0 8px 25px rgba(0,0,0,0.6); transition: transform 0.3s ease, border-color 0.3s ease;
         }
         .profile-avatar-box:hover { transform: scale(1.02); border-color: var(--primary); }
-        .profile-info-grid { display: flex; flex-direction: column; gap: 14px; z-index: 2; }
-        .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
-        .profile-name-row h2 { font-size: 26px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
+        .profile-info-grid { display: flex; flex-direction: column; gap: 12px; z-index: 2; }
+        .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 12px; }
+        .profile-name-row h2 { font-size: 24px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; letter-spacing: -0.5px; }
         
-        .profile-badges-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .profile-badges-row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         .profile-badge-item {
-            background: rgba(255, 69, 79, 0.1); border: 1px solid rgba(255, 69, 79, 0.25); color: var(--primary);
-            padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(255, 69, 79, 0.08); border: 1px solid rgba(255, 69, 79, 0.2); color: var(--primary);
+            padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;
         }
         .profile-badge-level {
-            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text-main);
-            padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;
+            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); color: var(--text-main);
+            padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
         }
         .profile-reg-date { color: var(--text-muted); font-size: 11px; font-weight: 500; opacity: 0.8; }
 
         .profile-settings-box {
-            background: var(--bg-input); padding: 16px; border-radius: 14px; border: 1px solid var(--border); margin-top: 4px;
-            display: flex; flex-direction: column; gap: 10px;
+            background: var(--bg-input); padding: 14px; border-radius: 12px; border: 1px solid var(--border); margin-top: 4px;
+            display: flex; flex-direction: column; gap: 8px;
         }
-        .profile-settings-box h4 { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+        .profile-settings-box h4 { font-size: 12px; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
 
-        /* Статистика: 6 интерактивных карточек */
+        /* Статистика */
         .profile-stats-grid {
-            display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px;
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 12px;
         }
         @media(max-width: 1200px) { .profile-stats-grid { grid-template-columns: repeat(3, 1fr); } }
         @media(max-width: 768px) { .profile-stats-grid { grid-template-columns: repeat(2, 1fr); } }
 
         .profile-stat-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 14px;
-            display: flex; flex-direction: column; gap: 8px; cursor: pointer; position: relative; overflow: hidden;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px 12px;
+            display: flex; flex-direction: column; gap: 6px; cursor: pointer; position: relative; overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3); transition: transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
         }
         .profile-stat-card:hover { background: var(--bg-card-hover); border-color: var(--text-muted); transform: translateY(-2px); }
         .profile-stat-card.active {
-            background: linear-gradient(135deg, rgba(255, 69, 79, 0.15), var(--bg-card));
+            background: linear-gradient(135deg, rgba(255, 69, 79, 0.12), var(--bg-card));
             border-color: var(--primary); box-shadow: 0 8px 25px var(--glow);
         }
-        .profile-stat-card .stat-icon { font-size: 20px; }
-        .profile-stat-card .stat-num { font-size: 22px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
-        .profile-stat-card .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .profile-stat-card .stat-icon { font-size: 18px; }
+        .profile-stat-card .stat-num { font-size: 20px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        .profile-stat-card .stat-label { font-size: 11px; font-weight: 600; color: var(--text-muted); }
         .profile-stat-card.active .stat-label { color: var(--primary); }
 
-        .profile-layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
-        .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .profile-layout-grid { display: grid; grid-template-columns: 1fr 300px; gap: 22px; align-items: start; }
+        .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 18px; display: flex; flex-direction: column; gap: 8px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
         
         .profile-menu-item {
-            background: var(--bg-input); border: 1px solid var(--border); padding: 12px 14px; border-radius: 12px;
-            font-size: 13px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px;
+            font-size: 12px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white;
+            transition: border-color 0.15s ease, background 0.15s ease;
         }
         .profile-menu-item:hover { border-color: var(--primary); background: var(--bg-card-hover); }
 
-        /* Стена сообщений */
-        .profile-wall-section { margin-top: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
-        .wall-message-item { background: var(--bg-input); border: 1px solid var(--border); padding: 14px 16px; border-radius: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .wall-message-author { font-size: 13px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .wall-message-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
-        .wall-message-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+        .profile-wall-section { margin-top: 24px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .wall-message-item { background: var(--bg-input); border: 1px solid var(--border); padding: 12px 14px; border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .wall-message-author { font-size: 12px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .wall-message-author img { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+        .wall-message-text { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
 
-        /* Modals */
+        /* Модальные окна */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);
+            background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(12px);
             display: flex; align-items: center; justify-content: center; z-index: 1000;
             opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: #0D0D12; border: 1px solid var(--border); border-radius: 20px;
-            width: 95%; max-width: 1300px; padding: 26px; max-height: 92vh; overflow-y: auto;
+            background: #0D0D12; border: 1px solid var(--border); border-radius: 18px;
+            width: 95%; max-width: 1250px; padding: 24px; max-height: 92vh; overflow-y: auto;
             position: relative; box-shadow: 0 25px 60px rgba(0,0,0,0.9); animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .modal-close {
-            position: absolute; top: 18px; right: 18px; background: var(--bg-card);
-            border: 1px solid var(--border); color: white; width: 34px; height: 34px; border-radius: 50%;
-            cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; z-index: 10;
+            position: absolute; top: 16px; right: 16px; background: var(--bg-card);
+            border: 1px solid var(--border); color: white; width: 32px; height: 32px; border-radius: 50%;
+            cursor: pointer; font-size: 15px; display: flex; align-items: center; justify-content: center; z-index: 10;
+            transition: background 0.2s ease, border-color 0.2s ease;
         }
         .modal-close:hover { background: var(--bg-card-hover); border-color: var(--text-muted); }
 
-        .form-group { margin-bottom: 16px; }
-        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-        .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 11px 14px; color: white; font-size: 13px; outline: none; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 5px; }
+        .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: white; font-size: 12px; outline: none; transition: border-color 0.2s ease, box-shadow 0.2s ease; }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
         textarea.form-control { resize: vertical; min-height: 80px; }
 
-        .btn-secondary { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 9px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 12px; }
+        .btn-secondary { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 11px; transition: background 0.15s ease, border-color 0.15s ease; }
         .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--text-muted); }
-        .btn-danger { background: rgba(255, 69, 79, 0.1); color: #FF454F; border: 1px solid rgba(255, 69, 79, 0.25); padding: 7px 14px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
-        .btn-danger:hover { background: rgba(255, 69, 79, 0.2); }
+        .btn-danger { background: rgba(255, 69, 79, 0.08); color: #FF454F; border: 1px solid rgba(255, 69, 79, 0.2); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.15s ease; }
+        .btn-danger:hover { background: rgba(255, 69, 79, 0.15); }
 
         .catalog-filters-box {
-            background: var(--bg-card); border: 1px solid var(--border); padding: 18px; border-radius: 16px;
-            margin-bottom: 22px; display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px;
+            background: var(--bg-card); border: 1px solid var(--border); padding: 16px; border-radius: 14px;
+            margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px;
         }
 
-        .watch-cinema-layout { display: flex; flex-direction: column; gap: 20px; width: 100%; }
+        .watch-cinema-layout { display: flex; flex-direction: column; gap: 18px; width: 100%; }
         .crunchy-hero-section {
-            display: flex; gap: 20px; background: var(--bg-card);
-            border: 1px solid var(--border); border-radius: 18px; padding: 22px; align-items: center;
+            display: flex; gap: 18px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 16px; padding: 20px; align-items: center;
         }
-        .crunchy-hero-poster { width: 140px; height: 190px; object-fit: cover; border-radius: 12px; border: 1px solid var(--border); }
+        .crunchy-hero-poster { width: 130px; height: 180px; object-fit: cover; border-radius: 10px; border: 1px solid var(--border); }
         .crunchy-hero-info { display: flex; flex-direction: column; gap: 8px; flex: 1; }
-        .crunchy-hero-info h1 { font-size: 24px; font-weight: 800; color: white; }
+        .crunchy-hero-info h1 { font-size: 22px; font-weight: 800; color: white; }
         
-        .party-room-grid { display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: start; }
-        .party-main-screen { display: flex; flex-direction: column; gap: 12px; position: relative; }
-        .party-video-container { position: relative; width: 100%; background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
+        .party-room-grid { display: grid; grid-template-columns: 1fr 300px; gap: 16px; align-items: start; }
+        .party-main-screen { display: flex; flex-direction: column; gap: 10px; position: relative; }
+        .party-video-container { position: relative; width: 100%; background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); box-shadow: 0 10px 25px rgba(0,0,0,0.8); }
         .party-video-container video, .party-video-container iframe { width: 100%; height: 100%; border: none; object-fit: contain; }
 
         .flying-emoji-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
-        .flying-emoji { position: absolute; bottom: 20px; font-size: 28px; animation: floatUp 2s ease-out forwards; }
+        .flying-emoji { position: absolute; bottom: 20px; font-size: 26px; animation: floatUp 2s ease-out forwards; }
 
-        .party-sidebar-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; gap: 12px; height: 460px; }
-        .party-members-list { display: flex; flex-direction: column; gap: 6px; max-height: 120px; overflow-y: auto; }
-        .party-member-badge { background: var(--bg-input); border: 1px solid var(--border); padding: 5px 8px; border-radius: 8px; font-size: 11px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
+        .party-sidebar-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 14px; display: flex; flex-direction: column; gap: 10px; height: 440px; }
+        .party-members-list { display: flex; flex-direction: column; gap: 6px; max-height: 110px; overflow-y: auto; }
+        .party-member-badge { background: var(--bg-input); border: 1px solid var(--border); padding: 4px 8px; border-radius: 6px; font-size: 11px; display: flex; align-items: center; gap: 6px; font-weight: 600; }
         
-        .party-chat-box { flex: 1; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 180px; }
+        .party-chat-box { flex: 1; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; padding: 8px; display: flex; flex-direction: column; gap: 6px; overflow-y: auto; max-height: 170px; }
         .party-chat-msg { font-size: 11px; display: flex; flex-direction: column; gap: 2px; }
         .party-chat-author { font-weight: 700; color: var(--text-main); }
 
-        .party-reactions-bar { display: flex; gap: 6px; justify-content: center; background: var(--bg-input); padding: 6px; border-radius: 10px; border: 1px solid var(--border); }
-        .party-react-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; padding: 2px 6px; border-radius: 6px; }
+        .party-reactions-bar { display: flex; gap: 6px; justify-content: center; background: var(--bg-input); padding: 6px; border-radius: 8px; border: 1px solid var(--border); }
+        .party-react-btn { background: transparent; border: none; font-size: 16px; cursor: pointer; padding: 2px 6px; border-radius: 6px; transition: transform 0.15s ease; }
         .party-react-btn:hover { background: var(--bg-card-hover); transform: scale(1.15); }
 
         .player-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; gap: 8px; }
-        .player-box { background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.8); position: relative; }
+        .player-box { background: #000; border-radius: 14px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 25px rgba(0,0,0,0.8); position: relative; }
         .player-box iframe, .player-box video { width: 100%; height: 100%; border: none; object-fit: contain; }
 
         .players-switcher-bar {
             display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
-            background: var(--bg-card); border: 1px solid var(--border); padding: 10px 14px; border-radius: 12px;
+            background: var(--bg-card); border: 1px solid var(--border); padding: 8px 12px; border-radius: 10px;
         }
         .player-switch-btn {
             background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted);
-            padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer;
+            padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;
+            transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
         }
         .player-switch-btn:hover { border-color: var(--text-muted); color: white; }
         .player-switch-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
-        .anime-screenshots-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+        .anime-screenshots-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 12px; }
         .screenshots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 6px; }
-        .screenshot-thumb { width: 100%; height: 85px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
+        .screenshot-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
         .screenshot-thumb:hover { transform: scale(1.02); border-color: var(--text-muted); }
 
-        .crunchy-episodes-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
-        .season-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); }
-        .season-tab-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; white-space: nowrap; }
+        .crunchy-episodes-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 16px; }
+        .season-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 6px; margin-bottom: 12px; border-bottom: 1px solid var(--border); }
+        .season-tab-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; white-space: nowrap; transition: color 0.15s ease, background 0.15s ease; }
         .season-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
-        .episodes-grid-crunchy { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; max-height: 360px; overflow-y: auto; padding-right: 2px; }
+        .episodes-grid-crunchy { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; max-height: 340px; overflow-y: auto; padding-right: 2px; }
         .ep-crunchy-card {
-            background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; overflow: hidden;
+            background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; overflow: hidden;
             cursor: pointer; display: flex; flex-direction: column; position: relative; transition: transform 0.2s ease, border-color 0.2s ease;
         }
         .ep-crunchy-card:hover, .ep-crunchy-card.active { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 6px 15px var(--glow); }
-        .ep-crunchy-thumb { width: 100%; height: 120px; object-fit: cover; background: #000; position: relative; }
+        .ep-crunchy-thumb { width: 100%; height: 110px; object-fit: cover; background: #000; position: relative; }
         .ep-crunchy-play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
         .ep-crunchy-card:hover .ep-crunchy-play-overlay { opacity: 1; }
-        .ep-crunchy-play-icon { width: 36px; height: 36px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 14px; box-shadow: 0 0 10px var(--glow); }
-        .ep-crunchy-info { padding: 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+        .ep-crunchy-play-icon { width: 32px; height: 32px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; box-shadow: 0 0 10px var(--glow); }
+        .ep-crunchy-info { padding: 8px 10px; display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
         .ep-crunchy-titles { display: flex; flex-direction: column; gap: 2px; overflow: hidden; }
-        .ep-crunchy-title { font-size: 13px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; }
+        .ep-crunchy-title { font-size: 12px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; }
         .ep-crunchy-desc { font-size: 10px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .ep-crunchy-time { font-size: 11px; font-weight: 700; color: var(--text-main); white-space: nowrap; background: rgba(255,255,255,0.06); padding: 3px 6px; border-radius: 6px; border: 1px solid var(--border); }
 
-        .comments-section { background: rgba(255,255,255,0.01); border: 1px solid var(--border); padding: 16px; border-radius: 14px; display: flex; flex-direction: column; gap: 10px; }
-        .comment-item { background: rgba(0,0,0,0.3); border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px; display: flex; flex-direction: column; gap: 5px; }
-        .comment-author { font-weight: 700; font-size: 12px; color: var(--text-main); display: flex; align-items: center; gap: 6px; cursor: pointer; }
-        .comment-author img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
-        .comment-reactions { display: flex; gap: 5px; margin-top: 3px; }
-        .reaction-btn { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; color: white; display: flex; align-items: center; gap: 4px; }
-        .reaction-btn:hover { border-color: var(--text-muted); }
-        .reaction-btn.active { background: var(--primary); border-color: var(--primary); color: white; }
-        .spoiler-text { background: #222; color: #222; border-radius: 4px; cursor: pointer; padding: 2px 6px; user-select: none; }
-        .spoiler-text.revealed { background: #333; color: #fff; }
-
-        .admin-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        .admin-table th, .admin-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
+        .admin-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        .admin-table th, .admin-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; }
         .admin-table th { color: var(--text-muted); font-weight: 600; }
 
         @media (max-width: 1024px) {
-            .app-layout { grid-template-columns: 1fr; padding: 20px; }
-            .right-sidebar { position: static; margin-top: 20px; }
+            .app-layout { grid-template-columns: 1fr; padding: 16px; }
+            .right-sidebar { position: static; margin-top: 16px; }
             .profile-header-card { grid-template-columns: 1fr; text-align: center; justify-items: center; }
             .profile-layout-grid { grid-template-columns: 1fr; }
             .screenshots-grid { grid-template-columns: repeat(2, 1fr); }
@@ -464,21 +468,21 @@
         }
 
         @media (max-width: 768px) {
-            header { padding: 12px 16px; flex-direction: column; align-items: stretch; gap: 10px; }
+            header { padding: 10px 16px; flex-direction: column; align-items: stretch; gap: 8px; }
             .logo-area { justify-content: space-between; }
             .search-container { flex: 1; max-width: 100%; }
             .nav-actions { justify-content: center; }
-            .hero-slide { padding: 25px; min-height: 340px; }
-            .hero-slide h1 { font-size: 28px; }
-            .anime-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
-            .anime-poster-box { height: 230px; }
-            .modal-content { padding: 16px 10px; width: 100%; max-height: 94vh; border-radius: 14px; }
+            .hero-slide { padding: 24px; min-height: 320px; }
+            .hero-slide h1 { font-size: 26px; }
+            .anime-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+            .anime-poster-box { height: 210px; }
+            .modal-content { padding: 16px 12px; width: 100%; max-height: 94vh; border-radius: 14px; }
         }
     </style>
 </head>
 <body class="theme-purple">
 
-    <!-- Header -->
+    <!-- Ультракомпактный премиальный Header -->
     <header>
         <div class="logo-area">
             <div class="logo-container" onclick="playSound(); navigate('home')">
@@ -510,24 +514,24 @@
                     <button class="btn-secondary" style="padding:2px 8px; font-size:10px;" onclick="clearNotifications()">Очистить</button>
                 </div>
                 <div class="notif-list" id="notifListContainer">
-                    <div style="padding:15px; text-align:center; color:var(--text-muted); font-size:12px;">Нет новых уведомлений</div>
+                    <div style="padding:15px; text-align:center; color:var(--text-muted); font-size:11px;">Нет новых уведомлений</div>
                 </div>
             </div>
 
             <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
             <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
-            <button class="action-icon-btn" onclick="playSound(); randomAnimeWithAnimation()">🎲 Случайно</button>
-            <button class="action-icon-btn" onclick="playSound(); openWatchPartyHub()" style="background:var(--bg-card);">🎉 Party</button>
+            <button class="action-icon-btn" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме">🎲</button>
+            <button class="action-icon-btn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(139,61,255,0.15); border-color:rgba(139,61,255,0.3); color:#c4b5fd;" title="Watch Party">🎉 Party</button>
             
-            <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="display: none;">⚙️ Админка</button>
-            <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="display: none;">+ Добавить</button>
+            <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="display: none;" title="Админка">⚙️</button>
+            <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="display: none;" title="Добавить">+ Добавить</button>
 
-            <select class="action-icon-btn" id="themeSelect" onchange="changeTheme(this.value)" style="background: var(--bg-card); padding: 8px;">
-                <option value="purple">💜 Фиолетовая</option>
-                <option value="red">🔴 Красная (#FF454F)</option>
-                <option value="mint">🟢 Мятная</option>
-                <option value="blue">💙 Синяя</option>
-                <option value="gold">🟡 Золотая</option>
+            <select class="action-icon-btn" id="themeSelect" onchange="changeTheme(this.value)" style="background: var(--bg-card); padding: 6px 8px;">
+                <option value="purple">💜 Фиолет</option>
+                <option value="red">🔴 Красный</option>
+                <option value="mint">🟢 Мята</option>
+                <option value="blue">💙 Синий</option>
+                <option value="gold">🟡 Золото</option>
             </select>
             <div id="userHeaderArea"></div>
         </div>
@@ -536,35 +540,36 @@
     <div class="app-layout">
         <main id="mainContainer"></main>
         
+        <!-- Правая колонка с друзьями и онлайном -->
         <aside class="right-sidebar">
             <div class="sidebar-section">
                 <h3>👥 Друзья</h3>
                 <div class="sidebar-users-list" id="sidebarFriendsList">
-                    <span style="color:var(--text-muted); font-size:12px;">Войдите в аккаунт</span>
+                    <span style="color:var(--text-muted); font-size:11px;">Войдите в аккаунт</span>
                 </div>
             </div>
-            <div class="sidebar-section" style="border-top: 1px solid var(--border); padding-top: 14px;">
-                <h3>🟢 Онлайн</h3>
+            <div class="sidebar-section" style="border-top: 1px solid var(--border); padding-top: 12px;">
+                <h3>🟢 Онлайн на сайте</h3>
                 <div class="sidebar-users-list" id="sidebarOnlineList">
-                    <span style="color:var(--text-muted); font-size:12px;">Загрузка...</span>
+                    <span style="color:var(--text-muted); font-size:11px;">Загрузка...</span>
                 </div>
             </div>
         </aside>
     </div>
 
-    <!-- Modals -->
+    <!-- Модальные окна -->
     <div class="modal-overlay" id="addModal">
-        <div class="modal-content" style="max-width: 700px;">
+        <div class="modal-content" style="max-width: 680px;">
             <button class="modal-close" onclick="playSound(); closeAddModal()">&times;</button>
-            <h2 id="modalTitleText" style="margin-bottom: 15px;">Добавить / Редактировать аниме</h2>
+            <h2 id="modalTitleText" style="margin-bottom: 14px; font-size: 20px;">Добавить / Редактировать аниме</h2>
             
-            <div style="margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px;">
-                <div style="display: flex; gap: 10px;">
-                    <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения...">
+            <div style="margin-bottom: 16px; display: flex; flex-direction: column; gap: 8px;">
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (Shikimori)...">
                     <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()">🔍 Найти</button>
-                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()">🔥 Импорт</button>
+                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()">🔥 Топ</button>
                 </div>
-                <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; max-height: 180px; overflow-y: auto; padding: 8px;"></div>
+                <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; max-height: 160px; overflow-y: auto; padding: 6px;"></div>
             </div>
 
             <form id="animeForm" onsubmit="saveAnimeForm(event)">
@@ -591,11 +596,11 @@
                 </div>
                 <div class="form-group">
                     <label>Жанры</label>
-                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; background: var(--bg-input); padding: 12px; border-radius: 12px; border: 1px solid var(--border);"></div>
+                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; background: var(--bg-input); padding: 10px; border-radius: 10px; border: 1px solid var(--border);"></div>
                 </div>
                 <div class="form-group">
                     <label>Год / Тип</label>
-                    <div style="display: flex; gap: 10px;">
+                    <div style="display: flex; gap: 8px;">
                         <input type="text" class="form-control" id="animeYear" placeholder="2026" style="flex:1;">
                         <input type="text" class="form-control" id="animeType" placeholder="Фильм или Сериал" style="flex:1;">
                     </div>
@@ -606,87 +611,65 @@
                 </div>
                 <div class="form-group">
                     <label>Эпизоды</label>
-                    <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
+                    <div id="episodesList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:8px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Сохранить</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 8px; justify-content: center;" onclick="playSound()">Сохранить</button>
             </form>
         </div>
     </div>
 
-    <!-- Auth Modal with Email Registration & OTP verification -->
+    <!-- Auth Modal -->
     <div class="modal-overlay" id="authModal">
-        <div class="modal-content" style="max-width: 420px;">
+        <div class="modal-content" style="max-width: 380px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
-            <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+            <div style="display: flex; gap: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); padding-bottom: 8px;">
                 <button type="button" class="season-tab-btn active" id="tabLoginBtn" onclick="playSound(); switchAuthTab('login')">Вход</button>
                 <button type="button" class="season-tab-btn" id="tabRegisterBtn" onclick="playSound(); switchAuthTab('register')">Регистрация</button>
             </div>
 
-            <!-- Login Form -->
             <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)">
-                <h2 style="margin-bottom: 15px; font-size: 20px;">Вход в аккаунт</h2>
+                <h2 style="margin-bottom: 14px; font-size: 18px;">Вход в аккаунт</h2>
                 <div class="form-group">
-                    <label>Email или Имя пользователя</label>
-                    <input type="text" class="form-control" id="loginUsername" required placeholder="name@mail.com или логин...">
+                    <label>Логин</label>
+                    <input type="text" class="form-control" id="loginUsername" required placeholder="Ваш никнейм...">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
                     <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Войти</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 8px; justify-content: center;" onclick="playSound()">Войти</button>
             </form>
 
-            <!-- Register Step 1: Input Data -->
-            <form id="registerFormContainer" onsubmit="handleRegisterStep1(event)">
-                <h2 style="margin-bottom: 15px; font-size: 20px;">Регистрация по почте</h2>
+            <form id="registerFormContainer" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+                <h2 style="margin-bottom: 14px; font-size: 18px;">Регистрация</h2>
                 <div class="form-group">
-                    <label>Электронная почта (Email)</label>
-                    <input type="email" class="form-control" id="regEmail" required placeholder="your_email@gmail.com">
-                </div>
-                <div class="form-group">
-                    <label>Имя пользователя</label>
-                    <input type="text" class="form-control" id="regUsername" required placeholder="Уникальный никнейм...">
+                    <label>Никнейм</label>
+                    <input type="text" class="form-control" id="regUsername" required placeholder="Придумайте логин...">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
                     <input type="password" class="form-control" id="regPassword" required placeholder="Придумайте пароль...">
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Продолжить</button>
-            </form>
-
-            <!-- Register Step 2: Email OTP Code Verification -->
-            <form id="registerVerifyContainer" onsubmit="handleRegisterVerify(event)" style="display: none;">
-                <h2 style="margin-bottom: 10px; font-size: 20px;">Подтверждение почты</h2>
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
-                    Мы отправили 6-значный код подтверждения на вашу электронную почту <b id="verifyEmailTarget" style="color: var(--text-main);"></b>.
-                </p>
-                <div class="form-group">
-                    <label>Код из письма</label>
-                    <input type="text" class="form-control" id="regVerifyCode" required placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight: 700; text-align: center; font-size: 18px;">
-                </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Подтвердить и войти</button>
-                <div style="text-align: center; margin-top: 12px;">
-                    <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="playSound(); switchAuthTab('register')">◀ Назад к форме</button>
-                </div>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 8px; justify-content: center;" onclick="playSound()">Создать аккаунт</button>
             </form>
         </div>
     </div>
 
-    <!-- Random Roulette Modal -->
+    <!-- Roulette Modal -->
     <div class="modal-overlay" id="randomRouletteModal">
-        <div class="modal-content" style="max-width: 380px; text-align: center; padding: 35px;">
-            <h3 style="margin-bottom: 20px; color: var(--text-main);">🎲 Выбираем аниме...</h3>
-            <div id="rouletteContainer" style="width: 160px; height: 220px; margin: 0 auto 20px auto; border-radius: 14px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 25px var(--glow);">
+        <div class="modal-content" style="max-width: 350px; text-align: center; padding: 30px;">
+            <h3 style="margin-bottom: 16px; font-size: 16px;">🎲 Выбираем аниме...</h3>
+            <div id="rouletteContainer" style="width: 150px; height: 210px; margin: 0 auto 16px auto; border-radius: 12px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 25px var(--glow);">
                 <img id="rouletteImage" src="" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
-            <div id="rouletteTitle" style="font-weight: 700; font-size: 15px; color: white;">Загрузка...</div>
+            <div id="rouletteTitle" style="font-weight: 700; font-size: 14px; color: white;">Загрузка...</div>
         </div>
     </div>
 
-    <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 1000px;" id="adminModalContent"></div></div>
+    <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 950px;" id="adminModalContent"></div></div>
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
-    <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1100px;" id="watchPartyModalContent"></div></div>
+    <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1050px;" id="watchPartyModalContent"></div></div>
 
     <script>
         const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
@@ -710,7 +693,7 @@
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(680, audioCtx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(340, audioCtx.currentTime + 0.05);
-                gain.gain.setValueAtTime(0.06, audioCtx.currentTime);
+                gain.gain.setValueAtTime(0.05, audioCtx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
                 osc.connect(gain);
                 gain.connect(audioCtx.destination);
@@ -814,7 +797,7 @@
         let userNotifications = JSON.parse(localStorage.getItem('komi_notifications')) || {}; 
         let profileWalls = JSON.parse(localStorage.getItem('komi_profile_walls')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
-        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': { passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', email: 'admin@komianime.hub' } };
+        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
         let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ⭐', regDate: '05 ноября 2026 года' }
         };
@@ -839,8 +822,6 @@
         
         let activeWatchPartyRoom = null;
         let activePartiesList = [];
-        let tempRegData = null;
-        let generatedOtpCode = null;
 
         function changeTheme(theme) {
             document.body.className = theme === 'purple' ? '' : 'theme-' + theme;
@@ -1029,7 +1010,7 @@
                     `;
                 }).join('');
             } else {
-                onlineContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Никого нет онлайн</span>`;
+                onlineContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px;">Никого нет онлайн</span>`;
             }
 
             if (currentUser) {
@@ -1047,10 +1028,10 @@
                         `;
                     }).join('');
                 } else {
-                    friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Список друзей пуст</span>`;
+                    friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px;">Список друзей пуст</span>`;
                 }
             } else {
-                friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Войдите, чтобы видеть друзей</span>`;
+                friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px;">Войдите, чтобы видеть друзей</span>`;
             }
         }
 
@@ -1098,18 +1079,18 @@
                         <span>${n.text}</span>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; flex-wrap:wrap; gap:6px;">
                             <span style="font-size:10px; color:var(--text-muted);">${n.time}</span>
-                            ${n.partyId ? `<button class="btn-glow" style="padding:4px 10px; font-size:11px;" onclick="playSound(); joinWatchPartyRoom('${n.partyId}')">Войти</button>` : ''}
+                            ${n.partyId ? `<button class="btn-glow" style="padding:3px 8px; font-size:10px;" onclick="playSound(); joinWatchPartyRoom('${n.partyId}')">Войти</button>` : ''}
                             ${n.friendRequestFrom ? `
-                                <div style="display:flex; gap:6px;">
-                                    <button class="btn-glow" style="padding:4px 10px; font-size:11px;" onclick="playSound(); acceptFriendRequest('${n.friendRequestFrom}', ${idx})">Принять</button>
-                                    <button class="btn-danger" style="padding:4px 10px; font-size:11px;" onclick="playSound(); declineFriendRequest(${idx})">Отклонить</button>
+                                <div style="display:flex; gap:4px;">
+                                    <button class="btn-glow" style="padding:3px 8px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${n.friendRequestFrom}', ${idx})">Принять</button>
+                                    <button class="btn-danger" style="padding:3px 8px; font-size:10px;" onclick="playSound(); declineFriendRequest(${idx})">Отклонить</button>
                                 </div>
                             ` : ''}
                         </div>
                     </div>
                 `).join('');
             } else {
-                listContainer.innerHTML = `<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:12px;">Нет новых уведомлений</div>`;
+                listContainer.innerHTML = `<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:11px;">Нет новых уведомлений</div>`;
             }
         }
 
@@ -1157,7 +1138,7 @@
                     <div class="user-pill" onclick="playSound(); openProfile('${currentUser.username}')">
                         <img src="${p.avatar}" class="user-avatar-small" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <span>${currentUser.username}</span>
-                        <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; margin-left:4px;" title="Выйти">🚪</button>
+                        <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:11px; margin-left:2px;" title="Выйти">🚪</button>
                     </div>
                 `;
                 updateNotificationsUI();
@@ -1184,6 +1165,7 @@
                 const sliderItems = animeList.slice(0, Math.min(animeList.length, 5));
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 8);
                 const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм');
+                const seasonalNew = [...animeList].reverse().slice(0, 8);
 
                 let continueWatchingHtml = '';
                 if (currentUser) {
@@ -1199,7 +1181,10 @@
                     });
                     if (userHistoryItems.length > 0) {
                         continueWatchingHtml = `
-                            <div class="section-header"><h2 class="section-title">▶ Продолжить просмотр</h2></div>
+                            <div class="section-header">
+                                <h2 class="section-title">▶ Продолжить просмотр</h2>
+                                <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                            </div>
                             <div class="anime-grid">
                                 ${userHistoryItems.map(a => renderCard(a)).join('')}
                             </div>
@@ -1232,6 +1217,7 @@
                             `).join('')}
                         </div>
 
+                        <!-- Тонкие горизонтальные полосы для индикатора слайдов -->
                         <div class="hero-dots">
                             ${sliderItems.map((_, idx) => `
                                 <div class="hero-dot ${idx === currentSlideIndex ? 'active' : ''}" onclick="playSound(); setSlide(${idx})"></div>
@@ -1241,12 +1227,26 @@
 
                     ${continueWatchingHtml}
 
-                    <div class="section-header"><h2 class="section-title">🌟 Лучшие по рейтингу</h2></div>
+                    <div class="section-header">
+                        <h2 class="section-title">🌟 Лучшие по рейтингу</h2>
+                        <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                    </div>
                     <div class="anime-grid">
                         ${bestShiki.length === 0 ? `<div class="empty-state"><h3>Нет доступных аниме в базе</h3></div>` : bestShiki.map(a => renderCard(a)).join('')}
                     </div>
 
-                    <div class="section-header"><h2 class="section-title">🎬 Лучшие фильмы</h2></div>
+                    <div class="section-header">
+                        <h2 class="section-title">✨ Новинки сезона</h2>
+                        <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                    </div>
+                    <div class="anime-grid">
+                        ${seasonalNew.map(a => renderCard(a)).join('')}
+                    </div>
+
+                    <div class="section-header">
+                        <h2 class="section-title">🎬 Лучшие фильмы</h2>
+                        <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                    </div>
                     <div class="anime-grid">
                         ${bestMovies.length === 0 ? `<div class="empty-state"><h3>Фильмы пока не добавлены</h3></div>` : bestMovies.map(a => renderCard(a)).join('')}
                     </div>
@@ -1272,7 +1272,7 @@
                 else if (catalogSort === 'alphabet') filtered.sort((a,b) => a.title.localeCompare(b.title));
 
                 container.innerHTML = `
-                    <h2 style="margin-bottom: 18px;">Каталог аниме</h2>
+                    <h2 style="margin-bottom: 16px; font-size: 20px;">Каталог аниме</h2>
                     <div class="catalog-filters-box">
                         <div class="form-group" style="margin:0;">
                             <label>Жанр</label>
@@ -1430,17 +1430,17 @@
 
                             ${isMe ? `
                             <div class="profile-settings-box">
-                                <h4>⚙️ Настройки профиля и загрузка аватара</h4>
+                                <h4>⚙️ Настройки профиля и смена аватара</h4>
                                 <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
-                                    <div style="flex:2; min-width:200px;">
-                                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:4px; display:block;">Загрузить фото с устройства</label>
-                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 7px; font-size:12px;" onchange="handleAvatarFileUpload(event)">
+                                    <div style="flex:2; min-width:180px;">
+                                        <label style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Загрузить фото с устройства</label>
+                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 5px; font-size:11px;" onchange="handleAvatarFileUpload(event)">
                                     </div>
-                                    <div style="flex:2; min-width:150px;">
-                                        <label style="font-size:11px; color:var(--text-muted); margin-bottom:4px; display:block;">Текст статуса</label>
+                                    <div style="flex:2; min-width:140px;">
+                                        <label style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
                                         <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." value="${p.status}">
                                     </div>
-                                    <button class="btn-glow" style="padding: 10px 20px; align-self:flex-end;" onclick="playSound(); updateUserProfile()">Сохранить</button>
+                                    <button class="btn-glow" style="padding: 8px 16px; align-self:flex-end;" onclick="playSound(); updateUserProfile()">Сохранить</button>
                                 </div>
                             </div>
                             ` : ''}
@@ -1481,15 +1481,15 @@
                     </div>
 
                     ${customFolderNames.length > 0 || isMe ? `
-                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:14px 18px; border-radius:16px; border:1px solid var(--border);">
-                            <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Папки:</span>
+                        <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:12px 16px; border-radius:14px; border:1px solid var(--border);">
+                            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
                             ${customFolderNames.map(fname => `
                                 <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab='${fname}'; render()">📁 ${fname} (${customFolders[fname].length})</button>
                             `).join('')}
                             ${isMe ? `
                                 <div style="display:flex; gap:6px; margin-left:auto; align-items:center;">
-                                    <input type="text" id="newFolderNameInput" class="form-control" placeholder="Новая папка..." style="max-width:160px; padding:7px 10px; font-size:12px;">
-                                    <button class="btn-secondary" style="padding:7px 12px; font-size:12px;" onclick="playSound(); createCustomFolder()">+ Папка</button>
+                                    <input type="text" id="newFolderNameInput" class="form-control" placeholder="Новая папка..." style="max-width:150px; padding:6px 10px; font-size:11px;">
+                                    <button class="btn-secondary" style="padding:6px 10px; font-size:11px;" onclick="playSound(); createCustomFolder()">+ Папка</button>
                                 </div>
                             ` : ''}
                         </div>
@@ -1497,18 +1497,18 @@
 
                     <div class="profile-layout-grid">
                         <div class="profile-main-content">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
-                                <h3 style="font-size:18px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${profileActiveTab}</span></h3>
-                                <div style="position:relative; width: 220px;">
-                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${profileCollectionSearchQuery}" oninput="profileCollectionSearchQuery=this.value; render()" style="padding: 8px 12px; font-size: 12px;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
+                                <h3 style="font-size:16px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${profileActiveTab}</span></h3>
+                                <div style="position:relative; width: 200px;">
+                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${profileCollectionSearchQuery}" oninput="profileCollectionSearchQuery=this.value; render()" style="padding: 7px 10px; font-size: 11px;">
                                 </div>
                             </div>
 
                             ${searchedList.length === 0 ? `
                                 <div class="empty-state">
-                                    <div style="font-size:32px; margin-bottom:10px;">📭</div>
-                                    <h3 style="font-size:15px; margin-bottom:6px;">В этой категории пока пусто</h3>
-                                    <p style="font-size:12px; color:var(--text-muted);">Добавляйте аниме из каталога или при просмотре.</p>
+                                    <div style="font-size:28px; margin-bottom:8px;">📭</div>
+                                    <h3 style="font-size:14px; margin-bottom:4px;">В этой категории пока пусто</h3>
+                                    <p style="font-size:11px; color:var(--text-muted);">Добавляйте аниме из каталога или при просмотре.</p>
                                 </div>
                             ` : `
                                 <div class="anime-grid">
@@ -1518,7 +1518,7 @@
                         </div>
 
                         <div class="profile-sidebar-menu">
-                            <h3 style="font-size:14px; font-weight:700; margin-bottom:4px;">📌 Статистика</h3>
+                            <h3 style="font-size:13px; font-weight:700; margin-bottom:4px;">📌 Статистика</h3>
                             <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span>👁 Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
                             <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Любимые'; render()"><span>❤️ Любимое</span> <b>${favoritesCount}</b></div>
                             <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
@@ -1527,14 +1527,14 @@
                     </div>
 
                     <div class="profile-wall-section">
-                        <h3 style="font-size:16px; font-weight:800; margin-bottom:14px;">💬 Стена сообщений</h3>
-                        <div style="display:flex; gap:10px; margin-bottom:18px;">
+                        <h3 style="font-size:15px; font-weight:800; margin-bottom:12px;">💬 Стена сообщений</h3>
+                        <div style="display:flex; gap:8px; margin-bottom:16px;">
                             <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall('${username}')">
-                            <button class="btn-glow" style="padding: 10px 22px;" onclick="playSound(); postToProfileWall('${username}')">Отпр.</button>
+                            <button class="btn-glow" style="padding: 8px 18px;" onclick="playSound(); postToProfileWall('${username}')">Отпр.</button>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:8px;">
                             ${wallMessages.length === 0 ? `
-                                <div style="color:var(--text-muted); font-size:12px; text-align:center; padding:20px; background:var(--bg-input); border-radius:12px; border:1px dashed var(--border);">
+                                <div style="color:var(--text-muted); font-size:11px; text-align:center; padding:18px; background:var(--bg-input); border-radius:10px; border:1px dashed var(--border);">
                                     На стене пока нет сообщений. Будьте первыми!
                                 </div>
                             ` : wallMessages.map((m, mIdx) => {
@@ -1644,12 +1644,12 @@
                     <div class="anime-poster-box">
                         <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                         <div class="anime-quick-view">
-                            <span class="btn-glow" style="padding: 6px 14px; font-size:11px;">▶ Смотреть</span>
+                            <span class="btn-glow" style="padding: 5px 12px; font-size:11px;">▶ Смотреть</span>
                         </div>
                     </div>
                     <div class="anime-info">
                         <div class="anime-title">${anime.title}</div>
-                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:130px;">${gText}</span><span>${anime.episodes ? anime.episodes.length : 1} сер.</span></div>
+                        <div class="anime-meta-card"><span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:120px;">${gText}</span><span>${anime.episodes ? anime.episodes.length : 1} сер.</span></div>
                     </div>
                 </div>
             `;
@@ -1665,7 +1665,7 @@
 
             let counter = 0;
             const maxSteps = 12;
-            let currentInterval = 70;
+            let currentInterval = 60;
 
             function spinStep() {
                 const randomItem = animeList[Math.floor(Math.random() * animeList.length)];
@@ -1674,7 +1674,7 @@
                 counter++;
 
                 if (counter < maxSteps) {
-                    currentInterval += 12; 
+                    currentInterval += 10; 
                     setTimeout(spinStep, currentInterval);
                 } else {
                     const finalItem = animeList[Math.floor(Math.random() * animeList.length)];
@@ -1683,7 +1683,7 @@
                     setTimeout(() => {
                         modal.classList.remove('active');
                         openWatchModal(finalItem.id);
-                    }, 500);
+                    }, 400);
                 }
             }
             spinStep();
@@ -1760,11 +1760,11 @@
 
             document.getElementById('watchPartyModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); closeWatchPartyModal()">&times;</button>
-                <h2 style="margin-bottom: 18px;">🎉 Watch Party — Совместный просмотр</h2>
+                <h2 style="margin-bottom: 16px; font-size: 20px;">🎉 Watch Party — Совместный просмотр</h2>
                 
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:20px;">
-                    <div style="background:var(--bg-input); padding:18px; border-radius:14px; border:1px solid var(--border);">
-                        <h3 style="font-size:14px; margin-bottom:12px;">🎬 Создать комнату</h3>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:16px; margin-bottom:18px;">
+                    <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border);">
+                        <h3 style="font-size:13px; margin-bottom:10px;">🎬 Создать комнату</h3>
                         <div class="form-group">
                             <label>Аниме</label>
                             <select id="partyAnimeSelect" class="form-control">${animeOptions}</select>
@@ -1783,12 +1783,12 @@
                         <button class="btn-glow" style="width:100%; justify-content:center;" onclick="playSound(); createWatchPartyRoom()">Создать и войти</button>
                     </div>
 
-                    <div style="background:var(--bg-input); padding:18px; border-radius:14px; border:1px solid var(--border); display:flex; flex-direction:column; gap:12px;">
-                        <h3 style="font-size:14px;">👥 Пригласить друзей</h3>
-                        <div style="display:flex; flex-direction:column; gap:6px; max-height:190px; overflow-y:auto;" id="partyInviteFriendsList">
+                    <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border); display:flex; flex-direction:column; gap:10px;">
+                        <h3 style="font-size:13px;">👥 Пригласить друзей</h3>
+                        <div style="display:flex; flex-direction:column; gap:6px; max-height:170px; overflow-y:auto;" id="partyInviteFriendsList">
                             ${friends.length === 0 ? `<div style="color:var(--text-muted); font-size:11px;">Список друзей пуст.</div>` : friends.map(f => `
                                 <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); padding:6px 10px; border-radius:8px; border:1px solid var(--border);">
-                                    <span style="font-size:12px; font-weight:600;">${f}</span>
+                                    <span style="font-size:11px; font-weight:600;">${f}</span>
                                     <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); inviteFriendToParty('${f}')">Пригласить</button>
                                 </div>
                             `).join('')}
@@ -1796,20 +1796,20 @@
                     </div>
                 </div>
 
-                <div style="background:var(--bg-input); padding:18px; border-radius:14px; border:1px solid var(--border);">
-                    <h3 style="font-size:14px; margin-bottom:10px;">🌍 Активные комнаты</h3>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap:10px; max-height:220px; overflow-y:auto;" id="activePartiesGridContainer">
-                        ${activePartiesList.length === 0 ? `<div style="color:var(--text-muted); font-size:12px;">Нет активных публичных комнат.</div>` : activePartiesList.map(room => {
+                <div style="background:var(--bg-input); padding:16px; border-radius:12px; border:1px solid var(--border);">
+                    <h3 style="font-size:13px; margin-bottom:10px;">🌍 Активные комнаты</h3>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap:10px; max-height:200px; overflow-y:auto;" id="activePartiesGridContainer">
+                        ${activePartiesList.length === 0 ? `<div style="color:var(--text-muted); font-size:11px;">Нет активных публичных комнат.</div>` : activePartiesList.map(room => {
                             const an = animeList.find(x => x.id === room.animeId);
                             return `
-                                <div style="background:var(--bg-card); border:1px solid var(--border); padding:10px; border-radius:10px; display:flex; gap:10px; align-items:center;">
-                                    <img src="${an ? an.poster : ''}" style="width:40px; height:55px; object-fit:cover; border-radius:6px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
+                                <div style="background:var(--bg-card); border:1px solid var(--border); padding:8px 10px; border-radius:8px; display:flex; gap:10px; align-items:center;">
+                                    <img src="${an ? an.poster : ''}" style="width:36px; height:50px; object-fit:cover; border-radius:6px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                                     <div style="flex:1; overflow:hidden;">
-                                        <div style="font-weight:700; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${room.name}</div>
+                                        <div style="font-weight:700; font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${room.name}</div>
                                         <div style="font-size:10px; color:var(--text-muted);">Хост: ${room.host}</div>
                                         <div style="font-size:10px; color:#34d399; margin-top:2px;">Участников: ${room.members.length}</div>
                                     </div>
-                                    <button class="btn-glow" style="padding:5px 10px; font-size:11px;" onclick="playSound(); joinWatchPartyRoom('${room.id}')">Войти</button>
+                                    <button class="btn-glow" style="padding:4px 8px; font-size:10px;" onclick="playSound(); joinWatchPartyRoom('${room.id}')">Войти</button>
                                 </div>
                             `;
                         }).join('')}
@@ -1930,14 +1930,14 @@
 
             const modal = document.getElementById('watchPartyModal');
             document.getElementById('watchPartyModalContent').innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:8px;">
                     <div>
-                        <h2>🎉 Party: ${activeWatchPartyRoom.name}</h2>
+                        <h2 style="font-size:18px;">🎉 Party: ${activeWatchPartyRoom.name}</h2>
                         <span style="font-size:11px; color:var(--text-muted);">Аниме: <b>${anime.title}</b> | Хост: <b>${activeWatchPartyRoom.host}</b> ${isHost ? '(Вы - Хост 👑)' : '(Зритель)'}</span>
                     </div>
                     <div style="display:flex; gap:8px; align-items:center;">
-                        ${isHost ? `<button class="btn-danger" style="padding:5px 10px; font-size:11px;" onclick="playSound(); deleteActiveWatchParty()">🗑️ Удалить</button>` : ''}
-                        <span style="background:rgba(16,185,129,0.1); color:#34d399; padding:4px 10px; border-radius:8px; font-size:11px; font-weight:700;">● Активно</span>
+                        ${isHost ? `<button class="btn-danger" style="padding:4px 8px; font-size:10px;" onclick="playSound(); deleteActiveWatchParty()">🗑️ Удалить</button>` : ''}
+                        <span style="background:rgba(16,185,129,0.1); color:#34d399; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700;">● Активно</span>
                         <button class="modal-close" style="position:static;" onclick="playSound(); leaveWatchPartyRoom()">&times;</button>
                     </div>
                 </div>
@@ -1957,8 +1957,8 @@
 
                     <div class="party-sidebar-panel">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <h4 style="font-size:12px; color:var(--text-muted);">Участники (${activeWatchPartyRoom.members.length})</h4>
-                            <select class="form-control" style="font-size:10px; padding:3px; max-width:110px;" onchange="if(this.value) { inviteFriendToParty(this.value); this.value=''; }">
+                            <h4 style="font-size:11px; color:var(--text-muted);">Участники (${activeWatchPartyRoom.members.length})</h4>
+                            <select class="form-control" style="font-size:10px; padding:2px; max-width:100px;" onchange="if(this.value) { inviteFriendToParty(this.value); this.value=''; }">
                                 <option value="">+ Пригласить</option>
                                 ${friends.map(f => `<option value="${f}">${f}</option>`).join('')}
                             </select>
@@ -1967,7 +1967,7 @@
                             ${activeWatchPartyRoom.members.map(m => `<div class="party-member-badge">👤 ${m} ${m === activeWatchPartyRoom.host ? '👑' : ''}</div>`).join('')}
                         </div>
 
-                        <h4 style="font-size:12px; color:var(--text-muted); margin-top:4px;">Чат</h4>
+                        <h4 style="font-size:11px; color:var(--text-muted); margin-top:2px;">Чат</h4>
                         <div class="party-chat-box" id="partyChatBox">
                             ${activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('')}
                         </div>
@@ -2073,13 +2073,13 @@
             if (query) {
                 handleInstantSearch(query);
             } else {
-                let html = `<div style="padding:8px 14px; font-size:11px; color:var(--text-muted);">Популярное</div>`;
+                let html = `<div style="padding:6px 12px; font-size:10px; color:var(--text-muted);">Популярное</div>`;
                 animeList.slice(0, 5).forEach(a => {
                     html += `
                         <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
-                            <img src="${a.poster}" style="width:24px; height:32px; object-fit:cover; border-radius:4px;">
+                            <img src="${a.poster}" style="width:22px; height:30px; object-fit:cover; border-radius:4px;">
                             <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${a.title}</b></div>
-                            <span style="font-size:11px; color:#fbbf24;">⭐ ${a.shikiRating || '8.5'}</span>
+                            <span style="font-size:10px; color:#fbbf24;">⭐ ${a.shikiRating || '8.5'}</span>
                         </div>
                     `;
                 });
@@ -2106,7 +2106,7 @@
             if (filtered.length > 0) {
                 dd.innerHTML = filtered.map(a => `
                     <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
-                        <img src="${a.poster}" style="width:26px; height:36px; object-fit:cover; border-radius:4px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
+                        <img src="${a.poster}" style="width:24px; height:34px; object-fit:cover; border-radius:4px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                         <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
                             <b>${a.title}</b>
                             <div style="font-size:10px; color:var(--text-muted);">${(a.genres||[]).join(', ')} • ${a.year || '2026'}</div>
@@ -2116,13 +2116,13 @@
                 `).join('');
                 dd.classList.add('active');
             } else {
-                dd.innerHTML = `<div style="padding:10px 14px; font-size:12px; color:var(--text-muted); text-align:center;">Ничего не найдено</div>`;
+                dd.innerHTML = `<div style="padding:10px 12px; font-size:11px; color:var(--text-muted); text-align:center;">Ничего не найдено</div>`;
                 dd.classList.add('active');
             }
 
             const container = document.getElementById('mainContainer');
             container.innerHTML = `
-                <h2 style="margin-bottom:18px;">Результаты поиска: "${q}"</h2>
+                <h2 style="margin-bottom: 16px; font-size: 18px;">Результаты поиска: "${q}"</h2>
                 <div class="anime-grid">${filtered.length === 0 ? '<div class="empty-state"><h3>Ничего не найдено</h3></div>' : filtered.map(a => renderCard(a)).join('')}</div>
             `;
         }
@@ -2167,11 +2167,11 @@
                                      genres: [],
                                      images: [posterUrl]
                                    }).replace(/"/g, '&quot;')})">
-                                <img src="${posterPreview}" style="width: 26px; height: 35px; object-fit: cover; border-radius: 4px;">
-                                <div style="font-size: 12px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                <img src="${posterPreview}" style="width: 24px; height: 32px; object-fit: cover; border-radius: 4px;">
+                                <div style="font-size: 11px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     ${anime.russian || anime.name} (${anime.aired_on ? anime.aired_on.split('-')[0] : 'N/A'})
                                 </div>
-                                <span style="font-size: 11px; color: #fbbf24;">⭐ ${anime.score || 'N/A'}</span>
+                                <span style="font-size: 10px; color: #fbbf24;">⭐ ${anime.score || 'N/A'}</span>
                             </div>
                         `;
                     }).join('');
@@ -2230,8 +2230,8 @@
             const modal = document.getElementById('adminModal');
             document.getElementById('adminModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); document.getElementById('adminModal').classList.remove('active')">&times;</button>
-                <h2 style="margin-bottom: 15px;">⚙️ Панель администратора</h2>
-                <div style="display:flex; gap:10px; margin-bottom:18px; flex-wrap:wrap;">
+                <h2 style="margin-bottom: 14px; font-size: 20px;">⚙️ Панель администратора</h2>
+                <div style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
                     <button class="btn-glow" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal()">+ Добавить аниме</button>
                     <button class="btn-secondary" onclick="playSound(); exportBackup()">📥 Скачать JSON</button>
                 </div>
@@ -2276,7 +2276,7 @@
         function renderGenresCheckboxes(selectedGenres = []) {
             const container = document.getElementById('genresCheckboxList');
             container.innerHTML = availableGenresList.map(g => `
-                <label style="display:flex; align-items:center; gap:6px; font-size:12px; cursor:pointer;">
+                <label style="display:flex; align-items:center; gap:6px; font-size:11px; cursor:pointer;">
                     <input type="checkbox" class="genre-checkbox" value="${g}" ${selectedGenres.includes(g) ? 'checked' : ''}> ${g}
                 </label>
             `).join('');
@@ -2290,10 +2290,10 @@
 
             document.getElementById('episodesList').innerHTML = `
                 <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:8px; border-radius:8px;">
-                    <input type="number" class="form-control ep-season" value="1" min="1" style="width:60px;" title="Сезон">
-                    <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1; min-width:90px;">
-                    <input type="text" class="form-control ep-source-name" value="Kodik" style="width:100px;">
-                    <input type="text" class="form-control ep-url" placeholder="iframe код или mp4..." style="flex:2; min-width:180px;" required>
+                    <input type="number" class="form-control ep-season" value="1" min="1" style="width:55px;" title="Сезон">
+                    <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1; min-width:80px;">
+                    <input type="text" class="form-control ep-source-name" value="Kodik" style="width:90px;">
+                    <input type="text" class="form-control ep-url" placeholder="iframe код или mp4..." style="flex:2; min-width:160px;" required>
                 </div>
             `;
 
@@ -2319,10 +2319,10 @@
                                 const safeSrcVal = srcVal.replace(/"/g, '&quot;');
                                 epsHtml += `
                                     <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:8px; border-radius:8px;">
-                                        <input type="number" class="form-control ep-season" value="${ep.season || 1}" min="1" style="width:60px;">
-                                        <input type="text" class="form-control ep-title" value="${ep.title}" style="flex:1; min-width:90px;">
-                                        <input type="text" class="form-control ep-source-name" value="${srcName}" style="width:100px;">
-                                        <input type="text" class="form-control ep-url" value="${safeSrcVal}" style="flex:2; min-width:180px;" required>
+                                        <input type="number" class="form-control ep-season" value="${ep.season || 1}" min="1" style="width:55px;">
+                                        <input type="text" class="form-control ep-title" value="${ep.title}" style="flex:1; min-width:80px;">
+                                        <input type="text" class="form-control ep-source-name" value="${srcName}" style="width:90px;">
+                                        <input type="text" class="form-control ep-url" value="${safeSrcVal}" style="flex:2; min-width:160px;" required>
                                     </div>
                                 `;
                             });
@@ -2340,10 +2340,10 @@
             const div = document.createElement('div');
             div.style.cssText = "display:flex; gap:6px; margin-top:6px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:8px; border-radius:8px;";
             div.innerHTML = `
-                <input type="number" class="form-control ep-season" value="1" min="1" style="width:60px;">
-                <input type="text" class="form-control ep-title" value="Эпизод" style="flex:1; min-width:90px;">
-                <input type="text" class="form-control ep-source-name" value="Kodik" style="width:100px;">
-                <input type="text" class="form-control ep-url" placeholder="iframe код или mp4..." style="flex:2; min-width:180px;" required>
+                <input type="number" class="form-control ep-season" value="1" min="1" style="width:55px;">
+                <input type="text" class="form-control ep-title" value="Эпизод" style="flex:1; min-width:80px;">
+                <input type="text" class="form-control ep-source-name" value="Kodik" style="width:90px;">
+                <input type="text" class="form-control ep-url" placeholder="iframe код или mp4..." style="flex:2; min-width:160px;" required>
             `;
             document.getElementById('episodesList').appendChild(div);
         }
@@ -2411,9 +2411,6 @@
             const regBtn = document.getElementById('tabRegisterBtn');
             const loginForm = document.getElementById('loginFormContainer');
             const regForm = document.getElementById('registerFormContainer');
-            const verifyForm = document.getElementById('registerVerifyContainer');
-
-            if (verifyForm) verifyForm.style.display = 'none';
 
             if (mode === 'login') {
                 loginBtn.classList.add('active');
@@ -2430,79 +2427,34 @@
 
         async function handleLoginSubmit(e) {
             e.preventDefault();
-            const inputVal = document.getElementById('loginUsername').value.trim();
+            const username = document.getElementById('loginUsername').value.trim();
             const passwordInput = document.getElementById('loginPassword').value;
-            if (!inputVal || !passwordInput) return;
+            if (!username || !passwordInput) return;
 
             const passwordHash = await hashPassword(passwordInput);
-            
-            // Проверяем по логину или по email
-            let matchedKey = null;
-            Object.entries(registeredUsers).forEach(([username, uData]) => {
-                const uEmail = typeof uData === 'object' ? uData.email : '';
-                const uHash = typeof uData === 'object' ? uData.passwordHash : uData;
-                if ((username.toLowerCase() === inputVal.toLowerCase() || uEmail.toLowerCase() === inputVal.toLowerCase()) && uHash === passwordHash) {
-                    matchedKey = username;
-                }
-            });
-
-            if (matchedKey) {
-                currentUser = { username: matchedKey };
+            if (registeredUsers[username] && registeredUsers[username] === passwordHash) {
+                currentUser = { username };
                 saveData();
                 closeAuthModal();
                 render();
             } else {
-                alert('Неверный логин/email или пароль!');
+                alert('Неверный логин или пароль!');
             }
         }
 
-        // Шаг 1 регистрации: проверяем занятость, генерируем OTP код и переключаем на ввод кода
-        async function handleRegisterStep1(e) {
+        async function handleRegisterSubmit(e) {
             e.preventDefault();
-            const email = document.getElementById('regEmail').value.trim();
             const username = document.getElementById('regUsername').value.trim();
-            const password = document.getElementById('regPassword').value;
+            const passwordInput = document.getElementById('regPassword').value;
+            if (!username || !passwordInput) return;
 
-            if (!email || !username || !password) return;
-
-            const lowerUser = username.toLowerCase();
-            const isUserTaken = Object.keys(registeredUsers).some(k => k.toLowerCase() === lowerUser);
-            if (isUserTaken) {
-                alert('Имя пользователя уже занято!');
+            if (registeredUsers[username]) {
+                alert('Пользователь уже существует!');
                 return;
             }
 
-            const isEmailTaken = Object.values(registeredUsers).some(u => typeof u === 'object' && u.email && u.email.toLowerCase() === email.toLowerCase());
-            if (isEmailTaken) {
-                alert('Этот email уже привязан к другому аккаунту!');
-                return;
-            }
-
-            const passwordHash = await hashPassword(password);
-            generatedOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
-            
-            tempRegData = { username, email, passwordHash };
-
-            // Имитируем отправку на почту и выводим красивое уведомление с кодом для удобства проверки
-            document.getElementById('verifyEmailTarget').innerText = email;
-            document.getElementById('registerFormContainer').style.display = 'none';
-            document.getElementById('registerVerifyContainer').style.display = 'block';
-
-            alert(`📩 [Имитация отправки Email]\nКод подтверждения для ${email}: ${generatedOtpCode}`);
-        }
-
-        // Шаг 2 регистрации: проверка OTP кода и завершение регистрации
-        async function handleRegisterVerify(e) {
-            e.preventDefault();
-            const enteredCode = document.getElementById('regVerifyCode').value.trim();
-
-            if (enteredCode !== generatedOtpCode) {
-                alert('Неверный код подтверждения! Проверьте введенные цифры.');
-                return;
-            }
-
-            const { username, email, passwordHash } = tempRegData;
-            registeredUsers[username] = { passwordHash, email };
+            const passwordHash = await hashPassword(passwordInput);
+            registeredUsers[username] = passwordHash;
             currentUser = { username };
 
             const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -2516,7 +2468,7 @@
             saveData();
             closeAuthModal();
             render();
-            alert('🎉 Регистрация успешно завершена! Добро пожаловать!');
+            alert('Регистрация успешна!');
         }
 
         function toggleFavorite(id, category) {
@@ -2641,15 +2593,15 @@
                     <div class="crunchy-hero-section">
                         <img src="${anime.poster}" class="crunchy-hero-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                         <div class="crunchy-hero-info">
-                            <span style="font-size:11px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
+                            <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
                             <h1>${anime.title}</h1>
-                            <p style="color:var(--text-muted); font-size:12px; line-height:1.4;">${anime.desc || ''}</p>
+                            <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${anime.desc || ''}</p>
                             <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px;">
-                                <span style="color:#fbbf24; font-weight:700; font-size:12px;">⭐ ${shikiRating} Shikimori</span>
-                                <span style="background:var(--bg-input); padding:3px 8px; border-radius:6px; font-size:11px; border:1px solid var(--border);">${(anime.genres||[]).join(', ')}</span>
-                                <span style="background:var(--bg-input); padding:3px 8px; border-radius:6px; font-size:11px; border:1px solid var(--border);">${anime.year || '2026'}</span>
-                                <button class="btn-secondary" style="padding:5px 12px; font-size:11px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
-                                <button class="btn-glow-secondary" style="padding:5px 12px; font-size:11px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Party</button>
+                                <span style="color:#fbbf24; font-weight:700; font-size:11px;">⭐ ${shikiRating} Shikimori</span>
+                                <span style="background:var(--bg-input); padding:3px 8px; border-radius:6px; font-size:10px; border:1px solid var(--border);">${(anime.genres||[]).join(', ')}</span>
+                                <span style="background:var(--bg-input); padding:3px 8px; border-radius:6px; font-size:10px; border:1px solid var(--border);">${anime.year || '2026'}</span>
+                                <button class="btn-secondary" style="padding:4px 10px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
+                                <button class="btn-glow-secondary" style="padding:4px 10px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Party</button>
                             </div>
                         </div>
                     </div>
@@ -2685,7 +2637,7 @@
                     </div>
 
                     <div class="anime-screenshots-section">
-                        <h3 style="font-size:12px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры</h3>
+                        <h3 style="font-size:11px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры</h3>
                         <div class="screenshots-grid">
                             ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
                         </div>
@@ -2700,7 +2652,7 @@
                             `).join('')}
                         </div>
 
-                        <h3 style="font-size:14px; font-weight:700; margin-bottom:12px;">Эпизоды (${currentSeasonEpisodes.length})</h3>
+                        <h3 style="font-size:13px; font-weight:700; margin-bottom:10px;">Эпизоды (${currentSeasonEpisodes.length})</h3>
                         <div class="episodes-grid-crunchy">
                             ${currentSeasonEpisodes.map((ep, i) => `
                                 <div class="ep-crunchy-card ${i === (selectedEpIdx || 0) ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${i})">
