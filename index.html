@@ -565,7 +565,7 @@
                     <textarea class="form-control" id="animeDesc" placeholder="Сюжет аниме..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Эпизоды и Озвучки</label>
+                    <label>Эпизоды и Ссылки на видео (.mp4 с любых доменов)</label>
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
@@ -1546,7 +1546,7 @@
                     <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1;">
                     <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria, Jaskier" style="flex:1.5;">
                     <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                    <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
+                    <input type="text" class="form-control ep-url" placeholder="Ссылка .mp4 или домен..." style="flex:2;" required>
                 </div>
             `;
 
@@ -1570,7 +1570,7 @@
                                 <input type="text" class="form-control ep-title" value="${ep.title}" style="flex:1;">
                                 <input type="text" class="form-control ep-voices" value="${ep.voices || ep.voice || 'AniLibria'}" style="flex:1.5;">
                                 <select class="form-control ep-quality" style="width:90px;"><option ${ep.quality==='1080p'?'selected':''}>1080p</option><option ${ep.quality==='720p'?'selected':''}>720p</option><option ${ep.quality==='480p'?'selected':''}>480p</option></select>
-                                <input type="url" class="form-control ep-url" value="${ep.url}" style="flex:2;" required>
+                                <input type="text" class="form-control ep-url" value="${ep.url}" style="flex:2;" required>
                             </div>
                         `).join('');
                     }
@@ -1592,7 +1592,7 @@
                 <input type="text" class="form-control ep-title" value="Эпизод ${count}" style="flex:1;">
                 <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria" style="flex:1.5;">
                 <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                <input type="url" class="form-control ep-url" placeholder="Прямая ссылка .mp4..." style="flex:2;" required>
+                <input type="text" class="form-control ep-url" placeholder="Ссылка .mp4 или домен..." style="flex:2;" required>
             `;
             document.getElementById('episodesList').appendChild(div);
         }
@@ -1623,12 +1623,18 @@
             const urls = document.querySelectorAll('.ep-url');
             
             for(let i=0; i<titles.length; i++) {
+                let rawUrl = urls[i].value.trim();
+                // Автоматическое добавление протокола, если ввели домен без https://
+                if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://') && !rawUrl.startsWith('data:')) {
+                    rawUrl = 'https://' + rawUrl;
+                }
+
                 episodes.push({ 
                     season: parseInt(seasonsInputs[i].value) || 1, 
                     title: titles[i].value, 
                     voices: voicesInputs[i].value,
                     quality: qualities[i].value,
-                    url: urls[i].value 
+                    url: rawUrl 
                 });
             }
 
@@ -1901,7 +1907,7 @@
 
                     <div class="player-wrapper">
                         <div class="player-box">
-                            <video id="animeVideoPlayer" controls preload="metadata" playsinline style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')" onerror="handleVideoError()">
+                            <video id="animeVideoPlayer" controls preload="metadata" crossorigin="anonymous" playsinline style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')" onerror="handleVideoError()">
                                 <source src="${currentEp ? currentEp.url : ''}" type="video/mp4">
                                 Ваш браузер не поддерживает видео.
                             </video>
@@ -1917,7 +1923,7 @@
                     </div>
 
                     <div id="videoErrorMsg" style="display:none; color:#fca5a5; font-size:13px; background:rgba(239,68,68,0.15); padding:10px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);">
-                        ⚠️ Не удалось загрузить видео. Убедитесь, что ссылка является прямой ссылкой на видеофайл (.mp4).
+                        ⚠️ Ошибка воспроизведения. Убедитесь, что сторонний домен разрешает прямые подключения (CORS) и ссылка ведет на рабочий файл .mp4.
                     </div>
 
                     <div style="display:flex; gap:15px; background:var(--bg-input); padding:12px 16px; border-radius:12px; align-items:center; flex-wrap:wrap;">
