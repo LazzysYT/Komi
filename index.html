@@ -150,13 +150,13 @@
         }
 
         .notification-dropdown {
-            position: absolute; top: 115%; right: 0; width: 320px; background: var(--bg-card);
+            position: absolute; top: 115%; right: 0; width: 340px; background: var(--bg-card);
             border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.9);
             display: none; flex-direction: column; z-index: 300; overflow: hidden;
         }
         .notification-dropdown.active { display: flex; animation: fadeInUp 0.15s ease; }
         .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
-        .notif-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; }
+        .notif-list { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; }
         .notif-item { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; }
         .notif-item:hover { background: rgba(255,255,255,0.03); color: white; }
 
@@ -845,6 +845,10 @@
                         if (row.id === 6) {
                             activePartiesList = JSON.parse(row.content || '[]');
                         }
+                        if (row.id === 7) {
+                            const cloudFriends = JSON.parse(row.content || '{}');
+                            userFriends = { ...userFriends, ...cloudFriends };
+                        }
                     }
                 }
                 if (!animeList || animeList.length === 0) {
@@ -895,6 +899,12 @@
             }
         }
 
+        async function saveFriendsToCloud() {
+            if (_supabase) {
+                try { await _supabase.from('animes').upsert({ id: 7, content: JSON.stringify(userFriends) }); } catch(e) {}
+            }
+        }
+
         async function updateOnlinePresence() {
             if (onlineTimerRunning || !_supabase) return;
             onlineTimerRunning = true;
@@ -911,12 +921,43 @@
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
-                // Также периодически подтягиваем уведомления и активные комнаты из облака для синхронизации в реальном времени
-                const { data: cloudSyncData } = await _supabase.from('animes').select('*').in('id', [5, 6]);
+                // Синхронизация данных из облака в реальном времени
+                const { data: cloudSyncData } = await _supabase.from('animes').select('*').in('id', [5, 6, 7]);
                 if (cloudSyncData) {
                     cloudSyncData.forEach(row => {
                         if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
-                        if (row.id === 6) activePartiesList = JSON.parse(row.content || '[]');
+                        if (row.id === 6) {
+                            activePartiesList = JSON.parse(row.content || '[]');
+                            if (activeWatchPartyRoom) {
+                                const latestRoom = activePartiesList.find(r => r.id === activeWatchPartyRoom.id);
+                                if (latestRoom) {
+                                    activeWatchPartyRoom = latestRoom;
+                                    // Если мы не хост, синхронизируем плеер автоматически по данным хоста
+                                    if (currentUser && currentUser.username !== activeWatchPartyRoom.host) {
+                                        const vid = document.getElementById('partyVideoElement');
+                                        if (vid) {
+                                            if (Math.abs(vid.currentTime - activeWatchPartyRoom.currentTime) > 1.0) {
+                                                vid.currentTime = activeWatchPartyRoom.currentTime;
+                                            }
+                                            if (activeWatchPartyRoom.isPlaying && vid.paused) {
+                                                vid.play().catch(()=>{});
+                                            } else if (!activeWatchPartyRoom.isPlaying && !vid.paused) {
+                                                vid.pause();
+                                            }
+                                        }
+                                    }
+                                } else {
+                                    // Если комната была удалена хостом
+                                    if (activeWatchPartyRoom && activeWatchPartyRoom.host !== currentUser?.username) {
+                                        alert('Хост удалил комнату!');
+                                        leaveWatchPartyRoom();
+                                    }
+                                }
+                            }
+                        }
+                        if (row.id === 7) {
+                            userFriends = JSON.parse(row.content || '{}');
+                        }
                     });
                     updateNotificationsUI();
                 }
@@ -941,7 +982,7 @@
             setTimeout(() => { onlineTimerRunning = false; }, 3000);
         }
 
-        setInterval(updateOnlinePresence, 3000);
+        setInterval(updateOnlinePresence, 2500);
         updateOnlinePresence();
 
         window.addEventListener('beforeunload', () => {
@@ -996,9 +1037,9 @@
             }
         }
 
-        async function addNotification(username, text, partyId = null) {
+        async function addNotification(username, text, partyId = null, friendRequestFrom = null) {
             if (!userNotifications[username]) userNotifications[username] = [];
-            userNotifications[username].unshift({ text, partyId, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
+            userNotifications[username].unshift({ text, partyId, friendRequestFrom, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
             await saveNotificationsToCloud();
             updateNotificationsUI();
         }
@@ -1035,12 +1076,18 @@
 
             const listContainer = document.getElementById('notifListContainer');
             if (notifs.length > 0) {
-                listContainer.innerHTML = notifs.map(n => `
+                listContainer.innerHTML = notifs.map((n, idx) => `
                     <div class="notif-item">
                         <span>${n.text}</span>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; flex-wrap:wrap; gap:6px;">
                             <span style="font-size:10px; color:var(--text-muted);">${n.time}</span>
                             ${n.partyId ? `<button class="btn-glow" style="padding:4px 10px; font-size:11px;" onclick="playSound(); joinWatchPartyRoom('${n.partyId}')">Присоединиться</button>` : ''}
+                            ${n.friendRequestFrom ? `
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn-glow" style="padding:4px 10px; font-size:11px;" onclick="playSound(); acceptFriendRequest('${n.friendRequestFrom}', ${idx})">Принять</button>
+                                    <button class="btn-danger" style="padding:4px 10px; font-size:11px;" onclick="playSound(); declineFriendRequest(${idx})">Отклонить</button>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 `).join('');
@@ -1354,7 +1401,7 @@
                                 <h2>👤 ${username} <span style="font-size:12px; color:#34d399; background:rgba(16,185,129,0.15); padding:3px 10px; border-radius:12px;">● Онлайн</span></h2>
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" style="padding:6px 14px; font-size:12px;" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                      `<button class="btn-glow" style="padding:6px 14px; font-size:12px;" onclick="playSound(); addFriendDirect('${username}')">+ Добавить в друзья</button>`}
+                                      `<button class="btn-glow" style="padding:6px 14px; font-size:12px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             <div style="display:flex; gap:12px; align-items:center;">
@@ -1542,13 +1589,67 @@
         }
 
         // ==========================================
+        // СИСТЕМА ДРУЗЕЙ И ЗАЯВОК
+        // ==========================================
+        function sendFriendRequest(targetUsername) {
+            if (!currentUser) { openAuthModal('login'); return; }
+            if (currentUser.username === targetUsername) return;
+
+            addNotification(targetUsername, `${currentUser.username} хочет добавить вас в друзья.`, null, currentUser.username);
+            alert(`Запрос в друзья отправлен пользователю ${targetUsername}!`);
+        }
+
+        async function acceptFriendRequest(senderName, notifIndex) {
+            if (!currentUser) return;
+            const myName = currentUser.username;
+
+            if (!userFriends[myName]) userFriends[myName] = [];
+            if (!userFriends[myName].includes(senderName)) userFriends[myName].push(senderName);
+
+            if (!userFriends[senderName]) userFriends[senderName] = [];
+            if (!userFriends[senderName].includes(myName)) userFriends[senderName].push(myName);
+
+            await saveFriendsToCloud();
+
+            // Удаляем уведомление о заявке
+            if (userNotifications[myName]) {
+                userNotifications[myName].splice(notifIndex, 1);
+                await saveNotificationsToCloud();
+            }
+
+            addNotification(senderName, `${myName} принял(а) ваш запрос в друзья!`);
+            alert(`Теперь вы друзья с ${senderName}!`);
+            render();
+        }
+
+        async function declineFriendRequest(notifIndex) {
+            if (!currentUser) return;
+            const myName = currentUser.username;
+
+            if (userNotifications[myName]) {
+                userNotifications[myName].splice(notifIndex, 1);
+                await saveNotificationsToCloud();
+                updateNotificationsUI();
+            }
+            alert('Запрос в друзья отклонен.');
+        }
+
+        async function removeFriend(friendUsername) {
+            if (!currentUser) return;
+            const myName = currentUser.username;
+            if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
+            if (userFriends[friendUsername]) userFriends[friendUsername] = userFriends[friendUsername].filter(u => u !== myName);
+            await saveFriendsToCloud();
+            openProfile(friendUsername);
+        }
+
+        // ==========================================
         // WATCH PARTY (РАСШИРЕННАЯ СИСТЕМА)
         // ==========================================
         async function openWatchPartyHub() {
             if (!currentUser) { openAuthModal('login'); return; }
             playSound();
 
-            // Подгружаем актуальные комнаты из облака
             if (_supabase) {
                 try {
                     const { data } = await _supabase.from('animes').select('*').eq('id', 6).single();
@@ -1659,7 +1760,6 @@
         async function joinWatchPartyRoom(roomId) {
             if (!currentUser) { openAuthModal('login'); return; }
             
-            // Загружаем актуальный список из облака
             if (_supabase) {
                 try {
                     const { data } = await _supabase.from('animes').select('*').eq('id', 6).single();
@@ -1707,7 +1807,7 @@
                 return;
             }
             addNotification(friendName, `${currentUser.username} приглашает вас в Watch Party "${activeWatchPartyRoom.name}"!`, activeWatchPartyRoom.id);
-            alert(`Приглашение отправлено пользователю ${friendName}! В его уведомлениях появится кнопка присоединения.`);
+            alert(`Приглашение отправлено пользователю ${friendName}!`);
         }
 
         function openActiveWatchPartyRoom() {
@@ -1715,6 +1815,7 @@
             const anime = animeList.find(a => a.id === activeWatchPartyRoom.animeId);
             if (!anime) return;
 
+            const isHost = currentUser && currentUser.username === activeWatchPartyRoom.host;
             const currentEp = (anime.episodes && anime.episodes[activeWatchPartyRoom.epIdx]) ? anime.episodes[activeWatchPartyRoom.epIdx] : { sources: { 'Default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' } };
             const sources = currentEp.sources || { 'Default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' };
             const activeUrl = Object.values(sources)[0] || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
@@ -1723,9 +1824,11 @@
             if (activeUrl.trim().startsWith('<iframe')) {
                 playerHtml = `<div class="party-video-container">${activeUrl}</div>`;
             } else {
+                // Если мы НЕ хост, атрибут controls убираем, чтобы участники не могли переключать паузу и перемотку самостоятельно
+                const controlsAttr = isHost ? 'controls' : '';
                 playerHtml = `
                     <div class="party-video-container">
-                        <video id="partyVideoElement" controls crossorigin="anonymous" playsinline ontimeupdate="partyReportTime(this)" onplay="partyReportState(true)" onpause="partyReportState(false)">
+                        <video id="partyVideoElement" ${controlsAttr} crossorigin="anonymous" playsinline ontimeupdate="partyReportTime(this)" onplay="partyReportState(true)" onpause="partyReportState(false)">
                             <source src="${activeUrl}" type="video/mp4">
                             Ваш браузер не поддерживает видео.
                         </video>
@@ -1733,7 +1836,6 @@
                 `;
             }
 
-            const isHost = currentUser && currentUser.username === activeWatchPartyRoom.host;
             const friends = userFriends[currentUser.username] || [];
 
             const modal = document.getElementById('watchPartyModal');
@@ -1741,7 +1843,7 @@
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                     <div>
                         <h2>🎉 Watch Party: ${activeWatchPartyRoom.name}</h2>
-                        <span style="font-size:12px; color:var(--text-muted);">Аниме: <b>${anime.title}</b> | Хост: <b>${activeWatchPartyRoom.host}</b></span>
+                        <span style="font-size:12px; color:var(--text-muted);">Аниме: <b>${anime.title}</b> | Хост: <b>${activeWatchPartyRoom.host}</b> ${isHost ? '(Вы - Создатель 👑)' : '(Режим зрителя)'}</span>
                     </div>
                     <div style="display:flex; gap:10px; align-items:center;">
                         ${isHost ? `<button class="btn-danger" style="padding:6px 12px; font-size:12px;" onclick="playSound(); deleteActiveWatchParty()">🗑️ Удалить комнату</button>` : ''}
@@ -1788,27 +1890,26 @@
                 </div>
             `;
             modal.classList.add('active');
-
-            if (partySyncInterval) clearInterval(partySyncInterval);
-            partySyncInterval = setInterval(() => {
-                if (activeWatchPartyRoom) {
-                    const vid = document.getElementById('partyVideoElement');
-                    if (vid && !vid.paused && Math.abs(vid.currentTime - activeWatchPartyRoom.currentTime) > 1.5) {
-                        vid.currentTime = activeWatchPartyRoom.currentTime;
-                    }
-                }
-            }, 2000);
         }
 
-        function partyReportTime(video) {
-            if (activeWatchPartyRoom) {
-                activeWatchPartyRoom.currentTime = video.currentTime;
+        async function partyReportTime(video) {
+            if (!currentUser || !activeWatchPartyRoom) return;
+            // Только хост управляет и записывает тайминг в облако для всех остальных
+            if (currentUser.username === activeWatchPartyRoom.host) {
+                if (Math.abs(video.currentTime - activeWatchPartyRoom.currentTime) > 1.0) {
+                    activeWatchPartyRoom.currentTime = video.currentTime;
+                    await savePartiesToCloud();
+                }
             }
         }
 
-        function partyReportState(isPlaying) {
-            if (activeWatchPartyRoom) {
-                activeWatchPartyRoom.isPlaying = isPlaying;
+        async function partyReportState(isPlaying) {
+            if (!currentUser || !activeWatchPartyRoom) return;
+            if (currentUser.username === activeWatchPartyRoom.host) {
+                if (activeWatchPartyRoom.isPlaying !== isPlaying) {
+                    activeWatchPartyRoom.isPlaying = isPlaying;
+                    await savePartiesToCloud();
+                }
             }
         }
 
@@ -2233,35 +2334,6 @@
             }
             saveData();
             openWatchModal(animeId);
-        }
-
-        function addFriendDirect(targetUsername) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            if (currentUser.username === targetUsername) return;
-
-            const myName = currentUser.username;
-            if (!userFriends[myName]) userFriends[myName] = [];
-            if (!userFriends[myName].includes(targetUsername)) {
-                userFriends[myName].push(targetUsername);
-            }
-
-            if (!userFriends[targetUsername]) userFriends[targetUsername] = [];
-            if (!userFriends[targetUsername].includes(myName)) {
-                userFriends[targetUsername].push(myName);
-            }
-
-            addNotification(targetUsername, `${myName} добавил вас в друзья!`);
-            saveData();
-            openProfile(targetUsername);
-        }
-
-        function removeFriend(friendUsername) {
-            if (!currentUser) return;
-            const myName = currentUser.username;
-            if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
-            if (userFriends[friendUsername]) userFriends[friendUsername] = userFriends[friendUsername].filter(u => u !== myName);
-            saveData();
-            openProfile(friendUsername);
         }
 
         async function updateUserProfile() {
