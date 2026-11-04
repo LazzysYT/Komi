@@ -604,7 +604,7 @@
             } catch(e) {}
         }
 
-        // Надежные ссылки на изображения с гарантированной стабильностью
+        // Исправленные уникальные постеры и кадры без дублирования
         let defaultAnime = [
             {
                 id: 'anime_1',
@@ -633,7 +633,8 @@
                 screenshots: [
                     'https://cdn.myanimelist.net/images/anime/1480/121730l.jpg',
                     'https://cdn.myanimelist.net/images/anime/1204/121731.jpg',
-                    'https://cdn.myanimelist.net/images/anime/1377/121732.jpg'
+                    'https://cdn.myanimelist.net/images/anime/1377/121732.jpg',
+                    'https://cdn.myanimelist.net/images/anime/1480/121730.jpg'
                 ],
                 trailer: 'https://www.youtube.com/embed/JtqIas3bYhg',
                 genres: ['Спорт', 'Комедия'],
@@ -644,13 +645,33 @@
                     { season: 1, title: 'Эпизод 1', voices: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
                 ratings: { Admin: 8.9 }
+            },
+            {
+                id: 'anime_3',
+                title: 'Счастливая Звезда',
+                poster: 'https://s.anixmirai.com/posters/z9skcF06hnw5RGUGYeBwHKpA7JDJos.jpg',
+                screenshots: [
+                    'https://cdn.myanimelist.net/images/anime/13/35715l.jpg',
+                    'https://cdn.myanimelist.net/images/anime/12/35717l.jpg',
+                    'https://cdn.myanimelist.net/images/anime/11/35719l.jpg',
+                    'https://cdn.myanimelist.net/images/anime/13/35715.jpg'
+                ],
+                trailer: 'https://www.youtube.com/embed/9272MmqsjgY',
+                genres: ['Комедия'],
+                year: '2007',
+                type: 'Сериал',
+                desc: 'Повседневная жизнь японских школьниц, их увлечения аниме, видеоиграми и учебой.',
+                episodes: [
+                    { season: 1, title: 'Эпизод 1', voices: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
+                ],
+                ratings: { Admin: 8.5 }
             }
         ];
 
         let animeList = [];
         let animeComments = {}; 
         let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
-        let friendRequests = JSON.parse(localStorage.getItem('komi_friend_requests')) || {}; 
+        let friendRequestsData = []; // Загружается из Supabase
         let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
@@ -691,7 +712,6 @@
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
-            localStorage.setItem('komi_friend_requests', JSON.stringify(friendRequests));
             localStorage.setItem('komi_anime_statuses', JSON.stringify(userAnimeStatuses));
             saveStatusesToCloud();
         }
@@ -713,10 +733,22 @@
                     animeList = defaultAnime;
                     await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
                 }
+                await loadFriendRequestsFromCloud();
             } catch(err) {
                 animeList = defaultAnime;
             }
             render();
+        }
+
+        async function loadFriendRequestsFromCloud() {
+            try {
+                const { data } = await _supabase.from('friend_requests').select('*');
+                if (data) {
+                    friendRequestsData = data;
+                }
+            } catch(e) {
+                friendRequestsData = [];
+            }
         }
 
         async function saveAnimeToCloud() {
@@ -761,6 +793,8 @@
                     if (el) el.innerText = `Онлайн: ${count}`;
                     renderSidebarLists(uniqueOnlineList);
                 }
+                await loadFriendRequestsFromCloud();
+                if (currentView === 'profile') render();
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
                 if (el) el.innerText = `Онлайн: 1`;
@@ -932,7 +966,7 @@
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
                 const genres = ['Все', ...availableGenresList];
-                const years = ['Все', '2026', '2025', '2024', '2023'];
+                const years = ['Все', '2026', '2025', '2024', '2023', '2007'];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA'];
 
                 let filtered = animeList.filter(a => {
@@ -1032,11 +1066,11 @@
             };
 
             const myFriends = userFriends[username] || [];
-            const myRequests = friendRequests[username] || [];
+            const myRequests = friendRequestsData.filter(r => r.to_user === username).map(r => r.from_user);
             const isMe = currentUser && currentUser.username === username;
             
             const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
-            const isRequestSent = currentUser && (friendRequests[username] || []).includes(currentUser.username);
+            const isRequestSent = currentUser && friendRequestsData.some(r => r.from_user === currentUser.username && r.to_user === username);
 
             const userStatuses = userAnimeStatuses[username] || {};
             const statsCounts = { 'Смотрю': 0, 'В планах': 0, 'Просмотрено': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
@@ -1103,7 +1137,7 @@
                         </div>
                     </div>
 
-                    <!-- ВИДИМЫЙ БЛОК ВХОДЯЩИХ ЗАЯВОК В ДРУЗЬЯ ДЛЯ САМОГО ПОЛЬЗОВАТЕЛЯ -->
+                    <!-- ВИДИМЫЙ БЛОК ВХОДЯЩИХ ЗАЯВОК В ДРУЗЬЯ -->
                     ${isMe && myRequests.length > 0 ? `
                         <div style="background:var(--bg-card); border:1px solid var(--primary); padding:20px; border-radius:16px; margin-bottom:25px; box-shadow:0 0 20px var(--glow);">
                             <h3 style="font-size:16px; margin-bottom:12px; color:var(--accent);">🔔 Входящие заявки в друзья (${myRequests.length})</h3>
@@ -1482,7 +1516,7 @@
             const isTaken = Object.keys(registeredUsers).some(k => k.toLowerCase() === lowerInput);
 
             if (isTaken) {
-                alert('Аккаунт с таким именем (или похожим в другом регистре / администратора) уже зарегистрирован!');
+                alert('Аккаунт с таким именем уже зарегистрирован!');
                 return;
             }
 
@@ -1527,50 +1561,54 @@
             openWatchModal(animeId);
         }
 
-        function sendFriendRequest(targetUsername) {
+        async function sendFriendRequest(targetUsername) {
             if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
 
-            if (!friendRequests[targetUsername]) friendRequests[targetUsername] = [];
-            if (!friendRequests[targetUsername].includes(currentUser.username)) {
-                friendRequests[targetUsername].push(currentUser.username);
-                saveData();
+            try {
+                await _supabase.from('friend_requests').insert([
+                    { from_user: currentUser.username, to_user: targetUsername }
+                ]);
+                await loadFriendRequestsFromCloud();
                 alert('Заявка в друзья отправлена!');
-            } else {
-                alert('Заявка уже отправлена ранее.');
+                openProfile(targetUsername);
+            } catch(e) {
+                alert('Заявка уже отправлена или произошла ошибка.');
             }
-            openProfile(targetUsername);
         }
 
-        function acceptFriendRequest(senderUsername) {
+        async function acceptFriendRequest(senderUsername) {
             if (!currentUser) return;
             const myName = currentUser.username;
             
-            if (friendRequests[myName]) {
-                friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
+            try {
+                await _supabase.from('friend_requests').delete().match({ from_user: senderUsername, to_user: myName });
+                
+                if (!userFriends[myName]) userFriends[myName] = [];
+                if (!userFriends[myName].includes(senderUsername)) userFriends[myName].push(senderUsername);
+
+                if (!userFriends[senderUsername]) userFriends[senderUsername] = [];
+                if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
+
+                saveData();
+                await loadFriendRequestsFromCloud();
+                openProfile(myName);
+            } catch(e) {
+                alert('Ошибка при принятии заявки.');
             }
-            
-            if (!userFriends[myName]) userFriends[myName] = [];
-            if (!userFriends[myName].includes(senderUsername)) userFriends[myName].push(senderUsername);
-
-            if (!userFriends[senderUsername]) userFriends[senderUsername] = [];
-            if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
-
-            saveData();
-            openProfile(myName);
         }
 
-        function declineFriendRequest(senderUsername) {
+        async function declineFriendRequest(senderUsername) {
             if (!currentUser) return;
             const myName = currentUser.username;
-            if (friendRequests[myName]) {
-                friendRequests[myName] = friendRequests[myName].filter(u => u !== senderUsername);
-            }
-            saveData();
-            openProfile(myName);
+            try {
+                await _supabase.from('friend_requests').delete().match({ from_user: senderUsername, to_user: myName });
+                await loadFriendRequestsFromCloud();
+                openProfile(myName);
+            } catch(e) {}
         }
 
-        function removeFriend(friendUsername) {
+        async function removeFriend(friendUsername) {
             if (!currentUser) return;
             const myName = currentUser.username;
             if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
