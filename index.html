@@ -604,7 +604,6 @@
             } catch(e) {}
         }
 
-        // Исправленные уникальные постеры и кадры без дублирования
         let defaultAnime = [
             {
                 id: 'anime_1',
@@ -671,7 +670,7 @@
         let animeList = [];
         let animeComments = {}; 
         let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
-        let friendRequestsData = []; // Загружается из Supabase
+        let friendRequestsData = []; // Загружается из Supabase (id: 4)
         let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
@@ -727,28 +726,25 @@
                             const cloudStatuses = JSON.parse(row.content || '{}');
                             userAnimeStatuses = { ...userAnimeStatuses, ...cloudStatuses };
                         }
+                        if (row.id === 4) {
+                            friendRequestsData = JSON.parse(row.content || '[]');
+                        }
                     }
                 }
                 if (animeList.length === 0) {
                     animeList = defaultAnime;
                     await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
                 }
-                await loadFriendRequestsFromCloud();
             } catch(err) {
                 animeList = defaultAnime;
             }
             render();
         }
 
-        async function loadFriendRequestsFromCloud() {
+        async function saveFriendRequestsToCloud() {
             try {
-                const { data } = await _supabase.from('friend_requests').select('*');
-                if (data) {
-                    friendRequestsData = data;
-                }
-            } catch(e) {
-                friendRequestsData = [];
-            }
+                await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(friendRequestsData) });
+            } catch(e) {}
         }
 
         async function saveAnimeToCloud() {
@@ -793,8 +789,14 @@
                     if (el) el.innerText = `Онлайн: ${count}`;
                     renderSidebarLists(uniqueOnlineList);
                 }
-                await loadFriendRequestsFromCloud();
+                
+                // Подтягиваем актуальные заявки из облака
+                const { data: reqData } = await _supabase.from('animes').select('*').eq('id', 4);
+                if (reqData && reqData.length > 0) {
+                    friendRequestsData = JSON.parse(reqData[0].content || '[]');
+                }
                 if (currentView === 'profile') render();
+
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
                 if (el) el.innerText = `Онлайн: 1`;
@@ -1066,11 +1068,11 @@
             };
 
             const myFriends = userFriends[username] || [];
-            const myRequests = friendRequestsData.filter(r => r.to_user === username).map(r => r.from_user);
+            const myRequests = friendRequestsData.filter(r => r.to === username).map(r => r.from);
             const isMe = currentUser && currentUser.username === username;
             
             const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
-            const isRequestSent = currentUser && friendRequestsData.some(r => r.from_user === currentUser.username && r.to_user === username);
+            const isRequestSent = currentUser && friendRequestsData.some(r => r.from === currentUser.username && r.to === username);
 
             const userStatuses = userAnimeStatuses[username] || {};
             const statsCounts = { 'Смотрю': 0, 'В планах': 0, 'Просмотрено': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
@@ -1137,7 +1139,7 @@
                         </div>
                     </div>
 
-                    <!-- ВИДИМЫЙ БЛОК ВХОДЯЩИХ ЗАЯВОК В ДРУЗЬЯ -->
+                    <!-- ВИДИМЫЙ БЛОК ВХОДЯЩИХ ЗАЯВОК В ДРУЗЬЯ (появляется если есть заявки) -->
                     ${isMe && myRequests.length > 0 ? `
                         <div style="background:var(--bg-card); border:1px solid var(--primary); padding:20px; border-radius:16px; margin-bottom:25px; box-shadow:0 0 20px var(--glow);">
                             <h3 style="font-size:16px; margin-bottom:12px; color:var(--accent);">🔔 Входящие заявки в друзья (${myRequests.length})</h3>
@@ -1565,15 +1567,14 @@
             if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
 
-            try {
-                await _supabase.from('friend_requests').insert([
-                    { from_user: currentUser.username, to_user: targetUsername }
-                ]);
-                await loadFriendRequestsFromCloud();
+            const exists = friendRequestsData.some(r => r.from === currentUser.username && r.to === targetUsername);
+            if (!exists) {
+                friendRequestsData.push({ from: currentUser.username, to: targetUsername });
+                await saveFriendRequestsToCloud();
                 alert('Заявка в друзья отправлена!');
                 openProfile(targetUsername);
-            } catch(e) {
-                alert('Заявка уже отправлена или произошла ошибка.');
+            } else {
+                alert('Заявка уже отправлена ранее.');
             }
         }
 
@@ -1581,31 +1582,25 @@
             if (!currentUser) return;
             const myName = currentUser.username;
             
-            try {
-                await _supabase.from('friend_requests').delete().match({ from_user: senderUsername, to_user: myName });
-                
-                if (!userFriends[myName]) userFriends[myName] = [];
-                if (!userFriends[myName].includes(senderUsername)) userFriends[myName].push(senderUsername);
+            friendRequestsData = friendRequestsData.filter(r => !(r.from === senderUsername && r.to === myName));
+            await saveFriendRequestsToCloud();
 
-                if (!userFriends[senderUsername]) userFriends[senderUsername] = [];
-                if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
+            if (!userFriends[myName]) userFriends[myName] = [];
+            if (!userFriends[myName].includes(senderUsername)) userFriends[myName].push(senderUsername);
 
-                saveData();
-                await loadFriendRequestsFromCloud();
-                openProfile(myName);
-            } catch(e) {
-                alert('Ошибка при принятии заявки.');
-            }
+            if (!userFriends[senderUsername]) userFriends[senderUsername] = [];
+            if (!userFriends[senderUsername].includes(myName)) userFriends[senderUsername].push(myName);
+
+            saveData();
+            openProfile(myName);
         }
 
         async function declineFriendRequest(senderUsername) {
             if (!currentUser) return;
             const myName = currentUser.username;
-            try {
-                await _supabase.from('friend_requests').delete().match({ from_user: senderUsername, to_user: myName });
-                await loadFriendRequestsFromCloud();
-                openProfile(myName);
-            } catch(e) {}
+            friendRequestsData = friendRequestsData.filter(r => !(r.from === senderUsername && r.to === myName));
+            await saveFriendRequestsToCloud();
+            openProfile(myName);
         }
 
         async function removeFriend(friendUsername) {
