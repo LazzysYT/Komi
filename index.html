@@ -366,7 +366,6 @@
         .crunchy-hero-info { display: flex; flex-direction: column; gap: 10px; flex: 1; }
         .crunchy-hero-info h1 { font-size: 28px; font-weight: 800; color: white; }
         
-        /* Watch Party Layout */
         .party-room-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
         .party-main-screen { display: flex; flex-direction: column; gap: 15px; position: relative; }
         .party-video-container { position: relative; width: 100%; background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
@@ -651,7 +650,12 @@
     <script>
         const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs'; 
-        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let _supabase = null;
+        try {
+            if (window.supabase) {
+                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch(e) {}
 
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив'];
 
@@ -762,7 +766,7 @@
             }
         ];
 
-        let animeList = [];
+        let animeList = defaultAnime;
         let animeComments = {}; 
         let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
         let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; 
@@ -795,7 +799,6 @@
         
         let activeWatchPartyRoom = null;
         let partySyncInterval = null;
-        let partyRealtimeChannel = null;
 
         function changeTheme(theme) {
             document.body.className = theme === 'default' ? '' : 'theme-' + theme;
@@ -821,6 +824,7 @@
 
         async function loadDataFromCloud() {
             try {
+                if (!_supabase) { render(); updateNotificationsUI(); return; }
                 const { data } = await _supabase.from('animes').select('*');
                 if (data && data.length > 0) {
                     for(let row of data) {
@@ -836,7 +840,7 @@
                         }
                     }
                 }
-                if (animeList.length === 0) {
+                if (!animeList || animeList.length === 0) {
                     animeList = defaultAnime;
                     await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
                 }
@@ -848,28 +852,32 @@
         }
 
         async function saveAnimeToCloud() {
-            await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
+            if (_supabase) {
+                try { await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) }); } catch(e){}
+            }
             render();
         }
 
         async function saveCommentsToCloud() {
-            await _supabase.from('animes').upsert({ id: 2, content: JSON.stringify(animeComments) });
+            if (_supabase) {
+                try { await _supabase.from('animes').upsert({ id: 2, content: JSON.stringify(animeComments) }); } catch(e){}
+            }
         }
 
         async function saveStatusesToCloud() {
-            try {
-                await _supabase.from('animes').upsert({ id: 3, content: JSON.stringify(userAnimeStatuses) });
-            } catch(e) {}
+            if (_supabase) {
+                try { await _supabase.from('animes').upsert({ id: 3, content: JSON.stringify(userAnimeStatuses) }); } catch(e) {}
+            }
         }
 
         async function saveProfilesToCloud() {
-            try {
-                await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) });
-            } catch(e) {}
+            if (_supabase) {
+                try { await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) }); } catch(e) {}
+            }
         }
 
         async function updateOnlinePresence() {
-            if (onlineTimerRunning) return;
+            if (onlineTimerRunning || !_supabase) return;
             onlineTimerRunning = true;
             try {
                 const now = Date.now();
@@ -908,14 +916,15 @@
         updateOnlinePresence();
 
         window.addEventListener('beforeunload', () => {
-            try {
-                navigator.sendBeacon && navigator.sendBeacon(`${SUPABASE_URL}/rest/v1/online_users?session_id=eq.${myUniqueKey}`, null);
-                fetch(`${SUPABASE_URL}/rest/v1/online_users?session_id=eq.${myUniqueKey}`, {
-                    method: 'DELETE',
-                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
-                    keepalive: true
-                });
-            } catch(e){}
+            if (_supabase) {
+                try {
+                    fetch(`${SUPABASE_URL}/rest/v1/online_users?session_id=eq.${myUniqueKey}`, {
+                        method: 'DELETE',
+                        headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                        keepalive: true
+                    });
+                } catch(e){}
+            }
         });
 
         function renderSidebarLists(onlineRows) {
@@ -941,7 +950,7 @@
                 if (myFriends.length > 0) {
                     friendsContainer.innerHTML = myFriends.map(f => {
                         const p = userProfiles[f] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${f}` };
-                        const isOnline = onlineRows.some(row => row.username === f);
+                        const isOnline = onlineRows && onlineRows.some(row => row.username === f);
                         return `
                             <div class="sidebar-user-item" onclick="playSound(); openProfile('${f}')">
                                 <img src="${p.avatar}" class="sidebar-user-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
@@ -1062,9 +1071,9 @@
         }
 
         async function logoutUser() {
-            try {
-                await _supabase.from('online_users').delete().eq('session_id', myUniqueKey);
-            } catch(e){}
+            if (_supabase) {
+                try { await _supabase.from('online_users').delete().eq('session_id', myUniqueKey); } catch(e){}
+            }
             currentUser = null;
             saveData();
             navigate('home');
@@ -1079,6 +1088,7 @@
         function render() {
             renderHeaderUser();
             const container = document.getElementById('mainContainer');
+            if (!container) return;
             
             if (currentView === 'home') {
                 const sliderItems = animeList.slice(0, 5);
@@ -1558,7 +1568,7 @@
             document.getElementById('watchPartyModal').classList.remove('active');
         }
 
-        async function createWatchPartyRoom() {
+        function createWatchPartyRoom() {
             if (!currentUser) return;
             const animeId = document.getElementById('partyAnimeSelect').value;
             const roomName = document.getElementById('partyRoomName').value.trim() || ('Комната ' + currentUser.username);
@@ -1587,7 +1597,7 @@
                 alert('Сначала создайте комнату!');
                 return;
             }
-            addNotification(friendName, `${currentUser.username приглашает вас в комнату Watch Party "${activeWatchPartyRoom.name}"!`);
+            addNotification(friendName, `${currentUser.username} приглашает вас в комнату Watch Party "${activeWatchPartyRoom.name}"!`);
             alert(`Приглашение отправлено пользователю ${friendName}!`);
         }
 
@@ -1642,11 +1652,8 @@
             `;
             modal.classList.add('active');
 
-            // Симуляция реалтайм синхронизации для демонстрации
             if (partySyncInterval) clearInterval(partySyncInterval);
-            partySyncInterval = setInterval(() => {
-                // Фоновая синхронизация комнаты
-            }, 1500);
+            partySyncInterval = setInterval(() => {}, 1500);
         }
 
         function partyReportTime(video) {
@@ -1663,15 +1670,17 @@
 
         function sendPartyMessage() {
             const input = document.getElementById('partyMessageInput');
-            const text = input.value.trim();
+            const text = input ? input.value.trim() : '';
             if (!text || !currentUser || !activeWatchPartyRoom) return;
 
             activeWatchPartyRoom.chat.push({ author: currentUser.username, text });
             input.value = '';
             
             const chatBox = document.getElementById('partyChatBox');
-            chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
-            chatBox.scrollTop = chatBox.scrollHeight;
+            if (chatBox) {
+                chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
+                chatBox.scrollTop = chatBox.scrollHeight;
+            }
         }
 
         function sendPartyReaction(emoji) {
@@ -2153,15 +2162,17 @@
             siteStats.views++;
             saveData();
             
-            try {
-                const { data } = await _supabase.from('animes').select('*').in('id', [2, 4]);
-                if (data) {
-                    data.forEach(row => {
-                        if (row.id === 2) animeComments = JSON.parse(row.content || '{}');
-                        if (row.id === 4) userProfiles = { ...userProfiles, ...JSON.parse(row.content || '{}') };
-                    });
-                }
-            } catch(e) {}
+            if (_supabase) {
+                try {
+                    const { data } = await _supabase.from('animes').select('*').in('id', [2, 4]);
+                    if (data) {
+                        data.forEach(row => {
+                            if (row.id === 2) animeComments = JSON.parse(row.content || '{}');
+                            if (row.id === 4) userProfiles = { ...userProfiles, ...JSON.parse(row.content || '{}') };
+                        });
+                    }
+                } catch(e) {}
+            }
 
             const anime = animeList.find(a => a.id === id);
             if (!anime || !anime.episodes || anime.episodes.length === 0) return;
