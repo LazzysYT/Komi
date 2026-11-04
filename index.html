@@ -157,7 +157,7 @@
         .notification-dropdown.active { display: flex; animation: fadeInUp 0.15s ease; }
         .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
         .notif-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; }
-        .notif-item { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 2px; }
+        .notif-item { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 6px; }
         .notif-item:hover { background: rgba(255,255,255,0.03); color: white; }
 
         .user-pill {
@@ -969,9 +969,9 @@
             }
         }
 
-        function addNotification(username, text) {
+        function addNotification(username, text, partyId = null) {
             if (!userNotifications[username]) userNotifications[username] = [];
-            userNotifications[username].unshift({ text, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
+            userNotifications[username].unshift({ text, partyId, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
             saveData();
             updateNotificationsUI();
         }
@@ -1011,7 +1011,10 @@
                 listContainer.innerHTML = notifs.map(n => `
                     <div class="notif-item">
                         <span>${n.text}</span>
-                        <span style="font-size:10px; color:var(--text-muted);">${n.time}</span>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+                            <span style="font-size:10px; color:var(--text-muted);">${n.time}</span>
+                            ${n.partyId ? `<button class="btn-glow" style="padding:4px 10px; font-size:11px;" onclick="playSound(); joinWatchPartyRoom('${n.partyId}')">Присоединиться</button>` : ''}
+                        </div>
                     </div>
                 `).join('');
             } else {
@@ -1512,7 +1515,7 @@
         }
 
         // ==========================================
-        // WATCH PARTY (УЛУЧШЕННАЯ СИСТЕМА)
+        // WATCH PARTY (РАСШИРЕННАЯ СИСТЕМА)
         // ==========================================
         function openWatchPartyHub() {
             if (!currentUser) { openAuthModal('login'); return; }
@@ -1618,7 +1621,10 @@
 
         function joinWatchPartyRoom(roomId) {
             if (!currentUser) { openAuthModal('login'); return; }
-            const room = activePartiesList.find(r => r.id === roomId);
+            let room = activePartiesList.find(r => r.id === roomId);
+            if (!room && activeWatchPartyRoom && activeWatchPartyRoom.id === roomId) {
+                room = activeWatchPartyRoom;
+            }
             if (!room) { alert('Комната не найдена или была удалена!'); return; }
 
             activeWatchPartyRoom = room;
@@ -1652,8 +1658,8 @@
                 alert('Сначала создайте комнату!');
                 return;
             }
-            addNotification(friendName, `${currentUser.username} приглашает вас в Watch Party "${activeWatchPartyRoom.name}"!`);
-            alert(`Приглашение отправлено пользователю ${friendName}!`);
+            addNotification(friendName, `${currentUser.username} приглашает вас в Watch Party "${activeWatchPartyRoom.name}"!`, activeWatchPartyRoom.id);
+            alert(`Приглашение отправлено пользователю ${friendName}! В его уведомлениях появится кнопка присоединения.`);
         }
 
         function openActiveWatchPartyRoom() {
@@ -1684,7 +1690,7 @@
 
             const modal = document.getElementById('watchPartyModal');
             document.getElementById('watchPartyModalContent').innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                     <div>
                         <h2>🎉 Watch Party: ${activeWatchPartyRoom.name}</h2>
                         <span style="font-size:12px; color:var(--text-muted);">Аниме: <b>${anime.title}</b> | Хост: <b>${activeWatchPartyRoom.host}</b></span>
