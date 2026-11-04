@@ -36,7 +36,7 @@
             margin: 0;
             padding: 0;
             font-family: 'Plus Jakarta Sans', sans-serif;
-            transition: background 0.25s ease, border-color 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease, color 0.25s ease;
+            transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease, color 0.2s ease;
         }
 
         body {
@@ -49,23 +49,23 @@
         }
 
         @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(12px); }
+            from { opacity: 0; transform: translateY(8px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         @keyframes modalScale {
-            from { opacity: 0; transform: scale(0.96); }
+            from { opacity: 0; transform: scale(0.97); }
             to { opacity: 1; transform: scale(1); }
         }
 
         @keyframes neonGlow {
-            0% { box-shadow: 0 0 12px var(--glow); }
-            50% { box-shadow: 0 0 28px var(--glow); }
-            100% { box-shadow: 0 0 12px var(--glow); }
+            0% { box-shadow: 0 0 10px var(--glow); }
+            50% { box-shadow: 0 0 24px var(--glow); }
+            100% { box-shadow: 0 0 10px var(--glow); }
         }
 
         header {
-            background: rgba(9, 9, 15, 0.85);
+            background: rgba(9, 9, 15, 0.9);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -87,7 +87,7 @@
             font-weight: 800; font-size: 24px; color: white;
             animation: neonGlow 3s infinite;
         }
-        .logo-box:hover { transform: scale(1.1) rotate(5deg); }
+        .logo-box:hover { transform: scale(1.08) rotate(3deg); }
         .logo-text {
             font-size: 22px; font-weight: 800;
             background: linear-gradient(to right, #FFFFFF, var(--accent));
@@ -107,7 +107,7 @@
             width: 100%; background: var(--bg-input); border: 1px solid var(--border);
             border-radius: 12px; padding: 12px 16px 12px 44px; color: white; font-size: 14px; outline: none;
         }
-        .search-bar input:focus { border-color: var(--accent); box-shadow: 0 0 20px var(--glow); }
+        .search-bar input:focus { border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
         .search-bar svg { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); fill: var(--text-muted); width: 18px; height: 18px; }
 
         .search-dropdown {
@@ -115,7 +115,7 @@
             border: 1px solid var(--border); border-radius: 12px; margin-top: 5px; display: none; z-index: 200;
             box-shadow: 0 10px 25px rgba(0,0,0,0.8); max-height: 250px; overflow-y: auto;
         }
-        .search-dropdown.active { display: block; animation: fadeInUp 0.2s ease; }
+        .search-dropdown.active { display: block; animation: fadeInUp 0.15s ease; }
         .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
         .search-dropdown-item:hover { background: var(--primary); color: white; }
 
@@ -124,18 +124,18 @@
             background: transparent; border: 1px solid transparent; color: var(--text-muted);
             font-weight: 600; font-size: 14px; cursor: pointer; padding: 8px 14px; border-radius: 10px;
         }
-        .nav-btn:hover, .nav-btn.active { color: white; background: var(--primary); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
+        .nav-btn:hover, .nav-btn.active { color: white; background: var(--primary); border-color: var(--accent); box-shadow: 0 0 12px var(--glow); }
 
         .action-icon-btn {
             background: var(--bg-card); border: 1px solid var(--border); color: white;
             padding: 9px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; position: relative;
         }
-        .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+        .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.08); transform: translateY(-1px); }
 
         .notification-badge {
             position: absolute; top: -5px; right: -5px; background: #EF4444; color: white;
             font-size: 10px; font-weight: 800; width: 18px; height: 18px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px rgba(239, 68, 68, 0.8);
         }
 
         .notification-dropdown {
@@ -143,7 +143,7 @@
             border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.9);
             display: none; flex-direction: column; z-index: 300; overflow: hidden;
         }
-        .notification-dropdown.active { display: flex; animation: fadeInUp 0.2s ease; }
+        .notification-dropdown.active { display: flex; animation: fadeInUp 0.15s ease; }
         .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
         .notif-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; }
         .notif-item { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 2px; }
@@ -153,7 +153,7 @@
             background: var(--bg-card); border: 1px solid var(--border);
             padding: 6px 14px; border-radius: 20px; display: flex; align-items: center; gap: 10px; font-size: 13px; font-weight: 600; cursor: pointer;
         }
-        .user-pill:hover { border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
+        .user-pill:hover { border-color: var(--accent); box-shadow: 0 0 12px var(--glow); }
         .user-avatar-small { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--primary); }
 
         .app-layout {
@@ -172,10 +172,10 @@
             background: var(--bg-input); border: 1px solid var(--border); padding: 8px 12px;
             border-radius: 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
         }
-        .sidebar-user-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); transform: translateX(4px); }
+        .sidebar-user-item:hover { border-color: var(--accent); background: rgba(255,255,255,0.05); transform: translateX(3px); }
         .sidebar-user-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--primary); }
 
-        main { width: 100%; animation: fadeInUp 0.3s ease; }
+        main { width: 100%; animation: fadeInUp 0.2s ease; }
 
         .hero-slider-container {
             position: relative;
@@ -198,7 +198,7 @@
         }
         .hero-slide.active {
             display: flex;
-            animation: fadeInUp 0.5s ease;
+            animation: fadeInUp 0.3s ease;
         }
         .hero-slide::before {
             content: ''; position: absolute; inset: 0;
@@ -219,19 +219,19 @@
 
         .btn-glow {
             background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 14px;
-            font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
+            font-weight: 700; font-size: 14px; cursor: pointer; box-shadow: 0 4px 18px var(--glow);
             display: inline-flex; align-items: center; gap: 8px; width: fit-content;
-            transition: transform 0.25s ease, background 0.25s ease, box-shadow 0.25s ease;
+            transition: transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
         }
-        .btn-glow:hover { background: var(--primary-hover); transform: scale(1.05) translateY(-2px); box-shadow: 0 6px 30px var(--glow); }
+        .btn-glow:hover { background: var(--primary-hover); transform: scale(1.03) translateY(-1px); box-shadow: 0 6px 25px var(--glow); }
 
         .btn-glow-secondary {
             background: rgba(255, 255, 255, 0.06); color: white; border: 1px solid var(--border); padding: 12px 26px; border-radius: 14px;
             font-weight: 700; font-size: 14px; cursor: pointer; backdrop-filter: blur(10px);
             display: inline-flex; align-items: center; gap: 8px; width: fit-content;
-            transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+            transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
         }
-        .btn-glow-secondary:hover { border-color: var(--accent); background: rgba(255, 255, 255, 0.12); transform: scale(1.05) translateY(-2px); box-shadow: 0 0 20px var(--glow); }
+        .btn-glow-secondary:hover { border-color: var(--accent); background: rgba(255, 255, 255, 0.12); transform: scale(1.03) translateY(-1px); box-shadow: 0 0 15px var(--glow); }
 
         .hero-slider-arrow {
             position: absolute; top: 50%; transform: translateY(-50%); background: rgba(21, 21, 32, 0.75);
@@ -239,7 +239,7 @@
             cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 18px;
             backdrop-filter: blur(6px); transition: background 0.2s, border-color 0.2s, transform 0.2s;
         }
-        .hero-slider-arrow:hover { background: var(--primary); border-color: var(--accent); transform: translateY(-50%) scale(1.1); box-shadow: 0 0 15px var(--glow); }
+        .hero-slider-arrow:hover { background: var(--primary); border-color: var(--accent); transform: translateY(-50%) scale(1.08); box-shadow: 0 0 12px var(--glow); }
         .hero-arrow-prev { left: 20px; }
         .hero-arrow-next { right: 20px; }
 
@@ -247,7 +247,7 @@
             position: absolute; bottom: 20px; right: 40px; display: flex; gap: 8px; z-index: 10;
         }
         .hero-dot {
-            width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: width 0.3s, background 0.3s;
+            width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: width 0.2s, background 0.2s;
         }
         .hero-dot.active { width: 28px; border-radius: 5px; background: var(--accent); box-shadow: 0 0 10px var(--glow); }
 
@@ -257,21 +257,21 @@
         .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 26px; }
         .anime-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
-            cursor: pointer; transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
-            display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.4s ease;
+            cursor: pointer; transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.2s ease, box-shadow 0.2s ease;
+            display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.3s ease;
         }
-        .anime-card:hover { transform: translateY(-8px) scale(1.02); border-color: var(--accent); box-shadow: 0 16px 35px var(--glow); }
+        .anime-card:hover { transform: translateY(-5px) scale(1.01); border-color: var(--accent); box-shadow: 0 12px 30px var(--glow); }
         .anime-rating-badge {
             position: absolute; top: 12px; left: 12px; background: rgba(9, 9, 15, 0.85); border: 1px solid var(--border);
             color: #fbbf24; padding: 5px 10px; border-radius: 8px; font-size: 12px; font-weight: 700; z-index: 2; backdrop-filter: blur(4px);
         }
         .anime-poster-box { position: relative; width: 100%; height: 330px; overflow: hidden; background: var(--bg-input); }
-        .anime-poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s ease; }
-        .anime-card:hover .anime-poster { transform: scale(1.08); }
+        .anime-poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+        .anime-card:hover .anime-poster { transform: scale(1.05); }
         
         .anime-quick-view {
             position: absolute; inset: 0; background: rgba(9, 9, 15, 0.6); backdrop-filter: blur(4px);
-            display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; z-index: 3;
+            display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; z-index: 3;
         }
         .anime-card:hover .anime-quick-view { opacity: 1; }
 
@@ -281,7 +281,7 @@
 
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border); }
 
-        .profile-container { max-width: 1300px; margin: 0 auto; width: 100%; animation: fadeInUp 0.3s ease; }
+        .profile-container { max-width: 1300px; margin: 0 auto; width: 100%; animation: fadeInUp 0.2s ease; }
         .profile-header-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 25px;
             display: grid; grid-template-columns: 200px 1fr; gap: 30px; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
@@ -306,7 +306,7 @@
         }
         .profile-stat-tab:last-child { border-right: none; }
         .profile-stat-tab:hover { background: rgba(255,255,255,0.05); color: white; }
-        .profile-stat-tab.active { background: var(--primary); color: white; box-shadow: inset 0 0 15px rgba(0,0,0,0.3); }
+        .profile-stat-tab.active { background: var(--primary); color: white; box-shadow: inset 0 0 12px rgba(0,0,0,0.3); }
         .profile-stat-tab .num { font-size: 16px; font-weight: 800; }
 
         .profile-layout-grid { display: grid; grid-template-columns: 1fr 280px; gap: 25px; align-items: start; }
@@ -333,13 +333,13 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(14px);
             display: flex; align-items: center; justify-content: center; z-index: 1000;
-            opacity: 0; pointer-events: none; transition: opacity 0.25s ease;
+            opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
             background: #0e0e16; border: 1px solid var(--border); border-radius: 20px;
             width: 96%; max-width: 1400px; padding: 28px; max-height: 94vh; overflow-y: auto;
-            position: relative; box-shadow: 0 30px 70px rgba(0,0,0,0.95); animation: modalScale 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: relative; box-shadow: 0 30px 70px rgba(0,0,0,0.95); animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .modal-close {
             position: absolute; top: 20px; right: 20px; background: rgba(255,255,255,0.06);
@@ -385,23 +385,23 @@
         .anime-screenshots-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
         .screenshots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
         .screenshot-thumb { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
-        .screenshot-thumb:hover { transform: scale(1.05); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
+        .screenshot-thumb:hover { transform: scale(1.03); border-color: var(--accent); box-shadow: 0 0 12px var(--glow); }
 
         .crunchy-episodes-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 20px; }
         .season-tabs { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 16px; border-bottom: 1px solid var(--border); }
         .season-tab-btn { background: var(--bg-input); border: 1px solid var(--border); color: var(--text-muted); padding: 8px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; cursor: pointer; white-space: nowrap; }
-        .season-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 15px var(--glow); }
+        .season-tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
 
         .episodes-grid-crunchy { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; max-height: 400px; overflow-y: auto; padding-right: 4px; }
         .ep-crunchy-card {
             background: var(--bg-input); border: 1px solid var(--border); border-radius: 14px; overflow: hidden;
             cursor: pointer; display: flex; flex-direction: column; position: relative; transition: transform 0.2s ease, border-color 0.2s ease;
         }
-        .ep-crunchy-card:hover, .ep-crunchy-card.active { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 8px 25px var(--glow); }
+        .ep-crunchy-card:hover, .ep-crunchy-card.active { border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 8px 20px var(--glow); }
         .ep-crunchy-thumb { width: 100%; height: 135px; object-fit: cover; background: #000; position: relative; }
         .ep-crunchy-play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
         .ep-crunchy-card:hover .ep-crunchy-play-overlay { opacity: 1; }
-        .ep-crunchy-play-icon { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; box-shadow: 0 0 15px var(--glow); }
+        .ep-crunchy-play-icon { width: 40px; height: 40px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 16px; box-shadow: 0 0 12px var(--glow); }
         .ep-crunchy-info { padding: 12px; display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
         .ep-crunchy-titles { display: flex; flex-direction: column; gap: 4px; overflow: hidden; }
         .ep-crunchy-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: white; }
@@ -660,7 +660,7 @@
                 episodes: [
                     { season: 1, title: 'Фильм', voices: 'AniLibria, Jaskier', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
-                ratings: { Admin: 9.8 }
+                ratings: { Admin: 9.8, mellstroy: 9.5 }
             },
             {
                 id: 'anime_2',
@@ -713,7 +713,7 @@
         let profileWalls = JSON.parse(localStorage.getItem('komi_profile_walls')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
-        let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || { 
+        let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Владелец ⭐', regDate: '05 ноября 2026 года' },
             'mellstroy': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Mellstroy', status: 'Стример', regDate: '05 ноября 2026 года' }
         };
@@ -744,7 +744,6 @@
         function saveData() {
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
-            localStorage.setItem('komi_profiles', JSON.stringify(userProfiles));
             localStorage.setItem('komi_favorites', JSON.stringify(userFavorites));
             localStorage.setItem('komi_history', JSON.stringify(userWatchHistory));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
@@ -767,6 +766,10 @@
                         if (row.id === 3) {
                             const cloudStatuses = JSON.parse(row.content || '{}');
                             userAnimeStatuses = { ...userAnimeStatuses, ...cloudStatuses };
+                        }
+                        if (row.id === 4) {
+                            const cloudProfiles = JSON.parse(row.content || '{}');
+                            userProfiles = { ...userProfiles, ...cloudProfiles };
                         }
                     }
                 }
@@ -796,7 +799,12 @@
             } catch(e) {}
         }
 
-        // Адекватное онлайн отслеживание с немедленной очисткой при закрытии
+        async function saveProfilesToCloud() {
+            try {
+                await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) });
+            } catch(e) {}
+        }
+
         async function updateOnlinePresence() {
             if (onlineTimerRunning) return;
             onlineTimerRunning = true;
@@ -836,7 +844,6 @@
         setInterval(updateOnlinePresence, 3000);
         updateOnlinePresence();
 
-        // Мгновенный выход при закрытии вкладки
         window.addEventListener('beforeunload', () => {
             try {
                 navigator.sendBeacon && navigator.sendBeacon(`${SUPABASE_URL}/rest/v1/online_users?session_id=eq.${myUniqueKey}`, null);
@@ -888,7 +895,6 @@
             }
         }
 
-        // Система уведомлений
         function addNotification(username, text) {
             if (!userNotifications[username]) userNotifications[username] = [];
             userNotifications[username].unshift({ text, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
@@ -1681,6 +1687,7 @@
                 regDate: nowStr
             };
 
+            await saveProfilesToCloud();
             saveData();
             closeAuthModal();
             render();
@@ -1756,7 +1763,7 @@
             openProfile(friendUsername);
         }
 
-        function updateUserProfile() {
+        async function updateUserProfile() {
             const avatar = document.getElementById('newAvatarUrl').value.trim();
             const status = document.getElementById('newStatusText').value.trim();
             if (!userProfiles[currentUser.username]) {
@@ -1765,8 +1772,11 @@
             }
             if (avatar) userProfiles[currentUser.username].avatar = avatar;
             if (status) userProfiles[currentUser.username].status = status;
+
+            await saveProfilesToCloud();
             saveData();
             render();
+            alert('Профиль успешно обновлен!');
         }
 
         function closeWatchModal() {
@@ -1783,9 +1793,12 @@
             saveData();
             
             try {
-                const { data } = await _supabase.from('animes').select('*').eq('id', 2);
-                if (data && data.length > 0) {
-                    animeComments = JSON.parse(data[0].content || '{}');
+                const { data } = await _supabase.from('animes').select('*').in('id', [2, 4]);
+                if (data) {
+                    data.forEach(row => {
+                        if (row.id === 2) animeComments = JSON.parse(row.content || '{}');
+                        if (row.id === 4) userProfiles = { ...userProfiles, ...JSON.parse(row.content || '{}') };
+                    });
                 }
             } catch(e) {}
 
@@ -1820,6 +1833,7 @@
             const userFavCategory = currentUser ? ((userFavorites[currentUser.username] || {})[anime.id] || '') : '';
             const avgRating = calculateAverageRating(anime);
             const myCurrentStatus = currentUser && userAnimeStatuses[currentUser.username] ? (userAnimeStatuses[currentUser.username][anime.id] || '') : '';
+            const myRatingVal = currentUser && anime.ratings ? (anime.ratings[currentUser.username] || 'нет') : 'нет';
             
             const customFolders = currentUser ? (userCustomFolders[currentUser.username] || {}) : {};
             const screenshots = (anime.screenshots && anime.screenshots.length > 0) ? anime.screenshots : [anime.poster, anime.poster, anime.poster, anime.poster];
@@ -1921,8 +1935,8 @@
                         </div>
                     </div>
 
-                    <div style="background:var(--bg-input); padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:space-between;">
-                        <span>Оценка MAL: <b>⭐ ${avgRating}</b> (Ваша оценка: <span id="myRating">нет</span>)</span>
+                    <div style="background:var(--bg-input); padding:12px 16px; border-radius:12px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px;">
+                        <span>Реальный рейтинг: <b>⭐ ${avgRating}</b> (Ваша оценка: <span id="myRating">${myRatingVal}</span>)</span>
                         <div style="display:flex; gap:4px;">
                             ${[2,4,6,8,10].map(star => `<button style="background:none; border:none; color:#fbbf24; cursor:pointer; font-size:16px;" onclick="playSound(); rateAnime('${anime.id}', ${star})">⭐${star}</button>`).join('')}
                         </div>
@@ -1995,13 +2009,13 @@
             openWatchModal(id, season, currentIdx + 1, voice, quality);
         }
 
-        function rateAnime(id, score) {
+        async function rateAnime(id, score) {
             if (!currentUser) { openAuthModal('login'); return; }
             const anime = animeList.find(a => a.id === id);
             if (!anime) return;
             if (!anime.ratings) anime.ratings = {};
             anime.ratings[currentUser.username] = score;
-            saveData();
+            await saveAnimeToCloud();
             document.getElementById('myRating').innerText = score;
             openWatchModal(id);
         }
