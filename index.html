@@ -3,29 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Komi Anime Hub — Платформа нового поколения</title>
+    <title>Komi Anime Hub — Премиум платформа</title>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23FF454F'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --bg-base: #09090D;
-            --bg-card: #121219;
-            --bg-card-hover: #181820;
-            --bg-input: #1a1a26;
+            --bg-card: #14141B;
+            --bg-card-hover: #1C1C26;
+            --bg-input: #1C1C26;
             --primary: #FF454F;
             --primary-hover: #E03E46;
             --accent: #FF454F;
             --text-main: #F5F5F7;
             --text-muted: #92929F;
-            --border: #25252F;
-            --glow: rgba(255, 69, 79, 0.35);
+            --border: #252530;
+            --glow: rgba(255, 69, 79, 0.3);
         }
 
-        body.theme-purple { --primary: #8B3DFF; --primary-hover: #722fe6; --accent: #B88AFF; --glow: rgba(139, 61, 255, 0.45); }
-        body.theme-mint { --primary: #10B981; --primary-hover: #059669; --accent: #6EE7B7; --glow: rgba(16, 185, 129, 0.45); }
-        body.theme-blue { --primary: #3B82F6; --primary-hover: #2563EB; --accent: #93C5FD; --glow: rgba(59, 130, 246, 0.45); }
-        body.theme-gold { --primary: #F59E0B; --primary-hover: #D97706; --accent: #FDE68A; --glow: rgba(245, 158, 11, 0.45); }
+        body.theme-purple { --primary: #8B3DFF; --primary-hover: #722fe6; --accent: #B88AFF; --glow: rgba(139, 61, 255, 0.35); }
+        body.theme-mint { --primary: #10B981; --primary-hover: #059669; --accent: #6EE7B7; --glow: rgba(16, 185, 129, 0.35); }
+        body.theme-blue { --primary: #3B82F6; --primary-hover: #2563EB; --accent: #93C5FD; --glow: rgba(59, 130, 246, 0.35); }
+        body.theme-gold { --primary: #F59E0B; --primary-hover: #D97706; --accent: #FDE68A; --glow: rgba(245, 158, 11, 0.35); }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: var(--bg-base); }
@@ -59,22 +59,16 @@
             to { opacity: 1; transform: scale(1); }
         }
 
-        @keyframes neonGlow {
-            0% { box-shadow: 0 0 10px var(--glow); }
-            50% { box-shadow: 0 0 20px var(--glow); }
-            100% { box-shadow: 0 0 10px var(--glow); }
-        }
-
         @keyframes floatUp {
             0% { transform: translateY(0px) scale(0.5); opacity: 1; }
             100% { transform: translateY(-350px) scale(1.4); opacity: 0; }
         }
 
-        /* 1. Верхнее меню */
+        /* Header */
         header {
-            background: rgba(11, 11, 16, 0.9);
+            background: rgba(9, 9, 13, 0.85);
             backdrop-filter: blur(16px);
-            border-bottom: 1px solid rgba(37, 37, 47, 0.6);
+            border-bottom: 1px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 100;
@@ -169,7 +163,7 @@
             max-width: 1600px; margin: 0 auto; padding: 30px 40px; flex: 1; width: 100%;
         }
 
-        /* 4. Блок друзей (компактный и аккуратный) */
+        /* Right Sidebar (Friends & Online) */
         .right-sidebar {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
             padding: 18px; height: fit-content; position: sticky; top: 85px; display: flex; flex-direction: column; gap: 18px;
@@ -183,98 +177,33 @@
             border-radius: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
         }
         .sidebar-user-item:hover { background: var(--bg-card-hover); border-color: var(--border); }
-        .sidebar-user-avatar { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; background: var(--primary); }
+        .sidebar-user-avatar { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; background: var(--primary); border: 1px solid var(--border); }
 
         main { width: 100%; animation: fadeInUp 0.2s ease; }
 
-        /* 2. Главный баннер */
+        /* Home & Catalog Styles */
         .hero-slider-container {
-            position: relative;
-            border-radius: 24px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            margin-bottom: 35px;
-            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9);
-            background: var(--bg-card);
+            position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--border);
+            margin-bottom: 35px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.9); background: var(--bg-card);
         }
-
         .hero-slide {
-            display: none;
-            background-size: cover;
-            background-position: center;
-            padding: 60px 70px;
-            min-height: 500px;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
+            display: none; background-size: cover; background-position: center; padding: 60px 70px;
+            min-height: 500px; flex-direction: column; justify-content: center; position: relative;
         }
-
-        .hero-slide.active {
-            display: flex;
-            animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-
+        .hero-slide.active { display: flex; animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .hero-slide::before {
-            content: '';
-            position: absolute;
-            inset: 0;
+            content: ''; position: absolute; inset: 0;
             background: linear-gradient(90deg, #09090D 35%, rgba(9, 9, 13, 0.85) 60%, rgba(9, 9, 13, 0.4) 100%),
                         radial-gradient(circle at top right, rgba(255, 69, 79, 0.15), transparent 60%);
             z-index: 1;
         }
-
-        .hero-slide > * {
-            position: relative;
-            z-index: 2;
-        }
-
-        .hero-slide h1 {
-            font-size: 48px;
-            font-weight: 800;
-            max-width: 600px;
-            margin-bottom: 14px;
-            line-height: 1.1;
-            color: #FFFFFF;
-            letter-spacing: -1px;
-        }
-
-        .hero-slide p {
-            color: var(--text-muted);
-            font-size: 14px;
-            max-width: 520px;
-            margin-bottom: 24px;
-            line-height: 1.6;
-        }
-
-        .hero-meta {
-            display: flex;
-            gap: 10px;
-            align-items: center;
-            font-size: 12px;
-            font-weight: 600;
-            color: var(--text-muted);
-            margin-bottom: 18px;
-            flex-wrap: wrap;
-        }
-
-        /* Компактные теги */
-        .hero-meta span {
-            background: rgba(255, 255, 255, 0.05);
-            backdrop-filter: blur(10px);
-            padding: 5px 12px;
-            border-radius: 8px;
-            color: var(--text-main);
-            border: 1px solid var(--border);
-        }
-
-        .hero-buttons {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            flex-wrap: wrap;
-        }
-
-        /* Красная кнопка Watch / Смотреть сейчас */
+        .hero-slide > * { position: relative; z-index: 2; }
+        .hero-slide h1 { font-size: 48px; font-weight: 800; max-width: 600px; margin-bottom: 14px; line-height: 1.1; color: #FFFFFF; letter-spacing: -1px; }
+        .hero-slide p { color: var(--text-muted); font-size: 14px; max-width: 520px; margin-bottom: 24px; line-height: 1.6; }
+        .hero-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 18px; flex-wrap: wrap; }
+        .hero-meta span { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 5px 12px; border-radius: 8px; color: var(--text-main); border: 1px solid var(--border); }
+        .hero-buttons { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+        
         .btn-glow {
             background: var(--primary); color: white; border: none; padding: 12px 26px; border-radius: 12px;
             font-weight: 700; font-size: 13px; cursor: pointer; box-shadow: 0 4px 20px var(--glow);
@@ -282,7 +211,6 @@
         }
         .btn-glow:hover { background: var(--primary-hover); transform: translateY(-1px); box-shadow: 0 6px 25px var(--glow); }
 
-        /* Остальные кнопки — тёмные */
         .btn-glow-secondary {
             background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 12px 26px; border-radius: 12px;
             font-weight: 700; font-size: 13px; cursor: pointer; backdrop-filter: blur(10px);
@@ -291,53 +219,20 @@
         .btn-glow-secondary:hover { border-color: var(--text-muted); background: var(--bg-card-hover); transform: translateY(-1px); }
 
         .hero-slider-arrow {
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            background: rgba(18, 18, 25, 0.8);
-            border: 1px solid var(--border);
-            color: white;
-            width: 44px;
-            height: 44px;
-            border-radius: 50%;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 10;
-            font-size: 16px;
-            backdrop-filter: blur(8px);
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20, 20, 27, 0.8);
+            border: 1px solid var(--border); color: white; width: 44px; height: 44px; border-radius: 50%;
+            cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 16px; backdrop-filter: blur(8px);
         }
         .hero-slider-arrow:hover { background: var(--primary); border-color: var(--primary); transform: translateY(-50%) scale(1.05); }
         .hero-arrow-prev { left: 20px; }
         .hero-arrow-next { right: 20px; }
-
-        .hero-dots {
-            position: absolute;
-            bottom: 24px;
-            right: 40px;
-            display: flex;
-            gap: 6px;
-            z-index: 10;
-        }
-        .hero-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
-            cursor: pointer;
-        }
-        .hero-dot.active {
-            width: 28px;
-            border-radius: 4px;
-            background: var(--primary);
-            box-shadow: 0 0 10px var(--glow);
-        }
+        .hero-dots { position: absolute; bottom: 24px; right: 40px; display: flex; gap: 6px; z-index: 10; }
+        .hero-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.2); cursor: pointer; }
+        .hero-dot.active { width: 28px; border-radius: 4px; background: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; margin-top: 30px; }
         .section-title { font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: var(--text-main); }
 
-        /* Карточки аниме (Плавное увеличение постера при наведении, скругление 16px-20px) */
         .anime-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 22px; }
         .anime-card {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
@@ -345,8 +240,6 @@
             display: flex; flex-direction: column; position: relative; animation: fadeInUp 0.3s ease;
         }
         .anime-card:hover { transform: translateY(-4px); border-color: rgba(255, 69, 79, 0.4); box-shadow: 0 12px 30px rgba(0,0,0,0.7); }
-        
-        /* Рейтинг в компактном полупрозрачном блоке под постером / поверх */
         .anime-rating-badge {
             position: absolute; top: 12px; left: 12px; background: rgba(9, 9, 13, 0.75); border: 1px solid var(--border);
             color: #fbbf24; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; z-index: 2; backdrop-filter: blur(6px);
@@ -354,68 +247,103 @@
         .anime-poster-box { position: relative; width: 100%; height: 310px; overflow: hidden; background: var(--bg-input); }
         .anime-poster { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .anime-card:hover .anime-poster { transform: scale(1.06); }
-        
         .anime-quick-view {
             position: absolute; inset: 0; background: rgba(9, 9, 13, 0.6); backdrop-filter: blur(4px);
             display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; z-index: 3;
         }
         .anime-card:hover .anime-quick-view { opacity: 1; }
-
-        /* Название и тип аниме расположить под постером */
         .anime-info { padding: 14px 16px; display: flex; flex-direction: column; gap: 4px; flex: 1; background: var(--bg-card); z-index: 2; }
         .anime-title { font-size: 14px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--text-main); }
         .anime-meta-card { font-size: 12px; color: var(--text-muted); display: flex; justify-content: space-between; }
-
         .empty-state { grid-column: 1 / -1; text-align: center; padding: 50px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border); }
 
-        .profile-container { max-width: 1250px; margin: 0 auto; width: 100%; animation: fadeInUp 0.2s ease; }
+        /* ========================================================== */
+        /* ПРЕМИУМ ДИЗАЙН ПРОФИЛЯ (Согласно заданию)                   */
+        /* ========================================================== */
+        .profile-container { max-width: 1350px; margin: 0 auto; width: 100%; animation: fadeInUp 0.25s ease; display: flex; flex-direction: column; gap: 26px; }
+        
+        /* Карточка профиля (Шапка) */
         .profile-header-card {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 26px;
-            display: grid; grid-template-columns: 180px 1fr; gap: 26px; margin-bottom: 22px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 32px;
+            display: grid; grid-template-columns: 190px 1fr; gap: 32px; box-shadow: 0 15px 40px rgba(0,0,0,0.5);
             position: relative; overflow: hidden;
         }
         .profile-header-card::after {
-            content: ''; position: absolute; top: 0; right: 0; width: 180px; height: 180px;
-            background: radial-gradient(circle, var(--glow) 0%, transparent 70%); pointer-events: none; opacity: 0.5;
+            content: ''; position: absolute; top: 0; right: 0; width: 220px; height: 220px;
+            background: radial-gradient(circle, var(--glow) 0%, transparent 70%); pointer-events: none; opacity: 0.6;
         }
-        .profile-avatar-box { width: 180px; height: 240px; border-radius: 14px; object-fit: cover; border: 1px solid var(--border); background: var(--bg-input); }
-        .profile-info-grid { display: flex; flex-direction: column; gap: 10px; }
-        .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .profile-name-row h2 { font-size: 22px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 10px; }
+        .profile-avatar-box {
+            width: 190px; height: 230px; border-radius: 16px; object-fit: cover; border: 1px solid var(--border); background: var(--bg-input);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.6); transition: transform 0.3s ease, border-color 0.3s ease;
+        }
+        .profile-avatar-box:hover { transform: scale(1.02); border-color: var(--primary); }
+        .profile-info-grid { display: flex; flex-direction: column; gap: 14px; z-index: 2; }
+        .profile-name-row { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 14px; }
+        .profile-name-row h2 { font-size: 26px; font-weight: 800; color: var(--text-main); display: flex; align-items: center; gap: 12px; letter-spacing: -0.5px; }
         
-        .profile-stats-bar {
-            background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
-            display: flex; overflow-x: auto; margin-bottom: 22px; box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+        .profile-badges-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+        .profile-badge-item {
+            background: rgba(255, 69, 79, 0.1); border: 1px solid rgba(255, 69, 79, 0.25); color: var(--primary);
+            padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;
         }
-        .profile-stat-tab {
-            flex: 1; min-width: 100px; padding: 12px 8px; text-align: center; cursor: pointer; border-right: 1px solid var(--border);
-            background: var(--bg-card); font-size: 12px; font-weight: 700; color: var(--text-muted); display: flex; flex-direction: column; gap: 3px;
+        .profile-badge-level {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid var(--border); color: var(--text-main);
+            padding: 5px 12px; border-radius: 10px; font-size: 12px; font-weight: 700;
         }
-        .profile-stat-tab:last-child { border-right: none; }
-        .profile-stat-tab:hover { background: var(--bg-card-hover); color: white; }
-        .profile-stat-tab.active { background: var(--primary); color: white; }
-        .profile-stat-tab .num { font-size: 15px; font-weight: 800; }
+        .profile-reg-date { color: var(--text-muted); font-size: 11px; font-weight: 500; opacity: 0.8; }
 
-        .profile-layout-grid { display: grid; grid-template-columns: 1fr 280px; gap: 22px; align-items: start; }
-        .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
-        .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+        .profile-settings-box {
+            background: var(--bg-input); padding: 16px; border-radius: 14px; border: 1px solid var(--border); margin-top: 4px;
+            display: flex; flex-direction: column; gap: 10px;
+        }
+        .profile-settings-box h4 { font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 2px; }
+
+        /* Статистика: 6 интерактивных карточек */
+        .profile-stats-grid {
+            display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px;
+        }
+        @media(max-width: 1200px) { .profile-stats-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media(max-width: 768px) { .profile-stats-grid { grid-template-columns: repeat(2, 1fr); } }
+
+        .profile-stat-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px 14px;
+            display: flex; flex-direction: column; gap: 8px; cursor: pointer; position: relative; overflow: hidden;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+        .profile-stat-card:hover { background: var(--bg-card-hover); border-color: var(--text-muted); transform: translateY(-2px); }
+        .profile-stat-card.active {
+            background: linear-gradient(135deg, rgba(255, 69, 79, 0.15), var(--bg-card));
+            border-color: var(--primary); box-shadow: 0 8px 25px var(--glow);
+        }
+        .profile-stat-card .stat-icon { font-size: 20px; }
+        .profile-stat-card .stat-num { font-size: 22px; font-weight: 800; color: var(--text-main); letter-spacing: -0.5px; }
+        .profile-stat-card .stat-label { font-size: 12px; font-weight: 600; color: var(--text-muted); }
+        .profile-stat-card.active .stat-label { color: var(--primary); }
+
+        /* Основной контент профиля и боковое меню */
+        .profile-layout-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+        .profile-main-content { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .profile-sidebar-menu { background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 20px; display: flex; flex-direction: column; gap: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        
         .profile-menu-item {
-            background: var(--bg-input); border: 1px solid var(--border); padding: 10px 12px; border-radius: 10px;
-            font-size: 12px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white;
+            background: var(--bg-input); border: 1px solid var(--border); padding: 12px 14px; border-radius: 12px;
+            font-size: 13px; font-weight: 600; cursor: pointer; display: flex; justify-content: space-between; align-items: center; color: white;
         }
-        .profile-menu-item:hover { border-color: var(--text-muted); background: var(--bg-card-hover); }
+        .profile-menu-item:hover { border-color: var(--primary); background: var(--bg-card-hover); }
 
-        .profile-anime-table { width: 100%; border-collapse: collapse; margin-top: 12px; }
-        .profile-anime-table th, .profile-anime-table td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 12px; }
+        .profile-anime-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+        .profile-anime-table th, .profile-anime-table td { padding: 12px 10px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         .profile-anime-table th { color: var(--text-muted); font-weight: 600; }
         .profile-anime-table tr:hover { background: var(--bg-card-hover); }
 
-        .profile-wall-section { margin-top: 22px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; }
-        .wall-message-item { background: var(--bg-input); border: 1px solid var(--border); padding: 10px 14px; border-radius: 12px; margin-bottom: 8px; display: flex; flex-direction: column; gap: 4px; }
-        .wall-message-author { font-size: 12px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 8px; cursor: pointer; }
-        .wall-message-author img { width: 18px; height: 18px; border-radius: 50%; object-fit: cover; }
-        .wall-message-text { font-size: 12px; color: var(--text-muted); }
+        /* Стена сообщений */
+        .profile-wall-section { margin-top: 28px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px; padding: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.4); }
+        .wall-message-item { background: var(--bg-input); border: 1px solid var(--border); padding: 14px 16px; border-radius: 14px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .wall-message-author { font-size: 13px; font-weight: 700; color: var(--text-main); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .wall-message-author img { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; border: 1px solid var(--border); }
+        .wall-message-text { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
 
+        /* Modals & other elements */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(12px);
@@ -437,13 +365,13 @@
 
         .form-group { margin-bottom: 16px; }
         .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--text-muted); margin-bottom: 6px; }
-        .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: white; font-size: 13px; outline: none; }
-        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--glow); }
+        .form-control { width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 11px 14px; color: white; font-size: 13px; outline: none; }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow); }
         textarea.form-control { resize: vertical; min-height: 80px; }
 
-        .btn-secondary { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 12px; }
+        .btn-secondary { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 9px 16px; border-radius: 12px; cursor: pointer; font-weight: 600; font-size: 12px; }
         .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--text-muted); }
-        .btn-danger { background: rgba(255, 69, 79, 0.1); color: #FF454F; border: 1px solid rgba(255, 69, 79, 0.25); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; }
+        .btn-danger { background: rgba(255, 69, 79, 0.1); color: #FF454F; border: 1px solid rgba(255, 69, 79, 0.25); padding: 7px 14px; border-radius: 10px; cursor: pointer; font-size: 12px; font-weight: 600; }
         .btn-danger:hover { background: rgba(255, 69, 79, 0.2); }
 
         .catalog-filters-box {
@@ -921,7 +849,8 @@
 
         let currentView = 'home';
         let profileTargetUser = null;
-        let profileActiveTab = 'Смотрю';
+        let profileActiveTab = 'Просмотрено';
+        let profileCollectionSearchQuery = '';
         let catalogFilterGenre = 'Все';
         let catalogFilterYear = 'Все';
         let catalogFilterType = 'Все';
@@ -1460,6 +1389,7 @@
             });
         }
 
+        /* Отрендерить полностью переработанную страницу профиля */
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
@@ -1473,7 +1403,7 @@
             const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
 
             const userStatuses = userAnimeStatuses[username] || {};
-            const statsCounts = { 'Смотрю': 0, 'В планах': 0, 'Просмотрено': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
+            const statsCounts = { 'Просмотрено': 0, 'В планах': 0, 'Смотрю': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
             
             const customFolders = userCustomFolders[username] || {};
             const customFolderNames = Object.keys(customFolders);
@@ -1515,103 +1445,156 @@
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
             const wallMessages = profileWalls[username] || [];
 
+            // Фильтрация личной коллекции по поиску
+            const searchedList = listForTab.filter(an => {
+                if (!profileCollectionSearchQuery) return true;
+                return an.title.toLowerCase().includes(profileCollectionSearchQuery.toLowerCase());
+            });
+
             container.innerHTML = `
                 <div class="profile-container">
+                    <!-- Шапка профиля -->
                     <div class="profile-header-card">
                         <img src="${p.avatar}" class="profile-avatar-box" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
-                                <h2>👤 ${username} <span style="font-size:11px; color:#34d399; background:rgba(16,185,129,0.1); padding:2px 8px; border-radius:10px;">● Онлайн</span></h2>
+                                <h2>👤 ${username} <span style="font-size:11px; color:#34d399; background:rgba(16,185,129,0.1); padding:3px 10px; border-radius:20px; border:1px solid rgba(16,185,129,0.3);">● Онлайн</span></h2>
                                 ${!isMe && currentUser ? `
-                                    ${amIFriend ? `<button class="btn-danger" style="padding:6px 12px; font-size:11px;" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                     `<button class="btn-glow" style="padding:6px 12px; font-size:11px;" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
+                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
-                            <div style="display:flex; gap:10px; align-items:center;">
-                                <span style="background:var(--primary); color:white; padding:3px 10px; border-radius:6px; font-size:11px; font-weight:700;">Уровень ${calculatedLevel} ⚡</span>
-                                <span style="color:var(--text-muted); font-size:12px;">Статус: <b>${p.status}</b></span>
+                            
+                            <div class="profile-badges-row">
+                                <div class="profile-badge-level">Уровень ${calculatedLevel} ⚡</div>
+                                <div class="profile-badge-item">🎯 Статус: ${p.status}</div>
                             </div>
-                            <p style="color:var(--text-muted); font-size:12px;">Регистрация: <b>${p.regDate || '05 ноября 2026 года'}</b></p>
+
+                            <div class="profile-reg-date">Дата регистрации: <b>${p.regDate || '05 ноября 2026 года'}</b></div>
 
                             ${isMe ? `
-                            <div style="background:var(--bg-input); padding:10px; border-radius:10px; margin-top:6px;">
-                                <h4 style="font-size:12px; margin-bottom:6px;">Настройки профиля</h4>
-                                <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                                    <input type="url" id="newAvatarUrl" class="form-control" placeholder="Аватар URL..." value="${p.avatar}" style="flex:1;">
-                                    <input type="text" id="newStatusText" class="form-control" placeholder="Статус..." value="${p.status}" style="flex:1;">
-                                    <button class="btn-glow" style="padding: 8px 14px;" onclick="playSound(); updateUserProfile()">Сохранить</button>
+                            <div class="profile-settings-box">
+                                <h4>⚙️ Настройки профиля</h4>
+                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                    <input type="url" id="newAvatarUrl" class="form-control" placeholder="URL аватара..." value="${p.avatar}" style="flex:2; min-width:200px;">
+                                    <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." value="${p.status}" style="flex:2; min-width:150px;">
+                                    <button class="btn-glow" style="padding: 10px 20px;" onclick="playSound(); updateUserProfile()">Сохранить</button>
                                 </div>
                             </div>
                             ` : ''}
                         </div>
                     </div>
 
-                    <div class="profile-stats-bar">
-                        ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено', 'Любимые', ...customFolderNames].map(tab => `
-                            <div class="profile-stat-tab ${profileActiveTab === tab ? 'active' : ''}" onclick="playSound(); profileActiveTab='${tab}'; render()">
-                                <span class="num">${tab === 'Любимые' ? favoritesCount : (statsCounts[tab] || (customFolders[tab] ? customFolders[tab].length : 0))}</span>
-                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tab.toUpperCase()}</span>
-                            </div>
-                        `).join('')}
+                    <!-- Статистика: 6 интерактивных карточек -->
+                    <div class="profile-stats-grid">
+                        <div class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; render()">
+                            <div class="stat-icon">👁</div>
+                            <div class="stat-num">${statsCounts['Просмотрено']}</div>
+                            <div class="stat-label">Просмотрено</div>
+                        </div>
+                        <div class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" onclick="playSound(); profileActiveTab='В планах'; render()">
+                            <div class="stat-icon">📺</div>
+                            <div class="stat-num">${statsCounts['В планах']}</div>
+                            <div class="stat-label">В планах</div>
+                        </div>
+                        <div class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Смотрю'; render()">
+                            <div class="stat-icon">🎬</div>
+                            <div class="stat-num">${statsCounts['Смотрю']}</div>
+                            <div class="stat-label">Смотрю</div>
+                        </div>
+                        <div class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Отложено'; render()">
+                            <div class="stat-icon">⏭</div>
+                            <div class="stat-num">${statsCounts['Отложено']}</div>
+                            <div class="stat-label">Отложено</div>
+                        </div>
+                        <div class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Брошено'; render()">
+                            <div class="stat-icon">❌</div>
+                            <div class="stat-num">${statsCounts['Брошено']}</div>
+                            <div class="stat-label">Брошено</div>
+                        </div>
+                        <div class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Любимые'; render()">
+                            <div class="stat-icon">❤️</div>
+                            <div class="stat-num">${favoritesCount}</div>
+                            <div class="stat-label">Любимое</div>
+                        </div>
                     </div>
 
-                    ${isMe ? `
-                        <div style="display:flex; gap:8px; margin-bottom:20px; align-items:center;">
-                            <input type="text" id="newFolderNameInput" class="form-control" placeholder="Новая папка..." style="max-width:220px;">
-                            <button class="btn-secondary" onclick="playSound(); createCustomFolder()">+ Создать папку</button>
+                    <!-- Кастомные папки если есть -->
+                    ${customFolderNames.length > 0 || isMe ? `
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:14px 18px; border-radius:16px; border:1px solid var(--border);">
+                            <span style="font-size:12px; font-weight:700; color:var(--text-muted);">Пользовательские папки:</span>
+                            ${customFolderNames.map(fname => `
+                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab='${fname}'; render()">📁 ${fname} (${customFolders[fname].length})</button>
+                            `).join('')}
+                            ${isMe ? `
+                                <div style="display:flex; gap:6px; margin-left:auto; align-items:center;">
+                                    <input type="text" id="newFolderNameInput" class="form-control" placeholder="Новая папка..." style="max-width:160px; padding:7px 10px; font-size:12px;">
+                                    <button class="btn-secondary" style="padding:7px 12px; font-size:12px;" onclick="playSound(); createCustomFolder()">+ Папка</button>
+                                </div>
+                            ` : ''}
                         </div>
                     ` : ''}
 
+                    <!-- Сетка аниме и боковое меню -->
                     <div class="profile-layout-grid">
                         <div class="profile-main-content">
-                            <h3 style="margin-bottom: 12px; font-size:15px;">Список: ${profileActiveTab}</h3>
-                            ${listForTab.length === 0 ? `
-                                <div class="empty-state" style="padding:25px;"><h3>В этой категории пусто</h3></div>
-                            ` : `
-                                <table class="profile-anime-table">
-                                    <thead><tr><th>Постер</th><th>Название</th><th>Оценка</th><th>Действие</th></tr></thead>
-                                    <tbody>
-                                        ${listForTab.map(an => `
-                                            <tr style="cursor:pointer;" onclick="playSound(); openWatchModal('${an.id}')">
-                                                <td style="width:50px;"><img src="${an.poster}" style="width:36px; height:50px; object-fit:cover; border-radius:6px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'"></td>
-                                                <td><b>${an.title}</b><div style="font-size:10px; color:var(--text-muted);">${(an.genres||[]).join(', ')}</div></td>
-                                                <td><span style="color:#fbbf24; font-weight:700;">⭐ ${an.shikiRating || '8.5'}</span></td>
-                                                <td><button class="btn-secondary" style="padding:3px 8px; font-size:10px;">Смотреть</button></td>
-                                            </tr>
-                                        `).join('')}
-                                    </tbody>
-                                </table>
-                            `}
-
-                            <div class="profile-wall-section">
-                                <h3 style="font-size:14px; margin-bottom:10px;">💬 Стена сообщений</h3>
-                                <div style="display:flex; gap:8px; margin-bottom:12px;">
-                                    <input type="text" id="wallMessageInput" class="form-control" placeholder="Сообщение на стену...">
-                                    <button class="btn-glow" onclick="playSound(); postToProfileWall('${username}')">Отпр.</button>
-                                </div>
-                                <div style="display:flex; flex-direction:column; gap:6px;">
-                                    ${wallMessages.length === 0 ? `<div style="color:var(--text-muted); font-size:11px; text-align:center; padding:8px;">На стене нет сообщений</div>` : wallMessages.map(m => {
-                                        const senderAvatar = (userProfiles[m.author] || {}).avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.author}`;
-                                        return `
-                                            <div class="wall-message-item">
-                                                <div class="wall-message-author" onclick="playSound(); openProfile('${m.author}')">
-                                                    <img src="${senderAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                                                    <span>${m.author}</span>
-                                                    <span style="font-size:9px; color:var(--text-muted); margin-left:auto;">${m.time}</span>
-                                                </div>
-                                                <div class="wall-message-text">${m.text}</div>
-                                            </div>
-                                        `;
-                                    }).join('')}
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+                                <h3 style="font-size:18px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${profileActiveTab}</span></h3>
+                                <div style="position:relative; width: 220px;">
+                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${profileCollectionSearchQuery}" oninput="profileCollectionSearchQuery=this.value; render()" style="padding: 8px 12px; font-size: 12px;">
                                 </div>
                             </div>
+
+                            ${searchedList.length === 0 ? `
+                                <div class="empty-state">
+                                    <div style="font-size:32px; margin-bottom:10px;">📭</div>
+                                    <h3 style="font-size:15px; margin-bottom:6px;">В этой категории пока пусто</h3>
+                                    <p style="font-size:12px; color:var(--text-muted);">Добавляйте аниме из каталога или при просмотре.</p>
+                                </div>
+                            ` : `
+                                <div class="anime-grid">
+                                    ${searchedList.map(an => renderCard(an)).join('')}
+                                </div>
+                            `}
                         </div>
 
+                        <!-- Боковая панель профиля -->
                         <div class="profile-sidebar-menu">
-                            <h3 style="font-size:13px; margin-bottom:6px;">📌 Статистика</h3>
+                            <h3 style="font-size:14px; font-weight:700; margin-bottom:4px;">📌 Общая статистика</h3>
+                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span>👁 Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
+                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Любимые'; render()"><span>❤️ Любимое</span> <b>${favoritesCount}</b></div>
                             <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
                             <div class="profile-menu-item"><span>💬 Комментарии</span> <b>${userCommentsCount}</b></div>
-                            <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${favoritesCount}</b></div>
+                        </div>
+                    </div>
+
+                    <!-- Стена сообщений -->
+                    <div class="profile-wall-section">
+                        <h3 style="font-size:16px; font-weight:800; margin-bottom:14px;">💬 Стена сообщений</h3>
+                        <div style="display:flex; gap:10px; margin-bottom:18px;">
+                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall('${username}')">
+                            <button class="btn-glow" style="padding: 10px 22px;" onclick="playSound(); postToProfileWall('${username}')">Отпр.</button>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:8px;">
+                            ${wallMessages.length === 0 ? `
+                                <div style="color:var(--text-muted); font-size:12px; text-align:center; padding:20px; background:var(--bg-input); border-radius:12px; border:1px dashed var(--border);">
+                                    На стене пока нет сообщений. Будьте первыми!
+                                </div>
+                            ` : wallMessages.map((m, mIdx) => {
+                                const senderAvatar = (userProfiles[m.author] || {}).avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.author}`;
+                                const canDelete = currentUser && (currentUser.username === username || currentUser.username === m.author || currentUser.username.toLowerCase() === 'admin');
+                                return `
+                                    <div class="wall-message-item">
+                                        <div class="wall-message-author" onclick="playSound(); openProfile('${m.author}')">
+                                            <img src="${senderAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                            <span>${m.author}</span>
+                                            <span style="font-size:10px; color:var(--text-muted); margin-left:auto; font-weight:normal;">${m.time}</span>
+                                            ${canDelete ? `<button class="btn-danger" style="padding:2px 6px; font-size:10px; margin-left:6px;" onclick="playSound(); deleteWallMessage('${username}', ${mIdx})">🗑️</button>` : ''}
+                                        </div>
+                                        <div class="wall-message-text">${m.text}</div>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     </div>
                 </div>
@@ -1621,24 +1604,23 @@
         function createCustomFolder() {
             if (!currentUser) return;
             const input = document.getElementById('newFolderNameInput');
-            const name = input.value.trim();
+            const name = input ? input.value.trim() : '';
             if (!name) return;
 
             if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
             if (!userCustomFolders[currentUser.username][name]) {
                 userCustomFolders[currentUser.username][name] = [];
                 saveData();
-                input.value = '';
                 render();
             } else {
                 alert('Папка уже существует!');
             }
         }
 
-        function postToProfileWall(profileOwner) {
+        async function postToProfileWall(profileOwner) {
             if (!currentUser) { openAuthModal('login'); return; }
             const input = document.getElementById('wallMessageInput');
-            const text = input.value.trim();
+            const text = input ? input.value.trim() : '';
             if (!text) return;
 
             if (!profileWalls[profileOwner]) profileWalls[profileOwner] = [];
@@ -1657,6 +1639,15 @@
             render();
         }
 
+        async function deleteWallMessage(profileOwner, msgIndex) {
+            if (!confirm('Удалить это сообщение?')) return;
+            if (profileWalls[profileOwner]) {
+                profileWalls[profileOwner].splice(msgIndex, 1);
+                saveData();
+                render();
+            }
+        }
+
         function renderCard(anime) {
             const shiki = anime.shikiRating || '8.5';
             const gText = (anime.genres || [anime.genre || '']).join(', ');
@@ -1666,7 +1657,7 @@
                     <div class="anime-poster-box">
                         <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                         <div class="anime-quick-view">
-                            <span class="btn-glow" style="padding: 6px 14px; font-size:11px;">▶ Быстрый просмотр</span>
+                            <span class="btn-glow" style="padding: 6px 14px; font-size:11px;">▶ Смотреть</span>
                         </div>
                     </div>
                     <div class="anime-info">
@@ -1754,6 +1745,7 @@
         }
 
         async function removeFriend(friendUsername) {
+            if (!confirm(`Удалить ${friendUsername} из друзей?`)) return;
             if (!currentUser) return;
             const myName = currentUser.username;
             if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
@@ -2665,7 +2657,7 @@
 
                     <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:8px 12px; border-radius:10px;">
                         <span style="font-size:11px; color:var(--text-muted);">Статус:</span>
-                        ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено'].map(st => `
+                        ${['Просмотрено', 'В планах', 'Смотрю', 'Отложено', 'Брошено'].map(st => `
                             <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
                         `).join('')}
                     </div>
