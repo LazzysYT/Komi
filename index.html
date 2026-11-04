@@ -1981,7 +1981,7 @@
         }
         // ==========================================
 
-        // Исправленный поиск аниме через Jikan API с таймаутом и защитой от лимитов
+        // Исправленный поиск через стабильный публичный Shikimori API
         async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
             const resultsContainer = document.getElementById('apiSearchResultsList');
@@ -1991,50 +1991,56 @@
                 return;
             }
 
-            resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ищем в базе MyAnimeList...</div>';
+            resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ищем в базе Shikimori...</div>';
             resultsContainer.style.display = 'block';
 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-                const res = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=5`;
-                const response = await fetch(res, { signal: controller.signal });
+                const res = `https://shikimori.me/api/animes?search=${encodeURIComponent(query)}&limit=5`;
+                const response = await fetch(res, { 
+                    signal: controller.signal,
+                    headers: { 'User-Agent': 'KomiAnimeHub' }
+                });
                 clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    throw new Error(response.status === 429 ? 'Превышен лимит запросов. Подождите несколько секунд.' : `Ошибка сервера: ${response.status}`);
+                    throw new Error(`Ошибка сервера: ${response.status}`);
                 }
 
                 const data = await response.json();
 
-                if (data.data && data.data.length > 0) {
-                    resultsContainer.innerHTML = data.data.map(anime => `
-                        <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px;" 
-                             onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'"
-                             onclick="fillFormWithAnimeData(${JSON.stringify({
-                                 title: anime.title_english || anime.title,
-                                 poster: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url,
-                                 score: anime.score || 8.5,
-                                 year: anime.year || (anime.aired?.from ? new Date(anime.aired.from).getFullYear() : '2026'),
-                                 type: anime.type || 'Сериал',
-                                 synopsis: anime.synopsis || '',
-                                 genres: (anime.genres || []).map(g => g.name),
-                                 images: [anime.images?.jpg?.large_image_url, anime.images?.jpg?.image_url].filter(Boolean)
-                             }).replace(/"/g, '&quot;')})">
-                            <img src="${anime.images?.jpg?.image_url}" style="width: 30px; height: 40px; object-fit: cover; border-radius: 4px;">
-                            <div style="font-size: 13px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                ${anime.title} (${anime.year || 'N/A'})
+                if (data && data.length > 0) {
+                    resultsContainer.innerHTML = data.map(anime => {
+                        const posterUrl = anime.image?.original ? `https://shikimori.me${anime.image.original}` : 'https://cdn.myanimelist.net/images/anime/1122/96435.jpg';
+                        const posterPreview = anime.image?.preview ? `https://shikimori.me${anime.image.preview}` : posterUrl;
+                        return `
+                            <div style="display: flex; align-items: center; gap: 10px; padding: 6px 10px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 8px;" 
+                                 onmouseover="this.style.background='rgba(255,255,255,0.05)'" onmouseout="this.style.background='transparent'"
+                                 onclick="fillFormWithAnimeData(${JSON.stringify({
+                                     title: anime.russian || anime.name,
+                                     poster: posterUrl,
+                                     score: anime.score || '8.5',
+                                     year: anime.aired_on ? anime.aired_on.split('-')[0] : '2026',
+                                     type: anime.kind === 'movie' ? 'Фильм' : 'Сериал',
+                                     synopsis: anime.description || '',
+                                     genres: [],
+                                     images: [posterUrl]
+                                 }).replace(/"/g, '&quot;')})">
+                                <img src="${posterPreview}" style="width: 30px; height: 40px; object-fit: cover; border-radius: 4px;">
+                                <div style="font-size: 13px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                                    ${anime.russian || anime.name} (${anime.aired_on ? anime.aired_on.split('-')[0] : 'N/A'})
+                                </div>
+                                <span style="font-size: 11px; color: #fbbf24;">⭐ ${anime.score || 'N/A'}</span>
                             </div>
-                            <span style="font-size: 11px; color: #fbbf24;">⭐ ${anime.score || 'N/A'}</span>
-                        </div>
-                    `).join('');
+                        `;
+                    }).join('');
                 } else {
                     resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ничего не найдено.</div>';
                 }
             } catch(e) {
-                const errorMsg = e.name === 'AbortError' ? 'Время ожидания запроса истекло.' : (e.message || 'Ошибка соединения с API.');
-                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">${errorMsg}</div>`;
+                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Не удалось загрузить данные. Проверьте соединение.</div>`;
             }
         }
 
@@ -2059,34 +2065,35 @@
             alert(`Данные аниме "${animeData.title}" успешно загружены в форму!`);
         }
 
-        // Исправленный импорт топа сезона с защитой от лимитов
+        // Исправленный импорт топа с надежного источника
         async function importTopSeasonalAnime() {
             const resultsContainer = document.getElementById('apiSearchResultsList');
             resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем топ аниме...</div>';
             resultsContainer.style.display = 'block';
 
             try {
-                const res = await fetch('https://api.jikan.moe/v4/top/anime?limit=1');
-                if (!res.ok) {
-                    throw new Error(res.status === 429 ? 'Превышен лимит запросов. Подождите пару секунд.' : 'Ошибка сервера');
-                }
+                const res = await fetch('https://shikimori.me/api/animes?order=popularity&limit=1', {
+                    headers: { 'User-Agent': 'KomiAnimeHub' }
+                });
+                if (!res.ok) throw new Error('Ошибка сервера');
 
                 const data = await res.json();
-                if (data.data && data.data.length > 0) {
-                    const anime = data.data[0];
+                if (data && data.length > 0) {
+                    const anime = data[0];
+                    const posterUrl = anime.image?.original ? `https://shikimori.me${anime.image.original}` : 'https://cdn.myanimelist.net/images/anime/1122/96435.jpg';
                     fillFormWithAnimeData({
-                        title: anime.title_english || anime.title,
-                        poster: anime.images?.jpg?.large_image_url || anime.images?.jpg?.image_url,
-                        score: anime.score || 9.0,
-                        year: anime.year || '2026',
-                        type: anime.type || 'Сериал',
-                        synopsis: anime.synopsis || '',
-                        genres: (anime.genres || []).map(g => g.name),
-                        images: [anime.images?.jpg?.large_image_url].filter(Boolean)
+                        title: anime.russian || anime.name,
+                        poster: posterUrl,
+                        score: anime.score || '9.0',
+                        year: anime.aired_on ? anime.aired_on.split('-')[0] : '2026',
+                        type: anime.kind === 'movie' ? 'Фильм' : 'Сериал',
+                        synopsis: anime.description || '',
+                        genres: [],
+                        images: [posterUrl]
                     });
                 }
             } catch(e) {
-                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">${e.message || 'Не удалось загрузить топ сезона.'}</div>`;
+                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Не удалось загрузить топ сезона.</div>`;
             }
         }
 
