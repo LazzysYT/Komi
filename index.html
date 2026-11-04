@@ -361,7 +361,7 @@
 
         .anime-screenshots-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
         .screenshots-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 8px; }
-        .screenshot-thumb { width: 100%; height: 80px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
+        .screenshot-thumb { width: 100%; height: 90px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); cursor: pointer; transition: transform 0.2s ease, border-color 0.2s ease; }
         .screenshot-thumb:hover { transform: scale(1.05); border-color: var(--accent); box-shadow: 0 0 15px var(--glow); }
 
         .crunchy-episodes-section { background: var(--bg-card); border: 1px solid var(--border); border-radius: 18px; padding: 20px; }
@@ -535,7 +535,7 @@
         </div>
     </div>
 
-    <!-- Модальное окно Авторизации и Регистрации -->
+    <!-- Модальное окно Входа и Регистрации -->
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 400px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
@@ -604,16 +604,17 @@
             } catch(e) {}
         }
 
+        // Надежные ссылки на изображения с гарантированной стабильностью
         let defaultAnime = [
             {
                 id: 'anime_1',
                 title: 'Форма Голоса',
-                poster: 'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop',
+                poster: 'https://cdn.myanimelist.net/images/anime/1122/96435.jpg',
                 screenshots: [
-                    'https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1578632767115-351597cf2477?q=80&w=600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?q=80&w=600&auto=format&fit=crop',
-                    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop'
+                    'https://cdn.myanimelist.net/images/anime/1122/96435l.jpg',
+                    'https://cdn.myanimelist.net/images/anime/1567/104953.jpg',
+                    'https://cdn.myanimelist.net/images/anime/1255/104954.jpg',
+                    'https://cdn.myanimelist.net/images/anime/1865/104955.jpg'
                 ],
                 trailer: 'https://www.youtube.com/embed/9272MmqsjgY',
                 genres: ['Романтика', 'Драма'],
@@ -624,6 +625,25 @@
                     { season: 1, title: 'Фильм', voices: 'AniLibria, Jaskier', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
                 ],
                 ratings: { Admin: 9.8 }
+            },
+            {
+                id: 'anime_2',
+                title: 'Аой Асито',
+                poster: 'https://cdn.myanimelist.net/images/anime/1480/121730.jpg',
+                screenshots: [
+                    'https://cdn.myanimelist.net/images/anime/1480/121730l.jpg',
+                    'https://cdn.myanimelist.net/images/anime/1204/121731.jpg',
+                    'https://cdn.myanimelist.net/images/anime/1377/121732.jpg'
+                ],
+                trailer: 'https://www.youtube.com/embed/JtqIas3bYhg',
+                genres: ['Спорт', 'Комедия'],
+                year: '2022',
+                type: 'Сериал',
+                desc: 'История одаренного футбольного юноши, стремящегося к вершинам профессионального спорта.',
+                episodes: [
+                    { season: 1, title: 'Эпизод 1', voices: 'AniLibria', quality: '1080p', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' }
+                ],
+                ratings: { Admin: 8.9 }
             }
         ];
 
@@ -635,8 +655,8 @@
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || { 
-            'Admin': { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Владелец ⭐', regDate: '05 ноября 2026 года' },
-            'mellstroy': { avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=150&auto=format&fit=crop', status: 'Стример', regDate: '05 ноября 2026 года' }
+            'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Владелец ⭐', regDate: '05 ноября 2026 года' },
+            'mellstroy': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Mellstroy', status: 'Стример', regDate: '05 ноября 2026 года' }
         };
         let userFavorites = JSON.parse(localStorage.getItem('komi_favorites')) || {};
         let userWatchHistory = JSON.parse(localStorage.getItem('komi_history')) || {};
@@ -758,10 +778,10 @@
 
             if (onlineRows && onlineRows.length > 0) {
                 onlineContainer.innerHTML = onlineRows.map(u => {
-                    const p = userProfiles[u.username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop' };
+                    const p = userProfiles[u.username] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${u.username}` };
                     return `
                         <div class="sidebar-user-item" onclick="playSound(); openProfile('${u.username}')">
-                            <img src="${p.avatar}" class="sidebar-user-avatar" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'">
+                            <img src="${p.avatar}" class="sidebar-user-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                             <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${u.username}</span>
                         </div>
                     `;
@@ -774,11 +794,11 @@
                 const myFriends = userFriends[currentUser.username] || [];
                 if (myFriends.length > 0) {
                     friendsContainer.innerHTML = myFriends.map(f => {
-                        const p = userProfiles[f] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop' };
+                        const p = userProfiles[f] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${f}` };
                         const isOnline = onlineRows.some(row => row.username === f);
                         return `
                             <div class="sidebar-user-item" onclick="playSound(); openProfile('${f}')">
-                                <img src="${p.avatar}" class="sidebar-user-avatar" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'">
+                                <img src="${p.avatar}" class="sidebar-user-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                 <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
                                 <span style="width:8px; height:8px; border-radius:50%; background:${isOnline ? '#34d399' : '#64748b'};" title="${isOnline ? 'В сети' : 'Не в сети'}"></span>
                             </div>
@@ -831,10 +851,10 @@
             }
 
             if (currentUser) {
-                const p = userProfiles[currentUser.username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop' };
+                const p = userProfiles[currentUser.username] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}` };
                 area.innerHTML = `
                     <div class="user-pill" onclick="playSound(); openProfile('${currentUser.username}')">
-                        <img src="${p.avatar}" class="user-avatar-small" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'">
+                        <img src="${p.avatar}" class="user-avatar-small" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <span>${currentUser.username}</span>
                         <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; margin-left:5px;" title="Выйти">🚪</button>
                     </div>
@@ -1006,7 +1026,7 @@
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', 
+                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`, 
                 status: 'Элитный Отаку ⭐',
                 regDate: '05 ноября 2026 года'
             };
@@ -1054,7 +1074,7 @@
             container.innerHTML = `
                 <div class="profile-container">
                     <div class="profile-header-card">
-                        <img src="${p.avatar}" class="profile-avatar-box" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'">
+                        <img src="${p.avatar}" class="profile-avatar-box" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
                                 <h2>👤 ${username} <span style="font-size:12px; color:#34d399; background:rgba(16,185,129,0.15); padding:3px 10px; border-radius:12px;">● Онлайн</span></h2>
@@ -1083,6 +1103,26 @@
                         </div>
                     </div>
 
+                    <!-- ВИДИМЫЙ БЛОК ВХОДЯЩИХ ЗАЯВОК В ДРУЗЬЯ ДЛЯ САМОГО ПОЛЬЗОВАТЕЛЯ -->
+                    ${isMe && myRequests.length > 0 ? `
+                        <div style="background:var(--bg-card); border:1px solid var(--primary); padding:20px; border-radius:16px; margin-bottom:25px; box-shadow:0 0 20px var(--glow);">
+                            <h3 style="font-size:16px; margin-bottom:12px; color:var(--accent);">🔔 Входящие заявки в друзья (${myRequests.length})</h3>
+                            <div style="display:flex; flex-direction:column; gap:10px;">
+                                ${myRequests.map(req => `
+                                    <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-input); padding:10px 16px; border-radius:12px; border:1px solid var(--border);">
+                                        <div style="display:flex; align-items:center; gap:10px; font-weight:700;">
+                                            <span>👤 ${req} хочет добавить вас в друзья</span>
+                                        </div>
+                                        <div style="display:flex; gap:8px;">
+                                            <button class="btn-glow" style="padding:6px 16px; font-size:12px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
+                                            <button class="btn-danger" style="padding:6px 16px; font-size:12px;" onclick="playSound(); declineFriendRequest('${req}')">Отклонить</button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+                    ` : ''}
+
                     <div class="profile-stats-bar">
                         ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено', 'Любимые'].map(tab => `
                             <div class="profile-stat-tab ${profileActiveTab === tab ? 'active' : ''}" onclick="playSound(); profileActiveTab='${tab}'; render()">
@@ -1103,7 +1143,7 @@
                                     <tbody>
                                         ${listForTab.map(an => `
                                             <tr style="cursor:pointer;" onclick="playSound(); openWatchModal('${an.id}')">
-                                                <td style="width:60px;"><img src="${an.poster}" style="width:40px; height:55px; object-fit:cover; border-radius:6px;" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'"></td>
+                                                <td style="width:60px;"><img src="${an.poster}" style="width:40px; height:55px; object-fit:cover; border-radius:6px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'"></td>
                                                 <td><b>${an.title}</b><div style="font-size:11px; color:var(--text-muted);">${(an.genres||[]).join(', ')}</div></td>
                                                 <td><span style="color:#fbbf24; font-weight:700;">⭐ ${calculateAverageRating(an)}</span></td>
                                                 <td><button class="btn-secondary" style="padding:4px 8px; font-size:11px;">Смотреть</button></td>
@@ -1119,21 +1159,6 @@
                             <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
                             <div class="profile-menu-item"><span>💬 Комментарии</span> <b>${userCommentsCount}</b></div>
                             <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${favoritesCount}</b></div>
-                            
-                            ${isMe && myRequests.length > 0 ? `
-                                <div style="margin-top:10px; background:rgba(139,61,255,0.15); border:1px solid var(--primary); padding:10px; border-radius:10px;">
-                                    <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки в друзья (${myRequests.length})</div>
-                                    ${myRequests.map(req => `
-                                        <div style="display:flex; justify-content:space-between; align-items:center; font-size:12px; margin-bottom:6px; gap:4px;">
-                                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:90px;" title="${req}">${req}</span>
-                                            <div style="display:flex; gap:4px;">
-                                                <button class="btn-glow" style="padding:3px 8px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${req}')">Принять</button>
-                                                <button class="btn-danger" style="padding:3px 8px; font-size:10px;" onclick="playSound(); declineFriendRequest('${req}')">Х</button>
-                                            </div>
-                                        </div>
-                                    `).join('')}
-                                </div>
-                            ` : ''}
                         </div>
                     </div>
                 </div>
@@ -1147,7 +1172,7 @@
                 <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
                     <div class="anime-rating-badge">⭐ ${avg}</div>
                     <div class="anime-poster-box">
-                        <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'">
+                        <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                         <div class="anime-quick-view">
                             <span class="btn-glow" style="padding: 8px 16px; font-size:12px;">▶ Быстрый просмотр</span>
                         </div>
@@ -1467,7 +1492,7 @@
 
             const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
             userProfiles[usernameInput] = { 
-                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', 
+                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${usernameInput}`, 
                 status: 'Новичок на платформе ⭐',
                 regDate: nowStr
             };
@@ -1625,7 +1650,7 @@
                 <button class="modal-close" onclick="playSound(); closeWatchModal()">&times;</button>
                 <div class="watch-cinema-layout">
                     <div class="crunchy-hero-section">
-                        <img src="${anime.poster}" class="crunchy-hero-poster" onerror="this.src='https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=600&auto=format&fit=crop'">
+                        <img src="${anime.poster}" class="crunchy-hero-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
                         <div class="crunchy-hero-info">
                             <span style="font-size:12px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Вы смотрите аниме</span>
                             <h1>${anime.title}</h1>
@@ -1659,7 +1684,7 @@
                     <div class="anime-screenshots-section">
                         <h3 style="font-size:13px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры из аниме</h3>
                         <div class="screenshots-grid">
-                            ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onerror="this.src='${anime.poster}'" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
+                            ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
                         </div>
                     </div>
 
@@ -1726,11 +1751,11 @@
                         </div>
                         <div id="commentsListContainer" style="display:flex; flex-direction:column; gap:10px; margin-top:10px;">
                             ${comments.map((c, cIdx) => {
-                                const cUserAvatar = (userProfiles[c.username] || {}).avatar || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop';
+                                const cUserAvatar = (userProfiles[c.username] || {}).avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${c.username}`;
                                 return `
                                 <div class="comment-item">
                                     <div class="comment-author" onclick="playSound(); openProfile('${c.username}')">
-                                        <img src="${cUserAvatar}" onerror="this.src='https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop'">
+                                        <img src="${cUserAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                         <span>${c.username}</span>
                                     </div>
                                     <div class="comment-text">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер (нажмите чтобы открыть) <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
