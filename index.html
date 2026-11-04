@@ -559,7 +559,6 @@
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || {};
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || {};
-        let userAchievements = JSON.parse(localStorage.getItem('komi_achievements')) || {};
         let userFavorites = JSON.parse(localStorage.getItem('komi_favorites')) || {};
         let userWatchHistory = JSON.parse(localStorage.getItem('komi_history')) || {};
         let searchHistory = JSON.parse(localStorage.getItem('komi_search_history')) || ['Экшен', 'Романтика', 'Топ-2026'];
@@ -586,7 +585,6 @@
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             localStorage.setItem('komi_profiles', JSON.stringify(userProfiles));
-            localStorage.setItem('komi_achievements', JSON.stringify(userAchievements));
             localStorage.setItem('komi_favorites', JSON.stringify(userFavorites));
             localStorage.setItem('komi_history', JSON.stringify(userWatchHistory));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
@@ -635,7 +633,6 @@
             } catch(e) {}
         }
 
-        // ИСПРАВЛЕННЫЙ МЕХАНИЗМ ОНЛАЙНА: привязка к уникальному идентификатору сессии/пользователя
         async function updateOnlinePresence() {
             if (onlineTimerRunning) return;
             onlineTimerRunning = true;
@@ -643,21 +640,17 @@
                 const now = Date.now();
                 const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
                 
-                // Используем уникальный session_id (myUniqueKey) как первичный ключ в таблице online_users, 
-                // чтобы одна вкладка/пользователь не плодила дубликаты
                 await _supabase.from('online_users').upsert({ 
                     session_id: myUniqueKey, 
                     username: currentName, 
                     last_seen: now 
                 }, { onConflict: 'session_id' });
 
-                // Удаляем устаревшие сессии (неактивные более 12 секунд)
                 const expireTime = now - 12000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
                 const { data } = await _supabase.from('online_users').select('*');
                 if (data) {
-                    // Убираем возможные дубликаты на клиенте по никнейму
                     const uniqueUsersMap = new Map();
                     data.forEach(item => uniqueUsersMap.set(item.username, item));
                     const uniqueOnlineList = Array.from(uniqueUsersMap.values());
@@ -678,7 +671,6 @@
         setInterval(updateOnlinePresence, 4000);
         updateOnlinePresence();
 
-        // Моментальное удаление из базы при закрытии сайта или уходе со страницы
         window.addEventListener('beforeunload', () => {
             try {
                 navigator.sendBeacon ? null : _supabase.from('online_users').delete().eq('session_id', myUniqueKey);
@@ -876,7 +868,12 @@
 
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
-            const p = userProfiles[username] || { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Элитный Отаку ⭐' };
+            const p = userProfiles[username] || { 
+                avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', 
+                status: 'Элитный Отаку ⭐',
+                regDate: '05 ноября 2026 года'
+            };
+
             const myFriends = userFriends[username] || [];
             const myRequests = friendRequests[username] || [];
             const isMe = currentUser && currentUser.username === username;
@@ -905,6 +902,20 @@
                 statsCounts['Любимые'] = listForTab.length;
             }
 
+            // РАСЧЕТ УРОВНЯ В ЗАВИСИМОСТИ ОТ ПРОСМОТРЕННЫХ АНИМЕ
+            const watchedCount = statsCounts['Просмотрено'] || 0;
+            const calculatedLevel = 1 + Math.floor(watchedCount / 3);
+
+            // ПОДСЧЕТ КОММЕНТАРИЕВ ПОЛЬЗОВАТЕЛЯ ПО ВСЕЙ БАЗЕ
+            let userCommentsCount = 0;
+            Object.values(animeComments).forEach(commList => {
+                commList.forEach(c => {
+                    if (c.username === username) userCommentsCount++;
+                });
+            });
+
+            const favoritesCount = Object.keys(userFavorites[username] || {}).length;
+
             container.innerHTML = `
                 <div class="profile-container">
                     <div class="profile-header-card">
@@ -919,10 +930,10 @@
                                 ` : ''}
                             </div>
                             <div style="display:flex; gap:12px; align-items:center;">
-                                <span style="background:var(--primary); color:white; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700;">Уровень 42 ⚡</span>
+                                <span style="background:var(--primary); color:white; padding:3px 10px; border-radius:8px; font-size:12px; font-weight:700;">Уровень ${calculatedLevel} ⚡</span>
                                 <span style="color:var(--text-muted); font-size:13px;">Статус: <b>${p.status}</b></span>
                             </div>
-                            <p style="color:var(--text-muted); font-size:13px;">Дата регистрации: <b>05 октября 2025 года</b></p>
+                            <p style="color:var(--text-muted); font-size:13px;">Дата регистрации: <b>${p.regDate || '05 ноября 2026 года'}</b></p>
 
                             ${isMe ? `
                             <div style="background:var(--bg-input); padding:12px; border-radius:12px; margin-top:10px;">
@@ -971,8 +982,8 @@
                         <div class="profile-sidebar-menu">
                             <h3 style="font-size:14px; margin-bottom:8px;">📌 Навигация</h3>
                             <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
-                            <div class="profile-menu-item"><span>💬 Комментарии</span> <b>0</b></div>
-                            <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${Object.keys(userFavorites[username]||{}).length}</b></div>
+                            <div class="profile-menu-item"><span>💬 Комментарии</span> <b>${userCommentsCount}</b></div>
+                            <div class="profile-menu-item"><span>⭐ Избранное</span> <b>${favoritesCount}</b></div>
                             ${isMe && myRequests.length > 0 ? `
                                 <div style="margin-top:10px; background:rgba(145,71,255,0.15); border:1px solid var(--primary); padding:10px; border-radius:10px;">
                                     <div style="font-size:12px; font-weight:700; margin-bottom:6px;">🔔 Заявки (${myRequests.length})</div>
@@ -1257,7 +1268,12 @@
                 registeredUsers[username] = passwordHash;
                 currentUser = { username };
                 if (!userProfiles[username]) {
-                    userProfiles[username] = { avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', status: 'Новичок на платформе ⭐' };
+                    const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+                    userProfiles[username] = { 
+                        avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=150&auto=format&fit=crop', 
+                        status: 'Новичок на платформе ⭐',
+                        regDate: nowStr
+                    };
                 }
                 saveData();
                 closeAuthModal();
@@ -1333,7 +1349,10 @@
         function updateUserProfile() {
             const avatar = document.getElementById('newAvatarUrl').value.trim();
             const status = document.getElementById('newStatusText').value.trim();
-            if (!userProfiles[currentUser.username]) userProfiles[currentUser.username] = {};
+            if (!userProfiles[currentUser.username]) {
+                const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
+                userProfiles[currentUser.username] = { regDate: nowStr };
+            }
             if (avatar) userProfiles[currentUser.username].avatar = avatar;
             if (status) userProfiles[currentUser.username].status = status;
             saveData();
