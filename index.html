@@ -2081,7 +2081,7 @@
             openWatchModal(id);
         }
 
-        // Авто-заполнение через Shikimori API с поддержкой разных аниме
+        // Авто-заполнение через Shikimori API напрямую (исправлено против CORS ошибок)
         async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
             const resultsContainer = document.getElementById('apiSearchResultsList');
@@ -2096,9 +2096,12 @@
 
             try {
                 const targetUrl = `https://shikimori.me/api/animes?search=${encodeURIComponent(query)}&limit=8`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
 
-                const response = await fetch(proxyUrl);
+                const response = await fetch(targetUrl, {
+                    headers: {
+                        'User-Agent': 'KomiAnimeHub'
+                    }
+                });
                 if (!response.ok) throw new Error('Ошибка сети');
 
                 const data = await response.json();
@@ -2132,7 +2135,43 @@
                     resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Ничего не найдено по вашему запросу.</div>';
                 }
             } catch(e) {
-                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Ошибка соединения с API. Попробуйте еще раз.</div>`;
+                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Ошибка соединения с API. Проверьте интернет-соединение.</div>`;
+            }
+        }
+
+        // Импорт случайного популярного аниме из топа Shikimori
+        async function importTopSeasonalAnime() {
+            const resultsContainer = document.getElementById('apiSearchResultsList');
+            resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем случайный хит из топа Shikimori...</div>';
+            resultsContainer.style.display = 'block';
+
+            try {
+                const targetUrl = `https://shikimori.me/api/animes?order=popularity&limit=50`;
+
+                const res = await fetch(targetUrl, {
+                    headers: {
+                        'User-Agent': 'KomiAnimeHub'
+                    }
+                });
+                if (!res.ok) throw new Error('Ошибка сервера');
+
+                const data = await res.json();
+                if (data && data.length > 0) {
+                    const randomAnime = data[Math.floor(Math.random() * data.length)];
+                    const posterUrl = randomAnime.image?.original ? `https://shikimori.me${randomAnime.image.original}` : 'https://cdn.myanimelist.net/images/anime/1122/96435.jpg';
+                    fillFormWithAnimeData({
+                        title: randomAnime.russian || randomAnime.name,
+                        poster: posterUrl,
+                        score: randomAnime.score || '8.8',
+                        year: randomAnime.aired_on ? randomAnime.aired_on.split('-')[0] : '2026',
+                        type: randomAnime.kind === 'movie' ? 'Фильм' : 'Сериал',
+                        synopsis: randomAnime.description || 'Популярное аниме из каталога Shikimori.',
+                        genres: [],
+                        images: [posterUrl]
+                    });
+                }
+            } catch(e) {
+                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Не удалось загрузить топ из сети.</div>`;
             }
         }
 
@@ -2154,39 +2193,6 @@
 
             document.getElementById('apiSearchResultsList').style.display = 'none';
             alert(`Данные аниме "${animeData.title}" успешно загружены в форму!`);
-        }
-
-        // Импорт случайного популярного аниме из топа Shikimori для разнообразия
-        async function importTopSeasonalAnime() {
-            const resultsContainer = document.getElementById('apiSearchResultsList');
-            resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем случайный хит из топа Shikimori...</div>';
-            resultsContainer.style.display = 'block';
-
-            try {
-                const targetUrl = `https://shikimori.me/api/animes?order=popularity&limit=50`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-                const res = await fetch(proxyUrl);
-                if (!res.ok) throw new Error('Ошибка сервера');
-
-                const data = await res.json();
-                if (data && data.length > 0) {
-                    const randomAnime = data[Math.floor(Math.random() * data.length)];
-                    const posterUrl = randomAnime.image?.original ? `https://shikimori.me${randomAnime.image.original}` : 'https://cdn.myanimelist.net/images/anime/1122/96435.jpg';
-                    fillFormWithAnimeData({
-                        title: randomAnime.russian || randomAnime.name,
-                        poster: posterUrl,
-                        score: randomAnime.score || '8.8',
-                        year: randomAnime.aired_on ? randomAnime.aired_on.split('-')[0] : '2026',
-                        type: randomAnime.kind === 'movie' ? 'Фильм' : 'Сериал',
-                        synopsis: randomAnime.description || 'Популярное аниме из каталога Shikimori.',
-                        genres: [],
-                        images: [posterUrl]
-                    });
-                }
-            } catch(e) {
-                resultsContainer.innerHTML = `<div style="padding: 8px; font-size: 12px; color: #fca5a5;">Не удалось загрузить топ из сети.</div>`;
-            }
         }
 
         function openAdminPanel() {
