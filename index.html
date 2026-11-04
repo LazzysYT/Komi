@@ -119,7 +119,7 @@
         .search-dropdown-item { padding: 10px 14px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
         .search-dropdown-item:hover { background: var(--primary); color: white; }
 
-        .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+        .nav-actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; position: relative; }
         .nav-btn {
             background: transparent; border: 1px solid transparent; color: var(--text-muted);
             font-weight: 600; font-size: 14px; cursor: pointer; padding: 8px 14px; border-radius: 10px;
@@ -128,9 +128,26 @@
 
         .action-icon-btn {
             background: var(--bg-card); border: 1px solid var(--border); color: white;
-            padding: 9px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600;
+            padding: 9px 14px; border-radius: 10px; cursor: pointer; font-size: 13px; font-weight: 600; position: relative;
         }
         .action-icon-btn:hover { border-color: var(--accent); background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+
+        .notification-badge {
+            position: absolute; top: -5px; right: -5px; background: #EF4444; color: white;
+            font-size: 10px; font-weight: 800; width: 18px; height: 18px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; box-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+        }
+
+        .notification-dropdown {
+            position: absolute; top: 115%; right: 0; width: 320px; background: var(--bg-card);
+            border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 15px 35px rgba(0,0,0,0.9);
+            display: none; flex-direction: column; z-index: 300; overflow: hidden;
+        }
+        .notification-dropdown.active { display: flex; animation: fadeInUp 0.2s ease; }
+        .notif-header { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; }
+        .notif-list { max-height: 250px; overflow-y: auto; display: flex; flex-direction: column; }
+        .notif-item { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12px; color: var(--text-muted); display: flex; flex-direction: column; gap: 2px; }
+        .notif-item:hover { background: rgba(255,255,255,0.03); color: white; }
 
         .user-pill {
             background: var(--bg-card); border: 1px solid var(--border);
@@ -281,10 +298,10 @@
         
         .profile-stats-bar {
             background: var(--bg-card); border: 1px solid var(--border); border-radius: 14px;
-            display: flex; overflow: hidden; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+            display: flex; overflow-x: auto; margin-bottom: 25px; box-shadow: 0 5px 20px rgba(0,0,0,0.4);
         }
         .profile-stat-tab {
-            flex: 1; padding: 14px 10px; text-align: center; cursor: pointer; border-right: 1px solid var(--border);
+            flex: 1; min-width: 110px; padding: 14px 10px; text-align: center; cursor: pointer; border-right: 1px solid var(--border);
             background: var(--bg-card); font-size: 13px; font-weight: 700; color: var(--text-muted); display: flex; flex-direction: column; gap: 4px;
         }
         .profile-stat-tab:last-child { border-right: none; }
@@ -305,6 +322,12 @@
         .profile-anime-table th, .profile-anime-table td { padding: 12px; text-align: left; border-bottom: 1px solid var(--border); font-size: 13px; }
         .profile-anime-table th { color: var(--text-muted); font-weight: 600; }
         .profile-anime-table tr:hover { background: rgba(255,255,255,0.03); }
+
+        .profile-wall-section { margin-top: 25px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; }
+        .wall-message-item { background: var(--bg-input); border: 1px solid var(--border); padding: 12px 16px; border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction: column; gap: 4px; }
+        .wall-message-author { font-size: 13px; font-weight: 700; color: var(--accent); display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .wall-message-author img { width: 20px; height: 20px; border-radius: 50%; object-fit: cover; }
+        .wall-message-text { font-size: 13px; color: var(--text-main); }
 
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -446,6 +469,20 @@
         </div>
 
         <div class="nav-actions">
+            <button class="action-icon-btn" id="notifBellBtn" onclick="playSound(); toggleNotifications()" title="Уведомления">
+                🔔
+                <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
+            </button>
+            <div class="notification-dropdown" id="notifDropdown">
+                <div class="notif-header">
+                    <span>Уведомления</span>
+                    <button class="btn-secondary" style="padding:2px 8px; font-size:10px;" onclick="clearNotifications()">Очистить</button>
+                </div>
+                <div class="notif-list" id="notifListContainer">
+                    <div style="padding:15px; text-align:center; color:var(--text-muted); font-size:12px;">Нет новых уведомлений</div>
+                </div>
+            </div>
+
             <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
             <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
             <button class="action-icon-btn" onclick="playSound(); randomAnime()">🎲 Мне повезет</button>
@@ -671,6 +708,9 @@
         let animeComments = {}; 
         let userFriends = JSON.parse(localStorage.getItem('komi_friends')) || {}; 
         let userAnimeStatuses = JSON.parse(localStorage.getItem('komi_anime_statuses')) || {}; 
+        let userCustomFolders = JSON.parse(localStorage.getItem('komi_custom_folders')) || {}; 
+        let userNotifications = JSON.parse(localStorage.getItem('komi_notifications')) || {}; 
+        let profileWalls = JSON.parse(localStorage.getItem('komi_profile_walls')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
         let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
         let userProfiles = JSON.parse(localStorage.getItem('komi_profiles')) || { 
@@ -711,6 +751,9 @@
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
             localStorage.setItem('komi_anime_statuses', JSON.stringify(userAnimeStatuses));
+            localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
+            localStorage.setItem('komi_notifications', JSON.stringify(userNotifications));
+            localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
             saveStatusesToCloud();
         }
 
@@ -735,6 +778,7 @@
                 animeList = defaultAnime;
             }
             render();
+            updateNotificationsUI();
         }
 
         async function saveAnimeToCloud() {
@@ -752,6 +796,7 @@
             } catch(e) {}
         }
 
+        // Адекватное онлайн отслеживание с немедленной очисткой при закрытии
         async function updateOnlinePresence() {
             if (onlineTimerRunning) return;
             onlineTimerRunning = true;
@@ -765,7 +810,7 @@
                     last_seen: now 
                 }, { onConflict: 'session_id' });
 
-                const expireTime = now - 12000;
+                const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
                 const { data } = await _supabase.from('online_users').select('*');
@@ -785,11 +830,23 @@
                 if (el) el.innerText = `Онлайн: 1`;
                 renderSidebarLists([{ username: currentUser ? currentUser.username : 'Гость' }]);
             }
-            setTimeout(() => { onlineTimerRunning = false; }, 4000);
+            setTimeout(() => { onlineTimerRunning = false; }, 3000);
         }
 
-        setInterval(updateOnlinePresence, 4000);
+        setInterval(updateOnlinePresence, 3000);
         updateOnlinePresence();
+
+        // Мгновенный выход при закрытии вкладки
+        window.addEventListener('beforeunload', () => {
+            try {
+                navigator.sendBeacon && navigator.sendBeacon(`${SUPABASE_URL}/rest/v1/online_users?session_id=eq.${myUniqueKey}`, null);
+                fetch(`${SUPABASE_URL}/rest/v1/online_users?session_id=eq.${myUniqueKey}`, {
+                    method: 'DELETE',
+                    headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` },
+                    keepalive: true
+                });
+            } catch(e){}
+        });
 
         function renderSidebarLists(onlineRows) {
             const onlineContainer = document.getElementById('sidebarOnlineList');
@@ -828,6 +885,57 @@
                 }
             } else {
                 friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:12px;">Войдите, чтобы видеть друзей</span>`;
+            }
+        }
+
+        // Система уведомлений
+        function addNotification(username, text) {
+            if (!userNotifications[username]) userNotifications[username] = [];
+            userNotifications[username].unshift({ text, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
+            saveData();
+            updateNotificationsUI();
+        }
+
+        function toggleNotifications() {
+            const dropdown = document.getElementById('notifDropdown');
+            dropdown.classList.toggle('active');
+            if (currentUser && userNotifications[currentUser.username]) {
+                userNotifications[currentUser.username].forEach(n => n.read = true);
+                saveData();
+                updateNotificationsUI();
+            }
+        }
+
+        function clearNotifications() {
+            if (!currentUser) return;
+            userNotifications[currentUser.username] = [];
+            saveData();
+            updateNotificationsUI();
+        }
+
+        function updateNotificationsUI() {
+            if (!currentUser) return;
+            const notifs = userNotifications[currentUser.username] || [];
+            const unreadCount = notifs.filter(n => !n.read).length;
+            const badge = document.getElementById('notifBadge');
+            
+            if (unreadCount > 0) {
+                badge.innerText = unreadCount;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+
+            const listContainer = document.getElementById('notifListContainer');
+            if (notifs.length > 0) {
+                listContainer.innerHTML = notifs.map(n => `
+                    <div class="notif-item">
+                        <span>${n.text}</span>
+                        <span style="font-size:10px; color:var(--text-muted);">${n.time}</span>
+                    </div>
+                `).join('');
+            } else {
+                listContainer.innerHTML = `<div style="padding:15px; text-align:center; color:var(--text-muted); font-size:12px;">Нет новых уведомлений</div>`;
             }
         }
 
@@ -878,6 +986,7 @@
                         <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:12px; margin-left:5px;" title="Выйти">🚪</button>
                     </div>
                 `;
+                updateNotificationsUI();
             } else {
                 area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="playSound(); openAuthModal('login')">Войти</button>`;
             }
@@ -1057,6 +1166,9 @@
             const userStatuses = userAnimeStatuses[username] || {};
             const statsCounts = { 'Смотрю': 0, 'В планах': 0, 'Просмотрено': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
             
+            const customFolders = userCustomFolders[username] || {};
+            const customFolderNames = Object.keys(customFolders);
+
             const listForTab = [];
             Object.entries(userStatuses).forEach(([aId, st]) => {
                 if (statsCounts[st] !== undefined) statsCounts[st]++;
@@ -1073,6 +1185,12 @@
                     if (anObj && !listForTab.some(x => x.id === aId)) listForTab.push(anObj);
                 });
                 statsCounts['Любимые'] = listForTab.length;
+            } else if (customFolderNames.includes(profileActiveTab)) {
+                const folderAnimeIds = customFolders[profileActiveTab] || [];
+                folderAnimeIds.forEach(aId => {
+                    const anObj = animeList.find(x => x.id === aId);
+                    if (anObj) listForTab.push(anObj);
+                });
             }
 
             const watchedCount = statsCounts['Просмотрено'] || 0;
@@ -1086,6 +1204,7 @@
             });
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
+            const wallMessages = profileWalls[username] || [];
 
             container.innerHTML = `
                 <div class="profile-container">
@@ -1108,9 +1227,9 @@
                             ${isMe ? `
                             <div style="background:var(--bg-input); padding:12px; border-radius:12px; margin-top:10px;">
                                 <h4 style="font-size:13px; margin-bottom:6px;">Настройки профиля</h4>
-                                <div style="display:flex; gap:8px;">
-                                    <input type="url" id="newAvatarUrl" class="form-control" placeholder="Ссылка на аватар..." value="${p.avatar}">
-                                    <input type="text" id="newStatusText" class="form-control" placeholder="Статус..." value="${p.status}">
+                                <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                                    <input type="url" id="newAvatarUrl" class="form-control" placeholder="Ссылка на аватар..." value="${p.avatar}" style="flex:1;">
+                                    <input type="text" id="newStatusText" class="form-control" placeholder="Статус..." value="${p.status}" style="flex:1;">
                                     <button class="btn-glow" style="padding: 10px 16px;" onclick="playSound(); updateUserProfile()">Сохранить</button>
                                 </div>
                             </div>
@@ -1119,13 +1238,20 @@
                     </div>
 
                     <div class="profile-stats-bar">
-                        ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено', 'Любимые'].map(tab => `
+                        ${['Смотрю', 'В планах', 'Просмотрено', 'Отложено', 'Брошено', 'Любимые', ...customFolderNames].map(tab => `
                             <div class="profile-stat-tab ${profileActiveTab === tab ? 'active' : ''}" onclick="playSound(); profileActiveTab='${tab}'; render()">
-                                <span class="num">${statsCounts[tab] || 0}</span>
-                                <span>${tab.toUpperCase()}</span>
+                                <span class="num">${tab === 'Любимые' ? favoritesCount : (statsCounts[tab] || (customFolders[tab] ? customFolders[tab].length : 0))}</span>
+                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${tab.toUpperCase()}</span>
                             </div>
                         `).join('')}
                     </div>
+
+                    ${isMe ? `
+                        <div style="display:flex; gap:10px; margin-bottom:25px; align-items:center;">
+                            <input type="text" id="newFolderNameInput" class="form-control" placeholder="Название новой папки..." style="max-width:250px;">
+                            <button class="btn-secondary" onclick="playSound(); createCustomFolder()">+ Создать папку списков</button>
+                        </div>
+                    ` : ''}
 
                     <div class="profile-layout-grid">
                         <div class="profile-main-content">
@@ -1147,6 +1273,30 @@
                                     </tbody>
                                 </table>
                             `}
+
+                            <!-- Стена профиля -->
+                            <div class="profile-wall-section">
+                                <h3 style="font-size:15px; margin-bottom:12px;">💬 Стена сообщений</h3>
+                                <div style="display:flex; gap:10px; margin-bottom:15px;">
+                                    <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать сообщение на стену...">
+                                    <button class="btn-glow" onclick="playSound(); postToProfileWall('${username}')">Отправить</button>
+                                </div>
+                                <div style="display:flex; flex-direction:column; gap:8px;">
+                                    ${wallMessages.length === 0 ? `<div style="color:var(--text-muted); font-size:12px; text-align:center; padding:10px;">На стене пока нет сообщений</div>` : wallMessages.map(m => {
+                                        const senderAvatar = (userProfiles[m.author] || {}).avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.author}`;
+                                        return `
+                                            <div class="wall-message-item">
+                                                <div class="wall-message-author" onclick="playSound(); openProfile('${m.author}')">
+                                                    <img src="${senderAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                                    <span>${m.author}</span>
+                                                    <span style="font-size:10px; color:var(--text-muted); margin-left:auto;">${m.time}</span>
+                                                </div>
+                                                <div class="wall-message-text">${m.text}</div>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
                         </div>
 
                         <div class="profile-sidebar-menu">
@@ -1158,6 +1308,45 @@
                     </div>
                 </div>
             `;
+        }
+
+        function createCustomFolder() {
+            if (!currentUser) return;
+            const input = document.getElementById('newFolderNameInput');
+            const name = input.value.trim();
+            if (!name) return;
+
+            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
+            if (!userCustomFolders[currentUser.username][name]) {
+                userCustomFolders[currentUser.username][name] = [];
+                saveData();
+                input.value = '';
+                render();
+            } else {
+                alert('Папка с таким именем уже существует!');
+            }
+        }
+
+        function postToProfileWall(profileOwner) {
+            if (!currentUser) { openAuthModal('login'); return; }
+            const input = document.getElementById('wallMessageInput');
+            const text = input.value.trim();
+            if (!text) return;
+
+            if (!profileWalls[profileOwner]) profileWalls[profileOwner] = [];
+            profileWalls[profileOwner].unshift({
+                author: currentUser.username,
+                text,
+                time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
+            });
+
+            if (profileOwner !== currentUser.username) {
+                addNotification(profileOwner, `${currentUser.username} оставил сообщение на вашей стене.`);
+            }
+
+            saveData();
+            input.value = '';
+            render();
         }
 
         function renderCard(anime) {
@@ -1510,6 +1699,22 @@
             openWatchModal(id);
         }
 
+        function addToCustomFolder(id, folderName) {
+            if (!currentUser) { openAuthModal('login'); return; }
+            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
+            if (!userCustomFolders[currentUser.username][folderName]) userCustomFolders[currentUser.username][folderName] = [];
+            
+            const list = userCustomFolders[currentUser.username][folderName];
+            const idx = list.indexOf(id);
+            if (idx > -1) {
+                list.splice(idx, 1);
+            } else {
+                list.push(id);
+            }
+            saveData();
+            openWatchModal(id);
+        }
+
         function setAnimeStatus(animeId, status) {
             if (!currentUser) { openAuthModal('login'); return; }
             if (!userAnimeStatuses[currentUser.username]) userAnimeStatuses[currentUser.username] = {};
@@ -1537,6 +1742,7 @@
                 userFriends[targetUsername].push(myName);
             }
 
+            addNotification(targetUsername, `${myName} добавил вас в друзья!`);
             saveData();
             openProfile(targetUsername);
         }
@@ -1615,6 +1821,7 @@
             const avgRating = calculateAverageRating(anime);
             const myCurrentStatus = currentUser && userAnimeStatuses[currentUser.username] ? (userAnimeStatuses[currentUser.username][anime.id] || '') : '';
             
+            const customFolders = currentUser ? (userCustomFolders[currentUser.username] || {}) : {};
             const screenshots = (anime.screenshots && anime.screenshots.length > 0) ? anime.screenshots : [anime.poster, anime.poster, anime.poster, anime.poster];
 
             document.getElementById('watchModalContent').innerHTML = `
@@ -1641,6 +1848,16 @@
                             <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
                         `).join('')}
                     </div>
+
+                    ${Object.keys(customFolders).length > 0 ? `
+                        <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:10px 14px; border-radius:12px;">
+                            <span style="font-size:12px; color:var(--text-muted);">Ваши папки:</span>
+                            ${Object.keys(customFolders).map(fname => {
+                                const inFolder = (customFolders[fname] || []).includes(anime.id);
+                                return `<button class="season-tab-btn ${inFolder ? 'active' : ''}" onclick="playSound(); addToCustomFolder('${anime.id}', '${fname}')">📁 ${fname} ${inFolder ? '✓' : ''}</button>`;
+                            }).join('')}
+                        </div>
+                    ` : ''}
 
                     <div class="player-wrapper">
                         <div class="player-box">
