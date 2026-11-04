@@ -70,6 +70,11 @@
             100% { transform: scale(0.95); filter: brightness(1); }
         }
 
+        @keyframes floatUp {
+            0% { transform: translateY(0px) scale(0.5); opacity: 1; }
+            100% { transform: translateY(-350px) scale(1.4); opacity: 0; }
+        }
+
         header {
             background: rgba(9, 9, 15, 0.85);
             backdrop-filter: blur(16px);
@@ -184,28 +189,14 @@
         main { width: 100%; animation: fadeInUp 0.2s ease; }
 
         .hero-slider-container {
-            position: relative;
-            border-radius: 24px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            margin-bottom: 40px;
-            box-shadow: 0 25px 60px rgba(0,0,0,0.9);
-            background: var(--bg-card);
+            position: relative; border-radius: 24px; overflow: hidden; border: 1px solid var(--border);
+            margin-bottom: 40px; box-shadow: 0 25px 60px rgba(0,0,0,0.9); background: var(--bg-card);
         }
         .hero-slide {
-            display: none;
-            background-size: cover;
-            background-position: center;
-            padding: 60px 70px;
-            min-height: 480px;
-            flex-direction: column;
-            justify-content: center;
-            position: relative;
+            display: none; background-size: cover; background-position: center; padding: 60px 70px;
+            min-height: 480px; flex-direction: column; justify-content: center; position: relative;
         }
-        .hero-slide.active {
-            display: flex;
-            animation: fadeInUp 0.35s ease;
-        }
+        .hero-slide.active { display: flex; animation: fadeInUp 0.35s ease; }
         .hero-slide::before {
             content: ''; position: absolute; inset: 0;
             background: linear-gradient(90deg, rgba(9,9,15,0.98) 35%, rgba(9,9,15,0.7) 70%, rgba(9,9,15,0.35) 100%),
@@ -221,7 +212,6 @@
         .hero-slide p { color: var(--text-muted); font-size: 15px; max-width: 550px; margin-bottom: 24px; line-height: 1.5; }
         .hero-meta { display: flex; gap: 12px; align-items: center; font-size: 13px; font-weight: 600; color: var(--text-muted); margin-bottom: 20px; flex-wrap: wrap; }
         .hero-meta span { background: rgba(255, 255, 255, 0.08); backdrop-filter: blur(8px); padding: 5px 12px; border-radius: 8px; color: white; border: 1px solid var(--border); }
-        
         .hero-buttons { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
 
         .btn-glow {
@@ -250,12 +240,8 @@
         .hero-arrow-prev { left: 24px; }
         .hero-arrow-next { right: 24px; }
 
-        .hero-dots {
-            position: absolute; bottom: 24px; right: 40px; display: flex; gap: 8px; z-index: 10;
-        }
-        .hero-dot {
-            width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: width 0.2s, background 0.2s;
-        }
+        .hero-dots { position: absolute; bottom: 24px; right: 40px; display: flex; gap: 8px; z-index: 10; }
+        .hero-dot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: width 0.2s, background 0.2s; }
         .hero-dot.active { width: 32px; border-radius: 5px; background: var(--accent); box-shadow: 0 0 12px var(--glow); }
 
         .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; margin-top: 35px; }
@@ -380,8 +366,29 @@
         .crunchy-hero-info { display: flex; flex-direction: column; gap: 10px; flex: 1; }
         .crunchy-hero-info h1 { font-size: 28px; font-weight: 800; color: white; }
         
+        /* Watch Party Layout */
+        .party-room-grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: start; }
+        .party-main-screen { display: flex; flex-direction: column; gap: 15px; position: relative; }
+        .party-video-container { position: relative; width: 100%; background: #000; border-radius: 16px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
+        .party-video-container video, .party-video-container iframe { width: 100%; height: 100%; border: none; object-fit: contain; }
+
+        .flying-emoji-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+        .flying-emoji { position: absolute; bottom: 20px; left: calc(50% + (random() * 200px - 100px)); font-size: 32px; animation: floatUp 2s ease-out forwards; }
+
+        .party-sidebar-panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 15px; height: 500px; }
+        .party-members-list { display: flex; flex-direction: column; gap: 8px; max-height: 140px; overflow-y: auto; }
+        .party-member-badge { background: var(--bg-input); border: 1px solid var(--border); padding: 6px 10px; border-radius: 10px; font-size: 12px; display: flex; align-items: center; gap: 8px; font-weight: 600; }
+        
+        .party-chat-box { flex: 1; background: var(--bg-input); border: 1px solid var(--border); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; gap: 8px; overflow-y: auto; max-height: 220px; }
+        .party-chat-msg { font-size: 12px; display: flex; flex-direction: column; gap: 2px; }
+        .party-chat-author { font-weight: 700; color: var(--accent); }
+
+        .party-reactions-bar { display: flex; gap: 8px; justify-content: center; background: var(--bg-input); padding: 8px; border-radius: 12px; border: 1px solid var(--border); }
+        .party-react-btn { background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 4px 8px; border-radius: 8px; }
+        .party-react-btn:hover { background: rgba(255,255,255,0.1); transform: scale(1.2); }
+
         .player-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; gap: 10px; }
-        .player-box { background: #000; border-radius: 18px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.85); }
+        .player-box { background: #000; border-radius: 18px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 10px 30px rgba(0,0,0,0.85); position: relative; }
         .player-box iframe, .player-box video { width: 100%; height: 100%; border: none; object-fit: contain; }
 
         .players-switcher-bar {
@@ -443,6 +450,7 @@
             .profile-layout-grid { grid-template-columns: 1fr; }
             .screenshots-grid { grid-template-columns: repeat(2, 1fr); }
             .crunchy-hero-section { flex-direction: column; text-align: center; }
+            .party-room-grid { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 768px) {
@@ -499,6 +507,7 @@
             <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
             <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
             <button class="action-icon-btn" onclick="playSound(); randomAnimeWithAnimation()">🎲 Случайно аниме</button>
+            <button class="action-icon-btn" onclick="playSound(); openWatchPartyHub()" style="background:linear-gradient(135deg, #8B3DFF, #3B82F6);">🎉 Watch Party</button>
             
             <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="background: var(--primary); border-color: var(--primary); display: none;">⚙️ Админка</button>
             <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="background: var(--primary); border-color: var(--primary); display: none;">+ Добавить</button>
@@ -593,13 +602,10 @@
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 400px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
-            
             <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
                 <button type="button" class="season-tab-btn active" id="tabLoginBtn" onclick="playSound(); switchAuthTab('login')">Вход</button>
                 <button type="button" class="season-tab-btn" id="tabRegisterBtn" onclick="playSound(); switchAuthTab('register')">Регистрация</button>
             </div>
-
-            <!-- Форма Входа -->
             <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)">
                 <h2 style="margin-bottom: 15px; font-size: 20px;">Вход в аккаунт</h2>
                 <div class="form-group">
@@ -612,8 +618,6 @@
                 </div>
                 <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Войти</button>
             </form>
-
-            <!-- Форма Регистрации -->
             <form id="registerFormContainer" onsubmit="handleRegisterSubmit(event)" style="display: none;">
                 <h2 style="margin-bottom: 15px; font-size: 20px;">Регистрация аккаунта</h2>
                 <div class="form-group">
@@ -642,6 +646,7 @@
 
     <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 1000px;" id="adminModalContent"></div></div>
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
+    <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1200px;" id="watchPartyModalContent"></div></div>
 
     <script>
         const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
@@ -787,6 +792,10 @@
         let slideInterval = null;
         let activePlayerSource = 'Kodik';
         const myUniqueKey = 'user_' + Math.random().toString(36).substring(2, 9);
+        
+        let activeWatchPartyRoom = null;
+        let partySyncInterval = null;
+        let partyRealtimeChannel = null;
 
         function changeTheme(theme) {
             document.body.className = theme === 'default' ? '' : 'theme-' + theme;
@@ -1073,11 +1082,7 @@
             
             if (currentView === 'home') {
                 const sliderItems = animeList.slice(0, 5);
-                
-                // Сортировка по рейтингу Shikimori
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 8);
-                
-                // Фильтруем аниме, у которых тип равен «Фильм»
                 const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм');
 
                 let continueWatchingHtml = '';
@@ -1119,12 +1124,9 @@
                                     <h1>${anime.title}</h1>
                                     <p>${anime.desc || 'Увлекательная история, захватывающие сражения и незабываемые персонажи ждут вас в новом релизе.'}</p>
                                     <div class="hero-buttons">
-                                        <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">
-                                            ▶ Смотреть сейчас
-                                        </button>
-                                        <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')">
-                                            ℹ Подробнее
-                                        </button>
+                                        <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">▶ Смотреть сейчас</button>
+                                        <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')">ℹ Подробнее</button>
+                                        <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Watch Party</button>
                                     </div>
                                 </div>
                             `).join('')}
@@ -1369,7 +1371,6 @@
                                 </table>
                             `}
 
-                            <!-- Стена профиля -->
                             <div class="profile-wall-section">
                                 <h3 style="font-size:15px; margin-bottom:12px;">💬 Стена сообщений</h3>
                                 <div style="display:flex; gap:10px; margin-bottom:15px;">
@@ -1464,7 +1465,6 @@
             `;
         }
 
-        // Анимация случайного выбора аниме (рулетка)
         function randomAnimeWithAnimation() {
             if (animeList.length === 0) return;
             playSound();
@@ -1496,9 +1496,231 @@
                     }, 600);
                 }
             }
-
             spinStep();
         }
+
+        // ==========================================
+        // WATCH PARTY (КОМНАТА СОВМЕСТНОГО ПРОСМОТРА)
+        // ==========================================
+        function openWatchPartyHub() {
+            if (!currentUser) { openAuthModal('login'); return; }
+            playSound();
+            const modal = document.getElementById('watchPartyModal');
+            
+            const animeOptions = animeList.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
+            const friends = userFriends[currentUser.username] || [];
+
+            document.getElementById('watchPartyModalContent').innerHTML = `
+                <button class="modal-close" onclick="playSound(); closeWatchPartyModal()">&times;</button>
+                <h2 style="margin-bottom: 20px;">🎉 Watch Party — Совместный просмотр</h2>
+                
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:25px;">
+                    <div style="background:var(--bg-input); padding:20px; border-radius:16px; border:1px solid var(--border);">
+                        <h3 style="font-size:16px; margin-bottom:15px;">🎬 Создать новую комнату</h3>
+                        <div class="form-group">
+                            <label>Выберите аниме</label>
+                            <select id="partyAnimeSelect" class="form-control">${animeOptions}</select>
+                        </div>
+                        <div class="form-group">
+                            <label>Название комнаты</label>
+                            <input type="text" id="partyRoomName" class="form-control" value="Комната ${currentUser.username}">
+                        </div>
+                        <div class="form-group">
+                            <label>Тип доступа</label>
+                            <select id="partyRoomType" class="form-control">
+                                <option value="public">🌍 Публичная (видна всем)</option>
+                                <option value="private">🔒 Приватная (только по приглашению)</option>
+                            </select>
+                        </div>
+                        <button class="btn-glow" style="width:100%; justify-content:center;" onclick="playSound(); createWatchPartyRoom()">Создать комнату и войти</button>
+                    </div>
+
+                    <div style="background:var(--bg-input); padding:20px; border-radius:16px; border:1px solid var(--border); display:flex; flex-direction:column; gap:15px;">
+                        <h3 style="font-size:16px;">👥 Пригласить друзей</h3>
+                        <div style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;" id="partyInviteFriendsList">
+                            ${friends.length === 0 ? `<div style="color:var(--text-muted); font-size:12px;">У вас пока нет друзей в списке.</div>` : friends.map(f => `
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); padding:8px 12px; border-radius:10px; border:1px solid var(--border);">
+                                    <span style="font-size:13px; font-weight:600;">${f}</span>
+                                    <button class="btn-secondary" style="padding:4px 10px; font-size:11px;" onclick="playSound(); inviteFriendToParty('${f}')">Пригласить</button>
+                                </div>
+                            `).join('')}
+                        </div>
+                        <div style="margin-top:auto; font-size:12px; color:var(--text-muted);">
+                            💡 Синхронизируйте паузу, общайтесь в чате комнаты и кидайте эпичные реакции прямо на экран видео!
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('active');
+        }
+
+        function closeWatchPartyModal() {
+            document.getElementById('watchPartyModal').classList.remove('active');
+        }
+
+        async function createWatchPartyRoom() {
+            if (!currentUser) return;
+            const animeId = document.getElementById('partyAnimeSelect').value;
+            const roomName = document.getElementById('partyRoomName').value.trim() || ('Комната ' + currentUser.username);
+            const roomType = document.getElementById('partyRoomType').value;
+
+            activeWatchPartyRoom = {
+                id: 'room_' + Date.now(),
+                name: roomName,
+                host: currentUser.username,
+                animeId: animeId,
+                type: roomType,
+                currentTime: 0,
+                isPlaying: false,
+                season: 1,
+                epIdx: 0,
+                members: [currentUser.username],
+                chat: [{ author: 'Система', text: `${currentUser.username} создал комнату совместного просмотра.` }]
+            };
+
+            closeWatchPartyModal();
+            openActiveWatchPartyRoom();
+        }
+
+        function inviteFriendToParty(friendName) {
+            if (!activeWatchPartyRoom) {
+                alert('Сначала создайте комнату!');
+                return;
+            }
+            addNotification(friendName, `${currentUser.username приглашает вас в комнату Watch Party "${activeWatchPartyRoom.name}"!`);
+            alert(`Приглашение отправлено пользователю ${friendName}!`);
+        }
+
+        function openActiveWatchPartyRoom() {
+            if (!activeWatchPartyRoom) return;
+            const anime = animeList.find(a => a.id === activeWatchPartyRoom.animeId);
+            if (!anime) return;
+
+            const modal = document.getElementById('watchPartyModal');
+            document.getElementById('watchPartyModalContent').innerHTML = `
+                <button class="modal-close" onclick="playSound(); leaveWatchPartyRoom()">&times;</button>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                    <h2>🎉 Watch Party: ${activeWatchPartyRoom.name}</h2>
+                    <span style="background:rgba(16,185,129,0.15); color:#34d399; padding:4px 12px; border-radius:10px; font-size:12px; font-weight:700;">● Сессия активна</span>
+                </div>
+
+                <div class="party-room-grid">
+                    <div class="party-main-screen">
+                        <div class="party-video-container" id="partyVideoContainer">
+                            <div class="flying-emoji-layer" id="flyingEmojiLayer"></div>
+                            <video id="partyVideoElement" controls crossorigin="anonymous" playsinline ontimeupdate="partyReportTime(this)" onplay="partyReportState(true)" onpause="partyReportState(false)">
+                                <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4" type="video/mp4">
+                                Ваш браузер не поддерживает видео.
+                            </video>
+                        </div>
+                        <div class="party-reactions-bar">
+                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('🔥')">🔥</button>
+                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('❤️')">❤️</button>
+                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('😂')">😂</button>
+                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('😲')">😲</button>
+                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('🎉')">🎉</button>
+                        </div>
+                    </div>
+
+                    <div class="party-sidebar-panel">
+                        <h4 style="font-size:13px; color:var(--text-muted);">Участники в комнате</h4>
+                        <div class="party-members-list" id="partyMembersList">
+                            ${activeWatchPartyRoom.members.map(m => `<div class="party-member-badge">👤 ${m} ${m === activeWatchPartyRoom.host ? '👑' : ''}</div>`).join('')}
+                        </div>
+
+                        <h4 style="font-size:13px; color:var(--text-muted); margin-top:5px;">Чат комнаты</h4>
+                        <div class="party-chat-box" id="partyChatBox">
+                            ${activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('')}
+                        </div>
+
+                        <div style="display:flex; gap:6px; margin-top:auto;">
+                            <input type="text" id="partyMessageInput" class="form-control" placeholder="Сообщение..." style="font-size:12px; padding:8px;" onkeydown="if(event.key==='Enter') sendPartyMessage()">
+                            <button class="btn-glow" style="padding:8px 14px; font-size:12px;" onclick="playSound(); sendPartyMessage()">Отпр.</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+            modal.classList.add('active');
+
+            // Симуляция реалтайм синхронизации для демонстрации
+            if (partySyncInterval) clearInterval(partySyncInterval);
+            partySyncInterval = setInterval(() => {
+                // Фоновая синхронизация комнаты
+            }, 1500);
+        }
+
+        function partyReportTime(video) {
+            if (activeWatchPartyRoom) {
+                activeWatchPartyRoom.currentTime = video.currentTime;
+            }
+        }
+
+        function partyReportState(isPlaying) {
+            if (activeWatchPartyRoom) {
+                activeWatchPartyRoom.isPlaying = isPlaying;
+            }
+        }
+
+        function sendPartyMessage() {
+            const input = document.getElementById('partyMessageInput');
+            const text = input.value.trim();
+            if (!text || !currentUser || !activeWatchPartyRoom) return;
+
+            activeWatchPartyRoom.chat.push({ author: currentUser.username, text });
+            input.value = '';
+            
+            const chatBox = document.getElementById('partyChatBox');
+            chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendPartyReaction(emoji) {
+            const layer = document.getElementById('flyingEmojiLayer');
+            if (!layer) return;
+
+            const span = document.createElement('div');
+            span.className = 'flying-emoji';
+            span.innerText = emoji;
+            span.style.left = Math.random() * 80 + 10 + '%';
+            layer.appendChild(span);
+
+            setTimeout(() => { span.remove(); }, 2000);
+
+            if (currentUser && activeWatchPartyRoom) {
+                activeWatchPartyRoom.chat.push({ author: 'Реакция', text: `${currentUser.username} отправил(а) ${emoji}` });
+                const chatBox = document.getElementById('partyChatBox');
+                if (chatBox) {
+                    chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            }
+        }
+
+        function leaveWatchPartyRoom() {
+            if (partySyncInterval) clearInterval(partySyncInterval);
+            activeWatchPartyRoom = null;
+            closeWatchPartyModal();
+        }
+
+        function createWatchPartyFromAnime(animeId) {
+            if (!currentUser) { openAuthModal('login'); return; }
+            playSound();
+            activeWatchPartyRoom = {
+                id: 'room_' + Date.now(),
+                name: 'Просмотр с друзьями',
+                host: currentUser.username,
+                animeId: animeId,
+                type: 'public',
+                currentTime: 0,
+                isPlaying: false,
+                season: 1,
+                epIdx: 0,
+                members: [currentUser.username],
+                chat: [{ author: 'Система', text: `${currentUser.username} запустил Watch Party.` }]
+            };
+            openActiveWatchPartyRoom();
+        }
+        // ==========================================
 
         async function autoFillFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
@@ -2005,6 +2227,7 @@
                                 <span style="background:rgba(255,255,255,0.08); padding:3px 10px; border-radius:6px; font-size:12px;">${(anime.genres||[]).join(', ')}</span>
                                 <span style="background:rgba(255,255,255,0.08); padding:3px 10px; border-radius:6px; font-size:12px;">${anime.year || '2026'}</span>
                                 <button class="btn-secondary" style="padding:6px 14px; font-size:12px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
+                                <button class="btn-glow-secondary" style="padding:6px 14px; font-size:12px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Watch Party</button>
                             </div>
                         </div>
                     </div>
