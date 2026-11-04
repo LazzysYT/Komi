@@ -177,7 +177,6 @@
 
         main { width: 100%; animation: fadeInUp 0.2s ease; }
 
-        /* Кинематографичный Hero Слайдер */
         .hero-slider-container {
             position: relative;
             border-radius: 24px;
@@ -565,7 +564,7 @@
                     <textarea class="form-control" id="animeDesc" placeholder="Сюжет аниме..."></textarea>
                 </div>
                 <div class="form-group">
-                    <label>Эпизоды и Ссылки на видео (.mp4 с любых доменов)</label>
+                    <label>Эпизоды (Прямая ссылка .mp4 или готовый iframe-код)</label>
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:10px; margin-bottom:10px;"></div>
                     <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
                 </div>
@@ -1544,9 +1543,7 @@
                 <div style="display:flex; gap:6px; align-items:center;">
                     <input type="number" class="form-control ep-season" value="1" min="1" style="width:65px;" title="Сезон">
                     <input type="text" class="form-control ep-title" value="Эпизод 1" style="flex:1;">
-                    <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria, Jaskier" style="flex:1.5;">
-                    <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                    <input type="text" class="form-control ep-url" placeholder="Ссылка .mp4 или домен..." style="flex:2;" required>
+                    <input type="text" class="form-control ep-url" placeholder="Прямая .mp4 ссылка или iframe код..." style="flex:3;" required>
                 </div>
             `;
 
@@ -1568,9 +1565,7 @@
                             <div style="display:flex; gap:6px; margin-bottom:6px; align-items:center;">
                                 <input type="number" class="form-control ep-season" value="${ep.season || 1}" min="1" style="width:65px;" title="Сезон">
                                 <input type="text" class="form-control ep-title" value="${ep.title}" style="flex:1;">
-                                <input type="text" class="form-control ep-voices" value="${ep.voices || ep.voice || 'AniLibria'}" style="flex:1.5;">
-                                <select class="form-control ep-quality" style="width:90px;"><option ${ep.quality==='1080p'?'selected':''}>1080p</option><option ${ep.quality==='720p'?'selected':''}>720p</option><option ${ep.quality==='480p'?'selected':''}>480p</option></select>
-                                <input type="text" class="form-control ep-url" value="${ep.url}" style="flex:2;" required>
+                                <input type="text" class="form-control ep-url" value="${ep.url}" style="flex:3;" required>
                             </div>
                         `).join('');
                     }
@@ -1590,9 +1585,7 @@
             div.innerHTML = `
                 <input type="number" class="form-control ep-season" value="${lastSeason}" min="1" style="width:65px;" title="Сезон">
                 <input type="text" class="form-control ep-title" value="Эпизод ${count}" style="flex:1;">
-                <input type="text" class="form-control ep-voices" placeholder="Озвучки через запятую..." value="AniLibria" style="flex:1.5;">
-                <select class="form-control ep-quality" style="width:90px;"><option>1080p</option><option>720p</option><option>480p</option></select>
-                <input type="text" class="form-control ep-url" placeholder="Ссылка .mp4 или домен..." style="flex:2;" required>
+                <input type="text" class="form-control ep-url" placeholder="Прямая .mp4 ссылка или iframe код..." style="flex:3;" required>
             `;
             document.getElementById('episodesList').appendChild(div);
         }
@@ -1618,22 +1611,17 @@
             const episodes = [];
             const seasonsInputs = document.querySelectorAll('.ep-season');
             const titles = document.querySelectorAll('.ep-title');
-            const voicesInputs = document.querySelectorAll('.ep-voices');
-            const qualities = document.querySelectorAll('.ep-quality');
             const urls = document.querySelectorAll('.ep-url');
             
             for(let i=0; i<titles.length; i++) {
                 let rawUrl = urls[i].value.trim();
-                // Автоматическое добавление протокола, если ввели домен без https://
-                if (rawUrl && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://') && !rawUrl.startsWith('data:')) {
+                if (rawUrl && !rawUrl.startsWith('<iframe') && !rawUrl.startsWith('http://') && !rawUrl.startsWith('https://') && !rawUrl.startsWith('data:')) {
                     rawUrl = 'https://' + rawUrl;
                 }
 
                 episodes.push({ 
                     season: parseInt(seasonsInputs[i].value) || 1, 
                     title: titles[i].value, 
-                    voices: voicesInputs[i].value,
-                    quality: qualities[i].value,
                     url: rawUrl 
                 });
             }
@@ -1820,7 +1808,7 @@
             document.getElementById('watchModal').classList.remove('active');
         }
 
-        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, selectedVoice = null, selectedQuality = null) {
+        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0) {
             siteStats.views++;
             saveData();
             
@@ -1847,17 +1835,26 @@
             const seasonNumbers = Object.keys(seasonsMap).map(Number).sort((a,b) => a - b);
             const activeSeason = selectedSeason !== null && seasonsMap[selectedSeason] ? selectedSeason : seasonNumbers[0];
             const currentSeasonEpisodes = seasonsMap[activeSeason];
+            const currentEp = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
 
-            const currentEpForVoices = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
-            const rawVoicesStr = currentEpForVoices.voices || currentEpForVoices.voice || 'AniLibria';
-            const availableVoices = rawVoicesStr.split(',').map(v => v.trim()).filter(Boolean);
-            const activeVoice = selectedVoice && availableVoices.includes(selectedVoice) ? selectedVoice : availableVoices[0];
+            let playerHtml = '';
+            const epUrl = currentEp ? currentEp.url : '';
 
-            const availableQualities = [...new Set(currentSeasonEpisodes.map(ep => ep.quality || '1080p'))];
-            const activeQuality = selectedQuality && availableQualities.includes(selectedQuality) ? selectedQuality : availableQualities[0];
-
-            const finalEpList = currentSeasonEpisodes.filter(ep => (ep.quality || '1080p') === activeQuality);
-            const currentEp = finalEpList[selectedEpIdx] || finalEpList[0] || currentSeasonEpisodes[0];
+            if (epUrl.trim().startsWith('<iframe')) {
+                playerHtml = `<div class="player-box" style="padding:0; overflow:hidden;">${epUrl}</div>`;
+            } else {
+                playerHtml = `
+                    <div class="player-box">
+                        <video id="animeVideoPlayer" controls preload="metadata" crossorigin="anonymous" playsinline style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0})" onerror="handleVideoError()">
+                            <source src="${epUrl}" type="video/mp4">
+                            Ваш браузер не поддерживает видео.
+                        </video>
+                    </div>
+                    <div id="videoErrorMsg" style="display:none; color:#fca5a5; font-size:13px; background:rgba(239,68,68,0.15); padding:10px; border-radius:8px; border:1px solid rgba(239,68,68,0.3); margin-top:10px;">
+                        ⚠️ Ошибка воспроизведения. Убедитесь, что ссылка ведет на рабочий файл .mp4 и сервер разрешает доступ (CORS).
+                    </div>
+                `;
+            }
 
             const comments = animeComments[anime.id] || [];
             const userHistoryKey = currentUser ? `${currentUser.username}_${anime.id}` : null;
@@ -1905,15 +1902,7 @@
                         </div>
                     ` : ''}
 
-                    <div class="player-wrapper">
-                        <div class="player-box">
-                            <video id="animeVideoPlayer" controls preload="metadata" crossorigin="anonymous" playsinline style="width:100%; height:100%;" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')" onerror="handleVideoError()">
-                                <source src="${currentEp ? currentEp.url : ''}" type="video/mp4">
-                                Ваш браузер не поддерживает видео.
-                            </video>
-                        </div>
-                        <button class="skip-intro-btn" id="skipIntroBtn" onclick="playSound(); skipIntro()">Пропустить опенинг ⏭</button>
-                    </div>
+                    ${playerHtml}
 
                     <div class="anime-screenshots-section">
                         <h3 style="font-size:13px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры из аниме</h3>
@@ -1922,34 +1911,19 @@
                         </div>
                     </div>
 
-                    <div id="videoErrorMsg" style="display:none; color:#fca5a5; font-size:13px; background:rgba(239,68,68,0.15); padding:10px; border-radius:8px; border:1px solid rgba(239,68,68,0.3);">
-                        ⚠️ Ошибка воспроизведения. Убедитесь, что сторонний домен разрешает прямые подключения (CORS) и ссылка ведет на рабочий файл .mp4.
-                    </div>
-
-                    <div style="display:flex; gap:15px; background:var(--bg-input); padding:12px 16px; border-radius:12px; align-items:center; flex-wrap:wrap;">
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:13px; color:var(--text-muted);">Озвучка:</span>
-                            ${availableVoices.map(v => `<button class="season-tab-btn ${v === activeVoice ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${v}', '${activeQuality}')">${v}</button>`).join('')}
-                        </div>
-                        <div style="display:flex; align-items:center; gap:8px;">
-                            <span style="font-size:13px; color:var(--text-muted);">Качество:</span>
-                            ${availableQualities.map(q => `<button class="season-tab-btn ${q === activeQuality ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${q}')">${q}</button>`).join('')}
-                        </div>
-                    </div>
-
                     <div class="crunchy-episodes-section">
                         <div class="season-tabs">
                             ${seasonNumbers.map(s => `
-                                <button class="season-tab-btn ${s === activeSeason ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${s}, 0, '${activeVoice}', '${activeQuality}')">
+                                <button class="season-tab-btn ${s === activeSeason ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${s}, 0)">
                                     Сезон ${s}
                                 </button>
                             `).join('')}
                         </div>
 
-                        <h3 style="font-size:16px; font-weight:700; margin-bottom:14px;">Список эпизодов (${finalEpList.length})</h3>
+                        <h3 style="font-size:16px; font-weight:700; margin-bottom:14px;">Список эпизодов (${currentSeasonEpisodes.length})</h3>
                         <div class="episodes-grid-crunchy">
-                            ${finalEpList.map((ep, i) => `
-                                <div class="ep-crunchy-card ${i === (selectedEpIdx || 0) ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${i}, '${activeVoice}', '${activeQuality}')">
+                            ${currentSeasonEpisodes.map((ep, i) => `
+                                <div class="ep-crunchy-card ${i === (selectedEpIdx || 0) ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${i})">
                                     <div class="ep-crunchy-thumb" style="background-image: url('${anime.poster}'); background-size: cover; background-position: center;">
                                         <div class="ep-crunchy-play-overlay">
                                             <div class="ep-crunchy-play-icon">▶</div>
@@ -1958,7 +1932,7 @@
                                     <div class="ep-crunchy-info">
                                         <div class="ep-crunchy-titles">
                                             <div class="ep-crunchy-title">${ep.title || ('Эпизод ' + (i+1))}</div>
-                                            <div class="ep-crunchy-desc">${activeVoice} • ${activeQuality}</div>
+                                            <div class="ep-crunchy-desc">Эпизод ${i+1}</div>
                                         </div>
                                         <div class="ep-crunchy-time">24 мин</div>
                                     </div>
@@ -1979,7 +1953,7 @@
                         <div style="display:flex; gap:10px; flex-direction:column;">
                             <div style="display:flex; gap:10px;">
                                 <input type="text" id="commentInput" class="form-control" placeholder="Написать комментарий...">
-                                <button class="btn-glow" onclick="playSound(); addComment('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0}, '${activeVoice}', '${activeQuality}')">Отправить</button>
+                                <button class="btn-glow" onclick="playSound(); addComment('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0})">Отправить</button>
                             </div>
                             <label style="font-size:12px; color:var(--text-muted); cursor:pointer;"><input type="checkbox" id="isSpoiler"> Содержит спойлер</label>
                         </div>
@@ -2025,11 +1999,6 @@
             if (errBox) errBox.style.display = 'block';
         }
 
-        function skipIntro() {
-            const v = document.getElementById('animeVideoPlayer');
-            if (v) v.currentTime += 85;
-        }
-
         function saveProgress(id, video) {
             if (!currentUser) return;
             const key = `${currentUser.username}_${id}`;
@@ -2037,8 +2006,8 @@
             saveData();
         }
 
-        function playNextEp(id, season, currentIdx, voice, quality) {
-            openWatchModal(id, season, currentIdx + 1, voice, quality);
+        function playNextEp(id, season, currentIdx) {
+            openWatchModal(id, season, currentIdx + 1);
         }
 
         async function rateAnime(id, score) {
@@ -2052,7 +2021,7 @@
             openWatchModal(id);
         }
 
-        async function addComment(id, season, epIdx, voice, quality) {
+        async function addComment(id, season, epIdx) {
             if (!currentUser) { openAuthModal('login'); return; }
             const text = document.getElementById('commentInput').value.trim();
             const spoiler = document.getElementById('isSpoiler').checked;
@@ -2062,7 +2031,7 @@
             animeComments[id].unshift({ username: currentUser.username, text, spoiler, reactions: {} });
             
             await saveCommentsToCloud();
-            openWatchModal(id, season, epIdx, voice, quality);
+            openWatchModal(id, season, epIdx);
         }
 
         async function reactComment(id, cIdx, emoji) {
