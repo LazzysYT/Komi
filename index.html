@@ -614,37 +614,61 @@
         </div>
     </div>
 
-    <!-- Auth Modal -->
+    <!-- Auth Modal with Email Registration & OTP verification -->
     <div class="modal-overlay" id="authModal">
-        <div class="modal-content" style="max-width: 400px;">
+        <div class="modal-content" style="max-width: 420px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
             <div style="display: flex; gap: 10px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
                 <button type="button" class="season-tab-btn active" id="tabLoginBtn" onclick="playSound(); switchAuthTab('login')">Вход</button>
                 <button type="button" class="season-tab-btn" id="tabRegisterBtn" onclick="playSound(); switchAuthTab('register')">Регистрация</button>
             </div>
+
+            <!-- Login Form -->
             <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)">
-                <h2 style="margin-bottom: 15px; font-size: 20px;">Вход</h2>
+                <h2 style="margin-bottom: 15px; font-size: 20px;">Вход в аккаунт</h2>
                 <div class="form-group">
-                    <label>Имя пользователя</label>
-                    <input type="text" class="form-control" id="loginUsername" required placeholder="Имя...">
+                    <label>Email или Имя пользователя</label>
+                    <input type="text" class="form-control" id="loginUsername" required placeholder="name@mail.com или логин...">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="password" class="form-control" id="loginPassword" required placeholder="Пароль...">
+                    <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
                 </div>
                 <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Войти</button>
             </form>
-            <form id="registerFormContainer" onsubmit="handleRegisterSubmit(event)" style="display: none;">
-                <h2 style="margin-bottom: 15px; font-size: 20px;">Регистрация</h2>
+
+            <!-- Register Step 1: Input Data -->
+            <form id="registerFormContainer" onsubmit="handleRegisterStep1(event)">
+                <h2 style="margin-bottom: 15px; font-size: 20px;">Регистрация по почте</h2>
+                <div class="form-group">
+                    <label>Электронная почта (Email)</label>
+                    <input type="email" class="form-control" id="regEmail" required placeholder="your_email@gmail.com">
+                </div>
                 <div class="form-group">
                     <label>Имя пользователя</label>
-                    <input type="text" class="form-control" id="regUsername" required placeholder="Уникальное имя...">
+                    <input type="text" class="form-control" id="regUsername" required placeholder="Уникальный никнейм...">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="password" class="form-control" id="regPassword" required placeholder="Пароль...">
+                    <input type="password" class="form-control" id="regPassword" required placeholder="Придумайте пароль...">
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Зарегистрироваться</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Продолжить</button>
+            </form>
+
+            <!-- Register Step 2: Email OTP Code Verification -->
+            <form id="registerVerifyContainer" onsubmit="handleRegisterVerify(event)" style="display: none;">
+                <h2 style="margin-bottom: 10px; font-size: 20px;">Подтверждение почты</h2>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">
+                    Мы отправили 6-значный код подтверждения на вашу электронную почту <b id="verifyEmailTarget" style="color: var(--text-main);"></b>.
+                </p>
+                <div class="form-group">
+                    <label>Код из письма</label>
+                    <input type="text" class="form-control" id="regVerifyCode" required placeholder="123456" maxlength="6" style="letter-spacing: 4px; font-weight: 700; text-align: center; font-size: 18px;">
+                </div>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="playSound()">Подтвердить и войти</button>
+                <div style="text-align: center; margin-top: 12px;">
+                    <button type="button" class="btn-secondary" style="padding: 6px 12px; font-size: 11px;" onclick="playSound(); switchAuthTab('register')">◀ Назад к форме</button>
+                </div>
             </form>
         </div>
     </div>
@@ -790,7 +814,7 @@
         let userNotifications = JSON.parse(localStorage.getItem('komi_notifications')) || {}; 
         let profileWalls = JSON.parse(localStorage.getItem('komi_profile_walls')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
-        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
+        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': { passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', email: 'admin@komianime.hub' } };
         let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ⭐', regDate: '05 ноября 2026 года' }
         };
@@ -815,6 +839,8 @@
         
         let activeWatchPartyRoom = null;
         let activePartiesList = [];
+        let tempRegData = null;
+        let generatedOtpCode = null;
 
         function changeTheme(theme) {
             document.body.className = theme === 'purple' ? '' : 'theme-' + theme;
@@ -947,7 +973,8 @@
                             activePartiesList = JSON.parse(row.content || '[]');
                         }
                         if (row.id === 7) {
-                            userFriends = JSON.parse(row.content || '{}');
+                            const cloudFriends = JSON.parse(row.content || '{}');
+                            userFriends = { ...userFriends, ...cloudFriends };
                         }
                     });
                     updateNotificationsUI();
@@ -2139,7 +2166,7 @@
                                      synopsis: anime.description || '',
                                      genres: [],
                                      images: [posterUrl]
-                                 }).replace(/"/g, '&quot;')})">
+                                   }).replace(/"/g, '&quot;')})">
                                 <img src="${posterPreview}" style="width: 26px; height: 35px; object-fit: cover; border-radius: 4px;">
                                 <div style="font-size: 12px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     ${anime.russian || anime.name} (${anime.aired_on ? anime.aired_on.split('-')[0] : 'N/A'})
@@ -2384,6 +2411,9 @@
             const regBtn = document.getElementById('tabRegisterBtn');
             const loginForm = document.getElementById('loginFormContainer');
             const regForm = document.getElementById('registerFormContainer');
+            const verifyForm = document.getElementById('registerVerifyContainer');
+
+            if (verifyForm) verifyForm.style.display = 'none';
 
             if (mode === 'login') {
                 loginBtn.classList.add('active');
@@ -2400,44 +2430,84 @@
 
         async function handleLoginSubmit(e) {
             e.preventDefault();
-            const usernameInput = document.getElementById('loginUsername').value.trim();
+            const inputVal = document.getElementById('loginUsername').value.trim();
             const passwordInput = document.getElementById('loginPassword').value;
-            if (!usernameInput || !passwordInput) return;
+            if (!inputVal || !passwordInput) return;
 
             const passwordHash = await hashPassword(passwordInput);
-            const matchedKey = Object.keys(registeredUsers).find(k => k.toLowerCase() === usernameInput.toLowerCase());
+            
+            // Проверяем по логину или по email
+            let matchedKey = null;
+            Object.entries(registeredUsers).forEach(([username, uData]) => {
+                const uEmail = typeof uData === 'object' ? uData.email : '';
+                const uHash = typeof uData === 'object' ? uData.passwordHash : uData;
+                if ((username.toLowerCase() === inputVal.toLowerCase() || uEmail.toLowerCase() === inputVal.toLowerCase()) && uHash === passwordHash) {
+                    matchedKey = username;
+                }
+            });
 
-            if (matchedKey && registeredUsers[matchedKey] === passwordHash) {
+            if (matchedKey) {
                 currentUser = { username: matchedKey };
                 saveData();
                 closeAuthModal();
                 render();
             } else {
-                alert('Неверное имя или пароль!');
+                alert('Неверный логин/email или пароль!');
             }
         }
 
-        async function handleRegisterSubmit(e) {
+        // Шаг 1 регистрации: проверяем занятость, генерируем OTP код и переключаем на ввод кода
+        async function handleRegisterStep1(e) {
             e.preventDefault();
-            const usernameInput = document.getElementById('regUsername').value.trim();
-            const passwordInput = document.getElementById('regPassword').value;
-            if (!usernameInput || !passwordInput) return;
+            const email = document.getElementById('regEmail').value.trim();
+            const username = document.getElementById('regUsername').value.trim();
+            const password = document.getElementById('regPassword').value;
 
-            const lowerInput = usernameInput.toLowerCase();
-            const isTaken = Object.keys(registeredUsers).some(k => k.toLowerCase() === lowerInput);
+            if (!email || !username || !password) return;
 
-            if (isTaken) {
-                alert('Имя уже занято!');
+            const lowerUser = username.toLowerCase();
+            const isUserTaken = Object.keys(registeredUsers).some(k => k.toLowerCase() === lowerUser);
+            if (isUserTaken) {
+                alert('Имя пользователя уже занято!');
                 return;
             }
 
-            const passwordHash = await hashPassword(passwordInput);
-            registeredUsers[usernameInput] = passwordHash;
-            currentUser = { username: usernameInput };
+            const isEmailTaken = Object.values(registeredUsers).some(u => typeof u === 'object' && u.email && u.email.toLowerCase() === email.toLowerCase());
+            if (isEmailTaken) {
+                alert('Этот email уже привязан к другому аккаунту!');
+                return;
+            }
+
+            const passwordHash = await hashPassword(password);
+            generatedOtpCode = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            tempRegData = { username, email, passwordHash };
+
+            // Имитируем отправку на почту и выводим красивое уведомление с кодом для удобства проверки
+            document.getElementById('verifyEmailTarget').innerText = email;
+            document.getElementById('registerFormContainer').style.display = 'none';
+            document.getElementById('registerVerifyContainer').style.display = 'block';
+
+            alert(`📩 [Имитация отправки Email]\nКод подтверждения для ${email}: ${generatedOtpCode}`);
+        }
+
+        // Шаг 2 регистрации: проверка OTP кода и завершение регистрации
+        async function handleRegisterVerify(e) {
+            e.preventDefault();
+            const enteredCode = document.getElementById('regVerifyCode').value.trim();
+
+            if (enteredCode !== generatedOtpCode) {
+                alert('Неверный код подтверждения! Проверьте введенные цифры.');
+                return;
+            }
+
+            const { username, email, passwordHash } = tempRegData;
+            registeredUsers[username] = { passwordHash, email };
+            currentUser = { username };
 
             const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-            userProfiles[usernameInput] = { 
-                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${usernameInput}`, 
+            userProfiles[username] = { 
+                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`, 
                 status: 'Новичок ⭐', 
                 regDate: nowStr 
             };
@@ -2446,7 +2516,7 @@
             saveData();
             closeAuthModal();
             render();
-            alert('Аккаунт создан!');
+            alert('🎉 Регистрация успешно завершена! Добро пожаловать!');
         }
 
         function toggleFavorite(id, category) {
@@ -2503,18 +2573,6 @@
             openWatchModal(animeId, season, epIdx);
         }
 
-        function formatVideoDuration(seconds) {
-            if (isNaN(seconds) || seconds <= 0) return '24 мин';
-            const hrs = Math.floor(seconds / 3600);
-            const mins = Math.floor((seconds % 3600) / 60);
-            const secs = Math.floor(seconds % 60);
-
-            if (hrs > 0) {
-                return `${hrs}:${mins < 10 ? '0' : ''}${mins}:${secs < 10 ? '0' : ''}${secs}`;
-            }
-            return `${mins} мин ${secs} сек`;
-        }
-
         async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0) {
             siteStats.views++;
             saveData();
@@ -2559,12 +2617,9 @@
             } else {
                 playerHtml = `
                     <div class="player-box">
-                        <video id="animeVideoPlayer" controls preload="metadata" crossorigin="anonymous" playsinline onloadedmetadata="updateDurationDisplay(this)" ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0})" onerror="handleVideoError()">
+                        <video id="animeVideoPlayer" controls preload="metadata" crossorigin="anonymous" playsinline ontimeupdate="saveProgress('${anime.id}', this)" onended="playNextEp('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0})">
                             <source src="${activeUrl}" type="video/mp4">
                         </video>
-                    </div>
-                    <div id="videoErrorMsg" style="display:none; color:#FF454F; font-size:12px; background:rgba(255,69,79,0.1); padding:8px; border-radius:8px; border:1px solid rgba(255,69,79,0.25); margin-top:8px;">
-                        ⚠️ Ошибка воспроизведения .mp4 файла.
                     </div>
                 `;
             }
@@ -2659,139 +2714,21 @@
                                             <div class="ep-crunchy-title">${ep.title || ('Эпизод ' + (i+1))}</div>
                                             <div class="ep-crunchy-desc">Эпизод ${i+1}</div>
                                         </div>
-                                        <div class="ep-crunchy-time" id="durationBadge_${i}">${ep.sources && Object.values(ep.sources)[0]?.startsWith('<iframe') ? 'Видео' : '...'}</div>
                                     </div>
                                 </div>
                             `).join('')}
                         </div>
                     </div>
-
-                    <div style="background:var(--bg-input); padding:10px 14px; border-radius:10px; display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; font-size:12px;">
-                        <span>Рейтинг: <b>⭐ ${shikiRating}</b> (Ваш: <span id="myRating">${myRatingVal}</span>)</span>
-                        <div style="display:flex; gap:4px;">
-                            ${[2,4,6,8,10].map(star => `<button style="background:none; border:none; color:#fbbf24; cursor:pointer; font-size:14px;" onclick="playSound(); rateAnime('${anime.id}', ${star})">⭐${star}</button>`).join('')}
-                        </div>
-                    </div>
-
-                    <div class="comments-section">
-                        <h3 style="font-size:13px;">💬 Комментарии (<span id="commentsCount">${comments.length}</span>)</h3>
-                        <div style="display:flex; gap:8px; flex-direction:column;">
-                            <div style="display:flex; gap:8px;">
-                                <input type="text" id="commentInput" class="form-control" placeholder="Комментарий...">
-                                <button class="btn-glow" onclick="playSound(); addComment('${anime.id}', ${activeSeason}, ${selectedEpIdx || 0})">Отпр.</button>
-                            </div>
-                            <label style="font-size:11px; color:var(--text-muted); cursor:pointer;"><input type="checkbox" id="isSpoiler"> Спойлер</label>
-                        </div>
-                        <div id="commentsListContainer" style="display:flex; flex-direction:column; gap:8px; margin-top:8px;">
-                            ${comments.map((c, cIdx) => {
-                                const cUserAvatar = (userProfiles[c.username] || {}).avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${c.username}`;
-                                return `
-                                <div class="comment-item">
-                                    <div class="comment-author" onclick="playSound(); openProfile('${c.username}')">
-                                        <img src="${cUserAvatar}" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
-                                        <span>${c.username}</span>
-                                    </div>
-                                    <div class="comment-text" style="font-size:12px;">${c.spoiler ? `<span class="spoiler-text" onclick="this.classList.toggle('revealed')">⚠️ Спойлер <span style="color:transparent">${c.text}</span></span>` : c.text}</div>
-                                    <div class="comment-reactions">
-                                        ${['🔥', '❤️', '😂', '🤡'].map(emoji => {
-                                            const count = (c.reactions && c.reactions[emoji]) ? c.reactions[emoji].length : 0;
-                                            const myUser = currentUser ? currentUser.username : null;
-                                            const hasMyReaction = myUser && c.reactions && c.reactions[emoji] && c.reactions[emoji].includes(myUser);
-                                            return `
-                                                <button class="reaction-btn ${hasMyReaction ? 'active' : ''}" onclick="playSound(); reactComment('${anime.id}', ${cIdx}, '${emoji}')">
-                                                    <span>${emoji}</span> <span>${count}</span>
-                                                </button>
-                                            `;
-                                        }).join('')}
-                                    </div>
-                                </div>
-                            `;}).join('')}
-                        </div>
-                    </div>
                 </div>
             `;
             document.getElementById('watchModal').classList.add('active');
-
-            const v = document.getElementById('animeVideoPlayer');
-            if (v && savedTime > 0) {
-                v.currentTime = savedTime;
-                v.play().catch(() => {});
-            }
         }
 
-        function updateDurationDisplay(videoElement) {
-            const duration = videoElement.duration;
-            const formatted = formatVideoDuration(duration);
-            document.querySelectorAll('.ep-crunchy-card.active .ep-crunchy-time').forEach(el => {
-                el.innerText = formatted;
-            });
-        }
-
-        function handleVideoError() {
-            const errBox = document.getElementById('videoErrorMsg');
-            if (errBox) errBox.style.display = 'block';
-        }
-
-        function saveProgress(id, video) {
+        function saveProgress(animeId, video) {
             if (!currentUser) return;
-            const key = `${currentUser.username}_${id}`;
+            const key = `${currentUser.username}_${animeId}`;
             userWatchHistory[key] = video.currentTime;
             saveData();
-        }
-
-        function playNextEp(id, season, currentIdx) {
-            openWatchModal(id, season, currentIdx + 1);
-        }
-
-        async function rateAnime(id, score) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            const anime = animeList.find(a => a.id === id);
-            if (!anime) return;
-            if (!anime.ratings) anime.ratings = {};
-            anime.ratings[currentUser.username] = score;
-            await saveAnimeToCloud();
-            document.getElementById('myRating').innerText = score;
-            openWatchModal(id);
-        }
-
-        async function addComment(id, season, epIdx) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            const text = document.getElementById('commentInput').value.trim();
-            const spoiler = document.getElementById('isSpoiler').checked;
-            if (!text) return;
-            
-            if (!animeComments[id]) animeComments[id] = [];
-            animeComments[id].unshift({ username: currentUser.username, text, spoiler, reactions: {} });
-            
-            await saveCommentsToCloud();
-            openWatchModal(id, season, epIdx);
-        }
-
-        async function reactComment(id, cIdx, emoji) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            const username = currentUser.username;
-            if (!animeComments[id] || !animeComments[id][cIdx]) return;
-
-            const comment = animeComments[id][cIdx];
-            if (!comment.reactions) comment.reactions = {};
-
-            Object.keys(comment.reactions).forEach(em => {
-                if (comment.reactions[em]) {
-                    comment.reactions[em] = comment.reactions[em].filter(u => u !== username);
-                }
-            });
-
-            if (!comment.reactions[emoji]) comment.reactions[emoji] = [];
-            const userIndex = comment.reactions[emoji].indexOf(username);
-            
-            if (userIndex > -1) {
-                comment.reactions[emoji].splice(userIndex, 1);
-            } else {
-                comment.reactions[emoji].push(username);
-            }
-
-            await saveCommentsToCloud();
-            openWatchModal(id);
         }
 
         loadDataFromCloud();
