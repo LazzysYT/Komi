@@ -2081,7 +2081,7 @@
             openWatchModal(id);
         }
 
-        // Авто-заполнение через Shikimori API напрямую (исправлено против CORS ошибок)
+        // Авто-заполнение через Shikimori API через стабильный прокси corsproxy.io
         async function searchAnimeFromAPI() {
             const query = document.getElementById('apiSearchTitle').value.trim();
             const resultsContainer = document.getElementById('apiSearchResultsList');
@@ -2096,12 +2096,9 @@
 
             try {
                 const targetUrl = `https://shikimori.me/api/animes?search=${encodeURIComponent(query)}&limit=8`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
-                const response = await fetch(targetUrl, {
-                    headers: {
-                        'User-Agent': 'KomiAnimeHub'
-                    }
-                });
+                const response = await fetch(proxyUrl);
                 if (!response.ok) throw new Error('Ошибка сети');
 
                 const data = await response.json();
@@ -2139,7 +2136,7 @@
             }
         }
 
-        // Импорт случайного популярного аниме из топа Shikimori
+        // Импорт случайного популярного аниме из топа Shikimori через прокси
         async function importTopSeasonalAnime() {
             const resultsContainer = document.getElementById('apiSearchResultsList');
             resultsContainer.innerHTML = '<div style="padding: 8px; font-size: 12px; color: var(--text-muted);">Загружаем случайный хит из топа Shikimori...</div>';
@@ -2147,12 +2144,9 @@
 
             try {
                 const targetUrl = `https://shikimori.me/api/animes?order=popularity&limit=50`;
+                const proxyUrl = `https://corsproxy.io/?${encodeURIComponent(targetUrl)}`;
 
-                const res = await fetch(targetUrl, {
-                    headers: {
-                        'User-Agent': 'KomiAnimeHub'
-                    }
-                });
+                const res = await fetch(proxyUrl);
                 if (!res.ok) throw new Error('Ошибка сервера');
 
                 const data = await res.json();
