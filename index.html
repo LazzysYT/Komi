@@ -774,10 +774,11 @@
         let userNotifications = JSON.parse(localStorage.getItem('komi_notifications')) || {}; 
         let profileWalls = JSON.parse(localStorage.getItem('komi_profile_walls')) || {}; 
         let currentUser = JSON.parse(localStorage.getItem('komi_current_user')) || null;
-        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
+        let registeredUsers = JSON.parse(localStorage.getItem('komi_users_db')) || { 'admin': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'mellstroy': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918', 'ukiydad': '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' };
         let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Владелец ⭐', regDate: '05 ноября 2026 года' },
-            'mellstroy': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Mellstroy', status: 'Стример', regDate: '05 ноября 2026 года' }
+            'mellstroy': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Mellstroy', status: 'Стример', regDate: '05 ноября 2026 года' },
+            'UkiyoAd': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=UkiyoAd', status: 'Зритель', regDate: '05 ноября 2026 года' }
         };
         let userFavorites = JSON.parse(localStorage.getItem('komi_favorites')) || {};
         let userWatchHistory = JSON.parse(localStorage.getItem('komi_history')) || {};
@@ -799,7 +800,7 @@
         
         let activeWatchPartyRoom = null;
         let partySyncInterval = null;
-        let activePartiesList = JSON.parse(localStorage.getItem('komi_active_parties')) || [];
+        let activePartiesList = [];
 
         function changeTheme(theme) {
             document.body.className = theme === 'default' ? '' : 'theme-' + theme;
@@ -818,9 +819,7 @@
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
             localStorage.setItem('komi_anime_statuses', JSON.stringify(userAnimeStatuses));
             localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
-            localStorage.setItem('komi_notifications', JSON.stringify(userNotifications));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
-            localStorage.setItem('komi_active_parties', JSON.stringify(activePartiesList));
             saveStatusesToCloud();
         }
 
@@ -839,6 +838,12 @@
                         if (row.id === 4) {
                             const cloudProfiles = JSON.parse(row.content || '{}');
                             userProfiles = { ...userProfiles, ...cloudProfiles };
+                        }
+                        if (row.id === 5) {
+                            userNotifications = JSON.parse(row.content || '{}');
+                        }
+                        if (row.id === 6) {
+                            activePartiesList = JSON.parse(row.content || '[]');
                         }
                     }
                 }
@@ -878,6 +883,18 @@
             }
         }
 
+        async function saveNotificationsToCloud() {
+            if (_supabase) {
+                try { await _supabase.from('animes').upsert({ id: 5, content: JSON.stringify(userNotifications) }); } catch(e) {}
+            }
+        }
+
+        async function savePartiesToCloud() {
+            if (_supabase) {
+                try { await _supabase.from('animes').upsert({ id: 6, content: JSON.stringify(activePartiesList) }); } catch(e) {}
+            }
+        }
+
         async function updateOnlinePresence() {
             if (onlineTimerRunning || !_supabase) return;
             onlineTimerRunning = true;
@@ -893,6 +910,16 @@
 
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
+
+                // Также периодически подтягиваем уведомления и активные комнаты из облака для синхронизации в реальном времени
+                const { data: cloudSyncData } = await _supabase.from('animes').select('*').in('id', [5, 6]);
+                if (cloudSyncData) {
+                    cloudSyncData.forEach(row => {
+                        if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
+                        if (row.id === 6) activePartiesList = JSON.parse(row.content || '[]');
+                    });
+                    updateNotificationsUI();
+                }
 
                 const { data } = await _supabase.from('online_users').select('*');
                 if (data) {
@@ -969,10 +996,10 @@
             }
         }
 
-        function addNotification(username, text, partyId = null) {
+        async function addNotification(username, text, partyId = null) {
             if (!userNotifications[username]) userNotifications[username] = [];
             userNotifications[username].unshift({ text, partyId, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
-            saveData();
+            await saveNotificationsToCloud();
             updateNotificationsUI();
         }
 
@@ -981,15 +1008,15 @@
             dropdown.classList.toggle('active');
             if (currentUser && userNotifications[currentUser.username]) {
                 userNotifications[currentUser.username].forEach(n => n.read = true);
-                saveData();
+                saveNotificationsToCloud();
                 updateNotificationsUI();
             }
         }
 
-        function clearNotifications() {
+        async function clearNotifications() {
             if (!currentUser) return;
             userNotifications[currentUser.username] = [];
-            saveData();
+            await saveNotificationsToCloud();
             updateNotificationsUI();
         }
 
@@ -1517,11 +1544,21 @@
         // ==========================================
         // WATCH PARTY (РАСШИРЕННАЯ СИСТЕМА)
         // ==========================================
-        function openWatchPartyHub() {
+        async function openWatchPartyHub() {
             if (!currentUser) { openAuthModal('login'); return; }
             playSound();
+
+            // Подгружаем актуальные комнаты из облака
+            if (_supabase) {
+                try {
+                    const { data } = await _supabase.from('animes').select('*').eq('id', 6).single();
+                    if (data && data.content) {
+                        activePartiesList = JSON.parse(data.content);
+                    }
+                } catch(e) {}
+            }
+
             const modal = document.getElementById('watchPartyModal');
-            
             const animeOptions = animeList.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
             const friends = userFriends[currentUser.username] || [];
 
@@ -1590,7 +1627,7 @@
             document.getElementById('watchPartyModal').classList.remove('active');
         }
 
-        function createWatchPartyRoom() {
+        async function createWatchPartyRoom() {
             if (!currentUser) return;
             const animeId = document.getElementById('partyAnimeSelect').value;
             const roomName = document.getElementById('partyRoomName').value.trim() || ('Комната ' + currentUser.username);
@@ -1614,13 +1651,24 @@
                 activePartiesList.push(activeWatchPartyRoom);
             }
 
-            saveData();
+            await savePartiesToCloud();
             closeWatchPartyModal();
             openActiveWatchPartyRoom();
         }
 
-        function joinWatchPartyRoom(roomId) {
+        async function joinWatchPartyRoom(roomId) {
             if (!currentUser) { openAuthModal('login'); return; }
+            
+            // Загружаем актуальный список из облака
+            if (_supabase) {
+                try {
+                    const { data } = await _supabase.from('animes').select('*').eq('id', 6).single();
+                    if (data && data.content) {
+                        activePartiesList = JSON.parse(data.content);
+                    }
+                } catch(e) {}
+            }
+
             let room = activePartiesList.find(r => r.id === roomId);
             if (!room && activeWatchPartyRoom && activeWatchPartyRoom.id === roomId) {
                 room = activeWatchPartyRoom;
@@ -1631,14 +1679,14 @@
             if (!activeWatchPartyRoom.members.includes(currentUser.username)) {
                 activeWatchPartyRoom.members.push(currentUser.username);
                 activeWatchPartyRoom.chat.push({ author: 'Система', text: `${currentUser.username} присоединился к комнате.` });
-                saveData();
+                await savePartiesToCloud();
             }
 
             closeWatchPartyModal();
             openActiveWatchPartyRoom();
         }
 
-        function deleteActiveWatchParty() {
+        async function deleteActiveWatchParty() {
             if (!activeWatchPartyRoom || !currentUser) return;
             if (activeWatchPartyRoom.host !== currentUser.username) {
                 alert('Только создатель комнаты может её удалить!');
@@ -1647,7 +1695,7 @@
 
             if (confirm('Вы уверены, что хотите удалить эту комнату?')) {
                 activePartiesList = activePartiesList.filter(r => r.id !== activeWatchPartyRoom.id);
-                saveData();
+                await savePartiesToCloud();
                 leaveWatchPartyRoom();
                 alert('Комната была удалена.');
             }
@@ -1764,14 +1812,14 @@
             }
         }
 
-        function sendPartyMessage() {
+        async function sendPartyMessage() {
             const input = document.getElementById('partyMessageInput');
             const text = input ? input.value.trim() : '';
             if (!text || !currentUser || !activeWatchPartyRoom) return;
 
             activeWatchPartyRoom.chat.push({ author: currentUser.username, text });
             input.value = '';
-            saveData();
+            await savePartiesToCloud();
             
             const chatBox = document.getElementById('partyChatBox');
             if (chatBox) {
@@ -1780,7 +1828,7 @@
             }
         }
 
-        function sendPartyReaction(emoji) {
+        async function sendPartyReaction(emoji) {
             const layer = document.getElementById('flyingEmojiLayer');
             if (!layer) return;
 
@@ -1794,7 +1842,7 @@
 
             if (currentUser && activeWatchPartyRoom) {
                 activeWatchPartyRoom.chat.push({ author: 'Реакция', text: `${currentUser.username} отправил(а) ${emoji}` });
-                saveData();
+                await savePartiesToCloud();
                 const chatBox = document.getElementById('partyChatBox');
                 if (chatBox) {
                     chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
@@ -1809,7 +1857,7 @@
             closeWatchPartyModal();
         }
 
-        function createWatchPartyFromAnime(animeId) {
+        async function createWatchPartyFromAnime(animeId) {
             if (!currentUser) { openAuthModal('login'); return; }
             playSound();
             activeWatchPartyRoom = {
@@ -1826,7 +1874,7 @@
                 chat: [{ author: 'Система', text: `${currentUser.username} запустил Watch Party.` }]
             };
             activePartiesList.push(activeWatchPartyRoom);
-            saveData();
+            await savePartiesToCloud();
             openActiveWatchPartyRoom();
         }
         // ==========================================
