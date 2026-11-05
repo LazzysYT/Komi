@@ -803,6 +803,12 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
 .komi-profile-friend{background:#28282a;border:1px solid #38383b;border-radius:12px;color:white;padding:10px 16px;cursor:pointer}
 @media(max-width:760px){.komi-profile-overview{grid-template-columns:1fr}.komi-profile-overview section{min-height:auto;padding:20px}.komi-profile-overview section+section{border-left:0;border-top:1px solid #303034}.komi-profile-tab{padding:9px 12px}.komi-profile-v2 .profile-header-card{padding:24px 12px!important}}
 
+.komi-profile-v2 .profile-header-card{border-radius:32px!important;overflow:hidden}
+.komi-profile-v2 .profile-stat-card{border-radius:18px!important}
+.komi-profile-v2 .profile-main-content,.komi-profile-v2 .profile-sidebar-menu{border-radius:24px!important}
+.komi-profile-v2 .komi-profile-anime-section .anime-card{border-radius:18px;overflow:hidden}
+.komi-collection-notice{background:#22191c;border:1px solid #57303a;border-radius:16px;padding:14px 18px;color:#e8c9cf;font-size:12px;margin:12px 0}
+@media(max-width:700px){.komi-profile-v2 .profile-header-card{border-radius:22px!important}.komi-profile-v2 .profile-stat-card{border-radius:14px!important}}
 </style>
 </head>
 <body>
@@ -1787,7 +1793,7 @@ const adminList = []; // No client-side username grants administrator privileges
             Object.entries(userStatuses).forEach(([aId, st]) => {
                 if (statsCounts[st] !== undefined) statsCounts[st]++;
                 if (st === profileActiveTab) {
-                    const anObj = animeList.find(x => x.id === aId);
+                    const anObj = animeList.find(x => String(x.id) === String(aId) || String(x.shikimoriId ?? '') === String(aId));
                     if (anObj) listForTab.push(anObj);
                 }
             });
@@ -1795,14 +1801,14 @@ const adminList = []; // No client-side username grants administrator privileges
             if (profileActiveTab === 'Любимые') {
                 const favs = userFavorites[username] || {};
                 Object.keys(favs).forEach(aId => {
-                    const anObj = animeList.find(x => x.id === aId);
+                    const anObj = animeList.find(x => String(x.id) === String(aId) || String(x.shikimoriId ?? '') === String(aId));
                     if (anObj && !listForTab.some(x => x.id === aId)) listForTab.push(anObj);
                 });
                 statsCounts['Любимые'] = listForTab.length;
             } else if (customFolderNames.includes(profileActiveTab)) {
                 const folderAnimeIds = customFolders[profileActiveTab] || [];
                 folderAnimeIds.forEach(aId => {
-                    const anObj = animeList.find(x => x.id === aId);
+                    const anObj = animeList.find(x => String(x.id) === String(aId) || String(x.shikimoriId ?? '') === String(aId));
                     if (anObj) listForTab.push(anObj);
                 });
             }
@@ -1819,6 +1825,11 @@ const adminList = []; // No client-side username grants administrator privileges
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
             const wallMessages = profileWalls[username] || [];
+
+            // Keep saved status entries visible even if the catalog is still loading or an ID is stale.
+            const unresolvedIds = Object.entries(userStatuses)
+                .filter(([aId, st]) => st === profileActiveTab && !animeList.some(x => String(x.id) === String(aId) || String(x.shikimoriId ?? '') === String(aId)))
+                .map(([aId]) => aId);
 
             const searchedList = listForTab.filter(an => {
                 if (!profileCollectionSearchQuery) return true;
@@ -1950,6 +1961,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 </div>
                             </div>
 
+                            ${unresolvedIds.length ? `<div class="komi-collection-notice">⏳ ${unresolvedIds.length} аниме из сохранённого списка пока не найдено в каталоге. Статусы сохранены; попробуй обновить страницу после загрузки каталога.</div>` : ''}
                             ${searchedList.length === 0 ? `
                                 <div class="empty-state">
                                     <div style="font-size:26px; margin-bottom:6px;">📭</div>
