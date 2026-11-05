@@ -723,6 +723,10 @@
         .komi-social-link:hover { background: #271519; border-color: #f04450; color: white; transform: translateY(-2px); box-shadow: 0 0 18px rgba(240,68,80,.22); }
         @media (max-width: 1100px) { .komi-social-links { left: 8px; gap: 6px; } .komi-social-link { width: 35px; height: 35px; border-radius: 12px; } }
         @media (max-width: 760px) { .komi-social-links { position: static; transform: none; margin-right: 8px; } .komi-social-link { width: 32px; height: 32px; } }
+        .komi-side-button > svg, .komi-side-account #sidebarAvatarIcon > svg { width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
+        .komi-side-button svg circle { fill:currentColor;stroke:none; }
+        .komi-side-button { border-radius:15px; }
+        .komi-side-button:hover { box-shadow:0 0 18px rgba(245,65,81,.13); }
     </style>
 </head>
 <body>
@@ -788,14 +792,14 @@
     <aside class="komi-side-nav" aria-label="Навигация Komi">
         <button class="komi-side-logo" onclick="playSound(); navigate('home')" title="Komi Anime">K</button>
         <div class="komi-side-links">
-            <button id="sideHomeBtn" class="komi-side-button" onclick="playSound(); navigate('home')" title="Главная" aria-label="Главная">⌂<span>Главная</span></button>
-            <button id="sideCatalogBtn" class="komi-side-button" onclick="playSound(); navigate('catalog')" title="Каталог" aria-label="Каталог">▤<span>Каталог</span></button>
-            <button class="komi-side-button" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме" aria-label="Случайное аниме">🎲<span>Случайное</span></button>
-            <button class="komi-side-button" onclick="playSound(); openWatchPartyHub()" title="Watch Party" aria-label="Watch Party">🎉<span>Party</span></button>
+            <button id="sideHomeBtn" class="komi-side-button" onclick="playSound(); navigate('home')" title="Главная" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10m5 10v-7h6v7"/></svg><span>Главная</span></button>
+            <button id="sideCatalogBtn" class="komi-side-button" onclick="playSound(); navigate('catalog')" title="Каталог" aria-label="Каталог"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Каталог</span></button>
+            <button class="komi-side-button" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме" aria-label="Случайное аниме"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg><span>Случайное</span></button>
+            <button class="komi-side-button" onclick="playSound(); openWatchPartyHub()" title="Watch Party" aria-label="Watch Party"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Party</span></button>
         </div>
         <div class="komi-side-bottom">
-            <button class="komi-side-button" onclick="playSound(); toggleNotifications()" title="Уведомления" aria-label="Уведомления">♧<span>Уведомления</span></button>
-            <button class="komi-side-button komi-side-account" onclick="playSound(); if(currentUser) openProfile(currentUser.username); else openAuthModal('login')" title="Профиль" aria-label="Профиль"><span id="sidebarAvatarIcon">◉</span><span>Профиль</span></button>
+            <button class="komi-side-button" onclick="playSound(); toggleNotifications()" title="Уведомления" aria-label="Уведомления"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg><span>Уведомления</span></button>
+            <button class="komi-side-button komi-side-account" onclick="playSound(); if(currentUser) openProfile(currentUser.username); else openAuthModal('login')" title="Профиль" aria-label="Профиль"><span id="sidebarAvatarIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></span><span>Профиль</span></button>
         </div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
@@ -1257,7 +1261,7 @@ async function loadDataFromCloud() {
                     return `
                         <div class="sidebar-friend-item" style="justify-content:space-between; margin-bottom:4px;">
                             <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; overflow:hidden;" onclick="playSound(); openProfile('${fName}')">
-                                <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                 <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fName}</span>
                             </div>
                             ${isAlreadyFriend ? `<span style="font-size:9px; color:var(--success);">В друзьях</span>` : `<button class="btn-glow" style="padding:2px 6px; font-size:9px;" onclick="playSound(); sendFriendRequest('${fName}')">+ Добавить</button>`}
@@ -1941,18 +1945,17 @@ const adminList = ['admin', 'mellstroy'];
                 if (!userProfiles[name]) userProfiles[name] = { regDate: new Date().toLocaleDateString('ru-RU') };
                 if (uploadedAvatarBase64) {
                     const publicAvatar = await uploadAvatarToStorage(uploadedAvatarBase64, name);
-                    userProfiles[name].avatar = publicAvatar || uploadedAvatarBase64;
-                    // Keep a device-local recovery copy until public cloud storage is verified.
-                    localStorage.setItem('komi_avatar_' + name, uploadedAvatarBase64);
+                    if (!publicAvatar) throw new Error('Не удалось загрузить фото в Supabase Storage (bucket avatars). Проверь создание публичного bucket и политики INSERT/SELECT. Фото не было опубликовано.');
+                    userProfiles[name].avatar = publicAvatar;
+                    localStorage.setItem('komi_avatar_' + name, publicAvatar);
                 }
                 if (status) userProfiles[name].status = status;
                 const result = await saveProfilesToCloud();
                 if (result?.error) {
                     // Only a device-local fallback if the shared profile write fails.
-                    if (uploadedAvatarBase64) localStorage.setItem('komi_avatar_' + name, uploadedAvatarBase64);
-                    alert('Не удалось сохранить аватар для всех пользователей: ' + result.error.message + '. Проверь доступ к Supabase.');
+                    alert('Не удалось сохранить профиль в общей базе: ' + result.error.message + '. Проверь доступ к Supabase.');
                 } else {
-                    alert('Профиль обновлён. Аватар сохранён; отображение другим пользователям зависит от доступности общего хранилища.');
+                    alert('Профиль сохранён в общей базе.');
                 }
                 uploadedAvatarBase64 = null;
                 avatarUploadPromise = null;
