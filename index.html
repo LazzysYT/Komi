@@ -834,44 +834,115 @@
             saveStatusesToCloud();
         }
 
-        async function loadDataFromCloud() {
-            try {
-                if (!_supabase) { render(); updateNotificationsUI(); return; }
-                const { data } = await _supabase.from('animes').select('*');
-                if (data && data.length > 0) {
-                    for(let row of data) {
-                        if (row.id === 1) animeList = JSON.parse(row.content || '[]');
-                        if (row.id === 2) animeComments = JSON.parse(row.content || '{}');
-                        if (row.id === 3) {
-                            const cloudStatuses = JSON.parse(row.content || '{}');
-                            userAnimeStatuses = { ...userAnimeStatuses, ...cloudStatuses };
-                        }
-                        if (row.id === 4) {
-                            const cloudProfiles = JSON.parse(row.content || '{}');
-                            userProfiles = { ...userProfiles, ...cloudProfiles };
-                        }
-                        if (row.id === 5) {
-                            userNotifications = JSON.parse(row.content || '{}');
-                        }
-                        if (row.id === 6) {
-                            activePartiesList = JSON.parse(row.content || '[]');
-                        }
-                        if (row.id === 7) {
-                            const cloudFriends = JSON.parse(row.content || '{}');
-                            userFriends = { ...userFriends, ...cloudFriends };
-                        }
-                    }
-                }
-                if (!animeList || animeList.length === 0) {
-                    animeList = defaultAnime;
-                    await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) });
-                }
-            } catch(err) {
-                animeList = defaultAnime;
-            }
-            render();
-            updateNotificationsUI();
+
+async function loadDataFromCloud() {
+    try {
+        if (!_supabase) {
+            throw new Error('Supabase не подключён');
         }
+
+        // Сначала загружаем остальные данные сайта
+        // из старой таблицы, НЕ трогая каталог.
+        const { data: settings, error: settingsError } =
+            await _supabase
+                .from('animes')
+                .select('id,content')
+                .in('id', [2, 3, 4, 5, 6, 7]);
+
+        if (settingsError) {
+            console.warn('Ошибка настроек:', settingsError.message);
+        }
+
+        for (const row of settings || []) {
+            let value;
+
+            try {
+                value = JSON.parse(row.content || 'null');
+            } catch {
+                continue;
+            }
+
+            if (row.id === 2) animeComments = value || {};
+            if (row.id === 3) {
+                userAnimeStatuses = {
+                    ...userAnimeStatuses,
+                    ...(value || {})
+                };
+            }
+            if (row.id === 4) {
+                userProfiles = {
+                    ...userProfiles,
+                    ...(value || {})
+                };
+            }
+            if (row.id === 5) userNotifications = value || {};
+            if (row.id === 6) activePartiesList = value || [];
+            if (row.id === 7) {
+                userFriends = {
+                    ...userFriends,
+                    ...(value || {})
+                };
+            }
+        }
+
+        // Загружаем каталог из НОВОЙ таблицы
+        const catalog = [];
+        const pageSize = 100;
+        let offset = 0;
+
+        while (true) {
+            const { data: rows, error } = await _supabase
+                .from('anime_catalog')
+                .select('shikimori_id,data')
+                .order('shikimori_id', { ascending: true })
+                .range(offset, offset + pageSize - 1);
+
+            if (error) throw error;
+
+            if (!rows || rows.length === 0) break;
+
+            for (const row of rows) {
+                const anime = row.data;
+
+                if (!anime || typeof anime !== 'object') {
+                    continue;
+                }
+
+                catalog.push({
+                    ...anime,
+                    id: String(row.shikimori_id),
+                    shikimoriId: Number(row.shikimori_id),
+                    title: anime.title || anime.originalTitle || 'Без названия',
+                    poster: anime.poster || '',
+                    shikiRating: anime.shikiRating || 0,
+                    genres: Array.isArray(anime.genres)
+                        ? anime.genres
+                        : [],
+                    episodes: Array.isArray(anime.episodes)
+                        ? anime.episodes
+                        : []
+                });
+            }
+
+            offset += rows.length;
+
+            if (rows.length < pageSize) break;
+        }
+
+        animeList = catalog;
+
+        console.log(
+            `Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`
+        );
+
+    } catch (err) {
+        console.error('Ошибка загрузки каталога:', err);
+        animeList = [];
+    }
+
+    render();
+    updateNotificationsUI();
+}
 
         async function saveAnimeToCloud() {
             if (_supabase) {
@@ -1676,7 +1747,7 @@ const adminList = ['admin', 'mellstroy'];
                 <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
                     <div class="anime-rating-badge">⭐ ${shiki}</div>
                     <div class="anime-poster-box">
-                        <img src="${anime.poster}" class="anime-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
+                        <img src="${anime.poster}" class="anime-poster" onerror="this.onerror=null;this.style.opacity='0.2'">
                         <div class="anime-quick-view">
                             <span class="btn-glow" style="padding: 5px 12px; font-size:11px;">▶ Смотреть</span>
                         </div>
@@ -1685,7 +1756,7 @@ const adminList = ['admin', 'mellstroy'];
                         <div class="anime-title">${anime.title}</div>
                         <div class="anime-meta-card">
                             <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:95px; color:var(--text-muted);">${gText}</span>
-                            <span>${anime.episodes ? anime.episodes.length : 1} сер.</span>
+                            <span>${Array.isArray(anime.episodes) ? anime.episodes.length : 0} сер.</span>
                         </div>
                     </div>
                 </div>
