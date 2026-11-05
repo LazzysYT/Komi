@@ -842,6 +842,45 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
 @media(max-width:620px){.komi-profile-v2{padding:0 9px 25px;gap:16px!important}.komi-profile-v2 .profile-header-card{padding:30px 14px!important;border-radius:28px!important}.komi-profile-v2 .profile-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.komi-profile-v2 .profile-stat-card{padding:14px 7px!important}.komi-profile-overview{grid-template-columns:minmax(0,1fr);gap:12px}.komi-profile-overview section:last-child{grid-column:auto}.komi-profile-overview section{min-height:0;padding:21px}.komi-profile-tabs{border-radius:22px;width:100%;justify-content:space-around}.komi-profile-tab{padding:10px 11px;font-size:12px}.komi-profile-v2 .profile-layout-grid{grid-template-columns:1fr}.komi-profile-v2 .profile-avatar-box{height:106px!important;width:106px!important}}
 @media(prefers-reduced-motion:reduce){.komi-profile-v2 *{transition:none!important;animation:none!important}}
 
+
+/* Community drawer, independent of home hero layout */
+.top-hero-section-grid{grid-template-columns:minmax(0,1fr)!important}
+.komi-friends-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(5px);z-index:1090;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
+.komi-friends-backdrop.open{opacity:1;visibility:visible}
+.komi-friends-drawer{position:fixed;right:0;top:0;bottom:0;width:min(430px,calc(100vw - 55px));z-index:1091;background:linear-gradient(160deg,#1b1016,#0e0d10 55%);border-left:1px solid #6a2636;box-shadow:-24px 0 65px #0009;transform:translateX(105%);visibility:hidden;transition:transform .28s ease,visibility .28s;display:flex;flex-direction:column;padding:30px 23px;gap:20px}
+.komi-friends-drawer.open{transform:translateX(0);visibility:visible}
+.komi-friends-heading{display:flex;justify-content:space-between;gap:12px;align-items:start}
+.komi-friends-kicker{font-size:10px;letter-spacing:2px;font-weight:800;color:#f0445d;margin-bottom:11px}
+.komi-friends-heading h2{font-size:24px;color:#fff;margin:0 0 7px}
+.komi-friends-heading p{font-size:12px;color:#9e9097;margin:0}
+.komi-friends-close{width:36px;height:36px;border-radius:12px;border:1px solid #4b2932;background:#26191f;color:#e7dce0;cursor:pointer}
+.komi-friends-close:hover{background:#5c1c2b}
+.komi-friends-search{display:flex;align-items:center;gap:10px;padding:0 14px;height:48px;border:1px solid #49303a;border-radius:15px;background:#201a20;color:#ee5068}
+.komi-friends-search:focus-within{border-color:#ed3d56}
+.komi-friends-search span{font-size:25px}
+.komi-friends-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-size:13px}
+.komi-friends-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#191418;border:1px solid #35252c;border-radius:16px;padding:5px}
+.komi-friends-tabs button{border:0;border-radius:12px;padding:12px 5px;background:transparent;color:#b4a5ac;cursor:pointer;font-size:12px;font-weight:700}
+.komi-friends-tabs button.active{background:linear-gradient(120deg,#c51e3b,#82162b);color:#fff;box-shadow:0 4px 15px #a31d3533}
+.komi-friends-results{overflow:auto;min-height:0;flex:1;padding-right:3px}
+.komi-friends-count{color:#a998a1;font-size:11px;margin-bottom:12px}
+.komi-friends-person{display:flex;align-items:center;gap:10px;padding:11px 10px;margin-bottom:9px;border:1px solid #35252d;border-radius:17px;background:#1c171c}
+.komi-friends-person:hover{border-color:#773347;background:#251a21}
+.komi-friends-identity{display:flex;align-items:center;gap:11px;min-width:0;flex:1;border:0;background:transparent;color:#fff;text-align:left;cursor:pointer}
+.komi-friends-identity img{width:44px;height:44px;object-fit:cover;border-radius:14px;background:#34232b}
+.komi-friends-identity span{min-width:0;display:flex;flex-direction:column;gap:5px}
+.komi-friends-identity strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.komi-friends-identity small{font-size:11px;color:#a99ca3}
+.komi-friends-add{width:34px;height:34px;border-radius:11px;background:#b61d38;border:1px solid #eb3d58;color:#fff;font-size:23px;cursor:pointer}
+.komi-friends-add:hover{background:#ec3551}
+.komi-friends-added{color:#48d58a;font-size:19px;padding:0 9px}
+.komi-friends-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;min-height:240px;padding:25px;color:#fff}
+.komi-friends-empty>span{font-size:45px}
+.komi-friends-empty strong{font-size:17px}
+.komi-friends-empty p{color:#a899a0;font-size:12px;line-height:1.6}
+@media(max-width:600px){.komi-friends-drawer{padding:22px 14px;width:min(400px,calc(100vw - 35px))}}
+@media(prefers-reduced-motion:reduce){.komi-friends-drawer,.komi-friends-backdrop{transition:none}}
+
 </style>
 </head>
 <body>
@@ -910,12 +949,20 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
             <button id="sideHomeBtn" class="komi-side-button" onclick="playSound(); navigate('home')" title="Главная" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10m5 10v-7h6v7"/></svg><span>Главная</span></button>
             <button id="sideCatalogBtn" class="komi-side-button" onclick="playSound(); navigate('catalog')" title="Каталог" aria-label="Каталог"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Каталог</span></button>
             <button class="komi-side-button" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме" aria-label="Случайное аниме"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg><span>Случайное</span></button>
+            <button id="sideFriendsBtn" class="komi-side-button" onclick="playSound(); toggleFriendsDrawer()" title="Люди и друзья" aria-label="Люди и друзья" aria-expanded="false" aria-controls="komiFriendsDrawer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg><span>Друзья</span></button>
             <button class="komi-side-button" onclick="playSound(); openWatchPartyHub()" title="Watch Party" aria-label="Watch Party"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Party</span></button>
         </div>
         <div class="komi-side-bottom">
             <button class="komi-side-button" onclick="playSound(); toggleNotifications()" title="Уведомления" aria-label="Уведомления"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg><span>Уведомления</span></button>
             <button class="komi-side-button komi-side-account" onclick="playSound(); if(currentUser) openProfile(currentUser.username); else openAuthModal('login')" title="Профиль" aria-label="Профиль"><span id="sidebarAvatarIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></span><span>Профиль</span></button>
         </div>
+    </aside>
+    <div id="komiFriendsBackdrop" class="komi-friends-backdrop" onclick="closeFriendsDrawer()"></div>
+    <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true">
+        <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2>👥 Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
+        <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." oninput="renderFriendsDrawer()" autocomplete="off" aria-label="Поиск по нику"></div>
+        <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" onclick="setFriendsDrawerTab('all')">Все пользователи</button><button id="komiFriendsMyTab" onclick="setFriendsDrawerTab('friends')">Мои друзья</button></div>
+        <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
         <main id="mainContainer"></main>
@@ -1353,6 +1400,75 @@ async function loadDataFromCloud() {
         setInterval(updateOnlinePresence, 8000);
         updateOnlinePresence();
 
+
+        // Community drawer: available on every page, without taking space from the hero.
+        let komiFriendsTab = 'all';
+        function escapeFriendHtml(value) {
+            return String(value ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+        }
+        function toggleFriendsDrawer() {
+            const drawer = document.getElementById('komiFriendsDrawer');
+            if (!drawer) return;
+            if (drawer.classList.contains('open')) closeFriendsDrawer();
+            else openFriendsDrawer();
+        }
+        function openFriendsDrawer() {
+            const drawer = document.getElementById('komiFriendsDrawer');
+            drawer.classList.add('open');
+            drawer.setAttribute('aria-hidden','false');
+            document.getElementById('komiFriendsBackdrop').classList.add('open');
+            document.getElementById('sideFriendsBtn')?.setAttribute('aria-expanded','true');
+            renderFriendsDrawer();
+            document.getElementById('komiFriendsSearch')?.focus();
+        }
+        function closeFriendsDrawer() {
+            document.getElementById('komiFriendsDrawer')?.classList.remove('open');
+            document.getElementById('komiFriendsDrawer')?.setAttribute('aria-hidden','true');
+            document.getElementById('komiFriendsBackdrop')?.classList.remove('open');
+            document.getElementById('sideFriendsBtn')?.setAttribute('aria-expanded','false');
+        }
+        function setFriendsDrawerTab(tab) {
+            komiFriendsTab = tab === 'friends' ? 'friends' : 'all';
+            renderFriendsDrawer();
+        }
+        function openCommunityProfile(name) {
+            closeFriendsDrawer();
+            openProfile(name);
+        }
+        function requestCommunityFriend(name) {
+            sendFriendRequest(name);
+            renderFriendsDrawer();
+        }
+        function renderFriendsDrawer() {
+            const list = document.getElementById('komiFriendsDrawerList');
+            if (!list) return;
+            document.getElementById('komiFriendsAllTab')?.classList.toggle('active', komiFriendsTab === 'all');
+            document.getElementById('komiFriendsMyTab')?.classList.toggle('active', komiFriendsTab === 'friends');
+            const query = (document.getElementById('komiFriendsSearch')?.value || '').trim().toLocaleLowerCase();
+            const me = currentUser?.username;
+            const friends = me ? (userFriends[me] || []) : [];
+            // Profiles are synchronized from Supabase (animes row 4); local registrations alone are not globally discoverable.
+            const names = komiFriendsTab === 'friends' ? friends : Object.keys(userProfiles);
+            const unique = [...new Set(names)].filter(n => n && n !== me && n.toLocaleLowerCase().includes(query)).sort((a,b)=>a.localeCompare(b,'ru'));
+            if (komiFriendsTab === 'friends' && !me) {
+                list.innerHTML = '<div class="komi-friends-empty"><strong>Войди в аккаунт</strong><p>Чтобы увидеть друзей, нужно авторизоваться.</p><button class="btn-glow" onclick="closeFriendsDrawer();openAuthModal(\'login\')">Войти</button></div>';
+                return;
+            }
+            if (!unique.length) {
+                list.innerHTML = '<div class="komi-friends-empty"><span>👥</span><strong>'+(query ? 'Никого не найдено' : komiFriendsTab === 'friends' ? 'Пока нет друзей' : 'Пользователей пока нет')+'</strong><p>'+(query ? 'Попробуй другой ник.' : 'Пользователи появятся здесь после создания профиля.')+'</p></div>';
+                return;
+            }
+            list.innerHTML = '<div class="komi-friends-count">Найдено: '+unique.length+'</div>'+unique.map((name,index)=>{
+                const safeName = escapeFriendHtml(name);
+                const profile = userProfiles[name] || {};
+                const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
+                const isFriend = friends.includes(name);
+                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':'Участник Komi')+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':'<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>')+'</div>';
+            }).join('');
+            window.komiFriendNames = unique;
+        }
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFriendsDrawer(); });
+
         function handleFriendSearchInput(inputVal) {
             const listEl = document.getElementById('dynamicFriendSearchResults');
             if (!listEl) return;
@@ -1637,15 +1753,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             </div>
                         </div>
 
-                        <div class="friends-sidebar-panel">
-                            <h3>
-                                <span>👥 Друзья</span>
-                                <span style="font-size:10px; color:var(--text-muted); font-weight:normal;">Поиск по нику</span>
-                            </h3>
-                            <div class="sidebar-friends-list" id="sidebarFriendsListContainer">
-                                <span style="color:var(--text-muted); font-size:11px;">Войдите в аккаунт</span>
-                            </div>
-                        </div>
+
                     </div>
 
                     ${continueWatchingHtml}
@@ -1702,7 +1810,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 `;
 
                 startHeroAutoSlide();
-                renderSidebarFriendsList();
+
 
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
