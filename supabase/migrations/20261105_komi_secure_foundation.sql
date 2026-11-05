@@ -86,3 +86,17 @@ create policy "komi notifications mark read own" on public.komi_notifications fo
 -- before enabling client updates, revoke table UPDATE and expose a narrow RPC.
 revoke update on public.komi_notifications from authenticated;
 -- No automatic migration of legacy username/password records: ownership must be verified.
+
+-- Explicit Data API privileges, with RLS governing row access.
+grant usage on schema public to authenticated;
+grant select,insert,update on public.komi_profiles to authenticated;
+grant select,insert on public.komi_friend_requests to authenticated;
+grant select on public.komi_friendships to authenticated;
+grant select,insert,update,delete on public.komi_watch_progress to authenticated;
+grant select,insert,update,delete on public.komi_anime_lists to authenticated;
+grant select on public.komi_notifications to authenticated;
+grant usage,select on sequence public.komi_friend_requests_id_seq to authenticated;
+revoke all on public.komi_profiles,public.komi_friend_requests,public.komi_friendships,public.komi_watch_progress,public.komi_anime_lists,public.komi_notifications from anon;
+revoke update,delete on public.komi_friend_requests from authenticated;
+revoke insert,update,delete on public.komi_friendships from authenticated;
+revoke insert,update,delete on public.komi_notifications from authenticated;
