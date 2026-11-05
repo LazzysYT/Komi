@@ -803,6 +803,45 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
 .komi-profile-friend{background:#28282a;border:1px solid #38383b;border-radius:12px;color:white;padding:10px 16px;cursor:pointer}
 @media(max-width:760px){.komi-profile-overview{grid-template-columns:1fr}.komi-profile-overview section{min-height:auto;padding:20px}.komi-profile-overview section+section{border-left:0;border-top:1px solid #303034}.komi-profile-tab{padding:9px 12px}.komi-profile-v2 .profile-header-card{padding:24px 12px!important}}
 
+
+/* Komi profile premium refresh: scoped design only, preserve application behavior */
+.komi-profile-v2{max-width:1280px!important;gap:22px!important;padding:0 14px 36px}
+.komi-profile-v2 .profile-header-card{position:relative;isolation:isolate;overflow:hidden;border:1px solid #60212d!important;border-radius:38px!important;padding:45px 24px 32px!important;background:radial-gradient(ellipse 55% 75% at 50% -35%,rgba(252,44,70,.28),transparent 85%),radial-gradient(circle at 95% 88%,rgba(178,15,40,.2),transparent 46%),linear-gradient(135deg,#1a0f14,#0c0b0e 65%)!important;box-shadow:0 22px 60px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.05)!important}
+.komi-profile-v2 .profile-header-card:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background:linear-gradient(125deg,transparent 24%,rgba(240,40,64,.16) 24.15%,transparent 24.6%,transparent 77%,rgba(240,40,64,.12) 77.2%,transparent 77.7%)}
+.komi-profile-v2 .profile-avatar-box{width:126px!important;height:126px!important;border:3px solid #fa3d54!important;border-radius:50%!important;box-shadow:0 0 0 6px #20161a,0 16px 40px #000b,0 0 32px #fa344144!important}
+.komi-profile-v2 .profile-info-grid{position:relative;z-index:1;max-width:780px;gap:12px!important}
+.komi-profile-v2 .profile-name-row h2{font-size:clamp(28px,3vw,40px)!important}
+.komi-profile-handle{padding:6px 13px;border:1px solid #235b3d;border-radius:999px;background:#10271b;font-size:12px!important;color:#4ddc91}
+.komi-profile-v2 .profile-badge-item,.komi-profile-v2 .profile-badge-level{border-radius:999px!important;padding:7px 13px!important}
+.komi-profile-actions{gap:12px;flex-wrap:wrap}
+.komi-profile-action{padding:12px 23px!important;border-radius:999px!important;transition:transform .2s,box-shadow .2s,background .2s}
+.komi-profile-action:hover{transform:translateY(-2px);box-shadow:0 8px 24px #f32e4433}
+.komi-profile-action:last-child{background:linear-gradient(135deg,#bd1a34,#7f1429);border-color:#ee3851}
+.komi-profile-v2 .profile-stats-grid{max-width:100%!important;background:linear-gradient(135deg,#191519,#141316)!important;border:1px solid #39242b!important;border-radius:30px!important;padding:9px!important;gap:6px!important}
+.komi-profile-v2 .profile-stat-card{border:1px solid transparent!important;border-radius:23px!important;padding:17px 9px!important;cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s}
+.komi-profile-v2 .profile-stat-card:not(:last-child){border-right:1px solid #33282d!important;border-radius:23px!important}
+.komi-profile-v2 .profile-stat-card:hover{transform:translateY(-3px);background:#331b24!important}
+.komi-profile-v2 .profile-stat-card.active{background:linear-gradient(145deg,#6c1325,#260e16)!important;border-color:#e52c49!important;box-shadow:inset 0 0 20px #ee294322,0 0 18px #e52c4930!important}
+.komi-profile-v2 .profile-stat-card .stat-num{font-size:26px!important}
+.komi-profile-v2 .profile-stat-card .stat-label{font-size:11px}
+.komi-profile-tabs{border:1px solid #39292f;background:#181518;border-radius:999px;padding:6px;gap:5px}
+.komi-profile-tab{border-radius:999px;padding:12px 22px;font-size:13px;transition:background .2s,color .2s}
+.komi-profile-tab.active{background:linear-gradient(135deg,#bf1934,#91142b);box-shadow:0 3px 14px #e5273b35}
+.komi-profile-overview{gap:16px;background:transparent;border-radius:0;overflow:visible}
+.komi-profile-overview section{min-width:0;min-height:235px;padding:25px;border-radius:27px;background:linear-gradient(145deg,#1b171b,#121114);border:1px solid #38252c;box-shadow:0 10px 30px #0003}
+.komi-profile-overview section+section{border-left:1px solid #38252c}
+.komi-profile-overview h3,.komi-profile-ratings h3{font-size:19px;margin-bottom:20px}
+.komi-overview-list-row{padding:11px 0;border-bottom:1px solid #30272c;font-size:13px}
+.komi-genre-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;color:#bdb4b9;border-bottom:1px solid #30272c;font-size:13px}
+.komi-genre-row b{color:#ff5267}
+.komi-profile-ratings{margin-top:0;border:1px solid #472630;border-radius:27px;padding:27px;background:linear-gradient(120deg,#1e1017,#100f12 60%,#290e17)}
+.komi-profile-v2 .profile-main-content,.komi-profile-v2 .profile-sidebar-menu,.komi-profile-friends-section,.komi-profile-comments-section{border:1px solid #38272e;border-radius:27px;background:#1b171b;box-shadow:0 10px 30px #0003}
+.komi-profile-v2 .profile-menu-item,.komi-profile-friend{border-radius:15px}
+.komi-profile-v2 .form-control{border-radius:13px}
+@media(max-width:900px){.komi-profile-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.komi-profile-overview section:last-child{grid-column:1/-1}.komi-profile-v2 .profile-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
+@media(max-width:620px){.komi-profile-v2{padding:0 9px 25px;gap:16px!important}.komi-profile-v2 .profile-header-card{padding:30px 14px!important;border-radius:28px!important}.komi-profile-v2 .profile-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.komi-profile-v2 .profile-stat-card{padding:14px 7px!important}.komi-profile-overview{grid-template-columns:minmax(0,1fr);gap:12px}.komi-profile-overview section:last-child{grid-column:auto}.komi-profile-overview section{min-height:0;padding:21px}.komi-profile-tabs{border-radius:22px;width:100%;justify-content:space-around}.komi-profile-tab{padding:10px 11px;font-size:12px}.komi-profile-v2 .profile-layout-grid{grid-template-columns:1fr}.komi-profile-v2 .profile-avatar-box{height:106px!important;width:106px!important}}
+@media(prefers-reduced-motion:reduce){.komi-profile-v2 *{transition:none!important;animation:none!important}}
+
 </style>
 </head>
 <body>
@@ -1787,7 +1826,7 @@ const adminList = []; // No client-side username grants administrator privileges
             Object.entries(userStatuses).forEach(([aId, st]) => {
                 if (statsCounts[st] !== undefined) statsCounts[st]++;
                 if (st === profileActiveTab) {
-                    const anObj = animeList.find(x => x.id === aId);
+                    const anObj = animeList.find(x => String(x.id) === String(aId));
                     if (anObj) listForTab.push(anObj);
                 }
             });
@@ -1795,18 +1834,27 @@ const adminList = []; // No client-side username grants administrator privileges
             if (profileActiveTab === 'Любимые') {
                 const favs = userFavorites[username] || {};
                 Object.keys(favs).forEach(aId => {
-                    const anObj = animeList.find(x => x.id === aId);
-                    if (anObj && !listForTab.some(x => x.id === aId)) listForTab.push(anObj);
+                    const anObj = animeList.find(x => String(x.id) === String(aId));
+                    if (anObj && !listForTab.some(x => String(x.id) === String(aId))) listForTab.push(anObj);
                 });
                 statsCounts['Любимые'] = listForTab.length;
             } else if (customFolderNames.includes(profileActiveTab)) {
                 const folderAnimeIds = customFolders[profileActiveTab] || [];
                 folderAnimeIds.forEach(aId => {
-                    const anObj = animeList.find(x => x.id === aId);
+                    const anObj = animeList.find(x => String(x.id) === String(aId));
                     if (anObj) listForTab.push(anObj);
                 });
             }
 
+            // Calculate real genre preferences from titles saved to the library.
+            const genreTotals = {};
+            Object.keys(userStatuses).forEach(aId => {
+                const item = animeList.find(x => String(x.id) === String(aId));
+                if (!item) return;
+                const genres = Array.isArray(item.genres) ? item.genres : [item.genre];
+                genres.filter(Boolean).forEach(g => { genreTotals[g] = (genreTotals[g] || 0) + 1; });
+            });
+            const topGenres = Object.entries(genreTotals).sort((a,b) => b[1] - a[1]).slice(0,5);
             const watchedCount = statsCounts['Просмотрено'] || 0;
             const calculatedLevel = 1 + Math.floor(watchedCount / 3);
 
@@ -1869,32 +1917,32 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     <div class="profile-stats-grid">
-                        <div class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; render()">
+                        <div class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
                             <div class="stat-icon">👁</div>
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
                         </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" onclick="playSound(); profileActiveTab='В планах'; render()">
+                        <div class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
                             <div class="stat-icon">📺</div>
                             <div class="stat-num">${statsCounts['В планах']}</div>
                             <div class="stat-label">В планах</div>
                         </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Смотрю'; render()">
+                        <div class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
                             <div class="stat-icon">🎬</div>
                             <div class="stat-num">${statsCounts['Смотрю']}</div>
                             <div class="stat-label">Смотрю</div>
                         </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Отложено'; render()">
+                        <div class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
                             <div class="stat-icon">⏭</div>
                             <div class="stat-num">${statsCounts['Отложено']}</div>
                             <div class="stat-label">Отложено</div>
                         </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Брошено'; render()">
+                        <div class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
                             <div class="stat-icon">❌</div>
                             <div class="stat-num">${statsCounts['Брошено']}</div>
                             <div class="stat-label">Брошено</div>
                         </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Любимые'; render()">
+                        <div class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
                             <div class="stat-icon">❤️</div>
                             <div class="stat-num">${favoritesCount}</div>
                             <div class="stat-label">Любимое</div>
@@ -1915,9 +1963,11 @@ const adminList = []; // No client-side username grants administrator privileges
                                         <span><i class="komi-list-dot dot-${i}"></i>${name}</span><b>${statsCounts[name] || 0}</b>
                                     </button>`).join('')}
                             </section>
-                            <section><h3>Любимые жанры</h3><p>Здесь появятся твои любимые жанры после добавления аниме в коллекцию.</p></section>
+                            <section><h3>Любимые жанры</h3>
+                                ${topGenres.length ? topGenres.map(([genre,count]) => `<div class="komi-genre-row"><span>${genre}</span><b>${count}</b></div>`).join('') : '<p>Добавь аниме в коллекцию, чтобы увидеть любимые жанры.</p>'}
+                            </section>
                             <section><h3>Активность</h3>
-                                <div class="komi-overview-list-row"><span>В библиотеке</span><b>${Object.values(statsCounts).reduce((a,b)=>a+b,0)}</b></div>
+                                <div class="komi-overview-list-row"><span>В библиотеке</span><b>${Object.keys(userStatuses).length}</b></div>
                                 <div class="komi-overview-list-row"><span>Друзей</span><b>${myFriends.length}</b></div>
                                 <div class="komi-overview-list-row"><span>Комментариев</span><b>${userCommentsCount}</b></div>
                                 <div class="komi-overview-list-row"><span>Любимое</span><b>${favoritesCount}</b></div>
