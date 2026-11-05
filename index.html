@@ -1337,7 +1337,7 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
             localStorage.setItem('komi_anime_statuses', JSON.stringify(userAnimeStatuses));
             localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
-            saveStatusesToCloud();
+            if (!currentUser?.authUserId) saveStatusesToCloud();
         }
 
 
@@ -1416,12 +1416,13 @@ async function loadDataFromCloud() {
         }
 
         async function saveStatusesToCloud() {
-            if (_supabase) {
+            if (_supabase && !currentUser?.authUserId) {
                 try { await _supabase.from('animes').upsert({ id: 3, content: JSON.stringify(userAnimeStatuses) }); } catch(e) {}
             }
         }
 
         async function saveProfilesToCloud() {
+            if (currentUser?.authUserId) return { error: new Error('Use komi_profiles for authenticated users') };
             if (!_supabase) return { error: new Error('Supabase не подключён') };
             try { return await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) }); }
             catch(error) { return { error }; }
@@ -1747,14 +1748,29 @@ const adminList = []; // No client-side username grants administrator privileges
             }
 
             if (currentUser) {
-                const p = userProfiles[currentUser.username] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${currentUser.username}` };
-                area.innerHTML = `
-                    <div class="user-pill" onclick="playSound(); openProfile('${currentUser.username}')">
-                        <img src="${p.avatar}" class="user-avatar-small" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                        <span>${currentUser.username}</span>
-                        <button onclick="event.stopPropagation(); logoutUser()" style="background:none; border:none; color:var(--text-muted); cursor:pointer; font-size:10px; margin-left:2px;" title="Выйти">🚪</button>
-                    </div>
-                `;
+                const username = String(currentUser.username || '');
+                const p = userProfiles[username] || {};
+                const pill = document.createElement('div');
+                pill.className = 'user-pill';
+                pill.addEventListener('click', () => { playSound(); openProfile(username); });
+                const img = document.createElement('img');
+                img.className = 'user-avatar-small';
+                img.alt = 'Аватар пользователя';
+                const avatar = String(p.avatar || '');
+                img.src = /^https:\/\//i.test(avatar)
+                    ? avatar : 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(username);
+                img.onerror = () => { img.onerror = null; img.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback'; };
+                const name = document.createElement('span');
+                name.textContent = username;
+                const logout = document.createElement('button');
+                logout.type = 'button';
+                logout.textContent = '🚪';
+                logout.title = 'Выйти';
+                logout.setAttribute('aria-label', 'Выйти из аккаунта');
+                logout.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;margin-left:2px';
+                logout.addEventListener('click', event => { event.stopPropagation(); logoutUser(); });
+                pill.append(img, name, logout);
+                area.replaceChildren(pill);
                 updateNotificationsUI();
             } else {
                 area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="playSound(); openAuthModal('login')">Войти</button>`;
@@ -3319,29 +3335,6 @@ const adminList = []; // No client-side username grants administrator privileges
             await restoreGoogleSession();
             alert('Аккаунт Supabase создан. Старый аккаунт Komi не удалён.');
             return;
-
-            if (/^google_/i.test(username)) { alert('Это имя зарезервировано для входа через Google.'); return; }
-            if (registeredUsers[username]) {
-                alert('Пользователь уже существует!');
-                return;
-            }
-
-            const passwordHash = await hashPassword(passwordInput);
-            registeredUsers[username] = passwordHash;
-            currentUser = { username };
-
-            const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-            userProfiles[username] = { 
-                avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`, 
-                status: 'Новичок ⭐', 
-                regDate: nowStr 
-            };
-
-            await saveProfilesToCloud();
-            saveData();
-            closeAuthModal();
-            render();
-            alert('Регистрация успешна!');
         }
 
         function toggleFavorite(id, category) {
