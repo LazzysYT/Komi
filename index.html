@@ -906,6 +906,49 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
 .komi-badges span{padding:7px 11px;background:#352029;border:1px solid #683144;border-radius:12px}
 @media(max-width:600px){.komi-release-row{grid-template-columns:70px 1fr 55px;gap:5px}.komi-feature-section{padding:13px}}
 
+
+.komi-feature-section{background:linear-gradient(125deg,#131114,#171116);border:1px solid #292329;border-radius:21px;padding:18px 20px;margin:18px 0;box-shadow:none}
+.komi-feature-section .section-header{margin-bottom:10px}
+.komi-feature-section .section-title{font-size:17px}
+.komi-feature-section .anime-grid{gap:12px}
+.komi-feature-section .anime-card{border-radius:16px}
+.komi-feature-muted{padding:12px 4px;color:#8e858b;font-size:12px}
+.komi-friends-pending{font-size:10px;color:#d3a1b1;white-space:nowrap}
+.komi-recent-section{margin:22px 0;padding:19px 20px;border:1px solid #30262d;border-radius:22px;background:linear-gradient(125deg,#191317,#101013)}
+.komi-recent-section .section-title{font-size:18px}
+.komi-recent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px}
+.komi-recent-card{display:flex;align-items:center;gap:13px;padding:10px;text-align:left;background:#20191e;border:1px solid #3b2a32;border-radius:16px;min-width:0;color:#fff;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.komi-recent-card:hover{background:#302028;border-color:#d23b56;transform:translateY(-2px)}
+.komi-recent-card img{width:64px;height:86px;border-radius:11px;object-fit:cover;background:#30232b}
+.komi-recent-info{display:flex;flex-direction:column;gap:8px;min-width:0}
+.komi-recent-info strong{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.komi-recent-info small{color:#a99ca3;font-size:11px}
+.komi-recent-info em{color:#ff647e;font-style:normal;font-size:11px;font-weight:700}
+.komi-recent-empty{padding:14px;color:#988a92;font-size:12px}
+#watchModal{padding:0!important;align-items:stretch!important;justify-content:center!important;background:rgba(4,3,6,.9)!important;backdrop-filter:blur(18px)}
+#watchModal #watchModalContent{position:relative;box-sizing:border-box;width:min(1500px,calc(100vw - 32px))!important;max-width:none!important;max-height:calc(100dvh - 32px)!important;height:calc(100dvh - 32px);margin:16px auto!important;overflow-y:auto!important;overflow-x:hidden;background:linear-gradient(155deg,rgba(27,24,31,.94),rgba(10,10,14,.96))!important;border:1px solid rgba(196,94,121,.24)!important;border-radius:24px!important;box-shadow:0 24px 90px #000b!important;padding:25px!important}
+#watchModal.komi-watch-fullscreen #watchModalContent{width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;border-radius:0!important;border:0!important}
+#watchModal .watch-cinema-layout{display:flex;flex-direction:column;gap:18px}
+#watchModal .komi-player-heading{order:1;display:flex;justify-content:space-between;align-items:center;gap:15px;padding:5px 2px}
+#watchModal .komi-player-heading small{font-size:10px;letter-spacing:2px;color:#e75370;font-weight:800}
+#watchModal .komi-player-heading h2{font-size:clamp(16px,2vw,24px);margin:5px 0;color:#fff}
+#watchModal .komi-player-heading span{font-size:12px;color:#b2a5af}
+#watchModal .player-wrapper{order:2!important;background:#050506;border:1px solid #40313b;border-radius:20px;overflow:hidden;min-height:280px;box-shadow:0 10px 30px #0008}
+#watchModal .player-box{width:100%;aspect-ratio:16/9;min-height:280px;max-height:72vh;background:#050506;display:flex;align-items:center;justify-content:center}
+#watchModal .player-box video,#watchModal .player-box iframe{width:100%!important;height:100%!important;min-height:0!important;max-height:72vh;object-fit:contain}
+#watchModal .players-switcher-bar{order:3;display:flex;gap:7px;overflow-x:auto;flex-wrap:nowrap!important;align-items:center;padding:13px!important;background:rgba(35,26,33,.75)!important;border:1px solid #392c36;border-radius:15px}
+#watchModal .player-switch-btn{flex-shrink:0;border-radius:11px!important;padding:9px 12px!important;white-space:nowrap}
+#watchModal .crunchy-episodes-section{order:4;border:1px solid #3a2d35;border-radius:18px;background:rgba(24,20,26,.65);padding:16px}
+#watchModal .crunchy-hero-section{order:5;border-radius:18px!important;background:rgba(31,25,32,.58)!important}
+#watchModal .watch-cinema-layout>div:not(.komi-player-heading):not(.player-wrapper):not(.players-switcher-bar):not(.crunchy-episodes-section):not(.crunchy-hero-section){order:6}
+#watchModal .anime-screenshots-section{order:7!important}
+#watchModal .komi-watch-expand{position:sticky;top:0;float:right;z-index:15;margin:0 42px 8px 0;background:rgba(48,33,44,.9);color:#fff;border:1px solid #744052;border-radius:11px;padding:9px 13px;cursor:pointer}
+#watchModal .komi-watch-expand:hover{background:#803047}
+#watchModal .komi-watch-next{border:1px solid #a3344d;background:#3d1b29;color:#ffdce4;padding:10px 13px;border-radius:12px;cursor:pointer;white-space:nowrap}
+#watchModal .komi-watch-next:hover{background:#862840}
+#watchModal .modal-close{z-index:20!important}
+@media(max-width:700px){#watchModal #watchModalContent{width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;border-radius:0!important;padding:13px!important}#watchModal .komi-player-heading{flex-wrap:wrap}#watchModal .player-box,#watchModal .player-wrapper{min-height:190px}#watchModal .komi-watch-expand span{display:none}.komi-recent-section{padding:13px}.komi-recent-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -1474,6 +1517,7 @@ async function loadDataFromCloud() {
             const query = (document.getElementById('komiFriendsSearch')?.value || '').trim().toLocaleLowerCase();
             const me = currentUser?.username;
             const friends = me ? (userFriends[me] || []) : [];
+            const pendingNames = me ? Object.entries(userNotifications).filter(([name,notifs])=>Array.isArray(notifs)&&notifs.some(n=>n.friendRequestFrom===me)).map(([name])=>name) : [];
             // Profiles are synchronized from Supabase (animes row 4); local registrations alone are not globally discoverable.
             const names = komiFriendsTab === 'friends' ? friends : Object.keys(userProfiles);
             const unique = [...new Set(names)].filter(n => n && n !== me && n.toLocaleLowerCase().includes(query)).sort((a,b)=>a.localeCompare(b,'ru'));
@@ -1490,7 +1534,8 @@ async function loadDataFromCloud() {
                 const profile = userProfiles[name] || {};
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
                 const isFriend = friends.includes(name);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':'Участник Komi')+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':'<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>')+'</div>';
+                const isPending = pendingNames.includes(name);
+                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?'⏳ Заявка отправлена':'Участник Komi')+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>':'<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
         }
@@ -1766,6 +1811,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     </div>
 
+                    <section class="komi-recent-section"><div class="section-header"><h2 class="section-title">🕘 Недавно смотрели вы</h2></div>${komiRecentMarkup(currentUser?.username)}</section>
                     ${continueWatchingHtml}
                     ${komiRecommendedHtml}
                     ${komiReleaseCalendar()}
@@ -2070,6 +2116,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     <section class="komi-achievement-panel"><div><strong>🏅 Уровень ${komiAchievements(username).level}</strong><span>${komiAchievements(username).xp} XP · ${komiAchievements(username).watched} просмотрено</span></div><div class="komi-achievement-track"><i style="width:${komiAchievements(username).xp%300/3}%"></i></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span>🎯 Первое достижение впереди</span>'}</div></section>
+                    ${isMe ? `<section class="komi-recent-section"><div class="section-header"><h2 class="section-title">🕘 Недавно смотрели вы</h2></div>${komiRecentMarkup(username)}</section>` : ''}
                     <nav class="komi-profile-tabs" aria-label="Разделы профиля">
                         <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" onclick="profilePageSection='overview';render()">Профиль</button>
                         <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" onclick="profilePageSection='anime';render()">Аниме</button>
@@ -2359,9 +2406,12 @@ const adminList = []; // No client-side username grants administrator privileges
         function sendFriendRequest(targetUsername) {
             if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
-
+            if (!userProfiles[targetUsername]) { alert('Пользователь не найден'); return; }
+            if ((userFriends[currentUser.username] || []).includes(targetUsername)) { alert('Вы уже друзья'); return; }
+            if ((userNotifications[targetUsername] || []).some(n=>n.friendRequestFrom===currentUser.username)) { alert('Заявка уже отправлена'); return; }
             addNotification(targetUsername, `${currentUser.username} хочет добавить вас в друзья.`, null, currentUser.username);
             alert(`Запрос отправлен пользователю ${targetUsername}!`);
+            renderFriendsDrawer();
         }
 
         async function acceptFriendRequest(senderName, notifIndex) {
@@ -2384,6 +2434,7 @@ const adminList = []; // No client-side username grants administrator privileges
             addNotification(senderName, `${myName} принял(а) ваш запрос в друзья!`);
             alert(`Теперь вы друзья с ${senderName}!`);
             render();
+            renderFriendsDrawer();
         }
 
         async function declineFriendRequest(notifIndex) {
@@ -2406,6 +2457,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (userFriends[friendUsername]) userFriends[friendUsername] = userFriends[friendUsername].filter(u => u !== myName);
             await saveFriendsToCloud();
             openProfile(friendUsername);
+            renderFriendsDrawer();
         }
 
         async function openWatchPartyHub() {
@@ -3332,13 +3384,29 @@ const adminList = []; // No client-side username grants administrator privileges
             animeList.forEach(a=>{if(statuses[a.id]||favs[a.id]) (a.genres||[]).forEach(g=>{tastes[g]=(tastes[g]||0)+1;});});
             return animeList.filter(a=>!statuses[a.id]&&!favs[a.id]).map(a=>({anime:a,score:(a.genres||[]).reduce((n,g)=>n+(tastes[g]||0),0)*10+(Number(a.shikiRating)||0)})).sort((a,b)=>b.score-a.score).slice(0,7).map(x=>x.anime);
         }
+
+        function komiRecentMarkup(username, limit=6) {
+            if (!username || username !== currentUser?.username) return '';
+            const prefix=username+'_';
+            const items=Object.entries(komiEpisodeProgress).filter(([key,p])=>key.startsWith(prefix)&&p&&p.updated).sort((a,b)=>b[1].updated-a[1].updated).slice(0,limit).map(([key,p])=>({anime:animeList.find(a=>String(a.id)===key.slice(prefix.length)),p})).filter(x=>x.anime);
+            if (!items.length) return '<div class="komi-recent-empty">Здесь появятся аниме, которые ты недавно открывал для просмотра.</div>';
+            return '<div class="komi-recent-grid">'+items.map(({anime,p})=>'<button class="komi-recent-card" onclick="resumeKomiAnime(\''+anime.id+'\')"><img loading="lazy" src="'+escapeFriendHtml(anime.poster||'')+'" alt=""><span class="komi-recent-info"><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small><em>Продолжить →</em></span></button>').join('')+'</div>';
+        }
+
         function komiReleaseCalendar() {
             const days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
             const entries=animeList.filter(a=>a.nextEpisodeAt||a.next_episode_at||a.nextEpisodeDate).map(a=>({anime:a,date:new Date(a.nextEpisodeAt||a.next_episode_at||a.nextEpisodeDate)})).filter(x=>!Number.isNaN(x.date.getTime())&&x.date.getTime()>Date.now()).sort((a,b)=>a.date-b.date).slice(0,12);
             return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2></div>'+(entries.length?'<div class="komi-release-list">'+entries.map(x=>'<button onclick="openWatchModal(\''+x.anime.id+'\')" class="komi-release-row"><span>'+days[x.date.getDay()]+' · '+x.date.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+'</span><strong>'+escapeFriendHtml(x.anime.title)+'</strong><small>'+x.date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</small></button>').join('')+'</div>':'<p class="komi-feature-muted">Расписание появится, когда каталог получит подтверждённые даты выхода серий. Не показываем выдуманные даты.</p>')+'</section>';
         }
 
+        function toggleKomiWatchFullscreen() {
+            const modal=document.getElementById('watchModal');
+            modal?.classList.toggle('komi-watch-fullscreen');
+            const button=modal?.querySelector('.komi-watch-expand span');
+            if(button) button.textContent=modal.classList.contains('komi-watch-fullscreen')?'Обычный размер':'На весь экран';
+        }
         function closeWatchModal() {
+            document.getElementById('watchModal')?.classList.remove('komi-watch-fullscreen');
             const videoEl = document.getElementById('animeVideoPlayer');
             if (videoEl) {
                 videoEl.pause();
@@ -3368,7 +3436,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 } catch(e) {}
             }
 
-            const anime = animeList.find(a => a.id === id);
+            const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
             if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); return; }
 
@@ -3380,12 +3448,13 @@ const adminList = []; // No client-side username grants administrator privileges
             });
 
             const seasonNumbers = Object.keys(seasonsMap).map(Number).sort((a,b) => a - b);
-            const activeSeason = selectedSeason !== null && seasonsMap[selectedSeason] ? selectedSeason : seasonNumbers[0];
+            const activeSeason = selectedSeason !== null && seasonsMap[selectedSeason] ? Number(selectedSeason) : seasonNumbers[0];
             const currentSeasonEpisodes = seasonsMap[activeSeason];
             const currentEp = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
 
             const sources = currentEp.sources && typeof currentEp.sources === 'object' ? currentEp.sources : { 'Default': currentEp.url || '' };
-            const sourceNames = Object.keys(sources);
+            const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && sources[name].trim());
+            if (!sourceNames.length) sourceNames.push('Недоступно');
             if (!sourceNames.includes(activePlayerSource)) {
                 activePlayerSource = sourceNames[0];
             }
@@ -3408,6 +3477,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const screenshots = (anime.screenshots && anime.screenshots.length > 0) ? anime.screenshots : [anime.poster, anime.poster, anime.poster, anime.poster];
 
             document.getElementById('watchModalContent').innerHTML = `
+                <button class="komi-watch-expand" onclick="toggleKomiWatchFullscreen()" title="Полный экран">⛶ <span>На весь экран</span></button>
                 <button class="modal-close" onclick="playSound(); closeWatchModal()">&times;</button>
                 <div class="watch-cinema-layout">
                     <div class="crunchy-hero-section">
@@ -3443,6 +3513,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         </div>
                     ` : ''}
 
+                    <div class="komi-player-heading"><div><small>СМОТРЕТЬ ОНЛАЙН</small><h2>${escapeFriendHtml(anime.title)}</h2><span>Сезон ${activeSeason} · Серия ${Number(selectedEpIdx)+1}</span></div><button class="komi-watch-next" onclick="playNextEp('${anime.id}',${activeSeason},${selectedEpIdx})">Следующая серия →</button></div>
                     <div class="players-switcher-bar">
                         <span style="font-size:11px; color:var(--text-muted); font-weight:700;">Плеер:</span>
                         ${sourceNames.map(srcName => `
