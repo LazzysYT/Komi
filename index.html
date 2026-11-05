@@ -1385,8 +1385,12 @@ async function loadDataFromCloud() {
             let value;
             try { value = JSON.parse(row.content || 'null'); } catch { continue; }
             if (row.id === 2) animeComments = value || {};
-            if (row.id === 3) userAnimeStatuses = { ...userAnimeStatuses, ...(value || {}) };
-            if (row.id === 4) userProfiles = { ...userProfiles, ...(value || {}) };
+            if (row.id === 3 && !currentUser?.authUserId) userAnimeStatuses = { ...userAnimeStatuses, ...(value || {}) };
+            if (row.id === 4) {
+                const existing = currentUser?.authUserId ? userProfiles[currentUser.username] : null;
+                userProfiles = { ...userProfiles, ...(value || {}) };
+                if (existing) userProfiles[currentUser.username] = existing;
+            }
             if (row.id === 4 && currentUser) {
                 const name = currentUser.username;
                 const avatar = localStorage.getItem('komi_avatar_' + name);
@@ -3251,6 +3255,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     if (profileError) console.warn('Profile sync:', profileError.message);
                 } catch (profileError) { console.warn('Profile sync:', profileError); }
                 await loadAuthenticatedAnimeData();
+                await loadAuthenticatedAnimeData();
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
@@ -3400,7 +3405,7 @@ const adminList = []; // No client-side username grants administrator privileges
             render();
         }
         async function persistAuthenticatedStatus(animeId, status) {
-            if (!_supabase || !currentUser?.authUserId || !/^\\d+$/.test(String(animeId))) return;
+            if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
             const uid = currentUser.authUserId;
             const query = _supabase.from('komi_anime_lists');
             const result = status
@@ -3409,7 +3414,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (result.error) console.error('Не удалось сохранить список:', result.error.message);
         }
         async function persistAuthenticatedProgress(animeId, progress) {
-            if (!_supabase || !currentUser?.authUserId || !/^\\d+$/.test(String(animeId))) return;
+            if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
             const result = await _supabase.from('komi_watch_progress').upsert({
                 user_id:currentUser.authUserId, anime_id:Number(animeId),
                 season:progress.season, episode_index:progress.index,
