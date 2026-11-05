@@ -690,6 +690,9 @@
             .komi-side-button span { display: none; }
             body { padding-bottom: 70px; }
         }
+        #notifBellBtn, #userHeaderArea { display: none !important; }
+        #notifDropdown { position: fixed; top: 72px; left: 84px; right: auto; }
+        @media (max-width: 768px) { #notifDropdown { top: auto; bottom: 76px; left: 12px; right: 12px; } }
     </style>
 </head>
 <body>
@@ -1087,6 +1090,10 @@ async function loadDataFromCloud() {
             if (row.id === 2) animeComments = value || {};
             if (row.id === 3) userAnimeStatuses = { ...userAnimeStatuses, ...(value || {}) };
             if (row.id === 4) userProfiles = { ...userProfiles, ...(value || {}) };
+            if (row.id === 4 && currentUser) {
+                const avatar = localStorage.getItem('komi_avatar_' + currentUser.username);
+                if (avatar) userProfiles[currentUser.username] = { ...(userProfiles[currentUser.username] || {}), avatar };
+            }
             if (row.id === 5) userNotifications = value || {};
             if (row.id === 6) activePartiesList = value || [];
             if (row.id === 7) userFriends = { ...userFriends, ...(value || {}) };
@@ -1116,9 +1123,9 @@ async function loadDataFromCloud() {
         }
 
         async function saveProfilesToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) }); } catch(e) {}
-            }
+            if (!_supabase) return { error: new Error('Supabase не подключён') };
+            try { return await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) }); }
+            catch(error) { return { error }; }
         }
 
         async function saveNotificationsToCloud() {
@@ -1828,31 +1835,53 @@ const adminList = ['admin', 'mellstroy'];
         }
 
         let uploadedAvatarBase64 = null;
+        let avatarUploadPromise = null;
         function handleAvatarFileUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
-            const reader = new FileReader();
-            reader.onload = function(e) { uploadedAvatarBase64 = e.target.result; };
-            reader.readAsDataURL(file);
+            if (!file.type.startsWith('image/')) { alert('Выбери изображение.'); return; }
+            uploadedAvatarBase64 = null;
+            avatarUploadPromise = new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+                reader.onload = () => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('Не удалось открыть изображение'));
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const scale = Math.min(1, 320 / Math.max(img.width, img.height));
+                        canvas.width = Math.max(1, Math.round(img.width * scale));
+                        canvas.height = Math.max(1, Math.round(img.height * scale));
+                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+                        uploadedAvatarBase64 = canvas.toDataURL('image/jpeg', 0.78);
+                        resolve();
+                    };
+                    img.src = reader.result;
+                };
+                reader.readAsDataURL(file);
+            });
+            avatarUploadPromise.catch(e => alert(e.message));
         }
 
         async function updateUserProfile() {
             if (!currentUser) return;
-            const status = document.getElementById('newStatusText').value.trim();
-            if (!userProfiles[currentUser.username]) {
-                const nowStr = new Date().toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' });
-                userProfiles[currentUser.username] = { regDate: nowStr };
-            }
-            if (uploadedAvatarBase64) {
-                userProfiles[currentUser.username].avatar = uploadedAvatarBase64;
+            try {
+                if (avatarUploadPromise) await avatarUploadPromise;
+                const name = currentUser.username;
+                const status = (document.getElementById('newStatusText')?.value || '').trim();
+                if (!userProfiles[name]) userProfiles[name] = { regDate: new Date().toLocaleDateString('ru-RU') };
+                if (uploadedAvatarBase64) {
+                    userProfiles[name].avatar = uploadedAvatarBase64;
+                    localStorage.setItem('komi_avatar_' + name, uploadedAvatarBase64);
+                }
+                if (status) userProfiles[name].status = status;
+                const result = await saveProfilesToCloud();
                 uploadedAvatarBase64 = null;
-            }
-            if (status) userProfiles[currentUser.username].status = status;
-
-            await saveProfilesToCloud();
-            saveData();
-            render();
-            alert('Профиль успешно обновлен!');
+                avatarUploadPromise = null;
+                saveData();
+                render();
+                alert(result?.error ? 'Аватар сохранён на этом устройстве, но ошибка синхронизации: ' + result.error.message : 'Профиль успешно обновлён!');
+            } catch(e) { alert('Ошибка загрузки аватара: ' + e.message); }
         }
 
         function createCustomFolder() {
