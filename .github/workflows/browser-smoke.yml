@@ -5,11 +5,18 @@ on:
     branches: [main]
     paths:
       - 'index.html'
+      - 'scripts/browser-smoke.cjs'
+      - 'scripts/auth-isolation-e2e.cjs'
       - '.github/workflows/browser-smoke.yml'
 jobs:
   smoke:
     runs-on: ubuntu-latest
     timeout-minutes: 12
+    env:
+      KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
+      KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
+      KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
+      KOMI_TEST_PASSWORD_B: ${{ secrets.KOMI_TEST_PASSWORD_B }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,6 +28,14 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run desktop and mobile browser checks
         run: node scripts/browser-smoke.cjs
+      - name: Run real two-account auth and RLS E2E (when secrets configured)
+        if: ${{ env.KOMI_TEST_EMAIL_A != '' && env.KOMI_TEST_PASSWORD_A != '' && env.KOMI_TEST_EMAIL_B != '' && env.KOMI_TEST_PASSWORD_B != '' }}
+        env:
+          KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
+          KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
+          KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
+          KOMI_TEST_PASSWORD_B: ${{ secrets.KOMI_TEST_PASSWORD_B }}
+        run: node scripts/auth-isolation-e2e.cjs
       - name: Upload screenshots and results
         if: always()
         uses: actions/upload-artifact@v4
