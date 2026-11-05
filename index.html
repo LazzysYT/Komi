@@ -3250,6 +3250,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     }, { onConflict: 'user_id' });
                     if (profileError) console.warn('Profile sync:', profileError.message);
                 } catch (profileError) { console.warn('Profile sync:', profileError); }
+                await loadAuthenticatedAnimeData();
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
