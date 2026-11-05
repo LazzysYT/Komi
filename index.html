@@ -3,7 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Komi Anime Hub — Премиум платформа</title>
+    <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
+    <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
+    <meta name="theme-color" content="#09090D">
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="ru_RU">
+    <meta property="og:site_name" content="Komi Anime Hub">
+    <meta property="og:title" content="Komi Anime Hub — каталог аниме">
+    <meta property="og:description" content="Находи аниме, следи за сериями и веди свой список просмотра.">
+    <meta property="og:url" content="https://komi-six.vercel.app/">
+    <meta name="twitter:card" content="summary">
+    <link rel="canonical" href="https://komi-six.vercel.app/">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23FF454F'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -1973,6 +1983,16 @@ const adminList = []; // No client-side username grants administrator privileges
             });
         }
 
+        function updateProfileCollectionSearch(input) {
+            profileCollectionSearchQuery = input.value;
+            const start = input.selectionStart, end = input.selectionEnd;
+            render();
+            const restored = document.querySelector('input[oninput="updateProfileCollectionSearch(this)"]');
+            if (restored) {
+                restored.focus({ preventScroll: true });
+                try { restored.setSelectionRange(start, end); } catch (_) {}
+            }
+        }
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
@@ -2173,7 +2193,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
                                 <h3 style="font-size:15px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${profileActiveTab}</span></h3>
                                 <div style="position:relative; width: 180px;">
-                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${profileCollectionSearchQuery}" oninput="profileCollectionSearchQuery=this.value; render()" style="padding: 6px 8px; font-size: 11px;">
+                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${profileCollectionSearchQuery}" oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
                                 </div>
                             </div>
 
@@ -3195,9 +3215,17 @@ const adminList = []; // No client-side username grants administrator privileges
                         status: 'Новичок ⭐',
                         regDate: new Date().toLocaleDateString('ru-RU')
                     };
-                    // Profile writes follow the site's existing shared profile storage.
-                    await saveProfilesToCloud();
+                    // Google profile data must not be written to legacy shared JSON.
                 }
+                try {
+                    const { error: profileError } = await _supabase.from('komi_profiles').upsert({
+                        user_id: session.user.id,
+                        username,
+                        display_name: String(session.user.user_metadata?.full_name || 'Пользователь Google').slice(0, 80),
+                        avatar_url: userProfiles[username]?.avatar || null
+                    }, { onConflict: 'user_id' });
+                    if (profileError) console.warn('Profile sync:', profileError.message);
+                } catch (profileError) { console.warn('Profile sync:', profileError); }
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
