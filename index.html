@@ -841,92 +841,64 @@ async function loadDataFromCloud() {
             throw new Error('Supabase не подключён');
         }
 
-        // Сначала загружаем остальные данные сайта
-        // из старой таблицы, НЕ трогая каталог.
-        const { data: settings, error: settingsError } =
-            await _supabase
-                .from('animes')
-                .select('id,content')
-                .in('id', [2, 3, 4, 5, 6, 7]);
+        // Load settings and catalog concurrently; fewer requests and no sequential 100-row waterfall.
+        const settingsPromise = _supabase
+            .from('animes')
+            .select('id,content')
+            .in('id', [2, 3, 4, 5, 6, 7]);
 
-        if (settingsError) {
-            console.warn('Ошибка настроек:', settingsError.message);
+        const catalog = [];
+        const pageSize = 500;
+        const batchPages = 3;
+        let offset = 0;
+        let finished = false;
+
+        while (!finished) {
+            const pages = await Promise.all(
+                Array.from({ length: batchPages }, (_, i) =>
+                    _supabase.from('anime_catalog')
+                        .select('shikimori_id,data')
+                        .order('shikimori_id', { ascending: true })
+                        .range(offset + i * pageSize, offset + (i + 1) * pageSize - 1)
+                )
+            );
+
+            for (const { data: rows, error } of pages) {
+                if (error) throw error;
+                for (const row of rows || []) {
+                    const anime = row.data;
+                    if (!anime || typeof anime !== 'object') continue;
+                    catalog.push({
+                        ...anime,
+                        id: String(row.shikimori_id),
+                        shikimoriId: Number(row.shikimori_id),
+                        title: anime.title || anime.originalTitle || 'Без названия',
+                        poster: anime.poster || '',
+                        shikiRating: anime.shikiRating || 0,
+                        genres: Array.isArray(anime.genres) ? anime.genres : [],
+                        episodes: Array.isArray(anime.episodes) ? anime.episodes : []
+                    });
+                }
+                if (!rows || rows.length < pageSize) {
+                    finished = true;
+                    break;
+                }
+            }
+            offset += pageSize * batchPages;
         }
 
+        const { data: settings, error: settingsError } = await settingsPromise;
+        if (settingsError) console.warn('Ошибка настроек:', settingsError.message);
         for (const row of settings || []) {
             let value;
-
-            try {
-                value = JSON.parse(row.content || 'null');
-            } catch {
-                continue;
-            }
-
+            try { value = JSON.parse(row.content || 'null'); }
+            catch { continue; }
             if (row.id === 2) animeComments = value || {};
-            if (row.id === 3) {
-                userAnimeStatuses = {
-                    ...userAnimeStatuses,
-                    ...(value || {})
-                };
-            }
-            if (row.id === 4) {
-                userProfiles = {
-                    ...userProfiles,
-                    ...(value || {})
-                };
-            }
+            if (row.id === 3) userAnimeStatuses = { ...userAnimeStatuses, ...(value || {}) };
+            if (row.id === 4) userProfiles = { ...userProfiles, ...(value || {}) };
             if (row.id === 5) userNotifications = value || {};
             if (row.id === 6) activePartiesList = value || [];
-            if (row.id === 7) {
-                userFriends = {
-                    ...userFriends,
-                    ...(value || {})
-                };
-            }
-        }
-
-        // Загружаем каталог из НОВОЙ таблицы
-        const catalog = [];
-        const pageSize = 100;
-        let offset = 0;
-
-        while (true) {
-            const { data: rows, error } = await _supabase
-                .from('anime_catalog')
-                .select('shikimori_id,data')
-                .order('shikimori_id', { ascending: true })
-                .range(offset, offset + pageSize - 1);
-
-            if (error) throw error;
-
-            if (!rows || rows.length === 0) break;
-
-            for (const row of rows) {
-                const anime = row.data;
-
-                if (!anime || typeof anime !== 'object') {
-                    continue;
-                }
-
-                catalog.push({
-                    ...anime,
-                    id: String(row.shikimori_id),
-                    shikimoriId: Number(row.shikimori_id),
-                    title: anime.title || anime.originalTitle || 'Без названия',
-                    poster: anime.poster || '',
-                    shikiRating: anime.shikiRating || 0,
-                    genres: Array.isArray(anime.genres)
-                        ? anime.genres
-                        : [],
-                    episodes: Array.isArray(anime.episodes)
-                        ? anime.episodes
-                        : []
-                });
-            }
-
-            offset += rows.length;
-
-            if (rows.length < pageSize) break;
+            if (row.id === 7) userFriends = { ...userFriends, ...(value || {}) };
         }
 
         animeList = catalog;
@@ -1747,7 +1719,7 @@ const adminList = ['admin', 'mellstroy'];
                 <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
                     <div class="anime-rating-badge">⭐ ${shiki}</div>
                     <div class="anime-poster-box">
-                        <img src="${anime.poster}" class="anime-poster" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <img src="${anime.poster}" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
                         <div class="anime-poster-fallback" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e2a,#101018);color:#92929F"><span style="font-size:30px;font-weight:800;color:#FF454F">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>
                         <div class="anime-quick-view">
                             <span class="btn-glow" style="padding: 5px 12px; font-size:11px;">▶ Смотреть</span>
