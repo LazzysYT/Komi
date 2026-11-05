@@ -839,22 +839,10 @@ async function loadDataFromCloud() {
     try {
         if (!_supabase) throw new Error('Supabase не подключён');
 
-        const { data: settings, error: settingsError } = await _supabase
+        const settingsPromise = _supabase
             .from('animes').select('id,content').in('id', [2, 3, 4, 5, 6, 7]);
-        if (settingsError) console.warn('Ошибка настроек:', settingsError.message);
-        for (const row of settings || []) {
-            let value;
-            try { value = JSON.parse(row.content || 'null'); } catch { continue; }
-            if (row.id === 2) animeComments = value || {};
-            if (row.id === 3) userAnimeStatuses = { ...userAnimeStatuses, ...(value || {}) };
-            if (row.id === 4) userProfiles = { ...userProfiles, ...(value || {}) };
-            if (row.id === 5) userNotifications = value || {};
-            if (row.id === 6) activePartiesList = value || [];
-            if (row.id === 7) userFriends = { ...userFriends, ...(value || {}) };
-        }
-
         const catalog = [];
-        const pageSize = 100;
+        const pageSize = 250;
         let offset = 0;
         while (true) {
             const { data: rows, error } = await _supabase
@@ -880,6 +868,19 @@ async function loadDataFromCloud() {
             offset += rows.length;
             if (rows.length < pageSize) break;
         }
+        const { data: settings, error: settingsError } = await settingsPromise;
+        if (settingsError) console.warn('Ошибка настроек:', settingsError.message);
+        for (const row of settings || []) {
+            let value;
+            try { value = JSON.parse(row.content || 'null'); } catch { continue; }
+            if (row.id === 2) animeComments = value || {};
+            if (row.id === 3) userAnimeStatuses = { ...userAnimeStatuses, ...(value || {}) };
+            if (row.id === 4) userProfiles = { ...userProfiles, ...(value || {}) };
+            if (row.id === 5) userNotifications = value || {};
+            if (row.id === 6) activePartiesList = value || [];
+            if (row.id === 7) userFriends = { ...userFriends, ...(value || {}) };
+        }
+
         animeList = catalog;
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
