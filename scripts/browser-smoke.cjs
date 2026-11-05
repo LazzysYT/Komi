@@ -26,6 +26,29 @@ fs.mkdirSync(output, { recursive: true });
       }));
       const result = { width, status: response?.status(), ...state, errors };
       results.push(result);
+      // Exercise the real auth UI without creating test users or sending credentials.
+      const authChecks = await page.evaluate(() => {
+        const result = {};
+        result.authModal = !!document.getElementById('authModal');
+        result.login = !!document.getElementById('loginUsername') && !!document.getElementById('loginPassword');
+        result.register = !!document.getElementById('regUsername') && !!document.getElementById('regEmail') && !!document.getElementById('regPassword');
+        result.authFunctions = typeof openAuthModal === 'function' && typeof switchAuthTab === 'function';
+        if (result.authFunctions && result.authModal) {
+          openAuthModal('register');
+          result.registerVisible = document.getElementById('authModal').classList.contains('active')
+            && document.getElementById('registerFormContainer').style.display !== 'none';
+          switchAuthTab('login');
+          result.loginVisible = document.getElementById('loginFormContainer').style.display !== 'none';
+          closeAuthModal();
+          result.modalCloses = !document.getElementById('authModal').classList.contains('active');
+        }
+        return result;
+      });
+      result.authChecks = authChecks;
+      if (Object.values(authChecks).some(value => value !== true)) {
+        console.error('FAIL auth UI', authChecks);
+        process.exitCode = 1;
+      }
       await page.screenshot({ path: path.join(output, 'komi-' + width + '.png'), fullPage: true });
       if (!response?.ok() || !state.mainText.trim() || state.horizontalOverflow || errors.length) {
         console.error('FAIL', result);
