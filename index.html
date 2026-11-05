@@ -723,6 +723,8 @@
         .komi-social-link:hover { background: #271519; border-color: #f04450; color: white; transform: translateY(-2px); box-shadow: 0 0 18px rgba(240,68,80,.22); }
         @media (max-width: 1100px) { .komi-social-links { left: 8px; gap: 6px; } .komi-social-link { width: 35px; height: 35px; border-radius: 12px; } }
         @media (max-width: 760px) { .komi-social-links { position: static; transform: none; margin-right: 8px; } .komi-social-link { width: 32px; height: 32px; } }
+        .komi-side-account #sidebarAvatarIcon { position:static; transform:none; display:flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border:0; background:none; opacity:1; visibility:visible; overflow:hidden; border-radius:50%; }
+        .komi-side-account #sidebarAvatarIcon img { display:block; width:36px; height:36px; border-radius:50%; object-fit:cover; }
         .komi-side-button > svg, .komi-side-account #sidebarAvatarIcon > svg { width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
         .komi-side-button svg circle { fill:currentColor;stroke:none; }
         .komi-side-button { border-radius:15px; }
@@ -1961,6 +1963,7 @@ const adminList = ['admin', 'mellstroy'];
                 avatarUploadPromise = null;
                 saveData();
                 render();
+                renderHeaderUser();
             } catch(e) { alert('Ошибка загрузки аватара: ' + e.message); }
         }
 
