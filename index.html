@@ -708,6 +708,13 @@
             .nav-actions { grid-column: 1; grid-row: 1; justify-self: start; }
         }
         .komi-side-account img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; display: block; }
+        /* Use available desktop width instead of leaving a large unused right margin. */
+        .app-layout { max-width: 1800px; padding-left: clamp(16px, 2vw, 36px); padding-right: clamp(16px, 2vw, 36px); }
+        .profile-container { max-width: 1600px; }
+        .top-hero-section-grid { grid-template-columns: minmax(0, 1fr) clamp(260px, 19vw, 340px); }
+        @media (max-width: 900px) { .top-hero-section-grid { grid-template-columns: 1fr; } }
+        /* The profile avatar should stay visible even when a saved image is wide. */
+        .profile-avatar-box { object-fit: cover; }
     </style>
 </head>
 <body>
@@ -1108,7 +1115,7 @@ async function loadDataFromCloud() {
             if (row.id === 4 && currentUser) {
                 const name = currentUser.username;
                 const avatar = localStorage.getItem('komi_avatar_' + name);
-                if (avatar && !userProfiles[name]?.avatar) userProfiles[name] = { ...(userProfiles[name] || {}), avatar };
+                if (avatar && (!userProfiles[name]?.avatar || userProfiles[name].avatar.startsWith('https://api.dicebear.com/'))) userProfiles[name] = { ...(userProfiles[name] || {}), avatar };
             }
             if (row.id === 5) userNotifications = value || {};
             if (row.id === 6) activePartiesList = value || [];
@@ -1369,7 +1376,7 @@ async function loadDataFromCloud() {
             const area = document.getElementById('userHeaderArea');
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
             if (sidebarAvatarIcon) {
-                const avatar = currentUser && userProfiles[currentUser.username]?.avatar;
+                const avatar = currentUser && (userProfiles[currentUser.username]?.avatar || localStorage.getItem('komi_avatar_' + currentUser.username));
                 if (avatar) {
                     const img = document.createElement('img');
                     img.alt = 'Аватар профиля';
@@ -1658,6 +1665,11 @@ const adminList = ['admin', 'mellstroy'];
                 status: 'Отаку ⭐', 
                 regDate: '05 ноября 2026 года' 
             };
+            // Recover existing avatars saved before cloud storage was introduced.
+            if (currentUser && username === currentUser.username) {
+                const previousAvatar = localStorage.getItem('komi_avatar_' + username);
+                if (previousAvatar && (!p.avatar || p.avatar.includes('dicebear.com'))) p.avatar = previousAvatar;
+            }
 
             const myFriends = userFriends[username] || [];
             const isMe = currentUser && currentUser.username === username;
@@ -1914,6 +1926,8 @@ const adminList = ['admin', 'mellstroy'];
                 if (uploadedAvatarBase64) {
                     const publicAvatar = await uploadAvatarToStorage(uploadedAvatarBase64, name);
                     userProfiles[name].avatar = publicAvatar || uploadedAvatarBase64;
+                    // Keep a device-local recovery copy until public cloud storage is verified.
+                    localStorage.setItem('komi_avatar_' + name, uploadedAvatarBase64);
                 }
                 if (status) userProfiles[name].status = status;
                 const result = await saveProfilesToCloud();
@@ -1922,8 +1936,7 @@ const adminList = ['admin', 'mellstroy'];
                     if (uploadedAvatarBase64) localStorage.setItem('komi_avatar_' + name, uploadedAvatarBase64);
                     alert('Не удалось сохранить аватар для всех пользователей: ' + result.error.message + '. Проверь доступ к Supabase.');
                 } else {
-                    localStorage.removeItem('komi_avatar_' + name);
-                    alert('Профиль обновлён. Аватар сохранён в общем профиле.');
+                    alert('Профиль обновлён. Аватар сохранён; отображение другим пользователям зависит от доступности общего хранилища.');
                 }
                 uploadedAvatarBase64 = null;
                 avatarUploadPromise = null;
