@@ -3191,6 +3191,8 @@ const adminList = []; // No client-side username grants administrator privileges
         // Google identities are namespaced by verified Supabase user ID, never by
         // an editable display name, email, or a privileged local username.
         function googleProfileName(authUser) {
+            const requested = String(authUser.user_metadata?.username || '').trim();
+            if (authUser.app_metadata?.provider !== 'google' && /^[A-Za-z0-9_]{3,24}$/.test(requested) && !/^google_/i.test(requested)) return requested;
             return 'google_' + authUser.id.replace(/[^a-zA-Z0-9_-]/g, '');
         }
         async function restoreGoogleSession() {
@@ -3209,8 +3211,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (previousGoogle && currentUser.username !== username) {
                     currentUser = null;
                 }
-                // Do not overwrite an existing manually signed-in Komi account.
-                if (currentUser && !previousGoogle) return;
+                // Verified Supabase sessions take precedence; legacy browser data is retained.
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
                 if (!userProfiles[username]) {
                     const meta = session.user.user_metadata || {};
@@ -3225,7 +3226,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     const { error: profileError } = await _supabase.from('komi_profiles').upsert({
                         user_id: session.user.id,
                         username,
-                        display_name: String(session.user.user_metadata?.full_name || 'Пользователь Google').slice(0, 80),
+                        display_name: String(session.user.user_metadata?.full_name || session.user.user_metadata?.username || 'Пользователь Komi').slice(0, 80),
                         avatar_url: userProfiles[username]?.avatar || null
                     }, { onConflict: 'user_id' });
                     if (profileError) console.warn('Profile sync:', profileError.message);
@@ -3278,6 +3279,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (!_supabase) { alert('Сервис входа недоступен'); return; }
                 const { error } = await _supabase.auth.signInWithPassword({ email: username, password: passwordInput });
                 if (error) { alert('Не удалось войти: ' + error.message); return; }
+                currentUser = null;
                 await restoreGoogleSession();
                 return;
             }
