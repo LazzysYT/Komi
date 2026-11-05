@@ -499,6 +499,93 @@
             .hero-slide h1 { font-size: 22px; }
             .modal-content { padding: 14px 10px; width: 100%; max-height: 92vh; border-radius: 12px; }
         }
+
+        /* KOMI OBSIDIAN — visual-only redesign based on the supplied reference.
+           No JavaScript, catalog, Supabase, account, or player changes. */
+        :root {
+            --bg-base: #050505;
+            --bg-card: #0c0c0d;
+            --bg-card-hover: #141416;
+            --bg-input: #101012;
+            --primary: #f13b45;
+            --primary-hover: #ff4b54;
+            --accent: #f13b45;
+            --text-main: #f6f6f7;
+            --text-muted: #929299;
+            --border: #252528;
+            --glow: rgba(241,59,69,.17);
+        }
+        body { background: #050505; }
+        header {
+            background: rgba(5,5,5,.96);
+            border-bottom: 1px solid #1c1c1e;
+            box-shadow: 0 8px 24px rgba(0,0,0,.35);
+        }
+        .header-inner { max-width: 1580px; }
+        .app-layout { max-width: 1580px; padding-top: 24px; gap: 34px; }
+        .logo-box { border-radius: 13px; background: linear-gradient(145deg,#ff545e,#bd0c20); box-shadow: 0 0 18px rgba(241,59,69,.22); }
+        .logo-text { background: none; -webkit-text-fill-color: #f6f6f7; color: #f6f6f7; }
+        .search-bar input {
+            background: #101012; border-color: #252528;
+            border-radius: 24px; padding-top: 11px; padding-bottom: 11px;
+        }
+        .search-bar input:focus { border-color: #9f2831; box-shadow: 0 0 0 3px rgba(241,59,69,.08); }
+        .nav-btn { border-radius: 24px; padding: 9px 15px; }
+        .nav-btn.active, .nav-btn:hover { background: #18090b; border-color: #79202a; color: #fff; }
+        .action-icon-btn, .user-pill { background: #101012; border-color: #29292d; border-radius: 22px; }
+        .action-icon-btn:hover, .user-pill:hover { border-color: #8c2730; }
+        .top-hero-section-grid { gap: 18px; grid-template-columns: minmax(0,1fr) 290px; }
+        .hero-slider-container {
+            border-radius: 28px; background: #0b0b0c; border-color: #282024;
+            height: 485px; box-shadow: 0 22px 65px rgba(0,0,0,.6);
+        }
+        .hero-slide { padding: 48px 60px; background-position: center; }
+        .hero-slide::before {
+            background: linear-gradient(90deg,rgba(3,3,4,.97) 0%,rgba(3,3,4,.9) 29%,rgba(3,3,4,.48) 58%,rgba(3,3,4,.10) 100%),
+                        linear-gradient(0deg,rgba(3,3,4,.62),transparent 36%);
+        }
+        .hero-slide h1 { font-size: clamp(30px,3vw,48px); letter-spacing: -.9px; line-height: 1.12; }
+        .hero-slide p { font-size: 13px; color: #b7b7bc; line-height: 1.7; }
+        .hero-meta span { background: rgba(12,12,13,.78); border-color: #333338; border-radius: 20px; }
+        .hero-slider-arrow { background: rgba(12,12,14,.88); border-color: #333338; }
+        .hero-dot { border-radius: 10px; background: #515156; }
+        .hero-dot.active { background: #ff3947; box-shadow: 0 0 12px rgba(255,57,71,.4); }
+        .btn-glow, .btn-glow-secondary { border-radius: 24px; padding: 11px 22px; }
+        .btn-glow { background: linear-gradient(125deg,#ff4854,#d51d2c); box-shadow: 0 8px 20px rgba(231,30,45,.22); }
+        .btn-glow-secondary { background: rgba(21,21,23,.88); border-color: #36363a; }
+        .friends-sidebar-panel {
+            height: 485px; border-radius: 26px; background: #0c0c0e;
+            border-color: #28282b; padding: 20px;
+        }
+        .sidebar-friend-item { border-radius: 16px; background: #151517; border-color: #27272a; padding: 10px; }
+        .section-header { margin-bottom: 19px; }
+        .section-title { font-size: 21px; font-weight: 800; }
+        .section-see-all { color: #f15b65; }
+        .anime-grid { gap: 17px; }
+        .anime-card {
+            background: #0b0b0c; border: 1px solid #242427;
+            border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,.24);
+        }
+        .anime-card:hover { border-color: #b62a36; box-shadow: 0 14px 32px rgba(225,30,48,.14); }
+        .anime-info { background: #0b0b0c; padding: 13px; }
+        .anime-rating-badge { background: rgba(4,4,5,.85); border-radius: 20px; border-color: #3b3434; }
+        .empty-state { background: #0c0c0d; border-color: #29292c; border-radius: 20px; }
+        .profile-header-card, .profile-stat-card, .notification-dropdown, .search-dropdown {
+            background: #0c0c0e; border-color: #29292c; border-radius: 20px;
+        }
+        input, select, textarea { accent-color: #f13b45; }
+        @media (max-width: 1100px) {
+            .top-hero-section-grid { grid-template-columns: minmax(0,1fr); }
+            .hero-slider-container { height: 430px; }
+        }
+        @media (max-width: 768px) {
+            .app-layout { padding: 16px 12px; }
+            .hero-slider-container { height: 360px; border-radius: 20px; }
+            .hero-slide { padding: 24px; }
+            .hero-slide h1 { font-size: 25px; }
+            .anime-card { border-radius: 15px; }
+            .section-title { font-size: 18px; }
+        }
     </style>
 </head>
 <body>
