@@ -1330,11 +1330,18 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             localStorage.setItem('komi_favorites', JSON.stringify(userFavorites));
             localStorage.setItem('komi_history', JSON.stringify(userWatchHistory));
-            localStorage.setItem('komi_episode_progress', JSON.stringify(komiEpisodeProgress));
+            // Supabase Auth progress is server-owned; never cache it in legacy shared browser maps.
+            const storedProgress = { ...komiEpisodeProgress };
+            if (currentUser?.authUserId) for (const key of Object.keys(storedProgress)) {
+                if (key.startsWith(currentUser.username + '_')) delete storedProgress[key];
+            }
+            localStorage.setItem('komi_episode_progress', JSON.stringify(storedProgress));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
-            localStorage.setItem('komi_anime_statuses', JSON.stringify(userAnimeStatuses));
+            const storedStatuses = { ...userAnimeStatuses };
+            if (currentUser?.authUserId) delete storedStatuses[currentUser.username];
+            localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
             localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
             if (!currentUser?.authUserId) saveStatusesToCloud();
