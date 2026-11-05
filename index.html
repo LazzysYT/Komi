@@ -949,6 +949,13 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
 #watchModal .modal-close{z-index:20!important}
 @media(max-width:700px){#watchModal #watchModalContent{width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;border-radius:0!important;padding:13px!important}#watchModal .komi-player-heading{flex-wrap:wrap}#watchModal .player-box,#watchModal .player-wrapper{min-height:190px}#watchModal .komi-watch-expand span{display:none}.komi-recent-section{padding:13px}.komi-recent-grid{grid-template-columns:1fr}}
 
+
+/* Transparent discovery panels */
+.komi-feature-section,.komi-achievement-panel,.komi-recent-section{background:transparent!important;box-shadow:none!important;border-color:rgba(255,255,255,.09)!important}
+.komi-feature-section .anime-card,.komi-progress-card,.komi-release-row{background:rgba(22,18,24,.38)!important;box-shadow:none!important}
+.komi-feature-section .anime-card:hover,.komi-progress-card:hover,.komi-release-row:hover{background:rgba(42,26,35,.6)!important}
+.komi-feature-section .section-header,.komi-achievement-panel .section-header{background:transparent!important}
+
 </style>
 </head>
 <body>
@@ -1811,7 +1818,6 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     </div>
 
-                    <section class="komi-recent-section"><div class="section-header"><h2 class="section-title">🕘 Недавно смотрели вы</h2></div>${komiRecentMarkup(currentUser?.username)}</section>
                     ${continueWatchingHtml}
                     ${komiRecommendedHtml}
                     ${komiReleaseCalendar()}
@@ -2116,7 +2122,6 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     <section class="komi-achievement-panel"><div><strong>🏅 Уровень ${komiAchievements(username).level}</strong><span>${komiAchievements(username).xp} XP · ${komiAchievements(username).watched} просмотрено</span></div><div class="komi-achievement-track"><i style="width:${komiAchievements(username).xp%300/3}%"></i></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span>🎯 Первое достижение впереди</span>'}</div></section>
-                    ${isMe ? `<section class="komi-recent-section"><div class="section-header"><h2 class="section-title">🕘 Недавно смотрели вы</h2></div>${komiRecentMarkup(username)}</section>` : ''}
                     <nav class="komi-profile-tabs" aria-label="Разделы профиля">
                         <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" onclick="profilePageSection='overview';render()">Профиль</button>
                         <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" onclick="profilePageSection='anime';render()">Аниме</button>
