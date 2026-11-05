@@ -1128,8 +1128,8 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
             <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
                 <div class="form-group">
-                    <label>Логин</label>
-                    <input type="text" class="form-control" id="loginUsername" required placeholder="Ваш никнейм...">
+                    <label for="loginUsername">Email или старый никнейм Komi</label>
+                    <input type="text" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com или старый ник">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
@@ -1141,8 +1141,12 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
             <form id="registerFormContainer" onsubmit="handleRegisterSubmit(event)" style="display: none;">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Регистрация</h2>
                 <div class="form-group">
-                    <label>Никнейм</label>
-                    <input type="text" class="form-control" id="regUsername" required placeholder="Придумайте логин...">
+                    <label for="regUsername">Никнейм</label>
+                    <input type="text" autocomplete="nickname" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" class="form-control" id="regUsername" required placeholder="Латинские буквы, цифры и _">
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email для безопасной регистрации</label>
+                    <input type="email" autocomplete="email" class="form-control" id="regEmail" required placeholder="email@example.com">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
@@ -1299,7 +1303,7 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
         };
         let userFavorites = safeParse(localStorage.getItem('komi_favorites'), {});
         let userWatchHistory = safeParse(localStorage.getItem('komi_history'), {});
-        let komiEpisodeProgress = JSON.parse(localStorage.getItem('komi_episode_progress') || '{}');
+        let komiEpisodeProgress = safeParse(localStorage.getItem('komi_episode_progress'), {});
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
@@ -1758,7 +1762,7 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         async function logoutUser() {
-            if (currentUser?.authProvider === 'google' && _supabase) {
+            if (currentUser?.authUserId && _supabase) {
                 try { await _supabase.auth.signOut(); } catch (error) { console.warn('Google sign out:', error); }
             }
             if (_supabase) {
@@ -3195,19 +3199,19 @@ const adminList = []; // No client-side username grants administrator privileges
                 const { data: { session }, error } = await _supabase.auth.getSession();
                 if (error) throw error;
                 if (!session?.user) {
-                    if (currentUser?.username?.startsWith('google_')) {
+                    if (currentUser?.authUserId) {
                         currentUser = null; saveData(); render();
                     }
                     return;
                 }
                 const username = googleProfileName(session.user);
-                const previousGoogle = currentUser?.username?.startsWith('google_');
+                const previousGoogle = Boolean(currentUser?.authUserId);
                 if (previousGoogle && currentUser.username !== username) {
                     currentUser = null;
                 }
                 // Do not overwrite an existing manually signed-in Komi account.
                 if (currentUser && !previousGoogle) return;
-                currentUser = { username, authProvider: 'google', authUserId: session.user.id };
+                currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
                 if (!userProfiles[username]) {
                     const meta = session.user.user_metadata || {};
                     userProfiles[username] = {
@@ -3270,6 +3274,13 @@ const adminList = []; // No client-side username grants administrator privileges
             e.preventDefault();
             const username = document.getElementById('loginUsername').value.trim();
             const passwordInput = document.getElementById('loginPassword').value;
+            if (username.includes('@')) {
+                if (!_supabase) { alert('Сервис входа недоступен'); return; }
+                const { error } = await _supabase.auth.signInWithPassword({ email: username, password: passwordInput });
+                if (error) { alert('Не удалось войти: ' + error.message); return; }
+                await restoreGoogleSession();
+                return;
+            }
             if (!username || !passwordInput) return;
 
             const passwordHash = await hashPassword(passwordInput);
@@ -3286,8 +3297,25 @@ const adminList = []; // No client-side username grants administrator privileges
         async function handleRegisterSubmit(e) {
             e.preventDefault();
             const username = document.getElementById('regUsername').value.trim();
+            const email = document.getElementById('regEmail').value.trim();
             const passwordInput = document.getElementById('regPassword').value;
-            if (!username || !passwordInput) return;
+            if (!username || !email || !passwordInput) return;
+            if (!_supabase) { alert('Сервис регистрации недоступен'); return; }
+            if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) { alert('Никнейм: 3–24 символа, латиница, цифры и _'); return; }
+            if (passwordInput.length < 8) { alert('Пароль должен содержать минимум 8 символов'); return; }
+            const { data: signupData, error: signupError } = await _supabase.auth.signUp({
+                email, password: passwordInput,
+                options: { data: { username }, emailRedirectTo: window.location.origin + window.location.pathname }
+            });
+            if (signupError) { alert('Не удалось зарегистрироваться: ' + signupError.message); return; }
+            if (!signupData.session) {
+                closeAuthModal();
+                alert('Проверь почту и подтверди регистрацию. Старые данные Komi останутся на месте.');
+                return;
+            }
+            await restoreGoogleSession();
+            alert('Аккаунт Supabase создан. Старый аккаунт Komi не удалён.');
+            return;
 
             if (/^google_/i.test(username)) { alert('Это имя зарезервировано для входа через Google.'); return; }
             if (registeredUsers[username]) {
