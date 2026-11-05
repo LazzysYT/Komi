@@ -1128,6 +1128,9 @@ async function loadDataFromCloud() {
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+        let catalogVisibleCount = 48;
+        function showMoreCatalog() { catalogVisibleCount += 48; render(); }
+
         function navigate(view) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
@@ -1191,7 +1194,7 @@ const adminList = ['admin', 'mellstroy'];
             if (currentView === 'home') {
                 const sliderItems = animeList.slice(0, Math.min(animeList.length, 5));
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 7);
-                const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм');
+                const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм').slice(0, 7);
                 const seasonalNew = [...animeList].reverse().slice(0, 7);
                 const recentlyAdded = [...animeList].slice(0, 7);
                 const popularNow = [...animeList].sort(() => 0.5 - Math.random()).slice(0, 7);
@@ -1371,8 +1374,9 @@ const adminList = ['admin', 'mellstroy'];
                         </div>
                     </div>
                     <div class="anime-grid">
-                        ${filtered.length === 0 ? `<div class="empty-state"><h3>Ничего не найдено по фильтрам</h3></div>` : filtered.map(a => renderCard(a)).join('')}
+                        ${filtered.length === 0 ? `<div class="empty-state"><h3>Ничего не найдено по фильтрам</h3></div>` : filtered.slice(0, catalogVisibleCount).map(a => renderCard(a)).join('')}
                     </div>
+                    ${filtered.length > catalogVisibleCount ? `<div style="display:flex;justify-content:center;margin:24px 0;"><button class="btn-glow" onclick="showMoreCatalog()">Показать ещё 48 · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button></div>` : ''}
                 `;
             } else if (currentView === 'profile') {
                 if (slideInterval) clearInterval(slideInterval);
