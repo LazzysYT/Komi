@@ -1367,6 +1367,7 @@ async function loadDataFromCloud() {
             for (const row of rows) {
                 const anime = row.data;
                 if (!anime || typeof anime !== 'object') continue;
+                if (!Array.isArray(anime.episodes) || !anime.episodes.some(ep => ep && ep.sources && Object.values(ep.sources).some(src => typeof src === 'string' && (src.includes('https://') || src.includes('https:&'))))) continue;
                 catalog.push({
                     ...anime,
                     id: String(row.shikimori_id),
