@@ -44,15 +44,26 @@ for (const key of required) {
       return {error:error?.message || null};
     }, animeId);
     if (owner.error) throw Error('Owner insert failed: '+owner.error);
+    const progressInsert = await a.page.evaluate(async id => {
+      const {error} = await _supabase.from('komi_watch_progress').insert({
+        user_id:currentUser.authUserId,anime_id:id,season:1,episode_index:3,
+        position_seconds:45,duration_seconds:1400
+      });
+      return error?.message || null;
+    }, animeId);
+    if (progressInsert) throw Error('Progress insert failed: '+progressInsert);
     const visibility = await b.page.evaluate(async ({id,uid}) => {
       const read = await _supabase.from('komi_anime_lists').select('status')
         .eq('user_id',uid).eq('anime_id',id);
       const update = await _supabase.from('komi_anime_lists')
         .update({status:'Просмотрено'}).eq('user_id',uid).eq('anime_id',id).select();
+      const progress = await _supabase.from('komi_watch_progress').select('position_seconds')
+        .eq('user_id',uid).eq('anime_id',id);
       return {readCount:read.data?.length,readError:read.error?.message,
-        updatedCount:update.data?.length,updateError:update.error?.message};
+        updatedCount:update.data?.length,updateError:update.error?.message,
+        progressCount:progress.data?.length,progressError:progress.error?.message};
     }, {id:animeId,uid:a.uid});
-    if (visibility.readCount !== 0 || visibility.updatedCount !== 0)
+    if (visibility.readCount !== 0 || visibility.updatedCount !== 0 || visibility.progressCount !== 0)
       throw Error('Cross-account data access detected: '+JSON.stringify(visibility));
     await a.page.reload({waitUntil:'domcontentloaded'});
     await a.page.waitForFunction(() => typeof _supabase !== 'undefined' && !!_supabase);
@@ -61,17 +72,26 @@ for (const key of required) {
         .select('status').eq('anime_id',id).single();
       return {status:data?.status,error:error?.message};
     }, animeId);
-    if (restored.status !== 'В планах') throw Error('Data did not survive reload: '+JSON.stringify(restored));
-    results.push('PASS two real email sessions, cross-account RLS, persistence after reload');
+    if (restored.status !== 'В планах') throw Error('List did not survive reload: '+JSON.stringify(restored));
+    const progressRestored = await a.page.evaluate(async id => {
+      const {data,error} = await _supabase.from('komi_watch_progress')
+        .select('episode_index,position_seconds').eq('anime_id',id).single();
+      return {data,error:error?.message};
+    }, animeId);
+    if (progressRestored.data?.episode_index !== 3 || Number(progressRestored.data?.position_seconds) !== 45)
+      throw Error('Progress did not survive reload: '+JSON.stringify(progressRestored));
+    results.push('PASS two real email sessions, list/progress cross-account RLS, persistence after reload');
     console.log(results.join('\n'));
   } finally {
     if (contexts[0]) {
       const page = contexts[0].pages()[0];
       if (page && !page.isClosed()) {
         const cleanup = await page.evaluate(async id => {
+          const uid = (await _supabase.auth.getUser()).data.user?.id;
+          const progress = await _supabase.from('komi_watch_progress').delete().eq('anime_id',id).eq('user_id',uid);
           const {error} = await _supabase.from('komi_anime_lists')
             .delete().eq('anime_id',id).eq('user_id',(await _supabase.auth.getUser()).data.user?.id);
-          return error?.message || null;
+          return progress.error?.message || error?.message || null;
         }, animeId).catch(e=>e.message);
         if (cleanup) console.error('Test record cleanup failed:',cleanup);
       }
