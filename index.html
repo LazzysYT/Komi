@@ -650,6 +650,46 @@
             .nav-actions { justify-content: center; }
             .nav-actions .nav-btn,.nav-actions .action-icon-btn,.nav-actions .user-pill { padding: 7px 11px; min-height: 34px; }
         }
+
+        /* Compact fixed left rail, inspired by the reference, retaining Komi controls */
+        :root { --komi-rail-width: 76px; }
+        .komi-side-nav {
+            position: fixed; left: 0; top: 0; bottom: 0; z-index: 101;
+            width: var(--komi-rail-width); background: #0b0b0c; border-right: 1px solid #202023;
+            display: flex; flex-direction: column; align-items: center; padding: 14px 8px 18px;
+            gap: 28px;
+        }
+        .komi-side-logo { width: 48px; height: 48px; border-radius: 16px; border: 0;
+            background: linear-gradient(135deg,#fa4552,#bc172c); color: white;
+            font-size: 25px; font-weight: 900; cursor: pointer; }
+        .komi-side-links,.komi-side-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+        .komi-side-bottom { margin-top: auto; }
+        .komi-side-button { position: relative; width: 49px; height: 49px; display: flex; align-items: center;
+            justify-content: center; background: transparent; border: 1px solid transparent; color: #9c9ca2;
+            border-radius: 16px; cursor: pointer; font-size: 23px; transition: .18s ease; }
+        .komi-side-button:hover,.komi-side-button.active { background: #222225; border-color: #353539; color: white; transform: translateY(-1px); }
+        .komi-side-button.active { box-shadow: inset 3px 0 #fa4552; }
+        .komi-side-button span { position: absolute; left: 60px; top: 50%; transform: translateY(-50%);
+            background: #202023; color: #fff; border: 1px solid #38383b; border-radius: 9px;
+            padding: 8px 11px; white-space: nowrap; font-size: 12px; font-weight: 700;
+            opacity: 0; visibility: hidden; pointer-events: none; transition: .15s ease; }
+        .komi-side-button:hover span { opacity: 1; visibility: visible; }
+        .komi-side-account { background: #17171a; color: #ff4b57; }
+        body > header { left: var(--komi-rail-width); width: calc(100% - var(--komi-rail-width)); }
+        .app-layout { margin-left: var(--komi-rail-width); width: calc(100% - var(--komi-rail-width)); }
+        #navHomeBtn,#navCatalogBtn,#headerRandomBtn,#headerPartyBtn { display: none !important; }
+        @media (max-width: 680px) {
+            :root { --komi-rail-width: 0px; }
+            .komi-side-nav { top: auto; right: 0; width: 100%; height: 65px; bottom: 0;
+                padding: 5px 10px; flex-direction: row; justify-content: center; gap: 0;
+                border-right: 0; border-top: 1px solid #2b2b2f; }
+            .komi-side-logo { display: none; }
+            .komi-side-links { flex-direction: row; width: auto; gap: 9px; }
+            .komi-side-bottom { flex-direction: row; width: auto; margin-top: 0; margin-left: 9px; gap: 9px; }
+            .komi-side-button { width: 44px; height: 44px; font-size: 20px; }
+            .komi-side-button span { display: none; }
+            body { padding-bottom: 70px; }
+        }
     </style>
 </head>
 <body>
@@ -693,8 +733,8 @@
 
                 <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
                 <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
-                <button class="action-icon-btn" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме">🎲</button>
-                <button class="action-icon-btn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(255,69,79,0.12); border-color:rgba(255,69,79,0.3); color:var(--primary);" title="Watch Party">🎉 Party</button>
+                <button class="action-icon-btn" id="headerRandomBtn" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме">🎲</button>
+                <button class="action-icon-btn" id="headerPartyBtn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(255,69,79,0.12); border-color:rgba(255,69,79,0.3); color:var(--primary);" title="Watch Party">🎉 Party</button>
                 
                 <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="display: none;" title="Админка">⚙️</button>
                 <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="display: none;" title="Добавить">+ Добавить</button>
@@ -704,6 +744,19 @@
         </div>
     </header>
 
+    <aside class="komi-side-nav" aria-label="Навигация Komi">
+        <button class="komi-side-logo" onclick="playSound(); navigate('home')" title="Komi Anime">K</button>
+        <div class="komi-side-links">
+            <button id="sideHomeBtn" class="komi-side-button" onclick="playSound(); navigate('home')" title="Главная" aria-label="Главная">⌂<span>Главная</span></button>
+            <button id="sideCatalogBtn" class="komi-side-button" onclick="playSound(); navigate('catalog')" title="Каталог" aria-label="Каталог">▤<span>Каталог</span></button>
+            <button class="komi-side-button" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме" aria-label="Случайное аниме">🎲<span>Случайное</span></button>
+            <button class="komi-side-button" onclick="playSound(); openWatchPartyHub()" title="Watch Party" aria-label="Watch Party">🎉<span>Party</span></button>
+        </div>
+        <div class="komi-side-bottom">
+            <button class="komi-side-button" onclick="playSound(); toggleNotifications()" title="Уведомления" aria-label="Уведомления">♧<span>Уведомления</span></button>
+            <button class="komi-side-button komi-side-account" onclick="playSound(); if(currentUser) openProfile(currentUser.username); else openAuthModal('login')" title="Профиль" aria-label="Профиль">◉<span>Профиль</span></button>
+        </div>
+    </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
         <main id="mainContainer"></main>
     </div>
