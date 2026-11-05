@@ -586,6 +586,70 @@
             .anime-card { border-radius: 15px; }
             .section-title { font-size: 18px; }
         }
+
+        /* Rounded navigation, profile and auth — additive, no app logic removed */
+        .search-dropdown { border-radius: 18px; overflow: hidden; box-shadow: 0 24px 65px rgba(0,0,0,.75); }
+        .search-dropdown-item { border-color: #242427; padding: 12px 14px; }
+        .search-dropdown-item:hover { background: #1a1214; }
+        .nav-actions { gap: 9px; }
+        .nav-actions .nav-btn, .nav-actions .action-icon-btn, .nav-actions .user-pill {
+            background: #151517; border: 1px solid #2c2c30; border-radius: 999px;
+            min-height: 38px; padding: 8px 15px;
+        }
+        .nav-actions .nav-btn:hover, .nav-actions .nav-btn.active,
+        .nav-actions .action-icon-btn:hover, .nav-actions .user-pill:hover {
+            background: #221013; border-color: #ae303c; color: white;
+        }
+        .profile-container { max-width: 1140px; gap: 26px; }
+        .profile-header-card {
+            border-radius: 30px; border-color: #27272a; padding: 42px;
+            background: radial-gradient(ellipse at 50% -40%,rgba(190,30,48,.13),transparent 62%),#0b0b0d;
+            grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px;
+        }
+        .profile-header-card::after { display: none; }
+        .profile-avatar-box {
+            width: 128px; height: 128px; border-radius: 50%;
+            border: 4px solid #222226; box-shadow: 0 12px 40px rgba(0,0,0,.55);
+        }
+        .profile-info-grid { width: 100%; max-width: 780px; align-items: center; gap: 14px; }
+        .profile-name-row { justify-content: center; gap: 16px; flex-wrap: wrap; width: 100%; border: 0; }
+        .profile-name-row h2 { font-size: clamp(23px,3vw,36px); letter-spacing: -.7px; }
+        .profile-badges-row { justify-content: center; }
+        .profile-settings-box { width: 100%; text-align: left; border-radius: 18px; padding: 20px; background: #151517; }
+        .profile-stats-grid { gap: 12px; }
+        .profile-stat-card { border-radius: 20px; padding: 20px 16px; background: #111113; }
+        .profile-stat-card .stat-num { font-size: 24px; }
+        .profile-stat-card.active { background: linear-gradient(145deg,#261014,#100b0d); }
+        .profile-container .empty-state { border-radius: 22px; }
+        .komi-auth-content {
+            border-radius: 30px; background: #101012; border: 1px solid #29292c;
+            padding: 30px 26px 28px; box-shadow: 0 28px 90px rgba(0,0,0,.75);
+        }
+        .komi-auth-mark {
+            width: 62px; height: 62px; margin: 0 auto 13px; display: grid; place-items: center;
+            border-radius: 20px; background: linear-gradient(140deg,#ff4b56,#bc1726);
+            font-size: 31px; font-weight: 800; box-shadow: 0 10px 25px rgba(240,40,60,.2);
+        }
+        .komi-auth-heading { text-align: center; font-size: 24px; font-weight: 800; }
+        .komi-auth-caption { text-align: center; color: #aaaab0; line-height: 1.6; font-size: 12px; margin: 10px 0 20px; }
+        .komi-google-btn {
+            display: flex; align-items: center; justify-content: center; gap: 12px;
+            width: 100%; border: 1px solid #444449; border-radius: 999px;
+            background: #f1f1f2; color: #161619; padding: 13px 16px;
+            font: inherit; font-weight: 800; cursor: pointer; margin: 15px 0;
+        }
+        .komi-google-btn:hover { background: white; }
+        .komi-google-g { font-size: 20px; font-weight: 900; color: #4285f4; }
+        .komi-auth-separator { text-align: center; color: #85858c; font-size: 11px; margin: 13px 0; }
+        .komi-auth-content .form-control { border-radius: 14px; background: #19191c; }
+        .komi-auth-content .btn-glow { border-radius: 999px; min-height: 43px; }
+        @media (max-width: 768px) {
+            .profile-header-card { padding: 25px 15px; border-radius: 22px; }
+            .profile-avatar-box { width: 105px; height: 105px; }
+            .profile-stats-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+            .nav-actions { justify-content: center; }
+            .nav-actions .nav-btn,.nav-actions .action-icon-btn,.nav-actions .user-pill { padding: 7px 11px; min-height: 34px; }
+        }
     </style>
 </head>
 <body>
@@ -714,6 +778,8 @@
                 <button type="button" class="season-tab-btn" id="tabRegisterBtn" onclick="playSound(); switchAuthTab('register')">Регистрация</button>
             </div>
 
+            <button type="button" class="komi-google-btn" onclick="showGoogleAuthInfo()"> <span class="komi-google-g">G</span> Продолжить через Google</button>
+            <div class="komi-auth-separator">или через аккаунт Komi</div>
             <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
                 <div class="form-group">
@@ -2219,6 +2285,17 @@ const adminList = ['admin', 'mellstroy'];
             openActiveWatchPartyRoom();
         }
 
+        function closeSearchDropdown() {
+            const dd = document.getElementById('searchDropdown');
+            if (dd) dd.classList.remove('active');
+        }
+        document.addEventListener('pointerdown', function(e) {
+            if (!e.target.closest('.search-container')) closeSearchDropdown();
+        });
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') { closeSearchDropdown(); document.getElementById('searchInput')?.blur(); }
+        });
+
         function showSearchDropdown() {
             const dd = document.getElementById('searchDropdown');
             const query = document.getElementById('searchInput').value.trim();
@@ -2549,6 +2626,10 @@ const adminList = ['admin', 'mellstroy'];
 
             await saveAnimeToCloud();
             closeAddModal();
+        }
+
+        function showGoogleAuthInfo() {
+            alert('Вход через Google пока не подключён к аккаунтам Komi. Для безопасного запуска нужно настроить Google OAuth в Supabase и связать Google ID с профилями сайта. Сейчас используйте обычный вход.');
         }
 
         function openAuthModal(mode = 'login') {
