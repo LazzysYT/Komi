@@ -1328,8 +1328,14 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
         function saveData() {
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
-            localStorage.setItem('komi_favorites', JSON.stringify(userFavorites));
-            localStorage.setItem('komi_history', JSON.stringify(userWatchHistory));
+            const storedFavorites = { ...userFavorites };
+            if (currentUser?.authUserId) delete storedFavorites[currentUser.username];
+            localStorage.setItem('komi_favorites', JSON.stringify(storedFavorites));
+            const storedHistory = { ...userWatchHistory };
+            if (currentUser?.authUserId) for (const key of Object.keys(storedHistory)) {
+                if (key.startsWith(currentUser.username + '_')) delete storedHistory[key];
+            }
+            localStorage.setItem('komi_history', JSON.stringify(storedHistory));
             // Supabase Auth progress is server-owned; never cache it in legacy shared browser maps.
             const storedProgress = { ...komiEpisodeProgress };
             if (currentUser?.authUserId) for (const key of Object.keys(storedProgress)) {
@@ -3243,6 +3249,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
+                userFavorites[username] = {};
                 for (const key of Object.keys(komiEpisodeProgress)) if (key.startsWith(username + '_')) delete komiEpisodeProgress[key];
                 if (!userProfiles[username]) {
                     const meta = session.user.user_metadata || {};
@@ -3262,7 +3269,6 @@ const adminList = []; // No client-side username grants administrator privileges
                     }, { onConflict: 'user_id' });
                     if (profileError) console.warn('Profile sync:', profileError.message);
                 } catch (profileError) { console.warn('Profile sync:', profileError); }
-                await loadAuthenticatedAnimeData();
                 await loadAuthenticatedAnimeData();
                 saveData(); closeAuthModal(); render();
             } catch (error) {
@@ -3363,7 +3369,18 @@ const adminList = []; // No client-side username grants administrator privileges
                 userFavorites[currentUser.username][id] = category;
             }
             saveData();
+            if (currentUser?.authUserId) persistAuthenticatedFavorite(id, userFavorites[currentUser.username][id] || null);
             openWatchModal(id);
+        }
+
+        async function persistAuthenticatedFavorite(animeId, category) {
+            if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
+            const uid = currentUser.authUserId;
+            const query = _supabase.from('komi_favorites');
+            const result = category
+                ? await query.upsert({user_id:uid, anime_id:Number(animeId), category}, {onConflict:'user_id,anime_id'})
+                : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
+            if (result.error) console.error('Не удалось сохранить избранное:', result.error.message);
         }
 
         function addToCustomFolder(id, folderName) {
@@ -3387,9 +3404,10 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!_supabase || !currentUser?.authUserId) return;
             const uid = currentUser.authUserId;
             const username = currentUser.username;
-            const [lists, progress] = await Promise.all([
+            const [lists, progress, favorites] = await Promise.all([
                 _supabase.from('komi_anime_lists').select('anime_id,status').eq('user_id', uid),
-                _supabase.from('komi_watch_progress').select('anime_id,season,episode_index,position_seconds,duration_seconds,updated_at').eq('user_id', uid)
+                _supabase.from('komi_watch_progress').select('anime_id,season,episode_index,position_seconds,duration_seconds,updated_at').eq('user_id', uid),
+                _supabase.from('komi_favorites').select('anime_id,category').eq('user_id', uid)
             ]);
             if (currentUser?.authUserId !== uid) return;
             if (lists.error) console.warn('Не удалось загрузить личные списки:', lists.error.message);
@@ -3397,12 +3415,21 @@ const adminList = []; // No client-side username grants administrator privileges
                 userAnimeStatuses[username] = {};
                 for (const item of lists.data || []) userAnimeStatuses[username][item.anime_id] = item.status;
             }
+            if (favorites.error) console.warn('Не удалось загрузить избранное:', favorites.error.message);
+            else {
+                userFavorites[username] = {};
+                for (const item of favorites.data || []) userFavorites[username][item.anime_id] = item.category;
+            }
             if (progress.error) console.warn('Не удалось загрузить прогресс:', progress.error.message);
             else {
                 for (const key of Object.keys(komiEpisodeProgress)) {
                     if (key.startsWith(username + '_')) delete komiEpisodeProgress[key];
                 }
+                for (const key of Object.keys(userWatchHistory)) {
+                    if (key.startsWith(username + '_')) delete userWatchHistory[key];
+                }
                 for (const item of progress.data || []) {
+                    userWatchHistory[username + '_' + item.anime_id] = Number(item.position_seconds) || 0;
                     komiEpisodeProgress[username + '_' + item.anime_id] = {
                         season: item.season, index: item.episode_index,
                         time: item.position_seconds, duration: item.duration_seconds,
