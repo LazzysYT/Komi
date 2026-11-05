@@ -3313,6 +3313,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 alert('Проверь почту и подтверди регистрацию. Старые данные Komi останутся на месте.');
                 return;
             }
+            currentUser = null;
             await restoreGoogleSession();
             alert('Аккаунт Supabase создан. Старый аккаунт Komi не удалён.');
             return;
