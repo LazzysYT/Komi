@@ -723,6 +723,13 @@
         .komi-social-link:hover { background: #271519; border-color: #f04450; color: white; transform: translateY(-2px); box-shadow: 0 0 18px rgba(240,68,80,.22); }
         @media (max-width: 1100px) { .komi-social-links { left: 8px; gap: 6px; } .komi-social-link { width: 35px; height: 35px; border-radius: 12px; } }
         @media (max-width: 760px) { .komi-social-links { position: static; transform: none; margin-right: 8px; } .komi-social-link { width: 32px; height: 32px; } }
+        /* Compact cinema-style numbered episodes without thumbnails */
+        .komi-episode-number-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:9px;margin:12px 0 18px; }
+        .komi-episode-number { min-height:48px;border:1px solid #2b2b31;border-radius:13px;background:#18181c;color:#e7e7eb;font:700 14px inherit;cursor:pointer;transition:background .18s,border-color .18s,transform .18s; }
+        .komi-episode-number:hover { background:#28282f;border-color:#666;transform:translateY(-1px); }
+        .komi-episode-number.active { background:#ee364a;border-color:#ee364a;color:#fff;box-shadow:0 5px 20px #ee364a33; }
+        .player-wrapper { border-radius:20px;overflow:hidden;background:#08080a;border:1px solid #27272d; }
+        .players-switcher-bar { border-radius:14px; }
         .komi-side-account #sidebarAvatarIcon { position:static; transform:none; display:flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border:0; background:none; opacity:1; visibility:visible; overflow:hidden; border-radius:50%; }
         .komi-side-account #sidebarAvatarIcon img { display:block; width:36px; height:36px; border-radius:50%; object-fit:cover; }
         .komi-side-button > svg, .komi-side-account #sidebarAvatarIcon > svg { width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
@@ -1155,6 +1162,7 @@ async function loadDataFromCloud() {
 }
 
         async function saveAnimeToCloud() {
+            if (!requireServerAdmin()) return;
             if (_supabase) {
                 try { await _supabase.from('animes').upsert({ id: 1, content: JSON.stringify(animeList) }); } catch(e){}
             }
@@ -1409,7 +1417,7 @@ async function loadDataFromCloud() {
             }
             const adminBtn = document.getElementById('adminPanelBtn');
             const addBtn = document.getElementById('addAnimeBtn');
-const adminList = ['admin', 'mellstroy'];
+const adminList = []; // No client-side username grants administrator privileges.
             
             const isAdmin = currentUser && adminList.includes(currentUser.username.toLowerCase());
 
@@ -2620,7 +2628,13 @@ const adminList = ['admin', 'mellstroy'];
             document.getElementById('apiSearchResultsList').style.display = 'none';
         }
 
+        function requireServerAdmin() {
+            alert('Администрирование отключено до настройки защищённой проверки прав через Supabase Auth и RLS.');
+            return false;
+        }
+
         function openAdminPanel() {
+            if (!requireServerAdmin()) return;
             const modal = document.getElementById('adminModal');
             document.getElementById('adminModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); document.getElementById('adminModal').classList.remove('active')">&times;</button>
@@ -2660,6 +2674,7 @@ const adminList = ['admin', 'mellstroy'];
         }
 
         async function deleteAnime(id) {
+            if (!requireServerAdmin()) return;
             if (confirm('Удалить аниме?')) {
                 animeList = animeList.filter(a => a.id !== id);
                 await saveAnimeToCloud();
@@ -2677,6 +2692,7 @@ const adminList = ['admin', 'mellstroy'];
         }
 
         function openAddModal(editId = null) {
+            if (!requireServerAdmin()) return;
             const modal = document.getElementById('addModal');
             document.getElementById('editAnimeId').value = '';
             document.getElementById('animeForm').reset();
@@ -3050,21 +3066,11 @@ const adminList = ['admin', 'mellstroy'];
                         </div>
 
                         <h3 style="font-size:12px; font-weight:700; margin-bottom:8px;">Эпизоды (${currentSeasonEpisodes.length})</h3>
-                        <div class="episodes-grid-crunchy">
+                        <div class="komi-episode-number-grid">
                             ${currentSeasonEpisodes.map((ep, i) => `
-                                <div class="ep-crunchy-card ${i === (selectedEpIdx || 0) ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${i})">
-                                    <div class="ep-crunchy-thumb" style="background-image: url('${anime.poster}'); background-size: cover; background-position: center;">
-                                        <div class="ep-crunchy-play-overlay">
-                                            <div class="ep-crunchy-play-icon">▶</div>
-                                        </div>
-                                    </div>
-                                    <div class="ep-crunchy-info">
-                                        <div class="ep-crunchy-titles">
-                                            <div class="ep-crunchy-title">${ep.title || ('Эпизод ' + (i+1))}</div>
-                                            <div class="ep-crunchy-desc">Эпизод ${i+1}</div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <button type="button" class="komi-episode-number ${i === (selectedEpIdx || 0) ? 'active' : ''}" title="Серия ${i+1}" aria-label="Серия ${i+1}" aria-current="${i === (selectedEpIdx || 0) ? 'true' : 'false'}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${i})">
+                                    ${i + 1}
+                                </button>
                             `).join('')}
                         </div>
                     </div>
