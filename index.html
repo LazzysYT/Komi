@@ -1747,7 +1747,8 @@ const adminList = ['admin', 'mellstroy'];
                 <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
                     <div class="anime-rating-badge">⭐ ${shiki}</div>
                     <div class="anime-poster-box">
-                        <img src="${anime.poster}" class="anime-poster" onerror="this.onerror=null;this.style.opacity='0.2'">
+                        <img src="${anime.poster}" class="anime-poster" loading="lazy" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
+                        <div class="anime-poster-fallback" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e2a,#101018);color:#92929F"><span style="font-size:30px;font-weight:800;color:#FF454F">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>
                         <div class="anime-quick-view">
                             <span class="btn-glow" style="padding: 5px 12px; font-size:11px;">▶ Смотреть</span>
                         </div>
