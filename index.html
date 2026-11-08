@@ -1790,7 +1790,7 @@ async function loadDataFromCloud() {
         if (!_supabase) throw new Error('Supabase не подключён');
 
         const settingsPromise = _supabase
-            .from('animes').select('id,content').in('id', [2, 3, 4, 5, 6, 7]);
+            .from('animes').select('id,content').in('id', [2, 3, 4, 5, 7]);
         const catalog = [];
         const pageSize = 100;
         let offset = 0;
@@ -1904,7 +1904,7 @@ async function loadDataFromCloud() {
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
-                const { data: cloudSyncData } = await _supabase.from('animes').select('*').in('id', [5, 6, 7]);
+                const { data: cloudSyncData } = await _supabase.from('animes').select('id,content').in('id', [5, 7]);
                 if (cloudSyncData) {
                     cloudSyncData.forEach(row => {
                         if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
@@ -3736,8 +3736,12 @@ const adminList = []; // No client-side username grants administrator privileges
                 saveData();
                 render();
                 komiStatusFeedback(next ? 'Статус сохранён: ' + next : 'Статус снят');
-                if (document.getElementById('watchModal').classList.contains('active')) {
-                    openWatchModal(animeId);
+                if (String(window.komiActiveAnimeId) === String(animeId)) {
+                    for (const button of document.querySelectorAll('#watchModalContent [data-watch-status]')) {
+                        const selected = button.dataset.watchStatus === next;
+                        button.classList.toggle('active', selected);
+                        button.setAttribute('aria-pressed', String(selected));
+                    }
                 }
             } catch (error) {
                 if (currentUser?.authUserId === user.authUserId) komiStatusFeedback('Не удалось сохранить статус. ' + error.message);
@@ -4072,7 +4076,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:6px 10px; border-radius:8px;">
                         <span style="font-size:11px; color:var(--text-muted);">Статус:</span>
                         ${['Просмотрено', 'В планах', 'Смотрю', 'Отложено', 'Брошено'].map(st => `
-                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
+                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" data-watch-status="${st}" aria-pressed="${myCurrentStatus === st}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
                         `).join('')}
                     </div>
 
