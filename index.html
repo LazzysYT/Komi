@@ -1750,8 +1750,6 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
         let globalAllOnlineUsersList = [];
         const myUniqueKey = 'user_' + Math.random().toString(36).substring(2, 9);
         
-        let activeWatchPartyRoom = null;
-        let activePartiesList = [];
 
         function saveData() {
             localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
@@ -1839,7 +1837,6 @@ async function loadDataFromCloud() {
                 if (avatar && (!userProfiles[name]?.avatar || userProfiles[name].avatar.startsWith('https://api.dicebear.com/'))) userProfiles[name] = { ...(userProfiles[name] || {}), avatar };
             }
             if (row.id === 5) userNotifications = value || {};
-            if (row.id === 6) activePartiesList = value || [];
             if (row.id === 7) userFriends = { ...userFriends, ...(value || {}) };
         }
 
@@ -1880,11 +1877,6 @@ async function loadDataFromCloud() {
             }
         }
 
-        async function savePartiesToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 6, content: JSON.stringify(activePartiesList) }); } catch(e) {}
-            }
-        }
 
         async function saveFriendsToCloud() {
             if (_supabase) {
@@ -1911,7 +1903,6 @@ async function loadDataFromCloud() {
                 if (cloudSyncData) {
                     cloudSyncData.forEach(row => {
                         if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
-                        if (row.id === 6) activePartiesList = JSON.parse(row.content || '[]');
                         if (row.id === 7) {
                             const cloudFriends = JSON.parse(row.content || '{}');
                             userFriends = { ...userFriends, ...cloudFriends };
@@ -2271,7 +2262,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 name.textContent = username;
                 const logout = document.createElement('button');
                 logout.type = 'button';
-                logout.textContent = '🚪';
+                logout.textContent = 'Выйти';
                 logout.title = 'Выйти';
                 logout.setAttribute('aria-label', 'Выйти из аккаунта');
                 logout.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;margin-left:2px';
@@ -2284,13 +2275,27 @@ const adminList = []; // No client-side username grants administrator privileges
             }
         }
 
+        function clearKomiAccountData(user) {
+            if (!user?.authUserId) return;
+            delete userAnimeStatuses[user.username];
+            delete userFavorites[user.username];
+            for (const data of [komiEpisodeProgress, userWatchHistory]) {
+                for (const key of Object.keys(data)) if (key.startsWith(user.username + '_')) delete data[key];
+            }
+        }
+
         async function logoutUser() {
+            const signingOut = currentUser;
+            await leaveWatchPartyRoom();
+            closeWatchModal();
             if (currentUser?.authUserId && _supabase) {
-                try { await _supabase.auth.signOut(); } catch (error) { console.warn('Google sign out:', error); }
+                const { error } = await _supabase.auth.signOut({ scope: 'local' });
+                if (error) { alert('Не удалось выйти: ' + error.message); return; }
             }
             if (_supabase) {
                 try { await _supabase.from('online_users').delete().eq('session_id', myUniqueKey); } catch(e){}
             }
+            clearKomiAccountData(signingOut);
             currentUser = null;
             saveData();
             navigate('home');
@@ -2339,12 +2344,12 @@ const adminList = []; // No client-side username grants administrator privileges
                                             <span>${anime.year || '2026'}</span>
                                             <span>${anime.type || 'Сериал'}</span>
                                         </div>
-                                        <h1>${anime.title}</h1>
+                                        <h1>${escapeFriendHtml(anime.title)}</h1>
                                         <p>${anime.desc || 'Увлекательная история, захватывающие сражения и незабываемые персонажи ждут вас в новом релизе.'}</p>
                                         <div class="hero-buttons">
                                             <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">▶ Смотреть сейчас</button>
                                             <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')">ℹ Подробнее</button>
-                                            <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Party</button>
+                                            <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)">🎉 Party</button>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -3023,332 +3028,6 @@ const adminList = []; // No client-side username grants administrator privileges
             renderFriendsDrawer();
         }
 
-        async function openWatchPartyHub() {
-            if (!currentUser) { openAuthModal('login'); return; }
-            playSound();
-
-            if (_supabase) {
-                try {
-                    const { data } = await _supabase.from('animes').select('*').eq('id', 6).single();
-                    if (data && data.content) {
-                        activePartiesList = JSON.parse(data.content);
-                    }
-                } catch(e) {}
-            }
-
-            const modal = document.getElementById('watchPartyModal');
-            const animeOptions = animeList.map(a => `<option value="${a.id}">${a.title}</option>`).join('');
-            const friends = userFriends[currentUser.username] || [];
-
-            document.getElementById('watchPartyModalContent').innerHTML = `
-                <button class="modal-close" onclick="playSound(); closeWatchPartyModal()">&times;</button>
-                <h2 style="margin-bottom: 14px; font-size: 18px;">🎉 Watch Party — Совместный просмотр</h2>
-                
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:14px; margin-bottom:16px;">
-                    <div style="background:var(--bg-input); padding:14px; border-radius:10px; border:1px solid var(--border);">
-                        <h3 style="font-size:12px; margin-bottom:8px;">🎬 Создать комнату</h3>
-                        <div class="form-group">
-                            <label>Аниме</label>
-                            <select id="partyAnimeSelect" class="form-control">${animeOptions}</select>
-                        </div>
-                        <div class="form-group">
-                            <label>Название</label>
-                            <input type="text" id="partyRoomName" class="form-control" value="Комната ${currentUser.username}">
-                        </div>
-                        <div class="form-group">
-                            <label>Доступ</label>
-                            <select id="partyRoomType" class="form-control">
-                                <option value="public">🌍 Публичная</option>
-                                <option value="private">🔒 Приватная</option>
-                            </select>
-                        </div>
-                        <button class="btn-glow" style="width:100%; justify-content:center;" onclick="playSound(); createWatchPartyRoom()">Создать и войти</button>
-                    </div>
-
-                    <div style="background:var(--bg-input); padding:14px; border-radius:10px; border:1px solid var(--border); display:flex; flex-direction:column; gap:8px;">
-                        <h3 style="font-size:12px;">👥 Пригласить друзей</h3>
-                        <div style="display:flex; flex-direction:column; gap:5px; max-height:150px; overflow-y:auto;" id="partyInviteFriendsList">
-                            ${friends.length === 0 ? `<div style="color:var(--text-muted); font-size:11px;">Список друзей пуст.</div>` : friends.map(f => `
-                                <div style="display:flex; justify-content:space-between; align-items:center; background:var(--bg-card); padding:5px 8px; border-radius:6px; border:1px solid var(--border);">
-                                    <span style="font-size:11px; font-weight:600;">${f}</span>
-                                    <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="playSound(); inviteFriendToParty('${f}')">Пригласить</button>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-
-                <div style="background:var(--bg-input); padding:14px; border-radius:10px; border:1px solid var(--border);">
-                    <h3 style="font-size:12px; margin-bottom:8px;">🌍 Активные комнаты</h3>
-                    <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:8px; max-height:180px; overflow-y:auto;" id="activePartiesGridContainer">
-                        ${activePartiesList.length === 0 ? `<div style="color:var(--text-muted); font-size:11px;">Нет активных публичных комнат.</div>` : activePartiesList.map(room => {
-                            const an = animeList.find(x => x.id === room.animeId);
-                            return `
-                                <div style="background:var(--bg-card); border:1px solid var(--border); padding:6px 8px; border-radius:6px; display:flex; gap:8px; align-items:center;">
-                                    <img src="${an ? an.poster : ''}" style="width:32px; height:45px; object-fit:cover; border-radius:5px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
-                                    <div style="flex:1; overflow:hidden;">
-                                        <div style="font-weight:700; font-size:11px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${room.name}</div>
-                                        <div style="font-size:10px; color:var(--text-muted);">Хост: ${room.host}</div>
-                                        <div style="font-size:10px; color:var(--success); margin-top:2px;">Участников: ${room.members.length}</div>
-                                    </div>
-                                    <button class="btn-glow" style="padding:3px 6px; font-size:10px;" onclick="playSound(); joinWatchPartyRoom('${room.id}')">Войти</button>
-                                </div>
-                            `;
-                        }).join('')}
-                    </div>
-                </div>
-            `;
-            modal.classList.add('active');
-        }
-
-        function closeWatchPartyModal() {
-            document.getElementById('watchPartyModal').classList.remove('active');
-        }
-
-        async function createWatchPartyRoom() {
-            if (!currentUser) return;
-            const animeId = document.getElementById('partyAnimeSelect').value;
-            const roomName = document.getElementById('partyRoomName').value.trim() || ('Комната ' + currentUser.username);
-            const roomType = document.getElementById('partyRoomType').value;
-
-            activeWatchPartyRoom = {
-                id: 'room_' + Date.now(),
-                name: roomName,
-                host: currentUser.username,
-                animeId: animeId,
-                type: roomType,
-                currentTime: 0,
-                isPlaying: false,
-                season: 1,
-                epIdx: 0,
-                members: [currentUser.username],
-                chat: [{ author: 'Система', text: `${currentUser.username} создал Watch Party.` }]
-            };
-
-            if (roomType === 'public') {
-                activePartiesList.push(activeWatchPartyRoom);
-            }
-
-            await savePartiesToCloud();
-            closeWatchPartyModal();
-            openActiveWatchPartyRoom();
-        }
-
-        async function joinWatchPartyRoom(roomId) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            
-            if (_supabase) {
-                try {
-                    const { data } = await _supabase.from('animes').select('*').eq('id', 6).single();
-                    if (data && data.content) {
-                        activePartiesList = JSON.parse(data.content);
-                    }
-                } catch(e) {}
-            }
-
-            let room = activePartiesList.find(r => r.id === roomId);
-            if (!room && activeWatchPartyRoom && activeWatchPartyRoom.id === roomId) {
-                room = activeWatchPartyRoom;
-            }
-            if (!room) { alert('Комната не найдена!'); return; }
-
-            activeWatchPartyRoom = room;
-            if (!activeWatchPartyRoom.members.includes(currentUser.username)) {
-                activeWatchPartyRoom.members.push(currentUser.username);
-                activeWatchPartyRoom.chat.push({ author: 'Система', text: `${currentUser.username} присоединился.` });
-                await savePartiesToCloud();
-            }
-
-            closeWatchPartyModal();
-            openActiveWatchPartyRoom();
-        }
-
-        async function deleteActiveWatchParty() {
-            if (!activeWatchPartyRoom || !currentUser) return;
-            if (activeWatchPartyRoom.host !== currentUser.username) {
-                alert('Только хост может удалить комнату!');
-                return;
-            }
-
-            if (confirm('Удалить эту комнату?')) {
-                activePartiesList = activePartiesList.filter(r => r.id !== activeWatchPartyRoom.id);
-                await savePartiesToCloud();
-                leaveWatchPartyRoom();
-                alert('Комната удалена.');
-            }
-        }
-
-        function inviteFriendToParty(friendName) {
-            if (!activeWatchPartyRoom) { alert('Сначала создайте комнату!'); return; }
-            addNotification(friendName, `${currentUser.username} приглашает вас в Watch Party "${activeWatchPartyRoom.name}"!`, activeWatchPartyRoom.id);
-            alert(`Приглашение отправлено пользователю ${friendName}!`);
-        }
-
-        function openActiveWatchPartyRoom() {
-            if (!activeWatchPartyRoom) return;
-            const anime = animeList.find(a => a.id === activeWatchPartyRoom.animeId);
-            if (!anime) return;
-
-            const isHost = currentUser && currentUser.username === activeWatchPartyRoom.host;
-            const currentEp = (anime.episodes && anime.episodes[activeWatchPartyRoom.epIdx]) ? anime.episodes[activeWatchPartyRoom.epIdx] : { sources: { 'Default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' } };
-            const sources = currentEp.sources || { 'Default': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' };
-            const activeUrl = Object.values(sources)[0] || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
-
-            let playerHtml = '';
-            if (activeUrl.trim().startsWith('<iframe')) {
-                playerHtml = `<div class="party-video-container">${activeUrl}</div>`;
-            } else {
-                const controlsAttr = isHost ? 'controls' : '';
-                playerHtml = `
-                    <div class="party-video-container">
-                        <video id="partyVideoElement" ${controlsAttr} crossorigin="anonymous" playsinline ontimeupdate="partyReportTime(this)" onplay="partyReportState(true)" onpause="partyReportState(false)">
-                            <source src="${activeUrl}" type="video/mp4">
-                        </video>
-                    </div>
-                `;
-            }
-
-            const friends = userFriends[currentUser.username] || [];
-
-            const modal = document.getElementById('watchPartyModal');
-            document.getElementById('watchPartyModalContent').innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:6px;">
-                    <div>
-                        <h2 style="font-size:16px;">🎉 Party: ${activeWatchPartyRoom.name}</h2>
-                        <span style="font-size:10px; color:var(--text-muted);">Аниме: <b>${anime.title}</b> | Хост: <b>${activeWatchPartyRoom.host}</b> ${isHost ? '(Вы - Хост 👑)' : '(Зритель)'}</span>
-                    </div>
-                    <div style="display:flex; gap:6px; align-items:center;">
-                        ${isHost ? `<button class="btn-danger" style="padding:3px 6px; font-size:10px;" onclick="playSound(); deleteActiveWatchParty()">🗑️ Удалить</button>` : ''}
-                        <span style="background:rgba(54,211,153,0.1); color:var(--success); padding:3px 6px; border-radius:5px; font-size:10px; font-weight:700;">● Активно</span>
-                        <button class="modal-close" style="position:static;" onclick="playSound(); leaveWatchPartyRoom()">&times;</button>
-                    </div>
-                </div>
-
-                <div class="party-room-grid">
-                    <div class="party-main-screen">
-                        ${playerHtml}
-                        <div class="flying-emoji-layer" id="flyingEmojiLayer"></div>
-                        <div class="party-reactions-bar">
-                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('🔥')">🔥</button>
-                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('❤️')">❤️</button>
-                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('😂')">😂</button>
-                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('😲')">😲</button>
-                            <button class="party-react-btn" onclick="playSound(); sendPartyReaction('🎉')">🎉</button>
-                        </div>
-                    </div>
-
-                    <div class="party-sidebar-panel">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <h4 style="font-size:11px; color:var(--text-muted);">Участники (${activeWatchPartyRoom.members.length})</h4>
-                            <select class="form-control" style="font-size:10px; padding:2px; max-width:90px;" onchange="if(this.value) { inviteFriendToParty(this.value); this.value=''; }">
-                                <option value="">+ Пригласить</option>
-                                ${friends.map(f => `<option value="${f}">${f}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="party-members-list" id="partyMembersList">
-                            ${activeWatchPartyRoom.members.map(m => `<div class="party-member-badge">👤 ${m} ${m === activeWatchPartyRoom.host ? '👑' : ''}</div>`).join('')}
-                        </div>
-
-                        <h4 style="font-size:11px; color:var(--text-muted); margin-top:2px;">Чат</h4>
-                        <div class="party-chat-box" id="partyChatBox">
-                            ${activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('')}
-                        </div>
-
-                        <div style="display:flex; gap:5px; margin-top:auto;">
-                            <input type="text" id="partyMessageInput" class="form-control" placeholder="Сообщение..." style="font-size:10px; padding:5px;" onkeydown="if(event.key==='Enter') sendPartyMessage()">
-                            <button class="btn-glow" style="padding:5px 10px; font-size:10px;" onclick="playSound(); sendPartyMessage()">Отпр.</button>
-                        </div>
-                    </div>
-                </div>
-            `;
-            modal.classList.add('active');
-        }
-
-        async function partyReportTime(video) {
-            if (!currentUser || !activeWatchPartyRoom) return;
-            if (currentUser.username === activeWatchPartyRoom.host) {
-                if (Math.abs(video.currentTime - activeWatchPartyRoom.currentTime) > 1.0) {
-                    activeWatchPartyRoom.currentTime = video.currentTime;
-                    await savePartiesToCloud();
-                }
-            }
-        }
-
-        async function partyReportState(isPlaying) {
-            if (!currentUser || !activeWatchPartyRoom) return;
-            if (currentUser.username === activeWatchPartyRoom.host) {
-                if (activeWatchPartyRoom.isPlaying !== isPlaying) {
-                    activeWatchPartyRoom.isPlaying = isPlaying;
-                    await savePartiesToCloud();
-                }
-            }
-        }
-
-        async function sendPartyMessage() {
-            const input = document.getElementById('partyMessageInput');
-            const text = input ? input.value.trim() : '';
-            if (!text || !currentUser || !activeWatchPartyRoom) return;
-
-            activeWatchPartyRoom.chat.push({ author: currentUser.username, text });
-            input.value = '';
-            await savePartiesToCloud();
-            
-            const chatBox = document.getElementById('partyChatBox');
-            if (chatBox) {
-                chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
-                chatBox.scrollTop = chatBox.scrollHeight;
-            }
-        }
-
-        async function sendPartyReaction(emoji) {
-            const layer = document.getElementById('flyingEmojiLayer');
-            if (!layer) return;
-
-            const span = document.createElement('div');
-            span.className = 'flying-emoji';
-            span.innerText = emoji;
-            span.style.left = Math.random() * 80 + 10 + '%';
-            layer.appendChild(span);
-
-            setTimeout(() => { span.remove(); }, 2000);
-
-            if (currentUser && activeWatchPartyRoom) {
-                activeWatchPartyRoom.chat.push({ author: 'Реакция', text: `${currentUser.username} отправл(а) ${emoji}` });
-                await savePartiesToCloud();
-                const chatBox = document.getElementById('partyChatBox');
-                if (chatBox) {
-                    chatBox.innerHTML = activeWatchPartyRoom.chat.map(c => `<div class="party-chat-msg"><span class="party-chat-author">${c.author}:</span><span>${c.text}</span></div>`).join('');
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-            }
-        }
-
-        function leaveWatchPartyRoom() {
-            activeWatchPartyRoom = null;
-            closeWatchPartyModal();
-        }
-
-        async function createWatchPartyFromAnime(animeId) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            playSound();
-            activeWatchPartyRoom = {
-                id: 'room_' + Date.now(),
-                name: 'Совместный просмотр',
-                host: currentUser.username,
-                animeId: animeId,
-                type: 'public',
-                currentTime: 0,
-                isPlaying: false,
-                season: 1,
-                epIdx: 0,
-                members: [currentUser.username],
-                chat: [{ author: 'Система', text: `${currentUser.username} создал Watch Party.` }]
-            };
-            activePartiesList.push(activeWatchPartyRoom);
-            await savePartiesToCloud();
-            openActiveWatchPartyRoom();
-        }
-
         function closeSearchDropdown() {
             const dd = document.getElementById('searchDropdown');
             if (dd) dd.classList.remove('active');
@@ -3722,6 +3401,9 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (error) throw error;
                 if (!session?.user) {
                     if (currentUser?.authUserId) {
+                        clearKomiAccountData(currentUser);
+                        closeWatchModal();
+                        await leaveWatchPartyRoom();
                         currentUser = null; saveData(); render();
                     }
                     return;
@@ -4205,6 +3887,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 videoEl.currentTime = 0;
             }
             document.getElementById('watchModal').classList.remove('active');
+            document.getElementById('watchModalContent').replaceChildren();
         }
 
         function changePlayerSource(animeId, season, epIdx, sourceName) {
@@ -4220,7 +3903,8 @@ const adminList = []; // No client-side username grants administrator privileges
             // Avoid fetching these tables on each episode switch.
             const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
-            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); return; }
+            closeWatchModal();
+            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); return; }
 
             const seasonsMap = {};
             anime.episodes.forEach((ep, idx) => {
@@ -4267,12 +3951,13 @@ const adminList = []; // No client-side username grants administrator privileges
                 <button class="komi-watch-expand" onclick="toggleKomiWatchFullscreen()" title="Полный экран">⛶ <span>На весь экран</span></button>
                 <button class="modal-close" onclick="playSound(); closeWatchModal()">&times;</button>
                 <div class="watch-cinema-layout">
+                    ${animeDetailsMarkup(anime)}
                     <div class="crunchy-hero-section">
-                        <img src="${anime.poster}" class="crunchy-hero-poster" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
+                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='./anime-artwork.svg'">
                         <div class="crunchy-hero-info">
                             <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
                             <h1>${anime.title}</h1>
-                            <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${anime.desc || ''}</p>
+                            <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${escapeFriendHtml(anime.desc || '')}</p>
                             <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                                 <span style="color:#fbbf24; font-weight:700; font-size:11px;">⭐ ${shikiRating} Shikimori</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${(anime.genres||[]).join(', ')}</span>
@@ -4335,6 +4020,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 </div>
             `;
             document.getElementById('watchModal').classList.add('active');
+            renderAnimeExtras(anime, seasonNumbers);
         }
 
         function saveProgress(animeId, video) {
@@ -4390,5 +4076,7 @@ const adminList = []; // No client-side username grants administrator privileges
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         restoreGoogleSession();
     </script>
+    <script src="./anime-details.js"></script>
+    <script src="./watch-party.js"></script>
 </body>
 </html>
