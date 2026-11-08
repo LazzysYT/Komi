@@ -1785,6 +1785,9 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
         }
 
 
+let catalogRefreshSince = new Date().toISOString();
+let catalogRefreshInProgress = false;
+
 async function loadDataFromCloud() {
     try {
         if (!_supabase) throw new Error('Supabase не подключён');
@@ -4137,13 +4140,24 @@ const adminList = []; // No client-side username grants administrator privileges
 
 
         async function refreshKomiCatalogUpdates() {
-            if (!_supabase || document.hidden) return;
+            if (!_supabase || document.hidden || catalogRefreshInProgress) return;
+            catalogRefreshInProgress = true;
+            const until = new Date().toISOString();
             try {
-                const { data: rows, error } = await _supabase.from('anime_catalog')
-                    .select('shikimori_id,data,updated_at')
-                    .order('updated_at', { ascending: false })
-                    .limit(100);
-                if (error) throw error;
+                const rows = [];
+                const pageSize = 100;
+                for (let offset = 0; ; offset += pageSize) {
+                    const { data, error } = await _supabase.from('anime_catalog')
+                        .select('shikimori_id,data,updated_at')
+                        .gte('updated_at', catalogRefreshSince)
+                        .lt('updated_at', until)
+                        .order('updated_at', { ascending: true })
+                        .order('shikimori_id', { ascending: true })
+                        .range(offset, offset + pageSize - 1);
+                    if (error) throw error;
+                    rows.push(...(data || []));
+                    if (!data || data.length < pageSize) break;
+                }
                 let changed = false;
                 const indexById = new Map(animeList.map((item, index) => [String(item.id), index]));
                 for (const row of rows || []) {
@@ -4172,7 +4186,11 @@ const adminList = []; // No client-side username grants administrator privileges
                     !document.getElementById('watchModal')?.classList.contains('active')) render();
             } catch (error) {
                 console.warn('Обновление каталога:', error.message);
+                return;
+            } finally {
+                catalogRefreshInProgress = false;
             }
+            catalogRefreshSince = until;
         }
         setInterval(refreshKomiCatalogUpdates, 120000);
 
