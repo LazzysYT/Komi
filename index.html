@@ -1394,7 +1394,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 @media(max-width:920px){#komiCalendarSection .komi-release-list{grid-template-columns:1fr}}
 
 </style>
-<style>:root{--bg-main:#09090b;--bg-card:#17171b;--bg-input:#17171b;--border:#27272d;--primary:#e11d38;--glow:rgba(225,29,56,.2);--text-main:#f4f4f5}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(225,29,56,.45);box-shadow:0 12px 32px rgba(225,29,56,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202024,#101012)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#17171bf2;backdrop-filter:blur(14px);padding:12px;border:1px solid #27272d;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style></head>
+<style>:root{--bg-main:#09090b;--bg-card:#17171b;--bg-input:#17171b;--border:#27272d;--primary:#e11d38;--glow:rgba(225,29,56,.2);--text-main:#f4f4f5}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(225,29,56,.45);box-shadow:0 12px 32px rgba(225,29,56,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202024,#101012)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#17171bf2;backdrop-filter:blur(14px);padding:12px;border:1px solid #27272d;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style><style>
+#watchModal .player-wrapper{aspect-ratio:16/9;min-height:0;background:#09090b}
+#watchModal .player-box video,#watchModal .player-box iframe{display:block;width:100%;height:100%;min-height:0}
+#watchModal .komi-watch-controls{position:static}
+.komi-catalog-chip[aria-pressed="true"]{background:#351820;border-color:#e11d38}
+</style></head>
 <body>
 
     <!-- Шапка сайта -->
@@ -3984,6 +3989,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
         function changePlayerSource(animeId, season, epIdx, sourceName) {
             activePlayerSource = sourceName;
+            try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
             openWatchModal(animeId, season, epIdx);
         }
 
@@ -4017,7 +4023,10 @@ const adminList = []; // No client-side username grants administrator privileges
             const sources = currentEp.sources && typeof currentEp.sources === 'object' ? currentEp.sources : { 'Default': currentEp.url || '' };
             const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && komiPlayerKind(sources[name]) !== 'missing');
             if (!sourceNames.length) sourceNames.push('Недоступно');
-            if (!sourceNames.includes(activePlayerSource)) activePlayerSource = sourceNames[0];
+            let preferredSource;
+            try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+            activePlayerSource = sourceNames.includes(preferredSource) ? preferredSource
+                : sourceNames.includes(activePlayerSource) ? activePlayerSource : sourceNames[0];
             const activeUrl = sources[activePlayerSource] || '';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
