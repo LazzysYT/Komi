@@ -3909,47 +3909,42 @@ const adminList = []; // No client-side username grants administrator privileges
             siteStats.views++;
             saveData();
             
-            if (_supabase) {
-                try {
-                    const { data } = await _supabase.from('animes').select('*').in('id', [2, 4]);
-                    if (data) {
-                        data.forEach(row => {
-                            if (row.id === 2) animeComments = JSON.parse(row.content || '{}');
-                            if (row.id === 4) userProfiles = { ...userProfiles, ...JSON.parse(row.content || '{}') };
-                        });
-                    }
-                } catch(e) {}
-            }
-
+            // Existing catalog bootstrapping already loaded comments and profiles.
+            // Avoid fetching these tables on each episode switch.
             const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
             if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); return; }
 
             const seasonsMap = {};
             anime.episodes.forEach((ep, idx) => {
-                const s = ep.season || 1;
-                if (!seasonsMap[s]) seasonsMap[s] = [];
-                seasonsMap[s].push({ ...ep, originalIdx: idx });
+                const season = Number(ep?.season) || 1;
+                if (!seasonsMap[season]) seasonsMap[season] = [];
+                seasonsMap[season].push({ ...ep, originalIdx: idx });
             });
-
             const seasonNumbers = Object.keys(seasonsMap).map(Number).sort((a,b) => a - b);
-            const activeSeason = selectedSeason !== null && seasonsMap[selectedSeason] ? Number(selectedSeason) : seasonNumbers[0];
-            const currentSeasonEpisodes = seasonsMap[activeSeason];
-            const currentEp = currentSeasonEpisodes[selectedEpIdx] || currentSeasonEpisodes[0];
-
+            const progressForResume = selectedSeason === null ? getKomiProgress(anime.id) : null;
+            const seasonWanted = selectedSeason === null ? Number(progressForResume?.season) : Number(selectedSeason);
+            const activeSeason = seasonsMap[seasonWanted] ? seasonWanted : seasonNumbers[0];
+            const currentSeasonEpisodes = seasonsMap[activeSeason] || [];
+            currentSeasonEpisodes.sort((a,b) => (Number(a.number)||0) - (Number(b.number)||0));
+            const targetIndex = progressForResume?.season === activeSeason ? Number(progressForResume.index) : Number(selectedEpIdx);
+            const activeIndex = Number.isInteger(targetIndex) && targetIndex >= 0 && targetIndex < currentSeasonEpisodes.length ? targetIndex : 0;
+            const currentEp = currentSeasonEpisodes[activeIndex];
+            if (!currentEp) return;
             const sources = currentEp.sources && typeof currentEp.sources === 'object' ? currentEp.sources : { 'Default': currentEp.url || '' };
-            const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && sources[name].trim());
+            const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && komiPlayerKind(sources[name]) !== 'missing');
             if (!sourceNames.length) sourceNames.push('Недоступно');
-            if (!sourceNames.includes(activePlayerSource)) {
-                activePlayerSource = sourceNames[0];
-            }
+            if (!sourceNames.includes(activePlayerSource)) activePlayerSource = sourceNames[0];
             const activeUrl = sources[activePlayerSource] || '';
-
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
-            window.komiActiveEpisode=Number(selectedEpIdx)||0;
-            saveKomiEpisode(String(anime.id),activeSeason,selectedEpIdx,getKomiProgress(anime.id)?.season===Number(activeSeason)&&getKomiProgress(anime.id)?.index===Number(selectedEpIdx)?getKomiProgress(anime.id).time:0);
-            let playerHtml = komiPlayerHtml(activeUrl,String(anime.id),activeSeason,selectedEpIdx);
+            window.komiActiveEpisode=activeIndex;
+            const previousProgress = getKomiProgress(anime.id);
+            saveKomiEpisode(String(anime.id),activeSeason,activeIndex,previousProgress?.season === Number(activeSeason) && previousProgress?.index === activeIndex ? previousProgress.time : 0);
+            const playerHtml = komiPlayerHtml(activeUrl,String(anime.id),activeSeason,activeIndex);
+            const hasPrevious = activeIndex > 0;
+            const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
+            const displayNumber = Number(currentEp.number) || activeIndex + 1;
 
             const comments = animeComments[anime.id] || [];
             const userHistoryKey = currentUser ? `${currentUser.username}_${anime.id}` : null;
@@ -3998,44 +3993,37 @@ const adminList = []; // No client-side username grants administrator privileges
                         </div>
                     ` : ''}
 
-                    <div class="komi-player-heading"><div><small>СМОТРЕТЬ ОНЛАЙН</small><h2>${escapeFriendHtml(anime.title)}</h2><span>Сезон ${activeSeason} · Серия ${Number(selectedEpIdx)+1}</span></div><button class="komi-watch-next" onclick="playNextEp('${anime.id}',${activeSeason},${selectedEpIdx})">Следующая серия →</button></div>
-                    <div class="players-switcher-bar">
-                        <span style="font-size:11px; color:var(--text-muted); font-weight:700;">Плеер:</span>
-                        ${sourceNames.map(srcName => `
-                            <button class="player-switch-btn ${srcName === activePlayerSource ? 'active' : ''}" onclick="playSound(); changePlayerSource('${anime.id}', ${activeSeason}, ${selectedEpIdx}, '${srcName}')">
-                                🎬 ${srcName}
-                            </button>
-                        `).join('')}
-                    </div>
-
-                    <div class="player-wrapper">
-                        ${playerHtml}
-                    </div>
-
-                    <div class="anime-screenshots-section">
-                        <h3 style="font-size:11px; color:var(--text-main); margin-bottom:4px;">🖼️ Кадры</h3>
-                        <div class="screenshots-grid">
-                            ${screenshots.map(sc => `<img src="${sc}" class="screenshot-thumb" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'" onclick="playSound(); window.open('${sc}', '_blank')">`).join('')}
+                    <div class="komi-watch-stage">
+                        <div class="komi-watch-main">
+                            <div class="komi-player-heading">
+                                <div><small>СМОТРЕТЬ ОНЛАЙН · KOMI</small><h2>${escapeFriendHtml(anime.title)}</h2>
+                                    <span>Сезон ${activeSeason} · Серия ${displayNumber} из ${currentSeasonEpisodes.length}</span>
+                                </div>
+                            </div>
+                            <div class="player-wrapper">${playerHtml}</div>
+                            <div class="komi-watch-controls">
+                                <button type="button" class="komi-watch-navbtn" ${hasPrevious?'':'disabled'} onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex - 1})">← Предыдущая</button>
+                                <div class="komi-watch-source">
+                                    <label for="komiWatchSourceSelect">Озвучка / плеер</label>
+                                    <select id="komiWatchSourceSelect" onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
+                                        ${sourceNames.map(name => '<option value="' + escapeFriendHtml(name) + '" ' + (name === activePlayerSource ? 'selected' : '') + '>' + escapeFriendHtml(name) + '</option>').join('')}
+                                    </select>
+                                </div>
+                                <button type="button" class="komi-watch-navbtn primary" ${hasNext?'':'disabled'} onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex + 1})">Следующая →</button>
+                            </div>
+                            <p class="komi-watch-help">Если видео не открывается, выбери другую озвучку. Встроенный плеер может не поддерживать сохранение времени просмотра.</p>
                         </div>
-                    </div>
-
-                    <div class="crunchy-episodes-section">
-                        <div class="season-tabs">
-                            ${seasonNumbers.map(s => `
-                                <button class="season-tab-btn ${s === activeSeason ? 'active' : ''}" onclick="playSound(); openWatchModal('${anime.id}', ${s}, 0)">
-                                    Сезон ${s}
-                                </button>
-                            `).join('')}
-                        </div>
-
-                        <h3 style="font-size:12px; font-weight:700; margin-bottom:8px;">Эпизоды (${currentSeasonEpisodes.length})</h3>
-                        <div class="komi-episode-number-grid">
-                            ${currentSeasonEpisodes.map((ep, i) => `
-                                <button type="button" class="komi-episode-number ${i === (selectedEpIdx || 0) ? 'active' : ''}" title="Серия ${i+1}" aria-label="Серия ${i+1}" aria-current="${i === (selectedEpIdx || 0) ? 'true' : 'false'}" onclick="playSound(); openWatchModal('${anime.id}', ${activeSeason}, ${i})">
-                                    ${i + 1}
-                                </button>
-                            `).join('')}
-                        </div>
+                        <aside class="komi-watch-sidebar" aria-label="Список серий">
+                            <div class="komi-watch-side-heading">
+                                <div><small>ВЫБОР СЕРИИ</small><h3>${currentSeasonEpisodes.length} серий</h3></div>
+                                <span>Сезон ${activeSeason}</span>
+                            </div>
+                            ${seasonNumbers.length > 1 ? '<div class="season-tabs" aria-label="Выбор сезона">' + seasonNumbers.map(n => '<button type="button" class="season-tab-btn ' + (n===activeSeason?'active':'') + '" onclick="openWatchModal(\'' + anime.id + '\',' + n + ',0)">Сезон ' + n + '</button>').join('') + '</div>' : ''}
+                            <div class="komi-episode-number-grid" role="group" aria-label="Выбрать серию">
+                                ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
+                            </div>
+                            <p class="komi-watch-side-footnote">Нажми на номер, чтобы перейти к серии.</p>
+                        </aside>
                     </div>
                 </div>
             `;
