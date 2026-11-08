@@ -4086,7 +4086,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!force && now - komiCalendarLastFetch < 25 * 60 * 1000) return;
             komiCalendarLoading = true;
             komiCalendarError = '';
-            const ids = new Set(animeList.map(a => Number(a.shikimoriId || a.id)).filter(Number.isSafeInteger));
+            // Store public airing dates independently of catalog loading progress.
             const query = 'query ($page:Int,$from:Int,$to:Int) { Page(page:$page,perPage:50) { pageInfo { hasNextPage } airingSchedules(airingAt_greater:$from,airingAt_lesser:$to,sort:TIME) { airingAt episode media { idMal isAdult } } } }';
             try {
                 const discovered = new Map();
@@ -4107,12 +4107,12 @@ const adminList = []; // No client-side username grants administrator privileges
                     for (const item of pageData.airingSchedules || []) {
                         const id = Number(item.media?.idMal);
                         const time = Number(item.airingAt) * 1000;
-                        if (!ids.has(id) || item.media?.isAdult || time <= now) continue;
+                        if (!Number.isSafeInteger(id) || id <= 0 || item.media?.isAdult || time <= now) continue;
                         if (!discovered.has(id) || discovered.get(id).at > time) {
                             discovered.set(id, { at: time, episode: Number(item.episode) || null });
                         }
                     }
-                    if (!pageData.pageInfo?.hasNextPage || discovered.size >= 40) break;
+                    if (!pageData.pageInfo?.hasNextPage) break;
                     await new Promise(resolve => setTimeout(resolve, 500));
                 }
                 // Preserve known dates if there was a temporary upstream issue.
@@ -4384,7 +4384,9 @@ const adminList = []; // No client-side username grants administrator privileges
         }
         setInterval(refreshKomiCatalogUpdates, 120000);
 
-        loadDataFromCloud().then(() => loadKomiEpisodeSchedule()).catch(error => console.warn('Календарь:',error));
+        loadDataFromCloud();
+        // Broadcast dates can load in parallel with the 6,000+ item catalog.
+        loadKomiEpisodeSchedule();
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         restoreGoogleSession();
     </script>
