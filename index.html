@@ -2958,12 +2958,12 @@ const adminList = []; // No client-side username grants administrator privileges
 
         function cleanAnimeDescription(value) {
             return escapeFriendHtml(String(value || '')
-                .replace(/\\[(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)[^\\]]*\\]/gi, ' ')
-                .replace(/\\[\\/(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)\\]/gi, ' ')
+                .replace(/\[(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)[^\]]*\]/gi, ' ')
+                .replace(/\[\/(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)\]/gi, ' ')
                 .replace(/<[^>]*>/g, ' ')
-                .replace(/(?:https?:\\/\\/|www\\.)\\S+/gi, ' ')
-                .replace(/&(?:#?x?[\\w]+);/gi, ' ')
-                .replace(/[\\u0000-\\u001f\\s]+/g, ' ').trim());
+                .replace(/(?:https?:\/\/|www\.)\S+/gi, ' ')
+                .replace(/&(?:#?x?[\w]+);/gi, ' ')
+                .replace(/[\u0000-\u001f\s]+/g, ' ').trim());
         }
         function renderCard(anime) {
             const year=komiAnimeYear(anime);
