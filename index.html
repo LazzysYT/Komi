@@ -1500,6 +1500,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
         let catalogFilterYear = 'Все';
         let catalogFilterType = 'Все';
         let catalogSort = 'popular';
+        let catalogSearchQuery = '';
         let currentSlideIndex = 0;
         let slideInterval = null;
         let activePlayerSource = 'Kodik';
@@ -1904,8 +1905,66 @@ async function loadDataFromCloud() {
             return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
+
+        function komiCatalogType(anime) {
+            const kind=String(anime?.type || anime?.kind || '').toLowerCase();
+            if (['movie','film','фильм'].includes(kind)) return 'Фильм';
+            if (kind==='ova') return 'OVA';
+            if (kind==='ona') return 'ONA';
+            if (kind==='special') return 'Special';
+            return 'Сериал';
+        }
+        function komiCatalogFiltered() {
+            const q=catalogSearchQuery.trim().toLocaleLowerCase('ru-RU');
+            const filtered=animeList.filter(a=>{
+                const genres=Array.isArray(a.genres)?a.genres:[a.genre].filter(Boolean);
+                if(catalogFilterGenre!=='Все'&&!genres.includes(catalogFilterGenre))return false;
+                if(catalogFilterYear!=='Все'&&komiAnimeYear(a)!==String(catalogFilterYear))return false;
+                if(catalogFilterType!=='Все'&&komiCatalogType(a)!==catalogFilterType)return false;
+                if(q&&![a.title,a.originalTitle,...genres].some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(q)))return false;
+                return true;
+            });
+            if(catalogSort==='rating'||catalogSort==='popular')filtered.sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
+            else if(catalogSort==='alphabet')filtered.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ru'));
+            else if(catalogSort==='year')filtered.sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id));
+            return filtered;
+        }
+        function komiCatalogChipsMarkup() {
+            return ['Все','2026','2025','2024'].map(y=>'<button type="button" class="komi-catalog-chip'+(catalogFilterYear===y?' active':'')+'" onclick="setKomiCatalogYear(\''+y+'\')">'+(y==='Все'?'Все годы':y)+'</button>').join('');
+        }
+        function setKomiCatalogYear(year) {catalogFilterYear=String(year);catalogVisibleCount=48;render();}
+        function komiResetCatalogFilters() {
+            catalogFilterGenre='Все';catalogFilterYear='Все';catalogFilterType='Все';
+            catalogSort='popular';catalogSearchQuery='';catalogVisibleCount=48;render();
+        }
+        function komiRefreshCatalogGrid() {
+            if(currentView!=='catalog')return;
+            const filtered=komiCatalogFiltered();
+            const grid=document.getElementById('komiCatalogGrid');
+            const count=document.getElementById('komiCatalogCount');
+            const more=document.getElementById('komiCatalogMore');
+            if(grid)grid.innerHTML=filtered.length
+                ?filtered.slice(0,catalogVisibleCount).map(a=>renderCard(a)).join('')
+                :'<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>';
+            if(count)count.textContent='Найдено: '+filtered.length;
+            if(more){
+                more.style.display=filtered.length>catalogVisibleCount?'flex':'none';
+                more.innerHTML=filtered.length>catalogVisibleCount?'<button class="btn-glow" onclick="showMoreCatalog()">Показать ещё · '+Math.min(catalogVisibleCount,filtered.length)+' из '+filtered.length+'</button>':'';
+            }
+        }
+        function komiUpdateCatalogQuery(value){
+            catalogSearchQuery=String(value||'').slice(0,120);
+            catalogVisibleCount=48;
+            komiRefreshCatalogGrid();
+        }
+        function komiIntroMarkup(){
+            const currentYearCount=animeList.filter(a=>komiAnimeYear(a)==='2026').length;
+            return '<div class="komi-spotlight-heading"><div><div class="komi-spotlight-eyebrow">KOMI ANIME HUB · ТВОЯ БИБЛИОТЕКА</div><h1>Выбирай историю на сегодня</h1><p>Свежие серии, любимые жанры и подборки для любого настроения — всё в одном месте.</p></div><div class="komi-spotlight-metrics"><span><strong>'+animeList.length.toLocaleString('ru-RU')+'</strong> аниме в каталоге</span><span><strong>'+currentYearCount+'</strong> тайтлов 2026</span></div></div>'+
+                '<nav class="komi-fastnav" aria-label="Быстрые разделы"><button class="is-prominent" onclick="showKomiYear(\'2026\')">🔥 Новинки 2026</button><button onclick="navigate(\'catalog\')">▦ Весь каталог</button><button onclick="document.getElementById(\'komiCalendarSection\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})">📅 Новые серии</button><button onclick="randomAnimeWithAnimation()">🎲 Случайное аниме</button></nav>';
+        }
+
         let catalogVisibleCount = 48;
-        function showMoreCatalog() { catalogVisibleCount += 48; render(); }
+        function showMoreCatalog() { catalogVisibleCount += 48; komiRefreshCatalogGrid(); }
 
         function navigate(view) {
             if (slideInterval) clearInterval(slideInterval);
