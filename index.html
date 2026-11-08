@@ -1816,7 +1816,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 const sliderItems = animeList.slice(0, Math.min(animeList.length, 5));
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 7);
                 const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм').slice(0, 7);
-                const seasonalNew = [...animeList].reverse().slice(0, 7);
+                const seasonalNew = [...animeList].filter(a => Number(komiAnimeYear(a)) >= 2024).sort((a,b) => Number(komiAnimeYear(b)) - Number(komiAnimeYear(a))).slice(0, 7);
                 const recentlyAdded = [...animeList].slice(0, 7);
                 const popularNow = [...animeList].sort(() => 0.5 - Math.random()).slice(0, 7);
 
@@ -1870,6 +1870,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     ${continueWatchingHtml}
                     ${komiRecommendedHtml}
                     ${komiReleaseCalendar()}
+                    ${komiYearSections()}
 
                     <div>
                         <div class="section-header">
@@ -1928,13 +1929,13 @@ const adminList = []; // No client-side username grants administrator privileges
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
                 const genres = ['Все', ...availableGenresList];
-                const years = ['Все', '2026', '2025', '2024', '2023', '2020', '2019', '2007'];
+                const years = ['Все', ...[...new Set(animeList.map(a => komiAnimeYear(a)).filter(Boolean))].sort((a,b) => Number(b) - Number(a))];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA'];
 
                 let filtered = animeList.filter(a => {
                     const gList = a.genres || [a.genre];
                     if (catalogFilterGenre !== 'Все' && !gList.includes(catalogFilterGenre)) return false;
-                    if (catalogFilterYear !== 'Все' && a.year !== catalogFilterYear) return false;
+                    if (catalogFilterYear !== 'Все' && komiAnimeYear(a) !== String(catalogFilterYear)) return false;
                     if (catalogFilterType !== 'Все' && a.type !== catalogFilterType) return false;
                     return true;
                 });
@@ -3570,10 +3571,55 @@ const adminList = []; // No client-side username grants administrator privileges
             return '<div class="komi-recent-grid">'+items.map(({anime,p})=>'<button class="komi-recent-card" onclick="resumeKomiAnime(\''+anime.id+'\')"><img loading="lazy" src="'+escapeFriendHtml(anime.poster||'')+'" alt=""><span class="komi-recent-info"><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small><em>Продолжить →</em></span></button>').join('')+'</div>';
         }
 
+        function komiAnimeYear(anime) {
+            const candidates = [anime?.year, anime?.aired_on, anime?.airedOn, anime?.releaseYear];
+            for (const value of candidates) {
+                const found = String(value ?? '').match(/(?:^|\D)((?:19|20)\d{2})(?:\D|$)/);
+                if (found) return found[1];
+            }
+            return '';
+        }
+
+        function showKomiYear(year) {
+            catalogFilterYear = String(year);
+            catalogVisibleCount = 48;
+            navigate('catalog');
+        }
+
+        function komiYearSections() {
+            const years = ['2026', '2025', '2024'];
+            return years.map(year => {
+                const items = animeList.filter(a => komiAnimeYear(a) === year);
+                if (!items.length) return '';
+                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">🎬 Аниме ' + year + '</h2><button class="section-see-all" onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + items.length + '</button></div><div class="anime-grid">' + items.slice(0, 7).map(a => renderCard(a)).join('') + '</div></section>';
+            }).join('');
+        }
+
         function komiReleaseCalendar() {
-            const days=['Вс','Пн','Вт','Ср','Чт','Пт','Сб'];
-            const entries=animeList.filter(a=>a.nextEpisodeAt||a.next_episode_at||a.nextEpisodeDate).map(a=>({anime:a,date:new Date(a.nextEpisodeAt||a.next_episode_at||a.nextEpisodeDate)})).filter(x=>!Number.isNaN(x.date.getTime())&&x.date.getTime()>Date.now()).sort((a,b)=>a.date-b.date).slice(0,12);
-            return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2></div>'+(entries.length?'<div class="komi-release-list">'+entries.map(x=>'<button onclick="openWatchModal(\''+x.anime.id+'\')" class="komi-release-row"><span>'+days[x.date.getDay()]+' · '+x.date.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+'</span><strong>'+escapeFriendHtml(x.anime.title)+'</strong><small>'+x.date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'})+'</small></button>').join('')+'</div>':'<p class="komi-feature-muted">Расписание появится, когда каталог получит подтверждённые даты выхода серий. Не показываем выдуманные даты.</p>')+'</section>';
+            const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+            const now = Date.now();
+            const upcoming = animeList.map(a => ({
+                anime: a, date: new Date(a.nextEpisodeAt || a.next_episode_at || a.nextEpisodeDate)
+            })).filter(x => Number.isFinite(x.date.getTime()) && x.date.getTime() > now && x.date.getTime() < now + 14 * 86400000)
+              .sort((a,b) => a.date - b.date).slice(0, 12);
+            const newEpisodes = animeList.map(a => ({
+                anime: a, date: new Date(a.lastEpisodeAddedAt)
+            })).filter(x => Number.isFinite(x.date.getTime()) && now - x.date.getTime() < 3 * 86400000 && x.date.getTime() <= now)
+              .sort((a,b) => b.date - a.date).slice(0, 8);
+            let content = '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2></div>';
+            if (upcoming.length) {
+                content += '<p class="komi-feature-muted">Время выхода в оригинальном эфире. Озвучка и плеер могут появиться позже.</p>';
+                content += '<div class="komi-release-list">' + upcoming.map(x => '<button onclick="openWatchModal(\'' + x.anime.id + '\')" class="komi-release-row"><span>' + days[x.date.getDay()] + ' · ' + x.date.toLocaleDateString('ru-RU', {day:'numeric',month:'short'}) + '</span><strong>' + escapeFriendHtml(x.anime.title) + (x.anime.nextEpisodeNumber ? ' · серия ' + Number(x.anime.nextEpisodeNumber) : '') + '</strong><small>' + x.date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) + '</small></button>').join('') + '</div>';
+            } else {
+                content += '<p class="komi-feature-muted">Подтверждённое расписание пока загружается. Даты не придумываем.</p>';
+            }
+            if (newEpisodes.length) {
+                content += '<div class="section-header" style="margin-top:16px"><h3 class="section-title" style="font-size:14px">🆕 Недавно добавленные серии</h3></div>';
+                content += '<div class="komi-release-list">' + newEpisodes.map(x =>
+                    '<button onclick="openWatchModal(\'' + x.anime.id + '\')" class="komi-release-row"><span>' + x.date.toLocaleDateString('ru-RU', {day:'numeric',month:'short'}) + '</span><strong>' + escapeFriendHtml(x.anime.title) + '</strong><small>' + (x.anime.lastEpisodeNumber ? 'Серия ' + Number(x.anime.lastEpisodeNumber) : 'Новые серии') + '</small></button>'
+                ).join('') + '</div>';
+            }
+            return content + '</section>';
         }
 
         function toggleKomiWatchFullscreen() {
@@ -3739,6 +3785,47 @@ const adminList = []; // No client-side username grants administrator privileges
             const key = `${currentUser.username}_${animeId}`;
             saveKomiEpisode(animeId,window.komiActiveSeason,window.komiActiveEpisode,video.currentTime,video.duration);
         }
+
+
+        async function refreshKomiCatalogUpdates() {
+            if (!_supabase || document.hidden) return;
+            try {
+                const { data: rows, error } = await _supabase.from('anime_catalog')
+                    .select('shikimori_id,data,updated_at')
+                    .order('updated_at', { ascending: false })
+                    .limit(100);
+                if (error) throw error;
+                let changed = false;
+                const indexById = new Map(animeList.map((item, index) => [String(item.id), index]));
+                for (const row of rows || []) {
+                    const data = row.data;
+                    if (!data || !Array.isArray(data.episodes) || !data.episodes.some(ep =>
+                        ep?.sources && Object.values(ep.sources).some(src =>
+                            typeof src === 'string' && src.includes('https://')))) continue;
+                    const id = String(row.shikimori_id);
+                    const normalized = {
+                        ...data, id, shikimoriId: Number(row.shikimori_id),
+                        title: data.title || data.originalTitle || 'Без названия',
+                        genres: Array.isArray(data.genres) ? data.genres : [],
+                        episodes: data.episodes
+                    };
+                    const index = indexById.get(id);
+                    if (index === undefined) {
+                        indexById.set(id, animeList.length);
+                        animeList.push(normalized);
+                        changed = true;
+                    } else if (JSON.stringify(animeList[index]) !== JSON.stringify(normalized)) {
+                        animeList[index] = normalized;
+                        changed = true;
+                    }
+                }
+                if (changed && (currentView === 'home' || currentView === 'catalog') &&
+                    !document.getElementById('watchModal')?.classList.contains('active')) render();
+            } catch (error) {
+                console.warn('Обновление каталога:', error.message);
+            }
+        }
+        setInterval(refreshKomiCatalogUpdates, 120000);
 
         loadDataFromCloud();
         restoreGoogleSession();
