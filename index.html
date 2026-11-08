@@ -1787,6 +1787,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 
 let catalogRefreshSince = new Date().toISOString();
 let catalogRefreshInProgress = false;
+let catalogInitialLoadComplete = false;
 
 async function loadDataFromCloud() {
     try {
@@ -1796,12 +1797,13 @@ async function loadDataFromCloud() {
             .from('animes').select('id,content').in('id', [2, 3, 4, 5, 7]);
         const catalog = [];
         const pageSize = 100;
-        let offset = 0;
+        let lastId = 0;
         while (true) {
             const { data: rows, error } = await _supabase
                 .from('anime_catalog').select('shikimori_id,data')
+                .gt('shikimori_id', lastId)
                 .order('shikimori_id', { ascending: true })
-                .range(offset, offset + pageSize - 1);
+                .limit(pageSize);
             if (error) throw error;
             if (!rows || rows.length === 0) break;
             for (const row of rows) {
@@ -1819,9 +1821,9 @@ async function loadDataFromCloud() {
                     episodes: Array.isArray(anime.episodes) ? anime.episodes : []
                 });
             }
-            offset += rows.length;
-            // Make the first results visible without waiting for all pages.
-            if (offset === rows.length && catalog.length > 0) {
+            lastId = rows[rows.length - 1].shikimori_id;
+            // Keep the first usable batch available even if a later request fails.
+            if (!animeList.length && catalog.length) {
                 animeList = catalog.slice();
                 render();
             }
@@ -1849,6 +1851,7 @@ async function loadDataFromCloud() {
         }
 
         animeList = catalog;
+        catalogInitialLoadComplete = true;
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
         console.error('Ошибка загрузки каталога:', err);
@@ -4140,7 +4143,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
 
         async function refreshKomiCatalogUpdates() {
-            if (!_supabase || document.hidden || catalogRefreshInProgress) return;
+            if (!_supabase || document.hidden || !catalogInitialLoadComplete || catalogRefreshInProgress) return;
             catalogRefreshInProgress = true;
             const until = new Date().toISOString();
             try {
