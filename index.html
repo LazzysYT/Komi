@@ -2056,12 +2056,13 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!container) return;
             
             if (currentView === 'home') {
-                const sliderItems = animeList.slice(0, Math.min(animeList.length, 5));
+                const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
+                    .sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0)).slice(0,5);
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 7);
-                const bestMovies = animeList.filter(a => (a.type || '').toLowerCase() === 'фильм').slice(0, 7);
+                const bestMovies = animeList.filter(a => komiCatalogType(a) === 'Фильм').sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0)).slice(0,7);
                 const seasonalNew = [...animeList].filter(a => Number(komiAnimeYear(a)) >= 2024).sort((a,b) => Number(komiAnimeYear(b)) - Number(komiAnimeYear(a))).slice(0, 7);
-                const recentlyAdded = [...animeList].slice(0, 7);
-                const popularNow = [...animeList].sort(() => 0.5 - Math.random()).slice(0, 7);
+                const recentlyAdded = [...animeList].filter(a => a.poster).sort((a,b)=>Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id)).slice(0,7);
+                const popularNow = [...animeList].filter(a=>Number(komiAnimeYear(a))>=2024).sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0)).slice(0,7);
 
 
                 let continueWatchingHtml = '';
@@ -2074,7 +2075,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 const komiRecommendedHtml = komiRecommended.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">✨ Тебе понравится</h2></div><div class="anime-grid">'+komiRecommended.map(a=>renderCard(a)).join('')+'</div></section>' : '';
 
                 container.innerHTML = `
-                    
+                    ${komiIntroMarkup()}
                     <div class="top-hero-section-grid">
                         <div class="hero-slider-container" id="heroSlider">
                             <button class="hero-slider-arrow hero-arrow-prev" onclick="playSound(); changeSlide(-1)">❮</button>
@@ -2102,7 +2103,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
                             <div class="hero-dots">
                                 ${sliderItems.map((_, idx) => `
-                                    <div class="hero-dot ${idx === currentSlideIndex ? 'active' : ''}" onclick="playSound(); setSlide(${idx})"></div>
+                                    <button type="button" class="hero-dot ${idx === currentSlideIndex ? 'active' : ''}" aria-label="Показать аниме ${idx + 1}" onclick="playSound(); setSlide(${idx})"></button>
                                 `).join('')}
                             </div>
                         </div>
@@ -2111,13 +2112,13 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     ${continueWatchingHtml}
-                    ${komiRecommendedHtml}
                     ${komiReleaseCalendar()}
+                    ${komiRecommendedHtml}
                     ${komiYearSections()}
 
                     <div>
                         <div class="section-header">
-                            <h2 class="section-title">🔥 Популярное сейчас</h2>
+                            <h2 class="section-title">🔥 В центре внимания</h2>
                             <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
@@ -2157,7 +2158,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     <div>
                         <div class="section-header">
-                            <h2 class="section-title">🆕 Недавно добавленные</h2>
+                            <h2 class="section-title">🆕 Ещё интересные аниме</h2>
                             <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
@@ -2230,7 +2231,7 @@ const adminList = []; // No client-side username grants administrator privileges
         function startHeroAutoSlide() {
             if (slideInterval) clearInterval(slideInterval);
             slideInterval = setInterval(() => {
-                const maxSlides = Math.min(animeList.length, 5);
+                const maxSlides = document.querySelectorAll('.hero-slide').length;
                 if (maxSlides > 1) {
                     currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
                     updateHeroSlideView();
@@ -2239,7 +2240,7 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         function changeSlide(direction) {
-            const maxSlides = Math.min(animeList.length, 5);
+            const maxSlides = document.querySelectorAll('.hero-slide').length;
             if (!maxSlides) return;
             currentSlideIndex = (currentSlideIndex + direction + maxSlides) % maxSlides;
             updateHeroSlideView();
@@ -2255,6 +2256,7 @@ const adminList = []; // No client-side username grants administrator privileges
         function updateHeroSlideView() {
             const slides = document.querySelectorAll('.hero-slide');
             const dots = document.querySelectorAll('.hero-dot');
+            if (slides.length) currentSlideIndex %= slides.length;
             slides.forEach((slide, idx) => {
                 if (idx === currentSlideIndex) slide.classList.add('active');
                 else slide.classList.remove('active');
@@ -3849,7 +3851,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 anime: a, date: new Date(a.lastEpisodeAddedAt)
             })).filter(x => Number.isFinite(x.date.getTime()) && now - x.date.getTime() < 3 * 86400000 && x.date.getTime() <= now)
               .sort((a,b) => b.date - a.date).slice(0, 8);
-            let content = '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2></div>';
+            let content = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2></div>';
             if (upcoming.length) {
                 content += '<p class="komi-feature-muted">Время выхода в оригинальном эфире. Озвучка и плеер могут появиться позже.</p>';
                 content += '<div class="komi-release-list">' + upcoming.map(x => '<button onclick="openWatchModal(\'' + x.anime.id + '\')" class="komi-release-row"><span>' + days[x.date.getDay()] + ' · ' + x.date.toLocaleDateString('ru-RU', {day:'numeric',month:'short'}) + '</span><strong>' + escapeFriendHtml(x.anime.title) + (x.anime.nextEpisodeNumber ? ' · серия ' + Number(x.anime.nextEpisodeNumber) : '') + '</strong><small>' + x.date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) + '</small></button>').join('') + '</div>';
