@@ -1179,7 +1179,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
             <div class="search-container">
                 <div class="search-bar">
                     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" placeholder="Поиск аниме..." oninput="handleInstantSearch(this.value)" onfocus="showSearchDropdown()">
+                    <input type="text" id="searchInput" placeholder="Название аниме или жанр..." oninput="handleInstantSearch(this.value)" onfocus="showSearchDropdown()">
                 </div>
                 <div class="search-dropdown" id="searchDropdown"></div>
             </div>
@@ -2671,27 +2671,30 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         function renderCard(anime) {
-            const shiki = anime.shikiRating || '8.5';
-            const gText = (anime.genres || [anime.genre || '']).join(', ');
-            return `
-                <div class="anime-card" onclick="playSound(); openWatchModal('${anime.id}')">
-                    <div class="anime-rating-badge">⭐ ${shiki}</div>
-                    <div class="anime-poster-box">
-                        <img src="${anime.poster}" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer" onerror="this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex'">
-                        <div class="anime-poster-fallback" style="display:none;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e2a,#101018);color:#92929F"><span style="font-size:30px;font-weight:800;color:#FF454F">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>
-                        <div class="anime-quick-view">
-                            <span class="btn-glow" style="padding: 5px 12px; font-size:11px;">▶ Смотреть</span>
-                        </div>
-                    </div>
-                    <div class="anime-info">
-                        <div class="anime-title">${anime.title}</div>
-                        <div class="anime-meta-card">
-                            <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:95px; color:var(--text-muted);">${gText}</span>
-                            <span>${Array.isArray(anime.episodes) ? anime.episodes.length : 0} сер.</span>
-                        </div>
-                    </div>
-                </div>
-            `;
+            const year=komiAnimeYear(anime);
+            const type=komiCatalogType(anime);
+            const score=Number(anime.shikiRating);
+            const rating=Number.isFinite(score)&&score>0?score.toFixed(1):'—';
+            const genres=Array.isArray(anime.genres)?anime.genres:[anime.genre].filter(Boolean);
+            const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
+            const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
+            const id=String(anime.id);
+            const poster=typeof anime.poster==='string'&&/^https:\/\//i.test(anime.poster)?escapeFriendHtml(anime.poster):'';
+            const episodeCount=Array.isArray(anime.episodes)?anime.episodes.length:0;
+            const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
+            const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
+            return '<div class="anime-card" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
+                'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
+                '<div class="anime-rating-badge">★ '+rating+'</div>'+
+                '<div class="anime-poster-box">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'+
+                    '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e26,#101015);color:#92929F"><span style="font-size:30px;font-weight:800;color:#f03d50">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
+                    '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▶ Смотреть</span></div>'+
+                '</div>'+
+                '<div class="anime-info"><div class="anime-title" title="'+name+'">'+name+'</div>'+
+                  '<div class="komi-card-meta">'+(year?'<span>'+year+'</span>':'')+'<span>'+type+'</span>'+(fresh?'<span class="komi-new-ep">● Новая серия</span>':'')+'</div>'+
+                  '<div class="anime-meta-card"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:120px;color:var(--text-muted)">'+genreText+'</span><span>'+episodeCount+' сер.</span></div>'+
+                '</div></div>';
         }
 
         function randomAnimeWithAnimation() {
@@ -3148,42 +3151,36 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         function handleInstantSearch(q) {
-            const dd = document.getElementById('searchDropdown');
-            if (!q.trim()) {
-                showSearchDropdown();
-                render();
+            const dd=document.getElementById('searchDropdown');
+            if(!dd)return;
+            const input=String(q||'');
+            const query=input.trim().toLocaleLowerCase('ru-RU');
+            if(!query){
+                catalogSearchQuery='';
+                if(currentView==='catalog')komiRefreshCatalogGrid();
+                dd.classList.remove('active');
                 return;
             }
-
-            const queryLower = q.toLowerCase();
-            const filtered = animeList.filter(a => 
-                a.title.toLowerCase().includes(queryLower) || 
-                (a.genres && a.genres.some(g => g.toLowerCase().includes(queryLower))) ||
-                (a.type && a.type.toLowerCase().includes(queryLower))
-            );
-
-            if (filtered.length > 0) {
-                dd.innerHTML = filtered.map(a => `
-                    <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
-                        <img src="${a.poster}" style="width:22px; height:30px; object-fit:cover; border-radius:3px;" onerror="this.src='https://cdn.myanimelist.net/images/anime/1122/96435.jpg'">
-                        <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
-                            <b>${a.title}</b>
-                            <div style="font-size:10px; color:var(--text-muted);">${(a.genres||[]).join(', ')} • ${a.year || '2026'}</div>
-                        </div>
-                        <span style="font-size:10px; color:#fbbf24; font-weight:700;">⭐ ${a.shikiRating || '8.5'}</span>
-                    </div>
-                `).join('');
-                dd.classList.add('active');
-            } else {
-                dd.innerHTML = `<div style="padding:8px 10px; font-size:11px; color:var(--text-muted); text-align:center;">Ничего не найдено</div>`;
-                dd.classList.add('active');
+            const results=animeList.filter(a=>
+                [a.title,a.originalTitle,...(Array.isArray(a.genres)?a.genres:[])]
+                .some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(query))
+            ).slice(0,8);
+            dd.innerHTML=results.length?results.map(a=>
+                '<button type="button" class="search-dropdown-item" onclick="selectAnimeFromSearch(\''+a.id+'\')">'+
+                '<img src="'+escapeFriendHtml(a.poster||'')+'" alt="" style="width:38px;height:53px;object-fit:cover;border-radius:8px;background:#222">'+
+                '<span style="flex:1;min-width:0;text-align:left"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeFriendHtml(a.title||'Без названия')+'</b><small style="color:#a5a5b1">'+(komiAnimeYear(a)||'')+' · '+komiCatalogType(a)+'</small></span>'+
+                '<strong style="font-size:11px;color:#f2bd5a">★ '+(Number(a.shikiRating)||0).toFixed(1)+'</strong></button>'
+            ).join(''):'<div style="padding:16px;color:#a6a6b0;font-size:12px;text-align:center">По запросу ничего не найдено</div>';
+            dd.classList.add('active');
+            catalogSearchQuery=input.slice(0,120);
+            if(currentView!=='catalog'){
+                currentView='catalog';
+                catalogFilterGenre='Все';catalogFilterYear='Все';catalogFilterType='Все';
+                render();
             }
-
-            const container = document.getElementById('mainContainer');
-            container.innerHTML = `
-                <h2 style="margin-bottom: 14px; font-size: 16px;">Результаты поиска: "${q}"</h2>
-                <div class="anime-grid">${filtered.length === 0 ? '<div class="empty-state"><h3>Ничего не найдено</h3></div>' : filtered.map(a => renderCard(a)).join('')}</div>
-            `;
+            const field=document.getElementById('komiCatalogSearchInput');
+            if(field && field.value!==catalogSearchQuery)field.value=catalogSearchQuery;
+            komiRefreshCatalogGrid();
         }
 
         function selectAnimeFromSearch(id) {
