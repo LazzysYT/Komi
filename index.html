@@ -1150,6 +1150,34 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     .anime-card,.anime-card .anime-poster,.komi-fastnav button {transition:none!important}
 }
 
+
+/* Small usability improvements: focused search, sticky-anchor offsets and readable card controls */
+.search-dropdown button.search-dropdown-item {
+    display:flex;
+    align-items:center;
+    gap:12px;
+    width:100%;
+    text-align:left;
+    border:0;
+    border-bottom:1px solid #29292f;
+    border-radius:0;
+    color:#ededf2;
+    background:#101115;
+    padding:11px 13px;
+    font:inherit;
+    cursor:pointer;
+}
+.search-dropdown button.search-dropdown-item:hover,
+.search-dropdown button.search-dropdown-item:focus-visible {
+    background:#22171d;
+}
+#komiCalendarSection {scroll-margin-top:100px}
+.anime-card:focus-visible {outline:2px solid #f54d61;outline-offset:3px}
+@media(max-width:680px) {
+    #komiCalendarSection {scroll-margin-top:72px}
+    .search-dropdown button.search-dropdown-item {gap:9px;padding:10px}
+}
+
 </style>
 </head>
 <body>
@@ -2060,9 +2088,12 @@ const adminList = []; // No client-side username grants administrator privileges
                     .sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0)).slice(0,5);
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 7);
                 const bestMovies = animeList.filter(a => komiCatalogType(a) === 'Фильм').sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0)).slice(0,7);
-                const seasonalNew = [...animeList].filter(a => Number(komiAnimeYear(a)) >= 2024).sort((a,b) => Number(komiAnimeYear(b)) - Number(komiAnimeYear(a))).slice(0, 7);
-                const recentlyAdded = [...animeList].filter(a => a.poster).sort((a,b)=>Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id)).slice(0,7);
-                const popularNow = [...animeList].filter(a=>Number(komiAnimeYear(a))>=2024).sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0)).slice(0,7);
+                const popularNow = [...animeList].filter(a=>Number(komiAnimeYear(a))>=2024)
+                    .sort((a,b)=>{
+                        const recentA=a.lastEpisodeAddedAt?Date.parse(a.lastEpisodeAddedAt)||0:0;
+                        const recentB=b.lastEpisodeAddedAt?Date.parse(b.lastEpisodeAddedAt)||0:0;
+                        return recentB-recentA||(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0);
+                    }).slice(0,7);
 
 
                 let continueWatchingHtml = '';
@@ -2118,7 +2149,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     <div>
                         <div class="section-header">
-                            <h2 class="section-title">🔥 В центре внимания</h2>
+                            <h2 class="section-title">🔥 Новинки и продолжения</h2>
                             <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
@@ -2138,16 +2169,6 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     <div>
                         <div class="section-header">
-                            <h2 class="section-title">✨ Новинки сезона</h2>
-                            <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
-                        </div>
-                        <div class="anime-grid">
-                            ${seasonalNew.map(a => renderCard(a)).join('')}
-                        </div>
-                    </div>
-
-                    <div>
-                        <div class="section-header">
                             <h2 class="section-title">🎬 Лучшие фильмы</h2>
                             <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
@@ -2156,15 +2177,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         </div>
                     </div>
 
-                    <div>
-                        <div class="section-header">
-                            <h2 class="section-title">🆕 Ещё интересные аниме</h2>
-                            <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
-                        </div>
-                        <div class="anime-grid">
-                            ${recentlyAdded.map(a => renderCard(a)).join('')}
-                        </div>
-                    </div>
+
                 `;
 
                 startHeroAutoSlide();
