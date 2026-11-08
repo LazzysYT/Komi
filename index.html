@@ -1952,7 +1952,10 @@ async function loadDataFromCloud() {
                 if(q&&![a.title,a.originalTitle,...genres].some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(q)))return false;
                 return true;
             });
-            if(catalogSort==='rating'||catalogSort==='popular')filtered.sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
+            if(catalogSort==='popular')filtered.sort((a,b)=>
+                Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||
+                (Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
+            else if(catalogSort==='rating')filtered.sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
             else if(catalogSort==='alphabet')filtered.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ru'));
             else if(catalogSort==='year')filtered.sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id));
             return filtered;
@@ -2224,7 +2227,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         <div class="form-group" style="margin:0;">
                             <label>Сортировка</label>
                             <select class="form-control" onchange="catalogSort=this.value; render()">
-                                <option value="popular" ${catalogSort==='popular'?'selected':''}>Популярность</option>
+                                <option value="popular" ${catalogSort==='popular'?'selected':''}>Актуальные</option>
                                 <option value="rating" ${catalogSort==='rating'?'selected':''}>Рейтинг</option>
                                 <option value="year" ${catalogSort==='year'?'selected':''}>Сначала новые по году</option>
                                 <option value="alphabet" ${catalogSort==='alphabet'?'selected':''}>Алфавит</option>
