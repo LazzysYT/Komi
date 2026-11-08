@@ -2349,7 +2349,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                         <div class="hero-buttons">
                                             <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">▶ Смотреть сейчас</button>
                                             <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')">ℹ Подробнее</button>
-                                            <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)">🎉 Party</button>
+                                            <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Party</button>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -3963,7 +3963,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${(anime.genres||[]).join(', ')}</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${anime.year || '2026'}</span>
                                 <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
-                                <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Party</button>
+                                <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)">🎉 Party</button>
                             </div>
                         </div>
                     </div>
