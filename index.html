@@ -1898,8 +1898,10 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
+        let presenceRequestInFlight = false;
         async function updateOnlinePresence() {
-            if (!_supabase) return;
+            if (!_supabase || document.hidden || presenceRequestInFlight) return;
+            presenceRequestInFlight = true;
             try {
                 const now = Date.now();
                 const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
@@ -1913,8 +1915,11 @@ async function loadDataFromCloud(attempt = 0) {
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
-                const { data: cloudSyncData } = await _supabase.from('animes').select('id,content').in('id', [5, 7]);
-                if (cloudSyncData) {
+                const presenceUser = currentUser?.username;
+                const { data: cloudSyncData } = presenceUser
+                    ? await _supabase.from('animes').select('id,content').in('id', [5, 7])
+                    : {};
+                if (cloudSyncData && currentUser?.username === presenceUser) {
                     cloudSyncData.forEach(row => {
                         if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
                         if (row.id === 7) {
@@ -1938,10 +1943,13 @@ async function loadDataFromCloud(attempt = 0) {
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
                 if (el) el.innerText = `Онлайн: 1`;
+            } finally {
+                presenceRequestInFlight = false;
             }
         }
 
         setInterval(updateOnlinePresence, 8000);
+        document.addEventListener('visibilitychange', updateOnlinePresence);
         updateOnlinePresence();
 
 
