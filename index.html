@@ -1789,7 +1789,7 @@ let catalogRefreshSince = new Date().toISOString();
 let catalogRefreshInProgress = false;
 let catalogInitialLoadComplete = false;
 
-async function loadDataFromCloud() {
+async function loadDataFromCloud(attempt = 0) {
     try {
         if (!_supabase) throw new Error('Supabase не подключён');
 
@@ -1855,7 +1855,10 @@ async function loadDataFromCloud() {
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
         console.error('Ошибка загрузки каталога:', err);
-        // Preserve already displayed records on a network error.
+        // Preserve already displayed records while retrying.
+        if (attempt < 3) {
+            setTimeout(() => loadDataFromCloud(attempt + 1), 2000 * 2 ** attempt);
+        }
     }
     render();
     updateNotificationsUI();
