@@ -3682,7 +3682,8 @@ const adminList = []; // No client-side username grants administrator privileges
             const result = status
                 ? await query.upsert({user_id:uid, anime_id:Number(animeId), status}, {onConflict:'user_id,anime_id'})
                 : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
-            if (result.error) console.error('Не удалось сохранить список:', result.error.message);
+            if (result.error) throw result.error;
+            return true;
         }
         async function persistAuthenticatedProgress(animeId, progress) {
             if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
@@ -3694,19 +3695,51 @@ const adminList = []; // No client-side username grants administrator privileges
             if (result.error) console.error('Не удалось сохранить прогресс:', result.error.message);
         }
 
-        function setAnimeStatus(animeId, status) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            if (!userAnimeStatuses[currentUser.username]) userAnimeStatuses[currentUser.username] = {};
-            if (userAnimeStatuses[currentUser.username][animeId] === status) {
-                delete userAnimeStatuses[currentUser.username][animeId];
-            } else {
-                userAnimeStatuses[currentUser.username][animeId] = status;
+        const pendingAnimeStatuses = new Set();
+        function komiStatusFeedback(message) {
+            let notice = document.getElementById('komiStatusFeedback');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'komiStatusFeedback';
+                notice.setAttribute('role', 'status');
+                notice.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;max-width:90vw;padding:14px 20px;background:#17171b;border:1px solid #27272d;border-radius:14px;color:#f4f4f5';
+                document.body.append(notice);
             }
-            saveData();
-            if (currentUser?.authUserId) persistAuthenticatedStatus(animeId, userAnimeStatuses[currentUser.username][animeId] || null);
-            openWatchModal(animeId);
+            notice.textContent = message;
+            clearTimeout(komiStatusFeedback.timer);
+            komiStatusFeedback.timer = setTimeout(() => notice.remove(), 5000);
         }
-
+        async function setAnimeStatus(animeId, status) {
+            if (!currentUser) { openAuthModal('login'); return; }
+            const user = currentUser;
+            const requestKey = (user.authUserId || user.username) + ':' + animeId;
+            if (pendingAnimeStatuses.has(requestKey)) return;
+            const previous = userAnimeStatuses[user.username]?.[animeId];
+            const next = previous === status ? null : status;
+            pendingAnimeStatuses.add(requestKey);
+            komiStatusFeedback('Сохраняем статус…');
+            try {
+                if (user.authUserId) {
+                    await persistAuthenticatedStatus(animeId, next);
+                } else {
+                    throw new Error('Войдите через аккаунт Komi, чтобы сохранить список.');
+                }
+                if (currentUser?.authUserId !== user.authUserId) return;
+                if (!userAnimeStatuses[user.username]) userAnimeStatuses[user.username] = {};
+                if (next) userAnimeStatuses[user.username][animeId] = next;
+                else delete userAnimeStatuses[user.username][animeId];
+                saveData();
+                render();
+                komiStatusFeedback(next ? 'Статус сохранён: ' + next : 'Статус снят');
+                if (document.getElementById('watchModal').classList.contains('active')) {
+                    openWatchModal(animeId);
+                }
+            } catch (error) {
+                if (currentUser?.authUserId === user.authUserId) komiStatusFeedback('Не удалось сохранить статус. ' + error.message);
+            } finally {
+                pendingAnimeStatuses.delete(requestKey);
+            }
+        }
 
         function komiProgressKey(animeId) { return currentUser ? currentUser.username + '_' + animeId : ''; }
         function getKomiProgress(animeId) { return komiEpisodeProgress[komiProgressKey(animeId)] || null; }
