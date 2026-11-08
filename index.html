@@ -2148,9 +2148,54 @@ async function loadDataFromCloud() {
             if (kind==='special') return 'Special';
             return 'Сериал';
         }
+        let catalogCollection = 'all';
+        const komiCollections = {all:'Все аниме', recent:'Свежие серии', short:'На один вечер', movies:'Фильмы', best:'Высокая оценка'};
+        function komiInCollection(anime, collection) {
+            const episodes = Array.isArray(anime.episodes) ? anime.episodes.length : 0;
+            if (collection === 'recent') return Number.isFinite(Date.parse(anime.lastEpisodeAddedAt));
+            if (collection === 'short') return komiCatalogType(anime) === 'Сериал' && episodes > 0 && episodes <= 13 && Number(anime.shikiRating) >= 7;
+            if (collection === 'movies') return komiCatalogType(anime) === 'Фильм';
+            if (collection === 'best') return Number(anime.shikiRating) >= 8;
+            return true;
+        }
+        function openKomiCollection(collection) {
+            catalogFilterGenre='Все'; catalogFilterYear='Все'; catalogFilterType='Все';
+            catalogSearchQuery=''; catalogVisibleCount=48;
+            catalogCollection=Object.hasOwn(komiCollections, collection) ? collection : 'all';
+            catalogSort=collection === 'recent' ? 'updated' : 'rating';
+            navigate('catalog');
+        }
+        function komiCollectionButtons() {
+            return Object.entries(komiCollections).map(([key,label]) =>
+                '<button type="button" class="komi-catalog-chip" aria-pressed="'+(currentView==='catalog' && catalogCollection===key)+'" onclick="openKomiCollection(\''+key+'\')">'+label+'</button>').join('');
+        }
+        function komiHomeShelves() {
+            const genres = ['Экшен','Романтика','Фэнтези','Комедия','Драма','Спорт'].filter(g => animeList.some(a => (a.genres || []).includes(g)));
+            const genreButtons = genres.map(g => '<button type="button" class="komi-catalog-chip" data-komi-genre="'+escapeFriendHtml(g)+'">'+escapeFriendHtml(g)+'</button>').join('');
+            const recent = animeList.filter(a=>komiInCollection(a,'recent')).sort((a,b)=>Date.parse(b.lastEpisodeAddedAt)-Date.parse(a.lastEpisodeAddedAt)).slice(0,7);
+            return '<section class="komi-feature-section"><h2 class="section-title">Что посмотреть сегодня</h2><div class="komi-catalog-chips">'+komiCollectionButtons()+'</div><div class="komi-catalog-chips" aria-label="Выбор жанра">'+genreButtons+'</div></section>'+
+                (recent.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">Свежие серии</h2><button class="section-see-all" onclick="openKomiCollection(\'recent\')">Все обновления</button></div><div class="anime-grid">'+recent.map(a=>renderCard(a)).join('')+'</div></section>' : '');
+        }
+        document.addEventListener('click', event => {
+            const button = event.target.closest('[data-komi-genre]');
+            if (!button) return;
+            catalogCollection='all'; catalogFilterYear='Все'; catalogFilterType='Все';
+            catalogSearchQuery=''; catalogVisibleCount=48; catalogFilterGenre=button.dataset.komiGenre;
+            navigate('catalog');
+        });
+        function komiFindEpisode(value) {
+            const buttons = document.querySelectorAll('.komi-episode-number-grid button');
+            let count = 0;
+            for (const button of buttons) {
+                button.hidden = !!value && !button.textContent.trim().includes(value.trim());
+                if (!button.hidden) count++;
+            }
+            document.getElementById('komiEpisodeSearchStatus').textContent = count ? '' : 'Серия не найдена. Измените номер.';
+        }
         function komiCatalogFiltered() {
             const q=catalogSearchQuery.trim().toLocaleLowerCase('ru-RU');
             const filtered=animeList.filter(a=>{
+                if (!komiInCollection(a,catalogCollection)) return false;
                 const genres=Array.isArray(a.genres)?a.genres:[a.genre].filter(Boolean);
                 if(catalogFilterGenre!=='Все'&&!genres.includes(catalogFilterGenre))return false;
                 if(catalogFilterYear!=='Все'&&komiAnimeYear(a)!==String(catalogFilterYear))return false;
@@ -2161,16 +2206,18 @@ async function loadDataFromCloud() {
             if(catalogSort==='popular')filtered.sort((a,b)=>
                 Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||
                 (Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
+            else if(catalogSort==='updated')filtered.sort((a,b)=>(Date.parse(b.lastEpisodeAddedAt)||0)-(Date.parse(a.lastEpisodeAddedAt)||0));
             else if(catalogSort==='rating')filtered.sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
             else if(catalogSort==='alphabet')filtered.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ru'));
             else if(catalogSort==='year')filtered.sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id));
             return filtered;
         }
         function komiCatalogChipsMarkup() {
-            return ['Все','2026','2025','2024'].map(y=>'<button type="button" class="komi-catalog-chip'+(catalogFilterYear===y?' active':'')+'" onclick="setKomiCatalogYear(\''+y+'\')">'+(y==='Все'?'Все годы':y)+'</button>').join('');
+            return ['Все', ...Array.from({length:3},(_,i)=>String(new Date().getFullYear()-i))].map(y=>'<button type="button" class="komi-catalog-chip'+(catalogFilterYear===y?' active':'')+'" onclick="setKomiCatalogYear(\''+y+'\')">'+(y==='Все'?'Все годы':y)+'</button>').join('');
         }
         function setKomiCatalogYear(year) {catalogFilterYear=String(year);catalogVisibleCount=48;render();}
         function komiResetCatalogFilters() {
+            catalogCollection='all';
             catalogFilterGenre='Все';catalogFilterYear='Все';catalogFilterType='Все';
             catalogSort='popular';catalogSearchQuery='';catalogVisibleCount=48;render();
         }
@@ -2366,6 +2413,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     ${continueWatchingHtml}
+                    ${komiHomeShelves()}
                     ${komiReleaseCalendar()}
                     ${komiRecommendedHtml}
                     ${komiYearSections()}
@@ -2393,7 +2441,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     <div>
                         <div class="section-header">
                             <h2 class="section-title">🎬 Лучшие фильмы</h2>
-                            <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                            <button class="section-see-all" onclick="playSound(); openKomiCollection('movies')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
                             ${bestMovies.length === 0 ? `<div class="empty-state"><h3>Фильмы пока не добавлены</h3></div>` : bestMovies.map(a => renderCard(a)).join('')}
@@ -2424,6 +2472,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
                         <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме, оригинальное название или жанр..." aria-label="Поиск в каталоге" oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off">
                     </div>
+                    <div class="komi-catalog-chips" aria-label="Подборки">${komiCollectionButtons()}</div>
                     <div class="komi-catalog-chips">${komiCatalogChipsMarkup()}</div>
                     <div class="catalog-filters-box">
                         <div class="form-group" style="margin:0;">
@@ -2448,6 +2497,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             <label>Сортировка</label>
                             <select class="form-control" onchange="catalogSort=this.value; render()">
                                 <option value="popular" ${catalogSort==='popular'?'selected':''}>Актуальные</option>
+                                <option value="updated" ${catalogSort==='updated'?'selected':''}>По обновлению серий</option>
                                 <option value="rating" ${catalogSort==='rating'?'selected':''}>Рейтинг</option>
                                 <option value="year" ${catalogSort==='year'?'selected':''}>Сначала новые по году</option>
                                 <option value="alphabet" ${catalogSort==='alphabet'?'selected':''}>Алфавит</option>
@@ -4011,6 +4061,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 <span>Сезон ${activeSeason}</span>
                             </div>
                             ${seasonNumbers.length > 1 ? '<div class="season-tabs" aria-label="Выбор сезона">' + seasonNumbers.map(n => '<button type="button" class="season-tab-btn ' + (n===activeSeason?'active':'') + '" onclick="openWatchModal(\'' + anime.id + '\',' + n + ',0)">Сезон ' + n + '</button>').join('') + '</div>' : ''}
+                            <label for="komiEpisodeSearch">Найти серию</label><input id="komiEpisodeSearch" type="search" inputmode="numeric" class="form-control" placeholder="Номер серии" oninput="komiFindEpisode(this.value)"><p id="komiEpisodeSearchStatus" role="status"></p>
                             <div class="komi-episode-number-grid" role="group" aria-label="Выбрать серию">
                                 ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
                             </div>
