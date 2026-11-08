@@ -2205,7 +2205,7 @@ async function loadDataFromCloud() {
                 if(catalogFilterGenre!=='Все'&&!genres.includes(catalogFilterGenre))return false;
                 if(catalogFilterYear!=='Все'&&komiAnimeYear(a)!==String(catalogFilterYear))return false;
                 if(catalogFilterType!=='Все'&&komiCatalogType(a)!==catalogFilterType)return false;
-                if(q&&![a.title,a.originalTitle,...genres].some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(q)))return false;
+                if(q&&![a.title,a.originalTitle,a.english,a.japanese,...(Array.isArray(a.synonyms)?a.synonyms:[]),...genres].some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(q)))return false;
                 return true;
             });
             if(catalogSort==='popular')filtered.sort((a,b)=>
@@ -2979,7 +2979,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
-            const poster=typeof anime.poster==='string'&&/^https:\/\//i.test(anime.poster)?escapeFriendHtml(anime.poster):'';
+            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || './anime-artwork.svg');
             const episodeCount=Array.isArray(anime.episodes)?anime.episodes.length:0;
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
@@ -2987,7 +2987,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'./anime-artwork.svg\'">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e26,#101015);color:#92929F"><span style="font-size:30px;font-weight:800;color:#f03d50">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▶ Смотреть</span></div>'+
                 '</div>'+
