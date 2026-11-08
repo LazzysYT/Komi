@@ -1370,6 +1370,29 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     #watchModal .modal-close{top:12px!important;right:11px!important}
 }
 
+
+/* Broadcast calendar - useful dates with clear broadcast vs available distinction */
+#komiCalendarSection .komi-release-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+#komiCalendarSection .komi-release-row{
+    display:flex!important;
+    align-items:center!important;
+    gap:13px!important;
+    min-width:0;
+    background:rgba(18,18,22,.9)!important;
+    border:1px solid #2b2b32!important;
+    border-radius:15px!important;
+    padding:10px 13px!important;
+    text-align:left;
+}
+#komiCalendarSection .komi-release-row:hover{border-color:#9d3548!important;background:#241820!important}
+#komiCalendarSection .komi-calendar-poster{width:49px;height:65px;object-fit:cover;border-radius:9px;background:#212128;flex-shrink:0}
+#komiCalendarSection .komi-calendar-info{display:flex;flex-direction:column;min-width:0;gap:5px;flex:1}
+#komiCalendarSection .komi-calendar-info small{font-size:11px;color:#b4b2bc}
+#komiCalendarSection .komi-calendar-info strong{font-size:12px;color:#f8f6f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#komiCalendarSection .komi-calendar-info em{font-size:11px;font-style:normal;font-weight:650;color:#ee7d91}
+#komiCalendarSection .komi-calendar-tag{font-size:10px;flex-shrink:0;background:#2e1923;color:#ff9cad;border:1px solid #6e2b40;border-radius:8px;padding:6px 8px}
+@media(max-width:920px){#komiCalendarSection .komi-release-list{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body>
@@ -4049,31 +4072,123 @@ const adminList = []; // No client-side username grants administrator privileges
             }).join('');
         }
 
-        function komiReleaseCalendar() {
-            const days = ['Вс', 'Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб'];
+
+        const komiExternalCalendar = new Map();
+        let komiCalendarLoading = false;
+        let komiCalendarError = '';
+        let komiCalendarLastFetch = 0;
+
+        // Fetch public broadcast dates directly as a fallback for delayed GitHub Actions.
+        // No secrets or private user information are sent to AniList.
+        async function loadKomiEpisodeSchedule(force = false) {
             const now = Date.now();
-            const upcoming = animeList.map(a => ({
-                anime: a, date: new Date(a.nextEpisodeAt || a.next_episode_at || a.nextEpisodeDate)
-            })).filter(x => Number.isFinite(x.date.getTime()) && x.date.getTime() > now && x.date.getTime() < now + 14 * 86400000)
-              .sort((a,b) => a.date - b.date).slice(0, 12);
-            const newEpisodes = animeList.map(a => ({
-                anime: a, date: new Date(a.lastEpisodeAddedAt)
-            })).filter(x => Number.isFinite(x.date.getTime()) && now - x.date.getTime() < 3 * 86400000 && x.date.getTime() <= now)
-              .sort((a,b) => b.date - a.date).slice(0, 8);
-            let content = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2></div>';
+            if (komiCalendarLoading || !animeList.length) return;
+            if (!force && now - komiCalendarLastFetch < 25 * 60 * 1000) return;
+            komiCalendarLoading = true;
+            komiCalendarError = '';
+            const ids = new Set(animeList.map(a => Number(a.shikimoriId || a.id)).filter(Number.isSafeInteger));
+            const query = 'query ($page:Int,$from:Int,$to:Int) { Page(page:$page,perPage:50) { pageInfo { hasNextPage } airingSchedules(airingAt_greater:$from,airingAt_lesser:$to,sort:TIME) { airingAt episode media { idMal isAdult } } } }';
+            try {
+                const discovered = new Map();
+                const start = Math.floor(now / 1000) - 60;
+                const end = start + 14 * 86400;
+                for (let page = 1; page <= 12; page++) {
+                    const response = await fetch('https://graphql.anilist.co', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+                        body: JSON.stringify({ query, variables: { page, from: start, to: end } }),
+                        signal: AbortSignal.timeout(15000)
+                    });
+                    if (!response.ok) throw new Error('AniList HTTP ' + response.status);
+                    const body = await response.json();
+                    if (body.errors?.length) throw new Error(body.errors[0].message || 'Ошибка API');
+                    const pageData = body.data?.Page;
+                    if (!pageData) throw new Error('Нет ответа расписания');
+                    for (const item of pageData.airingSchedules || []) {
+                        const id = Number(item.media?.idMal);
+                        const time = Number(item.airingAt) * 1000;
+                        if (!ids.has(id) || item.media?.isAdult || time <= now) continue;
+                        if (!discovered.has(id) || discovered.get(id).at > time) {
+                            discovered.set(id, { at: time, episode: Number(item.episode) || null });
+                        }
+                    }
+                    if (!pageData.pageInfo?.hasNextPage || discovered.size >= 40) break;
+                    await new Promise(resolve => setTimeout(resolve, 500));
+                }
+                // Preserve known dates if there was a temporary upstream issue.
+                komiExternalCalendar.clear();
+                for (const [id, value] of discovered) komiExternalCalendar.set(id, value);
+                komiCalendarLastFetch = Date.now();
+            } catch (error) {
+                komiCalendarError = error.message || 'Неизвестная ошибка';
+                // Retry later but do not hammer a rate-limited API on every render.
+                komiCalendarLastFetch = Date.now() - 20 * 60 * 1000;
+                console.warn('Komi AniList calendar:', komiCalendarError);
+            } finally {
+                komiCalendarLoading = false;
+                if (currentView === 'home') {
+                    const section = document.getElementById('komiCalendarSection');
+                    if (section) section.outerHTML = komiReleaseCalendar();
+                }
+            }
+        }
+
+        function komiReleaseCalendar() {
+            const now = Date.now();
+            const maxTime = now + 14 * 86400000;
+            const upcoming = animeList.map(anime => {
+                const stored = new Date(anime.nextEpisodeAt || anime.next_episode_at || anime.nextEpisodeDate).getTime();
+                const live = komiExternalCalendar.get(Number(anime.shikimoriId || anime.id));
+                const date = Number.isFinite(stored) && stored > now ? stored : live?.at;
+                return {
+                    anime,
+                    date,
+                    episode: Number.isFinite(stored) && stored > now
+                        ? (Number(anime.nextEpisodeNumber) || live?.episode)
+                        : live?.episode
+                };
+            }).filter(x => Number.isFinite(x.date) && x.date > now && x.date < maxTime)
+              .sort((a,b) => a.date - b.date).slice(0,18);
+            const latest = animeList.map(anime => ({
+                anime,
+                date: Date.parse(anime.lastEpisodeAddedAt)
+            })).filter(x => Number.isFinite(x.date) && x.date <= now && now - x.date <= 3 * 86400000)
+              .sort((a,b) => b.date - a.date).slice(0,8);
+
+            let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2>'+
+                '<button type="button" class="section-see-all" onclick="loadKomiEpisodeSchedule(true)">↻ Обновить расписание</button></div>';
             if (upcoming.length) {
-                content += '<p class="komi-feature-muted">Время выхода в оригинальном эфире. Озвучка и плеер могут появиться позже.</p>';
-                content += '<div class="komi-release-list">' + upcoming.map(x => '<button onclick="openWatchModal(\'' + x.anime.id + '\')" class="komi-release-row"><span>' + days[x.date.getDay()] + ' · ' + x.date.toLocaleDateString('ru-RU', {day:'numeric',month:'short'}) + '</span><strong>' + escapeFriendHtml(x.anime.title) + (x.anime.nextEpisodeNumber ? ' · серия ' + Number(x.anime.nextEpisodeNumber) : '') + '</strong><small>' + x.date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'}) + '</small></button>').join('') + '</div>';
+                result += '<p class="komi-feature-muted">Ближайшие эфиры · время указано в твоём часовом поясе. Озвучка может появиться позже.</p>';
+                result += '<div class="komi-release-list">' + upcoming.map(entry => {
+                    const date = new Date(entry.date);
+                    const title = escapeFriendHtml(entry.anime.title);
+                    const poster = escapeFriendHtml(entry.anime.poster || '');
+                    const day = date.toLocaleDateString('ru-RU', {weekday:'short',day:'numeric',month:'short'});
+                    const hour = date.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
+                    const episodeText = entry.episode ? 'Серия ' + entry.episode : 'Следующая серия';
+                    return '<button type="button" onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
+                        '<img loading="lazy" src="' + poster + '" alt="" class="komi-calendar-poster" onerror="this.style.display=\'none\'">'+
+                        '<span class="komi-calendar-info"><small>' + day + ' · ' + hour + '</small><strong>' + title + '</strong><em>' + episodeText + '</em></span>'+
+                        '<span class="komi-calendar-tag">Эфир</span></button>';
+                }).join('') + '</div>';
             } else {
-                content += '<p class="komi-feature-muted">Подтверждённое расписание пока загружается. Даты не придумываем.</p>';
+                const message = komiCalendarLoading
+                    ? 'Проверяем подтверждённое расписание на ближайшие 14 дней…'
+                    : komiCalendarError
+                        ? 'Не удалось получить расписание из AniList. Попробуй обновить позже.'
+                        : 'На ближайшие 14 дней пока нет подтверждённых дат для аниме из каталога.';
+                result += '<p class="komi-feature-muted">' + message + '</p>';
             }
-            if (newEpisodes.length) {
-                content += '<div class="section-header" style="margin-top:16px"><h3 class="section-title" style="font-size:14px">🆕 Недавно добавленные серии</h3></div>';
-                content += '<div class="komi-release-list">' + newEpisodes.map(x =>
-                    '<button onclick="openWatchModal(\'' + x.anime.id + '\')" class="komi-release-row"><span>' + x.date.toLocaleDateString('ru-RU', {day:'numeric',month:'short'}) + '</span><strong>' + escapeFriendHtml(x.anime.title) + '</strong><small>' + (x.anime.lastEpisodeNumber ? 'Серия ' + Number(x.anime.lastEpisodeNumber) : 'Новые серии') + '</small></button>'
-                ).join('') + '</div>';
+            if (latest.length) {
+                result += '<div class="section-header" style="margin-top:17px"><h3 class="section-title" style="font-size:15px!important">🆕 Добавлены новые серии</h3></div>';
+                result += '<div class="komi-release-list">' + latest.map(entry =>
+                    '<button type="button" onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
+                        '<img loading="lazy" src="' + escapeFriendHtml(entry.anime.poster || '') + '" alt="" class="komi-calendar-poster" onerror="this.style.display=\'none\'">'+
+                        '<span class="komi-calendar-info"><small>' + new Date(entry.date).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) + '</small>'+
+                        '<strong>' + escapeFriendHtml(entry.anime.title) + '</strong><em>' + (entry.anime.lastEpisodeNumber ? 'Серия ' + Number(entry.anime.lastEpisodeNumber) : 'Новая серия') + '</em></span>'+
+                    '</button>').join('') + '</div>';
             }
-            return content + '</section>';
+            return result + '</section>';
         }
 
         function toggleKomiWatchFullscreen() {
@@ -4269,7 +4384,8 @@ const adminList = []; // No client-side username grants administrator privileges
         }
         setInterval(refreshKomiCatalogUpdates, 120000);
 
-        loadDataFromCloud();
+        loadDataFromCloud().then(() => loadKomiEpisodeSchedule()).catch(error => console.warn('Календарь:',error));
+        setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         restoreGoogleSession();
     </script>
 </body>
