@@ -1,12 +1,18 @@
 name: Komi browser smoke tests
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'scripts/**'
+      - '.github/workflows/browser-smoke.yml'
   push:
     branches: [main]
     paths:
       - 'index.html'
       - 'scripts/browser-smoke.cjs'
       - 'scripts/auth-isolation-e2e.cjs'
+      - 'scripts/player-regression.cjs'
       - '.github/workflows/browser-smoke.yml'
 jobs:
   smoke:
@@ -26,8 +32,16 @@ jobs:
         run: |
           npm install --no-save playwright@1.58.2
           npx playwright install --with-deps chromium
-      - name: Run desktop and mobile browser checks
-        run: node scripts/browser-smoke.cjs
+      - name: Run player and session regression checks
+        run: node scripts/player-regression.cjs
+      - name: Run desktop and mobile browser checks against this checkout
+        env:
+          KOMI_TEST_URL: http://127.0.0.1:8080
+        run: |
+          python3 -m http.server 8080 --bind 127.0.0.1 &
+          server_pid=$!
+          trap 'kill "$server_pid"' EXIT
+          node scripts/browser-smoke.cjs
       - name: Run real two-account auth and RLS E2E (when secrets configured)
         if: ${{ env.KOMI_TEST_EMAIL_A != '' && env.KOMI_TEST_PASSWORD_A != '' && env.KOMI_TEST_EMAIL_B != '' && env.KOMI_TEST_PASSWORD_B != '' }}
         env:
