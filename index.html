@@ -2174,21 +2174,21 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (slideInterval) clearInterval(slideInterval);
                 const genres = ['Все', ...availableGenresList];
                 const years = ['Все', ...[...new Set(animeList.map(a => komiAnimeYear(a)).filter(Boolean))].sort((a,b) => Number(b) - Number(a))];
-                const types = ['Все', 'Сериал', 'Фильм', 'OVA'];
+                const types = ['Все', 'Сериал', 'Фильм', 'OVA', 'ONA', 'Special'];
 
-                let filtered = animeList.filter(a => {
-                    const gList = a.genres || [a.genre];
-                    if (catalogFilterGenre !== 'Все' && !gList.includes(catalogFilterGenre)) return false;
-                    if (catalogFilterYear !== 'Все' && komiAnimeYear(a) !== String(catalogFilterYear)) return false;
-                    if (catalogFilterType !== 'Все' && a.type !== catalogFilterType) return false;
-                    return true;
-                });
-
-                if (catalogSort === 'rating') filtered.sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0'));
-                else if (catalogSort === 'alphabet') filtered.sort((a,b) => a.title.localeCompare(b.title));
+                const filtered = komiCatalogFiltered();
 
                 container.innerHTML = `
-                    <h2 style="margin-bottom: 14px; font-size: 18px;">Каталог аниме</h2>
+                    <div class="komi-catalog-header">
+                        <div><div class="komi-spotlight-eyebrow">БИБЛИОТЕКА KOMI</div><h1>Каталог аниме</h1>
+                        <p>Найди сериал или фильм по названию, жанру, году и типу.</p></div>
+                        <button class="komi-catalog-clear" onclick="komiResetCatalogFilters()">Сбросить фильтры</button>
+                    </div>
+                    <div class="komi-catalog-search">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
+                        <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме, оригинальное название или жанр..." aria-label="Поиск в каталоге" oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off">
+                    </div>
+                    <div class="komi-catalog-chips">${komiCatalogChipsMarkup()}</div>
                     <div class="catalog-filters-box">
                         <div class="form-group" style="margin:0;">
                             <label>Жанр</label>
@@ -2213,14 +2213,18 @@ const adminList = []; // No client-side username grants administrator privileges
                             <select class="form-control" onchange="catalogSort=this.value; render()">
                                 <option value="popular" ${catalogSort==='popular'?'selected':''}>Популярность</option>
                                 <option value="rating" ${catalogSort==='rating'?'selected':''}>Рейтинг</option>
+                                <option value="year" ${catalogSort==='year'?'selected':''}>Сначала новые по году</option>
                                 <option value="alphabet" ${catalogSort==='alphabet'?'selected':''}>Алфавит</option>
                             </select>
                         </div>
                     </div>
-                    <div class="anime-grid">
-                        ${filtered.length === 0 ? `<div class="empty-state"><h3>Ничего не найдено по фильтрам</h3></div>` : filtered.slice(0, catalogVisibleCount).map(a => renderCard(a)).join('')}
+                    <div class="komi-catalog-status"><span class="komi-catalog-count" id="komiCatalogCount">Найдено: ${filtered.length}</span><span>Аниме с доступными сериями</span></div>
+                    <div class="anime-grid" id="komiCatalogGrid">
+                        ${filtered.length === 0 ? `<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>` : filtered.slice(0, catalogVisibleCount).map(a => renderCard(a)).join('')}
                     </div>
-                    ${filtered.length > catalogVisibleCount ? `<div style="display:flex;justify-content:center;margin:24px 0;"><button class="btn-glow" onclick="showMoreCatalog()">Показать ещё 48 · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button></div>` : ''}
+                    <div id="komiCatalogMore" style="display:${filtered.length > catalogVisibleCount ? 'flex' : 'none'};justify-content:center;margin:24px 0;">
+                        ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
+                    </div>
                 `;
             } else if (currentView === 'profile') {
                 if (slideInterval) clearInterval(slideInterval);
