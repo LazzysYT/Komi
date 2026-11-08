@@ -1178,6 +1178,198 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     .search-dropdown button.search-dropdown-item {gap:9px;padding:10px}
 }
 
+
+/* KOMI CINEMA 2.0 — episode navigator always visible beside the player */
+#watchModal #watchModalContent{
+    width:min(1600px,calc(100vw - 28px))!important;
+    max-width:none!important;
+    padding:22px!important;
+    background:linear-gradient(135deg,rgba(18,18,22,.97),rgba(9,9,12,.98))!important;
+    border:1px solid #30252f!important;
+}
+#watchModal .watch-cinema-layout{display:flex!important;flex-direction:column!important;gap:17px!important}
+#watchModal .komi-watch-stage{
+    order:-10!important;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 312px;
+    align-items:start;
+    gap:18px;
+    width:100%;
+    min-width:0;
+    margin-top:45px;
+}
+#watchModal .komi-watch-main{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-width:0;
+}
+#watchModal .komi-player-heading{
+    order:0!important;
+    min-width:0;
+    margin:0;
+    padding:0!important;
+    align-items:flex-start;
+}
+#watchModal .komi-player-heading h2{font-size:clamp(18px,2vw,26px);line-height:1.25;margin:6px 0 4px}
+#watchModal .komi-player-heading span{color:#b7b6c0}
+#watchModal .player-wrapper{
+    order:0!important;
+    min-height:0!important;
+    padding:0!important;
+    background:#050508!important;
+    border:1px solid #35313a!important;
+    box-shadow:0 10px 35px #0008!important;
+    overflow:hidden;
+    border-radius:18px!important;
+    width:100%;
+}
+#watchModal .player-box{
+    width:100%!important;
+    aspect-ratio:16/9!important;
+    min-height:0!important;
+    max-height:65dvh!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+    overflow:hidden;
+}
+#watchModal .player-box iframe,
+#watchModal .player-box video{
+    display:block;
+    width:100%!important;
+    height:100%!important;
+    min-height:0!important;
+    max-height:65dvh!important;
+    border:0!important;
+    border-radius:0!important;
+}
+#watchModal .komi-watch-controls{
+    display:flex;
+    gap:11px;
+    align-items:end;
+    padding:11px;
+    border-radius:15px;
+    border:1px solid #2e2b33;
+    background:rgba(25,24,29,.86);
+}
+#watchModal .komi-watch-navbtn{
+    min-height:43px;
+    border-radius:11px;
+    border:1px solid #34333c;
+    background:#252329;
+    color:#eee;
+    padding:9px 14px;
+    font-weight:700;
+    cursor:pointer;
+    font-size:12px;
+    white-space:nowrap;
+}
+#watchModal .komi-watch-navbtn.primary{background:#b82840;border-color:#dd3b55;color:#fff}
+#watchModal .komi-watch-navbtn:not(:disabled):hover{border-color:#f04d63;background:#46212f}
+#watchModal .komi-watch-navbtn.primary:not(:disabled):hover{background:#df3450}
+#watchModal .komi-watch-navbtn:disabled{opacity:.4;cursor:not-allowed}
+#watchModal .komi-watch-source{
+    display:flex;
+    flex:1;
+    min-width:0;
+    flex-direction:column;
+    gap:5px;
+}
+#watchModal .komi-watch-source label{font-size:11px;color:#b6a9b2;font-weight:700}
+#watchModal .komi-watch-source select{
+    width:100%;
+    min-height:43px;
+    padding:9px 11px;
+    color:#f5f4f7;
+    border-radius:10px;
+    border:1px solid #4b3941;
+    background:#151418;
+    outline:none;
+    font-size:12px;
+}
+#watchModal .komi-watch-source select:focus-visible{border-color:#f04d63}
+#watchModal .komi-watch-help{color:#85858e;font-size:11px;line-height:1.5;margin:0 1px}
+#watchModal .komi-watch-sidebar{
+    border:1px solid #302e37;
+    background:linear-gradient(155deg,#19181f,#111116);
+    border-radius:19px;
+    padding:17px;
+    min-width:0;
+    max-height:calc(100dvh - 160px);
+    overflow-y:auto;
+    scrollbar-color:#773041 #161419;
+}
+#watchModal .komi-watch-side-heading{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px}
+#watchModal .komi-watch-side-heading small{display:block;color:#e24c69;font-size:10px;font-weight:800;letter-spacing:1.7px}
+#watchModal .komi-watch-side-heading h3{font-size:17px;color:#fff;margin-top:5px}
+#watchModal .komi-watch-side-heading>span{font-size:11px;color:#bcb8c2;padding:7px 9px;background:#29242c;border-radius:9px}
+#watchModal .komi-watch-sidebar .season-tabs{border:0;margin:0 0 12px}
+#watchModal .komi-watch-sidebar .season-tab-btn{font-size:11px;border-radius:9px;padding:8px 10px}
+#watchModal .komi-watch-sidebar .komi-episode-number-grid{
+    display:grid;
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:9px;
+    max-height:none;
+    overflow-y:visible;
+    padding:2px;
+    margin:0!important;
+}
+#watchModal .komi-watch-sidebar .komi-episode-number{
+    width:100%;
+    min-width:0;
+    height:51px;
+    border-radius:12px!important;
+    border:1px solid #3b3a43;
+    background:#222128;
+    color:#eae8ee;
+    font-size:14px;
+    font-weight:750;
+    cursor:pointer;
+}
+#watchModal .komi-watch-sidebar .komi-episode-number:hover{background:#39202c;border-color:#ca455c}
+#watchModal .komi-watch-sidebar .komi-episode-number.active{
+    background:linear-gradient(135deg,#f44860,#b8203b)!important;
+    border-color:#fa536a!important;
+    box-shadow:0 5px 14px #ca284b40;
+    color:#fff;
+}
+#watchModal .komi-watch-side-footnote{font-size:11px;color:#96929c;margin-top:15px;line-height:1.5}
+#watchModal .komi-watch-expand{
+    position:absolute!important;
+    top:18px!important;right:62px!important;float:none!important;
+    margin:0!important;
+    border-radius:11px!important;
+    background:#252027!important;
+    border-color:#55404b!important;
+    z-index:20;
+}
+#watchModal .modal-close{top:18px!important;right:19px!important;z-index:21!important}
+#watchModal .crunchy-hero-section{
+    margin-top:6px;
+    background:rgba(21,19,24,.65)!important;
+}
+#watchModal .crunchy-hero-info p{max-height:5em;overflow:auto}
+#watchModal .komi-watch-stage *:focus-visible{outline:2px solid #ff5065;outline-offset:2px}
+@media(max-width:1080px){
+    #watchModal .komi-watch-stage{grid-template-columns:minmax(0,1fr) 255px;gap:12px}
+    #watchModal .komi-watch-sidebar{padding:13px}
+    #watchModal .komi-watch-sidebar .komi-episode-number-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media(max-width:760px){
+    #watchModal #watchModalContent{width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;padding:12px!important;border-radius:0!important}
+    #watchModal .komi-watch-stage{grid-template-columns:1fr;gap:12px;margin-top:44px}
+    #watchModal .komi-watch-sidebar{max-height:none;padding:12px}
+    #watchModal .komi-watch-sidebar .komi-episode-number-grid{grid-template-columns:repeat(auto-fill,minmax(54px,1fr));max-height:148px;overflow:auto}
+    #watchModal .komi-player-heading h2{font-size:19px}
+    #watchModal .komi-watch-controls{gap:7px;padding:8px;flex-wrap:wrap}
+    #watchModal .komi-watch-source{order:-1;flex:1 0 100%}
+    #watchModal .komi-watch-navbtn{flex:1;min-width:0}
+    #watchModal .player-box{max-height:53dvh!important}
+    #watchModal .komi-watch-expand{top:12px!important;right:50px!important}
+    #watchModal .modal-close{top:12px!important;right:11px!important}
+}
+
 </style>
 </head>
 <body>
