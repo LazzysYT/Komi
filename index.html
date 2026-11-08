@@ -966,6 +966,190 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
 .komi-feature-section .anime-card:hover,.komi-progress-card:hover,.komi-release-row:hover{background:rgba(42,26,35,.6)!important}
 .komi-feature-section .section-header,.komi-achievement-panel .section-header{background:transparent!important}
 
+
+/* KOMI DISCOVERY 2026 — calm, original red/black browsing layout */
+:root {
+    --bg-base:#07080b;
+    --bg-card:#111216;
+    --bg-card-hover:#1b1c23;
+    --bg-input:#17181d;
+    --border:#2a2b32;
+    --text-muted:#aaaab5;
+    --primary:#f03d50;
+    --primary-hover:#ff5264;
+}
+body {
+    background:radial-gradient(ellipse 75% 34% at 45% -8%,rgba(143,26,48,.16),transparent 76%),#07080b;
+}
+header {
+    background:rgba(9,10,13,.84)!important;
+    border-bottom:1px solid rgba(255,255,255,.06)!important;
+    backdrop-filter:blur(22px) saturate(1.25)!important;
+    -webkit-backdrop-filter:blur(22px) saturate(1.25);
+    box-shadow:none!important;
+}
+.app-layout {
+    max-width:1760px!important;
+    padding-top:28px!important;
+    padding-bottom:65px!important;
+}
+main#mainContainer {gap:30px}
+button, select, input {font-family:inherit}
+button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
+    outline:2px solid #f54d61!important;
+    outline-offset:3px;
+}
+.section-header {align-items:center;gap:16px;flex-wrap:wrap}
+.section-title {font-size:clamp(19px,1.5vw,24px)!important;letter-spacing:-.55px;line-height:1.25}
+.section-see-all {font-size:12px;font-weight:700;color:#bdbdc4;padding:7px 0;white-space:nowrap}
+.section-see-all:hover {color:#ff6475}
+.top-hero-section-grid {display:block!important}
+.hero-slider-container {
+    height:clamp(320px,32vw,465px)!important;
+    border-radius:28px!important;
+    border:1px solid #333039!important;
+    background:#101016;
+    box-shadow:0 18px 55px #0007!important;
+}
+.hero-slide {
+    padding:clamp(25px,4.5vw,72px)!important;
+    background-size:cover;
+    background-position:center 38%;
+}
+.hero-slide::before {
+    background:linear-gradient(90deg,#07080c 0%,rgba(7,8,12,.95) 24%,rgba(7,8,12,.75) 49%,rgba(7,8,12,.2) 82%),
+               linear-gradient(0deg,#07080c88,transparent 50%)!important;
+}
+.hero-slide h1 {max-width:680px!important;font-size:clamp(28px,3.25vw,53px)!important;line-height:1.08}
+.hero-slide p {max-width:580px!important;font-size:13px!important;line-height:1.7!important;-webkit-line-clamp:3}
+.hero-meta span {font-size:11px;border-radius:999px!important;background:#17171ab8!important}
+.hero-buttons .btn-glow,.hero-buttons .btn-glow-secondary {min-height:42px;border-radius:13px;padding:11px 20px}
+.hero-dot {height:5px!important;border-radius:999px!important}
+.komi-spotlight-heading {display:flex;flex-wrap:wrap;justify-content:space-between;gap:15px;align-items:flex-end}
+.komi-spotlight-eyebrow {text-transform:uppercase;font-size:10px;font-weight:800;letter-spacing:2.4px;color:#f26372}
+.komi-spotlight-heading h1 {font-size:clamp(24px,2.5vw,34px);letter-spacing:-1px;margin-top:7px;font-weight:800}
+.komi-spotlight-heading p {font-size:13px;line-height:1.55;color:#aaaab5;margin-top:8px;max-width:590px}
+.komi-spotlight-metrics {display:flex;gap:8px;flex-wrap:wrap}
+.komi-spotlight-metrics span {background:#151519;border:1px solid #303037;border-radius:15px;padding:9px 12px;color:#b6b6c1;font-size:11px}
+.komi-spotlight-metrics strong {font-size:14px;color:#f4f4f8;padding-right:5px}
+.komi-fastnav {display:flex;gap:9px;flex-wrap:wrap;padding:3px 0 0}
+.komi-fastnav button,.komi-catalog-chip,.komi-catalog-clear {
+    border:1px solid #303038;
+    border-radius:12px;
+    background:#17171b;
+    color:#d7d7dd;
+    padding:11px 16px;
+    font-size:12px;
+    font-weight:700;
+    cursor:pointer;
+    transition:border-color .2s,background .2s,transform .2s;
+}
+.komi-fastnav button:hover,.komi-catalog-chip:hover,.komi-catalog-clear:hover {
+    background:#24191e;border-color:#a42f43;transform:translateY(-1px);
+}
+.komi-fastnav .is-prominent {background:#f03d50;color:white;border-color:#f03d50}
+.komi-fastnav .is-prominent:hover {background:#d82d43;border-color:#d82d43}
+.komi-feature-section {
+    margin:0!important;
+    padding:0!important;
+    background:transparent!important;
+    border:0!important;
+    border-radius:0!important;
+    box-shadow:none!important;
+}
+.komi-feature-section .section-header {margin-bottom:15px}
+.komi-feature-section .section-title {font-size:clamp(19px,1.5vw,23px)!important}
+.anime-grid {gap:17px!important}
+.anime-card {
+    background:#111216!important;
+    border:1px solid #282a30!important;
+    border-radius:19px!important;
+    box-shadow:0 5px 22px rgba(0,0,0,.18)!important;
+    contain:layout paint;
+}
+.anime-card:hover {
+    border-color:#af3948!important;
+    box-shadow:0 12px 30px rgba(0,0,0,.43),0 0 0 1px #b52d4352!important;
+    transform:translateY(-3px);
+}
+.anime-card .anime-poster {transition:transform .28s ease}
+.anime-card:hover .anime-poster {transform:scale(1.035)}
+.anime-info {padding:13px 12px 14px!important;background:#111216!important}
+.anime-title {font-size:12px!important;line-height:1.45!important}
+.anime-meta-card {font-size:10px;gap:8px}
+.komi-card-meta {display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:8px 0 5px}
+.komi-card-meta span {font-size:10px;padding:3px 7px;border-radius:7px;background:#1f2026;border:1px solid #2b2d34;color:#b7b8c1}
+.komi-card-meta .komi-new-ep {color:#ff9ea8;border-color:#67303c;background:#301a22}
+.anime-rating-badge {z-index:3}
+.komi-release-row {border-radius:15px!important;background:#141418!important;border:1px solid #2d2b30!important;padding:14px!important;min-height:60px}
+.komi-release-row:hover {border-color:#824152!important;background:#221a21!important}
+.komi-release-list {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.komi-progress-grid {gap:12px}
+.komi-progress-card {border-radius:17px!important;background:#151519!important;border:1px solid #303037!important}
+.komi-catalog-header {display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px}
+.komi-catalog-header h1 {font-size:clamp(24px,2.5vw,34px);letter-spacing:-.9px}
+.komi-catalog-header p {font-size:12px;color:#a6a6b1;margin-top:7px}
+.komi-catalog-search {position:relative;margin-bottom:14px}
+.komi-catalog-search input {
+    display:block;width:100%;padding:15px 20px 15px 46px!important;
+    background:#121317;border:1px solid #303137;border-radius:17px;
+    color:#fff;font-size:14px;outline:none;
+}
+.komi-catalog-search input:focus {border-color:#cb4358;box-shadow:0 0 0 3px #f03d5017}
+.komi-catalog-search svg {position:absolute;left:16px;top:50%;transform:translateY(-50%);width:19px;height:19px;stroke:#9798a2;stroke-width:1.8;fill:none;pointer-events:none}
+.komi-catalog-chips {display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:12px 0 18px}
+.komi-catalog-chip {padding:8px 13px;border-radius:999px}
+.komi-catalog-chip.active {background:#3a1b25;border-color:#d13b54;color:white}
+.komi-catalog-clear {padding:9px 15px;border-radius:12px;font-size:11px}
+.catalog-filters-box {
+    border:1px solid #292b31!important;
+    background:rgba(20,21,26,.78)!important;
+    padding:16px!important;
+    border-radius:19px!important;
+    gap:12px!important;
+    margin-bottom:18px!important;
+}
+.catalog-filters-box .form-control {border-radius:11px!important;padding:11px!important;font-size:12px!important;background:#101116!important}
+.catalog-filters-box label {font-size:11px!important;color:#b3b4bc!important;margin-bottom:7px!important}
+.komi-catalog-status {display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 18px;color:#9e9fa8;font-size:12px}
+.komi-catalog-count {font-weight:700;color:#d6d6db}
+.komi-catalog-empty {grid-column:1/-1;min-height:180px;display:grid;place-items:center;align-content:center;gap:9px;border:1px dashed #3e3039;background:#111116;border-radius:20px;text-align:center;padding:24px;color:#c9c9cf}
+.komi-catalog-empty p {font-size:12px;color:#9999a5}
+#watchModal .player-wrapper {border-radius:20px!important}
+#watchModal .players-switcher-bar {background:rgba(18,18,23,.85)!important}
+#watchModal .crunchy-episodes-section {background:rgba(20,20,26,.86)!important}
+@media(max-width:1050px) {
+    .komi-release-list {grid-template-columns:1fr}
+    .hero-slider-container {height:405px!important}
+    .komi-spotlight-metrics {width:100%}
+}
+@media(max-width:680px) {
+    .app-layout {padding:18px 12px 88px!important}
+    main#mainContainer {gap:23px}
+    .komi-spotlight-heading h1 {font-size:25px}
+    .komi-spotlight-metrics span {padding:7px 9px}
+    .komi-fastnav {display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .komi-fastnav button {padding:11px 8px;font-size:11px}
+    .hero-slider-container {height:380px!important;border-radius:21px!important}
+    .hero-slide {padding:24px!important;justify-content:center!important}
+    .hero-slide h1 {font-size:26px!important}
+    .hero-slide p {font-size:11px!important;-webkit-line-clamp:2}
+    .hero-meta span {padding:4px 7px!important}
+    .hero-slider-arrow {width:31px;height:31px}
+    .hero-arrow-prev {left:6px}.hero-arrow-next {right:6px}
+    .hero-dots {right:16px;bottom:10px}
+    .anime-grid {gap:11px!important}
+    .anime-info {padding:10px!important}
+    .komi-release-row {grid-template-columns:70px minmax(0,1fr) 52px;gap:6px;padding:10px!important}
+    .komi-catalog-header {align-items:flex-start}
+    .catalog-filters-box {grid-template-columns:1fr 1fr!important;gap:9px!important;padding:12px!important}
+    .komi-catalog-search input {padding:13px 12px 13px 42px!important}
+    .komi-catalog-chip {padding:8px 11px}
+}
+@media(prefers-reduced-motion:reduce) {
+    .anime-card,.anime-card .anime-poster,.komi-fastnav button {transition:none!important}
+}
+
 </style>
 </head>
 <body>
