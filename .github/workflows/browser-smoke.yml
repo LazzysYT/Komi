@@ -1,6 +1,15 @@
 name: Komi browser smoke tests
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - 'index.html'
+      - 'watch-party.js'
+      - 'anicoin.js'
+      - 'anime-details.js'
+      - 'supabase/migrations/**'
+      - 'scripts/**'
+      - '.github/workflows/browser-smoke.yml'
   push:
     branches: [main]
     paths:
@@ -22,6 +31,21 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Check JavaScript syntax before browser tests
+        run: |
+          node --check watch-party.js
+          node --check anicoin.js
+          node --check anime-details.js
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const vm = require('node:vm');
+          const html = fs.readFileSync('index.html', 'utf8');
+          const scripts = [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
+          for (const [index, match] of scripts.entries()) {
+            if (match[1].trim()) new vm.Script(match[1], { filename: 'index.html:inline:' + index });
+          }
+          console.log('Checked', scripts.length, 'inline script tags');
+          NODE
       - name: Install browser testing tools
         run: |
           npm install --no-save playwright@1.58.2
