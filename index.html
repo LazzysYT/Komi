@@ -2705,6 +2705,12 @@ const adminList = []; // No client-side username grants administrator privileges
 
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
+                if (!catalogInitialLoadComplete) {
+                    container.innerHTML = catalogInitialLoadFailed
+                      ? '<section class="komi-catalog-empty" role="status"><h1>Не удалось загрузить каталог</h1><button class="komi-catalog-clear" onclick="loadDataFromCloud()">Повторить загрузку</button></section>'
+                      : '<section class="komi-catalog-empty" role="status" aria-live="polite"><h1>Загружаем каталог аниме…</h1><p>Подборки появятся после загрузки.</p></section>';
+                    return;
+                }
                 const genres = ['Все', ...availableGenresList];
                 const years = ['Все', ...[...new Set(animeList.map(a => komiAnimeYear(a)).filter(Boolean))].sort((a,b) => Number(b) - Number(a))];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA', 'ONA', 'Special'];
@@ -2762,7 +2768,8 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
                 `;
             } else if (currentView === 'shop') {
-                renderAniCoinShop(container);
+                if (typeof renderAniCoinShop === 'function') renderAniCoinShop(container);
+                else container.innerHTML = '<section class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
             } else if (currentView === 'profile') {
                 if (slideInterval) clearInterval(slideInterval);
                 renderProfileView(container);
