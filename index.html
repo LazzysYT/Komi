@@ -1566,6 +1566,30 @@ body > header {
     .komi-profile-v2 .profile-header-card { grid-template-columns: minmax(0, 1fr); justify-items: start; }
     .komi-profile-v2 .profile-settings-box .form-control { min-height: 42px; }
 }
+
+/* Komi partners page */
+.komi-partners-page{display:flex;flex-direction:column;gap:24px;max-width:1150px;width:100%;margin:0 auto}
+.komi-partners-hero{padding:clamp(26px,5vw,58px);border:1px solid #303030;border-radius:28px;background:radial-gradient(circle at 100% 0%,#292929,transparent 42%),#111}
+.komi-partners-eyebrow{color:#bdbdbd;font-size:11px;letter-spacing:2px;font-weight:800}
+.komi-partners-hero h1{font-size:clamp(28px,3.2vw,43px);letter-spacing:-1px;margin:14px 0;color:#fff}
+.komi-partners-hero p{max-width:650px;color:#b3b3b3;font-size:14px;line-height:1.8}
+.komi-partners-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.komi-partners-panel{min-width:0;padding:27px;border:1px solid #303030;background:#141414;border-radius:22px}
+.komi-partners-symbol{display:grid;place-items:center;width:48px;height:48px;border:1px solid #474747;border-radius:15px;background:#222;color:#fff;font-size:24px;margin-bottom:19px}
+.komi-partners-panel h2{color:#fff;font-size:20px;margin-bottom:10px}
+.komi-partners-panel p{color:#aaa;line-height:1.75;font-size:13px}
+.komi-partners-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:21px}
+.komi-partners-actions a{text-decoration:none;padding:12px 17px;border:1px solid #444;border-radius:13px;background:#252525;color:#f4f4f4;font-weight:700;font-size:12px}
+.komi-partners-actions a:hover{background:#353535;border-color:#bbb}
+@media(max-width:680px){
+.komi-partners-grid{grid-template-columns:1fr}
+.komi-partners-panel{padding:21px}
+.komi-side-nav{justify-content:flex-start;overflow-x:auto;scrollbar-width:none}
+.komi-side-nav::-webkit-scrollbar{display:none}
+.komi-side-links{gap:4px;flex:0 0 auto}
+.komi-side-bottom{gap:4px;margin-left:4px;flex:0 0 auto}
+.komi-side-button{width:41px;height:41px}
+}
 </style>    <link rel="stylesheet" href="./cinema-ui.css">
     <link rel="stylesheet" href="./mono-ui.css">
 </head>
@@ -1638,6 +1662,7 @@ body > header {
             <button class="komi-side-button" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме" aria-label="Случайное аниме"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg><span>Случайное</span></button>
             <button id="sideFriendsBtn" class="komi-side-button" onclick="playSound(); toggleFriendsDrawer()" title="Люди и друзья" aria-label="Люди и друзья" aria-expanded="false" aria-controls="komiFriendsDrawer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg><span>Друзья</span></button>
             <button class="komi-side-button" onclick="playSound(); openWatchPartyHub()" title="Watch Party" aria-label="Watch Party"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Party</span></button>
+            <button id="sidePartnersBtn" class="komi-side-button" onclick="playSound(); navigate('partners')" title="Партнёры" aria-label="Партнёры"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="8.5" height="10" rx="2"/><rect x="13" y="7" width="8.5" height="10" rx="2"/><path d="M10.5 12h3"/></svg><span>Партнёры</span></button>
         </div>
         <div class="komi-side-bottom">
             <button class="komi-side-button" onclick="playSound(); toggleNotifications()" title="Уведомления" aria-label="Уведомления"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg><span>Уведомления</span></button>
@@ -1792,7 +1817,14 @@ body > header {
         let _supabase = null;
         try {
             if (window.supabase) {
-                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                _supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+                    auth: {
+                        // Keep the default storage key so existing sessions are not discarded.
+                        persistSession: true,
+                        autoRefreshToken: true,
+                        detectSessionInUrl: true
+                    }
+                });
             }
         } catch(e) {}
 
@@ -1922,7 +1954,7 @@ body > header {
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
-        let currentView = location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : 'home';
+        let currentView = location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : location.hash === '#partners' ? 'partners' : 'home';
         let profileTargetUser = null;
         let profileActiveTab = 'Просмотрено';
         let profilePageSection = 'overview';
@@ -2520,7 +2552,7 @@ async function loadDataFromCloud(attempt = 0) {
         function navigate(view) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
-            const route = view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : '';
+            const route = view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : view === 'partners' ? '#partners' : '';
             if (location.hash !== route) history.replaceState(null, '', location.pathname + location.search + route);
             render();
             renderHeaderUser();
@@ -2798,6 +2830,31 @@ const adminList = []; // No client-side username grants administrator privileges
                         ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
                     </div>
                 `;
+            } else if (currentView === 'partners') {
+                container.innerHTML = `
+                    <section class="komi-partners-page" aria-labelledby="komiPartnersTitle">
+                        <div class="komi-partners-hero">
+                            <span class="komi-partners-eyebrow">KOMI ANIME HUB · COMMUNITY</span>
+                            <h1 id="komiPartnersTitle">Партнёры Komi Anime</h1>
+                            <p>Здесь будут представлены проекты и сообщества, с которыми мы сотрудничаем. Мы открыты к интересным предложениям для развития аниме-сообщества.</p>
+                        </div>
+                        <div class="komi-partners-grid">
+                            <article class="komi-partners-panel">
+                                <span class="komi-partners-symbol" aria-hidden="true">◇</span>
+                                <h2>Наши партнёры</h2>
+                                <p>Пока опубликованных партнёров нет. Когда сотрудничество будет подтверждено, здесь появятся названия и ссылки.</p>
+                            </article>
+                            <article class="komi-partners-panel">
+                                <span class="komi-partners-symbol" aria-hidden="true">✧</span>
+                                <h2>Сотрудничество</h2>
+                                <p>Мы рады новым идеям и совместным проектам. Следите за объявлениями в официальном сообществе Komi Anime.</p>
+                                <div class="komi-partners-actions">
+                                    <a href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer">Наш Telegram</a>
+                                    <a href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer">Наш TikTok</a>
+                                </div>
+                            </article>
+                        </div>
+                    </section>`;
             } else if (currentView === 'shop') {
                 if (typeof renderAniCoinShop === 'function') renderAniCoinShop(container);
                 else container.innerHTML = '<section class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
@@ -4068,11 +4125,19 @@ const adminList = []; // No client-side username grants administrator privileges
                 console.error('Google session:', error);
             }
         }
+        // Keep async profile loads in order when OAuth and initial-session events overlap.
+        let komiSessionRestoreQueue = Promise.resolve();
+        function queueKomiSessionRestore() {
+            komiSessionRestoreQueue = komiSessionRestoreQueue
+                .catch(error => console.warn('Previous session restore:', error))
+                .then(() => restoreGoogleSession());
+            return komiSessionRestoreQueue;
+        }
         if (_supabase) {
             _supabase.auth.onAuthStateChange((event) => {
-                if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
-                    // Avoid calling Supabase APIs synchronously inside its auth callback.
-                    Promise.resolve().then(() => restoreGoogleSession());
+                if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                    // Never call Supabase APIs synchronously inside an auth callback.
+                    setTimeout(() => queueKomiSessionRestore(), 0);
                 }
             });
         }
@@ -4112,7 +4177,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 const { error } = await _supabase.auth.signInWithPassword({ email: username, password: passwordInput });
                 if (error) { alert('Не удалось войти: ' + error.message); return; }
                 currentUser = null;
-                await restoreGoogleSession();
+                await queueKomiSessionRestore();
                 return;
             }
             if (!username || !passwordInput) return;
@@ -4148,8 +4213,8 @@ const adminList = []; // No client-side username grants administrator privileges
                 return;
             }
             currentUser = null;
-            await restoreGoogleSession();
-            alert('Аккаунт Supabase создан. Старый аккаунт Komi не удалён.');
+            await queueKomiSessionRestore();
+            alert('Аккаунт Komi Anime создан. Старый аккаунт Komi не удалён.');
             return;
         }
 
@@ -4826,12 +4891,14 @@ const adminList = []; // No client-side username grants administrator privileges
                 else navigate('shop');
             } else if (hash === '#catalog') {
                 if (currentView !== 'catalog') { currentView='catalog'; render(); }
+            } else if (hash === '#partners') {
+                if (currentView !== 'partners') { currentView='partners'; render(); }
             } else if (hash === '#profile') {
                 if (currentUser) {
                     profileTargetUser=currentUser.username;
                     if (currentView !== 'profile') { currentView='profile'; render(); }
                 } else openAuthModal('login');
-            } else if (!hash && ['shop','catalog','profile'].includes(currentView)) {
+            } else if (!hash && ['shop','catalog','profile','partners'].includes(currentView)) {
                 currentView='home';
                 render();
             }
@@ -4843,8 +4910,12 @@ const adminList = []; // No client-side username grants administrator privileges
         // Broadcast dates can load in parallel with the 6,000+ item catalog.
         loadKomiEpisodeSchedule();
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
-        restoreGoogleSession().finally(() => {
+        queueKomiSessionRestore().finally(() => {
             if (location.hash === '#profile') applyKomiHashRoute();
+        });
+        // Restore the stored session when returning from browser back/forward cache.
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) queueKomiSessionRestore();
         });
     </script>
     <script src="./accessibility.js"></script>
