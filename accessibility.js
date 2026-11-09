@@ -53,6 +53,10 @@
         }
         drawer.toggleAttribute('inert',!opened);
         drawer.setAttribute('aria-hidden',String(!opened));
+        if (opened && !drawerOpen) requestAnimationFrame(() => {
+            if (drawer.classList.contains('open') && !drawer.contains(document.activeElement))
+                drawer.querySelector('#komiFriendsSearch')?.focus({preventScroll:true});
+        });
         drawerOpen=opened;
     }
     if (drawer) {
