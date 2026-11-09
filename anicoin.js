@@ -45,6 +45,7 @@ function renderAniCoinShop(container) {
     if (!container) return;
     const owner = currentUser?.authUserId;
     const wallet = owner && owner === aniCoinOwner ? aniCoinWallet : null;
+    const history = wallet && Array.isArray(wallet.history) ? wallet.history : [];
     container.innerHTML = `
         <section class="anicoin-shop" aria-labelledby="anicoin-title">
             <p class="komi-spotlight-eyebrow">Komi Anime</p>
@@ -57,6 +58,14 @@ function renderAniCoinShop(container) {
                 <div><label for="anicoin-progress">До следующего коина · ${Math.floor(wallet.seconds / 60)} мин ${wallet.seconds % 60} сек из 20 мин</label>
                     <progress id="anicoin-progress" value="${wallet.seconds}" max="1200"></progress></div>
             </div>` : ''}
+            ${wallet ? `<section class="anicoin-history" style="margin-top:20px">
+                <h2 style="font-size:16px;margin-bottom:10px">История начислений</h2>
+                ${history.length ? `<ul style="list-style:none;padding:0;margin:0">
+                    ${history.map(entry => `<li style="display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid #323039">
+                        <span>Просмотр · ${escapeFriendHtml(new Date(entry.at).toLocaleString("ru-RU"))}</span>
+                        <strong style="color:#f16a77">+${Math.max(0, Number(entry.delta) || 0)} AniCoin</strong>
+                    </li>`).join("")}</ul>` : `<p style="color:var(--text-muted)">Новых начислений пока нет. История ведётся с момента включения кошелька.</p>`}
+            </section>` : ""}
             <p role="status">${escapeFriendHtml(aniCoinStatus)}</p>
             ${owner && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" onclick="openAniCoinShop()">Повторить</button>' : ''}
             <div class="anicoin-item"><h2>Товаров пока нет</h2><p>Заработанные AniCoin видны в кошельке.</p></div>
