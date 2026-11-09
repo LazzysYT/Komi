@@ -1500,6 +1500,22 @@ body > header {
     }
     .komi-discovery-row .anime-card { scroll-snap-align: start; }
 }
+</style><style>
+.anicoin-shop { max-width: 1050px; margin: 0 auto; padding: clamp(16px, 4vw, 48px) 0; }
+.anicoin-shop h1 { font-size: clamp(30px, 5vw, 56px); margin: 10px 0; }
+.anicoin-shop p { color: var(--text-muted); line-height: 1.65; }
+.anicoin-shop h2 { margin: 32px 0 16px; }
+.anicoin-wallet, .anicoin-item { padding: clamp(16px, 3vw, 24px); background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; }
+.anicoin-wallet { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 20px; margin: 24px 0 12px; }
+.anicoin-wallet strong { display: block; font-size: 28px; margin-top: 5px; }
+.anicoin-wallet label { color: var(--text-muted); }
+.anicoin-wallet progress { display: block; width: 100%; margin-top: 12px; accent-color: var(--primary); }
+.anicoin-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 14px; }
+.anicoin-item h3 { margin: 14px 0 4px; }
+.anicoin-item button { margin-top: 16px; min-height: 42px; }
+.anicoin-item button:disabled { opacity: .55; cursor: default; }
+.anicoin-symbol { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 1px solid #742836; border-radius: 50%; color: #ff8093; font-weight: 800; }
+[data-anicoin-badge][hidden] { display: none !important; }
 </style></head>
 <body>
 
@@ -1535,7 +1551,7 @@ body > header {
 
             <div class="nav-actions">
                 <button class="action-icon-btn" id="notifBellBtn" onclick="playSound(); toggleNotifications()" title="Уведомления">
-                    🔔
+                    ♧
                     <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
                 </button>
                 <div class="notification-dropdown" id="notifDropdown">
@@ -1550,10 +1566,10 @@ body > header {
 
                 <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
                 <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
-                <button class="action-icon-btn" id="headerRandomBtn" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме">🎲</button>
-                <button class="action-icon-btn" id="headerPartyBtn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(255,69,79,0.12); border-color:rgba(255,69,79,0.3); color:var(--primary);" title="Watch Party">🎉 Party</button>
+                <button class="action-icon-btn" id="headerRandomBtn" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме">◇</button>
+                <button class="action-icon-btn" id="headerPartyBtn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(255,69,79,0.12); border-color:rgba(255,69,79,0.3); color:var(--primary);" title="Watch Party"> Party</button>
                 
-                <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="display: none;" title="Админка">⚙️</button>
+                <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="display: none;" title="Админка"></button>
                 <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="display: none;" title="Добавить">+ Добавить</button>
 
                 <div id="userHeaderArea"></div>
@@ -1566,6 +1582,7 @@ body > header {
         <div class="komi-side-links">
             <button id="sideHomeBtn" class="komi-side-button" onclick="playSound(); navigate('home')" title="Главная" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10m5 10v-7h6v7"/></svg><span>Главная</span></button>
             <button id="sideCatalogBtn" class="komi-side-button" onclick="playSound(); navigate('catalog')" title="Каталог" aria-label="Каталог"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Каталог</span></button>
+            <button id="sideShopBtn" class="komi-side-button" onclick="openAniCoinShop()" title="Магазин AniCoin" aria-label="Магазин AniCoin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 13H5L4 8Zm5 1V6a3 3 0 0 1 6 0v3"/></svg><span>Магазин</span></button>
             <button class="komi-side-button" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме" aria-label="Случайное аниме"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg><span>Случайное</span></button>
             <button id="sideFriendsBtn" class="komi-side-button" onclick="playSound(); toggleFriendsDrawer()" title="Люди и друзья" aria-label="Люди и друзья" aria-expanded="false" aria-controls="komiFriendsDrawer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg><span>Друзья</span></button>
             <button class="komi-side-button" onclick="playSound(); openWatchPartyHub()" title="Watch Party" aria-label="Watch Party"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Party</span></button>
@@ -1577,7 +1594,7 @@ body > header {
     </aside>
     <div id="komiFriendsBackdrop" class="komi-friends-backdrop" onclick="closeFriendsDrawer()"></div>
     <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true">
-        <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2>👥 Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
+        <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
         <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." oninput="renderFriendsDrawer()" autocomplete="off" aria-label="Поиск по нику"></div>
         <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" onclick="setFriendsDrawerTab('all')">Все пользователи</button><button id="komiFriendsMyTab" onclick="setFriendsDrawerTab('friends')">Мои друзья</button></div>
         <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
@@ -1595,8 +1612,8 @@ body > header {
             <div style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px;">
                 <div style="display: flex; gap: 6px;">
                     <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (Shikimori)...">
-                    <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()">🔍 Найти</button>
-                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()">🔥 Топ</button>
+                    <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()"> Найти</button>
+                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()"> Топ</button>
                 </div>
                 <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; padding: 4px;"></div>
             </div>
@@ -1692,7 +1709,7 @@ body > header {
 
     <div class="modal-overlay" id="randomRouletteModal">
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
-            <h3 style="margin-bottom: 14px; font-size: 15px;">🎲 Выбираем аниме...</h3>
+            <h3 style="margin-bottom: 14px; font-size: 15px;">◇ Выбираем аниме...</h3>
             <div id="rouletteContainer" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
                 <img id="rouletteImage" src="" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
@@ -1832,7 +1849,7 @@ body > header {
         let currentUser = safeParse(localStorage.getItem('komi_current_user'), null);
         let registeredUsers = safeParse(localStorage.getItem('komi_users_db'), {});
         let userProfiles = { 
-            'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ⭐', regDate: '05 ноября 2026 года' }
+            'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ★', regDate: '05 ноября 2026 года' }
         };
         let userFavorites = safeParse(localStorage.getItem('komi_favorites'), {});
         let userWatchHistory = safeParse(localStorage.getItem('komi_history'), {});
@@ -2113,7 +2130,7 @@ async function loadDataFromCloud(attempt = 0) {
                 return;
             }
             if (!unique.length) {
-                list.innerHTML = '<div class="komi-friends-empty"><span>👥</span><strong>'+(query ? 'Никого не найдено' : komiFriendsTab === 'friends' ? 'Пока нет друзей' : 'Пользователей пока нет')+'</strong><p>'+(query ? 'Попробуй другой ник.' : 'Пользователи появятся здесь после создания профиля.')+'</p></div>';
+                list.innerHTML = '<div class="komi-friends-empty"><span></span><strong>'+(query ? 'Никого не найдено' : komiFriendsTab === 'friends' ? 'Пока нет друзей' : 'Пользователей пока нет')+'</strong><p>'+(query ? 'Попробуй другой ник.' : 'Пользователи появятся здесь после создания профиля.')+'</p></div>';
                 return;
             }
             list.innerHTML = '<div class="komi-friends-count">Найдено: '+unique.length+'</div>'+unique.map((name,index)=>{
@@ -2122,7 +2139,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.includes(name);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?'⏳ Заявка отправлена':'Участник Komi')+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>':'<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>')+'</div>';
+                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':'Участник Komi')+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>':'<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
         }
@@ -2378,7 +2395,7 @@ async function loadDataFromCloud(attempt = 0) {
         function komiIntroMarkup(){
             const currentYearCount=animeList.filter(a=>komiAnimeYear(a)==='2026').length;
             return '<div class="komi-spotlight-heading"><div><div class="komi-spotlight-eyebrow">KOMI ANIME HUB · ТВОЯ БИБЛИОТЕКА</div><h1>Выбирай историю на сегодня</h1><p>Свежие серии, любимые жанры и подборки для любого настроения — всё в одном месте.</p></div><div class="komi-spotlight-metrics"><span><strong>'+animeList.length.toLocaleString('ru-RU')+'</strong> аниме в каталоге</span><span><strong>'+currentYearCount+'</strong> тайтлов 2026</span></div></div>'+
-                '<nav class="komi-fastnav" aria-label="Быстрые разделы"><button class="is-prominent" onclick="showKomiYear(\'2026\')">🔥 Новинки 2026</button><button onclick="navigate(\'catalog\')">▦ Весь каталог</button><button onclick="document.getElementById(\'komiCalendarSection\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})">📅 Новые серии</button><button onclick="randomAnimeWithAnimation()">🎲 Случайное аниме</button></nav>';
+                '<nav class="komi-fastnav" aria-label="Быстрые разделы"><button class="is-prominent" onclick="showKomiYear(\'2026\')"> Новинки 2026</button><button onclick="navigate(\'catalog\')">▦ Весь каталог</button><button onclick="document.getElementById(\'komiCalendarSection\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})"> Новые серии</button><button onclick="randomAnimeWithAnimation()">◇ Случайное аниме</button></nav>';
         }
 
         let catalogVisibleCount = 48;
@@ -2387,6 +2404,8 @@ async function loadDataFromCloud(attempt = 0) {
         function navigate(view) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
+            if (view === 'shop') history.replaceState(null, '', '#shop');
+            else if (location.hash === '#shop') history.replaceState(null, '', location.pathname + location.search);
             render();
             renderHeaderUser();
         }
@@ -2511,10 +2530,10 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (currentUser) {
                     const history = Object.entries(komiEpisodeProgress).filter(([key])=>key.startsWith(currentUser.username+'_')).sort((a,b)=>(b[1].updated||0)-(a[1].updated||0)).slice(0,8);
                     const items=history.map(([key,p])=>({anime:animeList.find(a=>String(a.id)===key.slice(currentUser.username.length+1)),p})).filter(x=>x.anime);
-                    if (items.length) continueWatchingHtml='<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">▶ Продолжить просмотр</h2></div><div class="komi-progress-grid">'+items.map(({anime,p})=>'<button class="komi-progress-card" onclick="resumeKomiAnime(\''+anime.id+'\')"><img src="'+escapeFriendHtml(anime.poster||'')+'" loading="lazy" alt=""><span><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small></span></button>').join('')+'</div></section>';
+                    if (items.length) continueWatchingHtml='<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">▷ Продолжить просмотр</h2></div><div class="komi-progress-grid">'+items.map(({anime,p})=>'<button class="komi-progress-card" onclick="resumeKomiAnime(\''+anime.id+'\')"><img src="'+escapeFriendHtml(anime.poster||'')+'" loading="lazy" alt=""><span><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small></span></button>').join('')+'</div></section>';
                 }
                 const komiRecommended = komiRecommendations();
-                const komiRecommendedHtml = komiRecommended.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">✨ Тебе понравится</h2></div><div class="anime-grid">'+komiRecommended.map(a=>renderCard(a)).join('')+'</div></section>' : '';
+                const komiRecommendedHtml = komiRecommended.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Тебе понравится</h2></div><div class="anime-grid">'+komiRecommended.map(a=>renderCard(a)).join('')+'</div></section>' : '';
 
                 container.innerHTML = `
                     <div class="top-hero-section-grid">
@@ -2526,7 +2545,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 ${sliderItems.map((anime, idx) => `
                                     <div class="hero-slide ${idx === currentSlideIndex ? 'active' : ''}" style="background-image: url(&quot;${animeArtwork(anime)}&quot;);">
                                         <div class="hero-meta">
-                                            <span>⭐ ${anime.shikiRating || '8.5'} Shikimori</span>
+                                            <span>★ ${anime.shikiRating || '8.5'} Shikimori</span>
                                             <span>${(anime.genres || [anime.genre || 'Экшен']).join(', ')}</span>
                                             <span>${anime.year || '2026'}</span>
                                             <span>${anime.type || 'Сериал'}</span>
@@ -2534,9 +2553,9 @@ const adminList = []; // No client-side username grants administrator privileges
                                         <h1>${escapeFriendHtml(anime.title)}</h1>
                                         <p>${cleanAnimeDescription(anime.desc) || 'Описание пока не добавлено.'}</p>
                                         <div class="hero-buttons">
-                                            <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">▶ Смотреть сейчас</button>
-                                            <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')">ℹ Подробнее</button>
-                                            <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')">🎉 Party</button>
+                                            <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">▷ Смотреть сейчас</button>
+                                            <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')"> Подробнее</button>
+                                            <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')"> Party</button>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -2572,7 +2591,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     <div>
                         <div class="section-header">
-                            <h2 class="section-title">🌟 Лучшие по рейтингу</h2>
+                            <h2 class="section-title"> Лучшие по рейтингу</h2>
                             <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
@@ -2582,7 +2601,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     <div>
                         <div class="section-header">
-                            <h2 class="section-title">🎬 Лучшие фильмы</h2>
+                            <h2 class="section-title"> Лучшие фильмы</h2>
                             <button class="section-see-all" onclick="playSound(); openKomiCollection('movies')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
@@ -2654,6 +2673,8 @@ const adminList = []; // No client-side username grants administrator privileges
                         ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
                     </div>
                 `;
+            } else if (currentView === 'shop') {
+                renderAniCoinShop(container);
             } else if (currentView === 'profile') {
                 if (slideInterval) clearInterval(slideInterval);
                 renderProfileView(container);
@@ -2716,7 +2737,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
                 avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`, 
-                status: 'Отаку ⭐', 
+                status: 'Отаку ★', 
                 regDate: '05 ноября 2026 года' 
             };
             // Recover existing avatars saved before cloud storage was introduced.
@@ -2802,20 +2823,21 @@ const adminList = []; // No client-side username grants administrator privileges
                             </div>
                             
                             <div class="profile-badges-row">
-                                <div class="profile-badge-level">Уровень ${calculatedLevel} ⚡</div>
-                                <div class="profile-badge-item">🎯 Статус: ${safeProfileText(p.status)}</div>
+                                ${isMe ? `<span class="profile-badge-item" data-anicoin-badge ${typeof aniCoinBadge === 'function' && aniCoinBadge() ? '' : 'hidden'}>${typeof aniCoinBadge === 'function' ? escapeFriendHtml(aniCoinBadge()) : ''}</span>` : ''}
+                                <div class="profile-badge-level">Уровень ${calculatedLevel} </div>
+                                <div class="profile-badge-item"> Статус: ${safeProfileText(p.status)}</div>
                             </div>
 
                             <div class="komi-level-progress"><label>До следующего уровня <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
                             <div class="profile-reg-date">Дата регистрации: <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
                             <div class="komi-profile-actions">
-                                ${isMe ? '<button class="komi-profile-action" onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')">⚙ Настройки</button>' : ''}
+                                ${isMe ? '<button class="komi-profile-action" onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
                                 <button class="komi-profile-action" onclick="navigator.clipboard?.writeText(location.href).then(()=>alert('Ссылка скопирована')).catch(()=>alert('Не удалось скопировать ссылку'))">↗ Поделиться</button>
                             </div>
 
                             ${isMe ? `
                             <div class="profile-settings-box">
-                                <h4>⚙️ Настройки профиля</h4>
+                                <h4> Настройки профиля</h4>
                                 <label style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
                                 <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
                                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
@@ -2836,38 +2858,38 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     <div class="profile-stats-grid">
                         <div class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">👁</div>
+                            <div class="stat-icon"></div>
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
                         </div>
                         <div class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">📺</div>
+                            <div class="stat-icon"></div>
                             <div class="stat-num">${statsCounts['В планах']}</div>
                             <div class="stat-label">В планах</div>
                         </div>
                         <div class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">🎬</div>
+                            <div class="stat-icon"></div>
                             <div class="stat-num">${statsCounts['Смотрю']}</div>
                             <div class="stat-label">Смотрю</div>
                         </div>
                         <div class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">⏭</div>
+                            <div class="stat-icon">→</div>
                             <div class="stat-num">${statsCounts['Отложено']}</div>
                             <div class="stat-label">Отложено</div>
                         </div>
                         <div class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">❌</div>
+                            <div class="stat-icon">×</div>
                             <div class="stat-num">${statsCounts['Брошено']}</div>
                             <div class="stat-label">Брошено</div>
                         </div>
                         <div class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">❤️</div>
+                            <div class="stat-icon">♡</div>
                             <div class="stat-num">${favoritesCount}</div>
                             <div class="stat-label">Любимое</div>
                         </div>
                     </div>
 
-                    <section class="komi-achievement-panel"><div><strong>🏅 Уровень ${komiAchievements(username).level}</strong><span>${komiAchievements(username).xp} XP · ${komiAchievements(username).watched} просмотрено</span></div><div class="komi-achievement-track"><i style="width:${komiAchievements(username).xp%300/3}%"></i></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span>🎯 Первое достижение впереди</span>'}</div></section>
+                    <section class="komi-achievement-panel"><div><strong> Уровень ${komiAchievements(username).level}</strong><span>${komiAchievements(username).xp} XP · ${komiAchievements(username).watched} просмотрено</span></div><div class="komi-achievement-track"><i style="width:${komiAchievements(username).xp%300/3}%"></i></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span> Первое достижение впереди</span>'}</div></section>
                     <nav class="komi-profile-tabs" aria-label="Разделы профиля">
                         <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" onclick="profilePageSection='overview';render()">Профиль</button>
                         <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" onclick="profilePageSection='anime';render()">Аниме</button>
@@ -2899,7 +2921,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border);">
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
                             ${customFolderNames.map(fname => `
-                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab='${fname}'; render()">📁 ${fname} (${customFolders[fname].length})</button>
+                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab='${fname}'; render()"> ${fname} (${customFolders[fname].length})</button>
                             `).join('')}
                             ${isMe ? `
                                 <div style="display:flex; gap:5px; margin-left:auto; align-items:center;">
@@ -2921,7 +2943,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
                             ${searchedList.length === 0 ? `
                                 <div class="empty-state">
-                                    <div style="font-size:26px; margin-bottom:6px;">📭</div>
+                                    <div style="font-size:26px; margin-bottom:6px;"></div>
                                     <h3 style="font-size:13px; margin-bottom:3px;">В этой категории пока пусто</h3>
                                     <p style="font-size:11px; color:var(--text-muted);">Добавляйте аниме из каталога или при просмотре.</p>
                                 </div>
@@ -2933,11 +2955,11 @@ const adminList = []; // No client-side username grants administrator privileges
                         </div>
 
                         <div class="profile-sidebar-menu">
-                            <h3 style="font-size:12px; font-weight:700; margin-bottom:4px;">📌 Статистика</h3>
-                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span>👁 Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
-                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Любимые'; render()"><span>❤️ Любимое</span> <b>${favoritesCount}</b></div>
-                            <div class="profile-menu-item"><span>👥 Друзья</span> <b>${myFriends.length}</b></div>
-                            <div class="profile-menu-item"><span>💬 Комментарии</span> <b>${userCommentsCount}</b></div>
+                            <h3 style="font-size:12px; font-weight:700; margin-bottom:4px;"> Статистика</h3>
+                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span> Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
+                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Любимые'; render()"><span>♡ Любимое</span> <b>${favoritesCount}</b></div>
+                            <div class="profile-menu-item"><span> Друзья</span> <b>${myFriends.length}</b></div>
+                            <div class="profile-menu-item"><span> Комментарии</span> <b>${userCommentsCount}</b></div>
                         </div>
                     </div>
 
@@ -2945,7 +2967,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map(friend=>`<button class="komi-profile-friend" onclick="openProfile('${friend}')">${friend}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
                     <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
                     <div class="profile-wall-section">
-                        <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;">💬 Стена сообщений</h3>
+                        <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
                         <div style="display:flex; gap:6px; margin-bottom:14px;">
                             <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall('${username}')">
                             <button class="btn-glow" style="padding: 7px 16px;" onclick="playSound(); postToProfileWall('${username}')">Отпр.</button>
@@ -2964,7 +2986,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                             <img src="${senderAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                             <span>${escapeFriendHtml(m.author)}</span>
                                             <span style="font-size:10px; color:var(--text-muted); margin-left:auto; font-weight:normal;">${escapeFriendHtml(m.time)}</span>
-                                            ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">🗑️</button>` : ''}
+                                            ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">Удалить</button>` : ''}
                                         </div>
                                         <div class="wall-message-text">${escapeFriendHtml(m.text)}</div>
                                     </div>
@@ -3129,7 +3151,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 '<div class="anime-poster-box">'+
                     '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'./anime-artwork.svg\'">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e26,#101015);color:#92929F"><span style="font-size:30px;font-weight:800;color:#f03d50">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
-                    '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▶ Смотреть</span></div>'+
+                    '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
                 '<div class="anime-info"><div class="anime-title" title="'+name+'">'+name+'</div>'+
                   '<div class="komi-card-meta">'+(year?'<span>'+year+'</span>':'')+'<span>'+type+'</span>'+(fresh?'<span class="komi-new-ep">● Новая серия</span>':'')+'</div>'+
@@ -3337,7 +3359,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
                             <img src="${a.poster}" style="width:20px; height:28px; object-fit:cover; border-radius:3px;">
                             <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${a.title}</b></div>
-                            <span style="font-size:10px; color:#fbbf24;">⭐ ${a.shikiRating || '8.5'}</span>
+                            <span style="font-size:10px; color:#fbbf24;">★ ${a.shikiRating || '8.5'}</span>
                         </div>
                     `;
                 });
@@ -3423,7 +3445,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 <div style="font-size: 11px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                     ${anime.russian || anime.name} (${anime.aired_on ? anime.aired_on.split('-')[0] : 'N/A'})
                                 </div>
-                                <span style="font-size: 10px; color: #fbbf24;">⭐ ${anime.score || 'N/A'}</span>
+                                <span style="font-size: 10px; color: #fbbf24;">★ ${anime.score || 'N/A'}</span>
                             </div>
                         `;
                     }).join('');
@@ -3488,10 +3510,10 @@ const adminList = []; // No client-side username grants administrator privileges
             const modal = document.getElementById('adminModal');
             document.getElementById('adminModalContent').innerHTML = `
                 <button class="modal-close" onclick="playSound(); document.getElementById('adminModal').classList.remove('active')">&times;</button>
-                <h2 style="margin-bottom: 12px; font-size: 18px;">⚙️ Панель администратора</h2>
+                <h2 style="margin-bottom: 12px; font-size: 18px;"> Панель администратора</h2>
                 <div style="display:flex; gap:6px; margin-bottom:14px; flex-wrap:wrap;">
                     <button class="btn-glow" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal()">+ Добавить аниме</button>
-                    <button class="btn-secondary" onclick="playSound(); exportBackup()">📥 Скачать JSON</button>
+                    <button class="btn-secondary" onclick="playSound(); exportBackup()"> Скачать JSON</button>
                 </div>
                 <table class="admin-table">
                     <thead><tr><th>Название</th><th>Рейтинг</th><th>Эпизодов</th><th>Действия</th></tr></thead>
@@ -3499,11 +3521,11 @@ const adminList = []; // No client-side username grants administrator privileges
                         ${animeList.length === 0 ? `<tr><td colspan="4" style="text-align:center; color:var(--text-muted);">Список пуст</td></tr>` : animeList.map(a => `
                             <tr>
                                 <td><b>${a.title}</b></td>
-                                <td>⭐ ${a.shikiRating || '8.5'}</td>
+                                <td>★ ${a.shikiRating || '8.5'}</td>
                                 <td>${a.episodes ? a.episodes.length : 1}</td>
                                 <td>
-                                    <button class="btn-secondary" style="padding:3px 6px;" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">✏️ Ред.</button>
-                                    <button class="btn-danger" onclick="playSound(); deleteAnime('${a.id}')">🗑️ Уд.</button>
+                                    <button class="btn-secondary" style="padding:3px 6px;" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">Правка</button>
+                                    <button class="btn-danger" onclick="playSound(); deleteAnime('${a.id}')">Удалить</button>
                                 </td>
                             </tr>
                         `).join('')}
@@ -3709,7 +3731,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     const meta = session.user.user_metadata || {};
                     userProfiles[username] = {
                         avatar: typeof meta.avatar_url === 'string' && meta.avatar_url.startsWith('https://') ? meta.avatar_url : 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(username),
-                        status: 'Новичок ⭐',
+                        status: 'Новичок ★',
                         regDate: new Date().toLocaleDateString('ru-RU')
                     };
                     // Google profile data must not be written to legacy shared JSON.
@@ -3720,19 +3742,20 @@ const adminList = []; // No client-side username grants administrator privileges
                     else if (savedProfile) {
                         userProfiles[username].displayName = savedProfile.display_name || '';
                         userProfiles[username].avatar = savedProfile.avatar_url || userProfiles[username].avatar;
-                        userProfiles[username].status = savedProfile.bio || 'Новичок ⭐';
+                        userProfiles[username].status = savedProfile.bio || 'Новичок ★';
                         if (savedProfile.created_at) userProfiles[username].regDate = new Date(savedProfile.created_at).toLocaleDateString('ru-RU');
                     } else {
                         const { error: createError } = await _supabase.from('komi_profiles').insert({
                             user_id: session.user.id, username,
                             display_name: String(session.user.user_metadata?.full_name || session.user.user_metadata?.username || 'Пользователь Komi').slice(0, 40),
                             avatar_url: userProfiles[username]?.avatar || null,
-                            bio: userProfiles[username]?.status || 'Новичок ⭐'
+                            bio: userProfiles[username]?.status || 'Новичок ★'
                         });
                         if (createError) console.warn('Profile create:', createError.message);
                     }
                 } catch (profileError) { console.warn('Profile sync:', profileError); }
                 await loadAuthenticatedAnimeData();
+                if (typeof aniCoinRequest === 'function') aniCoinRequest('read').catch(() => {});
                 loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
                 saveData(); closeAuthModal(); render();
             } catch (error) {
@@ -4001,14 +4024,14 @@ const adminList = []; // No client-side username grants administrator privileges
         }
         function komiPlayerHtml(url, animeId, season, index) {
             const kind = komiPlayerKind(url);
-            if (kind === 'missing') return '<div class="komi-player-notice">⚠️ Для этой серии пока нет доступного плеера. Попробуйте другой источник или сообщите о проблеме.</div>';
+            if (kind === 'missing') return '<div class="komi-player-notice"> Для этой серии пока нет доступного плеера. Попробуйте другой источник или сообщите о проблеме.</div>';
             if (kind === 'iframe') {
                 const match = url.match(/src\s*=\s*["']([^"']+)["']/i);
                 url = match ? match[1] : '';
-                if (!komiSafeUrl(url)) return '<div class="komi-player-notice">⚠️ Неверная ссылка плеера.</div>';
+                if (!komiSafeUrl(url)) return '<div class="komi-player-notice"> Неверная ссылка плеера.</div>';
             }
             const safe = komiSafeUrl(url);
-            if (!safe) return '<div class="komi-player-notice">⚠️ Небезопасная или неверная ссылка плеера.</div>';
+            if (!safe) return '<div class="komi-player-notice"> Небезопасная или неверная ссылка плеера.</div>';
             if (kind === 'video') return '<div class="player-box"><video id="animeVideoPlayer" controls preload="metadata" playsinline onloadedmetadata="restoreKomiVideo(this)" ontimeupdate="saveProgress(\''+animeId+'\',this)" onended="playNextEp(\''+animeId+'\','+season+','+index+')" onerror="showKomiPlayerError()"><source src="'+safe+'"></video></div>';
             if (kind === 'hls') return '<div class="komi-player-notice">Этот источник использует HLS. Если видео не поддерживается браузером, откройте его в совместимом плеере.</div><div class="player-box"><video id="animeVideoPlayer" controls playsinline onloadedmetadata="restoreKomiVideo(this)" ontimeupdate="saveProgress(\''+animeId+'\',this)" onerror="showKomiPlayerError()" src="'+safe+'"></video></div>';
             return '<div class="player-box"><iframe src="'+safe+'" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;min-height:340px;border:0;border-radius:14px"></iframe></div><p class="komi-player-hint">Встроенные плееры могут не передавать прогресс просмотра. Выбранная серия сохраняется.</p>';
@@ -4035,7 +4058,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const watching=Object.values(statuses).filter(v=>v==='Смотрю').length;
             const friends=friendsFor(username).length;
             const xp=watched*100+watching*20+friends*15;
-            return {watched,watching,friends,xp,level:Math.floor(xp/300)+1,badges:[watched>=1&&'🎬 Первый просмотр',watched>=10&&'🏆 10 аниме',watched>=50&&'👑 Знаток аниме',friends>=1&&'🤝 Первый друг',watching>=5&&'🔥 Марафон'].filter(Boolean)};
+            return {watched,watching,friends,xp,level:Math.floor(xp/300)+1,badges:[watched>=1&&' Первый просмотр',watched>=10&&' 10 аниме',watched>=50&&' Знаток аниме',friends>=1&&' Первый друг',watching>=5&&' Марафон'].filter(Boolean)};
         }
         function komiRecommendations() {
             if (!currentUser) return [];
@@ -4074,7 +4097,7 @@ const adminList = []; // No client-side username grants administrator privileges
             return years.map(year => {
                 const items = animeList.filter(a => komiAnimeYear(a) === year);
                 if (!items.length) return '';
-                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">🎬 Аниме ' + year + '</h2><button class="section-see-all" onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + items.length + '</button></div><div class="anime-grid">' + items.slice(0, 7).map(a => renderCard(a)).join('') + '</div></section>';
+                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Аниме ' + year + '</h2><button class="section-see-all" onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + items.length + '</button></div><div class="anime-grid">' + items.slice(0, 7).map(a => renderCard(a)).join('') + '</div></section>';
             }).join('');
         }
 
@@ -4161,7 +4184,7 @@ const adminList = []; // No client-side username grants administrator privileges
             })).filter(x => Number.isFinite(x.date) && x.date <= now && now - x.date <= 3 * 86400000)
               .sort((a,b) => b.date - a.date).slice(0,8);
 
-            let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title">📅 Календарь серий</h2>'+
+            let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title"> Календарь серий</h2>'+
                 '<button type="button" class="section-see-all" onclick="loadKomiEpisodeSchedule(true)">↻ Обновить расписание</button></div>';
             if (upcoming.length) {
                 result += '<p class="komi-feature-muted">Ближайшие эфиры · время указано в твоём часовом поясе. Озвучка может появиться позже.</p>';
@@ -4186,7 +4209,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 result += '<p class="komi-feature-muted">' + message + '</p>';
             }
             if (latest.length) {
-                result += '<div class="section-header" style="margin-top:17px"><h3 class="section-title" style="font-size:15px!important">🆕 Добавлены новые серии</h3></div>';
+                result += '<div class="section-header" style="margin-top:17px"><h3 class="section-title" style="font-size:15px!important"> Добавлены новые серии</h3></div>';
                 result += '<div class="komi-release-list">' + latest.map(entry =>
                     '<button type="button" onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
                         '<img loading="lazy" src="' + escapeFriendHtml(entry.anime.poster || '') + '" alt="" class="komi-calendar-poster" onerror="this.style.display=\'none\'">'+
@@ -4287,11 +4310,11 @@ const adminList = []; // No client-side username grants administrator privileges
                             <h1>${anime.title}</h1>
                             <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${cleanAnimeDescription(anime.desc)}</p>
                             <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
-                                <span style="color:#fbbf24; font-weight:700; font-size:11px;">⭐ ${shikiRating} Shikimori</span>
+                                <span style="color:#fbbf24; font-weight:700; font-size:11px;">★ ${shikiRating} Shikimori</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${(anime.genres||[]).join(', ')}</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${anime.year || '2026'}</span>
-                                <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">⭐ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
-                                <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)">🎉 Party</button>
+                                <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
+                                <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)"> Party</button>
                             </div>
                         </div>
                     </div>
@@ -4308,7 +4331,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             <span style="font-size:11px; color:var(--text-muted);">Папки:</span>
                             ${Object.keys(customFolders).map(fname => {
                                 const inFolder = (customFolders[fname] || []).includes(anime.id);
-                                return `<button class="season-tab-btn ${inFolder ? 'active' : ''}" onclick="playSound(); addToCustomFolder('${anime.id}', '${fname}')">📁 ${fname} ${inFolder ? '✓' : ''}</button>`;
+                                return `<button class="season-tab-btn ${inFolder ? 'active' : ''}" onclick="playSound(); addToCustomFolder('${anime.id}', '${fname}')"> ${fname} ${inFolder ? '✓' : ''}</button>`;
                             }).join('')}
                         </div>
                     ` : ''}
@@ -4425,5 +4448,6 @@ const adminList = []; // No client-side username grants administrator privileges
     </script>
     <script src="./anime-details.js"></script>
     <script src="./watch-party.js"></script>
+    <script src="./anicoin.js"></script>
 </body>
 </html>
