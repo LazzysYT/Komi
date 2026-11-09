@@ -132,7 +132,7 @@
   display:inline-flex;position:static !important;align-items:center;justify-content:center;
   min-height:44px;border-radius:14px !important;padding:10px 15px;
   background:#281e29;color:#faf5f8;border:1px solid #54394a;
-  font:700 13px inherit;cursor:pointer;
+  font-family:inherit;font-size:13px;font-weight:700;cursor:pointer;
 }
 #watchPartyModal .komi-party-room-header .modal-close {width:44px;height:44px;padding:0;font-size:24px}
 #watchPartyModal .komi-party-fullscreen-btn:hover,
