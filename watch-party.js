@@ -160,11 +160,11 @@ function enterParty(room) {
         const message = field.value.trim();
         if (message && await postMessage(message) && field.value.trim() === message) field.value = '';
     };
-    for (const emoji of ['🔥', '❤️', '😂', '😲', '🎉']) {
+    for (const reaction of ['Класс', 'Нравится', 'Смешно', 'Удивило', 'Отлично']) {
         const button = document.createElement('button');
         button.className = 'party-react-btn';
-        button.textContent = emoji;
-        button.onclick = () => postMessage(emoji);
+        button.textContent = reaction;
+        button.onclick = () => postMessage(reaction);
         document.getElementById('partyReactions').append(button);
     }
     showMessages(room.messages || []);
