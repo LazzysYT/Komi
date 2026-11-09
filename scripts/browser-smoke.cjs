@@ -5,7 +5,7 @@ const BASE = process.env.KOMI_TEST_URL || 'https://komi-six.vercel.app/';
 const output = path.resolve('browser-test-results');
 fs.mkdirSync(output, { recursive: true });
 (async () => {
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({ headless: true, ...(process.env.KOMI_CHROME ? {executablePath:process.env.KOMI_CHROME} : {}) });
   const results = [];
   for (const width of [1440, 768, 390, 375]) {
     const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
@@ -14,7 +14,8 @@ fs.mkdirSync(output, { recursive: true });
     let response;
     try {
       response = await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 45000 });
-      await page.waitForTimeout(4500);
+      // Loading text is not evidence that the catalogue loaded successfully.
+      await page.waitForFunction(() => typeof catalogInitialLoadComplete !== 'undefined' && catalogInitialLoadComplete, null, {timeout:45000});
       const state = await page.evaluate(() => ({
         title: document.title,
         description: document.querySelector('meta[name="description"]')?.content || '',

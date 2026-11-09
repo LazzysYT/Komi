@@ -1668,7 +1668,7 @@ body > header {
                 <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; padding: 4px;"></div>
             </div>
 
-            <form id="animeForm" onsubmit="saveAnimeForm(event)">
+            <form id="animeForm" novalidate onsubmit="saveAnimeForm(event)">
                 <input type="hidden" id="editAnimeId">
                 <div class="form-group">
                     <label>Название</label>
@@ -1703,7 +1703,7 @@ body > header {
                 </div>
                 <div class="form-group">
                     <label>Описание</label>
-                    <textarea class="form-control" id="animeDesc" placeholder="Сюжет..."></textarea>
+                    <textarea class="form-control" id="animeDesc" style="resize: none; min-height: 120px" placeholder="Сюжет..."></textarea>
                 </div>
                 <div class="form-group">
                     <label>Эпизоды</label>
@@ -1725,7 +1725,7 @@ body > header {
 
             <button type="button" class="komi-google-btn" onclick="showGoogleAuthInfo()"> <span class="komi-google-g">G</span> Продолжить через Google</button>
             <div class="komi-auth-separator">или через аккаунт Komi</div>
-            <form id="loginFormContainer" onsubmit="handleLoginSubmit(event)">
+            <form id="loginFormContainer" novalidate onsubmit="handleLoginSubmit(event)">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
                 <div class="form-group">
                     <label for="loginUsername">Email или старый никнейм Komi</label>
@@ -1738,7 +1738,7 @@ body > header {
                 <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" onclick="playSound()">Войти</button>
             </form>
 
-            <form id="registerFormContainer" onsubmit="handleRegisterSubmit(event)" style="display: none;">
+            <form id="registerFormContainer" novalidate onsubmit="handleRegisterSubmit(event)" style="display: none;">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Регистрация</h2>
                 <div class="form-group">
                     <label for="regUsername">Никнейм</label>
@@ -1771,6 +1771,7 @@ body > header {
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
     <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1000px;" id="watchPartyModalContent"></div></div>
 
+    <script src="./player-core.js"></script>
     <script>
         const SUPABASE_URL = 'https://xebglnnpoutmdcgukbxf.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs'; 
@@ -1949,7 +1950,7 @@ body > header {
             localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
             localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
-            if (!currentUser?.authUserId) saveStatusesToCloud();
+            // Saving browser preferences must not rewrite the shared legacy status blob.
         }
 
 
@@ -2556,6 +2557,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const signingOut = currentUser;
             await leaveWatchPartyRoom();
             closeWatchModal();
+            await komiProgressWriter.flush();
             if (currentUser?.authUserId && _supabase) {
                 const { error } = await _supabase.auth.signOut({ scope: 'local' });
                 if (error) { alert('Не удалось выйти: ' + error.message); return; }
@@ -3514,55 +3516,41 @@ const adminList = []; // No client-side username grants administrator privileges
             openWatchModal(id);
         }
 
+        let komiApiSearchController;
         async function searchAnimeFromAPI() {
+            komiApiSearchController?.abort();
+            const controller = komiApiSearchController = new AbortController();
             const query = document.getElementById('apiSearchTitle').value.trim();
-            const resultsContainer = document.getElementById('apiSearchResultsList');
-            
-            if (!query) { alert('Введите название!'); return; }
-
-            resultsContainer.innerHTML = '<div style="padding: 5px; font-size: 11px; color: var(--text-muted);">Поиск в базе Shikimori...</div>';
-            resultsContainer.style.display = 'block';
-
+            const results = document.getElementById('apiSearchResultsList');
+            results.style.display = 'block';
+            results.textContent = query ? 'Поиск в базе Shikimori…' : 'Введите название аниме.';
+            if (!query) return;
+            const timer = setTimeout(() => controller.abort(), 15000);
             try {
-                const targetUrl = `https://shikimori.me/api/animes?search=${encodeURIComponent(query)}&limit=6`;
-                const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
-
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error('Ошибка');
-
-                const data = await response.json();
-
-                if (data && data.length > 0) {
-                    resultsContainer.innerHTML = data.map(anime => {
-                        const posterUrl = anime.image?.original ? `https://shikimori.me${anime.image.original}` : 'https://cdn.myanimelist.net/images/anime/1122/96435.jpg';
-                        const posterPreview = anime.image?.preview ? `https://shikimori.me${anime.image.preview}` : posterUrl;
-                        return `
-                            <div style="display: flex; align-items: center; gap: 6px; padding: 4px 6px; border-bottom: 1px solid var(--border); cursor: pointer; border-radius: 5px;" 
-                                 onmouseover="this.style.background='var(--bg-card-hover)'" onmouseout="this.style.background='transparent'"
-                                 onclick="fillFormWithAnimeData(${JSON.stringify({
-                                     title: anime.russian || anime.name,
-                                     poster: posterUrl,
-                                     score: anime.score || '8.5',
-                                     year: anime.aired_on ? anime.aired_on.split('-')[0] : '2026',
-                                     type: anime.kind === 'movie' ? 'Фильм' : 'Сериал',
-                                     synopsis: anime.description || '',
-                                     genres: [],
-                                     images: [posterUrl]
-                                   }).replace(/"/g, '&quot;')})">
-                                <img src="${posterPreview}" style="width: 22px; height: 30px; object-fit: cover; border-radius: 3px;">
-                                <div style="font-size: 11px; font-weight: 600; flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-                                    ${anime.russian || anime.name} (${anime.aired_on ? anime.aired_on.split('-')[0] : 'N/A'})
-                                </div>
-                                <span style="font-size: 10px; color: #fbbf24;">★ ${anime.score || 'N/A'}</span>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    resultsContainer.innerHTML = '<div style="padding: 5px; font-size: 11px; color: var(--text-muted);">Ничего не найдено.</div>';
+                const target = 'https://shikimori.me/api/animes?search='+encodeURIComponent(query)+'&limit=6';
+                const response = await fetch('https://api.allorigins.win/raw?url='+encodeURIComponent(target), {signal:controller.signal});
+                if (!response.ok) throw Error('HTTP '+response.status);
+                const rows = await response.json();
+                if (!Array.isArray(rows)) throw Error('Некорректный ответ каталога');
+                if (komiApiSearchController !== controller || !results.isConnected || document.getElementById('apiSearchTitle').value.trim() !== query) return;
+                results.replaceChildren();
+                if (!rows.length) results.textContent = 'Ничего не найдено.';
+                for (const anime of rows) {
+                    const button = document.createElement('button');
+                    button.type = 'button'; button.className = 'search-dropdown-item';
+                    button.textContent = (anime.russian || anime.name || 'Без названия')+' · '+(anime.aired_on?.slice(0,4) || 'Год не указан');
+                    button.onclick = () => {
+                        const poster = anime.image?.original ? new URL(anime.image.original,'https://shikimori.me').href : '';
+                        fillFormWithAnimeData({title:anime.russian || anime.name, poster, score:anime.score || 0,
+                            year:anime.aired_on?.slice(0,4) || '', type:anime.kind === 'movie' ? 'Фильм' : 'Сериал',
+                            synopsis:anime.description || '', genres:[], images:poster ? [poster] : []});
+                    };
+                    results.append(button);
                 }
-            } catch(e) {
-                resultsContainer.innerHTML = `<div style="padding: 5px; font-size: 11px; color: #FF454F;">Ошибка соединения с API.</div>`;
-            }
+            } catch (error) {
+                if (komiApiSearchController === controller && results.isConnected)
+                    results.textContent = 'Не удалось выполнить поиск. Проверьте соединение и повторите.';
+            } finally { clearTimeout(timer); }
         }
 
         async function importTopSeasonalAnime() {
@@ -3724,7 +3712,7 @@ const adminList = []; // No client-side username grants administrator privileges
             modal.classList.add('active');
         }
 
-        function closeAddModal() { document.getElementById('addModal').classList.remove('active'); }
+        function closeAddModal() { komiApiSearchController?.abort(); document.getElementById('addModal').classList.remove('active'); }
         
         function addEpisodeField() {
             const div = document.createElement('div');
@@ -3966,17 +3954,26 @@ const adminList = []; // No client-side username grants administrator privileges
             return;
         }
 
-        function toggleFavorite(id, category) {
+        const komiFavoritePending = new Set();
+        async function toggleFavorite(id, category) {
             if (!currentUser) { openAuthModal('login'); return; }
-            if (!userFavorites[currentUser.username]) userFavorites[currentUser.username] = {};
-            if (userFavorites[currentUser.username][id] === category) {
-                delete userFavorites[currentUser.username][id];
-            } else {
-                userFavorites[currentUser.username][id] = category;
-            }
-            saveData();
-            if (currentUser?.authUserId) persistAuthenticatedFavorite(id, userFavorites[currentUser.username][id] || null);
-            openWatchModal(id);
+            const user = currentUser;
+            const key = (user.authUserId || user.username) + ':' + id;
+            if (komiFavoritePending.has(key)) return;
+            const next = userFavorites[user.username]?.[id] === category ? null : category;
+            komiFavoritePending.add(key);
+            try {
+                if (user.authUserId) await persistAuthenticatedFavorite(id, next);
+                if (currentUser !== user) return;
+                userFavorites[user.username] ||= {};
+                if (next) userFavorites[user.username][id] = next;
+                else delete userFavorites[user.username][id];
+                saveData();
+                komiStatusFeedback(next ? 'Добавлено в избранное' : 'Удалено из избранного');
+                if (document.getElementById('watchModal')?.classList.contains('active') && String(window.komiActiveAnimeId) === String(id))
+                    openWatchModal(id,window.komiActiveSeason,window.komiActiveEpisode);
+            } catch (error) { komiStatusFeedback('Не удалось сохранить избранное. '+error.message); }
+            finally { komiFavoritePending.delete(key); }
         }
 
         async function persistAuthenticatedFavorite(animeId, category) {
@@ -3986,7 +3983,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const result = category
                 ? await query.upsert({user_id:uid, anime_id:Number(animeId), category}, {onConflict:'user_id,anime_id'})
                 : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
-            if (result.error) console.error('Не удалось сохранить избранное:', result.error.message);
+            if (result.error) throw result.error;
         }
 
         function addToCustomFolder(id, folderName) {
@@ -4010,6 +4007,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!_supabase || !currentUser?.authUserId) return;
             const uid = currentUser.authUserId;
             const username = currentUser.username;
+            const loadStarted = Date.now();
             const [lists, progress, favorites] = await Promise.all([
                 _supabase.from('komi_anime_lists').select('anime_id,status').eq('user_id', uid),
                 _supabase.from('komi_watch_progress').select('anime_id,season,episode_index,position_seconds,duration_seconds,updated_at').eq('user_id', uid),
@@ -4028,6 +4026,8 @@ const adminList = []; // No client-side username grants administrator privileges
             }
             if (progress.error) console.warn('Не удалось загрузить прогресс:', progress.error.message);
             else {
+                const newerProgress = Object.fromEntries(Object.entries(komiEpisodeProgress).filter(([key,value]) =>
+                    key.startsWith(username + '_') && value.updated >= loadStarted));
                 for (const key of Object.keys(komiEpisodeProgress)) {
                     if (key.startsWith(username + '_')) delete komiEpisodeProgress[key];
                 }
@@ -4042,6 +4042,10 @@ const adminList = []; // No client-side username grants administrator privileges
                         updated: Date.parse(item.updated_at) || Date.now()
                     };
                 }
+                for (const [key,value] of Object.entries(newerProgress)) {
+                    komiEpisodeProgress[key] = value;
+                    userWatchHistory[key] = value.time;
+                }
             }
             render();
         }
@@ -4055,14 +4059,22 @@ const adminList = []; // No client-side username grants administrator privileges
             if (result.error) throw result.error;
             return true;
         }
+        const komiProgressWriter = KomiPlayerCore.createWriter(async ({uid, animeId, progress}) => {
+            if (currentUser?.authUserId !== uid) return;
+            const {error} = await _supabase.from('komi_watch_progress').upsert({
+                user_id:uid, anime_id:Number(animeId), season:progress.season, episode_index:progress.index,
+                position_seconds:Math.floor(progress.time), duration_seconds:Math.floor(progress.duration),
+                updated_at:new Date(progress.updated).toISOString()
+            }, {onConflict:'user_id,anime_id'});
+            if (error) throw error;
+        }, (error, item) => {
+            if (currentUser?.authUserId === item.uid) komiStatusFeedback('Не удалось сохранить прогресс. Проверьте соединение; следующая запись повторит попытку.');
+            console.warn('Сохранение прогресса:', error.message);
+        });
         async function persistAuthenticatedProgress(animeId, progress) {
             if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
-            const result = await _supabase.from('komi_watch_progress').upsert({
-                user_id:currentUser.authUserId, anime_id:Number(animeId),
-                season:progress.season, episode_index:progress.index,
-                position_seconds:Math.floor(progress.time), duration_seconds:Math.floor(progress.duration)
-            }, {onConflict:'user_id,anime_id'});
-            if (result.error) console.error('Не удалось сохранить прогресс:', result.error.message);
+            const uid = currentUser.authUserId;
+            return komiProgressWriter.enqueue(uid + ':' + animeId, {uid, animeId, progress:{...progress}});
         }
 
         const pendingAnimeStatuses = new Set();
@@ -4124,36 +4136,22 @@ const adminList = []; // No client-side username grants administrator privileges
         function saveKomiEpisode(animeId, season, index, time=0, duration=0) {
             if (!currentUser) return;
             const key = komiProgressKey(animeId);
-            komiEpisodeProgress[key] = {season:Number(season)||1,index:Number(index)||0,time:Math.max(0,Number(time)||0),duration:Math.max(0,Number(duration)||0),updated:Date.now()};
-            userWatchHistory[key] = Math.max(0,Number(time)||0);
+            komiEpisodeProgress[key] = {season:Math.max(1,Math.floor(KomiPlayerCore.finite(season))),index:Math.floor(KomiPlayerCore.finite(index)),time:KomiPlayerCore.finite(time),duration:KomiPlayerCore.finite(duration),updated:Date.now()};
+            userWatchHistory[key] = komiEpisodeProgress[key].time;
             saveData();
             if (currentUser?.authUserId) persistAuthenticatedProgress(animeId, komiEpisodeProgress[key]);
         }
         function komiPlayerKind(url) {
-            if (!url || typeof url !== 'string') return 'missing';
-            const value = url.trim();
-            if (/^<iframe\b/i.test(value)) return 'iframe';
-            if (!/^https:\/\//i.test(value)) return 'missing';
-            if (/\.(mp4|webm|ogg)(?:[?#]|$)/i.test(value)) return 'video';
-            if (/\.m3u8(?:[?#]|$)/i.test(value)) return 'hls';
-            return 'embed';
+            return KomiPlayerCore.source(url).kind;
         }
         function komiSafeUrl(url) {
             try { const u = new URL(url); return u.protocol === 'https:' ? u.href.replace(/"/g,'%22') : ''; } catch { return ''; }
         }
         function komiPlayerHtml(url, animeId, season, index) {
-            const kind = komiPlayerKind(url);
-            if (kind === 'missing') return '<div class="komi-player-notice"> Для этой серии пока нет доступного плеера. Попробуйте другой источник или сообщите о проблеме.</div>';
-            if (kind === 'iframe') {
-                const match = url.match(/src\s*=\s*["']([^"']+)["']/i);
-                url = match ? match[1] : '';
-                if (!komiSafeUrl(url)) return '<div class="komi-player-notice"> Неверная ссылка плеера.</div>';
-            }
-            const safe = komiSafeUrl(url);
-            if (!safe) return '<div class="komi-player-notice"> Небезопасная или неверная ссылка плеера.</div>';
-            if (kind === 'video') return '<div class="player-box"><video id="animeVideoPlayer" controls preload="metadata" playsinline onloadedmetadata="restoreKomiVideo(this)" ontimeupdate="saveProgress(\''+animeId+'\',this)" onended="playNextEp(\''+animeId+'\','+season+','+index+')" onerror="showKomiPlayerError()"><source src="'+safe+'"></video></div>';
-            if (kind === 'hls') return '<div class="komi-player-notice">Этот источник использует HLS. Если видео не поддерживается браузером, откройте его в совместимом плеере.</div><div class="player-box"><video id="animeVideoPlayer" controls playsinline onloadedmetadata="restoreKomiVideo(this)" ontimeupdate="saveProgress(\''+animeId+'\',this)" onerror="showKomiPlayerError()" src="'+safe+'"></video></div>';
-            return '<div class="player-box"><iframe src="'+safe+'" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;min-height:340px;border:0;border-radius:14px"></iframe></div><div class="komi-player-hint" style="padding:12px"><button type="button" class="btn-glow-secondary" onclick="aniCoinStartEmbed()">▶ Начать учёт AniCoin</button><span id="komi-embed-coin-status" role="status" style="margin-left:12px">Учитывается активное время открытого плеера, не подтверждённое воспроизведение. При паузе остановите учёт, закрыв серию.</span></div>';
+            const source = KomiPlayerCore.source(url);
+            if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии нет доступного плеера. Выберите другой источник.</div>';
+            if (source.kind === 'video' || source.kind === 'hls') return '<div class="player-box"><video id="animeVideoPlayer" aria-label="Видеоплеер аниме" controls preload="metadata" playsinline></video></div>';
+            return '<div class="player-box"><iframe title="Видеоплеер аниме" src="'+escapeFriendHtml(source.url)+'" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0"></iframe></div><p class="komi-player-hint">Выбранная серия сохраняется. Точная позиция во внешнем плеере может быть недоступна.</p>';
         }
         function showKomiPlayerError() {
             const wrapper=document.querySelector('#watchModalContent .player-wrapper');
@@ -4346,12 +4344,14 @@ const adminList = []; // No client-side username grants administrator privileges
             if(button) button.textContent=modal.classList.contains('komi-watch-fullscreen')?'Обычный размер':'На весь экран';
         }
         function closeWatchModal() {
+            ++komiDetailOpenToken;
             if (typeof aniCoinStopEmbed === 'function') aniCoinStopEmbed();
             document.getElementById('watchModal')?.classList.remove('komi-watch-fullscreen');
             const videoEl = document.getElementById('animeVideoPlayer');
             if (videoEl) {
-                videoEl.pause();
-                videoEl.currentTime = 0;
+                saveProgress(videoEl.dataset.animeId, videoEl, true);
+                videoEl.komiRestored = false;
+                disposeKomiMedia(videoEl);
             }
             document.getElementById('watchModal').classList.remove('active');
             document.getElementById('watchModalContent').replaceChildren();
@@ -4369,7 +4369,12 @@ const adminList = []; // No client-side username grants administrator privileges
         async function ensureKomiAnimeDetails(anime) {
             const id = String(anime.shikimoriId || anime.id);
             if (anime.komiDetailsLoaded && anime.komiDetailsLoadedAt === anime.komiCardUpdatedAt) return anime;
-            if (komiDetailsPending.has(id)) return komiDetailsPending.get(id);
+            if (komiDetailsPending.has(id)) {
+                const loaded = await komiDetailsPending.get(id);
+                if (loaded !== anime) Object.assign(anime, loaded, {komiCardUpdatedAt:anime.komiCardUpdatedAt});
+                return anime;
+            }
+            const version = anime.komiCardUpdatedAt;
             const request = (async () => {
                 const { data: row, error } = await _supabase.from('anime_catalog')
                     .select('data').eq('shikimori_id', Number(id)).single();
@@ -4380,7 +4385,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     episodes: Array.isArray(row.data.episodes) ? row.data.episodes : [],
                     episodeCount: Array.isArray(row.data.episodes) ? row.data.episodes.length : 0,
                     komiDetailsLoaded: true,
-                    komiDetailsLoadedAt: anime.komiCardUpdatedAt
+                    komiDetailsLoadedAt: version
                 });
                 return anime;
             })().finally(() => komiDetailsPending.delete(id));
@@ -4394,10 +4399,10 @@ const adminList = []; // No client-side username grants administrator privileges
             
             // Existing catalog bootstrapping already loaded comments and profiles.
             // Avoid fetching these tables on each episode switch.
-            const requestToken = ++komiDetailOpenToken;
             const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
             closeWatchModal();
+            const requestToken = komiDetailOpenToken;
             if (!anime.komiDetailsLoaded || anime.komiDetailsLoadedAt !== anime.komiCardUpdatedAt) {
                 const modal = document.getElementById('watchModal');
                 const body = document.getElementById('watchModalContent');
@@ -4442,7 +4447,8 @@ const adminList = []; // No client-side username grants administrator privileges
             window.komiActiveSeason=Number(activeSeason);
             window.komiActiveEpisode=activeIndex;
             const previousProgress = getKomiProgress(anime.id);
-            saveKomiEpisode(String(anime.id),activeSeason,activeIndex,previousProgress?.season === Number(activeSeason) && previousProgress?.index === activeIndex ? previousProgress.time : 0);
+            const resuming = previousProgress?.season === Number(activeSeason) && previousProgress?.index === activeIndex;
+            saveKomiEpisode(String(anime.id),activeSeason,activeIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
             const playerHtml = komiPlayerHtml(activeUrl,String(anime.id),activeSeason,activeIndex);
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
@@ -4467,11 +4473,11 @@ const adminList = []; // No client-side username grants administrator privileges
                         <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='./anime-artwork.svg'">
                         <div class="crunchy-hero-info">
                             <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
-                            <h1>${anime.title}</h1>
+                            <h1>${escapeFriendHtml(anime.title)}</h1>
                             <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${cleanAnimeDescription(anime.desc)}</p>
                             <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
                                 <span style="color:#fbbf24; font-weight:700; font-size:11px;">★ ${shikiRating} Shikimori</span>
-                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${(anime.genres||[]).join(', ')}</span>
+                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml((anime.genres||[]).join(', '))}</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${anime.year || '2026'}</span>
                                 <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
                                 <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)"> Party</button>
@@ -4491,7 +4497,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             <span style="font-size:11px; color:var(--text-muted);">Папки:</span>
                             ${Object.keys(customFolders).map(fname => {
                                 const inFolder = (customFolders[fname] || []).includes(anime.id);
-                                return `<button class="season-tab-btn ${inFolder ? 'active' : ''}" onclick="playSound(); addToCustomFolder('${anime.id}', '${fname}')"> ${fname} ${inFolder ? '✓' : ''}</button>`;
+                                return `<button type="button" class="season-tab-btn ${inFolder ? 'active' : ''}" data-komi-folder="${escapeFriendHtml(fname)}"> ${escapeFriendHtml(fname)} ${inFolder ? '✓' : ''}</button>`;
                             }).join('')}
                         </div>
                     ` : ''}
@@ -4532,13 +4538,19 @@ const adminList = []; // No client-side username grants administrator privileges
                 </div>
             `;
             document.getElementById('watchModal').classList.add('active');
+            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl);
+            for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
+                button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
             renderAnimeExtras(anime, seasonNumbers);
         }
 
-        function saveProgress(animeId, video) {
-            if (!currentUser) return;
-            const key = `${currentUser.username}_${animeId}`;
-            saveKomiEpisode(animeId,window.komiActiveSeason,window.komiActiveEpisode,video.currentTime,video.duration);
+        function saveProgress(animeId, video, force = false) {
+            if (!currentUser || !video.komiRestored || !video.isConnected ||
+                video.dataset.owner !== (currentUser.authUserId || currentUser.username)) return;
+            const now = Date.now();
+            if (!force && now - (video.komiLastSave || 0) < 10000) return;
+            video.komiLastSave = now;
+            saveKomiEpisode(animeId,Number(video.dataset.season),Number(video.dataset.episode),video.currentTime,video.duration);
         }
 
 
@@ -4615,6 +4627,7 @@ const adminList = []; // No client-side username grants administrator privileges
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         restoreGoogleSession();
     </script>
+    <script src="./player-runtime.js"></script>
     <script src="./anime-details.js"></script>
     <script src="./watch-party.js"></script>
     <script src="./anicoin.js"></script>
