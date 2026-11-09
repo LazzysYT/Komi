@@ -34,8 +34,7 @@ begin
 end;
 $$;
 
-drop trigger if exists komi_guard_legacy_animes_dml on public.animes;
-create trigger komi_guard_legacy_animes_dml
+create or replace trigger komi_guard_legacy_animes_dml
 before insert or update or delete on public.animes
 for each row execute function public.komi_guard_legacy_animes_rows();
 
