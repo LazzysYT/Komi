@@ -259,14 +259,13 @@ const path=require('node:path');
        randomAnimeWithAnimation();
        const status=document.getElementById('rouletteTitle').textContent;
        const active=document.getElementById('randomRouletteModal').classList.contains('active');
+       const retryVisible=!document.getElementById('rouletteRetry').hidden;
        animeList=oldList;
-       document.getElementById('randomRouletteModal').classList.remove('active');
-       return {status,active};
+       return {status,active,retryVisible};
      });
      assert.ok(noPlayable.status.includes('нет аниме с доступными сериями'));
      assert.equal(noPlayable.active,true);
-     const retry=await page.locator('#rouletteRetry').isVisible();
-     assert.equal(retry,true,'Random picker should offer a retry on no playable anime');
+     assert.equal(noPlayable.retryVisible,true,'Random picker should offer a retry on no playable anime');
      const close=await page.evaluate(()=>{
        const before=komiRouletteRun;
        closeKomiRoulette();
