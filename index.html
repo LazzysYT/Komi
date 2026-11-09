@@ -1987,7 +1987,7 @@ async function loadDataFromCloud(attempt = 0) {
                 userProfiles = { ...userProfiles, ...(value || {}) };
                 if (existing) userProfiles[currentUser.username] = existing;
             }
-            if (row.id === 4 && currentUser) {
+            if (row.id === 4 && currentUser && !currentUser.authUserId) {
                 const name = currentUser.username;
                 const avatar = localStorage.getItem('komi_avatar_' + name);
                 if (avatar && (!userProfiles[name]?.avatar || userProfiles[name].avatar.startsWith('https://api.dicebear.com/'))) userProfiles[name] = { ...(userProfiles[name] || {}), avatar };
@@ -2449,7 +2449,7 @@ async function loadDataFromCloud(attempt = 0) {
             const area = document.getElementById('userHeaderArea');
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
             if (sidebarAvatarIcon) {
-                const avatar = currentUser && (userProfiles[currentUser.username]?.avatar || localStorage.getItem('komi_avatar_' + currentUser.username));
+                const avatar = currentUser && (userProfiles[currentUser.username]?.avatar || (!currentUser.authUserId && localStorage.getItem('komi_avatar_' + currentUser.username)));
                 if (avatar) {
                     const img = document.createElement('img');
                     img.alt = 'Аватар профиля';
@@ -2523,6 +2523,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 try { await _supabase.from('online_users').delete().eq('session_id', myUniqueKey); } catch(e){}
             }
             clearKomiAccountData(signingOut);
+            avatarDraft = null;
             currentUser = null;
             saveData();
             navigate('home');
@@ -2768,7 +2769,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 regDate: '05 ноября 2026 года' 
             };
             // Recover existing avatars saved before cloud storage was introduced.
-            if (currentUser && username === currentUser.username) {
+            if (currentUser && !currentUser.authUserId && username === currentUser.username) {
                 const previousAvatar = localStorage.getItem('komi_avatar_' + username);
                 if (previousAvatar && (!p.avatar || p.avatar.includes('dicebear.com'))) p.avatar = previousAvatar;
             }
@@ -2839,7 +2840,7 @@ const adminList = []; // No client-side username grants administrator privileges
             container.innerHTML = `
                 <div class="profile-container komi-profile-v2">
                     <div class="profile-header-card">
-                        <img src="${p.avatar}" class="profile-avatar-box" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                        <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
                                 <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2>
@@ -2876,7 +2877,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                         <label for="newStatusText" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
                                         <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." maxlength="100" value="${safeProfileText(p.status)}">
                                     </div>
-                                    <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" onclick="playSound(); updateUserProfile()">Сохранить</button>
+                                    <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
                             </div>
                             ` : ''}
@@ -3020,81 +3021,105 @@ const adminList = []; // No client-side username grants administrator privileges
             `;
         }
 
-        let uploadedAvatarBase64 = null;
-        let avatarUploadPromise = null;
+        let avatarDraft = null;
+        let profileSavePending = false;
+
         function handleAvatarFileUpload(event) {
             const file = event.target.files[0];
-            if (!file) return;
-            if (!file.type.startsWith('image/')) { alert('Выбери изображение.'); return; }
-            uploadedAvatarBase64 = null;
-            avatarUploadPromise = new Promise((resolve, reject) => {
+            const owner = currentUser?.authUserId || currentUser?.username;
+            avatarDraft = null;
+            if (!file || !owner) return;
+            if (!file.type.startsWith('image/')) {
+                komiStatusFeedback('Выберите изображение.');
+                return;
+            }
+            const image = new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
+                reader.onerror = () => reject(new Error('Не удалось прочитать файл.'));
                 reader.onload = () => {
-                    const img = new Image();
-                    img.onerror = () => reject(new Error('Не удалось открыть изображение'));
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        const scale = Math.min(1, 320 / Math.max(img.width, img.height));
-                        canvas.width = Math.max(1, Math.round(img.width * scale));
-                        canvas.height = Math.max(1, Math.round(img.height * scale));
-                        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
-                        uploadedAvatarBase64 = canvas.toDataURL('image/jpeg', 0.78);
-                        resolve();
+                    const preview = new Image();
+                    preview.onerror = () => reject(new Error('Не удалось открыть изображение.'));
+                    preview.onload = () => {
+                        try {
+                            const canvas = document.createElement('canvas');
+                            const scale = Math.min(1, 320 / Math.max(preview.width, preview.height));
+                            canvas.width = Math.max(1, Math.round(preview.width * scale));
+                            canvas.height = Math.max(1, Math.round(preview.height * scale));
+                            canvas.getContext('2d').drawImage(preview, 0, 0, canvas.width, canvas.height);
+                            canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error('Не удалось подготовить изображение.')), 'image/jpeg', .78);
+                        } catch (error) { reject(error); }
                     };
-                    img.src = reader.result;
+                    preview.src = reader.result;
                 };
                 reader.readAsDataURL(file);
             });
-            avatarUploadPromise.catch(e => alert(e.message));
+            const draft = avatarDraft = { owner, image };
+            image.then(() => {
+                if (avatarDraft === draft) komiStatusFeedback('Фото выбрано. Нажмите «Сохранить».');
+            }, error => {
+                if (avatarDraft !== draft) return;
+                avatarDraft = null;
+                komiStatusFeedback(error.message);
+            });
         }
 
-        async function uploadAvatarToStorage(dataUrl, username) {
-            if (!_supabase) return null;
-            try {
-                const blob = await (await fetch(dataUrl)).blob();
-                const filename = (currentUser?.authUserId || encodeURIComponent(username)) + '/' + Date.now() + '.jpg';
-                const { error } = await _supabase.storage.from('avatars').upload(filename, blob, {
-                    contentType: 'image/jpeg', upsert: false, cacheControl: '3600'
-                });
-                if (error) { console.warn('Avatar Storage:', error.message); return null; }
-                const { data } = _supabase.storage.from('avatars').getPublicUrl(filename);
-                return data?.publicUrl || null;
-            } catch (err) { console.warn('Avatar Storage:', err); return null; }
+        async function uploadAvatarToStorage(blob, owner) {
+            const filename = owner + '/' + crypto.randomUUID() + '.jpg';
+            const storage = _supabase.storage.from('avatars');
+            const { error } = await storage.upload(filename, blob, {
+                contentType: 'image/jpeg', upsert: false, cacheControl: '3600'
+            });
+            if (error) throw new Error('Не удалось загрузить аватар. ' + error.message);
+            return storage.getPublicUrl(filename).data.publicUrl;
         }
 
-        async function updateUserProfile() {
-            if (!currentUser) return;
+        async function updateUserProfile(button) {
+            if (!currentUser || profileSavePending) return;
+            const { username, authUserId } = currentUser;
+            if (!authUserId || !_supabase) {
+                komiStatusFeedback('Войдите в аккаунт Komi через Google или email для сохранения профиля.');
+                return;
+            }
+            const displayName = document.getElementById('newDisplayName')?.value.trim() || '';
+            const status = (document.getElementById('newStatusText')?.value || '').trim().slice(0, 100);
+            if (displayName && displayName.length < 2) {
+                komiStatusFeedback('Имя должно содержать хотя бы 2 символа.');
+                return;
+            }
+            const draft = avatarDraft?.owner === authUserId ? avatarDraft : null;
+            profileSavePending = true;
+            if (button) button.disabled = true;
             try {
-                if (avatarUploadPromise) await avatarUploadPromise;
-                const name = currentUser.username;
-                const status = (document.getElementById('newStatusText')?.value || '').trim().slice(0, 100);
-                const displayName = (document.getElementById('newDisplayName')?.value || '').trim();
-                if (currentUser.authUserId && (displayName.length < 2 || displayName.length > 40)) { alert('Никнейм должен содержать от 2 до 40 символов.'); return; }
-                if (!userProfiles[name]) userProfiles[name] = { regDate: new Date().toLocaleDateString('ru-RU') };
-                if (uploadedAvatarBase64) {
-                    const publicAvatar = await uploadAvatarToStorage(uploadedAvatarBase64, name);
-                    if (!publicAvatar) throw new Error('Не удалось загрузить фото в Supabase Storage (bucket avatars). Проверь создание публичного bucket и политики INSERT/SELECT. Фото не было опубликовано.');
-                    userProfiles[name].avatar = publicAvatar;
-                    localStorage.setItem('komi_avatar_' + name, publicAvatar);
+                const fields = { display_name: displayName.slice(0, 40), bio: status };
+                if (draft) {
+                    const blob = await draft.image;
+                    if (currentUser?.authUserId !== authUserId) return;
+                    draft.url ||= await uploadAvatarToStorage(blob, authUserId);
+                    fields.avatar_url = draft.url;
                 }
-                if (status) userProfiles[name].status = status;
-                if (currentUser.authUserId) userProfiles[name].displayName = displayName;
-                const result = currentUser.authUserId
-                    ? await _supabase.from('komi_profiles').upsert({ user_id: currentUser.authUserId, username: name, display_name: displayName, avatar_url: userProfiles[name].avatar || null, bio: status }, { onConflict: 'user_id' })
-                    : await saveProfilesToCloud();
-                if (result?.error) {
-                    // Only a device-local fallback if the shared profile write fails.
-                    alert('Не удалось сохранить профиль в общей базе: ' + result.error.message + '. Проверь доступ к Supabase.');
-                } else {
-                    alert('Профиль сохранён.');
+                if (currentUser?.authUserId !== authUserId) return;
+                const columns = 'display_name,avatar_url,bio,created_at';
+                const profiles = _supabase.from('komi_profiles');
+                let { data: saved, error } = await profiles.update(fields)
+                    .eq('user_id', authUserId).select(columns).maybeSingle();
+                if (error) throw error;
+                if (!saved && currentUser?.authUserId === authUserId) {
+                    ({ data: saved, error } = await _supabase.from('komi_profiles')
+                        .insert({ user_id: authUserId, username, ...fields }).select(columns).single());
+                    if (error) throw error;
                 }
-                uploadedAvatarBase64 = null;
-                avatarUploadPromise = null;
+                if (!saved || currentUser?.authUserId !== authUserId) return;
+                applySavedKomiProfile(username, saved);
+                if (avatarDraft === draft) avatarDraft = null;
                 saveData();
                 render();
-                renderHeaderUser();
-            } catch(e) { alert('Ошибка загрузки аватара: ' + e.message); }
+                komiStatusFeedback('Профиль сохранён.');
+            } catch (error) {
+                if (currentUser?.authUserId === authUserId) komiStatusFeedback('Не удалось сохранить профиль. ' + error.message);
+            } finally {
+                profileSavePending = false;
+                if (button) button.disabled = false;
+            }
         }
 
         function createCustomFolder() {
@@ -3723,6 +3748,15 @@ const adminList = []; // No client-side username grants administrator privileges
             if (authUser.app_metadata?.provider !== 'google' && /^[A-Za-z0-9_]{3,24}$/.test(requested) && !/^google_/i.test(requested)) return requested;
             return 'google_' + authUser.id.replace(/[^a-zA-Z0-9_-]/g, '');
         }
+        function applySavedKomiProfile(username, profile) {
+            userProfiles[username] = {
+                ...userProfiles[username],
+                displayName: profile.display_name || '',
+                avatar: profile.avatar_url || userProfiles[username]?.avatar || '',
+                status: profile.bio ?? 'Новичок',
+                regDate: profile.created_at ? new Date(profile.created_at).toLocaleDateString('ru-RU') : ''
+            };
+        }
         async function restoreGoogleSession() {
             if (!_supabase) return;
             try {
@@ -3761,10 +3795,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     const { data: savedProfile, error: profileError } = await _supabase.from('komi_profiles').select('display_name,avatar_url,bio,created_at').eq('user_id', session.user.id).maybeSingle();
                     if (profileError) console.warn('Profile load:', profileError.message);
                     else if (savedProfile) {
-                        userProfiles[username].displayName = savedProfile.display_name || '';
-                        userProfiles[username].avatar = savedProfile.avatar_url || userProfiles[username].avatar;
-                        userProfiles[username].status = savedProfile.bio || 'Новичок ★';
-                        if (savedProfile.created_at) userProfiles[username].regDate = new Date(savedProfile.created_at).toLocaleDateString('ru-RU');
+                        if (currentUser?.authUserId === session.user.id) applySavedKomiProfile(username, savedProfile);
                     } else {
                         const { error: createError } = await _supabase.from('komi_profiles').insert({
                             user_id: session.user.id, username,
