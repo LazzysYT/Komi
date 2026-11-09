@@ -14,7 +14,7 @@
     <meta property="og:url" content="https://komi-six.vercel.app/">
     <meta name="twitter:card" content="summary">
     <link rel="canonical" href="https://komi-six.vercel.app/">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23000000' stroke='%23FFFFFF' stroke-width='3'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -1589,7 +1589,7 @@ body > header {
                 </div>
                 <div class="online-counter">
                     <div class="online-dot"></div>
-                    <span id="onlineCountText">Онлайн: 1</span>
+                    <span id="onlineCountText" role="status" aria-live="polite">Онлайн: проверяем…</span>
                 </div>
             </div>
             
@@ -1652,7 +1652,15 @@ body > header {
         <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
-        <main id="mainContainer"></main>
+        <main id="mainContainer">
+            <section class="komi-seo-fallback" aria-label="О Komi Anime Hub">
+                <h1>Komi Anime Hub — каталог аниме</h1>
+                <p>Открывай каталог аниме, находи серии, сохраняй просмотренное и общайся с друзьями. В Komi Anime Hub доступны поиск по названиям и жанрам, списки просмотра, совместный просмотр и магазин AniCoin.</p>
+                <a href="#catalog">Открыть каталог</a>
+                <a href="#shop">Магазин AniCoin</a>
+                <noscript><p>Для интерактивного каталога и просмотра требуется JavaScript.</p></noscript>
+            </section>
+        </main>
     </div>
 
     <!-- Модальные окна -->
@@ -1763,7 +1771,7 @@ body > header {
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
             <h3 style="margin-bottom: 14px; font-size: 15px;">◇ Выбираем аниме...</h3>
             <div id="rouletteContainer" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
-                <img id="rouletteImage" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                <img id="rouletteImage" src="./anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div id="rouletteTitle" style="font-weight: 700; font-size: 13px; color: white;">Загрузка...</div>
         </div>
@@ -1910,7 +1918,7 @@ body > header {
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
-        let currentView = 'home';
+        let currentView = location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : 'home';
         let profileTargetUser = null;
         let profileActiveTab = 'Просмотрено';
         let profilePageSection = 'overview';
@@ -2474,8 +2482,8 @@ async function loadDataFromCloud(attempt = 0) {
         function navigate(view) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
-            if (view === 'shop') history.replaceState(null, '', '#shop');
-            else if (location.hash === '#shop') history.replaceState(null, '', location.pathname + location.search);
+            const route = view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : '';
+            if (location.hash !== route) history.replaceState(null, '', location.pathname + location.search + route);
             render();
             renderHeaderUser();
         }
@@ -2483,7 +2491,7 @@ async function loadDataFromCloud(attempt = 0) {
         function openProfile(username) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
-            if (location.hash === '#shop') history.replaceState(null, '', location.pathname + location.search);
+            if (location.hash !== '#profile') history.replaceState(null, '', location.pathname + location.search + '#profile');
             profileTargetUser = username;
             render();
             renderHeaderUser();
@@ -3904,6 +3912,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 await loadAuthenticatedAnimeData();
                 if (typeof aniCoinRequest === 'function') aniCoinRequest('read').catch(() => {});
                 loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
+                if (location.hash === '#profile') { currentView = 'profile'; profileTargetUser = username; }
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
@@ -4667,6 +4676,7 @@ const adminList = []; // No client-side username grants administrator privileges
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         restoreGoogleSession();
     </script>
+    <script src="./accessibility.js"></script>
     <script src="./player-runtime.js"></script>
     <script src="./anime-details.js"></script>
     <script src="./watch-party.js"></script>
