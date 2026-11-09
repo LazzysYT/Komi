@@ -2091,11 +2091,12 @@ async function loadDataFromCloud(attempt = 0) {
                 const now = Date.now();
                 const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
                 
-                await _supabase.from('online_users').upsert({ 
-                    session_id: myUniqueKey, 
-                    username: currentName, 
-                    last_seen: now 
+                const {error: presenceWriteError} = await _supabase.from('online_users').upsert({
+                    session_id: myUniqueKey,
+                    username: currentName,
+                    last_seen: now
                 }, { onConflict: 'session_id' });
+                if (presenceWriteError) throw presenceWriteError;
 
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
@@ -2115,19 +2116,20 @@ async function loadDataFromCloud(attempt = 0) {
                     updateNotificationsUI();
                 }
 
-                const { data } = await _supabase.from('online_users').select('*');
-                if (data) {
-                    const uniqueUsersMap = new Map();
-                    data.forEach(item => uniqueUsersMap.set(item.username, item));
-                    globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
-
-                    const count = globalAllOnlineUsersList.length || 1;
-                    const el = document.getElementById('onlineCountText');
-                    if (el) el.innerText = `Онлайн: ${count}`;
+                const {data, error:presenceReadError} = await _supabase.from('online_users').select('username,last_seen');
+                if (presenceReadError) throw presenceReadError;
+                if (!Array.isArray(data)) throw new Error('Не удалось получить список онлайн');
+                const uniqueUsersMap = new Map();
+                for (const item of data) {
+                    if (Number(item.last_seen) > now - 30000 && item.username)
+                        uniqueUsersMap.set(item.username, item);
                 }
+                globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
+                const el = document.getElementById('onlineCountText');
+                if (el) el.innerText = `Онлайн: ${globalAllOnlineUsersList.length}`;
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
-                if (el) el.innerText = `Онлайн: 1`;
+                if (el) el.innerText = navigator.onLine ? 'Онлайн: недоступно' : 'Нет соединения';
             } finally {
                 presenceRequestInFlight = false;
             }
@@ -2135,6 +2137,11 @@ async function loadDataFromCloud(attempt = 0) {
 
         setInterval(updateOnlinePresence, 8000);
         document.addEventListener('visibilitychange', updateOnlinePresence);
+        window.addEventListener('online', updateOnlinePresence);
+        window.addEventListener('offline', () => {
+            const indicator = document.getElementById('onlineCountText');
+            if (indicator) indicator.textContent = 'Нет соединения';
+        });
         updateOnlinePresence();
 
 
@@ -4669,12 +4676,33 @@ const adminList = []; // No client-side username grants administrator privileges
         }
         setInterval(refreshKomiCatalogUpdates, 120000);
 
+        function applyKomiHashRoute() {
+            const hash = location.hash.toLowerCase();
+            if (hash === '#shop') {
+                if (typeof openAniCoinShop === 'function') openAniCoinShop();
+                else navigate('shop');
+            } else if (hash === '#catalog') {
+                if (currentView !== 'catalog') { currentView='catalog'; render(); }
+            } else if (hash === '#profile') {
+                if (currentUser) {
+                    profileTargetUser=currentUser.username;
+                    if (currentView !== 'profile') { currentView='profile'; render(); }
+                } else openAuthModal('login');
+            } else if (!hash && ['shop','catalog','profile'].includes(currentView)) {
+                currentView='home';
+                render();
+            }
+        }
+        window.addEventListener('hashchange', applyKomiHashRoute);
+
         render();
         loadDataFromCloud();
         // Broadcast dates can load in parallel with the 6,000+ item catalog.
         loadKomiEpisodeSchedule();
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
-        restoreGoogleSession();
+        restoreGoogleSession().finally(() => {
+            if (location.hash === '#profile') applyKomiHashRoute();
+        });
     </script>
     <script src="./accessibility.js"></script>
     <script src="./player-runtime.js"></script>
