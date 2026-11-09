@@ -16,8 +16,12 @@ begin
             raise exception 'Shared legacy records cannot be deleted by public clients'
                 using errcode = '42501';
         end if;
-        if (tg_op = 'UPDATE' and old.id in (1, 2, 6))
-           or new.id in (1, 2, 6) then
+        if tg_op = 'UPDATE' then
+            if old.id in (1, 2, 6) or new.id in (1, 2, 6) then
+                raise exception 'Server-managed catalog and settings cannot be modified by public clients'
+                    using errcode = '42501';
+            end if;
+        elsif tg_op = 'INSERT' and new.id in (1, 2, 6) then
             raise exception 'Server-managed catalog and settings cannot be modified by public clients'
                 using errcode = '42501';
         end if;
