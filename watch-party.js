@@ -159,7 +159,7 @@ async function enterParty(room) {
 
     partyPanel(`
         <div class="komi-party-shell">
-            <header class="komi-party-room-header">
+            <div class="komi-party-room-header" role="group" aria-label="Информация о комнате">
                 <div class="komi-party-room-identity">
                     <div class="komi-party-kicker">KOMI WATCH PARTY <span class="komi-party-role">${host ? 'ВЕДУЩИЙ' : 'ЗРИТЕЛЬ'}</span></div>
                     <h2>${escapeFriendHtml(room.name)}</h2>
@@ -169,7 +169,7 @@ async function enterParty(room) {
                     <button class="komi-party-fullscreen-btn" type="button" onclick="toggleKomiPartyFullscreen()" aria-pressed="false" aria-label="Развернуть просмотр на весь экран" title="На весь экран">⛶ <span>На весь экран</span></button>
                     <button class="modal-close" type="button" onclick="leaveWatchPartyRoom()" aria-label="Закрыть комнату">×</button>
                 </div>
-            </header>
+            </div>
             <div class="komi-party-room-layout">
                 <section class="komi-party-screen-panel" aria-label="Видеоплеер совместного просмотра">
                     <div class="komi-party-video-frame" id="partyPlayerFrame"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
@@ -179,7 +179,7 @@ async function enterParty(room) {
                         ${host ? '<label for="partyEpisode">Серия и озвучка <select id="partyEpisode"></select></label>' : '<button id="partyUnlock" class="btn-secondary" hidden>Разрешить воспроизведение</button>'}
                     </div>
                 </section>
-                <aside class="komi-party-social-panel" aria-label="Чат и реакции Watch Party">
+                <section class="komi-party-social-panel" aria-label="Чат и реакции Watch Party">
                     <div class="komi-party-panel-heading"><h3>Чат комнаты</h3><small>Общайтесь во время просмотра</small></div>
                     <div id="partyChatBox" class="party-chat-box" role="log" aria-label="Сообщения в комнате"></div>
                     <form id="partyChat"><input name="message" maxlength="300" required placeholder="Написать сообщение…" aria-label="Новое сообщение"><button class="btn-secondary">Отправить</button></form>
@@ -188,7 +188,7 @@ async function enterParty(room) {
                         <div id="partyReactions"></div>
                     </div>
                     ${host && room.private ? '<form id="partyInvite"><input name="username" required placeholder="Ник для приглашения" aria-label="Ник пользователя"><button class="btn-secondary">Пригласить</button></form>' : ''}
-                </aside>
+                </section>
             </div>
         </div>
     `, true);
