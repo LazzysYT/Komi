@@ -2201,6 +2201,7 @@ async function loadDataFromCloud(attempt = 0) {
                 komiCommunityVerifiedNames.add(profile.username);
                 if (!userProfiles[profile.username]) userProfiles[profile.username] = {};
                 if (profile.avatar_url) userProfiles[profile.username].avatar = profile.avatar_url;
+                userProfiles[profile.username].displayName = profile.display_name?.trim() || profile.username;
             }
         }
         function renderFriendsDrawer() {
@@ -2211,10 +2212,15 @@ async function loadDataFromCloud(attempt = 0) {
             const query = (document.getElementById('komiFriendsSearch')?.value || '').trim().toLocaleLowerCase();
             const me = currentUser?.username;
             const friends = me ? friendsFor(me) : [];
-            const pendingNames = me ? Object.entries(userNotifications).filter(([name,notifs])=>Array.isArray(notifs)&&notifs.some(n=>n.friendRequestFrom===me)).map(([name])=>name) : [];
+            const pendingNames = me ? [
+                ...Object.entries(userNotifications).filter(([name,notifs]) => Array.isArray(notifs) && notifs.some(n => n.friendRequestFrom === me)).map(([name]) => name),
+                ...(protectedFriendSent.owner === currentUser?.authUserId ? protectedFriendSent.names : [])
+            ] : [];
             // Profiles are synchronized from Supabase (animes row 4); local registrations alone are not globally discoverable.
             const names = komiFriendsTab === 'friends' ? friends : [...new Set([...Object.keys(userProfiles), ...komiCommunityVerifiedNames])];
-            const unique = [...new Set(names)].filter(n => n && n !== me && n.toLocaleLowerCase().includes(query)).sort((a,b)=>a.localeCompare(b,'ru'));
+            const unique = [...new Set(names)].filter(n => n && n !== me && (
+                n.toLocaleLowerCase().includes(query) || (userProfiles[n]?.displayName || '').toLocaleLowerCase().includes(query)
+            )).sort((a,b)=>(userProfiles[a]?.displayName || a).localeCompare(userProfiles[b]?.displayName || b,'ru'));
             if (komiFriendsTab === 'friends' && !me) {
                 list.innerHTML = '<div class="komi-friends-empty"><strong>Войди в аккаунт</strong><p>Чтобы увидеть друзей, нужно авторизоваться.</p><button class="btn-glow" onclick="closeFriendsDrawer();openAuthModal(\'login\')">Войти</button></div>';
                 return;
@@ -2224,11 +2230,12 @@ async function loadDataFromCloud(attempt = 0) {
                 return;
             }
             list.innerHTML = '<div class="komi-friends-count">Найдено: '+unique.length+'</div>'+unique.map((name,index)=>{
-                const safeName = escapeFriendHtml(name);
                 const profile = userProfiles[name] || {};
+                const safeName = escapeFriendHtml(profile.displayName || name);
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.includes(name);
+                const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name) && name !== me);
                 return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
@@ -3456,6 +3463,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
         let protectedFriendRequests = [];
         let protectedFriendList = { owner: null, idsByName: new Map() };
+        let protectedFriendSent = { owner: null, names: new Set() };
 
         function friendsFor(username) {
             const legacy = userFriends[username] || [];
@@ -3465,13 +3473,14 @@ const adminList = []; // No client-side username grants administrator privileges
         async function loadProtectedFriends() {
             const uid = currentUser?.authUserId;
             if (!uid || !_supabase) return;
-            const [requests, friendships] = await Promise.all([
+            const [requests, friendships, outgoing] = await Promise.all([
                 _supabase.from('komi_friend_requests').select('id,sender_id').eq('receiver_id', uid).eq('status', 'pending'),
-                _supabase.from('komi_friendships').select('user_a,user_b')
+                _supabase.from('komi_friendships').select('user_a,user_b'),
+                _supabase.from('komi_friend_requests').select('receiver_id').eq('sender_id', uid).eq('status', 'pending')
             ]);
-            if (requests.error || friendships.error) throw requests.error || friendships.error;
+            if (requests.error || friendships.error || outgoing.error) throw requests.error || friendships.error || outgoing.error;
             const friendIds = friendships.data.map(row => row.user_a === uid ? row.user_b : row.user_a);
-            const ids = [...new Set([...friendIds, ...requests.data.map(row => row.sender_id)])];
+            const ids = [...new Set([...friendIds, ...requests.data.map(row => row.sender_id), ...outgoing.data.map(row => row.receiver_id)])];
             const profiles = ids.length
                 ? await _supabase.from('komi_profiles').select('user_id,username').in('user_id', ids)
                 : { data: [] };
@@ -3481,6 +3490,10 @@ const adminList = []; // No client-side username grants administrator privileges
             protectedFriendList = {
                 owner: uid,
                 idsByName: new Map(friendIds.filter(id => names.has(id)).map(id => [names.get(id), id]))
+            };
+            protectedFriendSent = {
+                owner: uid,
+                names: new Set(outgoing.data.map(row => names.get(row.receiver_id)).filter(Boolean))
             };
             protectedFriendRequests = requests.data.map(row => ({
                 owner: uid, id: row.id, name: names.get(row.sender_id) || 'Пользователь'
@@ -3517,6 +3530,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     const { error } = await _supabase.from('komi_friend_requests')
                         .insert({ sender_id: sender, receiver_id: target.user_id });
                     if (error) throw error;
+                    await loadProtectedFriends().catch(e => console.warn('Обновление заявок:', e.message));
                     alert('Заявка отправлена.');
                 } catch (error) {
                     alert('Не удалось отправить заявку: ' + error.message);
