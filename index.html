@@ -2143,13 +2143,13 @@ async function loadDataFromCloud(attempt = 0) {
                 ).join('');
                 listContainer.innerHTML = requestMarkup + notifs.map((n, idx) => `
                     <div class="notif-item">
-                        <span>${n.text}</span>
+                        <span>${escapeFriendHtml(n.text)}</span>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; flex-wrap:wrap; gap:6px;">
-                            <span style="font-size:10px; color:var(--text-muted);">${n.time}</span>
-                            ${n.partyId ? `<button class="btn-glow" style="padding:2px 6px; font-size:10px;" onclick="playSound(); joinWatchPartyRoom('${n.partyId}')">Войти</button>` : ''}
+                            <span style="font-size:10px; color:var(--text-muted);">${escapeFriendHtml(n.time)}</span>
+                            ${n.partyId ? `<button class="btn-glow" style="padding:2px 6px; font-size:10px;" data-room-id="${escapeFriendHtml(n.partyId)}" onclick="playSound(); joinWatchPartyRoom(this.dataset.roomId)">Войти</button>` : ''}
                             ${n.friendRequestFrom ? `
                                 <div style="display:flex; gap:4px;">
-                                    <button class="btn-glow" style="padding:2px 6px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${n.friendRequestFrom}', ${idx})">Принять</button>
+                                    <button class="btn-glow" style="padding:2px 6px; font-size:10px;" data-sender="${escapeFriendHtml(n.friendRequestFrom)}" onclick="playSound(); acceptFriendRequest(this.dataset.sender, ${idx})">Принять</button>
                                     <button class="btn-danger" style="padding:2px 6px; font-size:10px;" onclick="playSound(); declineFriendRequest(${idx})">Отклонить</button>
                                 </div>
                             ` : ''}
