@@ -12,12 +12,22 @@ async function partyCall(action, roomId = null, args = {}) {
 
 function partyOptions(anime) {
     return (anime?.episodes || []).flatMap((episode, index) =>
-        Object.entries(episode.sources || { Default: episode.url }).filter(([, url]) =>
-            komiPlayerKind(url) === 'video' && komiSafeUrl(url)
-        ).map(([source, url]) => ({
-            episode: index, source, url: komiSafeUrl(url),
-            label: `Сезон ${Number(episode.season) || 1} · Серия ${Number(episode.number) || index + 1} · ${source}`
-        }))
+        Object.entries(episode.sources || { Default: episode.url }).flatMap(([source, rawUrl]) => {
+            const kind = komiPlayerKind(rawUrl);
+            if (!['video', 'embed', 'iframe'].includes(kind)) return [];
+            let url = rawUrl;
+            if (kind === 'iframe') {
+                const match = String(rawUrl).match(/src\s*=\s*["']([^"']+)["']/i);
+                url = match?.[1] || '';
+            }
+            const safe = komiSafeUrl(url);
+            if (!safe) return [];
+            return [{
+                episode: index, source, url: safe,
+                kind: kind === 'video' ? 'video' : 'iframe',
+                label: `Сезон ${Number(episode.season) || 1} · Серия ${Number(episode.number) || index + 1} · ${source}`
+            }];
+        })
     );
 }
 
@@ -98,7 +108,7 @@ async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false
     const episodeOptions = episodeIndex === null ? options : options.filter(item => item.episode === episodeIndex);
     const initial = episodeOptions.find(item => item.source === source) || episodeOptions[0];
     if (!initial) {
-        alert('Для совместного просмотра этой серии нужен источник MP4, WebM или Ogg.');
+        alert('У этого аниме пока нет доступных источников для совместного просмотра.');
         return;
     }
     const generation = ++partyGeneration;
@@ -116,7 +126,7 @@ async function joinWatchPartyRoom(id) {
     const generation = ++partyGeneration;
     try {
         const room = await partyCall('read', id);
-        if (generation === partyGeneration) enterParty(room);
+        if (generation === partyGeneration) await enterParty(room);
     } catch (error) { alert('Не удалось войти в комнату: ' + error.message); }
 }
 
@@ -139,7 +149,8 @@ async function enterParty(room) {
         <button class="modal-close" onclick="leaveWatchPartyRoom()">×</button>
         <h2>${escapeFriendHtml(room.name)}</h2>
         <p>${escapeFriendHtml(anime?.title || 'Аниме')} · ${host ? 'Ведущий' : 'Зритель'}</p>
-        <video id="partyVideoElement" style="width:100%;max-height:60vh" playsinline preload="metadata" ${host ? 'controls' : ''}></video>
+        <div id="partyPlayerFrame" style="width:100%;aspect-ratio:16/9;max-height:65vh;background:#08080b;border-radius:16px;overflow:hidden"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
+        <p id="partyEmbedHint" style="display:none;color:#bfb2bb;font-size:13px">Внешний плеер: выбор серии синхронизируется для всех. Управление Play, паузой и перемоткой внутри стороннего плеера не передаётся сайту — каждый участник управляет им самостоятельно.</p>
         <p id="partyStatus" role="status"></p>
         <div id="partyChatBox" class="party-chat-box" role="log"></div>
         <form id="partyChat"><input name="message" maxlength="300" required placeholder="Сообщение"><button class="btn-secondary">Отправить</button></form>
@@ -148,6 +159,8 @@ async function enterParty(room) {
         ${host && room.private ? '<form id="partyInvite"><input name="username" required placeholder="Имя пользователя"><button class="btn-secondary">Пригласить</button></form>' : ''}
     `);
     const video = document.getElementById('partyVideoElement');
+    const embed = document.getElementById('partyEmbedElement');
+    const embedHint = document.getElementById('partyEmbedHint');
     const status = document.getElementById('partyStatus');
     const unlock = document.getElementById('partyUnlock');
     const select = document.getElementById('partyEpisode');
@@ -200,12 +213,29 @@ async function enterParty(room) {
             video.pause();
             video.removeAttribute('src');
             video.load();
+            embed.removeAttribute('src');
             loadedOption = null;
             return;
         }
         if (loadedOption !== option) {
             loadedOption = option;
-            video.src = option.url;
+            const external = option.kind === 'iframe';
+            video.pause();
+            video.style.display = external ? 'none' : 'block';
+            embed.style.display = external ? 'block' : 'none';
+            embedHint.style.display = external ? 'block' : 'none';
+            if (external) {
+                video.removeAttribute('src');
+                video.load();
+                embed.src = option.url;
+            } else {
+                embed.removeAttribute('src');
+                video.src = option.url;
+            }
+        }
+        if (option.kind === 'iframe') {
+            if (select) select.value = String(options.indexOf(option));
+            return;
         }
         if (select) select.value = String(options.indexOf(option));
         if (host || video.readyState < 1) return;
@@ -244,7 +274,7 @@ async function enterParty(room) {
             if (heartbeat) partyHeartbeat = performance.now();
         } catch (error) {
             status.textContent = 'Связь с комнатой: ' + error.message;
-            if (!host) video.pause();
+            if (!host && loadedOption?.kind !== 'iframe') video.pause();
         } finally {
             sampling = false;
             if (isActive()) partyTimer = setTimeout(poll, host ? 3000 : 900);
@@ -256,8 +286,8 @@ async function enterParty(room) {
         for (const [index, option] of options.entries()) select.add(new Option(option.label, index));
         select.onchange = () => {
             const option = options[Number(select.value)];
-            loadedOption = option;
-            video.src = option.url;
+            if (!option) return;
+            applyState({episode: option.episode, source: option.source, playing: false, position: 0});
             publish(option, 0, false);
         };
         for (const event of ['playing', 'pause', 'seeked', 'waiting', 'ended']) {
@@ -294,6 +324,8 @@ function leaveWatchPartyRoom() {
     ++partyGeneration;
     clearTimeout(partyTimer);
     const room = partyRoom;
+    const embed = document.getElementById('partyEmbedElement');
+    if (embed) embed.removeAttribute('src');
     partyRoom = null;
     document.getElementById('watchPartyModalContent').replaceChildren();
     document.getElementById('watchPartyModal').classList.remove('active');
