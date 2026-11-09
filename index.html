@@ -1516,6 +1516,32 @@ body > header {
 .anicoin-item button:disabled { opacity: .55; cursor: default; }
 .anicoin-symbol { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 1px solid #742836; border-radius: 50%; color: #ff8093; font-weight: 800; }
 [data-anicoin-badge][hidden] { display: none !important; }
+</style><style>
+.komi-profile-v2 .profile-header-card {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    gap: clamp(18px, 4vw, 44px) !important;
+    padding: clamp(22px, 5vw, 48px) !important;
+    text-align: left;
+    background: radial-gradient(ellipse at 0 0, #351924, transparent 65%), var(--bg-input) !important;
+}
+.komi-profile-v2 .profile-info-grid { align-items: flex-start; min-width: 0; }
+.komi-profile-v2 .profile-name-row,
+.komi-profile-v2 .profile-badges-row,
+.komi-profile-v2 .komi-profile-actions { justify-content: flex-start; }
+.komi-profile-v2 .profile-name-row h2 { overflow-wrap: anywhere; }
+.komi-profile-v2 .profile-avatar-box { margin-top: 5px; }
+.komi-profile-v2 .profile-stat-card { font: inherit; color: var(--text-main); min-height: 70px; }
+.komi-profile-v2 .profile-stat-card:focus-visible,
+.komi-profile-v2 .komi-profile-action:focus-visible { outline: 2px solid #ff6478; outline-offset: 2px; }
+.komi-profile-v2 .komi-profile-action { min-height: 42px; }
+.anicoin-shop .anicoin-item h2 { margin-top: 0; }
+.anicoin-shop .anicoin-item { margin-top: 22px; }
+@media (max-width: 620px) {
+    .komi-profile-v2 .profile-header-card { grid-template-columns: minmax(0, 1fr); justify-items: start; }
+    .komi-profile-v2 .profile-settings-box .form-control { min-height: 42px; }
+}
 </style></head>
 <body>
 
@@ -2413,6 +2439,7 @@ async function loadDataFromCloud(attempt = 0) {
         function openProfile(username) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
+            if (location.hash === '#shop') history.replaceState(null, '', location.pathname + location.search);
             profileTargetUser = username;
             render();
             renderHeaderUser();
@@ -2815,7 +2842,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         <img src="${p.avatar}" class="profile-avatar-box" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
-                                <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2><div class="komi-profile-handle">● В сети</div>
+                                <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2>
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
                                      `<button class="btn-glow" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
@@ -2828,25 +2855,25 @@ const adminList = []; // No client-side username grants administrator privileges
                                 <div class="profile-badge-item"> Статус: ${safeProfileText(p.status)}</div>
                             </div>
 
-                            <div class="komi-level-progress"><label>До следующего уровня <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
+                            <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 300} из 300 XP <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
                             <div class="profile-reg-date">Дата регистрации: <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
                             <div class="komi-profile-actions">
                                 ${isMe ? '<button class="komi-profile-action" onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
-                                <button class="komi-profile-action" onclick="navigator.clipboard?.writeText(location.href).then(()=>alert('Ссылка скопирована')).catch(()=>alert('Не удалось скопировать ссылку'))">↗ Поделиться</button>
+                                ${isMe ? '<button type="button" class="komi-profile-action" onclick="openAniCoinShop()">Кошелёк AniCoin</button>' : ''}
                             </div>
 
                             ${isMe ? `
                             <div class="profile-settings-box">
                                 <h4> Настройки профиля</h4>
-                                <label style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
+                                <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
                                 <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
                                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                                     <div style="flex:2; min-width:160px;">
-                                        <label style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Фото с устройства</label>
+                                        <label for="avatarFileInput" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Фото с устройства</label>
                                         <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 4px; font-size:10px;" onchange="handleAvatarFileUpload(event)">
                                     </div>
                                     <div style="flex:2; min-width:130px;">
-                                        <label style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
+                                        <label for="newStatusText" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
                                         <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." maxlength="100" value="${safeProfileText(p.status)}">
                                     </div>
                                     <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" onclick="playSound(); updateUserProfile()">Сохранить</button>
@@ -2857,39 +2884,33 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     <div class="profile-stats-grid">
-                        <div class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
-                            <div class="stat-icon"></div>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
-                        </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
-                            <div class="stat-icon"></div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['В планах']}</div>
                             <div class="stat-label">В планах</div>
-                        </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
-                            <div class="stat-icon"></div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Смотрю']}</div>
                             <div class="stat-label">Смотрю</div>
-                        </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">→</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Отложено']}</div>
                             <div class="stat-label">Отложено</div>
-                        </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">×</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Брошено']}</div>
                             <div class="stat-label">Брошено</div>
-                        </div>
-                        <div class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
-                            <div class="stat-icon">♡</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
                             <div class="stat-num">${favoritesCount}</div>
                             <div class="stat-label">Любимое</div>
-                        </div>
+                        </button>
                     </div>
 
-                    <section class="komi-achievement-panel"><div><strong> Уровень ${komiAchievements(username).level}</strong><span>${komiAchievements(username).xp} XP · ${komiAchievements(username).watched} просмотрено</span></div><div class="komi-achievement-track"><i style="width:${komiAchievements(username).xp%300/3}%"></i></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span> Первое достижение впереди</span>'}</div></section>
+                    <section class="komi-achievement-panel"><div><strong>Достижения</strong><span>${komiAchievements(username).xp} XP</span></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span> Первое достижение впереди</span>'}</div></section>
                     <nav class="komi-profile-tabs" aria-label="Разделы профиля">
                         <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" onclick="profilePageSection='overview';render()">Профиль</button>
                         <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" onclick="profilePageSection='anime';render()">Аниме</button>
