@@ -1483,7 +1483,24 @@ body > header {
     .hero-slide, .anime-card, .anime-poster { transition: none !important; }
 }
 </style>
-</head>
+<style>
+.top-hero-section-grid { margin-bottom: clamp(18px, 3vw, 36px); }
+#heroSlider .hero-buttons { flex-wrap: wrap; }
+#heroSlider .hero-meta span { background: rgba(14,14,18,.78); border-color: rgba(255,255,255,.12); }
+.komi-discovery-row .anime-grid { align-items: start; }
+@media (max-width: 700px) {
+    .komi-discovery-row .anime-grid {
+        display: grid;
+        grid-auto-flow: column;
+        grid-template-columns: none;
+        grid-auto-columns: minmax(132px, 43%);
+        overflow-x: auto;
+        scroll-snap-type: x proximity;
+        padding: 4px 4px 12px;
+    }
+    .komi-discovery-row .anime-card { scroll-snap-align: start; }
+}
+</style></head>
 <body>
 
     <!-- Шапка сайта -->
@@ -2500,7 +2517,6 @@ const adminList = []; // No client-side username grants administrator privileges
                 const komiRecommendedHtml = komiRecommended.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">✨ Тебе понравится</h2></div><div class="anime-grid">'+komiRecommended.map(a=>renderCard(a)).join('')+'</div></section>' : '';
 
                 container.innerHTML = `
-                    ${komiIntroMarkup()}
                     <div class="top-hero-section-grid">
                         <div class="hero-slider-container" id="heroSlider">
                             <button class="hero-slider-arrow hero-arrow-prev" onclick="playSound(); changeSlide(-1)">❮</button>
@@ -2538,19 +2554,21 @@ const adminList = []; // No client-side username grants administrator privileges
 
                     ${continueWatchingHtml}
                     ${komiHomeShelves()}
-                    ${komiReleaseCalendar()}
                     ${komiRecommendedHtml}
-                    ${komiYearSections()}
 
-                    <div>
+                    ${popularNow.length ? `
+                    <section class="komi-feature-section komi-discovery-row">
                         <div class="section-header">
-                            <h2 class="section-title">🔥 Новинки и продолжения</h2>
+                            <h2 class="section-title">Новинки и продолжения</h2>
                             <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
                             ${popularNow.map(a => renderCard(a)).join('')}
                         </div>
-                    </div>
+                    </section>` : ''}
+                    ${komiReleaseCalendar()}
+                    ${komiYearSections()}
+                    ${komiIntroMarkup()}
 
                     <div>
                         <div class="section-header">
@@ -2646,6 +2664,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (slideInterval) clearInterval(slideInterval);
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             slideInterval = setInterval(() => {
+                if (document.hidden || document.querySelector('#heroSlider:hover, #heroSlider:focus-within')) return;
                 const maxSlides = document.querySelectorAll('.hero-slide').length;
                 if (maxSlides > 1) {
                     currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
