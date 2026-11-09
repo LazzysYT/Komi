@@ -31,9 +31,25 @@ function partySignedIn() {
     return false;
 }
 
-function partyPanel(html) {
+function partyPanel(html, isRoom = false) {
+    const modal = document.getElementById('watchPartyModal');
+    modal.classList.toggle('komi-party-room-active', isRoom);
+    modal.classList.remove('komi-party-fullscreen');
     document.getElementById('watchPartyModalContent').innerHTML = html;
-    document.getElementById('watchPartyModal').classList.add('active');
+    modal.classList.add('active');
+}
+
+function toggleKomiPartyFullscreen() {
+    const modal = document.getElementById('watchPartyModal');
+    if (!modal?.classList.contains('komi-party-room-active')) return;
+    const expanded = modal.classList.toggle('komi-party-fullscreen');
+    const button = modal.querySelector('.komi-party-fullscreen-btn');
+    if (button) {
+        button.setAttribute('aria-pressed', String(expanded));
+        button.setAttribute('aria-label', expanded ? 'Вернуться к окну с закруглёнными краями' : 'Развернуть просмотр на весь экран');
+        const text = button.querySelector('span');
+        if (text) text.textContent = expanded ? 'Обычное окно' : 'На весь экран';
+    }
 }
 
 async function openWatchPartyHub() {
@@ -140,19 +156,42 @@ async function enterParty(room) {
     }
     if (generation !== partyGeneration) return;
     const options = partyOptions(anime);
+
     partyPanel(`
-        <button class="modal-close" onclick="leaveWatchPartyRoom()">×</button>
-        <h2>${escapeFriendHtml(room.name)}</h2>
-        <p>${escapeFriendHtml(anime?.title || 'Аниме')} · ${host ? 'Ведущий' : 'Зритель'}</p>
-        <div id="partyPlayerFrame" style="width:100%;aspect-ratio:16/9;max-height:65vh;background:#08080b;border-radius:16px;overflow:hidden"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
-        <p id="partyEmbedHint" style="display:none;color:#bfb2bb;font-size:13px">Внешний плеер: выбор серии синхронизируется для всех. Управление Play, паузой и перемоткой внутри стороннего плеера не передаётся сайту — каждый участник управляет им самостоятельно.</p>
-        <p id="partyStatus" role="status"></p>
-        <div id="partyChatBox" class="party-chat-box" role="log"></div>
-        <form id="partyChat"><input name="message" maxlength="300" required placeholder="Сообщение"><button class="btn-secondary">Отправить</button></form>
-        <div id="partyReactions"></div>
-        ${host ? '<label>Серия и источник <select id="partyEpisode"></select></label>' : '<button id="partyUnlock" class="btn-secondary" hidden>Разрешить воспроизведение</button>'}
-        ${host && room.private ? '<form id="partyInvite"><input name="username" required placeholder="Имя пользователя"><button class="btn-secondary">Пригласить</button></form>' : ''}
-    `);
+        <div class="komi-party-shell">
+            <div class="komi-party-room-header" role="group" aria-label="Информация о комнате">
+                <div class="komi-party-room-identity">
+                    <div class="komi-party-kicker">KOMI WATCH PARTY <span class="komi-party-role">${host ? 'ВЕДУЩИЙ' : 'ЗРИТЕЛЬ'}</span></div>
+                    <h2>${escapeFriendHtml(room.name)}</h2>
+                    <p>${escapeFriendHtml(anime?.title || 'Аниме')} · совместный просмотр</p>
+                </div>
+                <div class="komi-party-head-actions">
+                    <button class="komi-party-fullscreen-btn" type="button" onclick="toggleKomiPartyFullscreen()" aria-pressed="false" aria-label="Развернуть просмотр на весь экран" title="На весь экран">⛶ <span>На весь экран</span></button>
+                    <button class="modal-close" type="button" onclick="leaveWatchPartyRoom()" aria-label="Закрыть комнату">×</button>
+                </div>
+            </div>
+            <div class="komi-party-room-layout">
+                <section class="komi-party-screen-panel" aria-label="Видеоплеер совместного просмотра">
+                    <div class="komi-party-video-frame" id="partyPlayerFrame"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
+                    <p id="partyEmbedHint" style="display:none">Внешний плеер: серия и источник меняются для всех участников. Play, паузой и перемоткой стороннего плеера каждый управляет самостоятельно.</p>
+                    <p id="partyStatus" role="status"></p>
+                    <div class="komi-party-source-panel">
+                        ${host ? '<label for="partyEpisode">Серия и озвучка <select id="partyEpisode"></select></label>' : '<button id="partyUnlock" class="btn-secondary" hidden>Разрешить воспроизведение</button>'}
+                    </div>
+                </section>
+                <section class="komi-party-social-panel" aria-label="Чат и реакции Watch Party">
+                    <div class="komi-party-panel-heading"><h3>Чат комнаты</h3><small>Общайтесь во время просмотра</small></div>
+                    <div id="partyChatBox" class="party-chat-box" role="log" aria-label="Сообщения в комнате"></div>
+                    <form id="partyChat"><input name="message" maxlength="300" required placeholder="Написать сообщение…" aria-label="Новое сообщение"><button class="btn-secondary">Отправить</button></form>
+                    <div>
+                        <p class="komi-party-reaction-title">Быстрые реакции</p>
+                        <div id="partyReactions"></div>
+                    </div>
+                    ${host && room.private ? '<form id="partyInvite"><input name="username" required placeholder="Ник для приглашения" aria-label="Ник пользователя"><button class="btn-secondary">Пригласить</button></form>' : ''}
+                </section>
+            </div>
+        </div>
+    `, true);
     const video = document.getElementById('partyVideoElement');
     const embed = document.getElementById('partyEmbedElement');
     const embedHint = document.getElementById('partyEmbedHint');
@@ -335,7 +374,7 @@ function leaveWatchPartyRoom() {
     partyRoom = null;
     disposeKomiMedia(document.getElementById('partyVideoElement'));
     document.getElementById('watchPartyModalContent').replaceChildren();
-    document.getElementById('watchPartyModal').classList.remove('active');
+    document.getElementById('watchPartyModal').classList.remove('active', 'komi-party-room-active', 'komi-party-fullscreen');
     return room?.host === currentUser?.authUserId && room
         ? partyCall('close', room.id).catch(error => console.warn('Закрытие комнаты:', error.message))
         : Promise.resolve();
