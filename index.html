@@ -1406,6 +1406,17 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 .komi-friends-count{font-size:14px}.komi-friends-tabs button{font-size:14px;min-height:46px}
 .user-pill{gap:8px!important}.user-pill span{font-size:14px!important}
 @media(max-width:600px){.komi-friends-drawer{padding:22px 15px;width:min(440px,calc(100vw - 12px))}}
+
+/* Watch Party creation form: clear, usable inputs and spacing */
+#partyCreateForm{display:grid;gap:15px;margin:20px 0 25px}
+#partyCreateForm label{display:grid;gap:8px;font-size:15px;font-weight:650;color:#f5eaf0}
+#partyCreateForm label:has(input[type="checkbox"]){display:flex;align-items:center;gap:12px}
+#partyCreateForm select,#partyCreateForm input:not([type="checkbox"]){box-sizing:border-box;width:100%;min-height:46px;padding:11px 13px;background:#211a21;border:1px solid #61404a;border-radius:13px;color:#fff;font:inherit}
+#partyCreateForm input[type="checkbox"]{width:20px;height:20px;accent-color:#df2947}
+#partyCreateForm select:focus,#partyCreateForm input:focus{outline:2px solid #e73555;outline-offset:1px}
+#partyCreateForm button{min-height:46px;font-size:15px;border-radius:14px}
+#partyRoomList{display:grid;gap:10px}
+#partyRoomList button{min-height:44px;text-align:left;font-size:14px}
 </style>
 <style>:root{--bg-main:#09090b;--bg-card:#17171b;--bg-input:#17171b;--border:#27272d;--primary:#e11d38;--glow:rgba(225,29,56,.2);--text-main:#f4f4f5}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(225,29,56,.45);box-shadow:0 12px 32px rgba(225,29,56,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202024,#101012)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#17171bf2;backdrop-filter:blur(14px);padding:12px;border:1px solid #27272d;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style><style>
 #watchModal .player-wrapper{aspect-ratio:16/9;min-height:0;background:#09090b}
@@ -3235,6 +3246,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 '</div></div>';
         }
 
+        let komiRouletteRun = 0;
         function randomAnimeWithAnimation() {
             if (animeList.length === 0) return;
             playSound();
@@ -3243,24 +3255,43 @@ const adminList = []; // No client-side username grants administrator privileges
             const titleEl = document.getElementById('rouletteTitle');
             modal.classList.add('active');
 
+            const run = ++komiRouletteRun;
             let counter = 0;
             const maxSteps = 12;
+            const candidates = animeList.filter(item => item.poster && /^https?:\/\//i.test(item.poster));
+            if (!candidates.length) { modal.classList.remove('active'); return; }
+            const fallback = 'anime-artwork.svg';
+            let lastId = null;
+            function showPoster(item) {
+                titleEl.textContent = item.title || 'Аниме';
+                imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = fallback; };
+                // Avoid showing the previous poster while the next image downloads.
+                imgEl.style.opacity = '0';
+                imgEl.onload = () => { if (run === komiRouletteRun) imgEl.style.opacity = '1'; };
+                imgEl.src = item.poster;
+            }
+            function pick() {
+                const options = candidates.filter(item => item.id !== lastId);
+                const item = (options.length ? options : candidates)[Math.floor(Math.random() * (options.length || candidates.length))];
+                lastId = item.id;
+                return item;
+            }
             let currentInterval = 50;
 
             function spinStep() {
-                const randomItem = animeList[Math.floor(Math.random() * animeList.length)];
-                imgEl.src = randomItem.poster;
-                titleEl.innerText = randomItem.title;
+                if (run !== komiRouletteRun) return;
+                const randomItem = pick();
+                showPoster(randomItem);
                 counter++;
 
                 if (counter < maxSteps) {
                     currentInterval += 10; 
                     setTimeout(spinStep, currentInterval);
                 } else {
-                    const finalItem = animeList[Math.floor(Math.random() * animeList.length)];
-                    imgEl.src = finalItem.poster;
-                    titleEl.innerText = finalItem.title;
+                    const finalItem = pick();
+                    showPoster(finalItem);
                     setTimeout(() => {
+                        if (run !== komiRouletteRun) return;
                         modal.classList.remove('active');
                         openWatchModal(finalItem.id);
                     }, 400);
