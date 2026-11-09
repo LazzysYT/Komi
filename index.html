@@ -2128,6 +2128,7 @@ async function loadDataFromCloud(attempt = 0) {
             else openFriendsDrawer();
         }
         function openFriendsDrawer() {
+            loadKomiCommunityProfiles().then(() => renderFriendsDrawer()).catch(console.warn);
             const drawer = document.getElementById('komiFriendsDrawer');
             drawer.classList.add('open');
             drawer.setAttribute('aria-hidden','false');
