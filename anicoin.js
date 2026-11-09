@@ -9,9 +9,9 @@ let aniCoinStatus = '';
 let aniCoinPlayer;
 let aniCoinWatchQueue = Promise.resolve();
 
-async function aniCoinRequest(action, options = {}) {
+async function aniCoinRequest(action, options = {}, expectedOwner = currentUser?.authUserId) {
     const owner = currentUser?.authUserId;
-    if (!owner || !_supabase) return;
+    if (!owner || owner !== expectedOwner || !_supabase) return;
     const { data, error } = await _supabase.rpc('komi_anicoin', { p_action: action, ...options });
     if (error) throw error;
     if (currentUser?.authUserId !== owner) return;
@@ -77,7 +77,7 @@ function aniCoinStartTracking(video) {
     };
     const sample = aniCoinPlayer;
     aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
-        await aniCoinRequest('watch', { p_session: sample.session, p_seconds: 0 });
+        await aniCoinRequest('watch', { p_session: sample.session, p_seconds: 0 }, sample.owner);
         sample.ready = true;
     }).catch(() => {
         if (aniCoinPlayer === sample) aniCoinStatus = 'Не удалось подключить начисление AniCoin.';
@@ -116,7 +116,7 @@ document.addEventListener('timeupdate', event => {
     sample.sending = true;
     sample.pulse = now;
     aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
-        await aniCoinRequest('watch', { p_session: sample.session, p_seconds: seconds });
+        await aniCoinRequest('watch', { p_session: sample.session, p_seconds: seconds }, sample.owner);
         sample.seconds = Math.max(0, sample.seconds - seconds);
     }).catch(() => {
         aniCoinStatus = 'Ошибка начисления. Проверяем соединение…';
@@ -164,7 +164,7 @@ function aniCoinStartEmbed() {
     const status = document.getElementById('komi-embed-coin-status');
     if (status) status.textContent = 'Подключаем учёт времени…';
     aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
-        await aniCoinRequest('watch', {p_session: sample.session, p_seconds: 0});
+        await aniCoinRequest('watch', {p_session: sample.session, p_seconds: 0}, sample.owner);
         sample.ready = true;
         if (status?.isConnected) status.textContent = 'Учёт активного времени включён';
     }).catch(() => {
@@ -187,7 +187,7 @@ function aniCoinStartEmbed() {
         sample.sending = true;
         sample.pulse = now;
         aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
-            await aniCoinRequest('watch', {p_session: sample.session, p_seconds: seconds});
+            await aniCoinRequest('watch', {p_session: sample.session, p_seconds: seconds}, sample.owner);
             sample.seconds = Math.max(0, sample.seconds - seconds);
         }).catch(() => {
             if (status?.isConnected) status.textContent = 'Нет соединения — прогресс ожидает отправки';

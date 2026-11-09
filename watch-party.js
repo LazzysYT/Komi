@@ -11,20 +11,13 @@ async function partyCall(action, roomId = null, args = {}) {
 }
 
 function partyOptions(anime) {
-    return (anime?.episodes || []).flatMap((episode, index) =>
-        Object.entries(episode.sources || { Default: episode.url }).flatMap(([source, rawUrl]) => {
-            const kind = komiPlayerKind(rawUrl);
-            if (!['video', 'embed', 'iframe'].includes(kind)) return [];
-            let url = rawUrl;
-            if (kind === 'iframe') {
-                const match = String(rawUrl).match(/src\s*=\s*["']([^"']+)["']/i);
-                url = match?.[1] || '';
-            }
-            const safe = komiSafeUrl(url);
+    return (Array.isArray(anime?.episodes) ? anime.episodes : []).flatMap((episode, index) =>
+        Object.entries(episode?.sources || { Default: episode?.url }).flatMap(([source, rawUrl]) => {
+            const {kind, url: safe} = KomiPlayerCore.source(rawUrl);
             if (!safe) return [];
             return [{
                 episode: index, source, url: safe,
-                kind: kind === 'video' ? 'video' : 'iframe',
+                kind: ['video','hls'].includes(kind) ? 'video' : 'iframe',
                 label: `Сезон ${Number(episode.season) || 1} · Серия ${Number(episode.number) || index + 1} · ${source}`
             }];
         })
@@ -100,10 +93,12 @@ async function openWatchPartyHub() {
 
 async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false, episodeIndex = null, source = '') {
     if (!partySignedIn()) return;
+    const generation = ++partyGeneration;
     const selectedAnime = animeList.find(anime => String(anime.id) === String(animeId));
     if (!selectedAnime) { alert('Выберите аниме из списка.'); return; }
     try { await ensureKomiAnimeDetails(selectedAnime); }
     catch (error) { alert('Не удалось загрузить серии: ' + error.message); return; }
+    if (generation !== partyGeneration) return;
     const options = partyOptions(selectedAnime);
     const episodeOptions = episodeIndex === null ? options : options.filter(item => item.episode === episodeIndex);
     const initial = episodeOptions.find(item => item.source === source) || episodeOptions[0];
@@ -111,13 +106,13 @@ async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false
         alert('У этого аниме пока нет доступных источников для совместного просмотра.');
         return;
     }
-    const generation = ++partyGeneration;
     try {
         const room = await partyCall('create', null, {
             name: name.trim() || 'Совместный просмотр', animeId: String(animeId),
             private: privateRoom, episode: initial.episode, source: initial.source
         });
         if (generation === partyGeneration) await enterParty(room);
+        else await partyCall('close', room.id);
     } catch (error) { alert('Не удалось создать комнату: ' + error.message); }
 }
 
@@ -138,7 +133,7 @@ async function enterParty(room) {
     partyHeartbeat = 0;
     closeWatchModal();
     const host = room.host === currentUser.authUserId;
-    const anime = animeList.find(item => String(item.id) === room.anime_id);
+    const anime = animeList.find(item => String(item.id) === String(room.anime_id));
     if (anime) {
         try { await ensureKomiAnimeDetails(anime); }
         catch (error) { alert('Не удалось загрузить серии для комнаты: ' + error.message); return; }
@@ -167,7 +162,7 @@ async function enterParty(room) {
     const chatBox = document.getElementById('partyChatBox');
     const chatForm = document.getElementById('partyChat');
     let lastMessages = '';
-    function showMessages(messages) {
+    function showMessages(messages = []) {
         const serialized = JSON.stringify(messages);
         if (serialized === lastMessages) return;
         lastMessages = serialized;
@@ -205,19 +200,21 @@ async function enterParty(room) {
     let loadedOption;
     let sampleAt = performance.now();
     let sampling = false;
+    let switchingSource = false;
+    let latestState = room;
 
     function applyState(state) {
+        latestState = state;
         const option = options.find(item => item.episode === state.episode && item.source === state.source);
         if (!option) {
             status.textContent = 'Этот источник отсутствует в вашем каталоге.';
-            video.pause();
-            video.removeAttribute('src');
-            video.load();
+            disposeKomiMedia(video);
             embed.removeAttribute('src');
             loadedOption = null;
             return;
         }
         if (loadedOption !== option) {
+            switchingSource = true;
             loadedOption = option;
             const external = option.kind === 'iframe';
             video.pause();
@@ -225,22 +222,23 @@ async function enterParty(room) {
             embed.style.display = external ? 'block' : 'none';
             embedHint.style.display = external ? 'block' : 'none';
             if (external) {
-                video.removeAttribute('src');
-                video.load();
+                disposeKomiMedia(video);
                 embed.src = option.url;
             } else {
                 embed.removeAttribute('src');
-                video.src = option.url;
+                attachKomiMedia(video, option.url, () => { status.textContent = 'Не удалось загрузить видео. Выберите другой источник.'; });
             }
+            if (external) switchingSource = false;
         }
         if (option.kind === 'iframe') {
+            if (unlock) unlock.hidden = true;
             if (select) select.value = String(options.indexOf(option));
             return;
         }
         if (select) select.value = String(options.indexOf(option));
         if (host || video.readyState < 1) return;
         const elapsed = state.playing ? Math.max(0, Date.parse(state.server_now) - Date.parse(state.changed_at) + performance.now() - sampleAt) / 1000 : 0;
-        const desired = Math.min(video.duration || Infinity, state.position + elapsed);
+        const desired = Math.min(video.duration || Infinity, Number(state.position) + elapsed);
         if (Math.abs(video.currentTime - desired) > (state.playing ? 0.7 : 0.12)) video.currentTime = desired;
         if (!state.playing) {
             video.pause();
@@ -250,12 +248,14 @@ async function enterParty(room) {
         }
     }
 
-    function publish(option, position, playing) {
-        partyWrites = partyWrites.catch(() => {}).then(async () => {
+    const writer = KomiPlayerCore.createWriter(async ({option, position, playing, sampledAt}) => {
             if (!isActive()) return;
-            await partyCall('state', room.id, { episode: option.episode, source: option.source, position, playing });
+            const elapsed = playing ? (performance.now() - sampledAt) / 1000 : 0;
+            await partyCall('state', room.id, { episode: option.episode, source: option.source, position: position + elapsed, playing });
             status.textContent = '';
-        }).catch(error => { status.textContent = 'Синхронизация: ' + error.message; });
+        }, error => { if (isActive()) status.textContent = 'Синхронизация: ' + error.message; });
+    function publish(option, position, playing) {
+        partyWrites = writer.enqueue(room.id, {option, position, playing, sampledAt: performance.now()});
     }
 
     async function poll() {
@@ -263,12 +263,18 @@ async function enterParty(room) {
         sampling = true;
         try {
             const heartbeat = host && (!partyHeartbeat || performance.now() - partyHeartbeat > 15000);
+            if (heartbeat && loadedOption?.kind === 'video' && !switchingSource && video.readyState >= 1) {
+                publish(loadedOption, video.currentTime, !video.paused && !video.ended && video.readyState >= 3);
+                await partyWrites;
+            }
+            const requestAt = performance.now();
             const state = await partyCall(heartbeat ? 'heartbeat' : 'read', room.id);
             if (!isActive()) return;
+            status.textContent = '';
             showMessages(state.messages);
             if (!host) {
                 partyRoom = state;
-                sampleAt = performance.now();
+                sampleAt = (requestAt + performance.now()) / 2;
                 applyState(state);
             }
             if (heartbeat) partyHeartbeat = performance.now();
@@ -292,16 +298,16 @@ async function enterParty(room) {
         };
         for (const event of ['playing', 'pause', 'seeked', 'waiting', 'ended']) {
             video.addEventListener(event, () => {
-                if (!loadedOption || video.readyState < 1) return;
+                if (!isActive() || switchingSource || loadedOption?.kind !== 'video' || video.readyState < 1) return;
                 publish(loadedOption, video.currentTime, !video.paused && !video.ended && event !== 'waiting' && video.readyState >= 3);
             });
         }
         video.onloadedmetadata = () => {
-            if (loadedOption?.episode === room.episode && loadedOption?.source === room.source && room.position > 0) {
-                video.currentTime = Math.min(room.position, video.duration || Infinity);
+            switchingSource = false;
+            if (loadedOption) {
+                if (latestState.position > 0) video.currentTime = Math.min(latestState.position, video.duration || Infinity);
                 publish(loadedOption, video.currentTime, false);
             }
-            video.onloadedmetadata = null;
         };
         const invite = document.getElementById('partyInvite');
         if (invite) invite.onsubmit = async event => {
@@ -313,7 +319,7 @@ async function enterParty(room) {
             } catch (error) { status.textContent = error.message; }
         };
     } else {
-        video.onloadedmetadata = () => { if (isActive()) applyState(partyRoom); };
+        video.onloadedmetadata = () => { switchingSource = false; if (isActive()) applyState(partyRoom); };
         unlock.onclick = () => { if (isActive()) applyState(partyRoom); };
     }
     applyState(room);
@@ -327,6 +333,7 @@ function leaveWatchPartyRoom() {
     const embed = document.getElementById('partyEmbedElement');
     if (embed) embed.removeAttribute('src');
     partyRoom = null;
+    disposeKomiMedia(document.getElementById('partyVideoElement'));
     document.getElementById('watchPartyModalContent').replaceChildren();
     document.getElementById('watchPartyModal').classList.remove('active');
     return room?.host === currentUser?.authUserId && room
