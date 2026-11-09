@@ -19,6 +19,19 @@ const path=require('node:path');
    });
    await page.evaluate(()=>openWatchModal('1'));
    await page.waitForSelector('#animeVideoPlayer');
+   const cinema = await page.evaluate(() => {
+     const modal=document.getElementById('watchModalContent');
+     const stage=document.querySelector('#watchModal .komi-watch-stage');
+     const rect=modal.getBoundingClientRect();
+     const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
+     return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,columns:getComputedStyle(stage).gridTemplateColumns };
+   });
+   assert.ok(cinema.width >= width * .92, 'Watch modal should use almost full screen width');
+   assert.ok(cinema.height >= 800, 'Watch modal should use almost full screen height');
+   assert.ok(cinema.radius >= 15, 'Watch modal should have rounded corners');
+   assert.equal(cinema.stageDisplay,'grid');
+   await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
+
    const state=await page.evaluate(()=>{
     currentUser={username:'test_viewer'};
     const video=document.getElementById('animeVideoPlayer');
