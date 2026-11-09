@@ -1872,8 +1872,10 @@ body > header {
 let catalogRefreshSince = new Date().toISOString();
 let catalogRefreshInProgress = false;
 let catalogInitialLoadComplete = false;
+let catalogInitialLoadFailed = false;
 
 async function loadDataFromCloud(attempt = 0) {
+    catalogInitialLoadFailed = false;
     try {
         if (!_supabase) throw new Error('Supabase не подключён');
 
@@ -1942,6 +1944,8 @@ async function loadDataFromCloud(attempt = 0) {
         // Preserve already displayed records while retrying.
         if (attempt < 3) {
             setTimeout(() => loadDataFromCloud(attempt + 1), 2000 * 2 ** attempt);
+        } else {
+            catalogInitialLoadFailed = true;
         }
     }
     render();
@@ -2467,6 +2471,13 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!container) return;
             
             if (currentView === 'home') {
+                if (!catalogInitialLoadComplete) {
+                    clearInterval(slideInterval);
+                    container.innerHTML = catalogInitialLoadFailed
+                        ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
+                        : '<section class="komi-catalog-empty" role="status" aria-live="polite"><strong>Загружаем каталог</strong><p>Подборки появятся, когда каталог будет готов.</p></section>';
+                    return;
+                }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
                     .sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0)).slice(0,5);
                 const bestShiki = [...animeList].sort((a,b) => parseFloat(b.shikiRating || '0') - parseFloat(a.shikiRating || '0')).slice(0, 7);
@@ -4386,6 +4397,7 @@ const adminList = []; // No client-side username grants administrator privileges
         }
         setInterval(refreshKomiCatalogUpdates, 120000);
 
+        render();
         loadDataFromCloud();
         // Broadcast dates can load in parallel with the 6,000+ item catalog.
         loadKomiEpisodeSchedule();
