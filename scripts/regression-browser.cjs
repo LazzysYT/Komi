@@ -12,6 +12,20 @@ const path=require('node:path');
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    await page.goto(process.env.KOMI_TEST_URL || 'http://127.0.0.1:8765');
    await page.waitForFunction(()=>typeof bindKomiPlayer==='function');
+   if (width === 1440) {
+     const direct = await browser.newPage({viewport:{width:1280,height:800}});
+     await direct.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+     const base=process.env.KOMI_TEST_URL || 'http://127.0.0.1:8765';
+     await direct.goto(base+'#shop');
+     await direct.waitForSelector('#anicoin-title');
+     assert.equal(await direct.evaluate(()=>currentView),'shop','Direct #shop must show store');
+     await direct.goto(base+'#catalog');
+     await direct.waitForFunction(()=>currentView==='catalog');
+     assert.ok(await direct.locator('#mainContainer h1').count());
+     await direct.goto(base+'#profile');
+     await direct.waitForSelector('#authModal.active');
+     await direct.close();
+   }
    const favicon=await page.locator('link[rel="icon"]').getAttribute('href');
    assert.equal(favicon,'./icon.svg','Favicon must use a real static SVG file');
    const faviconResponse=await page.request.get(new URL('icon.svg',page.url()).href);
