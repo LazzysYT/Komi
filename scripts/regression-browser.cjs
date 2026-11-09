@@ -23,8 +23,22 @@ const path=require('node:path');
      bodyColor:getComputedStyle(document.body).backgroundColor,
      link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.endsWith('/mono-ui.css'))
    }));
-   assert.equal(mono.primary,'#f5f5f5','Global theme must use white accents');
+   assert.equal(mono.primary,'#ffffff','Global theme must use pure white accents');
    assert.ok(mono.link,'Global monochrome CSS must be loaded');
+   const emblems = await page.evaluate(() => {
+      const get = selector => {
+        const element = document.querySelector(selector);
+        const style = getComputedStyle(element);
+        return {background:style.backgroundColor,color:style.color,border:style.borderTopColor};
+      };
+      return {side:get('.komi-side-logo'),header:get('.logo-box'),heading:get('.logo-text')};
+   });
+   for (const [label,icon] of [['sidebar',emblems.side],['header',emblems.header]]) {
+     assert.equal(icon.background,'rgb(0, 0, 0)',label+' Komi emblem must be black');
+     assert.equal(icon.color,'rgb(255, 255, 255)',label+' Komi emblem K must be white');
+   }
+   assert.equal(emblems.heading.color,'rgb(255, 255, 255)','Brand name must be pure white');
+
    await page.waitForSelector('#animeVideoPlayer');
    const cinema = await page.evaluate(() => {
      const modal=document.getElementById('watchModalContent');
