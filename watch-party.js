@@ -172,7 +172,7 @@ async function enterParty(room) {
             </div>
             <div class="komi-party-room-layout">
                 <section class="komi-party-screen-panel" aria-label="Видеоплеер совместного просмотра">
-                    <div class="komi-party-video-frame" id="partyPlayerFrame"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
+                    <div class="komi-party-video-frame" id="partyPlayerFrame"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
                     <p id="partyEmbedHint" style="display:none">Внешний плеер: серия и источник меняются для всех участников. Play, паузой и перемоткой стороннего плеера каждый управляет самостоятельно.</p>
                     <p id="partyStatus" role="status"></p>
                     <div class="komi-party-source-panel">
