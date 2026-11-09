@@ -138,7 +138,7 @@
 #watchPartyModal .komi-party-fullscreen-btn:hover,
 #watchPartyModal .komi-party-room-header .modal-close:hover {background:#502338;border-color:#ed4363}
 #watchPartyModal .komi-party-room-layout {
-  display:grid;grid-template-columns:minmax(0,1fr) clamp(300px,23vw,380px);
+  display:grid;grid-template-columns:minmax(0,1fr) clamp(340px,25vw,400px);
   gap:clamp(14px,1.4vw,25px);min-width:0;flex:1;align-items:start;
 }
 #watchPartyModal .komi-party-screen-panel {display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -231,7 +231,7 @@
 #watchPartyModal:not(.komi-party-room-active) #partyRoomList {max-height:35dvh;overflow-y:auto}
 @media(max-width:1050px) {
   #watchModal .komi-watch-stage {grid-template-columns:minmax(0,1fr) 265px !important;gap:12px !important}
-  #watchPartyModal .komi-party-room-layout {grid-template-columns:minmax(0,1fr) 300px;gap:14px}
+  #watchPartyModal .komi-party-room-layout {grid-template-columns:minmax(0,1fr) 315px;gap:14px}
   #watchPartyModal .komi-party-social-panel {padding:15px}
 }
 @media(max-width:820px) {
