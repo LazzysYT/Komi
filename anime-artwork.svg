@@ -1,5 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540">
-  <defs><linearGradient id="bg"><stop stop-color="#381e30"/><stop offset="1" stop-color="#12131d"/></linearGradient></defs>
-  <path fill="url(#bg)" d="M0 0h960v540H0z"/>
-  <path fill="#f03d50" d="M435 200h22v60l50-60h29l-56 66 60 74h-30l-53-65v65h-22z"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 540" role="img" aria-label="Постер аниме пока недоступен">
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#202020"/>
+      <stop offset=".55" stop-color="#101010"/>
+      <stop offset="1" stop-color="#252525"/>
+    </linearGradient>
+  </defs>
+  <rect width="960" height="540" rx="18" fill="url(#background)"/>
+  <g transform="translate(480 268)" text-anchor="middle">
+    <rect x="-68" y="-68" width="136" height="136" rx="31" fill="#080808" stroke="#777" stroke-width="2"/>
+    <path d="M-29-42h17v36L22-42h22L7-3l40 45H23L-12 2v40h-17z" fill="#fff"/>
+    <text x="0" y="105" fill="#b6b6b6" font-family="Arial,sans-serif" font-size="17" font-weight="700" letter-spacing="4">KOMI ANIME</text>
+  </g>
 </svg>
