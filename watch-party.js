@@ -17,7 +17,7 @@ function partyOptions(anime) {
             if (!['video', 'embed', 'iframe'].includes(kind)) return [];
             let url = rawUrl;
             if (kind === 'iframe') {
-                const match = String(rawUrl).match(/src\\s*=\\s*["']([^"']+)["']/i);
+                const match = String(rawUrl).match(/src\s*=\s*["']([^"']+)["']/i);
                 url = match?.[1] || '';
             }
             const safe = komiSafeUrl(url);
