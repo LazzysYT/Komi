@@ -18,6 +18,13 @@ const path=require('node:path');
     catalogInitialLoadComplete=true;render();
    });
    await page.evaluate(()=>openWatchModal('1'));
+   const mono = await page.evaluate(() => ({
+     primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim().toLowerCase(),
+     bodyColor:getComputedStyle(document.body).backgroundColor,
+     link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.endsWith('/mono-ui.css'))
+   }));
+   assert.equal(mono.primary,'#f5f5f5','Global theme must use white accents');
+   assert.ok(mono.link,'Global monochrome CSS must be loaded');
    await page.waitForSelector('#animeVideoPlayer');
    const cinema = await page.evaluate(() => {
      const modal=document.getElementById('watchModalContent');
@@ -64,6 +71,24 @@ const path=require('node:path');
     ensureKomiAnimeDetails=original;
     return document.getElementById('watchModal').classList.contains('active');
    });assert.equal(race,false);
+   if (width === 1440) {
+     const random=await page.evaluate(async()=>{
+       const catalogBefore=animeList;
+       const originalOpen=openWatchModal;
+       let opened=null;
+       animeList=[{id:'posterless-title',title:'Аниме без постера',poster:null}];
+       openWatchModal=id=>{opened=String(id);};
+       randomAnimeWithAnimation();
+       await new Promise(resolve=>setTimeout(resolve,3200));
+       const shown=document.getElementById('rouletteTitle').textContent;
+       const source=document.getElementById('rouletteImage').getAttribute('src');
+       animeList=catalogBefore;openWatchModal=originalOpen;
+       return {opened,shown,source};
+     });
+     assert.equal(random.opened,'posterless-title','Random anime must include entries with missing posters');
+     assert.equal(random.shown,'Аниме без постера');
+     assert.ok(random.source.includes('anime-artwork.svg'));
+   }
    await page.screenshot({path:path.join(output,`regression-${width}.png`),fullPage:true});
    assert.deepEqual(errors,[]);console.log('PASS browser',width,'progress/source/search/auth/close race/overflow');await page.close();
   }
