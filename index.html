@@ -1944,9 +1944,9 @@ async function loadDataFromCloud(attempt = 0) {
         const catalog = [];
         let lastId = 0;
         while (true) {
-            const pageSize = catalog.length ? 100 : 48;
+            const pageSize = catalog.length ? 500 : 48;
             const { data: rows, error } = await _supabase
-                .from('komi_catalog_cards').select('shikimori_id,data')
+                .from('komi_catalog_cards').select('shikimori_id,data,updated_at')
                 .gt('shikimori_id', lastId)
                 .order('shikimori_id', { ascending: true })
                 .limit(pageSize);
@@ -1964,6 +1964,7 @@ async function loadDataFromCloud(attempt = 0) {
                     shikiRating: anime.shikiRating || 0,
                     genres: Array.isArray(anime.genres) ? anime.genres : [],
                     episodeCount: Math.max(0, Number(anime.episodeCount) || 0),
+                    komiCardUpdatedAt: row.updated_at,
                     // Full episode sources are fetched only when opening a title.
                     episodes: []
                 });
@@ -4301,7 +4302,7 @@ const adminList = []; // No client-side username grants administrator privileges
         let komiDetailOpenToken = 0;
         async function ensureKomiAnimeDetails(anime) {
             const id = String(anime.shikimoriId || anime.id);
-            if (anime.komiDetailsLoaded && anime.episodes?.length === Number(anime.episodeCount || 0)) return anime;
+            if (anime.komiDetailsLoaded && anime.komiDetailsLoadedAt === anime.komiCardUpdatedAt) return anime;
             if (komiDetailsPending.has(id)) return komiDetailsPending.get(id);
             const request = (async () => {
                 const { data: row, error } = await _supabase.from('anime_catalog')
@@ -4312,7 +4313,8 @@ const adminList = []; // No client-side username grants administrator privileges
                     id, shikimoriId: Number(id),
                     episodes: Array.isArray(row.data.episodes) ? row.data.episodes : [],
                     episodeCount: Array.isArray(row.data.episodes) ? row.data.episodes.length : 0,
-                    komiDetailsLoaded: true
+                    komiDetailsLoaded: true,
+                    komiDetailsLoadedAt: anime.komiCardUpdatedAt
                 });
                 return anime;
             })().finally(() => komiDetailsPending.delete(id));
@@ -4330,7 +4332,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
             closeWatchModal();
-            if (!anime.komiDetailsLoaded || anime.episodes?.length !== Number(anime.episodeCount || 0)) {
+            if (!anime.komiDetailsLoaded || anime.komiDetailsLoadedAt !== anime.komiCardUpdatedAt) {
                 const modal = document.getElementById('watchModal');
                 const body = document.getElementById('watchModalContent');
                 body.innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><p role="status" style="padding:35px">Загружаем описание и серии…</p>';
@@ -4506,6 +4508,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         title: data.title || data.originalTitle || 'Без названия',
                         genres: Array.isArray(data.genres) ? data.genres : [],
                         episodeCount: Math.max(0, Number(data.episodeCount) || 0),
+                        komiCardUpdatedAt: row.updated_at,
                         episodes: []
                     };
                     const index = indexById.get(id);
@@ -4515,11 +4518,12 @@ const adminList = []; // No client-side username grants administrator privileges
                         changed = true;
                     } else {
                         const previous = animeList[index];
-                        if (previous.komiDetailsLoaded && previous.episodes?.length === normalized.episodeCount) {
+                        if (previous.komiDetailsLoaded && previous.komiDetailsLoadedAt === normalized.komiCardUpdatedAt) {
                             normalized.episodes = previous.episodes;
                             normalized.desc = previous.desc;
                             normalized.screenshots = previous.screenshots;
                             normalized.komiDetailsLoaded = true;
+                            normalized.komiDetailsLoadedAt = previous.komiDetailsLoadedAt;
                         }
                         if (JSON.stringify(previous) === JSON.stringify(normalized)) continue;
                         animeList[index] = normalized;
