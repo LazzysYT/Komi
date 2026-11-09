@@ -1393,6 +1393,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 #komiCalendarSection .komi-calendar-tag{font-size:10px;flex-shrink:0;background:#2e1923;color:#ff9cad;border:1px solid #6e2b40;border-radius:8px;padding:6px 8px}
 @media(max-width:920px){#komiCalendarSection .komi-release-list{grid-template-columns:1fr}}
 
+
+/* Larger, readable community controls and accessible account sign-out */
+.komi-friends-drawer{width:min(490px,calc(100vw - 20px));padding:30px 25px;gap:19px}
+.komi-friends-heading h2{font-size:29px}.komi-friends-heading p{font-size:14px}
+.komi-friends-search{height:55px}.komi-friends-search input{font-size:15px!important}
+.komi-friends-person{padding:14px 13px;gap:13px;min-height:80px;border-radius:19px}
+.komi-friends-identity img{width:53px;height:53px;border-radius:15px}
+.komi-friends-identity strong{font-size:16px}.komi-friends-identity small{font-size:13px}
+.komi-friends-add{width:45px;height:45px;min-width:45px;border-radius:14px;font-size:28px}
+.komi-friends-unavailable{font-size:12px;color:#b9aab0;padding:9px 5px;text-align:center;max-width:96px}
+.komi-friends-count{font-size:14px}.komi-friends-tabs button{font-size:14px;min-height:46px}
+.user-pill{gap:8px!important}.user-pill span{font-size:14px!important}
+@media(max-width:600px){.komi-friends-drawer{padding:22px 15px;width:min(440px,calc(100vw - 12px))}}
 </style>
 <style>:root{--bg-main:#09090b;--bg-card:#17171b;--bg-input:#17171b;--border:#27272d;--primary:#e11d38;--glow:rgba(225,29,56,.2);--text-main:#f4f4f5}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(225,29,56,.45);box-shadow:0 12px 32px rgba(225,29,56,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202024,#101012)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#17171bf2;backdrop-filter:blur(14px);padding:12px;border:1px solid #27272d;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style><style>
 #watchModal .player-wrapper{aspect-ratio:16/9;min-height:0;background:#09090b}
@@ -2137,9 +2150,23 @@ async function loadDataFromCloud(attempt = 0) {
             closeFriendsDrawer();
             openProfile(name);
         }
-        function requestCommunityFriend(name) {
-            sendFriendRequest(name);
+        async function requestCommunityFriend(name) {
+            await sendFriendRequest(name);
+            await loadKomiCommunityProfiles();
             renderFriendsDrawer();
+        }
+        let komiCommunityVerifiedNames = new Set();
+        async function loadKomiCommunityProfiles() {
+            if (!_supabase) return;
+            const { data, error } = await _supabase.from('komi_profiles').select('username,display_name,avatar_url').limit(1000);
+            if (error) { console.warn('Komi profiles:', error.message); return; }
+            komiCommunityVerifiedNames = new Set();
+            for (const profile of data || []) {
+                if (!profile.username) continue;
+                komiCommunityVerifiedNames.add(profile.username);
+                if (!userProfiles[profile.username]) userProfiles[profile.username] = {};
+                if (profile.avatar_url) userProfiles[profile.username].avatar = profile.avatar_url;
+            }
         }
         function renderFriendsDrawer() {
             const list = document.getElementById('komiFriendsDrawerList');
@@ -2151,7 +2178,7 @@ async function loadDataFromCloud(attempt = 0) {
             const friends = me ? friendsFor(me) : [];
             const pendingNames = me ? Object.entries(userNotifications).filter(([name,notifs])=>Array.isArray(notifs)&&notifs.some(n=>n.friendRequestFrom===me)).map(([name])=>name) : [];
             // Profiles are synchronized from Supabase (animes row 4); local registrations alone are not globally discoverable.
-            const names = komiFriendsTab === 'friends' ? friends : Object.keys(userProfiles);
+            const names = komiFriendsTab === 'friends' ? friends : [...new Set([...Object.keys(userProfiles), ...komiCommunityVerifiedNames])];
             const unique = [...new Set(names)].filter(n => n && n !== me && n.toLocaleLowerCase().includes(query)).sort((a,b)=>a.localeCompare(b,'ru'));
             if (komiFriendsTab === 'friends' && !me) {
                 list.innerHTML = '<div class="komi-friends-empty"><strong>Войди в аккаунт</strong><p>Чтобы увидеть друзей, нужно авторизоваться.</p><button class="btn-glow" onclick="closeFriendsDrawer();openAuthModal(\'login\')">Войти</button></div>';
@@ -2167,7 +2194,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.includes(name);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':'Участник Komi')+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>':'<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>')+'</div>';
+                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
         }
@@ -2494,7 +2521,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 logout.textContent = 'Выйти';
                 logout.title = 'Выйти';
                 logout.setAttribute('aria-label', 'Выйти из аккаунта');
-                logout.style.cssText = 'background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:10px;margin-left:2px';
+                logout.style.cssText = 'background:#26181e;border:1px solid #653342;border-radius:12px;padding:9px 13px;min-height:40px;color:#fff;cursor:pointer;font-size:14px;font-weight:700;margin-left:8px';
                 logout.addEventListener('click', event => { event.stopPropagation(); logoutUser(); });
                 pill.append(img, name, logout);
                 area.replaceChildren(pill);
@@ -3289,6 +3316,7 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         async function sendFriendRequest(targetUsername) {
+            if (!currentUser?.authUserId) { alert('Для заявок в друзья войдите через email или Google. Старые аккаунты пока не привязаны к защищённой системе.'); return; }
             if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
             if (currentUser.authUserId) {
@@ -3297,7 +3325,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     const { data: target, error: lookupError } = await _supabase.from('komi_profiles')
                         .select('user_id').eq('username', targetUsername).maybeSingle();
                     if (lookupError) throw lookupError;
-                    if (!target) throw new Error('У пользователя нет профиля Komi.');
+                    if (!target) throw new Error('Этот старый профиль ещё не привязан к новому аккаунту.');
                     if (currentUser?.authUserId !== sender) return;
                     if (target.user_id === sender || friendsFor(currentUser.username).includes(targetUsername)) return;
                     const { error } = await _supabase.from('komi_friend_requests')
