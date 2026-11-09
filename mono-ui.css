@@ -231,3 +231,25 @@ header .logo-container .logo-text {
 .komi-seo-fallback h1{font-size:clamp(24px,3vw,42px);color:#fff}
 .komi-seo-fallback p{color:#ddd;line-height:1.7}
 .komi-seo-fallback a{display:inline-flex;margin-right:14px;margin-top:12px;color:#fff;text-decoration:underline}
+
+/* The roulette displays a calm neutral skeleton while a real image loads;
+   never flash the previous anime cover or a bright logo on every spin. */
+#randomRouletteModal #rouletteContainer {
+  position:relative;
+  background:linear-gradient(130deg,#151515,#303030,#161616) !important;
+  border-color:#fff !important;
+}
+#randomRouletteModal #rouletteContainer img {
+  display:block;opacity:1;transition:opacity .16s ease;
+}
+#randomRouletteModal #rouletteContainer.is-loading::after {
+  content:'ПОИСК ПОСТЕРА';
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(115deg,#161616 0%,#303030 45%,#161616 100%);
+  color:#d4d4d4;font-size:10px;font-weight:800;letter-spacing:1.1px;
+  pointer-events:none;animation:komiPosterPulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes komiPosterPulse{from{opacity:.73}to{opacity:1}}
+@media(prefers-reduced-motion:reduce) {
+  #randomRouletteModal #rouletteContainer.is-loading::after{animation:none}
+}
