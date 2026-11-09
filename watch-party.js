@@ -12,12 +12,22 @@ async function partyCall(action, roomId = null, args = {}) {
 
 function partyOptions(anime) {
     return (anime?.episodes || []).flatMap((episode, index) =>
-        Object.entries(episode.sources || { Default: episode.url }).filter(([, url]) =>
-            ['video', 'iframe'].includes(komiPlayerKind(url)) && komiSafeUrl(url)
-        ).map(([source, url]) => ({
-            episode: index, source, url: komiSafeUrl(url), kind: komiPlayerKind(url),
-            label: `Сезон ${Number(episode.season) || 1} · Серия ${Number(episode.number) || index + 1} · ${source}`
-        }))
+        Object.entries(episode.sources || { Default: episode.url }).flatMap(([source, rawUrl]) => {
+            const kind = komiPlayerKind(rawUrl);
+            if (!['video', 'embed', 'iframe'].includes(kind)) return [];
+            let url = rawUrl;
+            if (kind === 'iframe') {
+                const match = String(rawUrl).match(/src\\s*=\\s*["']([^"']+)["']/i);
+                url = match?.[1] || '';
+            }
+            const safe = komiSafeUrl(url);
+            if (!safe) return [];
+            return [{
+                episode: index, source, url: safe,
+                kind: kind === 'video' ? 'video' : 'iframe',
+                label: `Сезон ${Number(episode.season) || 1} · Серия ${Number(episode.number) || index + 1} · ${source}`
+            }];
+        })
     );
 }
 
