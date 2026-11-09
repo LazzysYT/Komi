@@ -4088,7 +4088,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!safe) return '<div class="komi-player-notice"> Небезопасная или неверная ссылка плеера.</div>';
             if (kind === 'video') return '<div class="player-box"><video id="animeVideoPlayer" controls preload="metadata" playsinline onloadedmetadata="restoreKomiVideo(this)" ontimeupdate="saveProgress(\''+animeId+'\',this)" onended="playNextEp(\''+animeId+'\','+season+','+index+')" onerror="showKomiPlayerError()"><source src="'+safe+'"></video></div>';
             if (kind === 'hls') return '<div class="komi-player-notice">Этот источник использует HLS. Если видео не поддерживается браузером, откройте его в совместимом плеере.</div><div class="player-box"><video id="animeVideoPlayer" controls playsinline onloadedmetadata="restoreKomiVideo(this)" ontimeupdate="saveProgress(\''+animeId+'\',this)" onerror="showKomiPlayerError()" src="'+safe+'"></video></div>';
-            return '<div class="player-box"><iframe src="'+safe+'" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;min-height:340px;border:0;border-radius:14px"></iframe></div><p class="komi-player-hint">Встроенные плееры могут не передавать прогресс просмотра. Выбранная серия сохраняется.</p>';
+            return '<div class="player-box"><iframe src="'+safe+'" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin" style="width:100%;min-height:340px;border:0;border-radius:14px"></iframe></div><div class="komi-player-hint" style="padding:12px"><button type="button" class="btn-glow-secondary" onclick="aniCoinStartEmbed()">▶ Начать учёт AniCoin</button><span id="komi-embed-coin-status" role="status" style="margin-left:12px">Учитывается активное время открытого плеера, не подтверждённое воспроизведение. При паузе остановите учёт, закрыв серию.</span></div>';
         }
         function showKomiPlayerError() {
             const wrapper=document.querySelector('#watchModalContent .player-wrapper');
@@ -4281,6 +4281,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if(button) button.textContent=modal.classList.contains('komi-watch-fullscreen')?'Обычный размер':'На весь экран';
         }
         function closeWatchModal() {
+            if (typeof aniCoinStopEmbed === 'function') aniCoinStopEmbed();
             document.getElementById('watchModal')?.classList.remove('komi-watch-fullscreen');
             const videoEl = document.getElementById('animeVideoPlayer');
             if (videoEl) {

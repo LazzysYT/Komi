@@ -138,6 +138,63 @@ document.addEventListener('visibilitychange', () => {
     }
 });
 
+
+/* Embedded providers cannot expose reliable playback events across origins.
+   Count only explicitly started, foreground watch sessions, not verified video time. */
+let aniCoinEmbedSession = null;
+let aniCoinEmbedTimer = null;
+function aniCoinStopEmbed() {
+    aniCoinEmbedSession = null;
+    if (aniCoinEmbedTimer) clearInterval(aniCoinEmbedTimer);
+    aniCoinEmbedTimer = null;
+}
+function aniCoinStartEmbed() {
+    const iframe = document.querySelector('#watchModal.active #watchModalContent .player-box iframe');
+    if (!iframe || !currentUser?.authUserId) {
+        aniCoinStatus = 'Войдите в аккаунт, чтобы учитывать время просмотра.';
+        return;
+    }
+    aniCoinStopEmbed();
+    const sample = {
+        iframe, owner: currentUser.authUserId, session: crypto.randomUUID(),
+        last: performance.now(), seconds: 0, pulse: performance.now(),
+        ready: false, sending: false
+    };
+    aniCoinEmbedSession = sample;
+    const status = document.getElementById('komi-embed-coin-status');
+    if (status) status.textContent = 'Подключаем учёт времени…';
+    aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
+        await aniCoinRequest('watch', {p_session: sample.session, p_seconds: 0});
+        sample.ready = true;
+        if (status?.isConnected) status.textContent = 'Учёт активного времени включён';
+    }).catch(() => {
+        if (status?.isConnected) status.textContent = 'Ошибка подключения. Повторите попытку.';
+        aniCoinStopEmbed();
+    });
+    aniCoinEmbedTimer = setInterval(() => {
+        if (aniCoinEmbedSession !== sample) return;
+        const now = performance.now();
+        const active = !document.hidden &&
+            document.querySelector('#watchModal.active #watchModalContent .player-box iframe') === sample.iframe &&
+            currentUser?.authUserId === sample.owner;
+        const elapsed = (now - sample.last) / 1000;
+        sample.last = now;
+        if (!active) return;
+        if (elapsed > 0 && elapsed <= 2) sample.seconds += elapsed;
+        if (!sample.ready || sample.sending || now - sample.pulse < 12000) return;
+        const seconds = Math.min(20, Math.floor(sample.seconds));
+        if (!seconds) return;
+        sample.sending = true;
+        sample.pulse = now;
+        aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
+            await aniCoinRequest('watch', {p_session: sample.session, p_seconds: seconds});
+            sample.seconds = Math.max(0, sample.seconds - seconds);
+        }).catch(() => {
+            if (status?.isConnected) status.textContent = 'Нет соединения — прогресс ожидает отправки';
+        }).finally(() => {sample.sending = false;});
+    }, 1000);
+}
+
 window.addEventListener('hashchange', () => {
     if (location.hash === '#shop' && currentView !== 'shop') openAniCoinShop();
     else if (location.hash !== '#shop' && currentView === 'shop') navigate('home');
