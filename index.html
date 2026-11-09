@@ -3430,7 +3430,10 @@ const adminList = []; // No client-side username grants administrator privileges
                 // Give the final picture time to load. An unsuccessful provider
                 // shows a monochrome fallback, never the poster of another anime.
                 Promise.all([
-                    finalPoster,
+                    Promise.race([
+                        finalPoster,
+                        new Promise(resolve => setTimeout(() => resolve(''), 3600))
+                    ]),
                     new Promise(resolve => setTimeout(resolve, 1000))
                 ]).then(([poster]) => {
                     if (run !== komiRouletteRun || token !== imageToken ||
