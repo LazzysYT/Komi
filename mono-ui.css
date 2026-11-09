@@ -8,12 +8,12 @@
   --bg-card-hover: #222222;
   --bg-input: #1b1b1b;
   --border: #393939;
-  --primary: #f5f5f5;
+  --primary: #ffffff;
   --primary-hover: #ffffff;
-  --accent: #e8e8e8;
+  --accent: #ffffff;
   --glow: rgba(255,255,255,.12);
-  --text-main: #f5f5f5;
-  --text-muted: #acacac;
+  --text-main: #ffffff;
+  --text-muted: #cecece;
   --success: #dedede;
 }
 body {
@@ -51,8 +51,8 @@ input::placeholder,textarea::placeholder {color:#898989}
 .season-tab-btn.active,.player-switch-btn.active,
 .komi-party-social-panel #partyChat button,
 .komi-party-social-panel #partyInvite button) {
-  background:#f3f3f3 !important;
-  border:1px solid #fff !important;
+  background:#ffffff !important;
+  border:1px solid #ffffff !important;
   color:#0a0a0a !important;
   box-shadow:0 0 0 1px rgba(255,255,255,.04) !important;
 }
@@ -60,7 +60,7 @@ input::placeholder,textarea::placeholder {color:#898989}
 .komi-watch-navbtn.primary,.komi-episode-number.active,
 .komi-friends-tabs button.active,.season-tab-btn.active,
 .player-switch-btn.active):hover:not(:disabled) {
-  background:#d5d5d5 !important;
+  background:#efefef !important;
   border-color:#f3f3f3 !important;
   color:#090909 !important;
 }
@@ -169,4 +169,54 @@ input::placeholder,textarea::placeholder {color:#898989}
 }
 @media(prefers-reduced-motion:reduce) {
   :is(button,select,input,textarea) {transition:none}
+}
+
+/* Brand identity: BLACK Komi tiles, crisp WHITE K and thin white outline.
+   Both real logo selectors are intentional: .logo-box in header,
+   .komi-side-logo in left navigation. */
+header .logo-container .logo-box,
+.komi-side-nav .komi-side-logo {
+  background:#000000 !important;
+  background-image:none !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  border:1px solid rgba(255,255,255,.88) !important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.035), 0 6px 24px rgba(0,0,0,.55) !important;
+  filter:none !important;
+  text-shadow:none !important;
+}
+header .logo-container .logo-box:hover,
+.komi-side-nav .komi-side-logo:hover {
+  background:#101010 !important;
+  border-color:#ffffff !important;
+  box-shadow:0 0 0 2px rgba(255,255,255,.13), 0 8px 24px rgba(0,0,0,.65) !important;
+}
+/* Strong white for brand and primary labels while secondary metadata
+   stays visibly softer, preserving the dark theme's hierarchy. */
+header .logo-container .logo-text {
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  background:none !important;
+  text-shadow:none !important;
+}
+:where(h1,h2,h3,h4,.section-title,.profile-header-card strong) {
+  color:#ffffff !important;
+}
+:where(.logo-container,.komi-side-logo) :is(svg,path) {
+  filter:none;
+}
+#watchModal .komi-watch-navbtn.primary,
+#watchModal .komi-watch-sidebar .komi-episode-number.active,
+#watchPartyModal .komi-party-social-panel #partyChat button,
+#watchPartyModal .komi-party-social-panel #partyInvite button,
+#watchPartyModal .komi-party-friend-invite {
+  background:#ffffff !important;
+  border-color:#ffffff !important;
+  color:#000000 !important;
+}
+#watchModal .komi-watch-navbtn.primary:not(:disabled):hover,
+#watchPartyModal .komi-party-friend-invite:not(:disabled):hover {
+  background:#ededed !important;
+  border-color:#ffffff !important;
+  color:#000000 !important;
 }
