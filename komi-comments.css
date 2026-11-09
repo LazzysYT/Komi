@@ -1,0 +1,27 @@
+/* Anime comments: black-and-white compact cinema layout */
+#watchModal .komi-comments {
+    margin-top:22px; padding:clamp(17px,2.5vw,27px);
+    border:1px solid #303030; border-radius:22px;
+    background:rgba(17,17,17,.88); color:#f3f3f3;
+}
+#watchModal .komi-comments-heading{display:flex;align-items:center;gap:12px;margin-bottom:18px}
+#watchModal .komi-comments-heading h2{font-size:19px;font-weight:800;margin:0}
+#watchModal .komi-comments-count{color:#b5b5b5;font-size:12px;background:#242424;border:1px solid #414141;padding:4px 10px;border-radius:999px}
+#watchModal .komi-comments-form{display:grid;gap:10px}
+#watchModal .komi-comments-input{width:100%;min-height:80px;max-height:220px;resize:vertical;background:#0d0d0d;color:#f3f3f3;border:1px solid #383838;border-radius:15px;padding:13px 15px;font:inherit;font-size:13px;line-height:1.6}
+#watchModal .komi-comments-input:focus{outline:2px solid #999;outline-offset:1px}
+#watchModal .komi-comments-actions{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
+#watchModal .komi-comments-actions small{font-size:11px;color:#a5a5a5}
+#watchModal .komi-comments-actions button{background:#ededed;color:#080808;border:0;border-radius:12px;padding:11px 20px;font:inherit;font-size:12px;font-weight:800;cursor:pointer}
+#watchModal .komi-comments-actions button:hover{background:#cfcfcf}
+#watchModal .komi-comments-actions button:disabled{opacity:.5;cursor:wait}
+#watchModal .komi-comments-status{min-height:20px;color:#bbb;font-size:12px;margin:8px 0}
+#watchModal .komi-comments-list{display:grid;gap:10px}
+#watchModal .komi-comment{background:#1a1a1a;border:1px solid #2e2e2e;border-radius:16px;padding:15px}
+#watchModal .komi-comment-header{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:8px}
+#watchModal .komi-comment-name{font-weight:800;color:white;font-size:13px;overflow-wrap:anywhere}
+#watchModal .komi-comment-date{font-size:10px;color:#999;margin-left:auto}
+#watchModal .komi-comment-body{font-size:13px;color:#d4d4d4;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.6;margin:0}
+#watchModal .komi-comment-delete{border:1px solid #464646;background:transparent;color:#ccc;border-radius:9px;padding:6px 10px;cursor:pointer;font-size:11px}
+#watchModal .komi-comment-delete:hover{border-color:#999;color:#fff}
+#watchModal .komi-comments-empty{text-align:center;padding:18px;color:#999;font-size:12px}
