@@ -7,14 +7,53 @@ fs.mkdirSync(output, { recursive: true });
 (async () => {
   const browser = await chromium.launch({ headless: true });
   const results = [];
-  for (const width of [1440, 768, 390, 375]) {
+  for (const width of [375, 768, 1366, 1920]) {
     const page = await browser.newPage({ viewport: { width, height: 900 }, deviceScaleFactor: 1 });
     const errors = [];
     page.on('pageerror', e => errors.push(e.message));
     let response;
     try {
       response = await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 45000 });
-      await page.waitForTimeout(4500);
+      try {
+        await page.waitForFunction(
+          () => typeof catalogInitialLoadComplete !== 'undefined' && catalogInitialLoadComplete,
+          null, { timeout: 15000 }
+        );
+      } catch (waitError) {
+        const diagnostic = await page.evaluate(() => ({
+          url: location.href,
+          title: document.title,
+          snippet: document.body?.innerText?.slice(0, 180),
+          catalogLoaded: typeof catalogInitialLoadComplete === 'undefined' ? 'undefined' : catalogInitialLoadComplete,
+          hasSupabase: typeof _supabase !== 'undefined' && !!_supabase,
+          catalogSize: typeof animeList === 'undefined' ? -1 : animeList.length
+        })).catch(e => ({ diagnosticError: e.message }));
+        throw new Error('Catalog load timeout: ' + JSON.stringify({
+          status: response?.status(), ...diagnostic, pageErrors: errors.slice(0, 4)
+        }));
+      }
+      const catalogChecks = await page.evaluate(async () => {
+        const playable = animeList.find(anime => Number(anime.episodeCount) > 0);
+        const allCardOnly = animeList.every(anime => Array.isArray(anime.episodes) && anime.episodes.length === 0);
+        const result = {
+          total: animeList.length,
+          initialCardsAreLightweight: allCardOnly,
+          playableId: playable?.id || null,
+          filteredCount: 0,
+          detailsLoaded: false,
+          modalHasSeries: false
+        };
+        if (!playable) return result;
+        const previousSearch = catalogSearchQuery;
+        catalogSearchQuery = String(playable.title).slice(0, 5);
+        result.filteredCount = komiCatalogFiltered().length;
+        catalogSearchQuery = previousSearch;
+        await openWatchModal(playable.id);
+        result.detailsLoaded = Boolean(playable.komiDetailsLoaded);
+        result.modalHasSeries = Boolean(document.querySelector('#watchModal .komi-watch-stage'));
+        closeWatchModal();
+        return result;
+      });
       const state = await page.evaluate(() => ({
         title: document.title,
         description: document.querySelector('meta[name="description"]')?.content || '',
@@ -24,7 +63,7 @@ fs.mkdirSync(output, { recursive: true });
         loginForm: !!document.querySelector('#loginFormContainer'),
         registrationForm: !!document.querySelector('#registerFormContainer'),
       }));
-      const result = { width, status: response?.status(), ...state, errors };
+      const result = { width, status: response?.status(), ...state, catalogChecks, errors };
       results.push(result);
       // Exercise the real auth UI without creating test users or sending credentials.
       const authChecks = await page.evaluate(() => {
@@ -50,7 +89,7 @@ fs.mkdirSync(output, { recursive: true });
         process.exitCode = 1;
       }
       await page.screenshot({ path: path.join(output, 'komi-' + width + '.png'), fullPage: true });
-      if (!response?.ok() || !state.mainText.trim() || state.horizontalOverflow || errors.length) {
+      if (!response?.ok() || !state.mainText.trim() || state.horizontalOverflow || errors.length || catalogChecks.total < 5000 || !catalogChecks.initialCardsAreLightweight || !catalogChecks.filteredCount || !catalogChecks.detailsLoaded || !catalogChecks.modalHasSeries) {
         console.error('FAIL', result);
         process.exitCode = 1;
       } else console.log('PASS', result);

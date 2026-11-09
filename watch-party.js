@@ -10,6 +10,12 @@ async function partyCall(action, roomId = null, args = {}) {
     return data;
 }
 
+async function partyPresenceCall(roomId, action = 'touch') {
+    const { data, error } = await _supabase.rpc('komi_party_presence', { p_room_id: roomId, p_action: action });
+    if (error) throw error;
+    return Array.isArray(data) ? data : [];
+}
+
 function partyOptions(anime) {
     return (anime?.episodes || []).flatMap((episode, index) =>
         Object.entries(episode.sources || { Default: episode.url }).filter(([, url]) =>
@@ -40,7 +46,7 @@ async function openWatchPartyHub() {
     try {
         const rooms = await partyCall('list');
         if (generation !== partyGeneration) return;
-        const available = animeList.filter(anime => partyOptions(anime).length);
+        const available = animeList.filter(anime => Number(anime.episodeCount) > 0 || partyOptions(anime).length);
         partyPanel(`
             <button class="modal-close" onclick="leaveWatchPartyRoom()">×</button>
             <h2>Совместный просмотр</h2>
@@ -78,7 +84,11 @@ async function openWatchPartyHub() {
 
 async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false, episodeIndex = null, source = '') {
     if (!partySignedIn()) return;
-    const options = partyOptions(animeList.find(anime => String(anime.id) === String(animeId)));
+    const anime = animeList.find(anime => String(anime.id) === String(animeId));
+    if (!anime) return;
+    try { await ensureKomiAnimeDetails(anime); }
+    catch (error) { alert('Не удалось загрузить серии: ' + error.message); return; }
+    const options = partyOptions(anime);
     const episodeOptions = episodeIndex === null ? options : options.filter(item => item.episode === episodeIndex);
     const initial = episodeOptions.find(item => item.source === source) || episodeOptions[0];
     if (!initial) {
@@ -104,15 +114,20 @@ async function joinWatchPartyRoom(id) {
     } catch (error) { alert('Не удалось войти в комнату: ' + error.message); }
 }
 
-function enterParty(room) {
+async function enterParty(room) {
     const generation = partyGeneration;
+    const anime = animeList.find(item => String(item.id) === room.anime_id);
+    if (!anime) { alert('Аниме этой комнаты нет в каталоге.'); return; }
+    try { await ensureKomiAnimeDetails(anime); }
+    catch (error) { if (generation === partyGeneration) alert('Не удалось загрузить серии: ' + error.message); return; }
+    if (generation !== partyGeneration) return;
     const isActive = () => partyGeneration === generation && partyRoom?.id === room.id;
     clearTimeout(partyTimer);
     partyRoom = room;
     partyHeartbeat = 0;
+    let partyPresenceHeartbeat = 0;
     closeWatchModal();
     const host = room.host === currentUser.authUserId;
-    const anime = animeList.find(item => String(item.id) === room.anime_id);
     const options = partyOptions(anime);
     partyPanel(`
         <button class="modal-close" onclick="leaveWatchPartyRoom()">×</button>
@@ -120,6 +135,10 @@ function enterParty(room) {
         <p>${escapeFriendHtml(anime?.title || 'Аниме')} · ${host ? 'Ведущий' : 'Зритель'}</p>
         <video id="partyVideoElement" style="width:100%;max-height:60vh" playsinline preload="metadata" ${host ? 'controls' : ''}></video>
         <p id="partyStatus" role="status"></p>
+        <section aria-label="Участники комнаты" style="margin:12px 0">
+            <strong style="font-size:13px">Сейчас смотрят</strong>
+            <div id="partyParticipants" aria-live="polite" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
+        </section>
         <div id="partyChatBox" class="party-chat-box" role="log"></div>
         <form id="partyChat"><input name="message" maxlength="300" required placeholder="Сообщение"><button class="btn-secondary">Отправить</button></form>
         <div id="partyReactions"></div>
@@ -133,6 +152,29 @@ function enterParty(room) {
     const chatBox = document.getElementById('partyChatBox');
     const chatForm = document.getElementById('partyChat');
     let lastMessages = '';
+    function showParticipants(members) {
+        const target = document.getElementById('partyParticipants');
+        if (!target || !isActive()) return;
+        target.replaceChildren(...members.map(person => {
+            const chip = document.createElement('span');
+            chip.style.cssText = 'display:inline-flex;align-items:center;gap:7px;max-width:190px;padding:5px 10px;border-radius:18px;background:#18181c;border:1px solid #373039;font-size:12px';
+            const image = komiSafeUrl(person.avatar);
+            if (image) {
+                const avatar = document.createElement('img');
+                avatar.src = image;
+                avatar.alt = '';
+                avatar.style.cssText = 'width:24px;height:24px;object-fit:cover;border-radius:50%';
+                avatar.onerror = () => avatar.remove();
+                chip.append(avatar);
+            }
+            const name = document.createElement('span');
+            name.textContent = (person.displayName || person.username || 'Участник') + (person.host ? ' · Ведущий' : '');
+            name.style.cssText = 'overflow:hidden;text-overflow:ellipsis;white-space:nowrap';
+            chip.append(name);
+            return chip;
+        }));
+        if (!members.length) target.textContent = 'Подключаем участников…';
+    }
     function showMessages(messages) {
         const serialized = JSON.stringify(messages);
         if (serialized === lastMessages) return;
@@ -212,8 +254,13 @@ function enterParty(room) {
         sampling = true;
         try {
             const heartbeat = host && (!partyHeartbeat || performance.now() - partyHeartbeat > 15000);
-            const state = await partyCall(heartbeat ? 'heartbeat' : 'read', room.id);
+            const updatePresence = !partyPresenceHeartbeat || performance.now() - partyPresenceHeartbeat > 7000;
+            const [state, members] = await Promise.all([
+                partyCall(heartbeat ? 'heartbeat' : 'read', room.id),
+                updatePresence ? partyPresenceCall(room.id) : Promise.resolve(null)
+            ]);
             if (!isActive()) return;
+            if (members) { partyPresenceHeartbeat = performance.now(); showParticipants(members); }
             showMessages(state.messages);
             if (!host) {
                 partyRoom = state;
@@ -276,9 +323,10 @@ function leaveWatchPartyRoom() {
     partyRoom = null;
     document.getElementById('watchPartyModalContent').replaceChildren();
     document.getElementById('watchPartyModal').classList.remove('active');
-    return room?.host === currentUser?.authUserId && room
+    if (!room) return Promise.resolve();
+    return room.host === currentUser?.authUserId
         ? partyCall('close', room.id).catch(error => console.warn('Закрытие комнаты:', error.message))
-        : Promise.resolve();
+        : partyPresenceCall(room.id, 'leave').catch(error => console.warn('Выход из комнаты:', error.message));
 }
 
 function closeWatchPartyModal() { return leaveWatchPartyRoom(); }

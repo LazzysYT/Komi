@@ -1944,9 +1944,9 @@ async function loadDataFromCloud(attempt = 0) {
         const catalog = [];
         let lastId = 0;
         while (true) {
-            const pageSize = catalog.length ? 100 : 48;
+            const pageSize = catalog.length ? 500 : 48;
             const { data: rows, error } = await _supabase
-                .from('anime_catalog').select('shikimori_id,data')
+                .from('komi_catalog_cards').select('shikimori_id,data,updated_at')
                 .gt('shikimori_id', lastId)
                 .order('shikimori_id', { ascending: true })
                 .limit(pageSize);
@@ -1955,7 +1955,6 @@ async function loadDataFromCloud(attempt = 0) {
             for (const row of rows) {
                 const anime = row.data;
                 if (!anime || typeof anime !== 'object') continue;
-                if (!Array.isArray(anime.episodes) || !anime.episodes.some(ep => ep && ep.sources && Object.values(ep.sources).some(src => typeof src === 'string' && (src.includes('https://') || src.includes('https:&'))))) continue;
                 catalog.push({
                     ...anime,
                     id: String(row.shikimori_id),
@@ -1964,12 +1963,15 @@ async function loadDataFromCloud(attempt = 0) {
                     poster: anime.poster || '',
                     shikiRating: anime.shikiRating || 0,
                     genres: Array.isArray(anime.genres) ? anime.genres : [],
-                    episodes: Array.isArray(anime.episodes) ? anime.episodes : []
+                    episodeCount: Math.max(0, Number(anime.episodeCount) || 0),
+                    komiCardUpdatedAt: row.updated_at,
+                    // Full episode sources are fetched only when opening a title.
+                    episodes: []
                 });
             }
             lastId = rows[rows.length - 1].shikimori_id;
             // Keep the first usable batch available even if a later request fails.
-            if (!animeList.length && catalog.length) {
+            if (!catalogInitialLoadComplete && catalog.length && catalog.length <= 48) {
                 animeList = catalog.slice();
                 render();
             }
@@ -2328,7 +2330,7 @@ async function loadDataFromCloud(attempt = 0) {
         let catalogCollection = 'all';
         const komiCollections = {all:'Все аниме', recent:'Свежие серии', short:'На один вечер', movies:'Фильмы', best:'Высокая оценка'};
         function komiInCollection(anime, collection) {
-            const episodes = Array.isArray(anime.episodes) ? anime.episodes.length : 0;
+            const episodes = Number(anime.episodeCount) || (Array.isArray(anime.episodes) ? anime.episodes.length : 0);
             if (collection === 'recent') return Number.isFinite(Date.parse(anime.lastEpisodeAddedAt));
             if (collection === 'short') return komiCatalogType(anime) === 'Сериал' && episodes > 0 && episodes <= 13 && Number(anime.shikiRating) >= 7;
             if (collection === 'movies') return komiCatalogType(anime) === 'Фильм';
@@ -3188,7 +3190,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
             const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || './anime-artwork.svg');
-            const episodeCount=Array.isArray(anime.episodes)?anime.episodes.length:0;
+            const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
             return '<div class="anime-card" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
@@ -3568,7 +3570,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             <tr>
                                 <td><b>${a.title}</b></td>
                                 <td>★ ${a.shikiRating || '8.5'}</td>
-                                <td>${a.episodes ? a.episodes.length : 1}</td>
+                                <td>${Number(a.episodeCount) || a.episodes?.length || 0}</td>
                                 <td>
                                     <button class="btn-secondary" style="padding:3px 6px;" onclick="playSound(); document.getElementById('adminModal').classList.remove('active'); openAddModal('${a.id}')">Правка</button>
                                     <button class="btn-danger" onclick="playSound(); deleteAnime('${a.id}')">Удалить</button>
@@ -4295,15 +4297,55 @@ const adminList = []; // No client-side username grants administrator privileges
             openWatchModal(animeId, season, epIdx);
         }
 
+        // Cache only active title details; card payloads never include playback URLs.
+        const komiDetailsPending = new Map();
+        let komiDetailOpenToken = 0;
+        async function ensureKomiAnimeDetails(anime) {
+            const id = String(anime.shikimoriId || anime.id);
+            if (anime.komiDetailsLoaded && anime.komiDetailsLoadedAt === anime.komiCardUpdatedAt) return anime;
+            if (komiDetailsPending.has(id)) return komiDetailsPending.get(id);
+            const request = (async () => {
+                const { data: row, error } = await _supabase.from('anime_catalog')
+                    .select('data').eq('shikimori_id', Number(id)).single();
+                if (error) throw error;
+                if (!row?.data || typeof row.data !== 'object') throw new Error('Данные аниме отсутствуют');
+                Object.assign(anime, row.data, {
+                    id, shikimoriId: Number(id),
+                    episodes: Array.isArray(row.data.episodes) ? row.data.episodes : [],
+                    episodeCount: Array.isArray(row.data.episodes) ? row.data.episodes.length : 0,
+                    komiDetailsLoaded: true,
+                    komiDetailsLoadedAt: anime.komiCardUpdatedAt
+                });
+                return anime;
+            })().finally(() => komiDetailsPending.delete(id));
+            komiDetailsPending.set(id, request);
+            return request;
+        }
+
         async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0) {
             siteStats.views++;
             saveData();
             
             // Existing catalog bootstrapping already loaded comments and profiles.
             // Avoid fetching these tables on each episode switch.
+            const requestToken = ++komiDetailOpenToken;
             const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
             closeWatchModal();
+            if (!anime.komiDetailsLoaded || anime.komiDetailsLoadedAt !== anime.komiCardUpdatedAt) {
+                const modal = document.getElementById('watchModal');
+                const body = document.getElementById('watchModalContent');
+                body.innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><p role="status" style="padding:35px">Загружаем описание и серии…</p>';
+                modal.classList.add('active');
+                try {
+                    await ensureKomiAnimeDetails(anime);
+                } catch (error) {
+                    if (requestToken === komiDetailOpenToken && modal.classList.contains('active'))
+                        body.innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><p role="alert" style="padding:35px">Не удалось загрузить серии. Попробуйте открыть аниме снова.</p>';
+                    return;
+                }
+                if (requestToken !== komiDetailOpenToken || !modal.classList.contains('active')) return;
+            }
             if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); return; }
 
             const seasonsMap = {};
@@ -4443,7 +4485,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 const pageSize = 100;
                 let lastUpdatedId = 0;
                 while (true) {
-                    const { data, error } = await _supabase.from('anime_catalog')
+                    const { data, error } = await _supabase.from('komi_catalog_cards')
                         .select('shikimori_id,data,updated_at')
                         .gte('updated_at', catalogRefreshSince)
                         .lt('updated_at', until)
@@ -4459,22 +4501,31 @@ const adminList = []; // No client-side username grants administrator privileges
                 const indexById = new Map(animeList.map((item, index) => [String(item.id), index]));
                 for (const row of rows || []) {
                     const data = row.data;
-                    if (!data || !Array.isArray(data.episodes) || !data.episodes.some(ep =>
-                        ep?.sources && Object.values(ep.sources).some(src =>
-                            typeof src === 'string' && src.includes('https://')))) continue;
+                    if (!data || typeof data !== 'object') continue;
                     const id = String(row.shikimori_id);
                     const normalized = {
                         ...data, id, shikimoriId: Number(row.shikimori_id),
                         title: data.title || data.originalTitle || 'Без названия',
                         genres: Array.isArray(data.genres) ? data.genres : [],
-                        episodes: data.episodes
+                        episodeCount: Math.max(0, Number(data.episodeCount) || 0),
+                        komiCardUpdatedAt: row.updated_at,
+                        episodes: []
                     };
                     const index = indexById.get(id);
                     if (index === undefined) {
                         indexById.set(id, animeList.length);
                         animeList.push(normalized);
                         changed = true;
-                    } else if (JSON.stringify(animeList[index]) !== JSON.stringify(normalized)) {
+                    } else {
+                        const previous = animeList[index];
+                        if (previous.komiDetailsLoaded && previous.komiDetailsLoadedAt === normalized.komiCardUpdatedAt) {
+                            normalized.episodes = previous.episodes;
+                            normalized.desc = previous.desc;
+                            normalized.screenshots = previous.screenshots;
+                            normalized.komiDetailsLoaded = true;
+                            normalized.komiDetailsLoadedAt = previous.komiDetailsLoadedAt;
+                        }
+                        if (JSON.stringify(previous) === JSON.stringify(normalized)) continue;
                         animeList[index] = normalized;
                         changed = true;
                     }
