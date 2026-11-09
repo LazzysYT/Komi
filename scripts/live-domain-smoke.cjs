@@ -39,6 +39,25 @@ fs.mkdirSync(output,{recursive:true});
         assert.ok(initial.canonical.startsWith(base),'Canonical URL should match the public domain');
         assert.ok(initial.cardCount>0,'Anime catalog should contain real cards');
         assert.equal(initial.overflow,false,'Page should not overflow horizontally');
+        const socials=await page.evaluate(()=>Array.from(document.querySelectorAll('nav[aria-label="Социальные сети Komi Anime"] a')).map(link=>{
+          const icon=link.querySelector('svg path');
+          const box=link.getBoundingClientRect();
+          const style=getComputedStyle(link);
+          return {href:link.href,ariaLabel:link.getAttribute('aria-label'),hasSvg:Boolean(icon),
+            width:box.width,height:box.height,visibility:style.visibility,display:style.display};
+        }));
+        assert.equal(socials.length,2,'TikTok and Telegram links must exist');
+        for (const link of socials) {
+          assert.ok(link.hasSvg,'Social link must have a rendered SVG icon');
+          assert.ok(link.width>=30&&link.height>=30,'Social links must have a usable click target');
+          assert.ok(link.visibility!=='hidden'&&link.display!=='none','Social icons must be visible');
+        }
+        const adminDisabled=await page.evaluate(()=>{
+          const originalAlert=window.alert;
+          window.alert=()=>{};
+          try {return requireServerAdmin()===false;} finally {window.alert=originalAlert;}
+        });
+        assert.equal(adminDisabled,true,'Client admin actions must remain disabled for guests');
         await page.locator('#sideFriendsBtn').click({timeout:10000});
         await page.waitForFunction(()=>document.getElementById('komiFriendsDrawer').classList.contains('open'));
         await page.waitForFunction(()=>!document.getElementById('komiFriendsDrawer').hasAttribute('inert'));
@@ -51,12 +70,16 @@ fs.mkdirSync(output,{recursive:true});
         }));
         assert.equal(drawer.visible,'visible');
         assert.equal(drawer.hasSearch,true);
+        assert.equal(await page.locator('#komiFriendsDrawer').getAttribute('aria-hidden'),'false',
+          'Visible friends drawer must not be hidden from assistive technologies');
         await page.locator('#komiFriendsSearch').fill('CI-AUTOTEST');
         await page.locator('#komiFriendsDrawer .komi-friends-close').count().then(async count=>{
           if(count)await page.locator('#komiFriendsDrawer .komi-friends-close').click();
           else await page.evaluate(()=>closeFriendsDrawer());
         });
         await page.waitForFunction(()=>document.getElementById('komiFriendsDrawer').hasAttribute('inert'));
+        assert.equal(await page.locator('#komiFriendsDrawer').getAttribute('aria-hidden'),'true',
+          'Closed friends drawer must be hidden from assistive technologies');
         await page.evaluate(()=>openWatchPartyHub());
         await page.waitForFunction(()=>document.getElementById('authModal').classList.contains('active'));
         await page.evaluate(()=>closeAuthModal());
