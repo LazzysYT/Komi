@@ -5,7 +5,6 @@ const aniCoinItems = [
 ];
 let aniCoinWallet;
 let aniCoinOwner;
-let aniCoinBusy = false;
 let aniCoinStatus = '';
 let aniCoinPlayer;
 
@@ -31,6 +30,7 @@ function aniCoinBadge() {
 }
 
 async function openAniCoinShop() {
+    aniCoinStatus = '';
     navigate('shop');
     if (!currentUser?.authUserId) return;
     try {
@@ -59,39 +59,9 @@ function renderAniCoinShop(container) {
             </div>` : ''}
             <p role="status">${escapeFriendHtml(aniCoinStatus)}</p>
             ${owner && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" onclick="openAniCoinShop()">Повторить</button>' : ''}
-            <h2>Значки профиля</h2>
-            <div class="anicoin-items">${aniCoinItems.map(item => {
-                const owned = wallet?.owned.includes(item.id);
-                const equipped = wallet?.equipped === item.id;
-                return `<article class="anicoin-item">
-                    <span class="anicoin-symbol" aria-hidden="true">AC</span>
-                    <h3>${item.name}</h3>
-                    <p>${item.cost} AniCoin</p>
-                    <button type="button" class="btn-glow" data-anicoin-item="${item.id}" data-anicoin-action="${owned ? 'equip' : 'buy'}"
-                        ${!wallet || aniCoinBusy || equipped || (!owned && wallet.balance < item.cost) ? 'disabled' : ''}>
-                        ${equipped ? 'Выбран' : owned ? 'Выбрать' : 'Купить'}
-                    </button>
-                </article>`;
-            }).join('')}</div>
+            <div class="anicoin-item"><h2>Товаров пока нет</h2><p>Заработанные AniCoin видны в кошельке.</p></div>
         </section>`;
 }
-
-document.addEventListener('click', async event => {
-    const button = event.target.closest('[data-anicoin-item]');
-    if (!button || aniCoinBusy) return;
-    aniCoinBusy = true;
-    aniCoinStatus = '';
-    renderAniCoinShop(document.getElementById('mainContainer'));
-    try {
-        const wallet = await aniCoinRequest(button.dataset.anicoinAction, { p_item: button.dataset.anicoinItem });
-        if (wallet) aniCoinStatus = 'Значок добавлен в профиль.';
-    } catch (error) {
-        aniCoinStatus = error.message || 'Операция не выполнена.';
-    } finally {
-        aniCoinBusy = false;
-        if (currentView === 'shop') renderAniCoinShop(document.getElementById('mainContainer'));
-    }
-});
 
 document.addEventListener('timeupdate', event => {
     const video = event.target;
