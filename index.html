@@ -1394,7 +1394,12 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 @media(max-width:920px){#komiCalendarSection .komi-release-list{grid-template-columns:1fr}}
 
 </style>
-<style>:root{--bg-main:#09090b;--bg-card:#17171b;--bg-input:#17171b;--border:#27272d;--primary:#e11d38;--glow:rgba(225,29,56,.2);--text-main:#f4f4f5}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(225,29,56,.45);box-shadow:0 12px 32px rgba(225,29,56,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202024,#101012)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#17171bf2;backdrop-filter:blur(14px);padding:12px;border:1px solid #27272d;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style></head>
+<style>:root{--bg-main:#09090b;--bg-card:#17171b;--bg-input:#17171b;--border:#27272d;--primary:#e11d38;--glow:rgba(225,29,56,.2);--text-main:#f4f4f5}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(225,29,56,.45);box-shadow:0 12px 32px rgba(225,29,56,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202024,#101012)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#17171bf2;backdrop-filter:blur(14px);padding:12px;border:1px solid #27272d;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style><style>
+#watchModal .player-wrapper{aspect-ratio:16/9;min-height:0;background:#09090b}
+#watchModal .player-box video,#watchModal .player-box iframe{display:block;width:100%;height:100%;min-height:0}
+#watchModal .komi-watch-controls{position:static}
+.komi-catalog-chip[aria-pressed="true"]{background:#351820;border-color:#e11d38}
+</style></head>
 <body>
 
     <!-- Шапка сайта -->
@@ -1780,20 +1785,25 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
         }
 
 
-async function loadDataFromCloud() {
+let catalogRefreshSince = new Date().toISOString();
+let catalogRefreshInProgress = false;
+let catalogInitialLoadComplete = false;
+
+async function loadDataFromCloud(attempt = 0) {
     try {
         if (!_supabase) throw new Error('Supabase не подключён');
 
         const settingsPromise = _supabase
-            .from('animes').select('id,content').in('id', [2, 3, 4, 5, 6, 7]);
+            .from('animes').select('id,content').in('id', [2, 3, 4, 5, 7]);
         const catalog = [];
-        const pageSize = 100;
-        let offset = 0;
+        let lastId = 0;
         while (true) {
+            const pageSize = catalog.length ? 100 : 48;
             const { data: rows, error } = await _supabase
                 .from('anime_catalog').select('shikimori_id,data')
+                .gt('shikimori_id', lastId)
                 .order('shikimori_id', { ascending: true })
-                .range(offset, offset + pageSize - 1);
+                .limit(pageSize);
             if (error) throw error;
             if (!rows || rows.length === 0) break;
             for (const row of rows) {
@@ -1811,9 +1821,9 @@ async function loadDataFromCloud() {
                     episodes: Array.isArray(anime.episodes) ? anime.episodes : []
                 });
             }
-            offset += rows.length;
-            // Make the first results visible without waiting for all pages.
-            if (offset === rows.length && catalog.length > 0) {
+            lastId = rows[rows.length - 1].shikimori_id;
+            // Keep the first usable batch available even if a later request fails.
+            if (!animeList.length && catalog.length) {
                 animeList = catalog.slice();
                 render();
             }
@@ -1841,10 +1851,14 @@ async function loadDataFromCloud() {
         }
 
         animeList = catalog;
+        catalogInitialLoadComplete = true;
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
         console.error('Ошибка загрузки каталога:', err);
-        // Preserve already displayed records on a network error.
+        // Preserve already displayed records while retrying.
+        if (attempt < 3) {
+            setTimeout(() => loadDataFromCloud(attempt + 1), 2000 * 2 ** attempt);
+        }
     }
     render();
     updateNotificationsUI();
@@ -1884,8 +1898,10 @@ async function loadDataFromCloud() {
             }
         }
 
+        let presenceRequestInFlight = false;
         async function updateOnlinePresence() {
-            if (!_supabase) return;
+            if (!_supabase || document.hidden || presenceRequestInFlight) return;
+            presenceRequestInFlight = true;
             try {
                 const now = Date.now();
                 const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
@@ -1899,8 +1915,11 @@ async function loadDataFromCloud() {
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
 
-                const { data: cloudSyncData } = await _supabase.from('animes').select('*').in('id', [5, 6, 7]);
-                if (cloudSyncData) {
+                const presenceUser = currentUser?.username;
+                const { data: cloudSyncData } = presenceUser
+                    ? await _supabase.from('animes').select('id,content').in('id', [5, 7])
+                    : {};
+                if (cloudSyncData && currentUser?.username === presenceUser) {
                     cloudSyncData.forEach(row => {
                         if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
                         if (row.id === 7) {
@@ -1924,10 +1943,13 @@ async function loadDataFromCloud() {
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
                 if (el) el.innerText = `Онлайн: 1`;
+            } finally {
+                presenceRequestInFlight = false;
             }
         }
 
         setInterval(updateOnlinePresence, 8000);
+        document.addEventListener('visibilitychange', updateOnlinePresence);
         updateOnlinePresence();
 
 
@@ -1976,7 +1998,7 @@ async function loadDataFromCloud() {
             document.getElementById('komiFriendsMyTab')?.classList.toggle('active', komiFriendsTab === 'friends');
             const query = (document.getElementById('komiFriendsSearch')?.value || '').trim().toLocaleLowerCase();
             const me = currentUser?.username;
-            const friends = me ? (userFriends[me] || []) : [];
+            const friends = me ? friendsFor(me) : [];
             const pendingNames = me ? Object.entries(userNotifications).filter(([name,notifs])=>Array.isArray(notifs)&&notifs.some(n=>n.friendRequestFrom===me)).map(([name])=>name) : [];
             // Profiles are synchronized from Supabase (animes row 4); local registrations alone are not globally discoverable.
             const names = komiFriendsTab === 'friends' ? friends : Object.keys(userProfiles);
@@ -2012,7 +2034,7 @@ async function loadDataFromCloud() {
                 return;
             }
 
-            const myFriends = currentUser ? (userFriends[currentUser.username] || []) : [];
+            const myFriends = currentUser ? friendsFor(currentUser.username) : [];
             const allKnownNames = Object.keys(userProfiles);
             const allRegNames = Object.keys(registeredUsers);
             const combinedPool = Array.from(new Set([...allKnownNames, ...allRegNames, ...Object.keys(userFriends)]));
@@ -2044,7 +2066,7 @@ async function loadDataFromCloud() {
             if (!friendsContainer) return;
 
             if (currentUser) {
-                const myFriends = userFriends[currentUser.username] || [];
+                const myFriends = friendsFor(currentUser.username);
                 let friendsHtml = `
                     <div style="margin-bottom:8px; display:flex; flex-direction:column; gap:4px;">
                         <input type="text" id="friendSearchInputBox" class="form-control" placeholder="Найти по нику..." oninput="handleFriendSearchInput(this.value)" style="font-size:10px; padding:6px 8px;">
@@ -2083,6 +2105,7 @@ async function loadDataFromCloud() {
         function toggleNotifications() {
             const dropdown = document.getElementById('notifDropdown');
             dropdown.classList.toggle('active');
+            if (dropdown.classList.contains('active')) loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
             if (currentUser && userNotifications[currentUser.username]) {
                 userNotifications[currentUser.username].forEach(n => n.read = true);
                 saveNotificationsToCloud();
@@ -2100,7 +2123,8 @@ async function loadDataFromCloud() {
         function updateNotificationsUI() {
             if (!currentUser) return;
             const notifs = userNotifications[currentUser.username] || [];
-            const unreadCount = notifs.filter(n => !n.read).length;
+            const requests = protectedFriendRequests.filter(row => row.owner === currentUser.authUserId);
+            const unreadCount = notifs.filter(n => !n.read).length + requests.length;
             const badge = document.getElementById('notifBadge');
             
             if (unreadCount > 0) {
@@ -2111,16 +2135,21 @@ async function loadDataFromCloud() {
             }
 
             const listContainer = document.getElementById('notifListContainer');
-            if (notifs.length > 0) {
-                listContainer.innerHTML = notifs.map((n, idx) => `
+            if (notifs.length || requests.length) {
+                const requestMarkup = requests.map(row =>
+                    '<div class="notif-item">' + escapeFriendHtml(row.name) + ' хочет добавить вас в друзья. ' +
+                    '<button class="btn-glow" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', true)">Принять</button> ' +
+                    '<button class="btn-danger" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', false)">Отклонить</button></div>'
+                ).join('');
+                listContainer.innerHTML = requestMarkup + notifs.map((n, idx) => `
                     <div class="notif-item">
-                        <span>${n.text}</span>
+                        <span>${escapeFriendHtml(n.text)}</span>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; flex-wrap:wrap; gap:6px;">
-                            <span style="font-size:10px; color:var(--text-muted);">${n.time}</span>
-                            ${n.partyId ? `<button class="btn-glow" style="padding:2px 6px; font-size:10px;" onclick="playSound(); joinWatchPartyRoom('${n.partyId}')">Войти</button>` : ''}
+                            <span style="font-size:10px; color:var(--text-muted);">${escapeFriendHtml(n.time)}</span>
+                            ${n.partyId ? `<button class="btn-glow" style="padding:2px 6px; font-size:10px;" data-room-id="${escapeFriendHtml(n.partyId)}" onclick="playSound(); joinWatchPartyRoom(this.dataset.roomId)">Войти</button>` : ''}
                             ${n.friendRequestFrom ? `
                                 <div style="display:flex; gap:4px;">
-                                    <button class="btn-glow" style="padding:2px 6px; font-size:10px;" onclick="playSound(); acceptFriendRequest('${n.friendRequestFrom}', ${idx})">Принять</button>
+                                    <button class="btn-glow" style="padding:2px 6px; font-size:10px;" data-sender="${escapeFriendHtml(n.friendRequestFrom)}" onclick="playSound(); acceptFriendRequest(this.dataset.sender, ${idx})">Принять</button>
                                     <button class="btn-danger" style="padding:2px 6px; font-size:10px;" onclick="playSound(); declineFriendRequest(${idx})">Отклонить</button>
                                 </div>
                             ` : ''}
@@ -2200,7 +2229,7 @@ async function loadDataFromCloud() {
                 if(catalogFilterGenre!=='Все'&&!genres.includes(catalogFilterGenre))return false;
                 if(catalogFilterYear!=='Все'&&komiAnimeYear(a)!==String(catalogFilterYear))return false;
                 if(catalogFilterType!=='Все'&&komiCatalogType(a)!==catalogFilterType)return false;
-                if(q&&![a.title,a.originalTitle,...genres].some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(q)))return false;
+                if(q&&![a.title,a.originalTitle,a.english,a.japanese,...(Array.isArray(a.synonyms)?a.synonyms:[]),...genres].some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(q)))return false;
                 return true;
             });
             if(catalogSort==='popular')filtered.sort((a,b)=>
@@ -2581,9 +2610,9 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (previousAvatar && (!p.avatar || p.avatar.includes('dicebear.com'))) p.avatar = previousAvatar;
             }
 
-            const myFriends = userFriends[username] || [];
+            const myFriends = friendsFor(username);
             const isMe = currentUser && currentUser.username === username;
-            const amIFriend = currentUser && (userFriends[currentUser.username] || []).includes(username);
+            const amIFriend = currentUser && friendsFor(currentUser.username).includes(username);
 
             const userStatuses = userAnimeStatuses[username] || {};
             const statsCounts = { 'Просмотрено': 0, 'В планах': 0, 'Смотрю': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
@@ -2662,7 +2691,8 @@ const adminList = []; // No client-side username grants administrator privileges
                                 <div class="profile-badge-item">🎯 Статус: ${safeProfileText(p.status)}</div>
                             </div>
 
-                            <div class="profile-reg-date">Дата регистрации: <b>${p.regDate || '05 ноября 2026 года'}</b></div>
+                            <div class="komi-level-progress"><label>До следующего уровня <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
+                            <div class="profile-reg-date">Дата регистрации: <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
                             <div class="komi-profile-actions">
                                 ${isMe ? '<button class="komi-profile-action" onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')">⚙ Настройки</button>' : ''}
                                 <button class="komi-profile-action" onclick="navigator.clipboard?.writeText(location.href).then(()=>alert('Ссылка скопирована')).catch(()=>alert('Не удалось скопировать ссылку'))">↗ Поделиться</button>
@@ -2974,7 +3004,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
-            const poster=typeof anime.poster==='string'&&/^https:\/\//i.test(anime.poster)?escapeFriendHtml(anime.poster):'';
+            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || './anime-artwork.svg');
             const episodeCount=Array.isArray(anime.episodes)?anime.episodes.length:0;
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
@@ -2982,7 +3012,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'./anime-artwork.svg\'">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e26,#101015);color:#92929F"><span style="font-size:30px;font-weight:800;color:#f03d50">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▶ Смотреть</span></div>'+
                 '</div>'+
@@ -3026,11 +3056,76 @@ const adminList = []; // No client-side username grants administrator privileges
             spinStep();
         }
 
-        function sendFriendRequest(targetUsername) {
+        let protectedFriendRequests = [];
+        let protectedFriendList = { owner: null, idsByName: new Map() };
+
+        function friendsFor(username) {
+            const legacy = userFriends[username] || [];
+            if (username !== currentUser?.username || protectedFriendList.owner !== currentUser?.authUserId) return legacy;
+            return [...new Set([...legacy, ...protectedFriendList.idsByName.keys()])];
+        }
+        async function loadProtectedFriends() {
+            const uid = currentUser?.authUserId;
+            if (!uid || !_supabase) return;
+            const [requests, friendships] = await Promise.all([
+                _supabase.from('komi_friend_requests').select('id,sender_id').eq('receiver_id', uid).eq('status', 'pending'),
+                _supabase.from('komi_friendships').select('user_a,user_b')
+            ]);
+            if (requests.error || friendships.error) throw requests.error || friendships.error;
+            const friendIds = friendships.data.map(row => row.user_a === uid ? row.user_b : row.user_a);
+            const ids = [...new Set([...friendIds, ...requests.data.map(row => row.sender_id)])];
+            const profiles = ids.length
+                ? await _supabase.from('komi_profiles').select('user_id,username').in('user_id', ids)
+                : { data: [] };
+            if (profiles.error) throw profiles.error;
+            if (currentUser?.authUserId !== uid) return;
+            const names = new Map(profiles.data.map(row => [row.user_id, row.username]));
+            protectedFriendList = {
+                owner: uid,
+                idsByName: new Map(friendIds.filter(id => names.has(id)).map(id => [names.get(id), id]))
+            };
+            protectedFriendRequests = requests.data.map(row => ({
+                owner: uid, id: row.id, name: names.get(row.sender_id) || 'Пользователь'
+            }));
+            updateNotificationsUI();
+            renderFriendsDrawer();
+        }
+
+        async function respondProtectedFriendRequest(id, accept) {
+            try {
+                const { error } = await _supabase.rpc('komi_respond_friend_request', {
+                    p_request_id: id, p_accept: accept
+                });
+                if (error) throw error;
+                await loadProtectedFriends();
+            } catch (error) {
+                alert('Не удалось обработать заявку: ' + error.message);
+            }
+        }
+
+        async function sendFriendRequest(targetUsername) {
             if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
+            if (currentUser.authUserId) {
+                const sender = currentUser.authUserId;
+                try {
+                    const { data: target, error: lookupError } = await _supabase.from('komi_profiles')
+                        .select('user_id').eq('username', targetUsername).maybeSingle();
+                    if (lookupError) throw lookupError;
+                    if (!target) throw new Error('У пользователя нет профиля Komi.');
+                    if (currentUser?.authUserId !== sender) return;
+                    if (target.user_id === sender || friendsFor(currentUser.username).includes(targetUsername)) return;
+                    const { error } = await _supabase.from('komi_friend_requests')
+                        .insert({ sender_id: sender, receiver_id: target.user_id });
+                    if (error) throw error;
+                    alert('Заявка отправлена.');
+                } catch (error) {
+                    alert('Не удалось отправить заявку: ' + error.message);
+                }
+                return;
+            }
             if (!userProfiles[targetUsername]) { alert('Пользователь не найден'); return; }
-            if ((userFriends[currentUser.username] || []).includes(targetUsername)) { alert('Вы уже друзья'); return; }
+            if (friendsFor(currentUser.username).includes(targetUsername)) { alert('Вы уже друзья'); return; }
             if ((userNotifications[targetUsername] || []).some(n=>n.friendRequestFrom===currentUser.username)) { alert('Заявка уже отправлена'); return; }
             addNotification(targetUsername, `${currentUser.username} хочет добавить вас в друзья.`, null, currentUser.username);
             alert(`Запрос отправлен пользователю ${targetUsername}!`);
@@ -3080,6 +3175,23 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!confirm(`Удалить ${friendUsername} из друзей?`)) return;
             if (!currentUser) return;
             const myName = currentUser.username;
+            const uid = currentUser.authUserId;
+            const friendId = uid && protectedFriendList.owner === uid && protectedFriendList.idsByName.get(friendUsername);
+            if (friendId) {
+                try {
+                    const { error } = await _supabase.rpc('komi_remove_friend', { p_friend_id: friendId });
+                    if (error) throw error;
+                    if (currentUser?.authUserId !== uid) return;
+                    await loadProtectedFriends();
+                } catch (error) {
+                    alert('Не удалось удалить друга: ' + error.message);
+                    return;
+                }
+                if (!(userFriends[myName] || []).includes(friendUsername)) {
+                    openProfile(friendUsername);
+                    return;
+                }
+            }
             if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
             if (userFriends[friendUsername]) userFriends[friendUsername] = userFriends[friendUsername].filter(u => u !== myName);
             await saveFriendsToCloud();
@@ -3506,6 +3618,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     }
                 } catch (profileError) { console.warn('Profile sync:', profileError); }
                 await loadAuthenticatedAnimeData();
+                loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
@@ -3682,7 +3795,8 @@ const adminList = []; // No client-side username grants administrator privileges
             const result = status
                 ? await query.upsert({user_id:uid, anime_id:Number(animeId), status}, {onConflict:'user_id,anime_id'})
                 : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
-            if (result.error) console.error('Не удалось сохранить список:', result.error.message);
+            if (result.error) throw result.error;
+            return true;
         }
         async function persistAuthenticatedProgress(animeId, progress) {
             if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
@@ -3694,19 +3808,55 @@ const adminList = []; // No client-side username grants administrator privileges
             if (result.error) console.error('Не удалось сохранить прогресс:', result.error.message);
         }
 
-        function setAnimeStatus(animeId, status) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            if (!userAnimeStatuses[currentUser.username]) userAnimeStatuses[currentUser.username] = {};
-            if (userAnimeStatuses[currentUser.username][animeId] === status) {
-                delete userAnimeStatuses[currentUser.username][animeId];
-            } else {
-                userAnimeStatuses[currentUser.username][animeId] = status;
+        const pendingAnimeStatuses = new Set();
+        function komiStatusFeedback(message) {
+            let notice = document.getElementById('komiStatusFeedback');
+            if (!notice) {
+                notice = document.createElement('div');
+                notice.id = 'komiStatusFeedback';
+                notice.setAttribute('role', 'status');
+                notice.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;max-width:90vw;padding:14px 20px;background:#17171b;border:1px solid #27272d;border-radius:14px;color:#f4f4f5';
+                document.body.append(notice);
             }
-            saveData();
-            if (currentUser?.authUserId) persistAuthenticatedStatus(animeId, userAnimeStatuses[currentUser.username][animeId] || null);
-            openWatchModal(animeId);
+            notice.textContent = message;
+            clearTimeout(komiStatusFeedback.timer);
+            komiStatusFeedback.timer = setTimeout(() => notice.remove(), 5000);
         }
-
+        async function setAnimeStatus(animeId, status) {
+            if (!currentUser) { openAuthModal('login'); return; }
+            const user = currentUser;
+            const requestKey = (user.authUserId || user.username) + ':' + animeId;
+            if (pendingAnimeStatuses.has(requestKey)) return;
+            const previous = userAnimeStatuses[user.username]?.[animeId];
+            const next = previous === status ? null : status;
+            pendingAnimeStatuses.add(requestKey);
+            komiStatusFeedback('Сохраняем статус…');
+            try {
+                if (user.authUserId) {
+                    await persistAuthenticatedStatus(animeId, next);
+                } else {
+                    throw new Error('Войдите через аккаунт Komi, чтобы сохранить список.');
+                }
+                if (currentUser?.authUserId !== user.authUserId) return;
+                if (!userAnimeStatuses[user.username]) userAnimeStatuses[user.username] = {};
+                if (next) userAnimeStatuses[user.username][animeId] = next;
+                else delete userAnimeStatuses[user.username][animeId];
+                saveData();
+                render();
+                komiStatusFeedback(next ? 'Статус сохранён: ' + next : 'Статус снят');
+                if (String(window.komiActiveAnimeId) === String(animeId)) {
+                    for (const button of document.querySelectorAll('#watchModalContent [data-watch-status]')) {
+                        const selected = button.dataset.watchStatus === next;
+                        button.classList.toggle('active', selected);
+                        button.setAttribute('aria-pressed', String(selected));
+                    }
+                }
+            } catch (error) {
+                if (currentUser?.authUserId === user.authUserId) komiStatusFeedback('Не удалось сохранить статус. ' + error.message);
+            } finally {
+                pendingAnimeStatuses.delete(requestKey);
+            }
+        }
 
         function komiProgressKey(animeId) { return currentUser ? currentUser.username + '_' + animeId : ''; }
         function getKomiProgress(animeId) { return komiEpisodeProgress[komiProgressKey(animeId)] || null; }
@@ -3768,7 +3918,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const statuses=userAnimeStatuses[username]||{};
             const watched=Object.values(statuses).filter(v=>v==='Просмотрено').length;
             const watching=Object.values(statuses).filter(v=>v==='Смотрю').length;
-            const friends=(userFriends[username]||[]).length;
+            const friends=friendsFor(username).length;
             const xp=watched*100+watching*20+friends*15;
             return {watched,watching,friends,xp,level:Math.floor(xp/300)+1,badges:[watched>=1&&'🎬 Первый просмотр',watched>=10&&'🏆 10 аниме',watched>=50&&'👑 Знаток аниме',friends>=1&&'🤝 Первый друг',watching>=5&&'🔥 Марафон'].filter(Boolean)};
         }
@@ -3951,6 +4101,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
         function changePlayerSource(animeId, season, epIdx, sourceName) {
             activePlayerSource = sourceName;
+            try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
             openWatchModal(animeId, season, epIdx);
         }
 
@@ -3984,7 +4135,10 @@ const adminList = []; // No client-side username grants administrator privileges
             const sources = currentEp.sources && typeof currentEp.sources === 'object' ? currentEp.sources : { 'Default': currentEp.url || '' };
             const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && komiPlayerKind(sources[name]) !== 'missing');
             if (!sourceNames.length) sourceNames.push('Недоступно');
-            if (!sourceNames.includes(activePlayerSource)) activePlayerSource = sourceNames[0];
+            let preferredSource;
+            try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+            activePlayerSource = sourceNames.includes(preferredSource) ? preferredSource
+                : sourceNames.includes(activePlayerSource) ? activePlayerSource : sourceNames[0];
             const activeUrl = sources[activePlayerSource] || '';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
@@ -4030,7 +4184,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:6px 10px; border-radius:8px;">
                         <span style="font-size:11px; color:var(--text-muted);">Статус:</span>
                         ${['Просмотрено', 'В планах', 'Смотрю', 'Отложено', 'Брошено'].map(st => `
-                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
+                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" data-watch-status="${st}" aria-pressed="${myCurrentStatus === st}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
                         `).join('')}
                     </div>
 
@@ -4091,13 +4245,26 @@ const adminList = []; // No client-side username grants administrator privileges
 
 
         async function refreshKomiCatalogUpdates() {
-            if (!_supabase || document.hidden) return;
+            if (!_supabase || document.hidden || !catalogInitialLoadComplete || catalogRefreshInProgress) return;
+            catalogRefreshInProgress = true;
+            const until = new Date().toISOString();
             try {
-                const { data: rows, error } = await _supabase.from('anime_catalog')
-                    .select('shikimori_id,data,updated_at')
-                    .order('updated_at', { ascending: false })
-                    .limit(100);
-                if (error) throw error;
+                const rows = [];
+                const pageSize = 100;
+                let lastUpdatedId = 0;
+                while (true) {
+                    const { data, error } = await _supabase.from('anime_catalog')
+                        .select('shikimori_id,data,updated_at')
+                        .gte('updated_at', catalogRefreshSince)
+                        .lt('updated_at', until)
+                        .gt('shikimori_id', lastUpdatedId)
+                        .order('shikimori_id', { ascending: true })
+                        .limit(pageSize);
+                    if (error) throw error;
+                    rows.push(...(data || []));
+                    if (!data || data.length < pageSize) break;
+                    lastUpdatedId = data[data.length - 1].shikimori_id;
+                }
                 let changed = false;
                 const indexById = new Map(animeList.map((item, index) => [String(item.id), index]));
                 for (const row of rows || []) {
@@ -4126,7 +4293,11 @@ const adminList = []; // No client-side username grants administrator privileges
                     !document.getElementById('watchModal')?.classList.contains('active')) render();
             } catch (error) {
                 console.warn('Обновление каталога:', error.message);
+                return;
+            } finally {
+                catalogRefreshInProgress = false;
             }
+            catalogRefreshSince = until;
         }
         setInterval(refreshKomiCatalogUpdates, 120000);
 
