@@ -44,6 +44,108 @@ const path=require('node:path');
    assert.equal(initialA11y.modalInert,true);
    assert.equal(initialA11y.drawerInert,true);
    assert.equal(initialA11y.drawerHidden,'hidden');
+   if (width === 1440) {
+     const friends = await page.evaluate(() => {
+       const originalUser=currentUser;
+       const origVerified=komiCommunityVerifiedNames;
+       const origSent=protectedFriendSent;
+       const names=['ci_verified_visitor','ci_legacy_visitor'];
+       const originals=names.map(name=>userProfiles[name]);
+       const search=document.getElementById('komiFriendsSearch');
+       const originalQuery=search.value;
+       const originalTab=komiFriendsTab;
+       try {
+         currentUser={username:'ci_test_owner',authUserId:'ci-auth-uid'};
+         userProfiles[names[0]]={displayName:'Проверенный друг',avatar:'https://example.com/ci.jpg'};
+         userProfiles[names[1]]={displayName:'Старый профиль',avatar:''};
+         komiCommunityVerifiedNames=new Set([names[0]]);
+         protectedFriendSent={owner:currentUser.authUserId,names:new Set()};
+         komiFriendsTab='all';
+         search.value='';
+         renderFriendsDrawer();
+         const list=document.getElementById('komiFriendsDrawerList');
+         const verified=list.querySelector('.komi-friends-person:has(.komi-friends-add)');
+         const unverified=[...list.querySelectorAll('.komi-friends-person')].find(el=>el.textContent.includes('Старый профиль'));
+         const before={
+           addVisible:verified?.textContent.includes('Проверенный друг'),
+           legacyUnavailable:unverified?.querySelector('.komi-friends-unavailable')?.textContent.includes('Недоступно')
+         };
+         protectedFriendSent.names.add(names[0]);
+         renderFriendsDrawer();
+         const pending=[...list.querySelectorAll('.komi-friends-person')].find(el=>el.textContent.includes('Проверенный друг'));
+         search.value='Проверенный';
+         renderFriendsDrawer();
+         const searched=[...list.querySelectorAll('.komi-friends-person')].some(el=>el.textContent.includes('Проверенный друг'));
+         return {...before,pending:pending?.textContent.includes('Ожидание'),searched};
+       } finally {
+         names.forEach((name,i)=>{if(originals[i]===undefined)delete userProfiles[name];else userProfiles[name]=originals[i]});
+         komiCommunityVerifiedNames=origVerified;
+         protectedFriendSent=origSent;
+         currentUser=originalUser;
+         komiFriendsTab=originalTab;
+         search.value=originalQuery;
+         renderFriendsDrawer();
+       }
+     });
+     assert.equal(friends.addVisible,true,'Verified Komi profiles must have Add friend button');
+     assert.equal(friends.legacyUnavailable,true,'Unlinked legacy accounts must not accept friend invites');
+     assert.equal(friends.pending,true,'Sent friend requests must show pending state');
+     assert.equal(friends.searched,true,'Friend search must match display names');
+
+     const profile = await page.evaluate(async () => {
+       const originalUser=currentUser, originalSupabase=_supabase, originalDraft=avatarDraft;
+       const username='ci_profile_owner',uid='ci-auth-profile';
+       const originalProfile=userProfiles[username];
+       const wrapper=document.createElement('div');
+       wrapper.innerHTML='<input id="newDisplayName" value="Профиль Komi"><input id="newStatusText" value="Проверка">';
+       document.body.append(wrapper);
+       const saved={};
+       try {
+         currentUser={username,authUserId:uid};
+         userProfiles[username]={avatar:'',status:'Новичок'};
+         avatarDraft={owner:uid,image:Promise.resolve(new Blob(['jpeg'],{type:'image/jpeg'})),url:null};
+         _supabase={
+           from(table) {
+             if(table!=='komi_profiles')throw Error('Unexpected table '+table);
+             return {update(fields) {
+               saved.fields=fields;
+               return {eq(key,value) {
+                 saved.ownerFilter={key,value};
+                 return {select() {return {maybeSingle:async()=>({
+                   data:{...fields,created_at:new Date().toISOString()},error:null
+                 })}}};
+               }};
+             }};
+           },
+           storage:{from(bucket) {
+             saved.bucket=bucket;
+             return {
+               upload:async(path,blob,opts)=>{saved.upload={path,contentType:opts.contentType};return {error:null}},
+               getPublicUrl:()=>({data:{publicUrl:'https://cdn.example.com/avatars/ci.jpg'}})
+             };
+           }}
+         };
+         await updateUserProfile();
+         return {name:userProfiles[username]?.displayName,
+           avatar:userProfiles[username]?.avatar,fields:saved.fields,
+           owner:saved.ownerFilter,bucket:saved.bucket,upload:saved.upload};
+       } finally {
+         currentUser=originalUser;
+         _supabase=originalSupabase;
+         avatarDraft=originalDraft;
+         if(originalProfile===undefined)delete userProfiles[username];else userProfiles[username]=originalProfile;
+         wrapper.remove();
+         render();
+       }
+     });
+     assert.equal(profile.name,'Профиль Komi','Display name must save independently');
+     assert.equal(profile.owner?.key,'user_id');
+     assert.equal(profile.owner?.value,'ci-auth-profile','Profile updates must target the current auth uid');
+     assert.equal(profile.bucket,'avatars');
+     assert.equal(profile.upload?.contentType,'image/jpeg');
+     assert.ok(profile.upload?.path.startsWith('ci-auth-profile/'),'Avatar uploads must use their owner folder');
+     assert.ok(profile.avatar.startsWith('https://cdn.example.com/'),'Saved profile must use uploaded avatar URL');
+   }
    await page.evaluate(()=>openAuthModal('login'));
    await page.waitForFunction(()=>!document.getElementById('authModal').hasAttribute('inert'));
    await page.evaluate(()=>closeAuthModal());
