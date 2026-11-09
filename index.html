@@ -14,7 +14,7 @@
     <meta property="og:url" content="https://komi-six.vercel.app/">
     <meta name="twitter:card" content="summary">
     <link rel="canonical" href="https://komi-six.vercel.app/">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23000000' stroke='%23FFFFFF' stroke-width='3'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -1589,7 +1589,7 @@ body > header {
                 </div>
                 <div class="online-counter">
                     <div class="online-dot"></div>
-                    <span id="onlineCountText">Онлайн: 1</span>
+                    <span id="onlineCountText" role="status" aria-live="polite">Онлайн: проверяем…</span>
                 </div>
             </div>
             
@@ -1652,7 +1652,15 @@ body > header {
         <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
-        <main id="mainContainer"></main>
+        <main id="mainContainer">
+            <section class="komi-seo-fallback" aria-label="О Komi Anime Hub">
+                <h1>Komi Anime Hub — каталог аниме</h1>
+                <p>Открывай каталог аниме, находи серии, сохраняй просмотренное и общайся с друзьями. В Komi Anime Hub доступны поиск по названиям и жанрам, списки просмотра, совместный просмотр и магазин AniCoin.</p>
+                <a href="#catalog">Открыть каталог</a>
+                <a href="#shop">Магазин AniCoin</a>
+                <noscript><p>Для интерактивного каталога и просмотра требуется JavaScript.</p></noscript>
+            </section>
+        </main>
     </div>
 
     <!-- Модальные окна -->
@@ -1763,7 +1771,7 @@ body > header {
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
             <h3 style="margin-bottom: 14px; font-size: 15px;">◇ Выбираем аниме...</h3>
             <div id="rouletteContainer" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
-                <img id="rouletteImage" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                <img id="rouletteImage" src="./anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div id="rouletteTitle" style="font-weight: 700; font-size: 13px; color: white;">Загрузка...</div>
         </div>
@@ -1910,7 +1918,7 @@ body > header {
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
-        let currentView = 'home';
+        let currentView = location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : 'home';
         let profileTargetUser = null;
         let profileActiveTab = 'Просмотрено';
         let profilePageSection = 'overview';
@@ -2077,17 +2085,23 @@ async function loadDataFromCloud(attempt = 0) {
 
         let presenceRequestInFlight = false;
         async function updateOnlinePresence() {
-            if (!_supabase || document.hidden || presenceRequestInFlight) return;
+            if (!_supabase || !navigator.onLine) {
+                const label = document.getElementById('onlineCountText');
+                if (label) label.textContent = navigator.onLine ? 'Онлайн: недоступно' : 'Нет соединения';
+                return;
+            }
+            if (document.hidden || presenceRequestInFlight) return;
             presenceRequestInFlight = true;
             try {
                 const now = Date.now();
                 const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
                 
-                await _supabase.from('online_users').upsert({ 
-                    session_id: myUniqueKey, 
-                    username: currentName, 
-                    last_seen: now 
+                const {error: presenceWriteError} = await _supabase.from('online_users').upsert({
+                    session_id: myUniqueKey,
+                    username: currentName,
+                    last_seen: now
                 }, { onConflict: 'session_id' });
+                if (presenceWriteError) throw presenceWriteError;
 
                 const expireTime = now - 10000;
                 await _supabase.from('online_users').delete().lt('last_seen', expireTime);
@@ -2107,19 +2121,20 @@ async function loadDataFromCloud(attempt = 0) {
                     updateNotificationsUI();
                 }
 
-                const { data } = await _supabase.from('online_users').select('*');
-                if (data) {
-                    const uniqueUsersMap = new Map();
-                    data.forEach(item => uniqueUsersMap.set(item.username, item));
-                    globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
-
-                    const count = globalAllOnlineUsersList.length || 1;
-                    const el = document.getElementById('onlineCountText');
-                    if (el) el.innerText = `Онлайн: ${count}`;
+                const {data, error:presenceReadError} = await _supabase.from('online_users').select('username,last_seen');
+                if (presenceReadError) throw presenceReadError;
+                if (!Array.isArray(data)) throw new Error('Не удалось получить список онлайн');
+                const uniqueUsersMap = new Map();
+                for (const item of data) {
+                    if (Number(item.last_seen) > now - 30000 && item.username)
+                        uniqueUsersMap.set(item.username, item);
                 }
+                globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
+                const el = document.getElementById('onlineCountText');
+                if (el) el.innerText = `Онлайн: ${globalAllOnlineUsersList.length}`;
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
-                if (el) el.innerText = `Онлайн: 1`;
+                if (el) el.innerText = navigator.onLine ? 'Онлайн: недоступно' : 'Нет соединения';
             } finally {
                 presenceRequestInFlight = false;
             }
@@ -2127,6 +2142,11 @@ async function loadDataFromCloud(attempt = 0) {
 
         setInterval(updateOnlinePresence, 8000);
         document.addEventListener('visibilitychange', updateOnlinePresence);
+        window.addEventListener('online', updateOnlinePresence);
+        window.addEventListener('offline', () => {
+            const indicator = document.getElementById('onlineCountText');
+            if (indicator) indicator.textContent = 'Нет соединения';
+        });
         updateOnlinePresence();
 
 
@@ -2474,8 +2494,8 @@ async function loadDataFromCloud(attempt = 0) {
         function navigate(view) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
-            if (view === 'shop') history.replaceState(null, '', '#shop');
-            else if (location.hash === '#shop') history.replaceState(null, '', location.pathname + location.search);
+            const route = view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : '';
+            if (location.hash !== route) history.replaceState(null, '', location.pathname + location.search + route);
             render();
             renderHeaderUser();
         }
@@ -2483,7 +2503,7 @@ async function loadDataFromCloud(attempt = 0) {
         function openProfile(username) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
-            if (location.hash === '#shop') history.replaceState(null, '', location.pathname + location.search);
+            if (location.hash !== '#profile') history.replaceState(null, '', location.pathname + location.search + '#profile');
             profileTargetUser = username;
             render();
             renderHeaderUser();
@@ -2690,6 +2710,12 @@ const adminList = []; // No client-side username grants administrator privileges
 
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
+                if (!catalogInitialLoadComplete) {
+                    container.innerHTML = catalogInitialLoadFailed
+                      ? '<section class="komi-catalog-empty" role="status"><h1>Не удалось загрузить каталог</h1><button class="komi-catalog-clear" onclick="loadDataFromCloud()">Повторить загрузку</button></section>'
+                      : '<section class="komi-catalog-empty" role="status" aria-live="polite"><h1>Загружаем каталог аниме…</h1><p>Подборки появятся после загрузки.</p></section>';
+                    return;
+                }
                 const genres = ['Все', ...availableGenresList];
                 const years = ['Все', ...[...new Set(animeList.map(a => komiAnimeYear(a)).filter(Boolean))].sort((a,b) => Number(b) - Number(a))];
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA', 'ONA', 'Special'];
@@ -2747,7 +2773,8 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
                 `;
             } else if (currentView === 'shop') {
-                renderAniCoinShop(container);
+                if (typeof renderAniCoinShop === 'function') renderAniCoinShop(container);
+                else container.innerHTML = '<section class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
             } else if (currentView === 'profile') {
                 if (slideInterval) clearInterval(slideInterval);
                 renderProfileView(container);
@@ -3904,6 +3931,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 await loadAuthenticatedAnimeData();
                 if (typeof aniCoinRequest === 'function') aniCoinRequest('read').catch(() => {});
                 loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
+                if (location.hash === '#profile') { currentView = 'profile'; profileTargetUser = username; }
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
@@ -4660,13 +4688,35 @@ const adminList = []; // No client-side username grants administrator privileges
         }
         setInterval(refreshKomiCatalogUpdates, 120000);
 
+        function applyKomiHashRoute() {
+            const hash = location.hash.toLowerCase();
+            if (hash === '#shop') {
+                if (typeof openAniCoinShop === 'function') openAniCoinShop();
+                else navigate('shop');
+            } else if (hash === '#catalog') {
+                if (currentView !== 'catalog') { currentView='catalog'; render(); }
+            } else if (hash === '#profile') {
+                if (currentUser) {
+                    profileTargetUser=currentUser.username;
+                    if (currentView !== 'profile') { currentView='profile'; render(); }
+                } else openAuthModal('login');
+            } else if (!hash && ['shop','catalog','profile'].includes(currentView)) {
+                currentView='home';
+                render();
+            }
+        }
+        window.addEventListener('hashchange', applyKomiHashRoute);
+
         render();
         loadDataFromCloud();
         // Broadcast dates can load in parallel with the 6,000+ item catalog.
         loadKomiEpisodeSchedule();
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
-        restoreGoogleSession();
+        restoreGoogleSession().finally(() => {
+            if (location.hash === '#profile') applyKomiHashRoute();
+        });
     </script>
+    <script src="./accessibility.js"></script>
     <script src="./player-runtime.js"></script>
     <script src="./anime-details.js"></script>
     <script src="./watch-party.js"></script>

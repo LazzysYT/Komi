@@ -180,16 +180,16 @@ header .logo-container .logo-box,
   background-image:none !important;
   color:#ffffff !important;
   -webkit-text-fill-color:#ffffff !important;
-  border:1px solid rgba(255,255,255,.88) !important;
-  box-shadow:0 0 0 2px rgba(255,255,255,.035), 0 6px 24px rgba(0,0,0,.55) !important;
+  border:0 !important;
+  box-shadow:none !important;
   filter:none !important;
   text-shadow:none !important;
 }
 header .logo-container .logo-box:hover,
 .komi-side-nav .komi-side-logo:hover {
   background:#101010 !important;
-  border-color:#ffffff !important;
-  box-shadow:0 0 0 2px rgba(255,255,255,.13), 0 8px 24px rgba(0,0,0,.65) !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
 }
 /* Strong white for brand and primary labels while secondary metadata
    stays visibly softer, preserving the dark theme's hierarchy. */
@@ -220,3 +220,14 @@ header .logo-container .logo-text {
   border-color:#ffffff !important;
   color:#000000 !important;
 }
+
+/* Closed dialogs and drawers must not stay reachable with the keyboard. */
+.modal-overlay:not(.active) {visibility:hidden !important}
+#komiFriendsDrawer:not(.open) {visibility:hidden !important}
+#komiFriendsDrawer.open {visibility:visible !important}
+#komiFriendsDrawer :focus-visible,
+.modal-overlay.active :focus-visible {outline:2px solid #fff;outline-offset:3px}
+.komi-seo-fallback {max-width:920px;margin:48px auto;padding:28px;border:1px solid #333;border-radius:20px;background:#151515;color:#f5f5f5}
+.komi-seo-fallback h1{font-size:clamp(24px,3vw,42px);color:#fff}
+.komi-seo-fallback p{color:#ddd;line-height:1.7}
+.komi-seo-fallback a{display:inline-flex;margin-right:14px;margin-top:12px;color:#fff;text-decoration:underline}

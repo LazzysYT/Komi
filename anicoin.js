@@ -34,11 +34,21 @@ async function openAniCoinShop() {
     aniCoinStatus = '';
     navigate('shop');
     if (!currentUser?.authUserId) return;
+    let timeout;
     try {
-        await aniCoinRequest('read');
+        await Promise.race([
+            aniCoinRequest('read'),
+            new Promise((_, reject) => {
+                timeout = setTimeout(() => reject(new Error('Request timed out')), 12000);
+            })
+        ]);
     } catch {
-        aniCoinStatus = 'Не удалось загрузить кошелёк. Попробуйте ещё раз.';
+        aniCoinStatus = navigator.onLine
+            ? 'Не удалось загрузить кошелёк. Попробуйте ещё раз.'
+            : 'Нет соединения с Интернетом. Повторите после подключения.';
         if (currentView === 'shop') renderAniCoinShop(document.getElementById('mainContainer'));
+    } finally {
+        clearTimeout(timeout);
     }
 }
 
@@ -52,7 +62,7 @@ function renderAniCoinShop(container) {
             <h1 id="anicoin-title">Магазин AniCoin</h1>
             <p>За каждые 20 минут воспроизведения во встроенном видеоплеере начисляется 1 AniCoin. Паузы, перемотка и внешние плееры не учитываются.</p>
             ${!owner ? '<button type="button" class="btn-glow" onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
-            ${owner && !wallet && !aniCoinStatus ? '<p role="status">Загружаем кошелёк…</p>' : ''}
+            ${owner && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
             ${wallet ? `<div class="anicoin-wallet">
                 <div><span>Баланс</span><strong>${wallet.balance} AniCoin</strong></div>
                 <div><label for="anicoin-progress">До следующего коина · ${Math.floor(wallet.seconds / 60)} мин ${wallet.seconds % 60} сек из 20 мин</label>
@@ -195,8 +205,5 @@ function aniCoinStartEmbed() {
     }, 1000);
 }
 
-window.addEventListener('hashchange', () => {
-    if (location.hash === '#shop' && currentView !== 'shop') openAniCoinShop();
-    else if (location.hash !== '#shop' && currentView === 'shop') navigate('home');
-});
+// Initial shop deep-link: subsequent hash changes use the central vanilla-JS router.
 if (location.hash === '#shop') openAniCoinShop();
