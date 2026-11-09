@@ -1399,7 +1399,91 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 #watchModal .player-box video,#watchModal .player-box iframe{display:block;width:100%;height:100%;min-height:0}
 #watchModal .komi-watch-controls{position:static}
 .komi-catalog-chip[aria-pressed="true"]{background:#351820;border-color:#e11d38}
-</style></head>
+</style><style>
+/* Komi visual system */
+:root {
+    --bg-main: #09090b;
+    --bg-card: #17171b;
+    --bg-input: #121216;
+    --border: #27272d;
+    --primary: #e11d38;
+    --text-main: #f4f4f5;
+    --text-muted: #a1a1aa;
+}
+body { background: var(--bg-main); }
+body > header {
+    background: rgba(9, 9, 11, .9) !important;
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+}
+.header-inner .logo-area { order: -1; }
+.header-inner .search-container { min-width: 0; }
+.search-bar { min-height: 44px; }
+.search-bar input { font-size: 14px; }
+.hero-slider-container {
+    height: clamp(350px, 43vw, 550px) !important;
+    border-radius: 20px !important;
+    border: 1px solid var(--border) !important;
+    background: var(--bg-input);
+}
+.hero-slider-container .hero-slide {
+    background-position: center 32%;
+    background-size: cover;
+    padding-inline: clamp(42px, 6vw, 96px) !important;
+}
+.hero-slider-container .hero-slide h1 {
+    font-size: clamp(30px, 4vw, 64px) !important;
+    letter-spacing: -.045em;
+    overflow-wrap: anywhere;
+}
+.hero-slider-arrow { min-width: 36px; min-height: 36px; }
+.anime-card { background: var(--bg-card); border-radius: 16px; }
+.anime-poster-box { aspect-ratio: 2 / 3; }
+.komi-catalog-header { padding-block: 12px; }
+.komi-catalog-search input { min-height: 48px; }
+.komi-catalog-chip:focus-visible,
+.komi-profile-tab:focus-visible,
+.hero-slider-arrow:focus-visible {
+    outline: 2px solid #ff6478;
+    outline-offset: 3px;
+}
+.komi-profile-v2 .profile-header-card {
+    border: 1px solid var(--border) !important;
+    border-radius: 20px !important;
+    background: radial-gradient(ellipse at 50% 0%, #2e1620, transparent 68%), var(--bg-input) !important;
+    box-shadow: none !important;
+}
+.komi-profile-v2 .profile-header-card::before { display: none; }
+.komi-profile-v2 .profile-stats-grid {
+    border: 1px solid var(--border) !important;
+    border-radius: 16px !important;
+    background: var(--bg-card) !important;
+}
+.komi-level-progress { width: min(100%, 270px); color: var(--text-muted); }
+.komi-level-progress progress {
+    display: block;
+    width: 100%;
+    margin-top: 8px;
+    accent-color: var(--primary);
+}
+#watchModal .komi-watch-stage { min-width: 0; }
+#watchModal .player-wrapper { border-radius: 16px; }
+#watchModal .komi-watch-controls { background: var(--bg-card); backdrop-filter: none; }
+@media (max-width: 700px) {
+    .hero-slider-container { height: 370px !important; }
+    .hero-slider-container .hero-slide { padding-inline: 42px !important; }
+    .hero-slider-container .hero-slide h1 { font-size: clamp(23px, 6vw, 34px) !important; }
+    .hero-slider-container .hero-slide p { -webkit-line-clamp: 2; }
+    #watchModal .player-wrapper { min-height: 0; }
+}
+@media (hover: none) {
+    .anime-card .anime-quick-view { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .hero-slide, .anime-card, .anime-poster { transition: none !important; }
+}
+</style>
+</head>
 <body>
 
     <!-- Шапка сайта -->
@@ -1427,7 +1511,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
             <div class="search-container">
                 <div class="search-bar">
                     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" placeholder="Название аниме или жанр..." oninput="handleInstantSearch(this.value)" onfocus="showSearchDropdown()">
+                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Название аниме или жанр..." oninput="handleInstantSearch(this.value)" onfocus="showSearchDropdown()">
                 </div>
                 <div class="search-dropdown" id="searchDropdown"></div>
             </div>
@@ -2413,7 +2497,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             
                             <div class="hero-slides-wrapper" style="position:relative; width:100%; height:100%;">
                                 ${sliderItems.map((anime, idx) => `
-                                    <div class="hero-slide ${idx === currentSlideIndex ? 'active' : ''}" style="background-image: url('${anime.poster}');">
+                                    <div class="hero-slide ${idx === currentSlideIndex ? 'active' : ''}" style="background-image: url(&quot;${animeArtwork(anime)}&quot;);">
                                         <div class="hero-meta">
                                             <span>⭐ ${anime.shikiRating || '8.5'} Shikimori</span>
                                             <span>${(anime.genres || [anime.genre || 'Экшен']).join(', ')}</span>
@@ -2549,6 +2633,7 @@ const adminList = []; // No client-side username grants administrator privileges
 
         function startHeroAutoSlide() {
             if (slideInterval) clearInterval(slideInterval);
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             slideInterval = setInterval(() => {
                 const maxSlides = document.querySelectorAll('.hero-slide').length;
                 if (maxSlides > 1) {
