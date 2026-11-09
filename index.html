@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
     <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
-    <meta name="theme-color" content="#09090D">
+    <meta name="theme-color" content="#090909">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="Komi Anime Hub">
@@ -14,23 +14,23 @@
     <meta property="og:url" content="https://komi-six.vercel.app/">
     <meta name="twitter:card" content="summary">
     <link rel="canonical" href="https://komi-six.vercel.app/">
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23FF454F'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='white' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='25' fill='%23F5F5F5'/><text x='50%' y='55%' font-size='60' font-weight='800' fill='black' font-family='sans-serif' dominant-baseline='middle' text-anchor='middle'>K</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
-            --bg-base: #09090D;
-            --bg-card: #14141B;
-            --bg-card-hover: #1C1C26;
-            --bg-input: #1C1C26;
-            --primary: #FF454F;
-            --primary-hover: #E03E46;
-            --accent: #FF454F;
-            --text-main: #F5F5F7;
-            --text-muted: #92929F;
-            --border: #282832;
-            --success: #36D399;
-            --glow: rgba(255, 69, 79, 0.3);
+            --bg-base: #090909;
+            --bg-card: #151515;
+            --bg-card-hover: #1d1d1d;
+            --bg-input: #1d1d1d;
+            --primary: #eaeaea;
+            --primary-hover: #eaeaea;
+            --accent: #eaeaea;
+            --text-main: #f5f5f5;
+            --text-muted: #939393;
+            --border: #292929;
+            --success: #eaeaea;
+            --glow: rgba(234,234,234, 0.3);
         }
 
         ::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -72,7 +72,7 @@
 
         /* Шапка сайта */
         header {
-            background: rgba(9, 9, 13, 0.88);
+            background: rgba(9,9,9, 0.88);
             backdrop-filter: blur(16px);
             border-bottom: 1px solid var(--border);
             position: sticky;
@@ -97,7 +97,7 @@
         .logo-container { display: flex; align-items: center; gap: 10px; cursor: pointer; }
         .logo-box {
             width: 38px; height: 38px;
-            background: linear-gradient(135deg, var(--primary), #FF737B);
+            background: linear-gradient(135deg, var(--primary), #eaeaea);
             border-radius: 10px; display: flex; align-items: center; justify-content: center;
             font-weight: 800; font-size: 18px; color: white;
             box-shadow: 0 0 16px var(--glow);
@@ -106,14 +106,14 @@
         .logo-box:hover { transform: scale(1.06); box-shadow: 0 0 22px var(--glow); }
         .logo-text {
             font-size: 18px; font-weight: 800;
-            background: linear-gradient(to right, #FFFFFF, var(--text-muted));
+            background: linear-gradient(to right, #ffffff, var(--text-muted));
             -webkit-background-clip: text; -webkit-text-fill-color: transparent;
             letter-spacing: -0.4px;
         }
 
         .online-counter {
-            background: rgba(54, 211, 153, 0.08);
-            border: 1px solid rgba(54, 211, 153, 0.25);
+            background: rgba(234,234,234, 0.08);
+            border: 1px solid rgba(234,234,234, 0.25);
             color: var(--success); padding: 4px 10px; border-radius: 20px;
             font-size: 11px; font-weight: 700; display: flex; align-items: center; gap: 6px;
         }
@@ -190,7 +190,7 @@
 
         .hero-slider-container {
             position: relative; border-radius: 16px; overflow: hidden; border: 1px solid var(--border);
-            box-shadow: 0 20px 45px rgba(0, 0, 0, 0.7); background: var(--bg-card); height: 440px; display: flex; flex-direction: column; justify-content: flex-end;
+            box-shadow: 0 20px 45px rgba(0,0,0, 0.7); background: var(--bg-card); height: 440px; display: flex; flex-direction: column; justify-content: flex-end;
         }
         .hero-slide {
             display: none; background-size: cover; background-position: center; padding: 40px 48px;
@@ -199,15 +199,15 @@
         .hero-slide.active { display: flex; animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .hero-slide::before {
             content: ''; position: absolute; inset: 0;
-            background: linear-gradient(90deg, #09090D 35%, rgba(9, 9, 13, 0.8) 65%, rgba(9, 9, 13, 0.3) 100%),
-                        radial-gradient(circle at top right, rgba(255, 69, 79, 0.15), transparent 60%);
+            background: linear-gradient(90deg, #090909 35%, rgba(9,9,9, 0.8) 65%, rgba(9,9,9, 0.3) 100%),
+                        radial-gradient(circle at top right, rgba(234,234,234, 0.15), transparent 60%);
             z-index: 1;
         }
         .hero-slide > * { position: relative; z-index: 2; }
-        .hero-slide h1 { font-size: 38px; font-weight: 800; max-width: 520px; margin-bottom: 10px; line-height: 1.1; color: #FFFFFF; letter-spacing: -0.5px; }
+        .hero-slide h1 { font-size: 38px; font-weight: 800; max-width: 520px; margin-bottom: 10px; line-height: 1.1; color: #ffffff; letter-spacing: -0.5px; }
         .hero-slide p { color: var(--text-muted); font-size: 12px; max-width: 440px; margin-bottom: 20px; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
         .hero-meta { display: flex; gap: 6px; align-items: center; font-size: 11px; font-weight: 600; color: var(--text-muted); margin-bottom: 12px; flex-wrap: wrap; }
-        .hero-meta span { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); padding: 4px 10px; border-radius: 6px; color: var(--text-main); border: 1px solid var(--border); }
+        .hero-meta span { background: rgba(255,255,255, 0.05); backdrop-filter: blur(10px); padding: 4px 10px; border-radius: 6px; color: var(--text-main); border: 1px solid var(--border); }
         .hero-buttons { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
         
         .btn-glow {
@@ -227,7 +227,7 @@
         .btn-glow-secondary:hover { border-color: var(--text-muted); background: var(--bg-card-hover); transform: translateY(-1px); }
 
         .hero-slider-arrow {
-            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(20, 20, 27, 0.7);
+            position: absolute; top: 50%; transform: translateY(-50%); background: rgba(21,21,21, 0.7);
             border: 1px solid var(--border); color: white; width: 40px; height: 40px; border-radius: 50%;
             cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 10; font-size: 14px; backdrop-filter: blur(8px);
             transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
@@ -237,7 +237,7 @@
         .hero-arrow-next { right: 16px; }
         
         .hero-dots { position: absolute; bottom: 16px; right: 36px; display: flex; gap: 5px; z-index: 10; }
-        .hero-dot { width: 16px; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); cursor: pointer; transition: width 0.3s ease, background 0.3s ease; }
+        .hero-dot { width: 16px; height: 3px; border-radius: 2px; background: rgba(255,255,255, 0.3); cursor: pointer; transition: width 0.3s ease, background 0.3s ease; }
         .hero-dot.active { width: 36px; background: var(--primary); box-shadow: 0 0 10px var(--glow); }
 
         .friends-sidebar-panel {
@@ -283,8 +283,8 @@
         .anime-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 12px 30px var(--glow); }
         
         .anime-rating-badge {
-            position: absolute; top: 8px; left: 8px; background: rgba(9, 9, 13, 0.75); border: 1px solid var(--border);
-            color: #fbbf24; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 2; backdrop-filter: blur(6px);
+            position: absolute; top: 8px; left: 8px; background: rgba(9,9,9, 0.75); border: 1px solid var(--border);
+            color: #eaeaea; padding: 3px 7px; border-radius: 6px; font-size: 10px; font-weight: 700; z-index: 2; backdrop-filter: blur(6px);
         }
         
         .anime-poster-box { position: relative; width: 100%; aspect-ratio: 2 / 3; overflow: hidden; background: var(--bg-input); }
@@ -292,7 +292,7 @@
         .anime-card:hover .anime-poster { transform: scale(1.06); }
         
         .anime-quick-view {
-            position: absolute; inset: 0; background: rgba(9, 9, 13, 0.6); backdrop-filter: blur(3px);
+            position: absolute; inset: 0; background: rgba(9,9,9, 0.6); backdrop-filter: blur(3px);
             display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; z-index: 3;
         }
         .anime-card:hover .anime-quick-view { opacity: 1; }
@@ -324,11 +324,11 @@
         
         .profile-badges-row { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
         .profile-badge-item {
-            background: rgba(255, 69, 79, 0.08); border: 1px solid rgba(255, 69, 79, 0.2); color: var(--primary);
+            background: rgba(234,234,234, 0.08); border: 1px solid rgba(234,234,234, 0.2); color: var(--primary);
             padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;
         }
         .profile-badge-level {
-            background: rgba(255, 255, 255, 0.04); border: 1px solid var(--border); color: var(--text-main);
+            background: rgba(255,255,255, 0.04); border: 1px solid var(--border); color: var(--text-main);
             padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
         }
         .profile-reg-date { color: var(--text-muted); font-size: 11px; font-weight: 500; opacity: 0.8; }
@@ -352,7 +352,7 @@
         }
         .profile-stat-card:hover { background: var(--bg-card-hover); border-color: var(--text-muted); transform: translateY(-2px); }
         .profile-stat-card.active {
-            background: linear-gradient(135deg, rgba(255, 69, 79, 0.12), var(--bg-card));
+            background: linear-gradient(135deg, rgba(234,234,234, 0.12), var(--bg-card));
             border-color: var(--primary); box-shadow: 0 6px 20px var(--glow);
         }
         .profile-stat-card .stat-icon { font-size: 16px; }
@@ -380,13 +380,13 @@
         /* Модальные окна */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.82); backdrop-filter: blur(10px);
+            background: rgba(0,0,0, 0.82); backdrop-filter: blur(10px);
             display: flex; align-items: center; justify-content: center; z-index: 1000;
             opacity: 0; pointer-events: none; transition: opacity 0.2s ease;
         }
         .modal-overlay.active { opacity: 1; pointer-events: auto; }
         .modal-content {
-            background: #0D0D12; border: 1px solid var(--border); border-radius: 16px;
+            background: #0d0d0d; border: 1px solid var(--border); border-radius: 16px;
             width: 95%; max-width: 1100px; padding: 22px; max-height: 90vh; overflow-y: auto;
             position: relative; box-shadow: 0 25px 50px rgba(0,0,0,0.9); animation: modalScale 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
@@ -406,8 +406,8 @@
 
         .btn-secondary { background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border); padding: 7px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 11px; transition: background 0.15s ease, border-color 0.15s ease; }
         .btn-secondary:hover { background: var(--bg-card-hover); border-color: var(--text-muted); }
-        .btn-danger { background: rgba(255, 69, 79, 0.08); color: #FF454F; border: 1px solid rgba(255, 69, 79, 0.2); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.15s ease; }
-        .btn-danger:hover { background: rgba(255, 69, 79, 0.15); }
+        .btn-danger { background: rgba(234,234,234, 0.08); color: #eaeaea; border: 1px solid rgba(234,234,234, 0.2); padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 11px; font-weight: 600; transition: background 0.15s ease; }
+        .btn-danger:hover { background: rgba(234,234,234, 0.15); }
 
         .catalog-filters-box {
             background: var(--bg-card); border: 1px solid var(--border); padding: 14px; border-radius: 12px;
@@ -425,7 +425,7 @@
         
         .party-room-grid { display: grid; grid-template-columns: 1fr 280px; gap: 14px; align-items: start; }
         .party-main-screen { display: flex; flex-direction: column; gap: 8px; position: relative; }
-        .party-video-container { position: relative; width: 100%; background: #000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.8); }
+        .party-video-container { position: relative; width: 100%; background: #000000; border-radius: 10px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); box-shadow: 0 8px 20px rgba(0,0,0,0.8); }
         .party-video-container video, .party-video-container iframe { width: 100%; height: 100%; border: none; object-fit: contain; }
 
         .flying-emoji-layer { position: absolute; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
@@ -444,7 +444,7 @@
         .party-react-btn:hover { background: var(--bg-card-hover); transform: scale(1.15); }
 
         .player-wrapper { position: relative; width: 100%; display: flex; flex-direction: column; gap: 6px; }
-        .player-box { background: #000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.8); position: relative; }
+        .player-box { background: #000000; border-radius: 12px; overflow: hidden; aspect-ratio: 16/9; border: 1px solid var(--border); width: 100%; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 20px rgba(0,0,0,0.8); position: relative; }
         .player-box iframe, .player-box video { width: 100%; height: 100%; border: none; object-fit: contain; }
 
         .players-switcher-bar {
@@ -475,7 +475,7 @@
             cursor: pointer; display: flex; flex-direction: column; position: relative; transition: transform 0.2s ease, border-color 0.2s ease;
         }
         .ep-crunchy-card:hover, .ep-crunchy-card.active { border-color: var(--primary); transform: translateY(-2px); box-shadow: 0 5px 12px var(--glow); }
-        .ep-crunchy-thumb { width: 100%; height: 95px; object-fit: cover; background: #000; position: relative; }
+        .ep-crunchy-thumb { width: 100%; height: 95px; object-fit: cover; background: #000000; position: relative; }
         .ep-crunchy-play-overlay { position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; }
         .ep-crunchy-card:hover .ep-crunchy-play-overlay { opacity: 1; }
         .ep-crunchy-play-icon { width: 28px; height: 28px; background: var(--primary); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 10px; box-shadow: 0 0 8px var(--glow); }
@@ -514,76 +514,76 @@
            No JavaScript, catalog, Supabase, account, or player changes. */
         :root {
             --bg-base: #050505;
-            --bg-card: #0c0c0d;
-            --bg-card-hover: #141416;
-            --bg-input: #101012;
-            --primary: #f13b45;
-            --primary-hover: #ff4b54;
-            --accent: #f13b45;
-            --text-main: #f6f6f7;
-            --text-muted: #929299;
-            --border: #252528;
-            --glow: rgba(241,59,69,.17);
+            --bg-card: #0c0c0c;
+            --bg-card-hover: #141414;
+            --bg-input: #101010;
+            --primary: #eaeaea;
+            --primary-hover: #eaeaea;
+            --accent: #eaeaea;
+            --text-main: #f6f6f6;
+            --text-muted: #939393;
+            --border: #252525;
+            --glow: rgba(234,234,234,.17);
         }
         body { background: #050505; }
         header {
             background: rgba(5,5,5,.96);
-            border-bottom: 1px solid #1c1c1e;
+            border-bottom: 1px solid #1c1c1c;
             box-shadow: 0 8px 24px rgba(0,0,0,.35);
         }
         .header-inner { max-width: 1580px; }
         .app-layout { max-width: 1580px; padding-top: 24px; gap: 34px; }
-        .logo-box { border-radius: 13px; background: linear-gradient(145deg,#ff545e,#bd0c20); box-shadow: 0 0 18px rgba(241,59,69,.22); }
-        .logo-text { background: none; -webkit-text-fill-color: #f6f6f7; color: #f6f6f7; }
+        .logo-box { border-radius: 13px; background: linear-gradient(145deg,#eaeaea,#d7d7d7); box-shadow: 0 0 18px rgba(234,234,234,.22); }
+        .logo-text { background: none; -webkit-text-fill-color: #f6f6f6; color: #f6f6f6; }
         .search-bar input {
-            background: #101012; border-color: #252528;
+            background: #101010; border-color: #252525;
             border-radius: 24px; padding-top: 11px; padding-bottom: 11px;
         }
-        .search-bar input:focus { border-color: #9f2831; box-shadow: 0 0 0 3px rgba(241,59,69,.08); }
+        .search-bar input:focus { border-color: #d7d7d7; box-shadow: 0 0 0 3px rgba(234,234,234,.08); }
         .nav-btn { border-radius: 24px; padding: 9px 15px; }
-        .nav-btn.active, .nav-btn:hover { background: #18090b; border-color: #79202a; color: #fff; }
-        .action-icon-btn, .user-pill { background: #101012; border-color: #29292d; border-radius: 22px; }
-        .action-icon-btn:hover, .user-pill:hover { border-color: #8c2730; }
+        .nav-btn.active, .nav-btn:hover { background: #171717; border-color: #575757; color: #ffffff; }
+        .action-icon-btn, .user-pill { background: #101010; border-color: #292929; border-radius: 22px; }
+        .action-icon-btn:hover, .user-pill:hover { border-color: #575757; }
         .top-hero-section-grid { gap: 18px; grid-template-columns: minmax(0,1fr) 290px; }
         .hero-slider-container {
-            border-radius: 28px; background: #0b0b0c; border-color: #282024;
+            border-radius: 28px; background: #0b0b0b; border-color: #222222;
             height: 485px; box-shadow: 0 22px 65px rgba(0,0,0,.6);
         }
         .hero-slide { padding: 48px 60px; background-position: center; }
         .hero-slide::before {
-            background: linear-gradient(90deg,rgba(3,3,4,.97) 0%,rgba(3,3,4,.9) 29%,rgba(3,3,4,.48) 58%,rgba(3,3,4,.10) 100%),
-                        linear-gradient(0deg,rgba(3,3,4,.62),transparent 36%);
+            background: linear-gradient(90deg,rgba(3,3,3,.97) 0%,rgba(3,3,3,.9) 29%,rgba(3,3,3,.48) 58%,rgba(3,3,3,.10) 100%),
+                        linear-gradient(0deg,rgba(3,3,3,.62),transparent 36%);
         }
         .hero-slide h1 { font-size: clamp(30px,3vw,48px); letter-spacing: -.9px; line-height: 1.12; }
-        .hero-slide p { font-size: 13px; color: #b7b7bc; line-height: 1.7; }
-        .hero-meta span { background: rgba(12,12,13,.78); border-color: #333338; border-radius: 20px; }
-        .hero-slider-arrow { background: rgba(12,12,14,.88); border-color: #333338; }
-        .hero-dot { border-radius: 10px; background: #515156; }
-        .hero-dot.active { background: #ff3947; box-shadow: 0 0 12px rgba(255,57,71,.4); }
+        .hero-slide p { font-size: 13px; color: #b7b7b7; line-height: 1.7; }
+        .hero-meta span { background: rgba(12,12,12,.78); border-color: #333333; border-radius: 20px; }
+        .hero-slider-arrow { background: rgba(12,12,12,.88); border-color: #333333; }
+        .hero-dot { border-radius: 10px; background: #515151; }
+        .hero-dot.active { background: #eaeaea; box-shadow: 0 0 12px rgba(234,234,234,.4); }
         .btn-glow, .btn-glow-secondary { border-radius: 24px; padding: 11px 22px; }
-        .btn-glow { background: linear-gradient(125deg,#ff4854,#d51d2c); box-shadow: 0 8px 20px rgba(231,30,45,.22); }
-        .btn-glow-secondary { background: rgba(21,21,23,.88); border-color: #36363a; }
+        .btn-glow { background: linear-gradient(125deg,#eaeaea,#eaeaea); box-shadow: 0 8px 20px rgba(234,234,234,.22); }
+        .btn-glow-secondary { background: rgba(21,21,21,.88); border-color: #363636; }
         .friends-sidebar-panel {
-            height: 485px; border-radius: 26px; background: #0c0c0e;
-            border-color: #28282b; padding: 20px;
+            height: 485px; border-radius: 26px; background: #0c0c0c;
+            border-color: #282828; padding: 20px;
         }
-        .sidebar-friend-item { border-radius: 16px; background: #151517; border-color: #27272a; padding: 10px; }
+        .sidebar-friend-item { border-radius: 16px; background: #151515; border-color: #272727; padding: 10px; }
         .section-header { margin-bottom: 19px; }
         .section-title { font-size: 21px; font-weight: 800; }
-        .section-see-all { color: #f15b65; }
+        .section-see-all { color: #eaeaea; }
         .anime-grid { gap: 17px; }
         .anime-card {
-            background: #0b0b0c; border: 1px solid #242427;
+            background: #0b0b0b; border: 1px solid #242424;
             border-radius: 20px; box-shadow: 0 8px 24px rgba(0,0,0,.24);
         }
-        .anime-card:hover { border-color: #b62a36; box-shadow: 0 14px 32px rgba(225,30,48,.14); }
-        .anime-info { background: #0b0b0c; padding: 13px; }
-        .anime-rating-badge { background: rgba(4,4,5,.85); border-radius: 20px; border-color: #3b3434; }
-        .empty-state { background: #0c0c0d; border-color: #29292c; border-radius: 20px; }
+        .anime-card:hover { border-color: #d7d7d7; box-shadow: 0 14px 32px rgba(234,234,234,.14); }
+        .anime-info { background: #0b0b0b; padding: 13px; }
+        .anime-rating-badge { background: rgba(4,4,4,.85); border-radius: 20px; border-color: #353535; }
+        .empty-state { background: #0c0c0c; border-color: #292929; border-radius: 20px; }
         .profile-header-card, .profile-stat-card, .notification-dropdown, .search-dropdown {
-            background: #0c0c0e; border-color: #29292c; border-radius: 20px;
+            background: #0c0c0c; border-color: #292929; border-radius: 20px;
         }
-        input, select, textarea { accent-color: #f13b45; }
+        input, select, textarea { accent-color: #eaeaea; }
         @media (max-width: 1100px) {
             .top-hero-section-grid { grid-template-columns: minmax(0,1fr); }
             .hero-slider-container { height: 430px; }
@@ -599,59 +599,59 @@
 
         /* Rounded navigation, profile and auth — additive, no app logic removed */
         .search-dropdown { border-radius: 18px; overflow: hidden; box-shadow: 0 24px 65px rgba(0,0,0,.75); }
-        .search-dropdown-item { border-color: #242427; padding: 12px 14px; }
-        .search-dropdown-item:hover { background: #1a1214; }
+        .search-dropdown-item { border-color: #242424; padding: 12px 14px; }
+        .search-dropdown-item:hover { background: #141414; }
         .nav-actions { gap: 9px; }
         .nav-actions .nav-btn, .nav-actions .action-icon-btn, .nav-actions .user-pill {
-            background: #151517; border: 1px solid #2c2c30; border-radius: 999px;
+            background: #151515; border: 1px solid #2c2c2c; border-radius: 999px;
             min-height: 38px; padding: 8px 15px;
         }
         .nav-actions .nav-btn:hover, .nav-actions .nav-btn.active,
         .nav-actions .action-icon-btn:hover, .nav-actions .user-pill:hover {
-            background: #221013; border-color: #ae303c; color: white;
+            background: #191919; border-color: #d7d7d7; color: white;
         }
         .profile-container { max-width: 1140px; gap: 26px; }
         .profile-header-card {
-            border-radius: 30px; border-color: #27272a; padding: 42px;
-            background: radial-gradient(ellipse at 50% -40%,rgba(190,30,48,.13),transparent 62%),#0b0b0d;
+            border-radius: 30px; border-color: #272727; padding: 42px;
+            background: radial-gradient(ellipse at 50% -40%,rgba(215,215,215,.13),transparent 62%),#0b0b0b;
             grid-template-columns: 1fr; justify-items: center; text-align: center; gap: 22px;
         }
         .profile-header-card::after { display: none; }
         .profile-avatar-box {
             width: 128px; height: 128px; border-radius: 50%;
-            border: 4px solid #222226; box-shadow: 0 12px 40px rgba(0,0,0,.55);
+            border: 4px solid #222222; box-shadow: 0 12px 40px rgba(0,0,0,.55);
         }
         .profile-info-grid { width: 100%; max-width: 780px; align-items: center; gap: 14px; }
         .profile-name-row { justify-content: center; gap: 16px; flex-wrap: wrap; width: 100%; border: 0; }
         .profile-name-row h2 { font-size: clamp(23px,3vw,36px); letter-spacing: -.7px; }
         .profile-badges-row { justify-content: center; }
-        .profile-settings-box { width: 100%; text-align: left; border-radius: 18px; padding: 20px; background: #151517; }
+        .profile-settings-box { width: 100%; text-align: left; border-radius: 18px; padding: 20px; background: #151515; }
         .profile-stats-grid { gap: 12px; }
-        .profile-stat-card { border-radius: 20px; padding: 20px 16px; background: #111113; }
+        .profile-stat-card { border-radius: 20px; padding: 20px 16px; background: #111111; }
         .profile-stat-card .stat-num { font-size: 24px; }
-        .profile-stat-card.active { background: linear-gradient(145deg,#261014,#100b0d); }
+        .profile-stat-card.active { background: linear-gradient(145deg,#1a1a1a,#0c0c0c); }
         .profile-container .empty-state { border-radius: 22px; }
         .komi-auth-content {
-            border-radius: 30px; background: #101012; border: 1px solid #29292c;
+            border-radius: 30px; background: #101010; border: 1px solid #292929;
             padding: 30px 26px 28px; box-shadow: 0 28px 90px rgba(0,0,0,.75);
         }
         .komi-auth-mark {
             width: 62px; height: 62px; margin: 0 auto 13px; display: grid; place-items: center;
-            border-radius: 20px; background: linear-gradient(140deg,#ff4b56,#bc1726);
-            font-size: 31px; font-weight: 800; box-shadow: 0 10px 25px rgba(240,40,60,.2);
+            border-radius: 20px; background: linear-gradient(140deg,#eaeaea,#d7d7d7);
+            font-size: 31px; font-weight: 800; box-shadow: 0 10px 25px rgba(234,234,234,.2);
         }
         .komi-auth-heading { text-align: center; font-size: 24px; font-weight: 800; }
-        .komi-auth-caption { text-align: center; color: #aaaab0; line-height: 1.6; font-size: 12px; margin: 10px 0 20px; }
+        .komi-auth-caption { text-align: center; color: #aaaaaa; line-height: 1.6; font-size: 12px; margin: 10px 0 20px; }
         .komi-google-btn {
             display: flex; align-items: center; justify-content: center; gap: 12px;
-            width: 100%; border: 1px solid #444449; border-radius: 999px;
-            background: #f1f1f2; color: #161619; padding: 13px 16px;
+            width: 100%; border: 1px solid #444444; border-radius: 999px;
+            background: #f1f1f1; color: #161616; padding: 13px 16px;
             font: inherit; font-weight: 800; cursor: pointer; margin: 15px 0;
         }
         .komi-google-btn:hover { background: white; }
-        .komi-google-g { font-size: 20px; font-weight: 900; color: #4285f4; }
-        .komi-auth-separator { text-align: center; color: #85858c; font-size: 11px; margin: 13px 0; }
-        .komi-auth-content .form-control { border-radius: 14px; background: #19191c; }
+        .komi-google-g { font-size: 20px; font-weight: 900; color: #eaeaea; }
+        .komi-auth-separator { text-align: center; color: #868686; font-size: 11px; margin: 13px 0; }
+        .komi-auth-content .form-control { border-radius: 14px; background: #191919; }
         .komi-auth-content .btn-glow { border-radius: 999px; min-height: 43px; }
         @media (max-width: 768px) {
             .profile-header-card { padding: 25px 15px; border-radius: 22px; }
@@ -665,26 +665,26 @@
         :root { --komi-rail-width: 76px; }
         .komi-side-nav {
             position: fixed; left: 0; top: 0; bottom: 0; z-index: 101;
-            width: var(--komi-rail-width); background: #0b0b0c; border-right: 1px solid #202023;
+            width: var(--komi-rail-width); background: #0b0b0b; border-right: 1px solid #202020;
             display: flex; flex-direction: column; align-items: center; padding: 14px 8px 18px;
             gap: 28px;
         }
         .komi-side-logo { width: 48px; height: 48px; border-radius: 16px; border: 0;
-            background: linear-gradient(135deg,#fa4552,#bc172c); color: white;
+            background: linear-gradient(135deg,#eaeaea,#d7d7d7); color: white;
             font-size: 25px; font-weight: 900; cursor: pointer; }
         .komi-side-links,.komi-side-bottom { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
         .komi-side-bottom { margin-top: auto; }
         .komi-side-button { position: relative; width: 49px; height: 49px; display: flex; align-items: center;
-            justify-content: center; background: transparent; border: 1px solid transparent; color: #9c9ca2;
+            justify-content: center; background: transparent; border: 1px solid transparent; color: #9c9c9c;
             border-radius: 16px; cursor: pointer; font-size: 23px; transition: .18s ease; }
-        .komi-side-button:hover,.komi-side-button.active { background: #222225; border-color: #353539; color: white; transform: translateY(-1px); }
-        .komi-side-button.active { box-shadow: inset 3px 0 #fa4552; }
+        .komi-side-button:hover,.komi-side-button.active { background: #222222; border-color: #353535; color: white; transform: translateY(-1px); }
+        .komi-side-button.active { box-shadow: inset 3px 0 #eaeaea; }
         .komi-side-button span { position: absolute; left: 60px; top: 50%; transform: translateY(-50%);
-            background: #202023; color: #fff; border: 1px solid #38383b; border-radius: 9px;
+            background: #202020; color: #ffffff; border: 1px solid #383838; border-radius: 9px;
             padding: 8px 11px; white-space: nowrap; font-size: 12px; font-weight: 700;
             opacity: 0; visibility: hidden; pointer-events: none; transition: .15s ease; }
         .komi-side-button:hover span { opacity: 1; visibility: visible; }
-        .komi-side-account { background: #17171a; color: #ff4b57; }
+        .komi-side-account { background: #171717; color: #eaeaea; }
         body > header { left: var(--komi-rail-width); width: calc(100% - var(--komi-rail-width)); }
         .app-layout { margin-left: var(--komi-rail-width); width: calc(100% - var(--komi-rail-width)); }
         #navHomeBtn,#navCatalogBtn,#headerRandomBtn,#headerPartyBtn { display: none !important; }
@@ -692,7 +692,7 @@
             :root { --komi-rail-width: 0px; }
             .komi-side-nav { top: auto; right: 0; width: 100%; height: 65px; bottom: 0;
                 padding: 5px 10px; flex-direction: row; justify-content: center; gap: 0;
-                border-right: 0; border-top: 1px solid #2b2b2f; }
+                border-right: 0; border-top: 1px solid #2b2b2b; }
             .komi-side-logo { display: none; }
             .komi-side-links { flex-direction: row; width: auto; gap: 9px; }
             .komi-side-bottom { flex-direction: row; width: auto; margin-top: 0; margin-left: 9px; gap: 9px; }
@@ -708,7 +708,7 @@
         .header-inner { max-width: none; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 18px; }
         .logo-area { grid-column: 2; grid-row: 1; justify-self: center; }
         .search-container { grid-column: 3; grid-row: 1; justify-self: end; width: min(100%, 480px); flex: none; }
-        .search-bar input { height: 48px; border-radius: 28px; padding-left: 46px; font-size: 14px; background: rgba(23,23,27,.55); border-color: rgba(255,255,255,.12); backdrop-filter: blur(18px); }
+        .search-bar input { height: 48px; border-radius: 28px; padding-left: 46px; font-size: 14px; background: rgba(23,23,23,.55); border-color: rgba(255,255,255,.12); backdrop-filter: blur(18px); }
         .search-bar svg { left: 17px; width: 18px; height: 18px; }
         .nav-actions { grid-column: 1; grid-row: 1; justify-self: start; }
         @media (max-width: 800px) {
@@ -728,124 +728,124 @@
         /* Social icons between the left rail and the centered site identity. */
         .header-inner { position: relative; }
         .komi-social-links { position: absolute; left: 18px; top: 50%; transform: translateY(-50%); display: flex; align-items: center; gap: 10px; z-index: 2; }
-        .komi-social-link { width: 43px; height: 43px; border-radius: 15px; display: grid; place-items: center; color: #ededf0; background: rgba(22,22,25,.92); border: 1px solid #303036; transition: background .2s, border-color .2s, transform .2s, box-shadow .2s; }
+        .komi-social-link { width: 43px; height: 43px; border-radius: 15px; display: grid; place-items: center; color: #ededed; background: rgba(22,22,22,.92); border: 1px solid #303030; transition: background .2s, border-color .2s, transform .2s, box-shadow .2s; }
         .komi-social-link svg { width: 21px; height: 21px; }
-        .komi-social-link:hover { background: #271519; border-color: #f04450; color: white; transform: translateY(-2px); box-shadow: 0 0 18px rgba(240,68,80,.22); }
+        .komi-social-link:hover { background: #1e1e1e; border-color: #eaeaea; color: white; transform: translateY(-2px); box-shadow: 0 0 18px rgba(234,234,234,.22); }
         @media (max-width: 1100px) { .komi-social-links { left: 8px; gap: 6px; } .komi-social-link { width: 35px; height: 35px; border-radius: 12px; } }
         @media (max-width: 760px) { .komi-social-links { position: static; transform: none; margin-right: 8px; } .komi-social-link { width: 32px; height: 32px; } }
         /* Compact cinema-style numbered episodes without thumbnails */
         .komi-episode-number-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(58px,1fr));gap:9px;margin:12px 0 18px; }
-        .komi-episode-number { min-height:48px;border:1px solid #2b2b31;border-radius:13px;background:#18181c;color:#e7e7eb;font:700 14px inherit;cursor:pointer;transition:background .18s,border-color .18s,transform .18s; }
-        .komi-episode-number:hover { background:#28282f;border-color:#666;transform:translateY(-1px); }
-        .komi-episode-number.active { background:#ee364a;border-color:#ee364a;color:#fff;box-shadow:0 5px 20px #ee364a33; }
-        .player-wrapper { border-radius:20px;overflow:hidden;background:#08080a;border:1px solid #27272d; }
+        .komi-episode-number { min-height:48px;border:1px solid #2b2b2b;border-radius:13px;background:#181818;color:#e7e7e7;font:700 14px inherit;cursor:pointer;transition:background .18s,border-color .18s,transform .18s; }
+        .komi-episode-number:hover { background:#292929;border-color:#666666;transform:translateY(-1px); }
+        .komi-episode-number.active { background:#eaeaea;border-color:#eaeaea;color:#ffffff;box-shadow:0 5px 20px #eaeaea33; }
+        .player-wrapper { border-radius:20px;overflow:hidden;background:#080808;border:1px solid #272727; }
         .players-switcher-bar { border-radius:14px; }
         .komi-side-account #sidebarAvatarIcon { position:static; transform:none; display:flex; align-items:center; justify-content:center; width:36px; height:36px; padding:0; border:0; background:none; opacity:1; visibility:visible; overflow:hidden; border-radius:50%; }
         .komi-side-account #sidebarAvatarIcon img { display:block; width:36px; height:36px; border-radius:50%; object-fit:cover; }
         .komi-side-button > svg, .komi-side-account #sidebarAvatarIcon > svg { width:23px;height:23px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round; }
         .komi-side-button svg circle { fill:currentColor;stroke:none; }
         .komi-side-button { border-radius:15px; }
-        .komi-side-button:hover { box-shadow:0 0 18px rgba(245,65,81,.13); }
+        .komi-side-button:hover { box-shadow:0 0 18px rgba(234,234,234,.13); }
     
-.profile-container{max-width:1180px;margin:0 auto}.profile-header-card{display:flex!important;flex-direction:column;align-items:center;text-align:center;gap:12px!important;padding:32px 22px!important;border-radius:30px!important;background:radial-gradient(ellipse at 50% 0%,#29171e,#121215 60%)!important}.profile-avatar-box{width:112px!important;height:112px!important;object-fit:cover;border-radius:50%!important;border:4px solid #303037!important}.profile-info-grid{width:100%;display:flex;flex-direction:column;align-items:center;gap:9px}.profile-name-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.profile-name-row h2{font-size:29px!important}.profile-badges-row{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}.profile-settings-box{width:min(100%,660px);margin-top:12px;text-align:left;border-radius:19px!important}.profile-stat-card{border-radius:20px!important}
-#watchModal .modal-content{max-width:1250px!important;border-radius:24px!important;background:#111114!important}#watchModal .watch-cinema-layout{gap:18px}#watchModal .crunchy-hero-section{border-radius:22px;overflow:hidden;background:linear-gradient(125deg,#202025,#101013);padding:20px}#watchModal .crunchy-hero-poster{border-radius:14px}#watchModal .crunchy-hero-info h1{font-size:clamp(22px,3vw,34px)}#watchModal .player-wrapper{border:1px solid #292930;border-radius:20px;overflow:hidden;background:#070709}#watchModal .player-box video{width:100%;max-height:72vh;object-fit:contain}#watchModal .players-switcher-bar{border-radius:16px;padding:10px}#watchModal .crunchy-episodes-section{border:1px solid #28282e;border-radius:22px;padding:18px;background:#161619}#watchModal .anime-screenshots-section{display:none}
-.komi-episode-number-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:9px;margin:12px 0}.komi-episode-number{min-height:48px;border:1px solid #303037;border-radius:13px;background:#232328;color:#eee;font-weight:700;cursor:pointer;transition:.18s}.komi-episode-number:hover{background:#35353b;transform:translateY(-2px)}.komi-episode-number.active{background:#ef394b;border-color:#ef394b;color:white;box-shadow:0 6px 22px #ef394b40}
-.komi-welcome{display:flex;align-items:center;gap:14px;padding:18px 24px;margin-bottom:18px;border-radius:22px;background:linear-gradient(110deg,#23141d,#121217 70%);border:1px solid #3c2931}.komi-welcome-art{font-size:48px;animation:komiWelcomeFloat 3.5s ease-in-out infinite}.komi-welcome strong{display:block;font-size:clamp(16px,2.4vw,23px);margin-bottom:4px}.komi-welcome span{color:#a9a4ad;font-size:12px}@keyframes komiWelcomeFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}@media(max-width:700px){.profile-header-card{padding:24px 12px!important}.profile-name-row h2{font-size:23px!important}.komi-welcome{padding:14px}.komi-welcome-art{font-size:36px}}@media(prefers-reduced-motion:reduce){.komi-welcome-art{animation:none}}
+.profile-container{max-width:1180px;margin:0 auto}.profile-header-card{display:flex!important;flex-direction:column;align-items:center;text-align:center;gap:12px!important;padding:32px 22px!important;border-radius:30px!important;background:radial-gradient(ellipse at 50% 0%,#202020,#121212 60%)!important}.profile-avatar-box{width:112px!important;height:112px!important;object-fit:cover;border-radius:50%!important;border:4px solid #313131!important}.profile-info-grid{width:100%;display:flex;flex-direction:column;align-items:center;gap:9px}.profile-name-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap}.profile-name-row h2{font-size:29px!important}.profile-badges-row{display:flex;justify-content:center;flex-wrap:wrap;gap:8px}.profile-settings-box{width:min(100%,660px);margin-top:12px;text-align:left;border-radius:19px!important}.profile-stat-card{border-radius:20px!important}
+#watchModal .modal-content{max-width:1250px!important;border-radius:24px!important;background:#111111!important}#watchModal .watch-cinema-layout{gap:18px}#watchModal .crunchy-hero-section{border-radius:22px;overflow:hidden;background:linear-gradient(125deg,#202020,#101010);padding:20px}#watchModal .crunchy-hero-poster{border-radius:14px}#watchModal .crunchy-hero-info h1{font-size:clamp(22px,3vw,34px)}#watchModal .player-wrapper{border:1px solid #2a2a2a;border-radius:20px;overflow:hidden;background:#070707}#watchModal .player-box video{width:100%;max-height:72vh;object-fit:contain}#watchModal .players-switcher-bar{border-radius:16px;padding:10px}#watchModal .crunchy-episodes-section{border:1px solid #282828;border-radius:22px;padding:18px;background:#161616}#watchModal .anime-screenshots-section{display:none}
+.komi-episode-number-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:9px;margin:12px 0}.komi-episode-number{min-height:48px;border:1px solid #313131;border-radius:13px;background:#232323;color:#eeeeee;font-weight:700;cursor:pointer;transition:.18s}.komi-episode-number:hover{background:#353535;transform:translateY(-2px)}.komi-episode-number.active{background:#eaeaea;border-color:#eaeaea;color:white;box-shadow:0 6px 22px #eaeaea40}
+.komi-welcome{display:flex;align-items:center;gap:14px;padding:18px 24px;margin-bottom:18px;border-radius:22px;background:linear-gradient(110deg,#1d1d1d,#121212 70%);border:1px solid #333333}.komi-welcome-art{font-size:48px;animation:komiWelcomeFloat 3.5s ease-in-out infinite}.komi-welcome strong{display:block;font-size:clamp(16px,2.4vw,23px);margin-bottom:4px}.komi-welcome span{color:#a6a6a6;font-size:12px}@keyframes komiWelcomeFloat{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-7px) rotate(3deg)}}@media(max-width:700px){.profile-header-card{padding:24px 12px!important}.profile-name-row h2{font-size:23px!important}.komi-welcome{padding:14px}.komi-welcome-art{font-size:36px}}@media(prefers-reduced-motion:reduce){.komi-welcome-art{animation:none}}
 
 /* Komi 2026: compact Senku-inspired profile and red-black welcome */
 .profile-container{max-width:1220px!important;gap:20px!important}
-.profile-header-card{padding:34px 22px 26px!important;gap:10px!important;border:1px solid #292126!important;border-radius:32px!important;background:radial-gradient(ellipse 55% 38% at 50% -12%,rgba(222,29,56,.24),transparent 90%),linear-gradient(180deg,#151114,#0b0b0d 78%)!important;box-shadow:0 20px 55px #0008!important}
-.profile-avatar-box{width:116px!important;height:116px!important;border:3px solid #f02e47!important;box-shadow:0 0 0 6px #191317,0 10px 30px #0009,0 0 24px #e9254633!important}
+.profile-header-card{padding:34px 22px 26px!important;gap:10px!important;border:1px solid #232323!important;border-radius:32px!important;background:radial-gradient(ellipse 55% 38% at 50% -12%,rgba(234,234,234,.24),transparent 90%),linear-gradient(180deg,#121212,#0b0b0b 78%)!important;box-shadow:0 20px 55px #00000088!important}
+.profile-avatar-box{width:116px!important;height:116px!important;border:3px solid #eaeaea!important;box-shadow:0 0 0 6px #151515,0 10px 30px #00000099,0 0 24px #eaeaea33!important}
 .profile-info-grid{gap:8px!important}
 .profile-name-row h2{font-size:clamp(26px,3vw,38px)!important;letter-spacing:-.8px}
 .profile-badges-row{gap:8px!important}
-.profile-reg-date{font-size:11px;color:#85818a}
-.profile-settings-box{max-width:720px!important;background:#141316!important;border:1px solid #29252a!important;border-radius:18px!important;margin-top:12px!important;padding:14px 18px!important}
-.profile-stats-grid{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:0!important;background:#151517;border:1px solid #28272b;border-radius:24px;padding:9px 12px;overflow:hidden}
+.profile-reg-date{font-size:11px;color:#838383}
+.profile-settings-box{max-width:720px!important;background:#131313!important;border:1px solid #262626!important;border-radius:18px!important;margin-top:12px!important;padding:14px 18px!important}
+.profile-stats-grid{display:grid!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;gap:0!important;background:#151515;border:1px solid #282828;border-radius:24px;padding:9px 12px;overflow:hidden}
 .profile-stat-card{min-width:0!important;border:0!important;border-radius:14px!important;background:transparent!important;box-shadow:none!important;padding:12px 8px!important;text-align:center!important;transition:background .2s}
-.profile-stat-card:not(:last-child){border-right:1px solid #2b292d!important;border-radius:0!important}
-.profile-stat-card:hover,.profile-stat-card.active{background:#2b151b!important}
-.profile-stat-card.active .stat-num,.profile-stat-card.active .stat-label{color:#ff4358!important}
+.profile-stat-card:not(:last-child){border-right:1px solid #2a2a2a!important;border-radius:0!important}
+.profile-stat-card:hover,.profile-stat-card.active{background:#1f1f1f!important}
+.profile-stat-card.active .stat-num,.profile-stat-card.active .stat-label{color:#eaeaea!important}
 .profile-stat-card .stat-num{font-size:23px!important}
 .profile-stat-card .stat-icon{font-size:17px!important}
 .profile-layout-grid>*,.profile-container .profile-stat-card{min-width:0}
-.komi-welcome{position:relative;isolation:isolate;overflow:hidden;min-height:112px;gap:22px!important;padding:22px 32px!important;border:1px solid #df2441!important;border-radius:26px!important;background:linear-gradient(105deg,#1b090e 0%,#120a0e 49%,#250810 100%)!important;box-shadow:inset 0 0 40px #b70d2117,0 8px 28px #0006}
-.komi-welcome:before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 88% 105%,#e3193b66,transparent 42%),linear-gradient(150deg,transparent 62%,#9b12242a 62.3%,transparent 73%);pointer-events:none}
-.komi-welcome:after{content:"✿  ✿  ✿";position:absolute;right:4%;bottom:10%;font-size:32px;letter-spacing:25px;color:#f42c4b;opacity:.48;transform:rotate(-12deg);pointer-events:none}
-.komi-welcome-art{font-size:40px!important;filter:drop-shadow(0 0 12px #f02c52aa);border-right:1px solid #f03a50;padding-right:24px}
-.komi-welcome strong{font-size:clamp(18px,2.5vw,26px)!important;color:#fff}
-.komi-welcome span{font-size:13px!important;color:#c7b8be!important}
+.komi-welcome{position:relative;isolation:isolate;overflow:hidden;min-height:112px;gap:22px!important;padding:22px 32px!important;border:1px solid #eaeaea!important;border-radius:26px!important;background:linear-gradient(105deg,#171717 0%,#0c0c0c 49%,#171717 100%)!important;box-shadow:inset 0 0 40px #d7d7d717,0 8px 28px #00000066}
+.komi-welcome:before{content:"";position:absolute;z-index:-1;inset:0;background:radial-gradient(ellipse at 88% 105%,#eaeaea66,transparent 42%),linear-gradient(150deg,transparent 62%,#d7d7d72a 62.3%,transparent 73%);pointer-events:none}
+.komi-welcome:after{content:"✿  ✿  ✿";position:absolute;right:4%;bottom:10%;font-size:32px;letter-spacing:25px;color:#eaeaea;opacity:.48;transform:rotate(-12deg);pointer-events:none}
+.komi-welcome-art{font-size:40px!important;filter:drop-shadow(0 0 12px #eaeaeaaa);border-right:1px solid #eaeaea;padding-right:24px}
+.komi-welcome strong{font-size:clamp(18px,2.5vw,26px)!important;color:#ffffff}
+.komi-welcome span{font-size:13px!important;color:#7d7d7d!important}
 @media(max-width:720px){.profile-header-card{padding:26px 12px!important}.profile-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:4px!important;padding:8px!important}.profile-stat-card:not(:last-child){border-right:0!important}.komi-welcome{padding:18px!important;gap:12px!important;min-height:95px}.komi-welcome-art{padding-right:12px;font-size:32px!important}.komi-welcome:after{display:none}}
 
 
 /* Profile v2 — Senku-inspired compact dashboard, preserving existing collection */
 .komi-profile-v2{max-width:1180px!important;gap:22px!important}
-.komi-profile-v2 .profile-header-card{background:radial-gradient(ellipse at 50% 0%,#24161b,#121214 65%)!important;border:0!important;border-radius:28px!important;box-shadow:none!important;padding:32px 20px 25px!important}
-.komi-profile-v2 .profile-avatar-box{width:124px!important;height:124px!important;border:4px solid #222326!important;box-shadow:0 0 0 5px #151517,0 14px 32px #0008!important}
+.komi-profile-v2 .profile-header-card{background:radial-gradient(ellipse at 50% 0%,#191919,#121212 65%)!important;border:0!important;border-radius:28px!important;box-shadow:none!important;padding:32px 20px 25px!important}
+.komi-profile-v2 .profile-avatar-box{width:124px!important;height:124px!important;border:4px solid #232323!important;box-shadow:0 0 0 5px #151515,0 14px 32px #00000088!important}
 .komi-profile-v2 .profile-name-row{gap:8px!important}
 .komi-profile-v2 .profile-name-row h2{font-size:clamp(26px,3vw,36px)!important}
-.komi-profile-handle{font-size:12px;font-weight:700;color:#50c991}
+.komi-profile-handle{font-size:12px;font-weight:700;color:#eaeaea}
 .komi-profile-v2 .profile-badges-row{gap:8px}
 .komi-profile-v2 .profile-settings-box{display:none;max-width:700px!important;margin-top:12px!important}
 .komi-profile-v2 .profile-settings-box.is-open{display:block}
 .komi-profile-actions{display:flex;justify-content:center;gap:8px;margin:8px auto 0}
-.komi-profile-action{background:#28282a;color:#fff;border:1px solid #333337;border-radius:999px;padding:10px 18px;cursor:pointer;font-weight:700}
-.komi-profile-action:hover{background:#3b252b;border-color:#c63b4d}
-.komi-profile-v2 .profile-stats-grid{max-width:1000px;margin:0 auto;width:100%;border:0!important;background:#1b1b1d!important;border-radius:22px!important}
-.komi-profile-tabs{display:flex;justify-content:center;gap:4px;flex-wrap:wrap;background:#1b1b1d;border-radius:16px;padding:5px;width:max-content;max-width:100%;margin:0 auto}
-.komi-profile-tab{background:transparent;border:0;border-radius:12px;color:#99999f;padding:10px 18px;cursor:pointer;font-size:12px;font-weight:750}
-.komi-profile-tab.active{background:#303033;color:white}
+.komi-profile-action{background:#282828;color:#ffffff;border:1px solid #333333;border-radius:999px;padding:10px 18px;cursor:pointer;font-weight:700}
+.komi-profile-action:hover{background:#2f2f2f;border-color:#d7d7d7}
+.komi-profile-v2 .profile-stats-grid{max-width:1000px;margin:0 auto;width:100%;border:0!important;background:#1b1b1b!important;border-radius:22px!important}
+.komi-profile-tabs{display:flex;justify-content:center;gap:4px;flex-wrap:wrap;background:#1b1b1b;border-radius:16px;padding:5px;width:max-content;max-width:100%;margin:0 auto}
+.komi-profile-tab{background:transparent;border:0;border-radius:12px;color:#999999;padding:10px 18px;cursor:pointer;font-size:12px;font-weight:750}
+.komi-profile-tab.active{background:#303030;color:white}
 .komi-profile-tab:hover{color:white}
-.komi-profile-overview{display:grid;grid-template-columns:1fr 1.1fr 1fr;background:#1b1b1d;border-radius:24px;overflow:hidden}
+.komi-profile-overview{display:grid;grid-template-columns:1fr 1.1fr 1fr;background:#1b1b1b;border-radius:24px;overflow:hidden}
 .komi-profile-overview section{padding:26px;min-height:235px}
-.komi-profile-overview section+section{border-left:1px solid #303034}
+.komi-profile-overview section+section{border-left:1px solid #303030}
 .komi-profile-overview h3,.komi-profile-ratings h3,.komi-profile-friends-section h3{font-size:18px;margin-bottom:20px}
-.komi-profile-overview p,.komi-profile-ratings p,.komi-profile-friend-list p{font-size:13px;color:#99999f;line-height:1.6}
-.komi-overview-list-row{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;color:#aaaab0;font-size:12px;background:transparent;border:0;text-align:left}
+.komi-profile-overview p,.komi-profile-ratings p,.komi-profile-friend-list p{font-size:13px;color:#999999;line-height:1.6}
+.komi-overview-list-row{display:flex;width:100%;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;color:#aaaaaa;font-size:12px;background:transparent;border:0;text-align:left}
 button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover{color:white}
 .komi-overview-list-row span{display:flex;align-items:center;gap:9px}
 .komi-overview-list-row b{color:white;font-size:13px}
-.komi-list-dot{display:inline-block;width:9px;height:9px;border-radius:3px;background:#52c888}
-.komi-list-dot.dot-1{background:#559afa}.komi-list-dot.dot-2{background:#f04455}.komi-list-dot.dot-3{background:#888}
-.komi-profile-ratings,.komi-profile-friends-section,.komi-profile-comments-section{background:#1b1b1d;border-radius:22px;padding:24px}
-.komi-profile-ratings{margin-top:-22px;border-top:1px solid #303034;border-radius:0 0 22px 22px}
+.komi-list-dot{display:inline-block;width:9px;height:9px;border-radius:3px;background:#eaeaea}
+.komi-list-dot.dot-1{background:#eaeaea}.komi-list-dot.dot-2{background:#eaeaea}.komi-list-dot.dot-3{background:#888888}
+.komi-profile-ratings,.komi-profile-friends-section,.komi-profile-comments-section{background:#1b1b1b;border-radius:22px;padding:24px}
+.komi-profile-ratings{margin-top:-22px;border-top:1px solid #303030;border-radius:0 0 22px 22px}
 .komi-profile-friend-list{display:flex;gap:10px;flex-wrap:wrap}
-.komi-profile-friend{background:#28282a;border:1px solid #38383b;border-radius:12px;color:white;padding:10px 16px;cursor:pointer}
-@media(max-width:760px){.komi-profile-overview{grid-template-columns:1fr}.komi-profile-overview section{min-height:auto;padding:20px}.komi-profile-overview section+section{border-left:0;border-top:1px solid #303034}.komi-profile-tab{padding:9px 12px}.komi-profile-v2 .profile-header-card{padding:24px 12px!important}}
+.komi-profile-friend{background:#282828;border:1px solid #383838;border-radius:12px;color:white;padding:10px 16px;cursor:pointer}
+@media(max-width:760px){.komi-profile-overview{grid-template-columns:1fr}.komi-profile-overview section{min-height:auto;padding:20px}.komi-profile-overview section+section{border-left:0;border-top:1px solid #303030}.komi-profile-tab{padding:9px 12px}.komi-profile-v2 .profile-header-card{padding:24px 12px!important}}
 
 
 /* Komi profile premium refresh: scoped design only, preserve application behavior */
 .komi-profile-v2{max-width:1280px!important;gap:22px!important;padding:0 14px 36px}
-.komi-profile-v2 .profile-header-card{position:relative;isolation:isolate;overflow:hidden;border:1px solid #60212d!important;border-radius:38px!important;padding:45px 24px 32px!important;background:radial-gradient(ellipse 55% 75% at 50% -35%,rgba(252,44,70,.28),transparent 85%),radial-gradient(circle at 95% 88%,rgba(178,15,40,.2),transparent 46%),linear-gradient(135deg,#1a0f14,#0c0b0e 65%)!important;box-shadow:0 22px 60px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.05)!important}
-.komi-profile-v2 .profile-header-card:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background:linear-gradient(125deg,transparent 24%,rgba(240,40,64,.16) 24.15%,transparent 24.6%,transparent 77%,rgba(240,40,64,.12) 77.2%,transparent 77.7%)}
-.komi-profile-v2 .profile-avatar-box{width:126px!important;height:126px!important;border:3px solid #fa3d54!important;border-radius:50%!important;box-shadow:0 0 0 6px #20161a,0 16px 40px #000b,0 0 32px #fa344144!important}
+.komi-profile-v2 .profile-header-card{position:relative;isolation:isolate;overflow:hidden;border:1px solid #343434!important;border-radius:38px!important;padding:45px 24px 32px!important;background:radial-gradient(ellipse 55% 75% at 50% -35%,rgba(234,234,234,.28),transparent 85%),radial-gradient(circle at 95% 88%,rgba(215,215,215,.2),transparent 46%),linear-gradient(135deg,#121212,#0b0b0b 65%)!important;box-shadow:0 22px 60px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.05)!important}
+.komi-profile-v2 .profile-header-card:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.35;background:linear-gradient(125deg,transparent 24%,rgba(234,234,234,.16) 24.15%,transparent 24.6%,transparent 77%,rgba(234,234,234,.12) 77.2%,transparent 77.7%)}
+.komi-profile-v2 .profile-avatar-box{width:126px!important;height:126px!important;border:3px solid #eaeaea!important;border-radius:50%!important;box-shadow:0 0 0 6px #181818,0 16px 40px #000000bb,0 0 32px #eaeaea44!important}
 .komi-profile-v2 .profile-info-grid{position:relative;z-index:1;max-width:780px;gap:12px!important}
 .komi-profile-v2 .profile-name-row h2{font-size:clamp(28px,3vw,40px)!important}
-.komi-profile-handle{padding:6px 13px;border:1px solid #235b3d;border-radius:999px;background:#10271b;font-size:12px!important;color:#4ddc91}
+.komi-profile-handle{padding:6px 13px;border:1px solid #525252;border-radius:999px;background:#262626;font-size:12px!important;color:#eaeaea}
 .komi-profile-v2 .profile-badge-item,.komi-profile-v2 .profile-badge-level{border-radius:999px!important;padding:7px 13px!important}
 .komi-profile-actions{gap:12px;flex-wrap:wrap}
 .komi-profile-action{padding:12px 23px!important;border-radius:999px!important;transition:transform .2s,box-shadow .2s,background .2s}
-.komi-profile-action:hover{transform:translateY(-2px);box-shadow:0 8px 24px #f32e4433}
-.komi-profile-action:last-child{background:linear-gradient(135deg,#bd1a34,#7f1429);border-color:#ee3851}
-.komi-profile-v2 .profile-stats-grid{max-width:100%!important;background:linear-gradient(135deg,#191519,#141316)!important;border:1px solid #39242b!important;border-radius:30px!important;padding:9px!important;gap:6px!important}
+.komi-profile-action:hover{transform:translateY(-2px);box-shadow:0 8px 24px #eaeaea33}
+.komi-profile-action:last-child{background:linear-gradient(135deg,#d7d7d7,#575757);border-color:#eaeaea}
+.komi-profile-v2 .profile-stats-grid{max-width:100%!important;background:linear-gradient(135deg,#161616,#131313)!important;border:1px solid #2e2e2e!important;border-radius:30px!important;padding:9px!important;gap:6px!important}
 .komi-profile-v2 .profile-stat-card{border:1px solid transparent!important;border-radius:23px!important;padding:17px 9px!important;cursor:pointer;transition:transform .2s,background .2s,box-shadow .2s}
-.komi-profile-v2 .profile-stat-card:not(:last-child){border-right:1px solid #33282d!important;border-radius:23px!important}
-.komi-profile-v2 .profile-stat-card:hover{transform:translateY(-3px);background:#331b24!important}
-.komi-profile-v2 .profile-stat-card.active{background:linear-gradient(145deg,#6c1325,#260e16)!important;border-color:#e52c49!important;box-shadow:inset 0 0 20px #ee294322,0 0 18px #e52c4930!important}
+.komi-profile-v2 .profile-stat-card:not(:last-child){border-right:1px solid #2b2b2b!important;border-radius:23px!important}
+.komi-profile-v2 .profile-stat-card:hover{transform:translateY(-3px);background:#262626!important}
+.komi-profile-v2 .profile-stat-card.active{background:linear-gradient(145deg,#2c2c2c,#191919)!important;border-color:#eaeaea!important;box-shadow:inset 0 0 20px #eaeaea22,0 0 18px #eaeaea30!important}
 .komi-profile-v2 .profile-stat-card .stat-num{font-size:26px!important}
 .komi-profile-v2 .profile-stat-card .stat-label{font-size:11px}
-.komi-profile-tabs{border:1px solid #39292f;background:#181518;border-radius:999px;padding:6px;gap:5px}
+.komi-profile-tabs{border:1px solid #323232;background:#161616;border-radius:999px;padding:6px;gap:5px}
 .komi-profile-tab{border-radius:999px;padding:12px 22px;font-size:13px;transition:background .2s,color .2s}
-.komi-profile-tab.active{background:linear-gradient(135deg,#bf1934,#91142b);box-shadow:0 3px 14px #e5273b35}
+.komi-profile-tab.active{background:linear-gradient(135deg,#d7d7d7,#575757);box-shadow:0 3px 14px #eaeaea35}
 .komi-profile-overview{gap:16px;background:transparent;border-radius:0;overflow:visible}
-.komi-profile-overview section{min-width:0;min-height:235px;padding:25px;border-radius:27px;background:linear-gradient(145deg,#1b171b,#121114);border:1px solid #38252c;box-shadow:0 10px 30px #0003}
-.komi-profile-overview section+section{border-left:1px solid #38252c}
+.komi-profile-overview section{min-width:0;min-height:235px;padding:25px;border-radius:27px;background:linear-gradient(145deg,#181818,#111111);border:1px solid #2f2f2f;box-shadow:0 10px 30px #00000033}
+.komi-profile-overview section+section{border-left:1px solid #2f2f2f}
 .komi-profile-overview h3,.komi-profile-ratings h3{font-size:19px;margin-bottom:20px}
-.komi-overview-list-row{padding:11px 0;border-bottom:1px solid #30272c;font-size:13px}
-.komi-genre-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;color:#bdb4b9;border-bottom:1px solid #30272c;font-size:13px}
-.komi-genre-row b{color:#ff5267}
-.komi-profile-ratings{margin-top:0;border:1px solid #472630;border-radius:27px;padding:27px;background:linear-gradient(120deg,#1e1017,#100f12 60%,#290e17)}
-.komi-profile-v2 .profile-main-content,.komi-profile-v2 .profile-sidebar-menu,.komi-profile-friends-section,.komi-profile-comments-section{border:1px solid #38272e;border-radius:27px;background:#1b171b;box-shadow:0 10px 30px #0003}
+.komi-overview-list-row{padding:11px 0;border-bottom:1px solid #292929;font-size:13px}
+.komi-genre-row{display:flex;justify-content:space-between;gap:10px;padding:10px 0;color:#b6b6b6;border-bottom:1px solid #292929;font-size:13px}
+.komi-genre-row b{color:#eaeaea}
+.komi-profile-ratings{margin-top:0;border:1px solid #333333;border-radius:27px;padding:27px;background:linear-gradient(120deg,#131313,#0f0f0f 60%,#191919)}
+.komi-profile-v2 .profile-main-content,.komi-profile-v2 .profile-sidebar-menu,.komi-profile-friends-section,.komi-profile-comments-section{border:1px solid #303030;border-radius:27px;background:#181818;box-shadow:0 10px 30px #00000033}
 .komi-profile-v2 .profile-menu-item,.komi-profile-friend{border-radius:15px}
 .komi-profile-v2 .form-control{border-radius:13px}
 @media(max-width:900px){.komi-profile-overview{grid-template-columns:repeat(2,minmax(0,1fr))}.komi-profile-overview section:last-child{grid-column:1/-1}.komi-profile-v2 .profile-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
@@ -857,132 +857,132 @@ button.komi-overview-list-row{cursor:pointer}button.komi-overview-list-row:hover
 .top-hero-section-grid{grid-template-columns:minmax(0,1fr)!important}
 .komi-friends-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.68);backdrop-filter:blur(5px);z-index:1090;opacity:0;visibility:hidden;transition:opacity .25s,visibility .25s}
 .komi-friends-backdrop.open{opacity:1;visibility:visible}
-.komi-friends-drawer{position:fixed;right:0;top:0;bottom:0;width:min(430px,calc(100vw - 55px));z-index:1091;background:linear-gradient(160deg,#1b1016,#0e0d10 55%);border-left:1px solid #6a2636;box-shadow:-24px 0 65px #0009;transform:translateX(105%);visibility:hidden;transition:transform .28s ease,visibility .28s;display:flex;flex-direction:column;padding:30px 23px;gap:20px}
+.komi-friends-drawer{position:fixed;right:0;top:0;bottom:0;width:min(430px,calc(100vw - 55px));z-index:1091;background:linear-gradient(160deg,#131313,#0d0d0d 55%);border-left:1px solid #3b3b3b;box-shadow:-24px 0 65px #00000099;transform:translateX(105%);visibility:hidden;transition:transform .28s ease,visibility .28s;display:flex;flex-direction:column;padding:30px 23px;gap:20px}
 .komi-friends-drawer.open{transform:translateX(0);visibility:visible}
 .komi-friends-heading{display:flex;justify-content:space-between;gap:12px;align-items:start}
-.komi-friends-kicker{font-size:10px;letter-spacing:2px;font-weight:800;color:#f0445d;margin-bottom:11px}
-.komi-friends-heading h2{font-size:24px;color:#fff;margin:0 0 7px}
-.komi-friends-heading p{font-size:12px;color:#9e9097;margin:0}
-.komi-friends-close{width:36px;height:36px;border-radius:12px;border:1px solid #4b2932;background:#26191f;color:#e7dce0;cursor:pointer}
-.komi-friends-close:hover{background:#5c1c2b}
-.komi-friends-search{display:flex;align-items:center;gap:10px;padding:0 14px;height:48px;border:1px solid #49303a;border-radius:15px;background:#201a20;color:#ee5068}
-.komi-friends-search:focus-within{border-color:#ed3d56}
+.komi-friends-kicker{font-size:10px;letter-spacing:2px;font-weight:800;color:#eaeaea;margin-bottom:11px}
+.komi-friends-heading h2{font-size:24px;color:#ffffff;margin:0 0 7px}
+.komi-friends-heading p{font-size:12px;color:#939393;margin:0}
+.komi-friends-close{width:36px;height:36px;border-radius:12px;border:1px solid #363636;background:#1c1c1c;color:#dfdfdf;cursor:pointer}
+.komi-friends-close:hover{background:#303030}
+.komi-friends-search{display:flex;align-items:center;gap:10px;padding:0 14px;height:48px;border:1px solid #3b3b3b;border-radius:15px;background:#1c1c1c;color:#eaeaea}
+.komi-friends-search:focus-within{border-color:#eaeaea}
 .komi-friends-search span{font-size:25px}
-.komi-friends-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#fff;font:inherit;font-size:13px}
-.komi-friends-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#191418;border:1px solid #35252c;border-radius:16px;padding:5px}
-.komi-friends-tabs button{border:0;border-radius:12px;padding:12px 5px;background:transparent;color:#b4a5ac;cursor:pointer;font-size:12px;font-weight:700}
-.komi-friends-tabs button.active{background:linear-gradient(120deg,#c51e3b,#82162b);color:#fff;box-shadow:0 4px 15px #a31d3533}
+.komi-friends-search input{min-width:0;flex:1;border:0;outline:0;background:transparent;color:#ffffff;font:inherit;font-size:13px}
+.komi-friends-tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px;background:#151515;border:1px solid #2e2e2e;border-radius:16px;padding:5px}
+.komi-friends-tabs button{border:0;border-radius:12px;padding:12px 5px;background:transparent;color:#7d7d7d;cursor:pointer;font-size:12px;font-weight:700}
+.komi-friends-tabs button.active{background:linear-gradient(120deg,#d7d7d7,#575757);color:#ffffff;box-shadow:0 4px 15px #d7d7d733}
 .komi-friends-results{overflow:auto;min-height:0;flex:1;padding-right:3px}
-.komi-friends-count{color:#a998a1;font-size:11px;margin-bottom:12px}
-.komi-friends-person{display:flex;align-items:center;gap:10px;padding:11px 10px;margin-bottom:9px;border:1px solid #35252d;border-radius:17px;background:#1c171c}
-.komi-friends-person:hover{border-color:#773347;background:#251a21}
-.komi-friends-identity{display:flex;align-items:center;gap:11px;min-width:0;flex:1;border:0;background:transparent;color:#fff;text-align:left;cursor:pointer}
-.komi-friends-identity img{width:44px;height:44px;object-fit:cover;border-radius:14px;background:#34232b}
+.komi-friends-count{color:#7d7d7d;font-size:11px;margin-bottom:12px}
+.komi-friends-person{display:flex;align-items:center;gap:10px;padding:11px 10px;margin-bottom:9px;border:1px solid #2e2e2e;border-radius:17px;background:#181818}
+.komi-friends-person:hover{border-color:#575757;background:#1d1d1d}
+.komi-friends-identity{display:flex;align-items:center;gap:11px;min-width:0;flex:1;border:0;background:transparent;color:#ffffff;text-align:left;cursor:pointer}
+.komi-friends-identity img{width:44px;height:44px;object-fit:cover;border-radius:14px;background:#2c2c2c}
 .komi-friends-identity span{min-width:0;display:flex;flex-direction:column;gap:5px}
 .komi-friends-identity strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.komi-friends-identity small{font-size:11px;color:#a99ca3}
-.komi-friends-add{width:34px;height:34px;border-radius:11px;background:#b61d38;border:1px solid #eb3d58;color:#fff;font-size:23px;cursor:pointer}
-.komi-friends-add:hover{background:#ec3551}
-.komi-friends-added{color:#48d58a;font-size:19px;padding:0 9px}
-.komi-friends-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;min-height:240px;padding:25px;color:#fff}
+.komi-friends-identity small{font-size:11px;color:#9f9f9f}
+.komi-friends-add{width:34px;height:34px;border-radius:11px;background:#d7d7d7;border:1px solid #eaeaea;color:#ffffff;font-size:23px;cursor:pointer}
+.komi-friends-add:hover{background:#eaeaea}
+.komi-friends-added{color:#eaeaea;font-size:19px;padding:0 9px}
+.komi-friends-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;min-height:240px;padding:25px;color:#ffffff}
 .komi-friends-empty>span{font-size:45px}
 .komi-friends-empty strong{font-size:17px}
-.komi-friends-empty p{color:#a899a0;font-size:12px;line-height:1.6}
+.komi-friends-empty p{color:#7d7d7d;font-size:12px;line-height:1.6}
 @media(max-width:600px){.komi-friends-drawer{padding:22px 14px;width:min(400px,calc(100vw - 35px))}}
 @media(prefers-reduced-motion:reduce){.komi-friends-drawer,.komi-friends-backdrop{transition:none}}
 
 
-.komi-feature-section,.komi-achievement-panel{padding:20px;border:1px solid #39252e;border-radius:23px;background:linear-gradient(145deg,#1b151a,#100f12);margin:16px 0}
-.komi-feature-muted{color:#a69ba0;font-size:13px;line-height:1.7}
+.komi-feature-section,.komi-achievement-panel{padding:20px;border:1px solid #2f2f2f;border-radius:23px;background:linear-gradient(145deg,#171717,#0f0f0f);margin:16px 0}
+.komi-feature-muted{color:#9e9e9e;font-size:13px;line-height:1.7}
 .komi-progress-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-.komi-progress-card{display:flex;align-items:center;gap:12px;text-align:left;background:#231a20;border:1px solid #432832;border-radius:17px;padding:9px;color:#fff;cursor:pointer;min-width:0}
-.komi-progress-card:hover,.komi-release-row:hover{border-color:#ed405b}
+.komi-progress-card{display:flex;align-items:center;gap:12px;text-align:left;background:#1c1c1c;border:1px solid #333333;border-radius:17px;padding:9px;color:#ffffff;cursor:pointer;min-width:0}
+.komi-progress-card:hover,.komi-release-row:hover{border-color:#eaeaea}
 .komi-progress-card img{width:56px;height:76px;object-fit:cover;border-radius:10px}
 .komi-progress-card span{display:flex;flex-direction:column;gap:8px;min-width:0}
 .komi-progress-card strong{font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:180px}
-.komi-progress-card small{font-size:11px;color:#ef687e}
+.komi-progress-card small{font-size:11px;color:#eaeaea}
 .komi-release-list{display:grid;gap:8px}
-.komi-release-row{display:grid;grid-template-columns:95px 1fr 65px;align-items:center;gap:10px;border:1px solid #39252e;background:#20191f;border-radius:13px;padding:13px;color:#fff;text-align:left;cursor:pointer}
-.komi-release-row span,.komi-release-row small{color:#bd9ba6;font-size:11px}
+.komi-release-row{display:grid;grid-template-columns:95px 1fr 65px;align-items:center;gap:10px;border:1px solid #2f2f2f;background:#1b1b1b;border-radius:13px;padding:13px;color:#ffffff;text-align:left;cursor:pointer}
+.komi-release-row span,.komi-release-row small{color:#a3a3a3;font-size:11px}
 .komi-release-row strong{font-size:12px}
-.komi-player-notice{padding:22px;background:#2a171d;border:1px solid #8d3549;border-radius:15px;color:#f6c3cb;line-height:1.6;font-size:13px}
-.komi-player-hint{font-size:11px;color:#a69ba0;margin-top:9px}
+.komi-player-notice{padding:22px;background:#202020;border:1px solid #5a5a5a;border-radius:15px;color:#eaeaea;line-height:1.6;font-size:13px}
+.komi-player-hint{font-size:11px;color:#9e9e9e;margin-top:9px}
 .komi-achievement-panel>div:first-child{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
-.komi-achievement-panel strong{color:#fff;font-size:17px}
-.komi-achievement-panel span{font-size:12px;color:#c5a9b1}
-.komi-achievement-track{height:9px;background:#34252d;border-radius:20px;margin:14px 0;overflow:hidden}
-.komi-achievement-track i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#a91936,#f04b65)}
+.komi-achievement-panel strong{color:#ffffff;font-size:17px}
+.komi-achievement-panel span{font-size:12px;color:#7d7d7d}
+.komi-achievement-track{height:9px;background:#2e2e2e;border-radius:20px;margin:14px 0;overflow:hidden}
+.komi-achievement-track i{display:block;height:100%;border-radius:20px;background:linear-gradient(90deg,#d7d7d7,#eaeaea)}
 .komi-badges{display:flex;gap:7px;flex-wrap:wrap}
-.komi-badges span{padding:7px 11px;background:#352029;border:1px solid #683144;border-radius:12px}
+.komi-badges span{padding:7px 11px;background:#2a2a2a;border:1px solid #434343;border-radius:12px}
 @media(max-width:600px){.komi-release-row{grid-template-columns:70px 1fr 55px;gap:5px}.komi-feature-section{padding:13px}}
 
 
-.komi-feature-section{background:linear-gradient(125deg,#131114,#171116);border:1px solid #292329;border-radius:21px;padding:18px 20px;margin:18px 0;box-shadow:none}
+.komi-feature-section{background:linear-gradient(125deg,#121212,#131313);border:1px solid #252525;border-radius:21px;padding:18px 20px;margin:18px 0;box-shadow:none}
 .komi-feature-section .section-header{margin-bottom:10px}
 .komi-feature-section .section-title{font-size:17px}
 .komi-feature-section .anime-grid{gap:12px}
 .komi-feature-section .anime-card{border-radius:16px}
-.komi-feature-muted{padding:12px 4px;color:#8e858b;font-size:12px}
-.komi-friends-pending{font-size:10px;color:#d3a1b1;white-space:nowrap}
-.komi-recent-section{margin:22px 0;padding:19px 20px;border:1px solid #30262d;border-radius:22px;background:linear-gradient(125deg,#191317,#101013)}
+.komi-feature-muted{padding:12px 4px;color:#878787;font-size:12px}
+.komi-friends-pending{font-size:10px;color:#eaeaea;white-space:nowrap}
+.komi-recent-section{margin:22px 0;padding:19px 20px;border:1px solid #292929;border-radius:22px;background:linear-gradient(125deg,#151515,#101010)}
 .komi-recent-section .section-title{font-size:18px}
 .komi-recent-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px}
-.komi-recent-card{display:flex;align-items:center;gap:13px;padding:10px;text-align:left;background:#20191e;border:1px solid #3b2a32;border-radius:16px;min-width:0;color:#fff;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
-.komi-recent-card:hover{background:#302028;border-color:#d23b56;transform:translateY(-2px)}
-.komi-recent-card img{width:64px;height:86px;border-radius:11px;object-fit:cover;background:#30232b}
+.komi-recent-card{display:flex;align-items:center;gap:13px;padding:10px;text-align:left;background:#1b1b1b;border:1px solid #333333;border-radius:16px;min-width:0;color:#ffffff;cursor:pointer;transition:background .2s,border-color .2s,transform .2s}
+.komi-recent-card:hover{background:#292929;border-color:#eaeaea;transform:translateY(-2px)}
+.komi-recent-card img{width:64px;height:86px;border-radius:11px;object-fit:cover;background:#262626}
 .komi-recent-info{display:flex;flex-direction:column;gap:8px;min-width:0}
 .komi-recent-info strong{font-size:13px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.komi-recent-info small{color:#a99ca3;font-size:11px}
-.komi-recent-info em{color:#ff647e;font-style:normal;font-size:11px;font-weight:700}
-.komi-recent-empty{padding:14px;color:#988a92;font-size:12px}
-#watchModal{padding:0!important;align-items:stretch!important;justify-content:center!important;background:rgba(4,3,6,.9)!important;backdrop-filter:blur(18px)}
-#watchModal #watchModalContent{position:relative;box-sizing:border-box;width:min(1500px,calc(100vw - 32px))!important;max-width:none!important;max-height:calc(100dvh - 32px)!important;height:calc(100dvh - 32px);margin:16px auto!important;overflow-y:auto!important;overflow-x:hidden;background:linear-gradient(155deg,rgba(27,24,31,.94),rgba(10,10,14,.96))!important;border:1px solid rgba(196,94,121,.24)!important;border-radius:24px!important;box-shadow:0 24px 90px #000b!important;padding:25px!important}
+.komi-recent-info small{color:#9f9f9f;font-size:11px}
+.komi-recent-info em{color:#eaeaea;font-style:normal;font-size:11px;font-weight:700}
+.komi-recent-empty{padding:14px;color:#8e8e8e;font-size:12px}
+#watchModal{padding:0!important;align-items:stretch!important;justify-content:center!important;background:rgba(3,3,3,.9)!important;backdrop-filter:blur(18px)}
+#watchModal #watchModalContent{position:relative;box-sizing:border-box;width:min(1500px,calc(100vw - 32px))!important;max-width:none!important;max-height:calc(100dvh - 32px)!important;height:calc(100dvh - 32px);margin:16px auto!important;overflow-y:auto!important;overflow-x:hidden;background:linear-gradient(155deg,rgba(25,25,25,.94),rgba(10,10,10,.96))!important;border:1px solid rgba(215,215,215,.24)!important;border-radius:24px!important;box-shadow:0 24px 90px #000000bb!important;padding:25px!important}
 #watchModal.komi-watch-fullscreen #watchModalContent{width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;border-radius:0!important;border:0!important}
 #watchModal .watch-cinema-layout{display:flex;flex-direction:column;gap:18px}
 #watchModal .komi-player-heading{order:1;display:flex;justify-content:space-between;align-items:center;gap:15px;padding:5px 2px}
-#watchModal .komi-player-heading small{font-size:10px;letter-spacing:2px;color:#e75370;font-weight:800}
-#watchModal .komi-player-heading h2{font-size:clamp(16px,2vw,24px);margin:5px 0;color:#fff}
-#watchModal .komi-player-heading span{font-size:12px;color:#b2a5af}
-#watchModal .player-wrapper{order:2!important;background:#050506;border:1px solid #40313b;border-radius:20px;overflow:hidden;min-height:280px;box-shadow:0 10px 30px #0008}
-#watchModal .player-box{width:100%;aspect-ratio:16/9;min-height:280px;max-height:72vh;background:#050506;display:flex;align-items:center;justify-content:center}
+#watchModal .komi-player-heading small{font-size:10px;letter-spacing:2px;color:#eaeaea;font-weight:800}
+#watchModal .komi-player-heading h2{font-size:clamp(16px,2vw,24px);margin:5px 0;color:#ffffff}
+#watchModal .komi-player-heading span{font-size:12px;color:#a8a8a8}
+#watchModal .player-wrapper{order:2!important;background:#050505;border:1px solid #3a3a3a;border-radius:20px;overflow:hidden;min-height:280px;box-shadow:0 10px 30px #00000088}
+#watchModal .player-box{width:100%;aspect-ratio:16/9;min-height:280px;max-height:72vh;background:#050505;display:flex;align-items:center;justify-content:center}
 #watchModal .player-box video,#watchModal .player-box iframe{width:100%!important;height:100%!important;min-height:0!important;max-height:72vh;object-fit:contain}
-#watchModal .players-switcher-bar{order:3;display:flex;gap:7px;overflow-x:auto;flex-wrap:nowrap!important;align-items:center;padding:13px!important;background:rgba(35,26,33,.75)!important;border:1px solid #392c36;border-radius:15px}
+#watchModal .players-switcher-bar{order:3;display:flex;gap:7px;overflow-x:auto;flex-wrap:nowrap!important;align-items:center;padding:13px!important;background:rgba(28,28,28,.75)!important;border:1px solid #2f2f2f;border-radius:15px}
 #watchModal .player-switch-btn{flex-shrink:0;border-radius:11px!important;padding:9px 12px!important;white-space:nowrap}
-#watchModal .crunchy-episodes-section{order:4;border:1px solid #3a2d35;border-radius:18px;background:rgba(24,20,26,.65);padding:16px}
-#watchModal .crunchy-hero-section{order:5;border-radius:18px!important;background:rgba(31,25,32,.58)!important}
+#watchModal .crunchy-episodes-section{order:4;border:1px solid #303030;border-radius:18px;background:rgba(21,21,21,.65);padding:16px}
+#watchModal .crunchy-hero-section{order:5;border-radius:18px!important;background:rgba(27,27,27,.58)!important}
 #watchModal .watch-cinema-layout>div:not(.komi-player-heading):not(.player-wrapper):not(.players-switcher-bar):not(.crunchy-episodes-section):not(.crunchy-hero-section){order:6}
 #watchModal .anime-screenshots-section{order:7!important}
-#watchModal .komi-watch-expand{position:sticky;top:0;float:right;z-index:15;margin:0 42px 8px 0;background:rgba(48,33,44,.9);color:#fff;border:1px solid #744052;border-radius:11px;padding:9px 13px;cursor:pointer}
-#watchModal .komi-watch-expand:hover{background:#803047}
-#watchModal .komi-watch-next{border:1px solid #a3344d;background:#3d1b29;color:#ffdce4;padding:10px 13px;border-radius:12px;cursor:pointer;white-space:nowrap}
-#watchModal .komi-watch-next:hover{background:#862840}
+#watchModal .komi-watch-expand{position:sticky;top:0;float:right;z-index:15;margin:0 42px 8px 0;background:rgba(42,42,42,.9);color:#ffffff;border:1px solid #5d5d5d;border-radius:11px;padding:9px 13px;cursor:pointer}
+#watchModal .komi-watch-expand:hover{background:#575757}
+#watchModal .komi-watch-next{border:1px solid #d7d7d7;background:#282828;color:#a3a3a3;padding:10px 13px;border-radius:12px;cursor:pointer;white-space:nowrap}
+#watchModal .komi-watch-next:hover{background:#575757}
 #watchModal .modal-close{z-index:20!important}
 @media(max-width:700px){#watchModal #watchModalContent{width:100vw!important;height:100dvh!important;max-height:100dvh!important;margin:0!important;border-radius:0!important;padding:13px!important}#watchModal .komi-player-heading{flex-wrap:wrap}#watchModal .player-box,#watchModal .player-wrapper{min-height:190px}#watchModal .komi-watch-expand span{display:none}.komi-recent-section{padding:13px}.komi-recent-grid{grid-template-columns:1fr}}
 
 
 /* Transparent discovery panels */
 .komi-feature-section,.komi-achievement-panel,.komi-recent-section{background:transparent!important;box-shadow:none!important;border-color:rgba(255,255,255,.09)!important}
-.komi-feature-section .anime-card,.komi-progress-card,.komi-release-row{background:rgba(22,18,24,.38)!important;box-shadow:none!important}
-.komi-feature-section .anime-card:hover,.komi-progress-card:hover,.komi-release-row:hover{background:rgba(42,26,35,.6)!important}
+.komi-feature-section .anime-card,.komi-progress-card,.komi-release-row{background:rgba(19,19,19,.38)!important;box-shadow:none!important}
+.komi-feature-section .anime-card:hover,.komi-progress-card:hover,.komi-release-row:hover{background:rgba(35,35,35,.6)!important}
 .komi-feature-section .section-header,.komi-achievement-panel .section-header{background:transparent!important}
 
 
 /* KOMI DISCOVERY 2026 — calm, original red/black browsing layout */
 :root {
-    --bg-base:#07080b;
-    --bg-card:#111216;
-    --bg-card-hover:#1b1c23;
-    --bg-input:#17181d;
-    --border:#2a2b32;
-    --text-muted:#aaaab5;
-    --primary:#f03d50;
-    --primary-hover:#ff5264;
+    --bg-base:#080808;
+    --bg-card:#121212;
+    --bg-card-hover:#1c1c1c;
+    --bg-input:#181818;
+    --border:#2b2b2b;
+    --text-muted:#ababab;
+    --primary:#eaeaea;
+    --primary-hover:#eaeaea;
 }
 body {
-    background:radial-gradient(ellipse 75% 34% at 45% -8%,rgba(143,26,48,.16),transparent 76%),#07080b;
+    background:radial-gradient(ellipse 75% 34% at 45% -8%,rgba(87,87,87,.16),transparent 76%),#080808;
 }
 header {
-    background:rgba(9,10,13,.84)!important;
+    background:rgba(10,10,10,.84)!important;
     border-bottom:1px solid rgba(255,255,255,.06)!important;
     backdrop-filter:blur(22px) saturate(1.25)!important;
     -webkit-backdrop-filter:blur(22px) saturate(1.25);
@@ -996,20 +996,20 @@ header {
 main#mainContainer {gap:30px}
 button, select, input {font-family:inherit}
 button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
-    outline:2px solid #f54d61!important;
+    outline:2px solid #eaeaea!important;
     outline-offset:3px;
 }
 .section-header {align-items:center;gap:16px;flex-wrap:wrap}
 .section-title {font-size:clamp(19px,1.5vw,24px)!important;letter-spacing:-.55px;line-height:1.25}
-.section-see-all {font-size:12px;font-weight:700;color:#bdbdc4;padding:7px 0;white-space:nowrap}
-.section-see-all:hover {color:#ff6475}
+.section-see-all {font-size:12px;font-weight:700;color:#bebebe;padding:7px 0;white-space:nowrap}
+.section-see-all:hover {color:#eaeaea}
 .top-hero-section-grid {display:block!important}
 .hero-slider-container {
     height:clamp(320px,32vw,465px)!important;
     border-radius:28px!important;
-    border:1px solid #333039!important;
-    background:#101016;
-    box-shadow:0 18px 55px #0007!important;
+    border:1px solid #313131!important;
+    background:#101010;
+    box-shadow:0 18px 55px #00000077!important;
 }
 .hero-slide {
     padding:clamp(25px,4.5vw,72px)!important;
@@ -1017,27 +1017,27 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     background-position:center 38%;
 }
 .hero-slide::before {
-    background:linear-gradient(90deg,#07080c 0%,rgba(7,8,12,.95) 24%,rgba(7,8,12,.75) 49%,rgba(7,8,12,.2) 82%),
-               linear-gradient(0deg,#07080c88,transparent 50%)!important;
+    background:linear-gradient(90deg,#080808 0%,rgba(8,8,8,.95) 24%,rgba(8,8,8,.75) 49%,rgba(8,8,8,.2) 82%),
+               linear-gradient(0deg,#08080888,transparent 50%)!important;
 }
 .hero-slide h1 {max-width:680px!important;font-size:clamp(28px,3.25vw,53px)!important;line-height:1.08}
 .hero-slide p {max-width:580px!important;font-size:13px!important;line-height:1.7!important;-webkit-line-clamp:3}
-.hero-meta span {font-size:11px;border-radius:999px!important;background:#17171ab8!important}
+.hero-meta span {font-size:11px;border-radius:999px!important;background:#171717b8!important}
 .hero-buttons .btn-glow,.hero-buttons .btn-glow-secondary {min-height:42px;border-radius:13px;padding:11px 20px}
 .hero-dot {height:5px!important;border-radius:999px!important}
 .komi-spotlight-heading {display:flex;flex-wrap:wrap;justify-content:space-between;gap:15px;align-items:flex-end}
-.komi-spotlight-eyebrow {text-transform:uppercase;font-size:10px;font-weight:800;letter-spacing:2.4px;color:#f26372}
+.komi-spotlight-eyebrow {text-transform:uppercase;font-size:10px;font-weight:800;letter-spacing:2.4px;color:#eaeaea}
 .komi-spotlight-heading h1 {font-size:clamp(24px,2.5vw,34px);letter-spacing:-1px;margin-top:7px;font-weight:800}
-.komi-spotlight-heading p {font-size:13px;line-height:1.55;color:#aaaab5;margin-top:8px;max-width:590px}
+.komi-spotlight-heading p {font-size:13px;line-height:1.55;color:#ababab;margin-top:8px;max-width:590px}
 .komi-spotlight-metrics {display:flex;gap:8px;flex-wrap:wrap}
-.komi-spotlight-metrics span {background:#151519;border:1px solid #303037;border-radius:15px;padding:9px 12px;color:#b6b6c1;font-size:11px}
-.komi-spotlight-metrics strong {font-size:14px;color:#f4f4f8;padding-right:5px}
+.komi-spotlight-metrics span {background:#151515;border:1px solid #313131;border-radius:15px;padding:9px 12px;color:#b7b7b7;font-size:11px}
+.komi-spotlight-metrics strong {font-size:14px;color:#f4f4f4;padding-right:5px}
 .komi-fastnav {display:flex;gap:9px;flex-wrap:wrap;padding:3px 0 0}
 .komi-fastnav button,.komi-catalog-chip,.komi-catalog-clear {
-    border:1px solid #303038;
+    border:1px solid #313131;
     border-radius:12px;
-    background:#17171b;
-    color:#d7d7dd;
+    background:#171717;
+    color:#d7d7d7;
     padding:11px 16px;
     font-size:12px;
     font-weight:700;
@@ -1045,10 +1045,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     transition:border-color .2s,background .2s,transform .2s;
 }
 .komi-fastnav button:hover,.komi-catalog-chip:hover,.komi-catalog-clear:hover {
-    background:#24191e;border-color:#a42f43;transform:translateY(-1px);
+    background:#1c1c1c;border-color:#d7d7d7;transform:translateY(-1px);
 }
-.komi-fastnav .is-prominent {background:#f03d50;color:white;border-color:#f03d50}
-.komi-fastnav .is-prominent:hover {background:#d82d43;border-color:#d82d43}
+.komi-fastnav .is-prominent {background:#eaeaea;color:white;border-color:#eaeaea}
+.komi-fastnav .is-prominent:hover {background:#eaeaea;border-color:#eaeaea}
 .komi-feature-section {
     margin:0!important;
     padding:0!important;
@@ -1061,63 +1061,63 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 .komi-feature-section .section-title {font-size:clamp(19px,1.5vw,23px)!important}
 .anime-grid {gap:17px!important}
 .anime-card {
-    background:#111216!important;
-    border:1px solid #282a30!important;
+    background:#121212!important;
+    border:1px solid #2a2a2a!important;
     border-radius:19px!important;
     box-shadow:0 5px 22px rgba(0,0,0,.18)!important;
     contain:layout paint;
 }
 .anime-card:hover {
-    border-color:#af3948!important;
-    box-shadow:0 12px 30px rgba(0,0,0,.43),0 0 0 1px #b52d4352!important;
+    border-color:#d7d7d7!important;
+    box-shadow:0 12px 30px rgba(0,0,0,.43),0 0 0 1px #d7d7d752!important;
     transform:translateY(-3px);
 }
 .anime-card .anime-poster {transition:transform .28s ease}
 .anime-card:hover .anime-poster {transform:scale(1.035)}
-.anime-info {padding:13px 12px 14px!important;background:#111216!important}
+.anime-info {padding:13px 12px 14px!important;background:#121212!important}
 .anime-title {font-size:12px!important;line-height:1.45!important}
 .anime-meta-card {font-size:10px;gap:8px}
 .komi-card-meta {display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:8px 0 5px}
-.komi-card-meta span {font-size:10px;padding:3px 7px;border-radius:7px;background:#1f2026;border:1px solid #2b2d34;color:#b7b8c1}
-.komi-card-meta .komi-new-ep {color:#ff9ea8;border-color:#67303c;background:#301a22}
+.komi-card-meta span {font-size:10px;padding:3px 7px;border-radius:7px;background:#202020;border:1px solid #2d2d2d;color:#b8b8b8}
+.komi-card-meta .komi-new-ep {color:#eaeaea;border-color:#424242;background:#242424}
 .anime-rating-badge {z-index:3}
-.komi-release-row {border-radius:15px!important;background:#141418!important;border:1px solid #2d2b30!important;padding:14px!important;min-height:60px}
-.komi-release-row:hover {border-color:#824152!important;background:#221a21!important}
+.komi-release-row {border-radius:15px!important;background:#141414!important;border:1px solid #2c2c2c!important;padding:14px!important;min-height:60px}
+.komi-release-row:hover {border-color:#616161!important;background:#1c1c1c!important}
 .komi-release-list {grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .komi-progress-grid {gap:12px}
-.komi-progress-card {border-radius:17px!important;background:#151519!important;border:1px solid #303037!important}
+.komi-progress-card {border-radius:17px!important;background:#151515!important;border:1px solid #313131!important}
 .komi-catalog-header {display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px}
 .komi-catalog-header h1 {font-size:clamp(24px,2.5vw,34px);letter-spacing:-.9px}
-.komi-catalog-header p {font-size:12px;color:#a6a6b1;margin-top:7px}
+.komi-catalog-header p {font-size:12px;color:#a7a7a7;margin-top:7px}
 .komi-catalog-search {position:relative;margin-bottom:14px}
 .komi-catalog-search input {
     display:block;width:100%;padding:15px 20px 15px 46px!important;
-    background:#121317;border:1px solid #303137;border-radius:17px;
-    color:#fff;font-size:14px;outline:none;
+    background:#131313;border:1px solid #313131;border-radius:17px;
+    color:#ffffff;font-size:14px;outline:none;
 }
-.komi-catalog-search input:focus {border-color:#cb4358;box-shadow:0 0 0 3px #f03d5017}
-.komi-catalog-search svg {position:absolute;left:16px;top:50%;transform:translateY(-50%);width:19px;height:19px;stroke:#9798a2;stroke-width:1.8;fill:none;pointer-events:none}
+.komi-catalog-search input:focus {border-color:#eaeaea;box-shadow:0 0 0 3px #eaeaea17}
+.komi-catalog-search svg {position:absolute;left:16px;top:50%;transform:translateY(-50%);width:19px;height:19px;stroke:#999999;stroke-width:1.8;fill:none;pointer-events:none}
 .komi-catalog-chips {display:flex;gap:7px;align-items:center;flex-wrap:wrap;margin:12px 0 18px}
 .komi-catalog-chip {padding:8px 13px;border-radius:999px}
-.komi-catalog-chip.active {background:#3a1b25;border-color:#d13b54;color:white}
+.komi-catalog-chip.active {background:#272727;border-color:#eaeaea;color:white}
 .komi-catalog-clear {padding:9px 15px;border-radius:12px;font-size:11px}
 .catalog-filters-box {
-    border:1px solid #292b31!important;
-    background:rgba(20,21,26,.78)!important;
+    border:1px solid #2b2b2b!important;
+    background:rgba(21,21,21,.78)!important;
     padding:16px!important;
     border-radius:19px!important;
     gap:12px!important;
     margin-bottom:18px!important;
 }
-.catalog-filters-box .form-control {border-radius:11px!important;padding:11px!important;font-size:12px!important;background:#101116!important}
-.catalog-filters-box label {font-size:11px!important;color:#b3b4bc!important;margin-bottom:7px!important}
-.komi-catalog-status {display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 18px;color:#9e9fa8;font-size:12px}
-.komi-catalog-count {font-weight:700;color:#d6d6db}
-.komi-catalog-empty {grid-column:1/-1;min-height:180px;display:grid;place-items:center;align-content:center;gap:9px;border:1px dashed #3e3039;background:#111116;border-radius:20px;text-align:center;padding:24px;color:#c9c9cf}
-.komi-catalog-empty p {font-size:12px;color:#9999a5}
+.catalog-filters-box .form-control {border-radius:11px!important;padding:11px!important;font-size:12px!important;background:#111111!important}
+.catalog-filters-box label {font-size:11px!important;color:#b4b4b4!important;margin-bottom:7px!important}
+.komi-catalog-status {display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 0 18px;color:#9f9f9f;font-size:12px}
+.komi-catalog-count {font-weight:700;color:#d6d6d6}
+.komi-catalog-empty {grid-column:1/-1;min-height:180px;display:grid;place-items:center;align-content:center;gap:9px;border:1px dashed #343434;background:#111111;border-radius:20px;text-align:center;padding:24px;color:#c9c9c9}
+.komi-catalog-empty p {font-size:12px;color:#9a9a9a}
 #watchModal .player-wrapper {border-radius:20px!important}
-#watchModal .players-switcher-bar {background:rgba(18,18,23,.85)!important}
-#watchModal .crunchy-episodes-section {background:rgba(20,20,26,.86)!important}
+#watchModal .players-switcher-bar {background:rgba(18,18,18,.85)!important}
+#watchModal .crunchy-episodes-section {background:rgba(20,20,20,.86)!important}
 @media(max-width:1050px) {
     .komi-release-list {grid-template-columns:1fr}
     .hero-slider-container {height:405px!important}
@@ -1159,20 +1159,20 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     width:100%;
     text-align:left;
     border:0;
-    border-bottom:1px solid #29292f;
+    border-bottom:1px solid #292929;
     border-radius:0;
-    color:#ededf2;
-    background:#101115;
+    color:#ededed;
+    background:#111111;
     padding:11px 13px;
     font:inherit;
     cursor:pointer;
 }
 .search-dropdown button.search-dropdown-item:hover,
 .search-dropdown button.search-dropdown-item:focus-visible {
-    background:#22171d;
+    background:#1a1a1a;
 }
 #komiCalendarSection {scroll-margin-top:100px}
-.anime-card:focus-visible {outline:2px solid #f54d61;outline-offset:3px}
+.anime-card:focus-visible {outline:2px solid #eaeaea;outline-offset:3px}
 @media(max-width:680px) {
     #komiCalendarSection {scroll-margin-top:72px}
     .search-dropdown button.search-dropdown-item {gap:9px;padding:10px}
@@ -1184,8 +1184,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     width:min(1600px,calc(100vw - 28px))!important;
     max-width:none!important;
     padding:22px!important;
-    background:linear-gradient(135deg,rgba(18,18,22,.97),rgba(9,9,12,.98))!important;
-    border:1px solid #30252f!important;
+    background:linear-gradient(135deg,rgba(18,18,18,.97),rgba(9,9,9,.98))!important;
+    border:1px solid #282828!important;
 }
 #watchModal .watch-cinema-layout{display:flex!important;flex-direction:column!important;gap:17px!important}
 #watchModal .komi-watch-stage{
@@ -1212,14 +1212,14 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     align-items:flex-start;
 }
 #watchModal .komi-player-heading h2{font-size:clamp(18px,2vw,26px);line-height:1.25;margin:6px 0 4px}
-#watchModal .komi-player-heading span{color:#b7b6c0}
+#watchModal .komi-player-heading span{color:#b7b7b7}
 #watchModal .player-wrapper{
     order:0!important;
     min-height:0!important;
     padding:0!important;
-    background:#050508!important;
-    border:1px solid #35313a!important;
-    box-shadow:0 10px 35px #0008!important;
+    background:#050505!important;
+    border:1px solid #333333!important;
+    box-shadow:0 10px 35px #00000088!important;
     overflow:hidden;
     border-radius:18px!important;
     width:100%;
@@ -1250,24 +1250,24 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     align-items:end;
     padding:11px;
     border-radius:15px;
-    border:1px solid #2e2b33;
-    background:rgba(25,24,29,.86);
+    border:1px solid #2c2c2c;
+    background:rgba(25,25,25,.86);
 }
 #watchModal .komi-watch-navbtn{
     min-height:43px;
     border-radius:11px;
-    border:1px solid #34333c;
-    background:#252329;
-    color:#eee;
+    border:1px solid #343434;
+    background:#242424;
+    color:#eeeeee;
     padding:9px 14px;
     font-weight:700;
     cursor:pointer;
     font-size:12px;
     white-space:nowrap;
 }
-#watchModal .komi-watch-navbtn.primary{background:#b82840;border-color:#dd3b55;color:#fff}
-#watchModal .komi-watch-navbtn:not(:disabled):hover{border-color:#f04d63;background:#46212f}
-#watchModal .komi-watch-navbtn.primary:not(:disabled):hover{background:#df3450}
+#watchModal .komi-watch-navbtn.primary{background:#d7d7d7;border-color:#eaeaea;color:#ffffff}
+#watchModal .komi-watch-navbtn:not(:disabled):hover{border-color:#eaeaea;background:#2f2f2f}
+#watchModal .komi-watch-navbtn.primary:not(:disabled):hover{background:#eaeaea}
 #watchModal .komi-watch-navbtn:disabled{opacity:.4;cursor:not-allowed}
 #watchModal .komi-watch-source{
     display:flex;
@@ -1276,34 +1276,34 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     flex-direction:column;
     gap:5px;
 }
-#watchModal .komi-watch-source label{font-size:11px;color:#b6a9b2;font-weight:700}
+#watchModal .komi-watch-source label{font-size:11px;color:#acacac;font-weight:700}
 #watchModal .komi-watch-source select{
     width:100%;
     min-height:43px;
     padding:9px 11px;
-    color:#f5f4f7;
+    color:#f4f4f4;
     border-radius:10px;
-    border:1px solid #4b3941;
-    background:#151418;
+    border:1px solid #424242;
+    background:#151515;
     outline:none;
     font-size:12px;
 }
-#watchModal .komi-watch-source select:focus-visible{border-color:#f04d63}
-#watchModal .komi-watch-help{color:#85858e;font-size:11px;line-height:1.5;margin:0 1px}
+#watchModal .komi-watch-source select:focus-visible{border-color:#eaeaea}
+#watchModal .komi-watch-help{color:#868686;font-size:11px;line-height:1.5;margin:0 1px}
 #watchModal .komi-watch-sidebar{
-    border:1px solid #302e37;
-    background:linear-gradient(155deg,#19181f,#111116);
+    border:1px solid #2f2f2f;
+    background:linear-gradient(155deg,#191919,#111111);
     border-radius:19px;
     padding:17px;
     min-width:0;
     max-height:calc(100dvh - 160px);
     overflow-y:auto;
-    scrollbar-color:#773041 #161419;
+    scrollbar-color:#575757 #151515;
 }
 #watchModal .komi-watch-side-heading{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:14px}
-#watchModal .komi-watch-side-heading small{display:block;color:#e24c69;font-size:10px;font-weight:800;letter-spacing:1.7px}
-#watchModal .komi-watch-side-heading h3{font-size:17px;color:#fff;margin-top:5px}
-#watchModal .komi-watch-side-heading>span{font-size:11px;color:#bcb8c2;padding:7px 9px;background:#29242c;border-radius:9px}
+#watchModal .komi-watch-side-heading small{display:block;color:#eaeaea;font-size:10px;font-weight:800;letter-spacing:1.7px}
+#watchModal .komi-watch-side-heading h3{font-size:17px;color:#ffffff;margin-top:5px}
+#watchModal .komi-watch-side-heading>span{font-size:11px;color:#bababa;padding:7px 9px;background:#262626;border-radius:9px}
 #watchModal .komi-watch-sidebar .season-tabs{border:0;margin:0 0 12px}
 #watchModal .komi-watch-sidebar .season-tab-btn{font-size:11px;border-radius:9px;padding:8px 10px}
 #watchModal .komi-watch-sidebar .komi-episode-number-grid{
@@ -1320,37 +1320,37 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     min-width:0;
     height:51px;
     border-radius:12px!important;
-    border:1px solid #3b3a43;
-    background:#222128;
-    color:#eae8ee;
+    border:1px solid #3b3b3b;
+    background:#222222;
+    color:#e9e9e9;
     font-size:14px;
     font-weight:750;
     cursor:pointer;
 }
-#watchModal .komi-watch-sidebar .komi-episode-number:hover{background:#39202c;border-color:#ca455c}
+#watchModal .komi-watch-sidebar .komi-episode-number:hover{background:#2b2b2b;border-color:#eaeaea}
 #watchModal .komi-watch-sidebar .komi-episode-number.active{
-    background:linear-gradient(135deg,#f44860,#b8203b)!important;
-    border-color:#fa536a!important;
-    box-shadow:0 5px 14px #ca284b40;
-    color:#fff;
+    background:linear-gradient(135deg,#eaeaea,#d7d7d7)!important;
+    border-color:#eaeaea!important;
+    box-shadow:0 5px 14px #eaeaea40;
+    color:#ffffff;
 }
-#watchModal .komi-watch-side-footnote{font-size:11px;color:#96929c;margin-top:15px;line-height:1.5}
+#watchModal .komi-watch-side-footnote{font-size:11px;color:#949494;margin-top:15px;line-height:1.5}
 #watchModal .komi-watch-expand{
     position:absolute!important;
     top:18px!important;right:62px!important;float:none!important;
     margin:0!important;
     border-radius:11px!important;
-    background:#252027!important;
-    border-color:#55404b!important;
+    background:#222222!important;
+    border-color:#4a4a4a!important;
     z-index:20;
 }
 #watchModal .modal-close{top:18px!important;right:19px!important;z-index:21!important}
 #watchModal .crunchy-hero-section{
     margin-top:6px;
-    background:rgba(21,19,24,.65)!important;
+    background:rgba(20,20,20,.65)!important;
 }
 #watchModal .crunchy-hero-info p{max-height:5em;overflow:auto}
-#watchModal .komi-watch-stage *:focus-visible{outline:2px solid #ff5065;outline-offset:2px}
+#watchModal .komi-watch-stage *:focus-visible{outline:2px solid #eaeaea;outline-offset:2px}
 @media(max-width:1080px){
     #watchModal .komi-watch-stage{grid-template-columns:minmax(0,1fr) 255px;gap:12px}
     #watchModal .komi-watch-sidebar{padding:13px}
@@ -1378,19 +1378,19 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
     align-items:center!important;
     gap:13px!important;
     min-width:0;
-    background:rgba(18,18,22,.9)!important;
-    border:1px solid #2b2b32!important;
+    background:rgba(18,18,18,.9)!important;
+    border:1px solid #2c2c2c!important;
     border-radius:15px!important;
     padding:10px 13px!important;
     text-align:left;
 }
-#komiCalendarSection .komi-release-row:hover{border-color:#9d3548!important;background:#241820!important}
-#komiCalendarSection .komi-calendar-poster{width:49px;height:65px;object-fit:cover;border-radius:9px;background:#212128;flex-shrink:0}
+#komiCalendarSection .komi-release-row:hover{border-color:#d7d7d7!important;background:#1b1b1b!important}
+#komiCalendarSection .komi-calendar-poster{width:49px;height:65px;object-fit:cover;border-radius:9px;background:#222222;flex-shrink:0}
 #komiCalendarSection .komi-calendar-info{display:flex;flex-direction:column;min-width:0;gap:5px;flex:1}
-#komiCalendarSection .komi-calendar-info small{font-size:11px;color:#b4b2bc}
-#komiCalendarSection .komi-calendar-info strong{font-size:12px;color:#f8f6f8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#komiCalendarSection .komi-calendar-info em{font-size:11px;font-style:normal;font-weight:650;color:#ee7d91}
-#komiCalendarSection .komi-calendar-tag{font-size:10px;flex-shrink:0;background:#2e1923;color:#ff9cad;border:1px solid #6e2b40;border-radius:8px;padding:6px 8px}
+#komiCalendarSection .komi-calendar-info small{font-size:11px;color:#b3b3b3}
+#komiCalendarSection .komi-calendar-info strong{font-size:12px;color:#f7f7f7;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#komiCalendarSection .komi-calendar-info em{font-size:11px;font-style:normal;font-weight:650;color:#eaeaea}
+#komiCalendarSection .komi-calendar-tag{font-size:10px;flex-shrink:0;background:#232323;color:#eaeaea;border:1px solid #575757;border-radius:8px;padding:6px 8px}
 @media(max-width:920px){#komiCalendarSection .komi-release-list{grid-template-columns:1fr}}
 
 
@@ -1402,41 +1402,41 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible {
 .komi-friends-identity img{width:53px;height:53px;border-radius:15px}
 .komi-friends-identity strong{font-size:16px}.komi-friends-identity small{font-size:13px}
 .komi-friends-add{width:45px;height:45px;min-width:45px;border-radius:14px;font-size:28px}
-.komi-friends-unavailable{font-size:12px;color:#b9aab0;padding:9px 5px;text-align:center;max-width:96px}
+.komi-friends-unavailable{font-size:12px;color:#7d7d7d;padding:9px 5px;text-align:center;max-width:96px}
 .komi-friends-count{font-size:14px}.komi-friends-tabs button{font-size:14px;min-height:46px}
 .user-pill{gap:8px!important}.user-pill span{font-size:14px!important}
 @media(max-width:600px){.komi-friends-drawer{padding:22px 15px;width:min(440px,calc(100vw - 12px))}}
 
 /* Watch Party creation form: clear, usable inputs and spacing */
 #partyCreateForm{display:grid;gap:15px;margin:20px 0 25px}
-#partyCreateForm label{display:grid;gap:8px;font-size:15px;font-weight:650;color:#f5eaf0}
+#partyCreateForm label{display:grid;gap:8px;font-size:15px;font-weight:650;color:#ededed}
 #partyCreateForm label:has(input[type="checkbox"]){display:flex;align-items:center;gap:12px}
-#partyCreateForm select,#partyCreateForm input:not([type="checkbox"]){box-sizing:border-box;width:100%;min-height:46px;padding:11px 13px;background:#211a21;border:1px solid #61404a;border-radius:13px;color:#fff;font:inherit}
-#partyCreateForm input[type="checkbox"]{width:20px;height:20px;accent-color:#df2947}
-#partyCreateForm select:focus,#partyCreateForm input:focus{outline:2px solid #e73555;outline-offset:1px}
+#partyCreateForm select,#partyCreateForm input:not([type="checkbox"]){box-sizing:border-box;width:100%;min-height:46px;padding:11px 13px;background:#1c1c1c;border:1px solid #4d4d4d;border-radius:13px;color:#ffffff;font:inherit}
+#partyCreateForm input[type="checkbox"]{width:20px;height:20px;accent-color:#eaeaea}
+#partyCreateForm select:focus,#partyCreateForm input:focus{outline:2px solid #eaeaea;outline-offset:1px}
 #partyCreateForm button{min-height:46px;font-size:15px;border-radius:14px}
 #partyRoomList{display:grid;gap:10px}
 #partyRoomList button{min-height:44px;text-align:left;font-size:14px}
 </style>
-<style>:root{--bg-main:#09090b;--bg-card:#17171b;--bg-input:#17171b;--border:#27272d;--primary:#e11d38;--glow:rgba(225,29,56,.2);--text-main:#f4f4f5}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(225,29,56,.45);box-shadow:0 12px 32px rgba(225,29,56,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202024,#101012)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#17171bf2;backdrop-filter:blur(14px);padding:12px;border:1px solid #27272d;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style><style>
-#watchModal .player-wrapper{aspect-ratio:16/9;min-height:0;background:#09090b}
+<style>:root{--bg-main:#090909;--bg-card:#171717;--bg-input:#171717;--border:#272727;--primary:#eaeaea;--glow:rgba(234,234,234,.2);--text-main:#f4f4f4}.anime-card{border-radius:16px;overflow:hidden;transition:transform .24s,border-color .24s,box-shadow .24s}.anime-card:hover{transform:translateY(-3px);border-color:rgba(234,234,234,.45);box-shadow:0 12px 32px rgba(234,234,234,.11)}.anime-poster-box{aspect-ratio:2/3;background:linear-gradient(145deg,#202020,#101010)}.komi-catalog-search input{font-size:15px!important;border-radius:16px!important}#watchModal .modal-content{max-width:1440px!important;padding:clamp(12px,2vw,28px)!important}#watchModal .player-wrapper{min-height:clamp(240px,58vw,720px);display:grid;place-items:center}#watchModal .player-box{width:100%;height:100%}#watchModal .player-box video,#watchModal .player-box iframe{width:100%;height:min(72vh,760px);object-fit:contain}#watchModal .komi-watch-controls{position:sticky;bottom:8px;z-index:3;background:#171717f2;backdrop-filter:blur(14px);padding:12px;border:1px solid #272727;border-radius:16px}@media(max-width:700px){#watchModal .modal-content{padding:10px!important}#watchModal .player-box video,#watchModal .player-box iframe{height:55vh}.anime-card:hover{transform:none}}</style><style>
+#watchModal .player-wrapper{aspect-ratio:16/9;min-height:0;background:#090909}
 #watchModal .player-box video,#watchModal .player-box iframe{display:block;width:100%;height:100%;min-height:0}
 #watchModal .komi-watch-controls{position:static}
-.komi-catalog-chip[aria-pressed="true"]{background:#351820;border-color:#e11d38}
+.komi-catalog-chip[aria-pressed="true"]{background:#242424;border-color:#eaeaea}
 </style><style>
 /* Komi visual system */
 :root {
-    --bg-main: #09090b;
-    --bg-card: #17171b;
-    --bg-input: #121216;
-    --border: #27272d;
-    --primary: #e11d38;
-    --text-main: #f4f4f5;
-    --text-muted: #a1a1aa;
+    --bg-main: #090909;
+    --bg-card: #171717;
+    --bg-input: #121212;
+    --border: #272727;
+    --primary: #eaeaea;
+    --text-main: #f4f4f4;
+    --text-muted: #a2a2a2;
 }
 body { background: var(--bg-main); }
 body > header {
-    background: rgba(9, 9, 11, .9) !important;
+    background: rgba(9,9,9, .9) !important;
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(10px);
 }
@@ -1468,13 +1468,13 @@ body > header {
 .komi-catalog-chip:focus-visible,
 .komi-profile-tab:focus-visible,
 .hero-slider-arrow:focus-visible {
-    outline: 2px solid #ff6478;
+    outline: 2px solid #eaeaea;
     outline-offset: 3px;
 }
 .komi-profile-v2 .profile-header-card {
     border: 1px solid var(--border) !important;
     border-radius: 20px !important;
-    background: radial-gradient(ellipse at 50% 0%, #2e1620, transparent 68%), var(--bg-input) !important;
+    background: radial-gradient(ellipse at 50% 0%, #212121, transparent 68%), var(--bg-input) !important;
     box-shadow: none !important;
 }
 .komi-profile-v2 .profile-header-card::before { display: none; }
@@ -1510,7 +1510,7 @@ body > header {
 <style>
 .top-hero-section-grid { margin-bottom: clamp(18px, 3vw, 36px); }
 #heroSlider .hero-buttons { flex-wrap: wrap; }
-#heroSlider .hero-meta span { background: rgba(14,14,18,.78); border-color: rgba(255,255,255,.12); }
+#heroSlider .hero-meta span { background: rgba(14,14,14,.78); border-color: rgba(255,255,255,.12); }
 .komi-discovery-row .anime-grid { align-items: start; }
 @media (max-width: 700px) {
     .komi-discovery-row .anime-grid {
@@ -1538,7 +1538,7 @@ body > header {
 .anicoin-item h3 { margin: 14px 0 4px; }
 .anicoin-item button { margin-top: 16px; min-height: 42px; }
 .anicoin-item button:disabled { opacity: .55; cursor: default; }
-.anicoin-symbol { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 1px solid #742836; border-radius: 50%; color: #ff8093; font-weight: 800; }
+.anicoin-symbol { display: inline-grid; place-items: center; width: 44px; height: 44px; border: 1px solid #575757; border-radius: 50%; color: #eaeaea; font-weight: 800; }
 [data-anicoin-badge][hidden] { display: none !important; }
 </style><style>
 .komi-profile-v2 .profile-header-card {
@@ -1548,7 +1548,7 @@ body > header {
     gap: clamp(18px, 4vw, 44px) !important;
     padding: clamp(22px, 5vw, 48px) !important;
     text-align: left;
-    background: radial-gradient(ellipse at 0 0, #351924, transparent 65%), var(--bg-input) !important;
+    background: radial-gradient(ellipse at 0 0, #252525, transparent 65%), var(--bg-input) !important;
 }
 .komi-profile-v2 .profile-info-grid { align-items: flex-start; min-width: 0; }
 .komi-profile-v2 .profile-name-row,
@@ -1558,7 +1558,7 @@ body > header {
 .komi-profile-v2 .profile-avatar-box { margin-top: 5px; }
 .komi-profile-v2 .profile-stat-card { font: inherit; color: var(--text-main); min-height: 70px; }
 .komi-profile-v2 .profile-stat-card:focus-visible,
-.komi-profile-v2 .komi-profile-action:focus-visible { outline: 2px solid #ff6478; outline-offset: 2px; }
+.komi-profile-v2 .komi-profile-action:focus-visible { outline: 2px solid #eaeaea; outline-offset: 2px; }
 .komi-profile-v2 .komi-profile-action { min-height: 42px; }
 .anicoin-shop .anicoin-item h2 { margin-top: 0; }
 .anicoin-shop .anicoin-item { margin-top: 22px; }
@@ -1567,6 +1567,7 @@ body > header {
     .komi-profile-v2 .profile-settings-box .form-control { min-height: 42px; }
 }
 </style>    <link rel="stylesheet" href="./cinema-ui.css">
+    <link rel="stylesheet" href="./mono-ui.css">
 </head>
 <body>
 
@@ -1618,7 +1619,7 @@ body > header {
                 <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
                 <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
                 <button class="action-icon-btn" id="headerRandomBtn" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме">◇</button>
-                <button class="action-icon-btn" id="headerPartyBtn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(255,69,79,0.12); border-color:rgba(255,69,79,0.3); color:var(--primary);" title="Watch Party"> Party</button>
+                <button class="action-icon-btn" id="headerPartyBtn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(234,234,234,0.12); border-color:rgba(234,234,234,0.3); color:var(--primary);" title="Watch Party"> Party</button>
                 
                 <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="display: none;" title="Админка"></button>
                 <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="display: none;" title="Добавить">+ Добавить</button>
@@ -2535,7 +2536,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 logout.textContent = 'Выйти';
                 logout.title = 'Выйти';
                 logout.setAttribute('aria-label', 'Выйти из аккаунта');
-                logout.style.cssText = 'background:#26181e;border:1px solid #653342;border-radius:12px;padding:9px 13px;min-height:40px;color:#fff;cursor:pointer;font-size:14px;font-weight:700;margin-left:8px';
+                logout.style.cssText = 'background:#1b1b1b;border:1px solid #444444;border-radius:12px;padding:9px 13px;min-height:40px;color:#ffffff;cursor:pointer;font-size:14px;font-weight:700;margin-left:8px';
                 logout.addEventListener('click', event => { event.stopPropagation(); logoutUser(); });
                 pill.append(img, name, logout);
                 area.replaceChildren(pill);
@@ -3240,7 +3241,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
                     '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'./anime-artwork.svg\'">'+
-                    '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e26,#101015);color:#92929F"><span style="font-size:30px;font-weight:800;color:#f03d50">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
+                    '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
                 '<div class="anime-info"><div class="anime-title" title="'+name+'">'+name+'</div>'+
@@ -3508,7 +3509,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
                             <img src="${a.poster}" style="width:20px; height:28px; object-fit:cover; border-radius:3px;">
                             <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${a.title}</b></div>
-                            <span style="font-size:10px; color:#fbbf24;">★ ${a.shikiRating || '8.5'}</span>
+                            <span style="font-size:10px; color:#eaeaea;">★ ${a.shikiRating || '8.5'}</span>
                         </div>
                     `;
                 });
@@ -3534,10 +3535,10 @@ const adminList = []; // No client-side username grants administrator privileges
             ).slice(0,8);
             dd.innerHTML=results.length?results.map(a=>
                 '<button type="button" class="search-dropdown-item" onclick="selectAnimeFromSearch(\''+a.id+'\')">'+
-                '<img src="'+escapeFriendHtml(a.poster||'')+'" alt="" style="width:38px;height:53px;object-fit:cover;border-radius:8px;background:#222">'+
-                '<span style="flex:1;min-width:0;text-align:left"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeFriendHtml(a.title||'Без названия')+'</b><small style="color:#a5a5b1">'+(komiAnimeYear(a)||'')+' · '+komiCatalogType(a)+'</small></span>'+
-                '<strong style="font-size:11px;color:#f2bd5a">★ '+(Number(a.shikiRating)||0).toFixed(1)+'</strong></button>'
-            ).join(''):'<div style="padding:16px;color:#a6a6b0;font-size:12px;text-align:center">По запросу ничего не найдено</div>';
+                '<img src="'+escapeFriendHtml(a.poster||'')+'" alt="" style="width:38px;height:53px;object-fit:cover;border-radius:8px;background:#222222">'+
+                '<span style="flex:1;min-width:0;text-align:left"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeFriendHtml(a.title||'Без названия')+'</b><small style="color:#a6a6a6">'+(komiAnimeYear(a)||'')+' · '+komiCatalogType(a)+'</small></span>'+
+                '<strong style="font-size:11px;color:#eaeaea">★ '+(Number(a.shikiRating)||0).toFixed(1)+'</strong></button>'
+            ).join(''):'<div style="padding:16px;color:#a7a7a7;font-size:12px;text-align:center">По запросу ничего не найдено</div>';
             dd.classList.add('active');
             catalogSearchQuery=input.slice(0,120);
             if(currentView!=='catalog'){
@@ -3620,7 +3621,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     });
                 }
             } catch(e) {
-                resultsContainer.innerHTML = `<div style="padding: 5px; font-size: 11px; color: #FF454F;">Ошибка загрузки.</div>`;
+                resultsContainer.innerHTML = `<div style="padding: 5px; font-size: 11px; color: #eaeaea;">Ошибка загрузки.</div>`;
             }
         }
 
@@ -4123,7 +4124,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 notice = document.createElement('div');
                 notice.id = 'komiStatusFeedback';
                 notice.setAttribute('role', 'status');
-                notice.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;max-width:90vw;padding:14px 20px;background:#17171b;border:1px solid #27272d;border-radius:14px;color:#f4f4f5';
+                notice.style.cssText = 'position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:10000;max-width:90vw;padding:14px 20px;background:#171717;border:1px solid #272727;border-radius:14px;color:#f4f4f4';
                 document.body.append(notice);
             }
             notice.textContent = message;
@@ -4515,7 +4516,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             <h1>${escapeFriendHtml(anime.title)}</h1>
                             <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${cleanAnimeDescription(anime.desc)}</p>
                             <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
-                                <span style="color:#fbbf24; font-weight:700; font-size:11px;">★ ${shikiRating} Shikimori</span>
+                                <span style="color:#eaeaea; font-weight:700; font-size:11px;">★ ${shikiRating} Shikimori</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml((anime.genres||[]).join(', '))}</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${anime.year || '2026'}</span>
                                 <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
