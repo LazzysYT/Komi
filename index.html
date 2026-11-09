@@ -1796,9 +1796,9 @@ async function loadDataFromCloud(attempt = 0) {
         const settingsPromise = _supabase
             .from('animes').select('id,content').in('id', [2, 3, 4, 5, 7]);
         const catalog = [];
-        const pageSize = 100;
         let lastId = 0;
         while (true) {
+            const pageSize = catalog.length ? 100 : 48;
             const { data: rows, error } = await _supabase
                 .from('anime_catalog').select('shikimori_id,data')
                 .gt('shikimori_id', lastId)
@@ -2684,7 +2684,8 @@ const adminList = []; // No client-side username grants administrator privileges
                                 <div class="profile-badge-item">🎯 Статус: ${safeProfileText(p.status)}</div>
                             </div>
 
-                            <div class="profile-reg-date">Дата регистрации: <b>${p.regDate || '05 ноября 2026 года'}</b></div>
+                            <div class="komi-level-progress"><label>До следующего уровня <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
+                            <div class="profile-reg-date">Дата регистрации: <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
                             <div class="komi-profile-actions">
                                 ${isMe ? '<button class="komi-profile-action" onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')">⚙ Настройки</button>' : ''}
                                 <button class="komi-profile-action" onclick="navigator.clipboard?.writeText(location.href).then(()=>alert('Ссылка скопирована')).catch(()=>alert('Не удалось скопировать ссылку'))">↗ Поделиться</button>
