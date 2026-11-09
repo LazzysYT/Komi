@@ -40,12 +40,12 @@ async function openWatchPartyHub() {
     try {
         const rooms = await partyCall('list');
         if (generation !== partyGeneration) return;
-        const available = animeList.filter(anime => partyOptions(anime).length);
+        const available = animeList.filter(anime => (anime.episodeCount || anime.episodes?.length || 0) > 0);
         partyPanel(`
             <button class="modal-close" onclick="leaveWatchPartyRoom()">×</button>
             <h2>Совместный просмотр</h2>
             <form id="partyCreateForm">
-                <label>Аниме <select name="anime" required>${available.map(anime =>
+                <label>Аниме <input id="partyAnimeSearch" type="search" placeholder="Найти аниме по названию" autocomplete="off" style="width:100%;min-height:44px;margin:8px 0"><select name="anime" required style="width:100%;min-height:44px">${available.map(anime =>
                     `<option value="${escapeFriendHtml(anime.id)}">${escapeFriendHtml(anime.title)}</option>`).join('')}</select></label>
                 <label>Комната <input name="room" maxlength="100" placeholder="Совместный просмотр"></label>
                 <label><input type="checkbox" name="private"> Только по приглашению</label>
@@ -55,6 +55,18 @@ async function openWatchPartyHub() {
             <div id="partyRoomList"></div>
             <button class="btn-secondary" onclick="openWatchPartyHub()">Обновить список</button>
         `);
+        const search = document.getElementById('partyAnimeSearch');
+        const animeSelect = document.querySelector('#partyCreateForm select[name="anime"]');
+        const allAnimeOptions = available.map(anime => ({id: String(anime.id), title: anime.title || 'Аниме'}));
+        const updateAnimeChoices = () => {
+            const term = search.value.trim().toLocaleLowerCase();
+            const matching = allAnimeOptions.filter(item => item.title.toLocaleLowerCase().includes(term)).slice(0, 150);
+            const previous = animeSelect.value;
+            animeSelect.replaceChildren(...matching.map(item => new Option(item.title, item.id)));
+            if (matching.some(item => item.id === previous)) animeSelect.value = previous;
+        };
+        search.addEventListener('input', updateAnimeChoices);
+        updateAnimeChoices();
         const list = document.getElementById('partyRoomList');
         if (!rooms.length) list.textContent = 'Активных комнат пока нет.';
         for (const room of rooms) {
@@ -78,7 +90,11 @@ async function openWatchPartyHub() {
 
 async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false, episodeIndex = null, source = '') {
     if (!partySignedIn()) return;
-    const options = partyOptions(animeList.find(anime => String(anime.id) === String(animeId)));
+    const selectedAnime = animeList.find(anime => String(anime.id) === String(animeId));
+    if (!selectedAnime) { alert('Выберите аниме из списка.'); return; }
+    try { await ensureKomiAnimeDetails(selectedAnime); }
+    catch (error) { alert('Не удалось загрузить серии: ' + error.message); return; }
+    const options = partyOptions(selectedAnime);
     const episodeOptions = episodeIndex === null ? options : options.filter(item => item.episode === episodeIndex);
     const initial = episodeOptions.find(item => item.source === source) || episodeOptions[0];
     if (!initial) {
@@ -91,7 +107,7 @@ async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false
             name: name.trim() || 'Совместный просмотр', animeId: String(animeId),
             private: privateRoom, episode: initial.episode, source: initial.source
         });
-        if (generation === partyGeneration) enterParty(room);
+        if (generation === partyGeneration) await enterParty(room);
     } catch (error) { alert('Не удалось создать комнату: ' + error.message); }
 }
 
@@ -104,7 +120,7 @@ async function joinWatchPartyRoom(id) {
     } catch (error) { alert('Не удалось войти в комнату: ' + error.message); }
 }
 
-function enterParty(room) {
+async function enterParty(room) {
     const generation = partyGeneration;
     const isActive = () => partyGeneration === generation && partyRoom?.id === room.id;
     clearTimeout(partyTimer);
@@ -113,6 +129,11 @@ function enterParty(room) {
     closeWatchModal();
     const host = room.host === currentUser.authUserId;
     const anime = animeList.find(item => String(item.id) === room.anime_id);
+    if (anime) {
+        try { await ensureKomiAnimeDetails(anime); }
+        catch (error) { alert('Не удалось загрузить серии для комнаты: ' + error.message); return; }
+    }
+    if (generation !== partyGeneration) return;
     const options = partyOptions(anime);
     partyPanel(`
         <button class="modal-close" onclick="leaveWatchPartyRoom()">×</button>
