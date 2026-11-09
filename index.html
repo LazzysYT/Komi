@@ -3279,92 +3279,174 @@ const adminList = []; // No client-side username grants administrator privileges
 
         let komiRouletteRun = 0;
         let komiRoulettePool = [];
-        let komiRouletteCatalogSize = -1;
+        let komiRouletteCatalogKey = '';
         let komiRouletteLastId = null;
-        function randomAnimeWithAnimation() {
-            // Never limit random picks to titles with working posters: every anime in the
-            // catalog must be reachable, including entries with missing artwork.
-            const all = animeList.filter(item => item && item.id != null);
-            if (!all.length) {
-                if (typeof komiStatusFeedback === 'function') komiStatusFeedback('Каталог пока загружается.');
-                return;
+        const komiRoulettePosterCache = new Map();
+
+        // "Случайное аниме" means something the visitor can actually watch.
+        // Anime without episode sources remains available in the full catalog.
+        function komiRandomPlayableAnime(items) {
+            const unique = new Map();
+            for (const item of items || []) {
+                if (!item || item.id == null) continue;
+                const cardCount = Number(item.episodeCount) || 0;
+                const realSources = Array.isArray(item.episodes) &&
+                    item.episodes.some(ep => ep && (Object.values(ep.sources || {}).some(Boolean) || ep.url));
+                if (cardCount > 0 || realSources) unique.set(String(item.id), item);
             }
-            playSound();
+            return [...unique.values()];
+        }
+
+        function komiPreloadRoulettePoster(url, maxWait = 1600) {
+            const safe = typeof url === 'string' && /^https:\/\//i.test(url.trim()) ? url.trim() : '';
+            if (!safe) return Promise.resolve('');
+            if (komiRoulettePosterCache.has(safe)) return komiRoulettePosterCache.get(safe);
+            const pending = new Promise(resolve => {
+                const image = new Image();
+                let settled = false;
+                const finish = result => {
+                    if (settled) return;
+                    settled = true;
+                    clearTimeout(timeout);
+                    image.onload = image.onerror = null;
+                    resolve(result);
+                };
+                const timeout = setTimeout(() => finish(''), maxWait);
+                image.onload = () => finish(safe);
+                image.onerror = () => finish('');
+                image.src = safe;
+            });
+            komiRoulettePosterCache.set(safe, pending);
+            if (komiRoulettePosterCache.size > 80) {
+                komiRoulettePosterCache.delete(komiRoulettePosterCache.keys().next().value);
+            }
+            return pending;
+        }
+
+        async function komiResolveRoulettePoster(item) {
+            const primary = await komiPreloadRoulettePoster(item?.poster, 1600);
+            if (primary) return primary;
+            const banner = await komiPreloadRoulettePoster(item?.banner, 900);
+            if (banner) return banner;
+            // Use the anime's verified MAL/Shikimori ID, never a fuzzy title match.
+            const id = Number(item?.shikimoriId || item?.id);
+            if (!Number.isSafeInteger(id) || id < 1) return '';
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 3000);
+            try {
+                const response = await fetch('https://graphql.anilist.co', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', Accept: 'application/json'},
+                    body: JSON.stringify({
+                        query: 'query ($id: Int) { Media(idMal: $id, type: ANIME) { coverImage { extraLarge large medium } } }',
+                        variables: {id}
+                    }),
+                    signal: controller.signal
+                });
+                if (!response.ok) return '';
+                const json = await response.json();
+                const cover = json?.data?.Media?.coverImage;
+                const candidate = cover?.extraLarge || cover?.large || cover?.medium;
+                return await komiPreloadRoulettePoster(candidate, 1800);
+            } catch {
+                return '';
+            } finally {
+                clearTimeout(timeout);
+            }
+        }
+
+        function randomAnimeWithAnimation() {
+            const items = komiRandomPlayableAnime(animeList);
             const modal = document.getElementById('randomRouletteModal');
             const imgEl = document.getElementById('rouletteImage');
             const titleEl = document.getElementById('rouletteTitle');
             if (!modal || !imgEl || !titleEl) return;
+            if (!items.length) {
+                titleEl.textContent = 'Пока нет аниме с доступными сериями';
+                imgEl.src = './anime-artwork.svg';
+                modal.classList.add('active');
+                setTimeout(() => modal.classList.remove('active'), 2200);
+                return;
+            }
+            playSound();
             modal.classList.add('active');
             const run = ++komiRouletteRun;
-            let imageToken = 0;
-            const fallback = './anime-artwork.svg';
-            const byId = new Map(all.map(item => [String(item.id), item]));
-            const items = [...byId.values()];
-            const chooseSample = (except) => {
-                if (items.length === 1) return items[0];
-                let chosen;
-                for (let n = 0; n < 6; n++) {
-                    chosen = items[Math.floor(Math.random() * items.length)];
-                    if (String(chosen.id) !== String(except)) break;
-                }
-                return String(chosen.id) === String(except)
-                    ? items.find(item => String(item.id) !== String(except)) : chosen;
-            };
-            // Shuffle without replacement so repeated clicks can eventually reach
-            // all titles instead of repeatedly showing a small subset.
-            if (!komiRoulettePool.length || komiRouletteCatalogSize !== items.length) {
-                komiRoulettePool = items.map(item => String(item.id));
+            const container = document.getElementById('rouletteContainer');
+            const byId = new Map(items.map(item => [String(item.id), item]));
+            const key = items.map(item => String(item.id)).join('|');
+            if (!komiRoulettePool.length || key !== komiRouletteCatalogKey) {
+                komiRoulettePool = [...byId.keys()];
                 for (let i = komiRoulettePool.length - 1; i > 0; i--) {
                     const j = Math.floor(Math.random() * (i + 1));
-                    [komiRoulettePool[i], komiRoulettePool[j]] = [komiRoulettePool[j], komiRoulettePool[i]];
+                    [komiRoulettePool[i], komiRoulettePool[j]] =
+                        [komiRoulettePool[j], komiRoulettePool[i]];
                 }
-                komiRouletteCatalogSize = items.length;
+                komiRouletteCatalogKey = key;
             }
             let finalId = komiRoulettePool.pop();
-            if (items.length > 1 && String(finalId) === String(komiRouletteLastId)) {
+            if (items.length > 1 && finalId === String(komiRouletteLastId)) {
                 const alternative = komiRoulettePool.pop();
-                if (alternative) { komiRoulettePool.unshift(finalId); finalId = alternative; }
+                if (alternative) {
+                    komiRoulettePool.unshift(finalId);
+                    finalId = alternative;
+                }
             }
-            let finalItem = byId.get(String(finalId)) || chooseSample(komiRouletteLastId);
-            komiRouletteLastId = finalItem.id;
-            function showPoster(item) {
-                titleEl.textContent = item.title || item.originalTitle || 'Без названия';
+            const finalItem = byId.get(finalId) || items[0];
+            komiRouletteLastId = String(finalItem.id);
+            let imageToken = 0;
+            const finalPoster = komiResolveRoulettePoster(finalItem);
+
+            function showSpinTitle(item) {
+                titleEl.textContent = item.title || item.originalTitle || 'Аниме';
+                imgEl.alt = 'Постер: ' + titleEl.textContent;
+                imgEl.style.opacity = '0';
+                container?.classList.add('is-loading');
                 const token = ++imageToken;
-                // Clear previous art first. A slow previous image cannot overwrite the new one.
-                imgEl.src = fallback;
-                imgEl.style.opacity = '1';
-                const poster = typeof item.poster === 'string' && /^https:\/\//i.test(item.poster.trim())
-                    ? item.poster.trim() : '';
-                if (!poster) return;
-                const preload = new Image();
-                preload.onload = () => {
-                    if (run === komiRouletteRun && token === imageToken && modal.classList.contains('active'))
-                        imgEl.src = poster;
-                };
-                preload.onerror = () => {};
-                preload.src = poster;
+                komiPreloadRoulettePoster(item.poster, 850).then(url => {
+                    if (!url || token !== imageToken || run !== komiRouletteRun ||
+                        !modal.classList.contains('active')) return;
+                    imgEl.src = url;
+                    imgEl.style.opacity = '1';
+                    container?.classList.remove('is-loading');
+                });
             }
-            imgEl.onerror = () => {
-                imgEl.onerror = null;
-                imgEl.src = fallback;
-            };
+
             let step = 0;
-            let lastSpinId = finalItem.id;
+            let previousId = finalId;
             function spinStep() {
                 if (run !== komiRouletteRun || !modal.classList.contains('active')) return;
-                const item = step < 9 ? chooseSample(lastSpinId) : finalItem;
-                lastSpinId = item.id;
-                showPoster(item);
-                step++;
-                if (step < 10) {
-                    setTimeout(spinStep, 80 + step * 19);
-                } else {
+                if (step < 7) {
+                    let option = items[Math.floor(Math.random() * items.length)];
+                    if (items.length > 1 && String(option.id) === String(previousId))
+                        option = items.find(item => String(item.id) !== String(previousId)) || option;
+                    previousId = String(option.id);
+                    showSpinTitle(option);
+                    step++;
+                    setTimeout(spinStep, 100 + step * 35);
+                    return;
+                }
+                showSpinTitle(finalItem);
+                const token = imageToken;
+                // Give the final picture time to load. An unsuccessful provider
+                // shows a monochrome fallback, never the poster of another anime.
+                Promise.all([
+                    finalPoster,
+                    new Promise(resolve => setTimeout(resolve, 1000))
+                ]).then(([poster]) => {
+                    if (run !== komiRouletteRun || token !== imageToken ||
+                        !modal.classList.contains('active')) return;
+                    imgEl.src = poster || './anime-artwork.svg';
+                    imgEl.style.opacity = '1';
+                    container?.classList.remove('is-loading');
+                    if (poster && poster !== finalItem.poster) {
+                        finalItem.poster = poster;
+                    }
                     setTimeout(() => {
                         if (run !== komiRouletteRun || !modal.classList.contains('active')) return;
                         modal.classList.remove('active');
                         openWatchModal(String(finalItem.id));
-                    }, 700);
-                }
+                    }, 600);
+                });
             }
             spinStep();
         }
