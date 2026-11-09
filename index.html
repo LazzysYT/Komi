@@ -3250,54 +3250,92 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         let komiRouletteRun = 0;
+        let komiRoulettePool = [];
+        let komiRouletteCatalogSize = -1;
+        let komiRouletteLastId = null;
         function randomAnimeWithAnimation() {
-            if (animeList.length === 0) return;
+            // Never limit random picks to titles with working posters: every anime in the
+            // catalog must be reachable, including entries with missing artwork.
+            const all = animeList.filter(item => item && item.id != null);
+            if (!all.length) {
+                if (typeof komiStatusFeedback === 'function') komiStatusFeedback('Каталог пока загружается.');
+                return;
+            }
             playSound();
             const modal = document.getElementById('randomRouletteModal');
             const imgEl = document.getElementById('rouletteImage');
             const titleEl = document.getElementById('rouletteTitle');
+            if (!modal || !imgEl || !titleEl) return;
             modal.classList.add('active');
-
             const run = ++komiRouletteRun;
-            let counter = 0;
-            const maxSteps = 12;
-            const candidates = animeList.filter(item => item.poster && /^https?:\/\//i.test(item.poster));
-            if (!candidates.length) { modal.classList.remove('active'); return; }
-            const fallback = 'anime-artwork.svg';
-            let lastId = null;
+            let imageToken = 0;
+            const fallback = './anime-artwork.svg';
+            const byId = new Map(all.map(item => [String(item.id), item]));
+            const items = [...byId.values()];
+            const chooseSample = (except) => {
+                if (items.length === 1) return items[0];
+                let chosen;
+                for (let n = 0; n < 6; n++) {
+                    chosen = items[Math.floor(Math.random() * items.length)];
+                    if (String(chosen.id) !== String(except)) break;
+                }
+                return String(chosen.id) === String(except)
+                    ? items.find(item => String(item.id) !== String(except)) : chosen;
+            };
+            // Shuffle without replacement so repeated clicks can eventually reach
+            // all titles instead of repeatedly showing a small subset.
+            if (!komiRoulettePool.length || komiRouletteCatalogSize !== items.length) {
+                komiRoulettePool = items.map(item => String(item.id));
+                for (let i = komiRoulettePool.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [komiRoulettePool[i], komiRoulettePool[j]] = [komiRoulettePool[j], komiRoulettePool[i]];
+                }
+                komiRouletteCatalogSize = items.length;
+            }
+            let finalId = komiRoulettePool.pop();
+            if (items.length > 1 && String(finalId) === String(komiRouletteLastId)) {
+                const alternative = komiRoulettePool.pop();
+                if (alternative) { komiRoulettePool.unshift(finalId); finalId = alternative; }
+            }
+            let finalItem = byId.get(String(finalId)) || chooseSample(komiRouletteLastId);
+            komiRouletteLastId = finalItem.id;
             function showPoster(item) {
-                titleEl.textContent = item.title || 'Аниме';
-                imgEl.onerror = () => { imgEl.onerror = null; imgEl.src = fallback; };
-                // Avoid showing the previous poster while the next image downloads.
-                imgEl.style.opacity = '0';
-                imgEl.onload = () => { if (run === komiRouletteRun) imgEl.style.opacity = '1'; };
-                imgEl.src = item.poster;
+                titleEl.textContent = item.title || item.originalTitle || 'Без названия';
+                const token = ++imageToken;
+                // Clear previous art first. A slow previous image cannot overwrite the new one.
+                imgEl.src = fallback;
+                imgEl.style.opacity = '1';
+                const poster = typeof item.poster === 'string' && /^https:\/\//i.test(item.poster.trim())
+                    ? item.poster.trim() : '';
+                if (!poster) return;
+                const preload = new Image();
+                preload.onload = () => {
+                    if (run === komiRouletteRun && token === imageToken && modal.classList.contains('active'))
+                        imgEl.src = poster;
+                };
+                preload.onerror = () => {};
+                preload.src = poster;
             }
-            function pick() {
-                const options = candidates.filter(item => item.id !== lastId);
-                const item = (options.length ? options : candidates)[Math.floor(Math.random() * (options.length || candidates.length))];
-                lastId = item.id;
-                return item;
-            }
-            let currentInterval = 50;
-
+            imgEl.onerror = () => {
+                imgEl.onerror = null;
+                imgEl.src = fallback;
+            };
+            let step = 0;
+            let lastSpinId = finalItem.id;
             function spinStep() {
-                if (run !== komiRouletteRun) return;
-                const randomItem = pick();
-                showPoster(randomItem);
-                counter++;
-
-                if (counter < maxSteps) {
-                    currentInterval += 10; 
-                    setTimeout(spinStep, currentInterval);
+                if (run !== komiRouletteRun || !modal.classList.contains('active')) return;
+                const item = step < 9 ? chooseSample(lastSpinId) : finalItem;
+                lastSpinId = item.id;
+                showPoster(item);
+                step++;
+                if (step < 10) {
+                    setTimeout(spinStep, 80 + step * 19);
                 } else {
-                    const finalItem = pick();
-                    showPoster(finalItem);
                     setTimeout(() => {
-                        if (run !== komiRouletteRun) return;
+                        if (run !== komiRouletteRun || !modal.classList.contains('active')) return;
                         modal.classList.remove('active');
-                        openWatchModal(finalItem.id);
-                    }, 400);
+                        openWatchModal(String(finalItem.id));
+                    }, 700);
                 }
             }
             spinStep();
