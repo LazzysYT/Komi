@@ -12,6 +12,35 @@ const path=require('node:path');
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    await page.goto(process.env.KOMI_TEST_URL || 'http://127.0.0.1:8765');
    await page.waitForFunction(()=>typeof bindKomiPlayer==='function');
+   const favicon=await page.locator('link[rel="icon"]').getAttribute('href');
+   assert.equal(favicon,'./icon.svg','Favicon must use a real static SVG file');
+   const faviconResponse=await page.request.get(new URL('icon.svg',page.url()).href);
+   assert.equal(faviconResponse.status(),200);
+   assert.ok((await faviconResponse.text()).includes('<svg'),'Favicon should serve valid SVG');
+   assert.equal(await page.locator('#rouletteImage').getAttribute('src'),'./anime-artwork.svg');
+   assert.equal(await page.locator('#rouletteImage').getAttribute('alt'),'Обложка случайного аниме');
+   await page.waitForFunction(()=>document.getElementById('authModal').hasAttribute('inert'));
+   const initialA11y=await page.evaluate(()=>({
+      modalHidden:document.getElementById('authModal').getAttribute('aria-hidden'),
+      modalInert:document.getElementById('authModal').hasAttribute('inert'),
+      drawerInert:document.getElementById('komiFriendsDrawer').hasAttribute('inert'),
+      drawerHidden:getComputedStyle(document.getElementById('komiFriendsDrawer')).visibility
+   }));
+   assert.equal(initialA11y.modalHidden,'true');
+   assert.equal(initialA11y.modalInert,true);
+   assert.equal(initialA11y.drawerInert,true);
+   assert.equal(initialA11y.drawerHidden,'hidden');
+   await page.evaluate(()=>openAuthModal('login'));
+   await page.waitForFunction(()=>!document.getElementById('authModal').hasAttribute('inert'));
+   await page.evaluate(()=>closeAuthModal());
+   await page.waitForFunction(()=>document.getElementById('authModal').hasAttribute('inert'));
+   await page.evaluate(()=>{location.hash='#shop'});
+   await page.waitForSelector('#anicoin-title');
+   await page.evaluate(()=>{location.hash='#catalog'});
+   await page.waitForFunction(()=>currentView==='catalog');
+   await page.evaluate(()=>{location.hash=''});
+   await page.waitForFunction(()=>currentView==='home');
+
    await page.evaluate(()=>{
     animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'./anime-artwork.svg',genres:['Драма'],year:2026,shikiRating:8,
       episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
