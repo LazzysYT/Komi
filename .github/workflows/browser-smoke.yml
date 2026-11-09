@@ -52,8 +52,10 @@ jobs:
           npx playwright install --with-deps chromium
       - name: Run desktop and mobile browser checks
         env:
-          KOMI_TEST_URL: ${{ github.event_name == 'pull_request' && github.head_ref == 'fix/final-stability-20261109' && 'https://komi-git-fix-final-stability-20261109-ukiyo6.vercel.app/' || 'https://komi-six.vercel.app/' }}
-        run: node scripts/browser-smoke.cjs
+          KOMI_TEST_URL: http://127.0.0.1:8787/
+        run: |
+          python3 -m http.server 8787 --bind 127.0.0.1 &
+          node scripts/browser-smoke.cjs
       - name: Run real two-account auth and RLS E2E (when secrets configured)
         if: ${{ env.KOMI_TEST_EMAIL_A != '' && env.KOMI_TEST_PASSWORD_A != '' && env.KOMI_TEST_EMAIL_B != '' && env.KOMI_TEST_PASSWORD_B != '' }}
         env:
