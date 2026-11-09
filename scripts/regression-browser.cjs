@@ -133,18 +133,36 @@ const path=require('node:path');
        const catalogBefore=animeList;
        const originalOpen=openWatchModal;
        let opened=null;
-       animeList=[{id:'posterless-title',title:'Аниме без постера',poster:null}];
+       animeList=[
+         {id:'not-playable',title:'Аниме без серий',poster:'https://media.test/not-playable.jpg',episodeCount:0,episodes:[]},
+         {id:'posterless-title',title:'Аниме без постера',poster:null,episodeCount:12}
+       ];
        openWatchModal=id=>{opened=String(id);};
        randomAnimeWithAnimation();
-       await new Promise(resolve=>setTimeout(resolve,3200));
+       await new Promise(resolve=>setTimeout(resolve,4800));
        const shown=document.getElementById('rouletteTitle').textContent;
        const source=document.getElementById('rouletteImage').getAttribute('src');
        animeList=catalogBefore;openWatchModal=originalOpen;
        return {opened,shown,source};
      });
-     assert.equal(random.opened,'posterless-title','Random anime must include entries with missing posters');
+     assert.equal(random.opened,'posterless-title','Random anime must include playable entries without posters, but exclude zero-episode entries');
      assert.equal(random.shown,'Аниме без постера');
-     assert.ok(random.source.includes('anime-artwork.svg'));
+     assert.ok(random.source.includes('anime-artwork.svg'),'When artwork providers fail, use neutral placeholder');
+     assert.ok(!/not-playable/.test(random.opened));
+   }
+   if(width===1440) {
+     const noPlayable = await page.evaluate(async()=>{
+       const oldList=animeList;
+       animeList=[{id:'empty-anime',title:'Нет серий',episodeCount:0,episodes:[]}];
+       randomAnimeWithAnimation();
+       const status=document.getElementById('rouletteTitle').textContent;
+       const active=document.getElementById('randomRouletteModal').classList.contains('active');
+       animeList=oldList;
+       document.getElementById('randomRouletteModal').classList.remove('active');
+       return {status,active};
+     });
+     assert.ok(noPlayable.status.includes('нет аниме с доступными сериями'));
+     assert.equal(noPlayable.active,true);
    }
    await page.screenshot({path:path.join(output,`regression-${width}.png`),fullPage:true});
    assert.deepEqual(errors,[]);console.log('PASS browser',width,'progress/source/search/auth/close race/overflow');await page.close();
