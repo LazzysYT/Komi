@@ -2085,7 +2085,12 @@ async function loadDataFromCloud(attempt = 0) {
 
         let presenceRequestInFlight = false;
         async function updateOnlinePresence() {
-            if (!_supabase || document.hidden || presenceRequestInFlight) return;
+            if (!_supabase || !navigator.onLine) {
+                const label = document.getElementById('onlineCountText');
+                if (label) label.textContent = navigator.onLine ? 'Онлайн: недоступно' : 'Нет соединения';
+                return;
+            }
+            if (document.hidden || presenceRequestInFlight) return;
             presenceRequestInFlight = true;
             try {
                 const now = Date.now();
