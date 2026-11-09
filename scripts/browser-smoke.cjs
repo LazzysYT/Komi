@@ -14,10 +14,24 @@ fs.mkdirSync(output, { recursive: true });
     let response;
     try {
       response = await page.goto(BASE, { waitUntil: 'domcontentloaded', timeout: 45000 });
-      await page.waitForFunction(
-        () => typeof catalogInitialLoadComplete !== 'undefined' && catalogInitialLoadComplete,
-        null, { timeout: 60000 }
-      );
+      try {
+        await page.waitForFunction(
+          () => typeof catalogInitialLoadComplete !== 'undefined' && catalogInitialLoadComplete,
+          null, { timeout: 15000 }
+        );
+      } catch (waitError) {
+        const diagnostic = await page.evaluate(() => ({
+          url: location.href,
+          title: document.title,
+          snippet: document.body?.innerText?.slice(0, 180),
+          catalogLoaded: typeof catalogInitialLoadComplete === 'undefined' ? 'undefined' : catalogInitialLoadComplete,
+          hasSupabase: typeof _supabase !== 'undefined' && !!_supabase,
+          catalogSize: typeof animeList === 'undefined' ? -1 : animeList.length
+        })).catch(e => ({ diagnosticError: e.message }));
+        throw new Error('Catalog load timeout: ' + JSON.stringify({
+          status: response?.status(), ...diagnostic, pageErrors: errors.slice(0, 4)
+        }));
+      }
       const catalogChecks = await page.evaluate(async () => {
         const playable = animeList.find(anime => Number(anime.episodeCount) > 0);
         const allCardOnly = animeList.every(anime => Array.isArray(anime.episodes) && anime.episodes.length === 0);
