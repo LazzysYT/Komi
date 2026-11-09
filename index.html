@@ -3135,7 +3135,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (error) throw error;
                 if (!saved && currentUser?.authUserId === authUserId) {
                     ({ data: saved, error } = await _supabase.from('komi_profiles')
-                        .insert({ user_id: authUserId, username, ...fields }).select(columns).single());
+                        .insert({ user_id: authUserId, username: komiSafeAccountUsername(username, authUserId), ...fields }).select(columns).single());
                     if (error) throw error;
                 }
                 if (!saved || currentUser?.authUserId !== authUserId) return;
@@ -3779,6 +3779,11 @@ const adminList = []; // No client-side username grants administrator privileges
             if (authUser.app_metadata?.provider !== 'google' && /^[A-Za-z0-9_]{3,24}$/.test(requested) && !/^google_/i.test(requested)) return requested;
             return 'google_' + authUser.id.replace(/[^a-zA-Z0-9_-]/g, '');
         }
+        function komiSafeAccountUsername(username, authUserId) {
+            const value = String(username || '').trim();
+            if (/^[A-Za-z0-9_]{3,48}$/.test(value)) return value;
+            return 'google_' + String(authUserId || '').replace(/[^a-fA-F0-9]/g, '').slice(0, 32);
+        }
         function applySavedKomiProfile(username, profile) {
             userProfiles[username] = {
                 ...userProfiles[username],
@@ -3829,7 +3834,7 @@ const adminList = []; // No client-side username grants administrator privileges
                         if (currentUser?.authUserId === session.user.id) applySavedKomiProfile(username, savedProfile);
                     } else {
                         const { error: createError } = await _supabase.from('komi_profiles').insert({
-                            user_id: session.user.id, username,
+                            user_id: session.user.id, username: komiSafeAccountUsername(username, session.user.id),
                             display_name: String(session.user.user_metadata?.full_name || session.user.user_metadata?.username || 'Пользователь Komi').slice(0, 40),
                             avatar_url: userProfiles[username]?.avatar || null,
                             bio: userProfiles[username]?.status || 'Новичок ★'
