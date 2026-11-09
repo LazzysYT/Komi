@@ -187,7 +187,12 @@ async function enterParty(room) {
                         <p class="komi-party-reaction-title">Быстрые реакции</p>
                         <div id="partyReactions"></div>
                     </div>
-                    ${host && room.private ? '<form id="partyInvite"><input name="username" required placeholder="Ник для приглашения" aria-label="Ник пользователя"><button class="btn-secondary">Пригласить</button></form>' : ''}
+                    ${host ? `<div class="komi-party-invites">
+                        <h4>Пригласить друга</h4>
+                        <p>Выбери друга из Komi или введи его ник. Приглашённый увидит комнату в разделе Watch Party.</p>
+                        <div id="partyFriendsList" class="komi-party-friends-list" role="group" aria-label="Друзья для приглашения">Загружаем друзей…</div>
+                        <form id="partyInvite"><input name="username" required maxlength="48" placeholder="Ник пользователя Komi" aria-label="Ник пользователя"><button class="btn-secondary">Пригласить</button></form>
+                    </div>` : ''}
                 </section>
             </div>
         </div>
@@ -348,12 +353,78 @@ async function enterParty(room) {
                 publish(loadedOption, video.currentTime, false);
             }
         };
+        const friendList = document.getElementById('partyFriendsList');
+        if (friendList && currentUser?.authUserId) {
+            // Only confirmed Supabase friendships; legacy local friend names are not trusted.
+            (async () => {
+                const owner = currentUser.authUserId;
+                try {
+                    const {data:links,error:linkError} = await _supabase.from('komi_friendships')
+                        .select('user_a,user_b');
+                    if (linkError) throw linkError;
+                    const ids = [...new Set((links || [])
+                        .filter(link => link.user_a === owner || link.user_b === owner)
+                        .map(link => link.user_a === owner ? link.user_b : link.user_a))];
+                    const response = ids.length
+                        ? await _supabase.from('komi_profiles').select('user_id,username,display_name,avatar_url').in('user_id',ids)
+                        : {data:[],error:null};
+                    if (response.error) throw response.error;
+                    if (!isActive() || owner !== currentUser?.authUserId || !friendList.isConnected) return;
+                    friendList.replaceChildren();
+                    if (!response.data?.length) {
+                        friendList.textContent = 'Пока нет подтверждённых друзей. Можно пригласить по нику ниже.';
+                    }
+                    for (const profile of response.data || []) {
+                        if (!profile.username) continue;
+                        const row = document.createElement('div');
+                        row.className = 'komi-party-friend-row';
+                        const avatar = document.createElement('span');
+                        avatar.className = 'komi-party-friend-avatar';
+                        if (profile.avatar_url && /^https:\/\//i.test(profile.avatar_url)) {
+                            const image = document.createElement('img');
+                            image.alt = '';
+                            image.loading = 'lazy';
+                            image.src = profile.avatar_url;
+                            avatar.append(image);
+                        } else avatar.textContent = (profile.display_name || profile.username).charAt(0).toUpperCase();
+                        const identity = document.createElement('div');
+                        identity.className = 'komi-party-friend-identity';
+                        const name = document.createElement('strong');
+                        name.textContent = profile.display_name?.trim() || profile.username;
+                        const username = document.createElement('small');
+                        username.textContent = '@' + profile.username;
+                        identity.append(name,username);
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'komi-party-friend-invite';
+                        button.textContent = 'Пригласить';
+                        button.addEventListener('click', async () => {
+                            if (!isActive() || button.disabled) return;
+                            button.disabled = true;
+                            try {
+                                await partyCall('invite', room.id, {username:profile.username});
+                                if (!isActive()) return;
+                                button.textContent = 'Приглашён';
+                                status.textContent = 'Приглашение для ' + (profile.display_name || profile.username) + ' создано.';
+                            } catch (error) {
+                                button.disabled = false;
+                                status.textContent = 'Приглашение: ' + error.message;
+                            }
+                        });
+                        row.append(avatar,identity,button);
+                        friendList.append(row);
+                    }
+                } catch (error) {
+                    if (isActive() && friendList.isConnected) friendList.textContent = 'Не удалось загрузить друзей: ' + error.message;
+                }
+            })();
+        }
         const invite = document.getElementById('partyInvite');
         if (invite) invite.onsubmit = async event => {
             event.preventDefault();
             try {
                 await partyCall('invite', room.id, { username: invite.elements.username.value.trim() });
-                status.textContent = 'Приглашение выдано. Комната появится у пользователя в списке.';
+                status.textContent = 'Приглашение отправлено. Друг увидит комнату в разделе Watch Party.';
                 invite.reset();
             } catch (error) { status.textContent = error.message; }
         };
