@@ -253,3 +253,8 @@ header .logo-container .logo-text {
 @media(prefers-reduced-motion:reduce) {
   #randomRouletteModal #rouletteContainer.is-loading::after{animation:none}
 }
+
+/* Give the random picker a visible retry and escape path on slow/offline loads. */
+#randomRouletteModal .komi-roulette-actions {display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+#randomRouletteModal .komi-roulette-actions button {min-height:42px;padding:10px 16px;border-radius:13px;font-weight:700}
+#randomRouletteModal .komi-roulette-actions [hidden] {display:none !important}
