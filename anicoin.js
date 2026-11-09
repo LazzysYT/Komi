@@ -7,6 +7,7 @@ let aniCoinWallet;
 let aniCoinOwner;
 let aniCoinStatus = '';
 let aniCoinPlayer;
+let aniCoinWatchQueue = Promise.resolve();
 
 async function aniCoinRequest(action, options = {}) {
     const owner = currentUser?.authUserId;
@@ -63,36 +64,66 @@ function renderAniCoinShop(container) {
         </section>`;
 }
 
+// Count real playback time only for the site's HTML5 player. Third-party iframes
+// do not expose trustworthy playback events and cannot earn rewards.
+function aniCoinStartTracking(video) {
+    const owner = currentUser?.authUserId;
+    if (!owner || !video || video.paused || video.seeking || video.ended || document.hidden) return;
+    if (aniCoinPlayer?.video === video && aniCoinPlayer.owner === owner) return;
+    aniCoinPlayer = {
+        video, owner, session: crypto.randomUUID(), last: performance.now(),
+        position: video.currentTime, pulse: performance.now(), seconds: 0,
+        ready: false, sending: false
+    };
+    const sample = aniCoinPlayer;
+    aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
+        await aniCoinRequest('watch', { p_session: sample.session, p_seconds: 0 });
+        sample.ready = true;
+    }).catch(() => {
+        if (aniCoinPlayer === sample) aniCoinStatus = 'Не удалось подключить начисление AniCoin.';
+    });
+}
+
+document.addEventListener('playing', event => {
+    if (event.target instanceof HTMLVideoElement &&
+        ['animeVideoPlayer', 'partyVideoElement'].includes(event.target.id)) {
+        aniCoinStartTracking(event.target);
+    }
+}, true);
+
 document.addEventListener('timeupdate', event => {
     const video = event.target;
-    if (!(video instanceof HTMLVideoElement) || !['animeVideoPlayer', 'partyVideoElement'].includes(video.id)) return;
-    const owner = currentUser?.authUserId;
-    if (!owner || video.paused || video.seeking || video.ended || document.hidden) {
-        if (aniCoinPlayer?.video === video) aniCoinPlayer = null;
-        return;
-    }
-    const now = performance.now();
-    if (aniCoinPlayer?.video !== video || aniCoinPlayer.owner !== owner) {
-        aniCoinPlayer = { video, owner, session: crypto.randomUUID(), last: now, position: video.currentTime, pulse: now, seconds: 0 };
-        aniCoinRequest('watch', { p_session: aniCoinPlayer.session }).catch(() => {});
-        return;
-    }
+    if (!(video instanceof HTMLVideoElement) ||
+        !['animeVideoPlayer', 'partyVideoElement'].includes(video.id)) return;
+    if (video.paused || video.seeking || video.ended || document.hidden || !currentUser?.authUserId) return;
+    aniCoinStartTracking(video);
     const sample = aniCoinPlayer;
+    if (!sample || sample.video !== video) return;
+    const now = performance.now();
     const elapsed = (now - sample.last) / 1000;
     const movement = video.currentTime - sample.position;
-    if (elapsed <= 2 && movement > 0 && movement <= elapsed * video.playbackRate + 0.3) {
+    // A seek, speed exploit or inactive tab never counts as playback.
+    if (elapsed > 0 && elapsed <= 3 && movement > 0 &&
+        video.playbackRate > 0 && video.playbackRate <= 1.05 &&
+        movement <= elapsed * video.playbackRate + 0.35) {
         sample.seconds += Math.min(elapsed, movement / video.playbackRate);
     }
     sample.last = now;
     sample.position = video.currentTime;
-    if (now - sample.pulse < 15000) return;
-    sample.pulse = now;
+    if (!sample.ready || sample.sending || now - sample.pulse < 12000) return;
     const seconds = Math.min(20, Math.floor(sample.seconds));
-    sample.seconds -= seconds;
-    aniCoinRequest('watch', { p_session: sample.session, p_seconds: seconds }).catch(() => {});
+    if (!seconds) return;
+    sample.sending = true;
+    sample.pulse = now;
+    aniCoinWatchQueue = aniCoinWatchQueue.catch(() => {}).then(async () => {
+        await aniCoinRequest('watch', { p_session: sample.session, p_seconds: seconds });
+        sample.seconds = Math.max(0, sample.seconds - seconds);
+    }).catch(() => {
+        aniCoinStatus = 'Ошибка начисления. Проверяем соединение…';
+    }).finally(() => { sample.sending = false; });
 }, true);
 
-for (const event of ['seeking', 'pause', 'ended', 'emptied']) {
+for (const event of ['seeking', 'seeked', 'pause', 'ended', 'emptied', 'ratechange']) {
     document.addEventListener(event, change => {
         if (aniCoinPlayer?.video === change.target) {
             aniCoinPlayer.last = performance.now();
@@ -101,7 +132,10 @@ for (const event of ['seeking', 'pause', 'ended', 'emptied']) {
     }, true);
 }
 document.addEventListener('visibilitychange', () => {
-    if (document.hidden && aniCoinPlayer) aniCoinPlayer.last = -Infinity;
+    if (document.hidden && aniCoinPlayer) {
+        aniCoinPlayer.last = performance.now();
+        aniCoinPlayer.position = aniCoinPlayer.video.currentTime;
+    }
 });
 
 window.addEventListener('hashchange', () => {
