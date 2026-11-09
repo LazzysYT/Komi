@@ -42,6 +42,8 @@ fs.mkdirSync(output,{recursive:true});
         await page.locator('#sideFriendsBtn').click({timeout:10000});
         await page.waitForFunction(()=>document.getElementById('komiFriendsDrawer').classList.contains('open'));
         await page.waitForFunction(()=>!document.getElementById('komiFriendsDrawer').hasAttribute('inert'));
+        // The drawer transitions visibility over ~280ms; wait for the actual visible frame.
+        await page.waitForFunction(()=>getComputedStyle(document.getElementById('komiFriendsDrawer')).visibility==='visible',null,{timeout:8000});
         const drawer=await page.evaluate(()=>({
           visible:getComputedStyle(document.getElementById('komiFriendsDrawer')).visibility,
           hasSearch:!!document.getElementById('komiFriendsSearch'),
