@@ -12,6 +12,7 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    await page.exposeFunction('testPartyRpc',async(action,args)=>{
     if(action==='state') {assert.equal(owner,'host');Object.assign(state,args,{changed_at:new Date().toISOString()});}
+    if(action==='invite') state.invited = args.username;
     if(action==='close') return null;
     return {...state,server_now:new Date().toISOString()};
    });
@@ -20,7 +21,12 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
    await page.evaluate(async({owner,state})=>{
     currentUser={authUserId:owner,username:owner};
     animeList=[{id:'1',title:'Тест',komiDetailsLoaded:true,episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}}]}];
-    _supabase={rpc:async(name,{action,args})=>({data:await window.testPartyRpc(action,args)})};
+    _supabase={
+      rpc:async(name,{action,args})=>({data:await window.testPartyRpc(action,args)}),
+      from:table=>({select:()=>table==='komi_friendships'
+        ? Promise.resolve({data:[{user_a:'host',user_b:'friend-id'}],error:null})
+        : {in:()=>Promise.resolve({data:[{user_id:'friend-id',username:'friend_test',display_name:'Тестовый друг',avatar_url:null}],error:null})}})
+    };
     await enterParty(state);
     const video=document.getElementById('partyVideoElement');
     Object.defineProperty(video,'readyState',{configurable:true,value:4});
@@ -29,6 +35,11 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
     video.dispatchEvent(new Event('loadedmetadata'));
    },{owner,state:{...state,server_now:new Date().toISOString()}});
   }
+  await pages[0].locator('.komi-party-friend-invite').waitFor({timeout:8000});
+  assert.equal(await pages[0].locator('.komi-party-friend-row').count(),1);
+  await pages[0].locator('.komi-party-friend-invite').click();
+  assert.equal(state.invited,'friend_test');
+  assert.equal(await pages[0].locator('.komi-party-friend-invite').innerText(),'Приглашён');
   const hostPage=pages[0];
   const cinema=await hostPage.evaluate(()=>{
     const modal=document.getElementById('watchPartyModalContent');
