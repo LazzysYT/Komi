@@ -15,6 +15,7 @@
     <meta name="twitter:card" content="summary">
     <link rel="canonical" href="https://komianime.online/">
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
+    <link rel="stylesheet" href="./komi-comments.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
@@ -3161,7 +3162,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                     <div class="wall-message-item">
                                         <div class="wall-message-author" onclick="playSound(); openProfile(window.komiWallAuthorByIndex[${mIdx}])">
                                             <img src="${senderAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                                            <span>${escapeFriendHtml(m.author)}</span>
+                                            <span>${escapeFriendHtml(userProfiles[m.author]?.displayName || m.author)}</span>
                                             <span style="font-size:10px; color:var(--text-muted); margin-left:auto; font-weight:normal;">${escapeFriendHtml(m.time)}</span>
                                             ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">Удалить</button>` : ''}
                                         </div>
@@ -3307,7 +3308,7 @@ const adminList = []; // No client-side username grants administrator privileges
             });
 
             if (profileOwner !== currentUser.username) {
-                addNotification(profileOwner, `${currentUser.username} оставил сообщение на вашей стене.`);
+                addNotification(profileOwner, `${userProfiles[currentUser.username]?.displayName || currentUser.username} оставил сообщение на вашей стене.`);
             }
 
             saveData();
@@ -4415,7 +4416,10 @@ const adminList = []; // No client-side username grants administrator privileges
             const source = KomiPlayerCore.source(url);
             if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии нет доступного плеера. Выберите другой источник.</div>';
             if (source.kind === 'video' || source.kind === 'hls') return '<div class="player-box"><video id="animeVideoPlayer" aria-label="Видеоплеер аниме" controls preload="metadata" playsinline></video></div>';
-            return '<div class="player-box"><iframe title="Видеоплеер аниме" src="'+escapeFriendHtml(source.url)+'" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0"></iframe></div><p class="komi-player-hint">Выбранная серия сохраняется. Точная позиция во внешнем плеере может быть недоступна.</p>';
+            // Limit third-party popups. In-player ads are controlled by the external provider.
+            const external = new URL(source.url, location.href).origin !== location.origin;
+            const sandbox = external ? ' sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"' : '';
+            return '<div class="player-box"><iframe title="Видеоплеер аниме" src="'+escapeFriendHtml(source.url)+'"'+sandbox+' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0"></iframe></div><p class="komi-player-hint">Всплывающие окна внешних плееров ограничены. Реклама внутри видео зависит от провайдера.</p>';
         }
         function showKomiPlayerError() {
             const wrapper=document.querySelector('#watchModalContent .player-wrapper');
@@ -4681,7 +4685,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 }
                 if (requestToken !== komiDetailOpenToken || !modal.classList.contains('active')) return;
             }
-            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); return; }
+            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); window.KomiComments?.mount(anime.id); return; }
 
             const seasonsMap = {};
             anime.episodes.forEach((ep, idx) => {
@@ -4704,8 +4708,9 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!sourceNames.length) sourceNames.push('Недоступно');
             let preferredSource;
             try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
-            activePlayerSource = sourceNames.includes(preferredSource) ? preferredSource
-                : sourceNames.includes(activePlayerSource) ? activePlayerSource : sourceNames[0];
+            // Prefer built-in HTML5 video or HLS when available, but keep explicit viewer choice.
+            const directSource = sourceNames.find(name => ['video', 'hls'].includes(komiPlayerKind(sources[name])));
+            activePlayerSource = sourceNames.includes(preferredSource) ? preferredSource : (directSource || sourceNames[0]);
             const activeUrl = sources[activePlayerSource] || '';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
@@ -4806,6 +4811,7 @@ const adminList = []; // No client-side username grants administrator privileges
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
             renderAnimeExtras(anime, seasonNumbers);
+            window.KomiComments?.mount(anime.id);
         }
 
         function saveProgress(animeId, video, force = false) {
@@ -4918,6 +4924,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (event.persisted) queueKomiSessionRestore();
         });
     </script>
+    <script src="./komi-comments.js"></script>
     <script src="./accessibility.js"></script>
     <script src="./player-runtime.js"></script>
     <script src="./anime-details.js"></script>
