@@ -265,6 +265,41 @@ const path=require('node:path');
      });
      assert.ok(noPlayable.status.includes('нет аниме с доступными сериями'));
      assert.equal(noPlayable.active,true);
+     const retry=await page.locator('#rouletteRetry').isVisible();
+     assert.equal(retry,true,'Random picker should offer a retry on no playable anime');
+     const close=await page.evaluate(()=>{
+       const before=komiRouletteRun;
+       closeKomiRoulette();
+       return {closed:!document.getElementById('randomRouletteModal').classList.contains('active'),runAdvanced:komiRouletteRun>before};
+     });
+     assert.equal(close.closed,true,'Random picker close must work without waiting for timer');
+     assert.equal(close.runAdvanced,true,'Closing must invalidate earlier roulette callbacks');
+   }
+   if (width === 1440) {
+     const presence=await page.evaluate(async()=>{
+       const priorClient=_supabase, priorUser=currentUser;
+       presenceRequestInFlight=false;
+       currentUser=null;
+       _supabase={
+         from:()=>({
+           upsert:()=>({abortSignal:signal=>new Promise(resolve=>{
+             if(signal.aborted)resolve({error:{message:'Request cancelled'}});
+             else signal.addEventListener('abort',()=>resolve({error:{message:'Request cancelled'}}),{once:true});
+           })})
+         })
+       };
+       const status=document.getElementById('onlineCountText');
+       status.textContent='Онлайн: проверяем…';
+       try {
+         await updateOnlinePresence();
+         return {label:status.textContent,inFlight:presenceRequestInFlight};
+       } finally {
+         _supabase=priorClient;
+         currentUser=priorUser;
+       }
+     });
+     assert.equal(presence.label,'Онлайн: —','Hung online request must time out instead of staying on checking');
+     assert.equal(presence.inFlight,false,'Timed-out online request must release the lock');
    }
    await page.screenshot({path:path.join(output,`regression-${width}.png`),fullPage:true});
    assert.deepEqual(errors,[]);console.log('PASS browser',width,'progress/source/search/auth/close race/overflow');await page.close();
