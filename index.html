@@ -2105,6 +2105,7 @@ async function loadDataFromCloud(attempt = 0) {
         function toggleNotifications() {
             const dropdown = document.getElementById('notifDropdown');
             dropdown.classList.toggle('active');
+            if (dropdown.classList.contains('active')) loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
             if (currentUser && userNotifications[currentUser.username]) {
                 userNotifications[currentUser.username].forEach(n => n.read = true);
                 saveNotificationsToCloud();
@@ -2122,7 +2123,8 @@ async function loadDataFromCloud(attempt = 0) {
         function updateNotificationsUI() {
             if (!currentUser) return;
             const notifs = userNotifications[currentUser.username] || [];
-            const unreadCount = notifs.filter(n => !n.read).length;
+            const requests = protectedFriendRequests.filter(row => row.owner === currentUser.authUserId);
+            const unreadCount = notifs.filter(n => !n.read).length + requests.length;
             const badge = document.getElementById('notifBadge');
             
             if (unreadCount > 0) {
@@ -2133,8 +2135,13 @@ async function loadDataFromCloud(attempt = 0) {
             }
 
             const listContainer = document.getElementById('notifListContainer');
-            if (notifs.length > 0) {
-                listContainer.innerHTML = notifs.map((n, idx) => `
+            if (notifs.length || requests.length) {
+                const requestMarkup = requests.map(row =>
+                    '<div class="notif-item">' + escapeFriendHtml(row.name) + ' хочет добавить вас в друзья. ' +
+                    '<button class="btn-glow" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', true)">Принять</button> ' +
+                    '<button class="btn-danger" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', false)">Отклонить</button></div>'
+                ).join('');
+                listContainer.innerHTML = requestMarkup + notifs.map((n, idx) => `
                     <div class="notif-item">
                         <span>${n.text}</span>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; flex-wrap:wrap; gap:6px;">
@@ -3049,9 +3056,65 @@ const adminList = []; // No client-side username grants administrator privileges
             spinStep();
         }
 
-        function sendFriendRequest(targetUsername) {
+        let protectedFriendRequests = [];
+        async function loadProtectedFriends() {
+            const uid = currentUser?.authUserId;
+            if (!uid || !_supabase) return;
+            const [requests, friendships] = await Promise.all([
+                _supabase.from('komi_friend_requests').select('id,sender_id').eq('receiver_id', uid).eq('status', 'pending'),
+                _supabase.from('komi_friendships').select('user_a,user_b')
+            ]);
+            if (requests.error || friendships.error) throw requests.error || friendships.error;
+            const friendIds = friendships.data.map(row => row.user_a === uid ? row.user_b : row.user_a);
+            const ids = [...new Set([...friendIds, ...requests.data.map(row => row.sender_id)])];
+            const profiles = ids.length
+                ? await _supabase.from('komi_profiles').select('user_id,username').in('user_id', ids)
+                : { data: [] };
+            if (profiles.error) throw profiles.error;
+            if (currentUser?.authUserId !== uid) return;
+            const names = new Map(profiles.data.map(row => [row.user_id, row.username]));
+            const protectedFriends = friendIds.map(id => names.get(id)).filter(Boolean);
+            protectedFriendRequests = requests.data.map(row => ({
+                owner: uid, id: row.id, name: names.get(row.sender_id) || 'Пользователь'
+            }));
+            userFriends[currentUser.username] = [...new Set([...(userFriends[currentUser.username] || []), ...protectedFriends])];
+            updateNotificationsUI();
+            renderFriendsDrawer();
+        }
+
+        async function respondProtectedFriendRequest(id, accept) {
+            try {
+                const { error } = await _supabase.rpc('komi_respond_friend_request', {
+                    p_request_id: id, p_accept: accept
+                });
+                if (error) throw error;
+                await loadProtectedFriends();
+            } catch (error) {
+                alert('Не удалось обработать заявку: ' + error.message);
+            }
+        }
+
+        async function sendFriendRequest(targetUsername) {
             if (!currentUser) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
+            if (currentUser.authUserId) {
+                const sender = currentUser.authUserId;
+                try {
+                    const { data: target, error: lookupError } = await _supabase.from('komi_profiles')
+                        .select('user_id').eq('username', targetUsername).maybeSingle();
+                    if (lookupError) throw lookupError;
+                    if (!target) throw new Error('У пользователя нет профиля Komi.');
+                    if (currentUser?.authUserId !== sender) return;
+                    if (target.user_id === sender || (userFriends[currentUser.username] || []).includes(targetUsername)) return;
+                    const { error } = await _supabase.from('komi_friend_requests')
+                        .insert({ sender_id: sender, receiver_id: target.user_id });
+                    if (error) throw error;
+                    alert('Заявка отправлена.');
+                } catch (error) {
+                    alert('Не удалось отправить заявку: ' + error.message);
+                }
+                return;
+            }
             if (!userProfiles[targetUsername]) { alert('Пользователь не найден'); return; }
             if ((userFriends[currentUser.username] || []).includes(targetUsername)) { alert('Вы уже друзья'); return; }
             if ((userNotifications[targetUsername] || []).some(n=>n.friendRequestFrom===currentUser.username)) { alert('Заявка уже отправлена'); return; }
@@ -3529,6 +3592,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     }
                 } catch (profileError) { console.warn('Profile sync:', profileError); }
                 await loadAuthenticatedAnimeData();
+                loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
