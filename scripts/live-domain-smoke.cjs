@@ -39,18 +39,38 @@ fs.mkdirSync(output,{recursive:true});
         assert.ok(initial.canonical.startsWith(base),'Canonical URL should match the public domain');
         assert.ok(initial.cardCount>0,'Anime catalog should contain real cards');
         assert.equal(initial.overflow,false,'Page should not overflow horizontally');
+        // Verify the actual production asset response, not an assumed Vite/public path.
+        const posterResponse=await page.request.get(new URL('anime-artwork.svg',base).href,{timeout:15000});
+        assert.equal(posterResponse.status(),200,'Random anime fallback must be publicly served');
+        assert.ok((posterResponse.headers()['content-type']||'').includes('image/svg+xml'),
+          'Random anime artwork must be served as SVG, not an HTML fallback');
+        const posterText=await posterResponse.text();
+        assert.ok(posterText.includes('<svg')&&posterText.includes('</svg>'),'Poster fallback must be valid SVG markup');
+        await page.waitForFunction(()=>{
+          const image=document.getElementById('rouletteImage');
+          return image?.complete && image.naturalWidth>0;
+        },null,{timeout:12000});
+        assert.ok((await page.locator('#rouletteImage').getAttribute('src')).endsWith('anime-artwork.svg'));
         const socials=await page.evaluate(()=>Array.from(document.querySelectorAll('nav[aria-label="Социальные сети Komi Anime"] a')).map(link=>{
-          const icon=link.querySelector('svg path');
+          const svg=link.querySelector('svg');
+          const icon=svg?.querySelector('path');
           const box=link.getBoundingClientRect();
+          const svgBox=svg?.getBoundingClientRect();
           const style=getComputedStyle(link);
+          const svgStyle=svg?getComputedStyle(svg):null;
           return {href:link.href,ariaLabel:link.getAttribute('aria-label'),hasSvg:Boolean(icon),
-            width:box.width,height:box.height,visibility:style.visibility,display:style.display};
+            width:box.width,height:box.height,visibility:style.visibility,display:style.display,
+            svgWidth:svgBox?.width||0,svgHeight:svgBox?.height||0,svgVisibility:svgStyle?.visibility||'hidden',
+            pathArea:icon?Math.abs(icon.getBBox().width*icon.getBBox().height):0};
         }));
         assert.equal(socials.length,2,'TikTok and Telegram links must exist');
         for (const link of socials) {
           assert.ok(link.hasSvg,'Social link must have a rendered SVG icon');
           assert.ok(link.width>=30&&link.height>=30,'Social links must have a usable click target');
           assert.ok(link.visibility!=='hidden'&&link.display!=='none','Social icons must be visible');
+          assert.ok(link.svgWidth>=16&&link.svgHeight>=16,'Social SVG must have visible rendered size');
+          assert.equal(link.svgVisibility,'visible','Social SVG itself must not be CSS-hidden');
+          assert.ok(link.pathArea>10,'Social SVG should contain drawable path geometry');
         }
         const adminDisabled=await page.evaluate(()=>{
           const originalAlert=window.alert;
@@ -82,6 +102,18 @@ fs.mkdirSync(output,{recursive:true});
           'Closed friends drawer must be hidden from assistive technologies');
         await page.evaluate(()=>openWatchPartyHub());
         await page.waitForFunction(()=>document.getElementById('authModal').classList.contains('active'));
+        const google=page.locator('#authModal .komi-google-btn');
+        assert.equal(await google.isVisible(),true,'Google sign-in must have a visible button');
+        assert.ok((await google.innerText()).includes('Google'),'Google sign-in must have readable text');
+        assert.equal(await page.locator('#tabLoginBtn').isVisible(),true);
+        assert.equal(await page.locator('#tabRegisterBtn').isVisible(),true);
+        assert.equal(await page.locator('#loginFormContainer button[type="submit"]').isVisible(),true,
+          'Komi sign-in submit button must be visible');
+        await page.locator('#tabRegisterBtn').click();
+        assert.equal(await page.locator('#registerFormContainer button[type="submit"]').isVisible(),true,
+          'Registration submit button must appear when switching tabs');
+        await page.locator('#tabLoginBtn').click();
+        assert.equal(await page.locator('#loginFormContainer button[type="submit"]').isVisible(),true);
         await page.evaluate(()=>closeAuthModal());
         await page.evaluate(()=>{location.hash='#shop'});
         await page.waitForSelector('#anicoin-title',{timeout:15000});
