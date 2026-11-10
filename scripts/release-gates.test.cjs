@@ -41,7 +41,7 @@ test('the applied migration version has exactly one file in GitHub', () => {
 
 test('account folders use owner-only RLS and are an additive release',()=>{
   const sql=fs.readFileSync(path.join(root,
-    'supabase/migrations/20261110120000_komi_account_custom_folders.sql'),'utf8');
+    'supabase/migrations/20261110113722_komi_account_custom_folders.sql'),'utf8');
   for(const table of ['komi_custom_folders','komi_folder_items']){
     assert.match(sql,new RegExp('alter table public\\.'+table+' enable row level security','i'));
     assert.match(sql,new RegExp('revoke all on public\\.'+table+' from public, anon, authenticated','i'));
