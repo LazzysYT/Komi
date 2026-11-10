@@ -3024,6 +3024,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
                             ${customFolderNames.map((fname,i) => `
                                 <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab=window.komiProfileFolderNames[${i}]; render()"> ${safeProfileText(fname)} (${customFolders[fname].length})</button>
+                                ${isMe ? `<button type="button" class="btn-danger" style="padding:4px 7px;border-radius:8px" aria-label="Удалить папку ${safeProfileText(fname)}" title="Удалить папку" onclick="deleteCustomFolder(window.komiProfileFolderNames[${i}])">×</button>` : ''}
                             `).join('')}
                             ${isMe ? `
                                 <div style="display:flex; gap:5px; margin-left:auto; align-items:center;">
@@ -3241,6 +3242,34 @@ const adminList = []; // No client-side username grants administrator privileges
                 komiStatusFeedback('Папка создана.');
             } catch (error) {
                 if (currentUser?.authUserId === owner) komiStatusFeedback('Не удалось создать папку. ' + error.message);
+            } finally {
+                pendingFolderWrites.delete(key);
+            }
+        }
+
+        async function deleteCustomFolder(folderName) {
+            if (!currentUser?.authUserId || !_supabase) { openAuthModal('login'); return; }
+            const {username,authUserId:owner} = currentUser;
+            if (!komiFolderNameAllowed(folderName) ||
+                !Object.prototype.hasOwnProperty.call(userCustomFolders[username] || {},folderName)) return;
+            if (!confirm('Удалить папку «' + folderName + '» и её записи? Аниме останутся в каталоге.')) return;
+            const key = owner + ':folder:' + folderName;
+            if (pendingFolderWrites.has(key)) return;
+            pendingFolderWrites.add(key);
+            try {
+                const {data,error} = await _supabase.from('komi_custom_folders').delete()
+                    .eq('user_id',owner).eq('name',folderName).select('name');
+                if (error) throw error;
+                if (!Array.isArray(data) || !data.some(row=>row.name===folderName))
+                    throw new Error('Сервер не подтвердил удаление папки.');
+                if (currentUser?.authUserId !== owner) return;
+                delete userCustomFolders[username][folderName];
+                if (profileActiveTab === folderName) profileActiveTab = 'Просмотрено';
+                saveData(); render();
+                komiStatusFeedback('Папка удалена.');
+            } catch (error) {
+                if (currentUser?.authUserId === owner)
+                    komiStatusFeedback('Не удалось удалить папку. ' + error.message);
             } finally {
                 pendingFolderWrites.delete(key);
             }
