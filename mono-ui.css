@@ -1,0 +1,260 @@
+/* KOMI MONO — permanent black & white visual language.
+   Artwork, avatar photographs and video are intentionally not filtered. */
+:root, html, body {
+  color-scheme: dark;
+  --bg-base: #080808;
+  --bg-main: #090909;
+  --bg-card: #141414;
+  --bg-card-hover: #222222;
+  --bg-input: #1b1b1b;
+  --border: #393939;
+  --primary: #ffffff;
+  --primary-hover: #ffffff;
+  --accent: #ffffff;
+  --glow: rgba(255,255,255,.12);
+  --text-main: #ffffff;
+  --text-muted: #cecece;
+  --success: #dedede;
+}
+body {
+  background: radial-gradient(ellipse 70% 45% at 48% -8%, rgba(255,255,255,.045), transparent 80%),#080808 !important;
+  color: #f5f5f5;
+}
+::selection {background:#f2f2f2;color:#080808}
+::-webkit-scrollbar-thumb {background:#676767}
+::-webkit-scrollbar-thumb:hover {background:#a4a4a4}
+header {
+  background:rgba(9,9,9,.94) !important;
+  border-bottom:1px solid #343434 !important;
+  box-shadow:none !important;
+}
+:where(.anime-card,.profile-header-card,.profile-main-content,.profile-sidebar-menu,
+.profile-wall-section,.komi-feature-section,.hero-slider-container,.komi-recent-card,
+.komi-friends-drawer,.komi-party-social-panel,.komi-party-source-panel,
+.komi-watch-sidebar,.komi-recent-section,.komi-achievement-panel) {
+  border-color:#333 !important;
+  box-shadow:none;
+}
+:where(.modal-content,.komi-friends-drawer,.komi-party-social-panel,
+.komi-party-source-panel,.profile-header-card) {
+  background-color:#121212 !important;
+}
+:is(button,input,textarea,select):focus-visible, a:focus-visible {
+  outline:2px solid #f5f5f5 !important;
+  outline-offset:3px;
+}
+input,textarea,select {accent-color:#f5f5f5}
+input::placeholder,textarea::placeholder {color:#898989}
+:is(.btn-glow,.komi-party-friend-invite,.komi-friends-add,
+.komi-watch-navbtn.primary,.komi-episode-number.active,
+.komi-friends-tabs button.active,.profile-menu-item.active,
+.season-tab-btn.active,.player-switch-btn.active,
+.komi-party-social-panel #partyChat button,
+.komi-party-social-panel #partyInvite button) {
+  background:#ffffff !important;
+  border:1px solid #ffffff !important;
+  color:#0a0a0a !important;
+  box-shadow:0 0 0 1px rgba(255,255,255,.04) !important;
+}
+:is(.btn-glow,.komi-party-friend-invite,
+.komi-watch-navbtn.primary,.komi-episode-number.active,
+.komi-friends-tabs button.active,.season-tab-btn.active,
+.player-switch-btn.active):hover:not(:disabled) {
+  background:#efefef !important;
+  border-color:#f3f3f3 !important;
+  color:#090909 !important;
+}
+:is(.btn-secondary,.btn-glow-secondary,.nav-btn,
+.komi-watch-navbtn,.season-tab-btn,.player-switch-btn) {
+  border-color:#555 !important;
+}
+:is(.btn-secondary,.btn-glow-secondary,.nav-btn,.season-tab-btn,.player-switch-btn):hover:not(:disabled) {
+  background:#343434 !important;
+  color:#fff !important;
+  border-color:#d0d0d0 !important;
+}
+:is(button,select,input,textarea) {transition:background-color .16s,border-color .16s,color .16s}
+:where(.komi-side-logo,.komi-google-g,.komi-logo,.header-logo) {
+  filter:grayscale(1);
+}
+:where(.badge,.komi-new-ep,.komi-party-role) {box-shadow:none !important}
+:where(.komi-party-kicker,.komi-watch-side-heading small,
+.komi-friends-kicker,.komi-player-heading small,.komi-recent-info em) {
+  color:#e1e1e1 !important;
+}
+/* Special controls with light-background source CSS need black label contrast. */
+#watchModal .komi-watch-sidebar .komi-episode-number.active,
+#watchModal .komi-watch-navbtn.primary,
+#watchPartyModal .komi-party-social-panel #partyChat button,
+#watchPartyModal .komi-party-social-panel #partyInvite button,
+#watchPartyModal .komi-party-friend-invite {
+  color:#080808 !important;
+  background:#f5f5f5 !important;
+  border-color:#f5f5f5 !important;
+}
+#watchModal #watchModalContent,
+#watchPartyModal.komi-party-room-active #watchPartyModalContent {
+  background:radial-gradient(ellipse 50% 25% at 20% 0%,rgba(255,255,255,.05),transparent 95%),#101010 !important;
+  border-color:#444 !important;
+}
+#watchModal .player-wrapper,#watchPartyModal .komi-party-video-frame {
+  border-color:#494949 !important;
+  background:#000 !important;
+}
+#watchPartyModal .komi-party-social-panel {
+  background:linear-gradient(180deg,#191919,#101010) !important;
+  border-color:#414141 !important;
+  overflow-y:auto;
+  scrollbar-color:#7c7c7c #161616;
+}
+#watchPartyModal .komi-party-role {background:#292929 !important;color:#f5f5f5 !important;border-color:#5a5a5a !important}
+#watchPartyModal #partyChatBox > div {background:#222 !important;color:#f0f0f0 !important;border-color:#353535 !important}
+#watchPartyModal #partyChatBox {background:#0c0c0c !important;border-color:#414141 !important}
+#watchPartyModal .party-react-btn {background:#252525 !important;border-color:#555 !important;color:#eee !important}
+#watchPartyModal .party-react-btn:hover {background:#3a3a3a !important;border-color:#ddd !important}
+#watchPartyModal .komi-party-fullscreen-btn,
+#watchPartyModal .komi-party-room-header .modal-close {
+  background:#262626 !important;
+  border-color:#555 !important;
+  color:#fff !important;
+}
+#watchPartyModal .komi-party-fullscreen-btn:hover,
+#watchPartyModal .komi-party-room-header .modal-close:hover {
+  background:#3a3a3a !important;
+  border-color:#fff !important;
+}
+#watchPartyModal .komi-party-invites {border-top:1px solid #393939;padding-top:15px;display:grid;gap:10px}
+#watchPartyModal .komi-party-invites h4 {margin:0;font-size:16px;font-weight:800;color:#f5f5f5}
+#watchPartyModal .komi-party-invites>p {margin:0;color:#a9a9a9;font-size:12px;line-height:1.5}
+#watchPartyModal .komi-party-friends-list {
+  display:grid;gap:7px;max-height:190px;min-height:26px;overflow-y:auto;
+  scrollbar-color:#666 #151515;color:#aaa;font-size:12px;
+}
+#watchPartyModal .komi-party-friend-row {
+  display:flex;gap:10px;align-items:center;padding:9px;
+  background:#1e1e1e;border:1px solid #3a3a3a;border-radius:14px;
+}
+#watchPartyModal .komi-party-friend-avatar {
+  display:flex;align-items:center;justify-content:center;
+  width:40px;height:40px;min-width:40px;overflow:hidden;
+  border-radius:12px;background:#383838;border:1px solid #555;
+  font-size:18px;font-weight:800;color:#fff;
+}
+#watchPartyModal .komi-party-friend-avatar img {width:100%;height:100%;object-fit:cover}
+#watchPartyModal .komi-party-friend-identity {display:flex;flex:1;flex-direction:column;gap:3px;min-width:0}
+#watchPartyModal .komi-party-friend-identity strong {font-size:13px;color:#fff;overflow:hidden;text-overflow:ellipsis}
+#watchPartyModal .komi-party-friend-identity small {font-size:11px;color:#aaa;overflow:hidden;text-overflow:ellipsis}
+#watchPartyModal .komi-party-friend-invite {
+  flex-shrink:0;border-radius:11px;padding:10px 12px;min-height:40px;
+  font-family:inherit;font-weight:750;font-size:12px;cursor:pointer;
+}
+#watchPartyModal .komi-party-friend-invite:disabled {cursor:default;opacity:.62;background:#555 !important;color:#fff !important;border-color:#555 !important}
+#watchPartyModal #partyInvite {display:flex;gap:7px;flex-wrap:nowrap}
+#watchPartyModal #partyInvite input {width:100%;min-width:0;flex:1;background:#222;border-color:#515151}
+#watchPartyModal #partyInvite button {flex-shrink:0}
+#randomRouletteModal .modal-content {
+  background:#111 !important;border:1px solid #5a5a5a !important;border-radius:25px !important;
+  box-shadow:0 30px 80px #000a !important;
+}
+#randomRouletteModal #rouletteContainer {border-color:#f5f5f5 !important;box-shadow:0 0 25px #ffffff18 !important;border-radius:15px !important}
+#randomRouletteModal #rouletteTitle {font-size:15px !important}
+#randomRouletteModal #rouletteImage {background:#171717;object-fit:cover}
+@media(max-width:820px) {
+  #watchPartyModal .komi-party-social-panel {overflow-y:visible}
+  #watchPartyModal .komi-party-friends-list {max-height:150px}
+}
+@media(max-width:440px) {
+  #watchPartyModal #partyInvite {flex-wrap:wrap}
+  #watchPartyModal #partyInvite button {width:100%}
+}
+@media(prefers-reduced-motion:reduce) {
+  :is(button,select,input,textarea) {transition:none}
+}
+
+/* Brand identity: BLACK Komi tiles, crisp WHITE K and thin white outline.
+   Both real logo selectors are intentional: .logo-box in header,
+   .komi-side-logo in left navigation. */
+header .logo-container .logo-box,
+.komi-side-nav .komi-side-logo {
+  background:#000000 !important;
+  background-image:none !important;
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  border:0 !important;
+  box-shadow:none !important;
+  filter:none !important;
+  text-shadow:none !important;
+}
+header .logo-container .logo-box:hover,
+.komi-side-nav .komi-side-logo:hover {
+  background:#101010 !important;
+  border-color:transparent !important;
+  box-shadow:none !important;
+}
+/* Strong white for brand and primary labels while secondary metadata
+   stays visibly softer, preserving the dark theme's hierarchy. */
+header .logo-container .logo-text {
+  color:#ffffff !important;
+  -webkit-text-fill-color:#ffffff !important;
+  background:none !important;
+  text-shadow:none !important;
+}
+:where(h1,h2,h3,h4,.section-title,.profile-header-card strong) {
+  color:#ffffff !important;
+}
+:where(.logo-container,.komi-side-logo) :is(svg,path) {
+  filter:none;
+}
+#watchModal .komi-watch-navbtn.primary,
+#watchModal .komi-watch-sidebar .komi-episode-number.active,
+#watchPartyModal .komi-party-social-panel #partyChat button,
+#watchPartyModal .komi-party-social-panel #partyInvite button,
+#watchPartyModal .komi-party-friend-invite {
+  background:#ffffff !important;
+  border-color:#ffffff !important;
+  color:#000000 !important;
+}
+#watchModal .komi-watch-navbtn.primary:not(:disabled):hover,
+#watchPartyModal .komi-party-friend-invite:not(:disabled):hover {
+  background:#ededed !important;
+  border-color:#ffffff !important;
+  color:#000000 !important;
+}
+
+/* Closed dialogs and drawers must not stay reachable with the keyboard. */
+.modal-overlay:not(.active) {visibility:hidden !important}
+#komiFriendsDrawer:not(.open) {visibility:hidden !important}
+#komiFriendsDrawer.open {visibility:visible !important}
+#komiFriendsDrawer :focus-visible,
+.modal-overlay.active :focus-visible {outline:2px solid #fff;outline-offset:3px}
+.komi-seo-fallback {max-width:920px;margin:48px auto;padding:28px;border:1px solid #333;border-radius:20px;background:#151515;color:#f5f5f5}
+.komi-seo-fallback h1{font-size:clamp(24px,3vw,42px);color:#fff}
+.komi-seo-fallback p{color:#ddd;line-height:1.7}
+.komi-seo-fallback a{display:inline-flex;margin-right:14px;margin-top:12px;color:#fff;text-decoration:underline}
+
+/* The roulette displays a calm neutral skeleton while a real image loads;
+   never flash the previous anime cover or a bright logo on every spin. */
+#randomRouletteModal #rouletteContainer {
+  position:relative;
+  background:linear-gradient(130deg,#151515,#303030,#161616) !important;
+  border-color:#fff !important;
+}
+#randomRouletteModal #rouletteContainer img {
+  display:block;opacity:1;transition:opacity .16s ease;
+}
+#randomRouletteModal #rouletteContainer.is-loading::after {
+  content:'ПОИСК ПОСТЕРА';
+  position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(115deg,#161616 0%,#303030 45%,#161616 100%);
+  color:#d4d4d4;font-size:10px;font-weight:800;letter-spacing:1.1px;
+  pointer-events:none;animation:komiPosterPulse 1.2s ease-in-out infinite alternate;
+}
+@keyframes komiPosterPulse{from{opacity:.73}to{opacity:1}}
+@media(prefers-reduced-motion:reduce) {
+  #randomRouletteModal #rouletteContainer.is-loading::after{animation:none}
+}
+
+/* Give the random picker a visible retry and escape path on slow/offline loads. */
+#randomRouletteModal .komi-roulette-actions {display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}
+#randomRouletteModal .komi-roulette-actions button {min-height:42px;padding:10px 16px;border-radius:13px;font-weight:700}
+#randomRouletteModal .komi-roulette-actions [hidden] {display:none !important}
