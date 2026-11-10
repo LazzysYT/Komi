@@ -1986,10 +1986,14 @@ async function loadDataFromCloud(attempt = 0) {
                 });
             }
             lastId = rows[rows.length - 1].shikimori_id;
-            // Keep the first usable batch available even if a later request fails.
-            if (!catalogInitialLoadComplete && catalog.length && catalog.length <= 48) {
+            // Display the first 48 cards immediately; later pages load without blocking UI.
+            // Keep the in-memory search collection growing while the remaining pages arrive.
+            if (catalog.length) {
                 animeList = catalog.slice();
-                render();
+                if (!catalogInitialLoadComplete) {
+                    catalogInitialLoadComplete = true;
+                    render();
+                }
             }
             if (rows.length < pageSize) break;
         }
