@@ -2863,6 +2863,8 @@ const adminList = []; // No client-side username grants administrator privileges
             const amIFriend = currentUser && friendsFor(currentUser.username).includes(username);
 
             const userStatuses = userAnimeStatuses[username] || {};
+            // Index 7k+ catalog cards once; don't scan the full catalog for every saved title.
+            const profileAnimeById = new Map(animeList.map(anime => [String(anime.id),anime]));
             const statsCounts = { 'Просмотрено': 0, 'В планах': 0, 'Смотрю': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
             
             const customFolders = userCustomFolders[username] || {};
@@ -2872,7 +2874,7 @@ const adminList = []; // No client-side username grants administrator privileges
             Object.entries(userStatuses).forEach(([aId, st]) => {
                 if (statsCounts[st] !== undefined) statsCounts[st]++;
                 if (st === profileActiveTab) {
-                    const anObj = animeList.find(x => String(x.id) === String(aId));
+                    const anObj = profileAnimeById.get(String(aId));
                     if (anObj) listForTab.push(anObj);
                 }
             });
@@ -2880,14 +2882,14 @@ const adminList = []; // No client-side username grants administrator privileges
             if (profileActiveTab === 'Любимые') {
                 const favs = userFavorites[username] || {};
                 Object.keys(favs).forEach(aId => {
-                    const anObj = animeList.find(x => String(x.id) === String(aId));
+                    const anObj = profileAnimeById.get(String(aId));
                     if (anObj && !listForTab.some(x => String(x.id) === String(aId))) listForTab.push(anObj);
                 });
                 statsCounts['Любимые'] = listForTab.length;
             } else if (customFolderNames.includes(profileActiveTab)) {
                 const folderAnimeIds = customFolders[profileActiveTab] || [];
                 folderAnimeIds.forEach(aId => {
-                    const anObj = animeList.find(x => String(x.id) === String(aId));
+                    const anObj = profileAnimeById.get(String(aId));
                     if (anObj) listForTab.push(anObj);
                 });
             }
@@ -2895,7 +2897,7 @@ const adminList = []; // No client-side username grants administrator privileges
             // Calculate real genre preferences from titles saved to the library.
             const genreTotals = {};
             Object.keys(userStatuses).forEach(aId => {
-                const item = animeList.find(x => String(x.id) === String(aId));
+                const item = profileAnimeById.get(String(aId));
                 if (!item) return;
                 const genres = Array.isArray(item.genres) ? item.genres : [item.genre];
                 genres.filter(Boolean).forEach(g => { genreTotals[g] = (genreTotals[g] || 0) + 1; });
@@ -2912,6 +2914,11 @@ const adminList = []; // No client-side username grants administrator privileges
             });
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
+            const profileSavedCount = profileActiveTab === 'Любимые' ? favoritesCount
+                : customFolderNames.includes(profileActiveTab)
+                    ? (customFolders[profileActiveTab] || []).length
+                    : (statsCounts[profileActiveTab] || 0);
+            const missingProfileCards = Math.max(0,profileSavedCount - listForTab.length);
             const wallMessages = profileWalls[username] || [];
 
             const searchedList = listForTab.filter(an => {
@@ -3052,11 +3059,16 @@ const adminList = []; // No client-side username grants administrator privileges
                                 </div>
                             </div>
 
+                            ${missingProfileCards > 0 ? `
+                                <p class="komi-profile-notice" role="status" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                                    ${missingProfileCards} сохранённых аниме ещё загружаются или отсутствуют в каталоге. Статусы не удалены.
+                                </p>
+                            ` : ''}
                             ${searchedList.length === 0 ? `
                                 <div class="empty-state">
                                     <div style="font-size:26px; margin-bottom:6px;"></div>
-                                    <h3 style="font-size:13px; margin-bottom:3px;">В этой категории пока пусто</h3>
-                                    <p style="font-size:11px; color:var(--text-muted);">Добавляйте аниме из каталога или при просмотре.</p>
+                                    <h3 style="font-size:13px; margin-bottom:3px;">${profileCollectionSearchQuery ? 'По запросу ничего не найдено' : profileSavedCount ? 'Ожидаем карточки каталога' : 'В этой категории пока пусто'}</h3>
+                                    <p style="font-size:11px; color:var(--text-muted);">${profileSavedCount ? 'Сохранённые записи останутся в аккаунте.' : 'Добавляйте аниме из каталога или при просмотре.'}</p>
                                 </div>
                             ` : `
                                 <div class="anime-grid">
