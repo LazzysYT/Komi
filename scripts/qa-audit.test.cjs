@@ -51,3 +51,28 @@ test('admin entry remains fail closed before importing editor',async()=>{
  await vm.runInContext('openAddModal()',context);
  assert.equal(mounted,false);
 });
+
+
+test('legacy sidebar escapes names and never embeds them in JavaScript handlers', () => {
+ const source=functionSource('function handleFriendSearchInput(', '        async function addNotification(');
+ const unsafe='X"><img src=x onerror=alert(1)>';
+ const list={innerHTML:'',style:{display:''}};
+ const win={};
+ const context=vm.createContext({
+  document:{getElementById:id=>id==='dynamicFriendSearchResults'?list:null},
+  window:win,
+  currentUser:{username:'owner'},
+  userProfiles:{[unsafe]:{avatar:'" onerror="alert(2)'}},
+  registeredUsers:{},
+  userFriends:{},
+  friendsFor:()=>[],
+  escapeFriendHtml:s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'),
+  encodeURIComponent,
+ });
+ vm.runInContext(source,context);
+ vm.runInContext("handleFriendSearchInput('X')",context);
+ assert.equal(win.komiSidebarSearchNames[0],unsafe);
+ assert.doesNotMatch(list.innerHTML, /<img src=x|src="" onerror="alert/);
+ assert.match(list.innerHTML,/window\.komiSidebarSearchNames\[0\]/);
+ assert.match(list.innerHTML,/&lt;img src=x/);
+});
