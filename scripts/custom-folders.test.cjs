@@ -23,6 +23,8 @@ function fixture() {
     Number,
     currentUser:{authUserId:'owner-uuid',username:'alex'},
     userCustomFolders:{alex:Object.create(null)},
+    profileActiveTab:'Моя папка',
+    confirm:()=>true,
     document:{getElementById:id=>id==='newFolderNameInput'?input:null},
     komiStatusFeedback:msg=>notifications.push(msg),
     openWatchModal:id=>opened.push(id),
@@ -52,6 +54,7 @@ function fixture() {
   vm.runInContext(createSource+toggleSource,ctx);
   return {ctx,calls,notifications,opened,saved,input,setResponse:r=>nextResponse=r,
     defer:p=>deferred=p,runCreate:()=>vm.runInContext('createCustomFolder()',ctx),
+    runDelete:folder=>{ctx.__folder=folder;return vm.runInContext('deleteCustomFolder(__folder)',ctx);},
     runToggle:(animeId,folder)=>{ctx.__id=animeId;ctx.__folder=folder;
       return vm.runInContext('addToCustomFolder(__id,__folder)',ctx);}
   };
@@ -146,4 +149,27 @@ test('folder pagination fails closed if signed-in account changed',async()=>{
  const result=await vm.runInContext("komiLoadAllFolderItems('owner-uuid')",ctx);
  assert.equal(result.data.length,0);
  assert.match(result.error.message,/Аккаунт/);
+});
+
+
+test('owner may explicitly delete a server-confirmed folder, preserving catalog data',async()=>{
+ const x=fixture();
+ x.ctx.userCustomFolders.alex['Моя папка']=['42'];
+ x.setResponse({data:[{name:'Моя папка'}],error:null});
+ await x.runDelete('Моя папка');
+ assert.equal(Object.hasOwn(x.ctx.userCustomFolders.alex,'Моя папка'),false);
+ assert.equal(x.ctx.profileActiveTab,'Просмотрено');
+ assert.deepEqual(x.calls.filter(q=>q.kind==='where').map(q=>[q.column,q.value]),
+  [['user_id','owner-uuid'],['name','Моя папка']]);
+ assert.equal(x.saved.length,1);
+});
+
+test('failed folder deletion does not remove local folder',async()=>{
+ const x=fixture();
+ x.ctx.userCustomFolders.alex['Моя папка']=['42'];
+ x.setResponse({data:null,error:{message:'RLS denied'}});
+ await x.runDelete('Моя папка');
+ assert.deepEqual(Array.from(x.ctx.userCustomFolders.alex['Моя папка']),['42']);
+ assert.equal(x.saved.length,0);
+ assert.match(x.notifications.at(-1),/RLS denied/);
 });
