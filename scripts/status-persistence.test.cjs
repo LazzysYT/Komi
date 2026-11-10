@@ -12,7 +12,7 @@ const extract = (start, end) => {
   return html.slice(from, to);
 };
 const statusSource = extract('async function persistAuthenticatedStatus(', '        const komiProgressWriter');
-const favoriteSource = extract('async function persistAuthenticatedFavorite(', '        function addToCustomFolder(');
+const favoriteSource = extract('async function persistAuthenticatedFavorite(', '        async function addToCustomFolder(');
 
 function sandbox(source, response) {
   const calls = [];
