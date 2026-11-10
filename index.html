@@ -2909,6 +2909,7 @@ const adminList = []; // No client-side username grants administrator privileges
             });
 
             window.komiWallProfileName=username;
+            window.komiViewedProfileName=username;
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
                 <div class="profile-container komi-profile-v2">
@@ -2918,8 +2919,8 @@ const adminList = []; // No client-side username grants administrator privileges
                             <div class="profile-name-row">
                                 <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2>
                                 ${!isMe && currentUser ? `
-                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
+                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             
@@ -4167,13 +4168,20 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         async function persistAuthenticatedFavorite(animeId, category) {
-            if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
+            const id = Number(animeId);
+            if (!_supabase || !currentUser?.authUserId) throw new Error('Нет подтверждённого входа в аккаунт.');
+            if (!/^\d+$/.test(String(animeId)) || !Number.isSafeInteger(id) || id <= 0)
+                throw new Error('Некорректный ID аниме.');
             const uid = currentUser.authUserId;
             const query = _supabase.from('komi_favorites');
             const result = category
-                ? await query.upsert({user_id:uid, anime_id:Number(animeId), category}, {onConflict:'user_id,anime_id'})
-                : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
+                ? await query.upsert({user_id:uid, anime_id:id, category}, {onConflict:'user_id,anime_id'})
+                    .select('anime_id,category').single()
+                : await query.delete().eq('user_id',uid).eq('anime_id',id).select('anime_id');
             if (result.error) throw result.error;
+            if (category && (!result.data || Number(result.data.anime_id) !== id || result.data.category !== category))
+                throw new Error('Сервер не подтвердил сохранение избранного.');
+            return true;
         }
 
         function addToCustomFolder(id, folderName) {
@@ -4240,13 +4248,19 @@ const adminList = []; // No client-side username grants administrator privileges
             render();
         }
         async function persistAuthenticatedStatus(animeId, status) {
-            if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
+            const id = Number(animeId);
+            if (!_supabase || !currentUser?.authUserId) throw new Error('Нет подтверждённого входа в аккаунт.');
+            if (!/^\d+$/.test(String(animeId)) || !Number.isSafeInteger(id) || id <= 0)
+                throw new Error('Некорректный ID аниме.');
             const uid = currentUser.authUserId;
             const query = _supabase.from('komi_anime_lists');
             const result = status
-                ? await query.upsert({user_id:uid, anime_id:Number(animeId), status}, {onConflict:'user_id,anime_id'})
-                : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
+                ? await query.upsert({user_id:uid, anime_id:id, status}, {onConflict:'user_id,anime_id'})
+                    .select('anime_id,status').single()
+                : await query.delete().eq('user_id',uid).eq('anime_id',id).select('anime_id');
             if (result.error) throw result.error;
+            if (status && (!result.data || Number(result.data.anime_id) !== id || result.data.status !== status))
+                throw new Error('Сервер не подтвердил сохранение статуса.');
             return true;
         }
         const komiProgressWriter = KomiPlayerCore.createWriter(async ({uid, animeId, progress}) => {
