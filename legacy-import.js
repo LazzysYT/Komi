@@ -43,6 +43,16 @@ function komiLegacyImportRows(archive, name, owner) {
         progress
     };
 }
+// Each table has its own unique key. A shared onConflict would break folder imports.
+function komiLegacyImportBatches(rows) {
+    return [
+        {table:'komi_anime_lists', records:rows.lists, onConflict:'user_id,anime_id'},
+        {table:'komi_favorites', records:rows.favorites, onConflict:'user_id,anime_id'},
+        {table:'komi_watch_progress', records:rows.progress, onConflict:'user_id,anime_id'},
+        {table:'komi_custom_folders', records:rows.folders, onConflict:'user_id,name'},
+        {table:'komi_folder_items', records:rows.folderItems, onConflict:'user_id,folder_name,anime_id'}
+    ];
+}
 function openLegacyImport() {
     if (!currentUser?.authUserId) return openAuthModal('login');
     const owner=currentUser.authUserId;
@@ -63,12 +73,12 @@ function openLegacyImport() {
         button.disabled=true;select.disabled=true;let processed=0;
         try{
             const rows=komiLegacyImportRows(archive,select.value,owner);
-            for(const [table,records] of [['komi_anime_lists',rows.lists],['komi_favorites',rows.favorites],['komi_watch_progress',rows.progress],['komi_custom_folders',rows.folders],['komi_folder_items',rows.folderItems]]){
+            for(const {table, records, onConflict} of komiLegacyImportBatches(rows)){
                 for(let i=0;i<records.length;i+=100){
                     if(currentUser?.authUserId!==owner)throw Error('Аккаунт изменился.');
                     const {data,error}=await _supabase.auth.getUser();
                     if(error||data?.user?.id!==owner)throw Error('Войдите в аккаунт ещё раз.');
-                    const result=await _supabase.from(table).upsert(records.slice(i,i+100),{onConflict:'user_id,anime_id',ignoreDuplicates:true});
+                    const result=await _supabase.from(table).upsert(records.slice(i,i+100),{onConflict,ignoreDuplicates:true});
                     if(result.error)throw result.error;
                     processed+=Math.min(100,records.length-i);
                 }
