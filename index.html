@@ -4263,6 +4263,24 @@ const adminList = []; // No client-side username grants administrator privileges
             }
         }
 
+        // Supabase returns a maximum of about 1000 rows per request by default.
+        // Page owner-only folder items deterministically so large collections are never truncated.
+        async function komiLoadAllFolderItems(uid) {
+            const all = [];
+            const pageSize = 500;
+            for (let offset = 0; ; offset += pageSize) {
+                if (currentUser?.authUserId !== uid) return {data:[],error:new Error('Аккаунт изменился.')};
+                const {data,error} = await _supabase.from('komi_folder_items')
+                    .select('folder_name,anime_id').eq('user_id',uid)
+                    .order('folder_name',{ascending:true}).order('anime_id',{ascending:true})
+                    .range(offset,offset+pageSize-1);
+                if (error) return {data:[],error};
+                all.push(...(data||[]));
+                if (!data || data.length < pageSize) break;
+            }
+            return {data:all,error:null};
+        }
+
         // Supabase-owned data is loaded from RLS-protected tables, never imported from shared legacy blobs.
         async function loadAuthenticatedAnimeData() {
             if (!_supabase || !currentUser?.authUserId) return;
@@ -4274,7 +4292,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 _supabase.from('komi_watch_progress').select('anime_id,season,episode_index,position_seconds,duration_seconds,updated_at').eq('user_id', uid),
                 _supabase.from('komi_favorites').select('anime_id,category').eq('user_id', uid),
                 _supabase.from('komi_custom_folders').select('name').eq('user_id',uid),
-                _supabase.from('komi_folder_items').select('folder_name,anime_id').eq('user_id',uid)
+                komiLoadAllFolderItems(uid)
             ]);
             if (currentUser?.authUserId !== uid) return;
             if (lists.error) console.warn('Не удалось загрузить личные списки:', lists.error.message);
