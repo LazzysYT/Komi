@@ -31,7 +31,7 @@ const path=require('node:path');
    const faviconResponse=await page.request.get(new URL('icon.svg',page.url()).href);
    assert.equal(faviconResponse.status(),200);
    assert.ok((await faviconResponse.text()).includes('<svg'),'Favicon should serve valid SVG');
-   assert.equal(await page.locator('#rouletteImage').getAttribute('src'),'./anime-artwork.svg');
+   assert.equal(await page.locator('#rouletteImage').getAttribute('src'),'/anime-artwork.svg');
    assert.equal(await page.locator('#rouletteImage').getAttribute('alt'),'Обложка случайного аниме');
    await page.waitForFunction(()=>document.getElementById('authModal').hasAttribute('inert'));
    const initialA11y=await page.evaluate(()=>({
@@ -158,7 +158,7 @@ const path=require('node:path');
    await page.waitForFunction(()=>currentView==='home');
 
    await page.evaluate(()=>{
-    animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'./anime-artwork.svg',genres:['Драма'],year:2026,shikiRating:8,
+    animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'/anime-artwork.svg',genres:['Драма'],year:2026,shikiRating:8,
       episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
     catalogInitialLoadComplete=true;render();
    });
@@ -280,18 +280,17 @@ const path=require('node:path');
        presenceRequestInFlight=false;
        currentUser=null;
        _supabase={
-         from:()=>({
-           upsert:()=>({abortSignal:signal=>new Promise(resolve=>{
+         rpc:()=>({abortSignal:signal=>new Promise(resolve=>{
              if(signal.aborted)resolve({error:{message:'Request cancelled'}});
              else signal.addEventListener('abort',()=>resolve({error:{message:'Request cancelled'}}),{once:true});
            })})
-         })
        };
        const status=document.getElementById('onlineCountText');
        status.textContent='Онлайн: проверяем…';
        try {
+         const started=Date.now();
          await updateOnlinePresence();
-         return {label:status.textContent,inFlight:presenceRequestInFlight};
+         return {label:status.textContent,inFlight:presenceRequestInFlight,elapsed:Date.now()-started};
        } finally {
          _supabase=priorClient;
          currentUser=priorUser;
@@ -299,6 +298,7 @@ const path=require('node:path');
      });
      assert.equal(presence.label,'Онлайн: —','Hung online request must time out instead of staying on checking');
      assert.equal(presence.inFlight,false,'Timed-out online request must release the lock');
+     assert.ok(presence.elapsed>=2900 && presence.elapsed<6000, 'Actual abort deadline must be exercised');
    }
    await page.screenshot({path:path.join(output,`regression-${width}.png`),fullPage:true});
    assert.deepEqual(errors,[]);console.log('PASS browser',width,'progress/source/search/auth/close race/overflow');await page.close();

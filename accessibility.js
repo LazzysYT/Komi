@@ -38,11 +38,19 @@
             });
         }
     }
-    for (const modal of overlays) {
+    function registerModal(modal) {
         synchronizeModal(modal);
         new MutationObserver(() => synchronizeModal(modal))
             .observe(modal,{attributes:true,attributeFilter:['class']});
     }
+    for (const modal of overlays) registerModal(modal);
+    new MutationObserver(records => {
+        for (const record of records) for (const node of record.addedNodes) {
+            if (node.nodeType !== 1) continue;
+            const additions = node.matches('.modal-overlay') ? [node] : Array.from(node.querySelectorAll('.modal-overlay'));
+            for (const modal of additions) if (!overlays.includes(modal)) { overlays.push(modal); registerModal(modal); }
+        }
+    }).observe(document.body,{childList:true,subtree:true});
     const drawer = document.getElementById('komiFriendsDrawer');
     let drawerOpen = false;
     function synchronizeDrawer() {

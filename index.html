@@ -1593,6 +1593,7 @@ body > header {
 }
 </style>    <link rel="stylesheet" href="./cinema-ui.css">
     <link rel="stylesheet" href="./mono-ui.css">
+<style>.komi-skeleton { pointer-events:none; }.komi-skeleton-line { height:14px; margin:16px; border-radius:4px; background:var(--border); } #catalog > p { margin-block:12px; color:var(--text-muted); }</style>
 </head>
 <body>
 
@@ -1601,10 +1602,10 @@ body > header {
         <div class="header-inner">
             <nav class="komi-social-links" aria-label="Социальные сети Komi Anime">
                 <a class="komi-social-link" href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer" title="Komi Anime в TikTok" aria-label="TikTok Komi Anime">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 2h-3.2v13.3a3.1 3.1 0 1 1-2.7-3.1V8.9a6.5 6.5 0 1 0 6 6.4V8.4a8.2 8.2 0 0 0 4.8 1.5V6.7A4.9 4.9 0 0 1 16.7 2Z"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 2h-3.2v13.3a3.1 3.1 0 1 1-2.7-3.1V8.9a6.5 6.5 0 1 0 6 6.4V8.4a8.2 8.2 0 0 0 4.8 1.5V6.7A4.9 4.9 0 0 1 16.7 2Z"/></svg>
                 </a>
                 <a class="komi-social-link" href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer" title="Telegram-канал Komi Anime" aria-label="Telegram Komi Anime">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
                 </a>
             </nav>
             <div class="logo-area">
@@ -1614,7 +1615,7 @@ body > header {
                 </div>
                 <div class="online-counter">
                     <div class="online-dot"></div>
-                    <span id="onlineCountText" role="status" aria-live="polite">Онлайн: проверяем…</span>
+                    <span id="onlineCountText" role="status" aria-live="polite">Онлайн: недоступен</span>
                 </div>
             </div>
             
@@ -1671,86 +1672,17 @@ body > header {
         </div>
     </aside>
     <div id="komiFriendsBackdrop" class="komi-friends-backdrop" onclick="closeFriendsDrawer()"></div>
-    <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true">
+    <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true" inert>
         <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
         <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." oninput="renderFriendsDrawer()" autocomplete="off" aria-label="Поиск по нику"></div>
         <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" onclick="setFriendsDrawerTab('all')">Все пользователи</button><button id="komiFriendsMyTab" onclick="setFriendsDrawerTab('friends')">Мои друзья</button></div>
         <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
-        <main id="mainContainer">
-            <section class="komi-seo-fallback" aria-label="О Komi Anime Hub">
-                <h1>Komi Anime Hub — каталог аниме</h1>
-                <p>Открывай каталог аниме, находи серии, сохраняй просмотренное и общайся с друзьями. В Komi Anime Hub доступны поиск по названиям и жанрам, списки просмотра, совместный просмотр и магазин AniCoin.</p>
-                <a href="#catalog">Открыть каталог</a>
-                <a href="#shop">Магазин AniCoin</a>
-                <noscript><p>Для интерактивного каталога и просмотра требуется JavaScript.</p></noscript>
-            </section>
-        </main>
+        <main id="mainContainer"><section id="catalog" aria-labelledby="catalogLoadingTitle"><h1 id="catalogLoadingTitle" class="section-title">Каталог аниме</h1><p role="status">Загружаем каталог…</p><div id="anime-grid" class="anime-grid" aria-busy="true"><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div></div></section><noscript><p>Для загрузки каталога и просмотра аниме включите JavaScript.</p></noscript></main>
     </div>
 
     <!-- Модальные окна -->
-    <div class="modal-overlay" id="addModal">
-        <div class="modal-content" style="max-width: 650px;">
-            <button class="modal-close" onclick="playSound(); closeAddModal()">&times;</button>
-            <h2 id="modalTitleText" style="margin-bottom: 12px; font-size: 18px;">Добавить / Редактировать аниме</h2>
-            
-            <div style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px;">
-                <div style="display: flex; gap: 6px;">
-                    <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (Shikimori)...">
-                    <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()"> Найти</button>
-                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()"> Топ</button>
-                </div>
-                <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; padding: 4px;"></div>
-            </div>
-
-            <form id="animeForm" novalidate onsubmit="saveAnimeForm(event)">
-                <input type="hidden" id="editAnimeId">
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" class="form-control" id="animeTitle" required placeholder="Название аниме">
-                </div>
-                <div class="form-group">
-                    <label>Постер (URL)</label>
-                    <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
-                </div>
-                <div class="form-group">
-                    <label>Рейтинг Shikimori</label>
-                    <input type="text" class="form-control" id="animeShikiRating" placeholder="9.0">
-                </div>
-                <div class="form-group">
-                    <label>Кадры (через запятую)</label>
-                    <input type="text" class="form-control" id="animeScreenshots" placeholder="https://img1.jpg, https://img2.jpg...">
-                </div>
-                <div class="form-group">
-                    <label>Трейлер (YouTube embed)</label>
-                    <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
-                </div>
-                <div class="form-group">
-                    <label>Жанры</label>
-                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; background: var(--bg-input); padding: 8px; border-radius: 8px; border: 1px solid var(--border);"></div>
-                </div>
-                <div class="form-group">
-                    <label>Год / Тип</label>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="text" class="form-control" id="animeYear" placeholder="2026" style="flex:1;">
-                        <input type="text" class="form-control" id="animeType" placeholder="Фильм или Сериал" style="flex:1;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea class="form-control" id="animeDesc" style="resize: none; min-height: 120px" placeholder="Сюжет..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Эпизоды</label>
-                    <div id="episodesList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:6px;"></div>
-                    <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
-                </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" onclick="playSound()">Сохранить</button>
-            </form>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 360px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
@@ -1764,8 +1696,8 @@ body > header {
             <form id="loginFormContainer" novalidate onsubmit="handleLoginSubmit(event)">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
                 <div class="form-group">
-                    <label for="loginUsername">Email или старый никнейм Komi</label>
-                    <input type="text" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com или старый ник">
+                    <label for="loginUsername">Email</label>
+                    <input type="text" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
@@ -1797,7 +1729,7 @@ body > header {
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
             <h3 style="margin-bottom: 14px; font-size: 15px;">◇ Выбираем аниме...</h3>
             <div id="rouletteContainer" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
-                <img id="rouletteImage" src="./anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
+                <img id="rouletteImage" src="/anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div id="rouletteTitle" role="status" aria-live="polite" style="font-weight: 700; font-size: 13px; color: white;">Загрузка...</div>
             <div class="komi-roulette-actions">
@@ -1936,6 +1868,16 @@ body > header {
             }
         ];
 
+        let komiLegacyArchiveReady = false;
+        try {
+            if (!localStorage.getItem('komi_legacy_archive_v1')) localStorage.setItem('komi_legacy_archive_v1', JSON.stringify({
+                statuses: safeParse(localStorage.getItem('komi_anime_statuses'),{}),
+                favorites: safeParse(localStorage.getItem('komi_favorites'),{}),
+                progress: safeParse(localStorage.getItem('komi_episode_progress'),{}),
+                folders: safeParse(localStorage.getItem('komi_custom_folders'),{})
+            }));
+            komiLegacyArchiveReady = true;
+        } catch (error) { console.warn('Local archive could not be saved; original lists are preserved.'); }
         let animeList = defaultAnime;
         function safeParse(raw, fallback) { try { const v=JSON.parse(raw); return v == null ? fallback : v; } catch { return fallback; } }
         let animeComments = {}; 
@@ -1944,7 +1886,7 @@ body > header {
         let userCustomFolders = safeParse(localStorage.getItem('komi_custom_folders'), {}); 
         let userNotifications = safeParse(localStorage.getItem('komi_notifications'), {}); 
         let profileWalls = safeParse(localStorage.getItem('komi_profile_walls'), {}); 
-        let currentUser = safeParse(localStorage.getItem('komi_current_user'), null);
+        let currentUser = null; // Only restored Supabase Auth sessions establish identity.
         let registeredUsers = safeParse(localStorage.getItem('komi_users_db'), {});
         let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ★', regDate: '05 ноября 2026 года' }
@@ -1977,7 +1919,7 @@ body > header {
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             const storedFavorites = { ...userFavorites };
             if (currentUser?.authUserId) delete storedFavorites[currentUser.username];
-            localStorage.setItem('komi_favorites', JSON.stringify(storedFavorites));
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_favorites', JSON.stringify(storedFavorites));
             const storedHistory = { ...userWatchHistory };
             if (currentUser?.authUserId) for (const key of Object.keys(storedHistory)) {
                 if (key.startsWith(currentUser.username + '_')) delete storedHistory[key];
@@ -1988,14 +1930,16 @@ body > header {
             if (currentUser?.authUserId) for (const key of Object.keys(storedProgress)) {
                 if (key.startsWith(currentUser.username + '_')) delete storedProgress[key];
             }
-            localStorage.setItem('komi_episode_progress', JSON.stringify(storedProgress));
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_episode_progress', JSON.stringify(storedProgress));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
             const storedStatuses = { ...userAnimeStatuses };
             if (currentUser?.authUserId) delete storedStatuses[currentUser.username];
-            localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
-            localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
+            const storedFolders = { ...userCustomFolders };
+            if (currentUser?.authUserId) delete storedFolders[currentUser.username];
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_custom_folders', JSON.stringify(storedFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
             // Saving browser preferences must not rewrite the shared legacy status blob.
         }
@@ -2012,7 +1956,7 @@ async function loadDataFromCloud(attempt = 0) {
         if (!_supabase) throw new Error('Supabase не подключён');
 
         const settingsPromise = _supabase
-            .from('animes').select('id,content').in('id', [2, 3, 4, 5, 7]);
+            .from('animes').select('id,content').in('id', [2, 4]);
         const catalog = [];
         let lastId = 0;
         while (true) {
@@ -2098,32 +2042,13 @@ async function loadDataFromCloud(attempt = 0) {
             render();
         }
 
-        async function saveStatusesToCloud() {
-            if (_supabase && !currentUser?.authUserId) {
-                try { await _supabase.from('animes').upsert({ id: 3, content: JSON.stringify(userAnimeStatuses) }); } catch(e) {}
-            }
-        }
+        // Legacy records are retained as an archive; never rewrite another user's blob.
+        async function saveStatusesToCloud() { saveData(); }
+        async function saveProfilesToCloud() { return { error: new Error('Войдите через Google или email для сохранения профиля.') }; }
+        async function saveNotificationsToCloud() { saveData(); }
+        async function saveFriendsToCloud() { saveData(); }
 
-        async function saveProfilesToCloud() {
-            if (currentUser?.authUserId) return { error: new Error('Use komi_profiles for authenticated users') };
-            if (!_supabase) return { error: new Error('Supabase не подключён') };
-            try { return await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) }); }
-            catch(error) { return { error }; }
-        }
-
-        async function saveNotificationsToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 5, content: JSON.stringify(userNotifications) }); } catch(e) {}
-            }
-        }
-
-
-        async function saveFriendsToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 7, content: JSON.stringify(userFriends) }); } catch(e) {}
-            }
-        }
-
+        const komiPresenceSession = crypto.randomUUID();
         let presenceRequestInFlight = false;
         let presenceRequestEpoch = 0;
         async function updateOnlinePresence() {
@@ -2143,48 +2068,15 @@ async function loadDataFromCloud(attempt = 0) {
                     const indicator = document.getElementById('onlineCountText');
                     if (indicator) indicator.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
                 }
-            }, 5000);
+            }, 3000);
             try {
-                const now = Date.now();
-                const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
-                
-                const {error: presenceWriteError} = await _supabase.from('online_users').upsert({
-                    session_id: myUniqueKey,
-                    username: currentName,
-                    last_seen: now
-                }, { onConflict: 'session_id' }).abortSignal(requestController.signal);
-                if (presenceWriteError) throw presenceWriteError;
-
-                const expireTime = now - 10000;
-                await _supabase.from('online_users').delete().lt('last_seen', expireTime).abortSignal(requestController.signal);
-
-                const presenceUser = currentUser?.username;
-                const { data: cloudSyncData } = presenceUser
-                    ? await _supabase.from('animes').select('id,content').in('id', [5, 7]).abortSignal(requestController.signal)
-                    : {};
-                if (!requestController.signal.aborted && epoch === presenceRequestEpoch && cloudSyncData && currentUser?.username === presenceUser) {
-                    cloudSyncData.forEach(row => {
-                        if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
-                        if (row.id === 7) {
-                            const cloudFriends = JSON.parse(row.content || '{}');
-                            userFriends = { ...userFriends, ...cloudFriends };
-                        }
-                    });
-                    updateNotificationsUI();
-                }
-
-                const {data, error:presenceReadError} = await _supabase.from('online_users').select('username,last_seen').abortSignal(requestController.signal);
-                if (presenceReadError) throw presenceReadError;
-                if (!Array.isArray(data)) throw new Error('Не удалось получить список онлайн');
+                const {data: count, error} = await _supabase.rpc('komi_site_presence', {p_session: komiPresenceSession})
+                    .abortSignal(requestController.signal);
+                if (error) throw error;
                 if (requestController.signal.aborted || epoch !== presenceRequestEpoch) return;
-                const uniqueUsersMap = new Map();
-                for (const item of data) {
-                    if (Number(item.last_seen) > now - 30000 && item.username)
-                        uniqueUsersMap.set(item.username, item);
-                }
-                globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
+                if (!Number.isSafeInteger(Number(count)) || Number(count)<0) throw Error('Некорректный счётчик');
                 const el = document.getElementById('onlineCountText');
-                if (el) el.innerText = `Онлайн: ${globalAllOnlineUsersList.length}`;
+                if (el) el.textContent = 'Онлайн: ' + Number(count);
             } catch(e) {
                 if (epoch === presenceRequestEpoch) {
                     const el = document.getElementById('onlineCountText');
@@ -2221,13 +2113,19 @@ async function loadDataFromCloud(attempt = 0) {
             loadKomiCommunityProfiles().then(() => renderFriendsDrawer()).catch(console.warn);
             const drawer = document.getElementById('komiFriendsDrawer');
             drawer.classList.add('open');
+            drawer.inert = false;
             drawer.setAttribute('aria-hidden','false');
             document.getElementById('komiFriendsBackdrop').classList.add('open');
             document.getElementById('sideFriendsBtn')?.setAttribute('aria-expanded','true');
             renderFriendsDrawer();
-            document.getElementById('komiFriendsSearch')?.focus();
+            requestAnimationFrame(() => {
+                if (drawer.classList.contains('open')) document.getElementById('komiFriendsSearch')?.focus();
+            });
         }
         function closeFriendsDrawer() {
+            const drawer = document.getElementById('komiFriendsDrawer');
+            if (drawer?.classList.contains('open')) document.getElementById('sideFriendsBtn')?.focus();
+            if (drawer) drawer.inert = true;
             document.getElementById('komiFriendsDrawer')?.classList.remove('open');
             document.getElementById('komiFriendsDrawer')?.setAttribute('aria-hidden','true');
             document.getElementById('komiFriendsBackdrop')?.classList.remove('open');
@@ -2298,76 +2196,98 @@ async function loadDataFromCloud(attempt = 0) {
         }
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFriendsDrawer(); });
 
+        // Never interpolate stored profile names into HTML attributes or inline JavaScript.
+        // Indexed handlers keep even legacy/unverified nicknames as data, not executable code.
         function handleFriendSearchInput(inputVal) {
             const listEl = document.getElementById('dynamicFriendSearchResults');
             if (!listEl) return;
-            const query = inputVal.trim().toLowerCase();
-            
+            const query = String(inputVal || '').trim().toLocaleLowerCase();
+
             if (!query) {
+                window.komiSidebarSearchNames = [];
                 listEl.innerHTML = '';
                 listEl.style.display = 'none';
                 return;
             }
 
             const myFriends = currentUser ? friendsFor(currentUser.username) : [];
-            const allKnownNames = Object.keys(userProfiles);
-            const allRegNames = Object.keys(registeredUsers);
-            const combinedPool = Array.from(new Set([...allKnownNames, ...allRegNames, ...Object.keys(userFriends)]));
-            const foundResults = combinedPool.filter(n => n.toLowerCase().includes(query) && (!currentUser || n !== currentUser.username));
+            const combinedPool = Array.from(new Set([
+                ...Object.keys(userProfiles),
+                ...Object.keys(registeredUsers),
+                ...Object.keys(userFriends)
+            ]));
+            const foundResults = combinedPool.filter(name =>
+                name.toLocaleLowerCase().includes(query) && name !== currentUser?.username
+            );
+            window.komiSidebarSearchNames = foundResults;
+            listEl.style.display = 'flex';
 
-            if (foundResults.length > 0) {
-                listEl.style.display = 'flex';
-                listEl.innerHTML = foundResults.map(fName => {
-                    const p = userProfiles[fName] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${fName}` };
-                    const isAlreadyFriend = myFriends.includes(fName);
-                    return `
-                        <div class="sidebar-friend-item" style="justify-content:space-between; margin-bottom:4px;">
-                            <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; overflow:hidden;" onclick="playSound(); openProfile('${fName}')">
-                                <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fName}</span>
-                            </div>
-                            ${isAlreadyFriend ? `<span style="font-size:9px; color:var(--success);">В друзьях</span>` : `<button class="btn-glow" style="padding:2px 6px; font-size:9px;" onclick="playSound(); sendFriendRequest('${fName}')">+ Добавить</button>`}
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                listEl.style.display = 'flex';
-                listEl.innerHTML = `<div style="font-size:10px; color:var(--text-muted); padding:4px; text-align:center;">Никого не найдено</div>`;
+            if (!foundResults.length) {
+                listEl.innerHTML = '<div style="font-size:10px;color:var(--text-muted);padding:4px;text-align:center;">Никого не найдено</div>';
+                return;
             }
+
+            listEl.innerHTML = foundResults.map((name,index) => {
+                const profile = userProfiles[name] || {};
+                const safeName = escapeFriendHtml(name);
+                const safeAvatar = escapeFriendHtml(profile.avatar ||
+                    'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
+                const friend = myFriends.includes(name);
+                return `
+                    <div class="sidebar-friend-item" style="justify-content:space-between;margin-bottom:4px;">
+                        <button type="button" class="komi-friends-identity"
+                            onclick="playSound();openProfile(window.komiSidebarSearchNames[${index}])">
+                            <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
+                                onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                            <span>${safeName}</span>
+                        </button>
+                        ${friend ? '<span style="font-size:9px;color:var(--success);">В друзьях</span>' :
+                            `<button type="button" class="btn-glow" style="padding:2px 6px;font-size:9px;"
+                                onclick="playSound();sendFriendRequest(window.komiSidebarSearchNames[${index}])">+ Добавить</button>`}
+                    </div>`;
+            }).join('');
         }
 
         function renderSidebarFriendsList() {
             const friendsContainer = document.getElementById('sidebarFriendsListContainer');
             if (!friendsContainer) return;
 
-            if (currentUser) {
-                const myFriends = friendsFor(currentUser.username);
-                let friendsHtml = `
-                    <div style="margin-bottom:8px; display:flex; flex-direction:column; gap:4px;">
-                        <input type="text" id="friendSearchInputBox" class="form-control" placeholder="Найти по нику..." oninput="handleFriendSearchInput(this.value)" style="font-size:10px; padding:6px 8px;">
-                        <div id="dynamicFriendSearchResults" style="display:none; flex-direction:column; max-height:120px; overflow-y:auto;"></div>
-                    </div>
-                `;
-
-                if (myFriends.length > 0) {
-                    friendsHtml += myFriends.map(f => {
-                        const p = userProfiles[f] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${f}` };
-                        return `
-                            <div class="sidebar-friend-item" onclick="playSound(); openProfile('${f}')">
-                                <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                                <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
-                                <span style="width:6px; height:6px; border-radius:50%; background:var(--success);"></span>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    friendsHtml += `<span style="color:var(--text-muted); font-size:11px; padding:4px;">Список друзей пуст. Введите ник выше для поиска.</span>`;
-                }
-
-                friendsContainer.innerHTML = friendsHtml;
-            } else {
-                friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px; padding:4px;">Войдите, чтобы искать друзей</span>`;
+            if (!currentUser) {
+                window.komiSidebarFriendNames = [];
+                friendsContainer.innerHTML = '<span style="color:var(--text-muted);font-size:11px;padding:4px;">Войдите, чтобы искать друзей</span>';
+                return;
             }
+
+            const myFriends = friendsFor(currentUser.username);
+            window.komiSidebarFriendNames = myFriends.slice();
+            let friendsHtml = `
+                <div style="margin-bottom:8px;display:flex;flex-direction:column;gap:4px;">
+                    <input type="text" id="friendSearchInputBox" class="form-control"
+                        placeholder="Найти по нику..." oninput="handleFriendSearchInput(this.value)"
+                        style="font-size:10px;padding:6px 8px;">
+                    <div id="dynamicFriendSearchResults"
+                        style="display:none;flex-direction:column;max-height:120px;overflow-y:auto;"></div>
+                </div>`;
+
+            if (myFriends.length) {
+                friendsHtml += myFriends.map((name,index) => {
+                    const profile = userProfiles[name] || {};
+                    const safeName = escapeFriendHtml(name);
+                    const safeAvatar = escapeFriendHtml(profile.avatar ||
+                        'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
+                    return `
+                        <button type="button" class="sidebar-friend-item"
+                            onclick="playSound();openProfile(window.komiSidebarFriendNames[${index}])">
+                            <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
+                                onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                            <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeName}</span>
+                            <span style="width:6px;height:6px;border-radius:50%;background:var(--success);"></span>
+                        </button>`;
+                }).join('');
+            } else {
+                friendsHtml += '<span style="color:var(--text-muted);font-size:11px;padding:4px;">Список друзей пуст. Введите ник выше для поиска.</span>';
+            }
+            friendsContainer.innerHTML = friendsHtml;
         }
 
         async function addNotification(username, text, partyId = null, friendRequestFrom = null) {
@@ -2397,7 +2317,7 @@ async function loadDataFromCloud(attempt = 0) {
 
         function updateNotificationsUI() {
             if (!currentUser) return;
-            const notifs = userNotifications[currentUser.username] || [];
+            const notifs = currentUser.authUserId ? [] : (userNotifications[currentUser.username] || []);
             const requests = protectedFriendRequests.filter(row => row.owner === currentUser.authUserId);
             const unreadCount = notifs.filter(n => !n.read).length + requests.length;
             const badge = document.getElementById('notifBadge');
@@ -2633,6 +2553,11 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!user?.authUserId) return;
             delete userAnimeStatuses[user.username];
             delete userFavorites[user.username];
+            delete userCustomFolders[user.username];
+            ++komiCollectionLoadEpoch;
+            for (const changes of Object.values(komiCollectionMutations)) {
+                for (const key of changes.keys()) if (key.startsWith(user.authUserId + ':')) changes.delete(key);
+            }
             for (const data of [komiEpisodeProgress, userWatchHistory]) {
                 for (const key of Object.keys(data)) if (key.startsWith(user.username + '_')) delete data[key];
             }
@@ -2647,9 +2572,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 const { error } = await _supabase.auth.signOut({ scope: 'local' });
                 if (error) { alert('Не удалось выйти: ' + error.message); return; }
             }
-            if (_supabase) {
-                try { await _supabase.from('online_users').delete().eq('session_id', myUniqueKey); } catch(e){}
-            }
+            // Presence expires server-side after 30 seconds.
             clearKomiAccountData(signingOut);
             avatarDraft = null;
             currentUser = null;
@@ -2657,6 +2580,7 @@ const adminList = []; // No client-side username grants administrator privileges
             navigate('home');
         }
 
+        const komiCatalogLoadingMarkup = "<section id=\"catalog\" aria-labelledby=\"catalogLoadingTitle\"><h1 id=\"catalogLoadingTitle\" class=\"section-title\">Каталог аниме</h1><p role=\"status\">Загружаем каталог…</p><div id=\"anime-grid\" class=\"anime-grid\" aria-busy=\"true\"><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div></div></section>";
         function render() {
             renderHeaderUser();
             const container = document.getElementById('mainContainer');
@@ -2667,7 +2591,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     clearInterval(slideInterval);
                     container.innerHTML = catalogInitialLoadFailed
                         ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
-                        : '<section class="komi-catalog-empty" role="status" aria-live="polite"><strong>Загружаем каталог</strong><p>Подборки появятся, когда каталог будет готов.</p></section>';
+                        : komiCatalogLoadingMarkup;
                     return;
                 }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
@@ -2939,6 +2863,8 @@ const adminList = []; // No client-side username grants administrator privileges
             const amIFriend = currentUser && friendsFor(currentUser.username).includes(username);
 
             const userStatuses = userAnimeStatuses[username] || {};
+            // Index 7k+ catalog cards once; don't scan the full catalog for every saved title.
+            const profileAnimeById = new Map(animeList.map(anime => [String(anime.id),anime]));
             const statsCounts = { 'Просмотрено': 0, 'В планах': 0, 'Смотрю': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
             
             const customFolders = userCustomFolders[username] || {};
@@ -2948,7 +2874,7 @@ const adminList = []; // No client-side username grants administrator privileges
             Object.entries(userStatuses).forEach(([aId, st]) => {
                 if (statsCounts[st] !== undefined) statsCounts[st]++;
                 if (st === profileActiveTab) {
-                    const anObj = animeList.find(x => String(x.id) === String(aId));
+                    const anObj = profileAnimeById.get(String(aId));
                     if (anObj) listForTab.push(anObj);
                 }
             });
@@ -2956,14 +2882,14 @@ const adminList = []; // No client-side username grants administrator privileges
             if (profileActiveTab === 'Любимые') {
                 const favs = userFavorites[username] || {};
                 Object.keys(favs).forEach(aId => {
-                    const anObj = animeList.find(x => String(x.id) === String(aId));
+                    const anObj = profileAnimeById.get(String(aId));
                     if (anObj && !listForTab.some(x => String(x.id) === String(aId))) listForTab.push(anObj);
                 });
                 statsCounts['Любимые'] = listForTab.length;
             } else if (customFolderNames.includes(profileActiveTab)) {
                 const folderAnimeIds = customFolders[profileActiveTab] || [];
                 folderAnimeIds.forEach(aId => {
-                    const anObj = animeList.find(x => String(x.id) === String(aId));
+                    const anObj = profileAnimeById.get(String(aId));
                     if (anObj) listForTab.push(anObj);
                 });
             }
@@ -2971,7 +2897,7 @@ const adminList = []; // No client-side username grants administrator privileges
             // Calculate real genre preferences from titles saved to the library.
             const genreTotals = {};
             Object.keys(userStatuses).forEach(aId => {
-                const item = animeList.find(x => String(x.id) === String(aId));
+                const item = profileAnimeById.get(String(aId));
                 if (!item) return;
                 const genres = Array.isArray(item.genres) ? item.genres : [item.genre];
                 genres.filter(Boolean).forEach(g => { genreTotals[g] = (genreTotals[g] || 0) + 1; });
@@ -2988,6 +2914,11 @@ const adminList = []; // No client-side username grants administrator privileges
             });
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
+            const profileSavedCount = profileActiveTab === 'Любимые' ? favoritesCount
+                : customFolderNames.includes(profileActiveTab)
+                    ? (customFolders[profileActiveTab] || []).length
+                    : (statsCounts[profileActiveTab] || 0);
+            const missingProfileCards = Math.max(0,profileSavedCount - listForTab.length);
             const wallMessages = profileWalls[username] || [];
 
             const searchedList = listForTab.filter(an => {
@@ -2996,6 +2927,9 @@ const adminList = []; // No client-side username grants administrator privileges
             });
 
             window.komiWallProfileName=username;
+            window.komiProfileFolderNames=customFolderNames.slice();
+            window.komiProfileFriendNames=myFriends.slice();
+            window.komiViewedProfileName=username;
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
                 <div class="profile-container komi-profile-v2">
@@ -3005,8 +2939,8 @@ const adminList = []; // No client-side username grants administrator privileges
                             <div class="profile-name-row">
                                 <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2>
                                 ${!isMe && currentUser ? `
-                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
+                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             
@@ -3026,12 +2960,13 @@ const adminList = []; // No client-side username grants administrator privileges
                             ${isMe ? `
                             <div class="profile-settings-box">
                                 <h4> Настройки профиля</h4>
+                                <button type="button" class="btn-secondary" onclick="openLegacyImport()">Перенести старые списки</button>
                                 <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
                                 <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
                                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                                     <div style="flex:2; min-width:160px;">
                                         <label for="avatarFileInput" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Фото с устройства</label>
-                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 4px; font-size:10px;" onchange="handleAvatarFileUpload(event)">
+                                        <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" class="form-control" style="padding: 4px; font-size:10px;" onchange="handleAvatarFileUpload(event)">
                                     </div>
                                     <div style="flex:2; min-width:130px;">
                                         <label for="newStatusText" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
@@ -3087,7 +3022,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                     </button>`).join('')}
                             </section>
                             <section><h3>Любимые жанры</h3>
-                                ${topGenres.length ? topGenres.map(([genre,count]) => `<div class="komi-genre-row"><span>${genre}</span><b>${count}</b></div>`).join('') : '<p>Добавь аниме в коллекцию, чтобы увидеть любимые жанры.</p>'}
+                                ${topGenres.length ? topGenres.map(([genre,count]) => `<div class="komi-genre-row"><span>${safeProfileText(genre)}</span><b>${count}</b></div>`).join('') : '<p>Добавь аниме в коллекцию, чтобы увидеть любимые жанры.</p>'}
                             </section>
                             <section><h3>Активность</h3>
                                 <div class="komi-overview-list-row"><span>В библиотеке</span><b>${Object.keys(userStatuses).length}</b></div>
@@ -3102,8 +3037,9 @@ const adminList = []; // No client-side username grants administrator privileges
                     ${customFolderNames.length > 0 || isMe ? `
                         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border);">
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
-                            ${customFolderNames.map(fname => `
-                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab='${fname}'; render()"> ${fname} (${customFolders[fname].length})</button>
+                            ${customFolderNames.map((fname,i) => `
+                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab=window.komiProfileFolderNames[${i}]; render()"> ${safeProfileText(fname)} (${customFolders[fname].length})</button>
+                                ${isMe ? `<button type="button" class="btn-danger" style="padding:4px 7px;border-radius:8px" aria-label="Удалить папку ${safeProfileText(fname)}" title="Удалить папку" onclick="deleteCustomFolder(window.komiProfileFolderNames[${i}])">×</button>` : ''}
                             `).join('')}
                             ${isMe ? `
                                 <div style="display:flex; gap:5px; margin-left:auto; align-items:center;">
@@ -3117,17 +3053,22 @@ const adminList = []; // No client-side username grants administrator privileges
                     <div class="profile-layout-grid">
                         <div class="profile-main-content">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
-                                <h3 style="font-size:15px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${profileActiveTab}</span></h3>
+                                <h3 style="font-size:15px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${safeProfileText(profileActiveTab)}</span></h3>
                                 <div style="position:relative; width: 180px;">
-                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${profileCollectionSearchQuery}" oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
+                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
                                 </div>
                             </div>
 
+                            ${missingProfileCards > 0 ? `
+                                <p class="komi-profile-notice" role="status" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                                    ${missingProfileCards} сохранённых аниме ещё загружаются или отсутствуют в каталоге. Статусы не удалены.
+                                </p>
+                            ` : ''}
                             ${searchedList.length === 0 ? `
                                 <div class="empty-state">
                                     <div style="font-size:26px; margin-bottom:6px;"></div>
-                                    <h3 style="font-size:13px; margin-bottom:3px;">В этой категории пока пусто</h3>
-                                    <p style="font-size:11px; color:var(--text-muted);">Добавляйте аниме из каталога или при просмотре.</p>
+                                    <h3 style="font-size:13px; margin-bottom:3px;">${profileCollectionSearchQuery ? 'По запросу ничего не найдено' : profileSavedCount ? 'Ожидаем карточки каталога' : 'В этой категории пока пусто'}</h3>
+                                    <p style="font-size:11px; color:var(--text-muted);">${profileSavedCount ? 'Сохранённые записи останутся в аккаунте.' : 'Добавляйте аниме из каталога или при просмотре.'}</p>
                                 </div>
                             ` : `
                                 <div class="anime-grid">
@@ -3146,13 +3087,13 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     </div>
-                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map(friend=>`<button class="komi-profile-friend" onclick="openProfile('${friend}')">${friend}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
+                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map((friend,i)=>`<button class="komi-profile-friend" onclick="openProfile(window.komiProfileFriendNames[${i}])">${safeProfileText(friend)}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
                     <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
                     <div class="profile-wall-section">
                         <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
                         <div style="display:flex; gap:6px; margin-bottom:14px;">
-                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall('${username}')">
-                            <button class="btn-glow" style="padding: 7px 16px;" onclick="playSound(); postToProfileWall('${username}')">Отпр.</button>
+                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall(window.komiWallProfileName)">
+                            <button class="btn-glow" style="padding: 7px 16px;" onclick="playSound(); postToProfileWall(window.komiWallProfileName)">Отпр.</button>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:6px;">
                             ${wallMessages.length === 0 ? `
@@ -3165,7 +3106,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 return `
                                     <div class="wall-message-item">
                                         <div class="wall-message-author" onclick="playSound(); openProfile(window.komiWallAuthorByIndex[${mIdx}])">
-                                            <img src="${senderAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                            <img src="${safeProfileText(komiSafeUrl(senderAvatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                             <span>${escapeFriendHtml(userProfiles[m.author]?.displayName || m.author)}</span>
                                             <span style="font-size:10px; color:var(--text-muted); margin-left:auto; font-weight:normal;">${escapeFriendHtml(m.time)}</span>
                                             ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">Удалить</button>` : ''}
@@ -3189,8 +3130,12 @@ const adminList = []; // No client-side username grants administrator privileges
             const owner = currentUser?.authUserId || currentUser?.username;
             avatarDraft = null;
             if (!file || !owner) return;
-            if (!file.type.startsWith('image/')) {
-                komiStatusFeedback('Выберите изображение.');
+            if (!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(file.type)) {
+                komiStatusFeedback('Поддерживаются JPG, PNG, WebP, GIF и AVIF.');
+                return;
+            }
+            if (!Number.isSafeInteger(file.size) || file.size <= 0 || file.size > 8 * 1024 * 1024) {
+                komiStatusFeedback('Выберите изображение размером до 8 МБ.');
                 return;
             }
             const image = new Promise((resolve, reject) => {
@@ -3201,6 +3146,12 @@ const adminList = []; // No client-side username grants administrator privileges
                     preview.onerror = () => reject(new Error('Не удалось открыть изображение.'));
                     preview.onload = () => {
                         try {
+                            if (!Number.isFinite(preview.width) || !Number.isFinite(preview.height) ||
+                                preview.width < 1 || preview.height < 1 ||
+                                preview.width > 8192 || preview.height > 8192 ||
+                                preview.width * preview.height > 32_000_000) {
+                                throw new Error('Слишком большое разрешение изображения.');
+                            }
                             const canvas = document.createElement('canvas');
                             const scale = Math.min(1, 320 / Math.max(preview.width, preview.height));
                             canvas.width = Math.max(1, Math.round(preview.width * scale));
@@ -3282,19 +3233,65 @@ const adminList = []; // No client-side username grants administrator privileges
             }
         }
 
-        function createCustomFolder() {
-            if (!currentUser) return;
+        const pendingFolderWrites = new Set();
+        async function createCustomFolder() {
+            if (!currentUser?.authUserId || !_supabase) { openAuthModal('login'); return; }
+            const {username,authUserId:owner} = currentUser;
             const input = document.getElementById('newFolderNameInput');
-            const name = input ? input.value.trim() : '';
-            if (!name) return;
+            const name = (input?.value || '').trim();
+            if (!komiFolderNameAllowed(name)) {
+                komiStatusFeedback('Название папки: 1–40 символов, без служебных названий.');
+                return;
+            }
+            if (Object.prototype.hasOwnProperty.call(userCustomFolders[username] || {}, name)) {
+                komiStatusFeedback('Такая папка уже существует.');
+                return;
+            }
+            const key = owner + ':folder:' + name;
+            if (pendingFolderWrites.has(key)) return;
+            pendingFolderWrites.add(key);
+            try {
+                const {data,error} = await _supabase.from('komi_custom_folders')
+                    .insert({user_id:owner,name}).select('name').single();
+                if (error) throw error;
+                if (!data || data.name !== name) throw new Error('Сервер не подтвердил создание папки.');
+                if (currentUser?.authUserId !== owner) return;
+                userCustomFolders[username] ||= Object.create(null);
+                userCustomFolders[username][name] = [];
+                saveData(); render();
+                komiStatusFeedback('Папка создана.');
+            } catch (error) {
+                if (currentUser?.authUserId === owner) komiStatusFeedback('Не удалось создать папку. ' + error.message);
+            } finally {
+                pendingFolderWrites.delete(key);
+            }
+        }
 
-            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
-            if (!userCustomFolders[currentUser.username][name]) {
-                userCustomFolders[currentUser.username][name] = [];
-                saveData();
-                render();
-            } else {
-                alert('Папка уже существует!');
+        async function deleteCustomFolder(folderName) {
+            if (!currentUser?.authUserId || !_supabase) { openAuthModal('login'); return; }
+            const {username,authUserId:owner} = currentUser;
+            if (!komiFolderNameAllowed(folderName) ||
+                !Object.prototype.hasOwnProperty.call(userCustomFolders[username] || {},folderName)) return;
+            if (!confirm('Удалить папку «' + folderName + '» и её записи? Аниме останутся в каталоге.')) return;
+            const key = owner + ':folder:' + folderName;
+            if (pendingFolderWrites.has(key)) return;
+            pendingFolderWrites.add(key);
+            try {
+                const {data,error} = await _supabase.from('komi_custom_folders').delete()
+                    .eq('user_id',owner).eq('name',folderName).select('name');
+                if (error) throw error;
+                if (!Array.isArray(data) || !data.some(row=>row.name===folderName))
+                    throw new Error('Сервер не подтвердил удаление папки.');
+                if (currentUser?.authUserId !== owner) return;
+                delete userCustomFolders[username][folderName];
+                if (profileActiveTab === folderName) profileActiveTab = 'Просмотрено';
+                saveData(); render();
+                komiStatusFeedback('Папка удалена.');
+            } catch (error) {
+                if (currentUser?.authUserId === owner)
+                    komiStatusFeedback('Не удалось удалить папку. ' + error.message);
+            } finally {
+                pendingFolderWrites.delete(key);
             }
         }
 
@@ -3347,7 +3344,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
-            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || './anime-artwork.svg');
+            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || '/anime-artwork.svg');
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
@@ -3355,7 +3352,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'./anime-artwork.svg\'">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'/anime-artwork.svg\'">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
@@ -3462,7 +3459,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 titleEl.textContent = catalogInitialLoadComplete
                     ? 'Пока нет аниме с доступными сериями'
                     : 'Каталог загружается. Повтори попытку через несколько секунд.';
-                imgEl.src = './anime-artwork.svg';
+                imgEl.src = '/anime-artwork.svg';
                 modal.classList.add('active');
                 // A stale timer must never dismiss a newer roulette run.
                 setTimeout(() => {
@@ -3539,7 +3536,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 ]).then(([poster]) => {
                     if (run !== komiRouletteRun || token !== imageToken ||
                         !modal.classList.contains('active')) return;
-                    imgEl.src = poster || './anime-artwork.svg';
+                    imgEl.src = poster || '/anime-artwork.svg';
                     imgEl.style.opacity = '1';
                     container?.classList.remove('is-loading');
                     if (poster && poster !== finalItem.poster) {
@@ -3562,7 +3559,7 @@ const adminList = []; // No client-side username grants administrator privileges
         function friendsFor(username) {
             const legacy = userFriends[username] || [];
             if (username !== currentUser?.username || protectedFriendList.owner !== currentUser?.authUserId) return legacy;
-            return [...new Set([...legacy, ...protectedFriendList.idsByName.keys()])];
+            return [...protectedFriendList.idsByName.keys()];
         }
         async function loadProtectedFriends() {
             const uid = currentUser?.authUserId;
@@ -3919,8 +3916,20 @@ const adminList = []; // No client-side username grants administrator privileges
             `).join('');
         }
 
-        function openAddModal(editId = null) {
+        async function openAddModal(editId = null) {
+            // Preserve the existing fail-closed server-policy gate.
             if (!requireServerAdmin()) return;
+            try {
+                const { data, error } = await _supabase.auth.getUser();
+                if (error || !data?.user || data.user.app_metadata?.role !== 'admin' || currentUser?.authUserId !== data.user.id) return;
+                const owner = data.user.id;
+                const editor = await import('/admin-editor.mjs');
+                if (currentUser?.authUserId !== owner || !requireServerAdmin()) return;
+                editor.mountAdminEditor();
+            } catch (error) {
+                komiStatusFeedback('Не удалось открыть редактор. Попробуйте ещё раз.');
+                return;
+            }
             const modal = document.getElementById('addModal');
             document.getElementById('editAnimeId').value = '';
             document.getElementById('animeForm').reset();
@@ -3972,7 +3981,7 @@ const adminList = []; // No client-side username grants administrator privileges
             modal.classList.add('active');
         }
 
-        function closeAddModal() { komiApiSearchController?.abort(); document.getElementById('addModal').classList.remove('active'); }
+        function closeAddModal() { komiApiSearchController?.abort(); document.getElementById('addModal')?.remove(); }
         
         function addEpisodeField() {
             const div = document.createElement('div');
@@ -4055,8 +4064,12 @@ const adminList = []; // No client-side username grants administrator privileges
         // an editable display name, email, or a privileged local username.
         function googleProfileName(authUser) {
             const requested = String(authUser.user_metadata?.username || '').trim();
-            if (authUser.app_metadata?.provider !== 'google' && /^[A-Za-z0-9_]{3,24}$/.test(requested) && !/^google_/i.test(requested)) return requested;
-            return 'google_' + authUser.id.replace(/[^a-zA-Z0-9_-]/g, '');
+            if (authUser.app_metadata?.provider !== 'google' &&
+                /^[A-Za-z0-9_]{3,24}$/.test(requested) &&
+                !/^(google_|admin$)/i.test(requested)) return requested;
+            // Deterministic fallback: use exactly the username persisted to komi_profiles.
+            // A UUID with dashes would differ from the database-safe 32-hex identity.
+            return 'google_' + String(authUser.id || '').replace(/[^a-fA-F0-9]/g, '').slice(0, 32);
         }
         function komiSafeAccountUsername(username, authUserId) {
             const value = String(username || '').trim();
@@ -4086,7 +4099,9 @@ const adminList = []; // No client-side username grants administrator privileges
                     }
                     return;
                 }
-                const username = googleProfileName(session.user);
+                const {data: identityProfile, error: identityError} = await _supabase.from('komi_profiles').select('username').eq('user_id', session.user.id).maybeSingle();
+                if (identityError) throw identityError;
+                const username = identityProfile?.username || googleProfileName(session.user);
                 const previousGoogle = Boolean(currentUser?.authUserId);
                 if (previousGoogle && currentUser.username !== username) {
                     currentUser = null;
@@ -4096,6 +4111,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
                 userFavorites[username] = {};
+                userCustomFolders[username] = Object.create(null);
                 for (const key of Object.keys(komiEpisodeProgress)) if (key.startsWith(username + '_')) delete komiEpisodeProgress[key];
                 if (!userProfiles[username]) {
                     const meta = session.user.user_metadata || {};
@@ -4141,6 +4157,7 @@ const adminList = []; // No client-side username grants administrator privileges
         if (_supabase) {
             _supabase.auth.onAuthStateChange((event) => {
                 if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                    document.getElementById('addModal')?.remove();
                     // Never call Supabase APIs synchronously inside an auth callback.
                     setTimeout(() => queueKomiSessionRestore(), 0);
                 }
@@ -4187,15 +4204,7 @@ const adminList = []; // No client-side username grants administrator privileges
             }
             if (!username || !passwordInput) return;
 
-            const passwordHash = await hashPassword(passwordInput);
-            if (registeredUsers[username] && registeredUsers[username] === passwordHash) {
-                currentUser = { username };
-                saveData();
-                closeAuthModal();
-                render();
-            } else {
-                alert('Неверный логин или пароль!');
-            }
+            komiStatusFeedback('Старые данные сохранены в этом браузере. Войдите через email или Google; перенос списков выполняется отдельно.');
         }
 
         async function handleRegisterSubmit(e) {
@@ -4224,6 +4233,27 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         const komiFavoritePending = new Set();
+        const komiCollectionMutations = { statuses:new Map(), favorites:new Map() };
+        let komiCollectionLoadEpoch = 0;
+        function komiRecordCollectionMutation(kind, uid, animeId, value) {
+            komiCollectionMutations[kind].set(uid + ':' + String(animeId), {value,at:Date.now()});
+        }
+        function komiMergeCollectionMutations(kind, uid, loadStarted, rows) {
+            const result = Object.assign(Object.create(null), rows);
+            const prefix = uid + ':';
+            for (const [key, change] of komiCollectionMutations[kind]) {
+                if (!key.startsWith(prefix)) continue;
+                const animeId = key.slice(prefix.length);
+                if (change.at < loadStarted) {
+                    komiCollectionMutations[kind].delete(key);
+                } else if (change.value == null) {
+                    delete result[animeId];
+                } else {
+                    result[animeId] = change.value;
+                }
+            }
+            return result;
+        }
         async function toggleFavorite(id, category) {
             if (!currentUser) { openAuthModal('login'); return; }
             const user = currentUser;
@@ -4232,8 +4262,12 @@ const adminList = []; // No client-side username grants administrator privileges
             const next = userFavorites[user.username]?.[id] === category ? null : category;
             komiFavoritePending.add(key);
             try {
-                if (user.authUserId) await persistAuthenticatedFavorite(id, next);
-                if (currentUser !== user) return;
+                if (!user.authUserId || !_supabase)
+                    throw new Error('Войдите через подтверждённый аккаунт Komi.');
+                await persistAuthenticatedFavorite(id, next);
+                if (currentUser?.authUserId !== user.authUserId ||
+                    currentUser?.username !== user.username) return;
+                komiRecordCollectionMutation('favorites',user.authUserId,id,next);
                 userFavorites[user.username] ||= {};
                 if (next) userFavorites[user.username][id] = next;
                 else delete userFavorites[user.username][id];
@@ -4246,29 +4280,92 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         async function persistAuthenticatedFavorite(animeId, category) {
-            if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
+            const id = Number(animeId);
+            if (!_supabase || !currentUser?.authUserId) throw new Error('Нет подтверждённого входа в аккаунт.');
+            if (!/^\d+$/.test(String(animeId)) || !Number.isSafeInteger(id) || id <= 0)
+                throw new Error('Некорректный ID аниме.');
             const uid = currentUser.authUserId;
             const query = _supabase.from('komi_favorites');
             const result = category
-                ? await query.upsert({user_id:uid, anime_id:Number(animeId), category}, {onConflict:'user_id,anime_id'})
-                : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
+                ? await query.upsert({user_id:uid, anime_id:id, category}, {onConflict:'user_id,anime_id'})
+                    .select('anime_id,category').single()
+                : await query.delete().eq('user_id',uid).eq('anime_id',id).select('anime_id');
             if (result.error) throw result.error;
+            if (category && (!result.data || Number(result.data.anime_id) !== id || result.data.category !== category))
+                throw new Error('Сервер не подтвердил сохранение избранного.');
+            return true;
         }
 
-        function addToCustomFolder(id, folderName) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
-            if (!userCustomFolders[currentUser.username][folderName]) userCustomFolders[currentUser.username][folderName] = [];
-            
-            const list = userCustomFolders[currentUser.username][folderName];
-            const idx = list.indexOf(id);
-            if (idx > -1) {
-                list.splice(idx, 1);
-            } else {
-                list.push(id);
+        async function addToCustomFolder(id, folderName) {
+            if (!currentUser?.authUserId || !_supabase) { openAuthModal('login'); return; }
+            const {username,authUserId:owner} = currentUser;
+            const animeId = Number(id);
+            if (!Number.isSafeInteger(animeId) || animeId <= 0 || !komiFolderNameAllowed(folderName) ||
+                !Object.prototype.hasOwnProperty.call(userCustomFolders[username] || {}, folderName)) {
+                komiStatusFeedback('Некорректная папка или ID аниме.');
+                return;
             }
-            saveData();
-            openWatchModal(id);
+            const key = owner + ':' + folderName + ':' + animeId;
+            if (pendingFolderWrites.has(key)) return;
+            pendingFolderWrites.add(key);
+            const list = userCustomFolders[username][folderName];
+            const existing = list.includes(String(animeId));
+            try {
+                const query = _supabase.from('komi_folder_items');
+                if (existing) {
+                    const {error} = await query.delete().eq('user_id',owner)
+                        .eq('folder_name',folderName).eq('anime_id',animeId);
+                    if (error) throw error;
+                } else {
+                    const {data,error} = await query.insert({user_id:owner,folder_name:folderName,anime_id:animeId})
+                        .select('anime_id').single();
+                    if (error) throw error;
+                    if (!data || Number(data.anime_id) !== animeId)
+                        throw new Error('Сервер не подтвердил добавление в папку.');
+                }
+                if (currentUser?.authUserId !== owner) return;
+                if (existing) userCustomFolders[username][folderName] = list.filter(x => String(x) !== String(animeId));
+                else userCustomFolders[username][folderName] = [...list,String(animeId)];
+                saveData();
+                openWatchModal(String(animeId));
+                komiStatusFeedback(existing ? 'Удалено из папки.' : 'Добавлено в папку.');
+            } catch (error) {
+                if (currentUser?.authUserId === owner)
+                    komiStatusFeedback('Не удалось изменить папку. ' + error.message);
+            } finally {
+                pendingFolderWrites.delete(key);
+            }
+        }
+
+        // Supabase may truncate a single response at its configured max rows.
+        // Load every owner-only collection in stable pages, never just the first 1000.
+        async function komiLoadAllOwnedRows(table, columns, uid, orderColumns) {
+            const allowed = {
+                komi_anime_lists: ['anime_id'],
+                komi_favorites: ['anime_id'],
+                komi_watch_progress: ['anime_id'],
+                komi_custom_folders: ['name'],
+                komi_folder_items: ['folder_name','anime_id']
+            };
+            if (!Object.prototype.hasOwnProperty.call(allowed,table) ||
+                JSON.stringify(orderColumns) !== JSON.stringify(allowed[table]))
+                return {data:[],error:new Error('Некорректный запрос личной коллекции.')};
+            const all = [];
+            const pageSize = 500;
+            for (let offset = 0; ; offset += pageSize) {
+                if (currentUser?.authUserId !== uid || !_supabase)
+                    return {data:[],error:new Error('Аккаунт изменился.')};
+                let query = _supabase.from(table).select(columns).eq('user_id',uid);
+                for (const column of orderColumns) query = query.order(column,{ascending:true});
+                const {data,error} = await query.range(offset,offset+pageSize-1);
+                if (error) return {data:[],error};
+                all.push(...(data||[]));
+                if (!data || data.length < pageSize) break;
+            }
+            return {data:all,error:null};
+        }
+        async function komiLoadAllFolderItems(uid) {
+            return komiLoadAllOwnedRows('komi_folder_items','folder_name,anime_id',uid,['folder_name','anime_id']);
         }
 
         // Supabase-owned data is loaded from RLS-protected tables, never imported from shared legacy blobs.
@@ -4277,21 +4374,43 @@ const adminList = []; // No client-side username grants administrator privileges
             const uid = currentUser.authUserId;
             const username = currentUser.username;
             const loadStarted = Date.now();
-            const [lists, progress, favorites] = await Promise.all([
-                _supabase.from('komi_anime_lists').select('anime_id,status').eq('user_id', uid),
-                _supabase.from('komi_watch_progress').select('anime_id,season,episode_index,position_seconds,duration_seconds,updated_at').eq('user_id', uid),
-                _supabase.from('komi_favorites').select('anime_id,category').eq('user_id', uid)
+            const loadEpoch = ++komiCollectionLoadEpoch;
+            const [lists, progress, favorites, folders, folderItems] = await Promise.all([
+                komiLoadAllOwnedRows('komi_anime_lists','anime_id,status',uid,['anime_id']),
+                komiLoadAllOwnedRows('komi_watch_progress','anime_id,season,episode_index,position_seconds,duration_seconds,updated_at',uid,['anime_id']),
+                komiLoadAllOwnedRows('komi_favorites','anime_id,category',uid,['anime_id']),
+                komiLoadAllOwnedRows('komi_custom_folders','name',uid,['name']),
+                komiLoadAllFolderItems(uid)
             ]);
-            if (currentUser?.authUserId !== uid) return;
+            if (currentUser?.authUserId !== uid || loadEpoch !== komiCollectionLoadEpoch) return;
             if (lists.error) console.warn('Не удалось загрузить личные списки:', lists.error.message);
             else {
-                userAnimeStatuses[username] = {};
-                for (const item of lists.data || []) userAnimeStatuses[username][item.anime_id] = item.status;
+                const serverStatuses = Object.create(null);
+                for (const item of lists.data || []) serverStatuses[item.anime_id] = item.status;
+                userAnimeStatuses[username] =
+                    komiMergeCollectionMutations('statuses',uid,loadStarted,serverStatuses);
             }
             if (favorites.error) console.warn('Не удалось загрузить избранное:', favorites.error.message);
             else {
-                userFavorites[username] = {};
-                for (const item of favorites.data || []) userFavorites[username][item.anime_id] = item.category;
+                const serverFavorites = Object.create(null);
+                for (const item of favorites.data || []) serverFavorites[item.anime_id] = item.category;
+                userFavorites[username] =
+                    komiMergeCollectionMutations('favorites',uid,loadStarted,serverFavorites);
+            }
+            if (folders.error || folderItems.error) {
+                console.warn('Не удалось загрузить папки:',
+                    folders.error?.message || folderItems.error?.message);
+            } else {
+                const ownedFolders = Object.create(null);
+                for (const row of folders.data || []) {
+                    if (komiFolderNameAllowed(row.name)) ownedFolders[row.name] = [];
+                }
+                for (const item of folderItems.data || []) {
+                    if (Object.prototype.hasOwnProperty.call(ownedFolders,item.folder_name) &&
+                        Number.isSafeInteger(Number(item.anime_id)) && Number(item.anime_id)>0)
+                        ownedFolders[item.folder_name].push(String(item.anime_id));
+                }
+                userCustomFolders[username] = ownedFolders;
             }
             if (progress.error) console.warn('Не удалось загрузить прогресс:', progress.error.message);
             else {
@@ -4319,13 +4438,19 @@ const adminList = []; // No client-side username grants administrator privileges
             render();
         }
         async function persistAuthenticatedStatus(animeId, status) {
-            if (!_supabase || !currentUser?.authUserId || !/^\d+$/.test(String(animeId))) return;
+            const id = Number(animeId);
+            if (!_supabase || !currentUser?.authUserId) throw new Error('Нет подтверждённого входа в аккаунт.');
+            if (!/^\d+$/.test(String(animeId)) || !Number.isSafeInteger(id) || id <= 0)
+                throw new Error('Некорректный ID аниме.');
             const uid = currentUser.authUserId;
             const query = _supabase.from('komi_anime_lists');
             const result = status
-                ? await query.upsert({user_id:uid, anime_id:Number(animeId), status}, {onConflict:'user_id,anime_id'})
-                : await query.delete().eq('user_id',uid).eq('anime_id',Number(animeId));
+                ? await query.upsert({user_id:uid, anime_id:id, status}, {onConflict:'user_id,anime_id'})
+                    .select('anime_id,status').single()
+                : await query.delete().eq('user_id',uid).eq('anime_id',id).select('anime_id');
             if (result.error) throw result.error;
+            if (status && (!result.data || Number(result.data.anime_id) !== id || result.data.status !== status))
+                throw new Error('Сервер не подтвердил сохранение статуса.');
             return true;
         }
         const komiProgressWriter = KomiPlayerCore.createWriter(async ({uid, animeId, progress}) => {
@@ -4377,6 +4502,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 }
                 if (currentUser?.authUserId !== user.authUserId) return;
                 if (!userAnimeStatuses[user.username]) userAnimeStatuses[user.username] = {};
+                komiRecordCollectionMutation('statuses',user.authUserId,animeId,next);
                 if (next) userAnimeStatuses[user.username][animeId] = next;
                 else delete userAnimeStatuses[user.username][animeId];
                 saveData();
@@ -4743,7 +4869,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 <div class="watch-cinema-layout">
                     ${animeDetailsMarkup(anime)}
                     <div class="crunchy-hero-section">
-                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='./anime-artwork.svg'">
+                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='/anime-artwork.svg'">
                         <div class="crunchy-hero-info">
                             <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
                             <h1>${escapeFriendHtml(anime.title)}</h1>
@@ -4929,6 +5055,7 @@ const adminList = []; // No client-side username grants administrator privileges
         });
     </script>
     <script src="./komi-comments.js"></script>
+    <script src="./legacy-import.js"></script>
     <script src="./accessibility.js"></script>
     <script src="./player-runtime.js"></script>
     <script src="./anime-details.js"></script>

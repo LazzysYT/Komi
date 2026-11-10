@@ -11,3 +11,5 @@
 Permissions remain owned by Supabase RLS and RPC checks in migrations. Legacy public tables are a documented remaining security issue, not a permission model to extend. No data deletion or ownership migration is part of this patch.
 
 Personal progress is not copied to shared legacy local-storage maps. Pending writes capture the account and are skipped after account changes. Browser shutdown/network loss can still prevent the final request; no offline delivery guarantee is made.
+
+Initial-load and drawer behavior: index.html owns the static catalogue skeleton and its runtime reuse, the 3-second presence deadline, and the friends drawer aria-hidden/inert/focus state. admin-editor.mjs owns editor markup only; the existing server-permission gate remains disabled until a separate authorization implementation is approved and verified. scripts/qa-audit.test.cjs and scripts/regression-browser.cjs cover these changes.
