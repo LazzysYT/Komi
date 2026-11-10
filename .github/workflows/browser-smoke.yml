@@ -37,7 +37,7 @@ jobs:
           node scripts/check-syntax.cjs
           node --check admin-editor.mjs
           node --test scripts/qa-audit.test.cjs scripts/legacy-import.test.cjs scripts/release-gates.test.cjs scripts/status-persistence.test.cjs scripts/auth-identity.test.cjs scripts/avatar-upload.test.cjs scripts/custom-folders.test.cjs scripts/catalog-first-paint.test.cjs scripts/auth-e2e-target.test.cjs
-          node --test scripts/player-core.test.cjs
+          node --test scripts/player-core.test.cjs scripts/party-join-guard.test.cjs
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-preview.log 2>&1 &
           node scripts/regression-browser.cjs
           node scripts/party-regression.cjs
