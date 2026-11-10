@@ -4221,7 +4221,9 @@ const adminList = []; // No client-side username grants administrator privileges
             const next = userFavorites[user.username]?.[id] === category ? null : category;
             komiFavoritePending.add(key);
             try {
-                if (user.authUserId) await persistAuthenticatedFavorite(id, next);
+                if (!user.authUserId || !_supabase)
+                    throw new Error('Войдите через подтверждённый аккаунт Komi.');
+                await persistAuthenticatedFavorite(id, next);
                 if (currentUser !== user) return;
                 userFavorites[user.username] ||= {};
                 if (next) userFavorites[user.username][id] = next;
