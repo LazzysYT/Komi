@@ -2948,7 +2948,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                                     <div style="flex:2; min-width:160px;">
                                         <label for="avatarFileInput" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Фото с устройства</label>
-                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 4px; font-size:10px;" onchange="handleAvatarFileUpload(event)">
+                                        <input type="file" id="avatarFileInput" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" class="form-control" style="padding: 4px; font-size:10px;" onchange="handleAvatarFileUpload(event)">
                                     </div>
                                     <div style="flex:2; min-width:130px;">
                                         <label for="newStatusText" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
@@ -3106,8 +3106,12 @@ const adminList = []; // No client-side username grants administrator privileges
             const owner = currentUser?.authUserId || currentUser?.username;
             avatarDraft = null;
             if (!file || !owner) return;
-            if (!file.type.startsWith('image/')) {
-                komiStatusFeedback('Выберите изображение.');
+            if (!['image/jpeg','image/png','image/webp','image/gif','image/avif'].includes(file.type)) {
+                komiStatusFeedback('Поддерживаются JPG, PNG, WebP, GIF и AVIF.');
+                return;
+            }
+            if (!Number.isSafeInteger(file.size) || file.size <= 0 || file.size > 8 * 1024 * 1024) {
+                komiStatusFeedback('Выберите изображение размером до 8 МБ.');
                 return;
             }
             const image = new Promise((resolve, reject) => {
@@ -3118,6 +3122,12 @@ const adminList = []; // No client-side username grants administrator privileges
                     preview.onerror = () => reject(new Error('Не удалось открыть изображение.'));
                     preview.onload = () => {
                         try {
+                            if (!Number.isFinite(preview.width) || !Number.isFinite(preview.height) ||
+                                preview.width < 1 || preview.height < 1 ||
+                                preview.width > 8192 || preview.height > 8192 ||
+                                preview.width * preview.height > 32_000_000) {
+                                throw new Error('Слишком большое разрешение изображения.');
+                            }
                             const canvas = document.createElement('canvas');
                             const scale = Math.min(1, 320 / Math.max(preview.width, preview.height));
                             canvas.width = Math.max(1, Math.round(preview.width * scale));
