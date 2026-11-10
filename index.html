@@ -4292,22 +4292,35 @@ const adminList = []; // No client-side username grants administrator privileges
             }
         }
 
-        // Supabase returns a maximum of about 1000 rows per request by default.
-        // Page owner-only folder items deterministically so large collections are never truncated.
-        async function komiLoadAllFolderItems(uid) {
+        // Supabase may truncate a single response at its configured max rows.
+        // Load every owner-only collection in stable pages, never just the first 1000.
+        async function komiLoadAllOwnedRows(table, columns, uid, orderColumns) {
+            const allowed = {
+                komi_anime_lists: ['anime_id'],
+                komi_favorites: ['anime_id'],
+                komi_watch_progress: ['anime_id'],
+                komi_custom_folders: ['name'],
+                komi_folder_items: ['folder_name','anime_id']
+            };
+            if (!Object.prototype.hasOwnProperty.call(allowed,table) ||
+                JSON.stringify(orderColumns) !== JSON.stringify(allowed[table]))
+                return {data:[],error:new Error('Некорректный запрос личной коллекции.')};
             const all = [];
             const pageSize = 500;
             for (let offset = 0; ; offset += pageSize) {
-                if (currentUser?.authUserId !== uid) return {data:[],error:new Error('Аккаунт изменился.')};
-                const {data,error} = await _supabase.from('komi_folder_items')
-                    .select('folder_name,anime_id').eq('user_id',uid)
-                    .order('folder_name',{ascending:true}).order('anime_id',{ascending:true})
-                    .range(offset,offset+pageSize-1);
+                if (currentUser?.authUserId !== uid || !_supabase)
+                    return {data:[],error:new Error('Аккаунт изменился.')};
+                let query = _supabase.from(table).select(columns).eq('user_id',uid);
+                for (const column of orderColumns) query = query.order(column,{ascending:true});
+                const {data,error} = await query.range(offset,offset+pageSize-1);
                 if (error) return {data:[],error};
                 all.push(...(data||[]));
                 if (!data || data.length < pageSize) break;
             }
             return {data:all,error:null};
+        }
+        async function komiLoadAllFolderItems(uid) {
+            return komiLoadAllOwnedRows('komi_folder_items','folder_name,anime_id',uid,['folder_name','anime_id']);
         }
 
         // Supabase-owned data is loaded from RLS-protected tables, never imported from shared legacy blobs.
@@ -4317,10 +4330,10 @@ const adminList = []; // No client-side username grants administrator privileges
             const username = currentUser.username;
             const loadStarted = Date.now();
             const [lists, progress, favorites, folders, folderItems] = await Promise.all([
-                _supabase.from('komi_anime_lists').select('anime_id,status').eq('user_id', uid),
-                _supabase.from('komi_watch_progress').select('anime_id,season,episode_index,position_seconds,duration_seconds,updated_at').eq('user_id', uid),
-                _supabase.from('komi_favorites').select('anime_id,category').eq('user_id', uid),
-                _supabase.from('komi_custom_folders').select('name').eq('user_id',uid),
+                komiLoadAllOwnedRows('komi_anime_lists','anime_id,status',uid,['anime_id']),
+                komiLoadAllOwnedRows('komi_watch_progress','anime_id,season,episode_index,position_seconds,duration_seconds,updated_at',uid,['anime_id']),
+                komiLoadAllOwnedRows('komi_favorites','anime_id,category',uid,['anime_id']),
+                komiLoadAllOwnedRows('komi_custom_folders','name',uid,['name']),
                 komiLoadAllFolderItems(uid)
             ]);
             if (currentUser?.authUserId !== uid) return;
