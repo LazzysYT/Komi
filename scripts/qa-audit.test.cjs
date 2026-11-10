@@ -25,7 +25,7 @@ test('presence timeout aborts requests, releases lock and recovers on next poll'
  const query = {
   upsert(){return this;}, delete(){return this;}, lt(){return this;}, select(){return this;},
   abortSignal(signal){
-   if (!blocked) return Promise.resolve({data:[{username:'one'},{username:'two'}]});
+   if (!blocked) return Promise.resolve({data:2});
    return new Promise((resolve,reject)=>{
     if (signal.aborted) reject(Error('aborted'));
     else signal.addEventListener('abort',()=>reject(Error('aborted')), {once:true});
@@ -34,12 +34,12 @@ test('presence timeout aborts requests, releases lock and recovers on next poll'
  };
  const context = vm.createContext({AbortController, Date, Map, Error,
   document:{hidden:false,getElementById:()=>status}, currentUser:null, myUniqueKey:'test',
-  _supabase:{from:()=>query}, setTimeout(fn, ms){assert.equal(ms,3000); timeout=fn; return 1;}, clearTimeout(){cleared++;},
+  navigator:{onLine:true}, komiPresenceSession:'00000000-0000-4000-8000-000000000001', _supabase:{rpc:()=>query}, setTimeout(fn, ms){assert.equal(ms,3000); timeout=fn; return 1;}, clearTimeout(){cleared++;},
  });
- vm.runInContext('let presenceRequestInFlight=false; let globalAllOnlineUsersList=[];\n'+functionSource('async function updateOnlinePresence()', '        setInterval(updateOnlinePresence'),context);
+ vm.runInContext('let presenceRequestInFlight=false; let presenceRequestEpoch=0; let globalAllOnlineUsersList=[];\n'+functionSource('async function updateOnlinePresence()', '        setInterval(updateOnlinePresence'),context);
  const pending=vm.runInContext('updateOnlinePresence()',context);
  timeout(); await pending;
- assert.equal(status.textContent,'Онлайн: недоступен');
+ assert.equal(status.textContent,'Онлайн: —');
  assert.equal(vm.runInContext('presenceRequestInFlight',context),false);
  blocked=false; await vm.runInContext('updateOnlinePresence()',context);
  assert.equal(status.textContent,'Онлайн: 2'); assert.equal(cleared,2);

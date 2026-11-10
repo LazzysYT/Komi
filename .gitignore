@@ -1,3 +1,5 @@
 node_modules/
 browser-test-results/
 premium-audit.json
+
+supabase/.temp/

@@ -1696,8 +1696,8 @@ body > header {
             <form id="loginFormContainer" novalidate onsubmit="handleLoginSubmit(event)">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
                 <div class="form-group">
-                    <label for="loginUsername">Email или старый никнейм Komi</label>
-                    <input type="text" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com или старый ник">
+                    <label for="loginUsername">Email</label>
+                    <input type="text" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
@@ -1868,6 +1868,16 @@ body > header {
             }
         ];
 
+        let komiLegacyArchiveReady = false;
+        try {
+            if (!localStorage.getItem('komi_legacy_archive_v1')) localStorage.setItem('komi_legacy_archive_v1', JSON.stringify({
+                statuses: safeParse(localStorage.getItem('komi_anime_statuses'),{}),
+                favorites: safeParse(localStorage.getItem('komi_favorites'),{}),
+                progress: safeParse(localStorage.getItem('komi_episode_progress'),{}),
+                folders: safeParse(localStorage.getItem('komi_custom_folders'),{})
+            }));
+            komiLegacyArchiveReady = true;
+        } catch (error) { console.warn('Local archive could not be saved; original lists are preserved.'); }
         let animeList = defaultAnime;
         function safeParse(raw, fallback) { try { const v=JSON.parse(raw); return v == null ? fallback : v; } catch { return fallback; } }
         let animeComments = {}; 
@@ -1876,7 +1886,7 @@ body > header {
         let userCustomFolders = safeParse(localStorage.getItem('komi_custom_folders'), {}); 
         let userNotifications = safeParse(localStorage.getItem('komi_notifications'), {}); 
         let profileWalls = safeParse(localStorage.getItem('komi_profile_walls'), {}); 
-        let currentUser = safeParse(localStorage.getItem('komi_current_user'), null);
+        let currentUser = null; // Only restored Supabase Auth sessions establish identity.
         let registeredUsers = safeParse(localStorage.getItem('komi_users_db'), {});
         let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ★', regDate: '05 ноября 2026 года' }
@@ -1909,7 +1919,7 @@ body > header {
             localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
             const storedFavorites = { ...userFavorites };
             if (currentUser?.authUserId) delete storedFavorites[currentUser.username];
-            localStorage.setItem('komi_favorites', JSON.stringify(storedFavorites));
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_favorites', JSON.stringify(storedFavorites));
             const storedHistory = { ...userWatchHistory };
             if (currentUser?.authUserId) for (const key of Object.keys(storedHistory)) {
                 if (key.startsWith(currentUser.username + '_')) delete storedHistory[key];
@@ -1920,14 +1930,14 @@ body > header {
             if (currentUser?.authUserId) for (const key of Object.keys(storedProgress)) {
                 if (key.startsWith(currentUser.username + '_')) delete storedProgress[key];
             }
-            localStorage.setItem('komi_episode_progress', JSON.stringify(storedProgress));
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_episode_progress', JSON.stringify(storedProgress));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
             localStorage.setItem('komi_friends', JSON.stringify(userFriends));
             const storedStatuses = { ...userAnimeStatuses };
             if (currentUser?.authUserId) delete storedStatuses[currentUser.username];
-            localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
-            localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
             // Saving browser preferences must not rewrite the shared legacy status blob.
         }
@@ -1944,7 +1954,7 @@ async function loadDataFromCloud(attempt = 0) {
         if (!_supabase) throw new Error('Supabase не подключён');
 
         const settingsPromise = _supabase
-            .from('animes').select('id,content').in('id', [2, 3, 4, 5, 7]);
+            .from('animes').select('id,content').in('id', [2, 4]);
         const catalog = [];
         let lastId = 0;
         while (true) {
@@ -2026,32 +2036,13 @@ async function loadDataFromCloud(attempt = 0) {
             render();
         }
 
-        async function saveStatusesToCloud() {
-            if (_supabase && !currentUser?.authUserId) {
-                try { await _supabase.from('animes').upsert({ id: 3, content: JSON.stringify(userAnimeStatuses) }); } catch(e) {}
-            }
-        }
+        // Legacy records are retained as an archive; never rewrite another user's blob.
+        async function saveStatusesToCloud() { saveData(); }
+        async function saveProfilesToCloud() { return { error: new Error('Войдите через Google или email для сохранения профиля.') }; }
+        async function saveNotificationsToCloud() { saveData(); }
+        async function saveFriendsToCloud() { saveData(); }
 
-        async function saveProfilesToCloud() {
-            if (currentUser?.authUserId) return { error: new Error('Use komi_profiles for authenticated users') };
-            if (!_supabase) return { error: new Error('Supabase не подключён') };
-            try { return await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) }); }
-            catch(error) { return { error }; }
-        }
-
-        async function saveNotificationsToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 5, content: JSON.stringify(userNotifications) }); } catch(e) {}
-            }
-        }
-
-
-        async function saveFriendsToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 7, content: JSON.stringify(userFriends) }); } catch(e) {}
-            }
-        }
-
+        const komiPresenceSession = crypto.randomUUID();
         let presenceRequestInFlight = false;
         let presenceRequestEpoch = 0;
         async function updateOnlinePresence() {
@@ -2073,46 +2064,13 @@ async function loadDataFromCloud(attempt = 0) {
                 }
             }, 3000);
             try {
-                const now = Date.now();
-                const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
-                
-                const {error: presenceWriteError} = await _supabase.from('online_users').upsert({
-                    session_id: myUniqueKey,
-                    username: currentName,
-                    last_seen: now
-                }, { onConflict: 'session_id' }).abortSignal(requestController.signal);
-                if (presenceWriteError) throw presenceWriteError;
-
-                const expireTime = now - 10000;
-                await _supabase.from('online_users').delete().lt('last_seen', expireTime).abortSignal(requestController.signal);
-
-                const presenceUser = currentUser?.username;
-                const { data: cloudSyncData } = presenceUser
-                    ? await _supabase.from('animes').select('id,content').in('id', [5, 7]).abortSignal(requestController.signal)
-                    : {};
-                if (!requestController.signal.aborted && epoch === presenceRequestEpoch && cloudSyncData && currentUser?.username === presenceUser) {
-                    cloudSyncData.forEach(row => {
-                        if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
-                        if (row.id === 7) {
-                            const cloudFriends = JSON.parse(row.content || '{}');
-                            userFriends = { ...userFriends, ...cloudFriends };
-                        }
-                    });
-                    updateNotificationsUI();
-                }
-
-                const {data, error:presenceReadError} = await _supabase.from('online_users').select('username,last_seen').abortSignal(requestController.signal);
-                if (presenceReadError) throw presenceReadError;
-                if (!Array.isArray(data)) throw new Error('Не удалось получить список онлайн');
+                const {data: count, error} = await _supabase.rpc('komi_site_presence', {p_session: komiPresenceSession})
+                    .abortSignal(requestController.signal);
+                if (error) throw error;
                 if (requestController.signal.aborted || epoch !== presenceRequestEpoch) return;
-                const uniqueUsersMap = new Map();
-                for (const item of data) {
-                    if (Number(item.last_seen) > now - 30000 && item.username)
-                        uniqueUsersMap.set(item.username, item);
-                }
-                globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
+                if (!Number.isSafeInteger(Number(count)) || Number(count)<0) throw Error('Некорректный счётчик');
                 const el = document.getElementById('onlineCountText');
-                if (el) el.innerText = `Онлайн: ${globalAllOnlineUsersList.length}`;
+                if (el) el.textContent = 'Онлайн: ' + Number(count);
             } catch(e) {
                 if (epoch === presenceRequestEpoch) {
                     const el = document.getElementById('onlineCountText');
@@ -2331,7 +2289,7 @@ async function loadDataFromCloud(attempt = 0) {
 
         function updateNotificationsUI() {
             if (!currentUser) return;
-            const notifs = userNotifications[currentUser.username] || [];
+            const notifs = currentUser.authUserId ? [] : (userNotifications[currentUser.username] || []);
             const requests = protectedFriendRequests.filter(row => row.owner === currentUser.authUserId);
             const unreadCount = notifs.filter(n => !n.read).length + requests.length;
             const badge = document.getElementById('notifBadge');
@@ -2581,9 +2539,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 const { error } = await _supabase.auth.signOut({ scope: 'local' });
                 if (error) { alert('Не удалось выйти: ' + error.message); return; }
             }
-            if (_supabase) {
-                try { await _supabase.from('online_users').delete().eq('session_id', myUniqueKey); } catch(e){}
-            }
+            // Presence expires server-side after 30 seconds.
             clearKomiAccountData(signingOut);
             avatarDraft = null;
             currentUser = null;
@@ -2961,6 +2917,7 @@ const adminList = []; // No client-side username grants administrator privileges
                             ${isMe ? `
                             <div class="profile-settings-box">
                                 <h4> Настройки профиля</h4>
+                                <button type="button" class="btn-secondary" onclick="openLegacyImport()">Перенести старые списки</button>
                                 <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
                                 <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
                                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
@@ -3497,7 +3454,7 @@ const adminList = []; // No client-side username grants administrator privileges
         function friendsFor(username) {
             const legacy = userFriends[username] || [];
             if (username !== currentUser?.username || protectedFriendList.owner !== currentUser?.authUserId) return legacy;
-            return [...new Set([...legacy, ...protectedFriendList.idsByName.keys()])];
+            return [...protectedFriendList.idsByName.keys()];
         }
         async function loadProtectedFriends() {
             const uid = currentUser?.authUserId;
@@ -4033,7 +3990,9 @@ const adminList = []; // No client-side username grants administrator privileges
                     }
                     return;
                 }
-                const username = googleProfileName(session.user);
+                const {data: identityProfile, error: identityError} = await _supabase.from('komi_profiles').select('username').eq('user_id', session.user.id).maybeSingle();
+                if (identityError) throw identityError;
+                const username = identityProfile?.username || googleProfileName(session.user);
                 const previousGoogle = Boolean(currentUser?.authUserId);
                 if (previousGoogle && currentUser.username !== username) {
                     currentUser = null;
@@ -4135,15 +4094,7 @@ const adminList = []; // No client-side username grants administrator privileges
             }
             if (!username || !passwordInput) return;
 
-            const passwordHash = await hashPassword(passwordInput);
-            if (registeredUsers[username] && registeredUsers[username] === passwordHash) {
-                currentUser = { username };
-                saveData();
-                closeAuthModal();
-                render();
-            } else {
-                alert('Неверный логин или пароль!');
-            }
+            komiStatusFeedback('Старые данные сохранены в этом браузере. Войдите через email или Google; перенос списков выполняется отдельно.');
         }
 
         async function handleRegisterSubmit(e) {
@@ -4877,6 +4828,7 @@ const adminList = []; // No client-side username grants administrator privileges
         });
     </script>
     <script src="./komi-comments.js"></script>
+    <script src="./legacy-import.js"></script>
     <script src="./accessibility.js"></script>
     <script src="./player-runtime.js"></script>
     <script src="./anime-details.js"></script>

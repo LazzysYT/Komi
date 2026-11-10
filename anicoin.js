@@ -70,6 +70,12 @@ function renderAniCoinShop(container) {
             </div>` : ''}
             <p role="status">${escapeFriendHtml(aniCoinStatus)}</p>
             ${owner && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" onclick="openAniCoinShop()">Повторить</button>' : ''}
+            <div class="anicoin-item"><h2>Komi Premium · скоро</h2>
+                <p><strong>49 грн / месяц</strong> · примерно 88,74 ₽ · 483,63 ₸ · $1,08.</p>
+                <p>Планируем расширенную статистику, бонусные AniCoin и уникальное оформление профиля. Точный состав подписки объявим перед запуском.</p>
+                <p>Пересчёт по курсам <a href="https://nationalbank.kz/ru/exchangerates/ezhednevnye-oficialnye-rynochnye-kursy-valyut" target="_blank" rel="noopener noreferrer">НБ Казахстана</a> на 10.11.2026. Это ориентировочные суммы; цены оплаты будут опубликованы при запуске.</p>
+                <button type="button" class="btn-secondary" disabled>Оплата пока недоступна</button>
+            </div>
             <div class="anicoin-item"><h2>Товаров пока нет</h2><p>Заработанные AniCoin видны в кошельке.</p></div>
         </section>`;
 }
