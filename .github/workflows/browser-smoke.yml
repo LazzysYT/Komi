@@ -36,7 +36,7 @@ jobs:
         run: |
           node scripts/check-syntax.cjs
           node --check admin-editor.mjs
-          node --test scripts/qa-audit.test.cjs scripts/legacy-import.test.cjs scripts/release-gates.test.cjs scripts/status-persistence.test.cjs scripts/auth-identity.test.cjs scripts/avatar-upload.test.cjs scripts/custom-folders.test.cjs scripts/catalog-first-paint.test.cjs
+          node --test scripts/qa-audit.test.cjs scripts/legacy-import.test.cjs scripts/release-gates.test.cjs scripts/status-persistence.test.cjs scripts/auth-identity.test.cjs scripts/avatar-upload.test.cjs scripts/custom-folders.test.cjs scripts/catalog-first-paint.test.cjs scripts/auth-e2e-target.test.cjs
           node --test scripts/player-core.test.cjs
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-preview.log 2>&1 &
           node scripts/regression-browser.cjs
@@ -46,10 +46,13 @@ jobs:
         timeout-minutes: 4
         run: node scripts/live-domain-smoke.cjs
       - name: Run real two-account auth and RLS E2E (when secrets configured)
-        # Real-account credentials are currently rejected by Supabase; run deliberately with valid test accounts.
-        # Automated PR smoke remains mandatory and does not silently report this live-auth test as passed.
+        # Manual only: verify the source branch/commit and the reviewed URL first.
+        # Use disposable dedicated test accounts, not administrator/owner credentials.
+        # Set the repository variable KOMI_TEST_URL to the exact verified Preview URL.
+        # Automated PR smoke does not silently count this as passed.
         if: ${{ github.event_name == 'workflow_dispatch' && env.KOMI_TEST_EMAIL_A != '' && env.KOMI_TEST_PASSWORD_A != '' && env.KOMI_TEST_EMAIL_B != '' && env.KOMI_TEST_PASSWORD_B != '' }}
         env:
+          KOMI_TEST_URL: ${{ vars.KOMI_TEST_URL }}
           KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
           KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
           KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
