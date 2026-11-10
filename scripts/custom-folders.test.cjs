@@ -125,7 +125,7 @@ test('changing accounts during async write never contaminates a second user',asy
 
 
 test('folder membership loads every page without the Supabase 1000-row truncation',async()=>{
- const loadSource=part('async function komiLoadAllFolderItems(', '        // Supabase-owned data is loaded');
+ const loadSource=part('async function komiLoadAllOwnedRows(', '        // Supabase-owned data is loaded');
  const items=Array.from({length:1003},(_,i)=>({folder_name:'Моя папка',anime_id:i+1}));
  const ranges=[];
  const chain={
@@ -143,7 +143,7 @@ test('folder membership loads every page without the Supabase 1000-row truncatio
 });
 
 test('folder pagination fails closed if signed-in account changed',async()=>{
- const loadSource=part('async function komiLoadAllFolderItems(', '        // Supabase-owned data is loaded');
+ const loadSource=part('async function komiLoadAllOwnedRows(', '        // Supabase-owned data is loaded');
  const ctx=vm.createContext({currentUser:{authUserId:'other-owner'},_supabase:{from(){throw Error('unexpected query')}},Error});
  vm.runInContext(loadSource,ctx);
  const result=await vm.runInContext("komiLoadAllFolderItems('owner-uuid')",ctx);
@@ -172,4 +172,46 @@ test('failed folder deletion does not remove local folder',async()=>{
  assert.deepEqual(Array.from(x.ctx.userCustomFolders.alex['Моя папка']),['42']);
  assert.equal(x.saved.length,0);
  assert.match(x.notifications.at(-1),/RLS denied/);
+});
+
+
+test('large lists, favorites and progress always page through 1205 records',async()=>{
+ const loadSource=part('async function komiLoadAllOwnedRows(', '        // Supabase-owned data is loaded');
+ const cases=[
+   ['komi_anime_lists','anime_id,status'],
+   ['komi_favorites','anime_id,category'],
+   ['komi_watch_progress','anime_id,season,episode_index,position_seconds,duration_seconds,updated_at']
+ ];
+ for(const [table,columns] of cases) {
+   const input=Array.from({length:1205},(_,i)=>({anime_id:i+1}));
+   const requests=[];
+   const chain={
+     select(c){requests.push(['select',c]);return this;},
+     eq(k,v){requests.push(['eq',k,v]);return this;},
+     order(k){requests.push(['order',k]);return this;},
+     range(a,b){requests.push(['range',a,b]);return Promise.resolve({data:input.slice(a,b+1),error:null})}
+   };
+   const ctx=vm.createContext({currentUser:{authUserId:'owner-uuid'},_supabase:{from:name=>{requests.push(['from',name]);return chain;}},Error});
+   vm.runInContext(loadSource,ctx);
+   ctx.__table=table;ctx.__columns=columns;
+   const result=await vm.runInContext("komiLoadAllOwnedRows(__table,__columns,'owner-uuid',['anime_id'])",ctx);
+   assert.equal(result.error,null);
+   assert.equal(result.data.length,1205);
+   assert.deepEqual(requests.filter(x=>x[0]==='range').map(x=>x.slice(1)),[[0,499],[500,999],[1000,1499]]);
+   assert.ok(requests.filter(x=>x[0]==='from').every(x=>x[1]===table));
+   assert.ok(requests.filter(x=>x[0]==='eq').every(x=>x[1]==='user_id'&&x[2]==='owner-uuid'));
+ }
+});
+
+test('personal list loader propagates a failed page without returning partial data',async()=>{
+ const loadSource=part('async function komiLoadAllOwnedRows(', '        // Supabase-owned data is loaded');
+ const chain={select(){return this;},eq(){return this;},order(){return this;},range(a){
+   return Promise.resolve(a===0?{data:Array.from({length:500},(_,i)=>({anime_id:i+1})),error:null}:
+     {data:null,error:{message:'Network failure'}});
+ }};
+ const ctx=vm.createContext({currentUser:{authUserId:'owner-uuid'},_supabase:{from:()=>chain},Error});
+ vm.runInContext(loadSource,ctx);
+ const result=await vm.runInContext("komiLoadAllOwnedRows('komi_anime_lists','anime_id,status','owner-uuid',['anime_id'])",ctx);
+ assert.equal(result.data.length,0);
+ assert.equal(result.error.message,'Network failure');
 });
