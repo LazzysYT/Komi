@@ -1566,7 +1566,8 @@ body > header {
     .komi-profile-v2 .profile-header-card { grid-template-columns: minmax(0, 1fr); justify-items: start; }
     .komi-profile-v2 .profile-settings-box .form-control { min-height: 42px; }
 }
-</style></head>
+</style><style>.komi-skeleton { pointer-events:none; }.komi-skeleton-line { height:14px; margin:16px; border-radius:4px; background:var(--border); } #catalog > p { margin-block:12px; color:var(--text-muted); }</style>
+</head>
 <body>
 
     <!-- Шапка сайта -->
@@ -1574,10 +1575,10 @@ body > header {
         <div class="header-inner">
             <nav class="komi-social-links" aria-label="Социальные сети Komi Anime">
                 <a class="komi-social-link" href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer" title="Komi Anime в TikTok" aria-label="TikTok Komi Anime">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 2h-3.2v13.3a3.1 3.1 0 1 1-2.7-3.1V8.9a6.5 6.5 0 1 0 6 6.4V8.4a8.2 8.2 0 0 0 4.8 1.5V6.7A4.9 4.9 0 0 1 16.7 2Z"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 2h-3.2v13.3a3.1 3.1 0 1 1-2.7-3.1V8.9a6.5 6.5 0 1 0 6 6.4V8.4a8.2 8.2 0 0 0 4.8 1.5V6.7A4.9 4.9 0 0 1 16.7 2Z"/></svg>
                 </a>
                 <a class="komi-social-link" href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer" title="Telegram-канал Komi Anime" aria-label="Telegram Komi Anime">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
                 </a>
             </nav>
             <div class="logo-area">
@@ -1587,7 +1588,7 @@ body > header {
                 </div>
                 <div class="online-counter">
                     <div class="online-dot"></div>
-                    <span id="onlineCountText">Онлайн: 1</span>
+                    <span id="onlineCountText" role="status" aria-live="polite">Онлайн: недоступен</span>
                 </div>
             </div>
             
@@ -1643,78 +1644,17 @@ body > header {
         </div>
     </aside>
     <div id="komiFriendsBackdrop" class="komi-friends-backdrop" onclick="closeFriendsDrawer()"></div>
-    <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true">
+    <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true" inert>
         <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
         <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." oninput="renderFriendsDrawer()" autocomplete="off" aria-label="Поиск по нику"></div>
         <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" onclick="setFriendsDrawerTab('all')">Все пользователи</button><button id="komiFriendsMyTab" onclick="setFriendsDrawerTab('friends')">Мои друзья</button></div>
         <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
-        <main id="mainContainer"></main>
+        <main id="mainContainer"><section id="catalog" aria-labelledby="catalogLoadingTitle"><h1 id="catalogLoadingTitle" class="section-title">Каталог аниме</h1><p role="status">Загружаем каталог…</p><div id="anime-grid" class="anime-grid" aria-busy="true"><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div><div class="anime-card komi-skeleton" aria-hidden="true"><div class="anime-poster-box"></div><div class="komi-skeleton-line"></div></div></div></section><noscript><p>Для загрузки каталога и просмотра аниме включите JavaScript.</p></noscript></main>
     </div>
 
     <!-- Модальные окна -->
-    <div class="modal-overlay" id="addModal">
-        <div class="modal-content" style="max-width: 650px;">
-            <button class="modal-close" onclick="playSound(); closeAddModal()">&times;</button>
-            <h2 id="modalTitleText" style="margin-bottom: 12px; font-size: 18px;">Добавить / Редактировать аниме</h2>
-            
-            <div style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px;">
-                <div style="display: flex; gap: 6px;">
-                    <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (Shikimori)...">
-                    <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()"> Найти</button>
-                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()"> Топ</button>
-                </div>
-                <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; padding: 4px;"></div>
-            </div>
-
-            <form id="animeForm" novalidate onsubmit="saveAnimeForm(event)">
-                <input type="hidden" id="editAnimeId">
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" class="form-control" id="animeTitle" required placeholder="Название аниме">
-                </div>
-                <div class="form-group">
-                    <label>Постер (URL)</label>
-                    <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
-                </div>
-                <div class="form-group">
-                    <label>Рейтинг Shikimori</label>
-                    <input type="text" class="form-control" id="animeShikiRating" placeholder="9.0">
-                </div>
-                <div class="form-group">
-                    <label>Кадры (через запятую)</label>
-                    <input type="text" class="form-control" id="animeScreenshots" placeholder="https://img1.jpg, https://img2.jpg...">
-                </div>
-                <div class="form-group">
-                    <label>Трейлер (YouTube embed)</label>
-                    <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
-                </div>
-                <div class="form-group">
-                    <label>Жанры</label>
-                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; background: var(--bg-input); padding: 8px; border-radius: 8px; border: 1px solid var(--border);"></div>
-                </div>
-                <div class="form-group">
-                    <label>Год / Тип</label>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="text" class="form-control" id="animeYear" placeholder="2026" style="flex:1;">
-                        <input type="text" class="form-control" id="animeType" placeholder="Фильм или Сериал" style="flex:1;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea class="form-control" id="animeDesc" style="resize: none; min-height: 120px" placeholder="Сюжет..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Эпизоды</label>
-                    <div id="episodesList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:6px;"></div>
-                    <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
-                </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" onclick="playSound()">Сохранить</button>
-            </form>
-        </div>
-    </div>
-
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 360px;">
             <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
@@ -1761,7 +1701,7 @@ body > header {
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
             <h3 style="margin-bottom: 14px; font-size: 15px;">◇ Выбираем аниме...</h3>
             <div id="rouletteContainer" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
-                <img id="rouletteImage" src="" style="width: 100%; height: 100%; object-fit: cover;">
+                <img id="rouletteImage" src="/anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div id="rouletteTitle" style="font-weight: 700; font-size: 13px; color: white;">Загрузка...</div>
         </div>
@@ -2077,6 +2017,12 @@ async function loadDataFromCloud(attempt = 0) {
         async function updateOnlinePresence() {
             if (!_supabase || document.hidden || presenceRequestInFlight) return;
             presenceRequestInFlight = true;
+            const controller = new AbortController();
+            const timer = setTimeout(() => {
+                controller.abort();
+                const el = document.getElementById('onlineCountText');
+                if (el) el.textContent = 'Онлайн: недоступен';
+            }, 3000);
             try {
                 const now = Date.now();
                 const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
@@ -2085,14 +2031,14 @@ async function loadDataFromCloud(attempt = 0) {
                     session_id: myUniqueKey, 
                     username: currentName, 
                     last_seen: now 
-                }, { onConflict: 'session_id' });
+                }, { onConflict: 'session_id' }).abortSignal(controller.signal);
 
                 const expireTime = now - 10000;
-                await _supabase.from('online_users').delete().lt('last_seen', expireTime);
+                await _supabase.from('online_users').delete().lt('last_seen', expireTime).abortSignal(controller.signal);
 
                 const presenceUser = currentUser?.username;
                 const { data: cloudSyncData } = presenceUser
-                    ? await _supabase.from('animes').select('id,content').in('id', [5, 7])
+                    ? await _supabase.from('animes').select('id,content').in('id', [5, 7]).abortSignal(controller.signal)
                     : {};
                 if (cloudSyncData && currentUser?.username === presenceUser) {
                     cloudSyncData.forEach(row => {
@@ -2105,20 +2051,22 @@ async function loadDataFromCloud(attempt = 0) {
                     updateNotificationsUI();
                 }
 
-                const { data } = await _supabase.from('online_users').select('*');
+                const { data, error } = await _supabase.from('online_users').select('*').abortSignal(controller.signal);
+                if (error || controller.signal.aborted) throw error || Error('Presence timed out');
                 if (data) {
                     const uniqueUsersMap = new Map();
                     data.forEach(item => uniqueUsersMap.set(item.username, item));
                     globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
 
-                    const count = globalAllOnlineUsersList.length || 1;
+                    const count = globalAllOnlineUsersList.length;
                     const el = document.getElementById('onlineCountText');
                     if (el) el.innerText = `Онлайн: ${count}`;
                 }
             } catch(e) {
                 const el = document.getElementById('onlineCountText');
-                if (el) el.innerText = `Онлайн: 1`;
+                if (el) el.innerText = `Онлайн: недоступен`;
             } finally {
+                clearTimeout(timer);
                 presenceRequestInFlight = false;
             }
         }
@@ -2143,13 +2091,19 @@ async function loadDataFromCloud(attempt = 0) {
             loadKomiCommunityProfiles().then(() => renderFriendsDrawer()).catch(console.warn);
             const drawer = document.getElementById('komiFriendsDrawer');
             drawer.classList.add('open');
+            drawer.inert = false;
             drawer.setAttribute('aria-hidden','false');
             document.getElementById('komiFriendsBackdrop').classList.add('open');
             document.getElementById('sideFriendsBtn')?.setAttribute('aria-expanded','true');
             renderFriendsDrawer();
-            document.getElementById('komiFriendsSearch')?.focus();
+            requestAnimationFrame(() => {
+                if (drawer.classList.contains('open')) document.getElementById('komiFriendsSearch')?.focus();
+            });
         }
         function closeFriendsDrawer() {
+            const drawer = document.getElementById('komiFriendsDrawer');
+            if (drawer?.classList.contains('open')) document.getElementById('sideFriendsBtn')?.focus();
+            if (drawer) drawer.inert = true;
             document.getElementById('komiFriendsDrawer')?.classList.remove('open');
             document.getElementById('komiFriendsDrawer')?.setAttribute('aria-hidden','true');
             document.getElementById('komiFriendsBackdrop')?.classList.remove('open');
@@ -2207,6 +2161,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.includes(name);
+                const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name));
                 return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
@@ -2572,6 +2527,7 @@ const adminList = []; // No client-side username grants administrator privileges
             navigate('home');
         }
 
+        const komiCatalogLoadingMarkup = "<section id=\"catalog\" aria-labelledby=\"catalogLoadingTitle\"><h1 id=\"catalogLoadingTitle\" class=\"section-title\">Каталог аниме</h1><p role=\"status\">Загружаем каталог…</p><div id=\"anime-grid\" class=\"anime-grid\" aria-busy=\"true\"><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div><div class=\"anime-card komi-skeleton\" aria-hidden=\"true\"><div class=\"anime-poster-box\"></div><div class=\"komi-skeleton-line\"></div></div></div></section>";
         function render() {
             renderHeaderUser();
             const container = document.getElementById('mainContainer');
@@ -2582,7 +2538,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     clearInterval(slideInterval);
                     container.innerHTML = catalogInitialLoadFailed
                         ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
-                        : '<section class="komi-catalog-empty" role="status" aria-live="polite"><strong>Загружаем каталог</strong><p>Подборки появятся, когда каталог будет готов.</p></section>';
+                        : komiCatalogLoadingMarkup;
                     return;
                 }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
@@ -3230,7 +3186,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
-            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || './anime-artwork.svg');
+            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || '/anime-artwork.svg');
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
@@ -3238,7 +3194,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'./anime-artwork.svg\'">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'/anime-artwork.svg\'">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1e1e26,#101015);color:#92929F"><span style="font-size:30px;font-weight:800;color:#f03d50">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
@@ -3262,7 +3218,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const maxSteps = 12;
             const candidates = animeList.filter(item => item.poster && /^https?:\/\//i.test(item.poster));
             if (!candidates.length) { modal.classList.remove('active'); return; }
-            const fallback = 'anime-artwork.svg';
+            const fallback = '/anime-artwork.svg';
             let lastId = null;
             function showPoster(item) {
                 titleEl.textContent = item.title || 'Аниме';
@@ -3659,8 +3615,20 @@ const adminList = []; // No client-side username grants administrator privileges
             `).join('');
         }
 
-        function openAddModal(editId = null) {
+        async function openAddModal(editId = null) {
+            // Preserve the existing fail-closed server-policy gate.
             if (!requireServerAdmin()) return;
+            try {
+                const { data, error } = await _supabase.auth.getUser();
+                if (error || !data?.user || data.user.app_metadata?.role !== 'admin' || currentUser?.authUserId !== data.user.id) return;
+                const owner = data.user.id;
+                const editor = await import('/admin-editor.mjs');
+                if (currentUser?.authUserId !== owner || !requireServerAdmin()) return;
+                editor.mountAdminEditor();
+            } catch (error) {
+                komiStatusFeedback('Не удалось открыть редактор. Попробуйте ещё раз.');
+                return;
+            }
             const modal = document.getElementById('addModal');
             document.getElementById('editAnimeId').value = '';
             document.getElementById('animeForm').reset();
@@ -3712,7 +3680,7 @@ const adminList = []; // No client-side username grants administrator privileges
             modal.classList.add('active');
         }
 
-        function closeAddModal() { komiApiSearchController?.abort(); document.getElementById('addModal').classList.remove('active'); }
+        function closeAddModal() { komiApiSearchController?.abort(); document.getElementById('addModal')?.remove(); }
         
         function addEpisodeField() {
             const div = document.createElement('div');
@@ -3872,6 +3840,7 @@ const adminList = []; // No client-side username grants administrator privileges
         if (_supabase) {
             _supabase.auth.onAuthStateChange((event) => {
                 if (event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                    document.getElementById('addModal')?.remove();
                     // Avoid calling Supabase APIs synchronously inside its auth callback.
                     Promise.resolve().then(() => restoreGoogleSession());
                 }
@@ -4470,7 +4439,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 <div class="watch-cinema-layout">
                     ${animeDetailsMarkup(anime)}
                     <div class="crunchy-hero-section">
-                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='./anime-artwork.svg'">
+                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='/anime-artwork.svg'">
                         <div class="crunchy-hero-info">
                             <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
                             <h1>${escapeFriendHtml(anime.title)}</h1>

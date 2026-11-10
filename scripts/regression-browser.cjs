@@ -17,6 +17,15 @@ const path=require('node:path');
       episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
     catalogInitialLoadComplete=true;render();
    });
+   await page.evaluate(()=>openFriendsDrawer());
+   assert.equal(await page.locator('#komiFriendsDrawer').getAttribute('aria-hidden'),'false');
+   assert.equal(await page.locator('#komiFriendsDrawer').evaluate(el=>el.inert),false);
+   await page.locator('#komiFriendsSearch').focus();
+   await page.evaluate(()=>closeFriendsDrawer());
+   assert.equal(await page.locator('#komiFriendsDrawer').evaluate(el=>el.inert),true);
+   assert.equal(await page.evaluate(()=>document.activeElement.id),'sideFriendsBtn');
+   await page.evaluate(()=>openAddModal());
+   assert.equal(await page.locator('#addModal').count(),0);
    await page.evaluate(()=>openWatchModal('1'));
    await page.waitForSelector('#animeVideoPlayer');
    const state=await page.evaluate(()=>{
