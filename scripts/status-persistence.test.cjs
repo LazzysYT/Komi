@@ -64,7 +64,7 @@ test('upsert that returns no row must not pretend status or favorite was saved',
 
 test('server errors propagate instead of changing the local list silently', async () => {
   const { context } = sandbox(statusSource,{data:null,error:{message:'RLS denied'}});
-  await assert.rejects(vm.runInContext("persistAuthenticatedStatus('12','Просмотрено')",context), /RLS denied/);
+  await assert.rejects(vm.runInContext("persistAuthenticatedStatus('12','Просмотрено')",context), error => error?.message === 'RLS denied');
 });
 
 test('deleting absent status is an idempotent successful operation', async () => {
