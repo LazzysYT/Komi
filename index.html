@@ -2554,6 +2554,10 @@ const adminList = []; // No client-side username grants administrator privileges
             delete userAnimeStatuses[user.username];
             delete userFavorites[user.username];
             delete userCustomFolders[user.username];
+            ++komiCollectionLoadEpoch;
+            for (const changes of Object.values(komiCollectionMutations)) {
+                for (const key of changes.keys()) if (key.startsWith(user.authUserId + ':')) changes.delete(key);
+            }
             for (const data of [komiEpisodeProgress, userWatchHistory]) {
                 for (const key of Object.keys(data)) if (key.startsWith(user.username + '_')) delete data[key];
             }
@@ -4217,6 +4221,27 @@ const adminList = []; // No client-side username grants administrator privileges
         }
 
         const komiFavoritePending = new Set();
+        const komiCollectionMutations = { statuses:new Map(), favorites:new Map() };
+        let komiCollectionLoadEpoch = 0;
+        function komiRecordCollectionMutation(kind, uid, animeId, value) {
+            komiCollectionMutations[kind].set(uid + ':' + String(animeId), {value,at:Date.now()});
+        }
+        function komiMergeCollectionMutations(kind, uid, loadStarted, rows) {
+            const result = Object.assign(Object.create(null), rows);
+            const prefix = uid + ':';
+            for (const [key, change] of komiCollectionMutations[kind]) {
+                if (!key.startsWith(prefix)) continue;
+                const animeId = key.slice(prefix.length);
+                if (change.at < loadStarted) {
+                    komiCollectionMutations[kind].delete(key);
+                } else if (change.value == null) {
+                    delete result[animeId];
+                } else {
+                    result[animeId] = change.value;
+                }
+            }
+            return result;
+        }
         async function toggleFavorite(id, category) {
             if (!currentUser) { openAuthModal('login'); return; }
             const user = currentUser;
@@ -4228,7 +4253,9 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (!user.authUserId || !_supabase)
                     throw new Error('Войдите через подтверждённый аккаунт Komi.');
                 await persistAuthenticatedFavorite(id, next);
-                if (currentUser !== user) return;
+                if (currentUser?.authUserId !== user.authUserId ||
+                    currentUser?.username !== user.username) return;
+                komiRecordCollectionMutation('favorites',user.authUserId,id,next);
                 userFavorites[user.username] ||= {};
                 if (next) userFavorites[user.username][id] = next;
                 else delete userFavorites[user.username][id];
@@ -4335,6 +4362,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const uid = currentUser.authUserId;
             const username = currentUser.username;
             const loadStarted = Date.now();
+            const loadEpoch = ++komiCollectionLoadEpoch;
             const [lists, progress, favorites, folders, folderItems] = await Promise.all([
                 komiLoadAllOwnedRows('komi_anime_lists','anime_id,status',uid,['anime_id']),
                 komiLoadAllOwnedRows('komi_watch_progress','anime_id,season,episode_index,position_seconds,duration_seconds,updated_at',uid,['anime_id']),
@@ -4342,16 +4370,20 @@ const adminList = []; // No client-side username grants administrator privileges
                 komiLoadAllOwnedRows('komi_custom_folders','name',uid,['name']),
                 komiLoadAllFolderItems(uid)
             ]);
-            if (currentUser?.authUserId !== uid) return;
+            if (currentUser?.authUserId !== uid || loadEpoch !== komiCollectionLoadEpoch) return;
             if (lists.error) console.warn('Не удалось загрузить личные списки:', lists.error.message);
             else {
-                userAnimeStatuses[username] = {};
-                for (const item of lists.data || []) userAnimeStatuses[username][item.anime_id] = item.status;
+                const serverStatuses = Object.create(null);
+                for (const item of lists.data || []) serverStatuses[item.anime_id] = item.status;
+                userAnimeStatuses[username] =
+                    komiMergeCollectionMutations('statuses',uid,loadStarted,serverStatuses);
             }
             if (favorites.error) console.warn('Не удалось загрузить избранное:', favorites.error.message);
             else {
-                userFavorites[username] = {};
-                for (const item of favorites.data || []) userFavorites[username][item.anime_id] = item.category;
+                const serverFavorites = Object.create(null);
+                for (const item of favorites.data || []) serverFavorites[item.anime_id] = item.category;
+                userFavorites[username] =
+                    komiMergeCollectionMutations('favorites',uid,loadStarted,serverFavorites);
             }
             if (folders.error || folderItems.error) {
                 console.warn('Не удалось загрузить папки:',
@@ -4458,6 +4490,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 }
                 if (currentUser?.authUserId !== user.authUserId) return;
                 if (!userAnimeStatuses[user.username]) userAnimeStatuses[user.username] = {};
+                komiRecordCollectionMutation('statuses',user.authUserId,animeId,next);
                 if (next) userAnimeStatuses[user.username][animeId] = next;
                 else delete userAnimeStatuses[user.username][animeId];
                 saveData();
