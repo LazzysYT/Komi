@@ -76,3 +76,20 @@ test('legacy sidebar escapes names and never embeds them in JavaScript handlers'
  assert.match(list.innerHTML,/window\.komiSidebarSearchNames\[0\]/);
  assert.match(list.innerHTML,/&lt;img src=x/);
 });
+
+
+test('profile renderer keeps user-authored fields out of HTML attributes and inline code', () => {
+ const src=functionSource('function renderProfileView(', '        let avatarDraft = null;');
+ assert.match(src, /safeProfileText\(profileCollectionSearchQuery\)/);
+ assert.match(src, /safeProfileText\(profileActiveTab\)/);
+ assert.match(src, /safeProfileText\(fname\)/);
+ assert.match(src, /safeProfileText\(genre\)/);
+ assert.match(src, /safeProfileText\(friend\)/);
+ assert.match(src, /komiSafeUrl\(senderAvatar\)/);
+ assert.match(src, /window\.komiProfileFolderNames\[\$\{i\}\]/);
+ assert.match(src, /window\.komiProfileFriendNames\[\$\{i\}\]/);
+ assert.match(src, /postToProfileWall\(window\.komiWallProfileName\)/);
+ assert.doesNotMatch(src, /postToProfileWall\('\$\{username\}'\)/);
+ assert.doesNotMatch(src, /openProfile\('\$\{friend\}'\)/);
+ assert.doesNotMatch(src, /profileActiveTab='\$\{fname\}'/);
+});
