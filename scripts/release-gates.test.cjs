@@ -37,3 +37,18 @@ test('the applied migration version has exactly one file in GitHub', () => {
     .filter(name => name.endsWith('_secure_presence_and_legacy_archive.sql'));
   assert.deepEqual(filenames, ['20261110105211_secure_presence_and_legacy_archive.sql']);
 });
+
+
+test('account folders use owner-only RLS and are an additive release',()=>{
+  const sql=fs.readFileSync(path.join(root,
+    'supabase/migrations/20261110120000_komi_account_custom_folders.sql'),'utf8');
+  for(const table of ['komi_custom_folders','komi_folder_items']){
+    assert.match(sql,new RegExp('alter table public\\.'+table+' enable row level security','i'));
+    assert.match(sql,new RegExp('revoke all on public\\.'+table+' from public, anon, authenticated','i'));
+    assert.match(sql,new RegExp('grant select, insert, delete on public\\.'+table+' to authenticated','i'));
+    assert.doesNotMatch(sql,new RegExp('grant .* on public\\.'+table+' to anon','i'));
+  }
+  assert.match(sql,/user_id\s*=\s*\(select auth\.uid\(\)\)/i);
+  assert.match(sql,/references public\.komi_custom_folders\(user_id, name\) on delete cascade/i);
+  assert.doesNotMatch(sql,/(alter|drop|truncate|delete from)\s+(?:table\s+)?public\.(animes|online_users|anime_catalog)/i);
+});
