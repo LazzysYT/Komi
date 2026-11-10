@@ -86,3 +86,20 @@ test('profile friend action uses data-bound name rather than inlined JS interpol
   assert.match(source,/sendFriendRequest\(window\.komiViewedProfileName\)/);
   assert.doesNotMatch(source, /(?:removeFriend|sendFriendRequest)\('(?:\$\{username\})'\)/);
 });
+
+
+test('favorites cannot claim success for a local-only account', async () => {
+  const source=extract('const komiFavoritePending = new Set();','        async function persistAuthenticatedFavorite(');
+  const messages=[];
+  const favorites={legacy_user:{}};
+  const context=vm.createContext({
+    currentUser:{username:'legacy_user'}, userFavorites:favorites, _supabase:null,
+    komiStatusFeedback:m=>messages.push(m), openAuthModal:()=>{throw Error('should show status instead')},
+    Error, Set
+  });
+  vm.runInContext(source,context);
+  await vm.runInContext("toggleFavorite('12','Любимые')",context);
+  assert.equal(Object.keys(favorites.legacy_user).length,0);
+  assert.match(messages.at(-1),/Не удалось сохранить избранное/);
+  assert.equal(vm.runInContext('komiFavoritePending.size',context),0);
+});
