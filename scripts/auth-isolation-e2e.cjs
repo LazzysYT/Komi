@@ -2,7 +2,10 @@
 // KOMI_TEST_EMAIL_A / KOMI_TEST_PASSWORD_A / KOMI_TEST_EMAIL_B / KOMI_TEST_PASSWORD_B
 // This test never creates users or migrates legacy accounts.
 const { chromium } = require('playwright');
-const BASE = process.env.KOMI_TEST_URL || 'https://komi-six.vercel.app/';
+const {validateE2EUrl}=require('./auth-e2e-target.cjs');
+let BASE;
+try { BASE=validateE2EUrl(process.env.KOMI_TEST_URL); }
+catch(error) { console.error(error.message); process.exit(2); }
 const required = ['KOMI_TEST_EMAIL_A','KOMI_TEST_PASSWORD_A','KOMI_TEST_EMAIL_B','KOMI_TEST_PASSWORD_B'];
 for (const key of required) {
   if (!process.env[key]) { console.error('Missing test secret:', key); process.exit(2); }
