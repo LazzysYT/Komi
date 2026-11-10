@@ -23,7 +23,7 @@ function fixture(){
   Number, Error
  });
  vm.runInContext('let avatarDraft = null;\n'+source,ctx);
- const run=file=>vm.runInContext('handleAvatarFileUpload({target:{files:[file]}})',ctx);
+ const run=file=>{ ctx.__testFile=file; return vm.runInContext('handleAvatarFileUpload({target:{files:[__testFile]}})',ctx); };
  return {ctx,run,feedback,reads};
 }
 
