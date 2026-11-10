@@ -42,3 +42,30 @@ test('progress keys cannot cross a similar nickname prefix',()=>{
  assert.equal(rows.progress.length,1);
  assert.equal(rows.progress[0].anime_id,22);
 });
+
+
+test('legacy folder import includes only valid selected-user folders and deduplicates anime IDs',()=>{
+ const archive={folders:{
+  alice: {
+   'Сёнен':['12',12,'13','invalid','0','9007199254740999'],
+   '__proto__':['14'],
+   'Просмотрено':['15'],
+   'too-long-name-abcdefghijklmnopqrstuvwxyz-1234':['16'],
+   'Манга':['23']
+  },
+  bob: {'Личное':['99']}
+ }};
+ const before=JSON.stringify(archive);
+ const result=ctx.komiLegacyImportRows(archive,'alice','verified-owner');
+ assert.deepEqual(Array.from(result.folders.map(x=>x.name)),['Сёнен','Манга']);
+ assert.deepEqual(Array.from(result.folderItems.map(x=>[x.folder_name,x.anime_id])),
+  [['Сёнен',12],['Сёнен',13],['Манга',23]]);
+ assert.ok(result.folderItems.every(x=>x.user_id==='verified-owner'));
+ assert.equal(JSON.stringify(archive),before);
+});
+test('folder names cannot collide with profile tabs or prototype properties',()=>{
+ for(const name of ['__proto__','constructor','prototype','Просмотрено','Любимые','', 'a'.repeat(41)]) {
+  assert.equal(ctx.komiFolderNameAllowed(name),false);
+ }
+ assert.equal(ctx.komiFolderNameAllowed('Мой список'),true);
+});
