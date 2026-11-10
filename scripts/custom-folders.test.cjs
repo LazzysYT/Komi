@@ -119,3 +119,31 @@ test('changing accounts during async write never contaminates a second user',asy
  assert.ok(!Object.hasOwn(x.ctx.userCustomFolders.alex,'Моя папка'));
  assert.equal(x.saved.length,0);
 });
+
+
+test('folder membership loads every page without the Supabase 1000-row truncation',async()=>{
+ const loadSource=part('async function komiLoadAllFolderItems(', '        // Supabase-owned data is loaded');
+ const items=Array.from({length:1003},(_,i)=>({folder_name:'Моя папка',anime_id:i+1}));
+ const ranges=[];
+ const chain={
+  select(){return this;},
+  eq(){return this;},
+  order(){return this;},
+  range(start,end){ranges.push([start,end]);return Promise.resolve({data:items.slice(start,end+1),error:null});}
+ };
+ const ctx=vm.createContext({currentUser:{authUserId:'owner-uuid'},_supabase:{from:()=>chain},Error});
+ vm.runInContext(loadSource,ctx);
+ const result=await vm.runInContext("komiLoadAllFolderItems('owner-uuid')",ctx);
+ assert.equal(result.error,null);
+ assert.equal(result.data.length,1003);
+ assert.deepEqual(ranges,[[0,499],[500,999],[1000,1499]]);
+});
+
+test('folder pagination fails closed if signed-in account changed',async()=>{
+ const loadSource=part('async function komiLoadAllFolderItems(', '        // Supabase-owned data is loaded');
+ const ctx=vm.createContext({currentUser:{authUserId:'other-owner'},_supabase:{from(){throw Error('unexpected query')}},Error});
+ vm.runInContext(loadSource,ctx);
+ const result=await vm.runInContext("komiLoadAllFolderItems('owner-uuid')",ctx);
+ assert.equal(result.data.length,0);
+ assert.match(result.error.message,/Аккаунт/);
+});
