@@ -69,3 +69,22 @@ test('folder names cannot collide with profile tabs or prototype properties',()=
  }
  assert.equal(ctx.komiFolderNameAllowed('Мой список'),true);
 });
+
+
+test('legacy import uses the correct composite unique key for every destination',()=>{
+ const archive={
+  statuses:{alex:{12:'Смотрю'}},favorites:{alex:{13:'Любимые'}},
+  progress:{alex_14:{season:1,index:0,time:15,duration:100}},
+  folders:{alex:{'Сёнен':[12,13]}}
+ };
+ const rows=ctx.komiLegacyImportRows(archive,'alex','verified-user');
+ const jobs=ctx.komiLegacyImportBatches(rows);
+ const keys=Object.fromEntries(Array.from(jobs, job=>[job.table,job.onConflict]));
+ assert.equal(keys.komi_anime_lists,'user_id,anime_id');
+ assert.equal(keys.komi_favorites,'user_id,anime_id');
+ assert.equal(keys.komi_watch_progress,'user_id,anime_id');
+ assert.equal(keys.komi_custom_folders,'user_id,name');
+ assert.equal(keys.komi_folder_items,'user_id,folder_name,anime_id');
+ assert.ok(jobs.every(job=>job.records.every(row=>row.user_id==='verified-user')));
+ assert.ok(jobs.every(job=>job.records.length>0));
+});
