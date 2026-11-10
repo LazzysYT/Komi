@@ -1937,7 +1937,9 @@ body > header {
             const storedStatuses = { ...userAnimeStatuses };
             if (currentUser?.authUserId) delete storedStatuses[currentUser.username];
             if (komiLegacyArchiveReady) localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
-            if (komiLegacyArchiveReady) localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
+            const storedFolders = { ...userCustomFolders };
+            if (currentUser?.authUserId) delete storedFolders[currentUser.username];
+            if (komiLegacyArchiveReady) localStorage.setItem('komi_custom_folders', JSON.stringify(storedFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
             // Saving browser preferences must not rewrite the shared legacy status blob.
         }
@@ -2547,6 +2549,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!user?.authUserId) return;
             delete userAnimeStatuses[user.username];
             delete userFavorites[user.username];
+            delete userCustomFolders[user.username];
             for (const data of [komiEpisodeProgress, userWatchHistory]) {
                 for (const key of Object.keys(data)) if (key.startsWith(user.username + '_')) delete data[key];
             }
@@ -3209,19 +3212,37 @@ const adminList = []; // No client-side username grants administrator privileges
             }
         }
 
-        function createCustomFolder() {
-            if (!currentUser) return;
+        const pendingFolderWrites = new Set();
+        async function createCustomFolder() {
+            if (!currentUser?.authUserId || !_supabase) { openAuthModal('login'); return; }
+            const {username,authUserId:owner} = currentUser;
             const input = document.getElementById('newFolderNameInput');
-            const name = input ? input.value.trim() : '';
-            if (!name) return;
-
-            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
-            if (!userCustomFolders[currentUser.username][name]) {
-                userCustomFolders[currentUser.username][name] = [];
-                saveData();
-                render();
-            } else {
-                alert('Папка уже существует!');
+            const name = (input?.value || '').trim();
+            if (!komiFolderNameAllowed(name)) {
+                komiStatusFeedback('Название папки: 1–40 символов, без служебных названий.');
+                return;
+            }
+            if (Object.prototype.hasOwnProperty.call(userCustomFolders[username] || {}, name)) {
+                komiStatusFeedback('Такая папка уже существует.');
+                return;
+            }
+            const key = owner + ':folder:' + name;
+            if (pendingFolderWrites.has(key)) return;
+            pendingFolderWrites.add(key);
+            try {
+                const {data,error} = await _supabase.from('komi_custom_folders')
+                    .insert({user_id:owner,name}).select('name').single();
+                if (error) throw error;
+                if (!data || data.name !== name) throw new Error('Сервер не подтвердил создание папки.');
+                if (currentUser?.authUserId !== owner) return;
+                userCustomFolders[username] ||= Object.create(null);
+                userCustomFolders[username][name] = [];
+                saveData(); render();
+                komiStatusFeedback('Папка создана.');
+            } catch (error) {
+                if (currentUser?.authUserId === owner) komiStatusFeedback('Не удалось создать папку. ' + error.message);
+            } finally {
+                pendingFolderWrites.delete(key);
             }
         }
 
@@ -4041,6 +4062,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
                 userFavorites[username] = {};
+                userCustomFolders[username] = Object.create(null);
                 for (const key of Object.keys(komiEpisodeProgress)) if (key.startsWith(username + '_')) delete komiEpisodeProgress[key];
                 if (!userProfiles[username]) {
                     const meta = session.user.user_metadata || {};
@@ -4200,20 +4222,45 @@ const adminList = []; // No client-side username grants administrator privileges
             return true;
         }
 
-        function addToCustomFolder(id, folderName) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
-            if (!userCustomFolders[currentUser.username][folderName]) userCustomFolders[currentUser.username][folderName] = [];
-            
-            const list = userCustomFolders[currentUser.username][folderName];
-            const idx = list.indexOf(id);
-            if (idx > -1) {
-                list.splice(idx, 1);
-            } else {
-                list.push(id);
+        async function addToCustomFolder(id, folderName) {
+            if (!currentUser?.authUserId || !_supabase) { openAuthModal('login'); return; }
+            const {username,authUserId:owner} = currentUser;
+            const animeId = Number(id);
+            if (!Number.isSafeInteger(animeId) || animeId <= 0 || !komiFolderNameAllowed(folderName) ||
+                !Object.prototype.hasOwnProperty.call(userCustomFolders[username] || {}, folderName)) {
+                komiStatusFeedback('Некорректная папка или ID аниме.');
+                return;
             }
-            saveData();
-            openWatchModal(id);
+            const key = owner + ':' + folderName + ':' + animeId;
+            if (pendingFolderWrites.has(key)) return;
+            pendingFolderWrites.add(key);
+            const list = userCustomFolders[username][folderName];
+            const existing = list.includes(String(animeId));
+            try {
+                const query = _supabase.from('komi_folder_items');
+                if (existing) {
+                    const {error} = await query.delete().eq('user_id',owner)
+                        .eq('folder_name',folderName).eq('anime_id',animeId);
+                    if (error) throw error;
+                } else {
+                    const {data,error} = await query.insert({user_id:owner,folder_name:folderName,anime_id:animeId})
+                        .select('anime_id').single();
+                    if (error) throw error;
+                    if (!data || Number(data.anime_id) !== animeId)
+                        throw new Error('Сервер не подтвердил добавление в папку.');
+                }
+                if (currentUser?.authUserId !== owner) return;
+                if (existing) userCustomFolders[username][folderName] = list.filter(x => String(x) !== String(animeId));
+                else userCustomFolders[username][folderName] = [...list,String(animeId)];
+                saveData();
+                openWatchModal(String(animeId));
+                komiStatusFeedback(existing ? 'Удалено из папки.' : 'Добавлено в папку.');
+            } catch (error) {
+                if (currentUser?.authUserId === owner)
+                    komiStatusFeedback('Не удалось изменить папку. ' + error.message);
+            } finally {
+                pendingFolderWrites.delete(key);
+            }
         }
 
         // Supabase-owned data is loaded from RLS-protected tables, never imported from shared legacy blobs.
@@ -4222,10 +4269,12 @@ const adminList = []; // No client-side username grants administrator privileges
             const uid = currentUser.authUserId;
             const username = currentUser.username;
             const loadStarted = Date.now();
-            const [lists, progress, favorites] = await Promise.all([
+            const [lists, progress, favorites, folders, folderItems] = await Promise.all([
                 _supabase.from('komi_anime_lists').select('anime_id,status').eq('user_id', uid),
                 _supabase.from('komi_watch_progress').select('anime_id,season,episode_index,position_seconds,duration_seconds,updated_at').eq('user_id', uid),
-                _supabase.from('komi_favorites').select('anime_id,category').eq('user_id', uid)
+                _supabase.from('komi_favorites').select('anime_id,category').eq('user_id', uid),
+                _supabase.from('komi_custom_folders').select('name').eq('user_id',uid),
+                _supabase.from('komi_folder_items').select('folder_name,anime_id').eq('user_id',uid)
             ]);
             if (currentUser?.authUserId !== uid) return;
             if (lists.error) console.warn('Не удалось загрузить личные списки:', lists.error.message);
@@ -4237,6 +4286,21 @@ const adminList = []; // No client-side username grants administrator privileges
             else {
                 userFavorites[username] = {};
                 for (const item of favorites.data || []) userFavorites[username][item.anime_id] = item.category;
+            }
+            if (folders.error || folderItems.error) {
+                console.warn('Не удалось загрузить папки:',
+                    folders.error?.message || folderItems.error?.message);
+            } else {
+                const ownedFolders = Object.create(null);
+                for (const row of folders.data || []) {
+                    if (komiFolderNameAllowed(row.name)) ownedFolders[row.name] = [];
+                }
+                for (const item of folderItems.data || []) {
+                    if (Object.prototype.hasOwnProperty.call(ownedFolders,item.folder_name) &&
+                        Number.isSafeInteger(Number(item.anime_id)) && Number(item.anime_id)>0)
+                        ownedFolders[item.folder_name].push(String(item.anime_id));
+                }
+                userCustomFolders[username] = ownedFolders;
             }
             if (progress.error) console.warn('Не удалось загрузить прогресс:', progress.error.message);
             else {
