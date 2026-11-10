@@ -3982,8 +3982,12 @@ const adminList = []; // No client-side username grants administrator privileges
         // an editable display name, email, or a privileged local username.
         function googleProfileName(authUser) {
             const requested = String(authUser.user_metadata?.username || '').trim();
-            if (authUser.app_metadata?.provider !== 'google' && /^[A-Za-z0-9_]{3,24}$/.test(requested) && !/^google_/i.test(requested)) return requested;
-            return 'google_' + authUser.id.replace(/[^a-zA-Z0-9_-]/g, '');
+            if (authUser.app_metadata?.provider !== 'google' &&
+                /^[A-Za-z0-9_]{3,24}$/.test(requested) &&
+                !/^(google_|admin$)/i.test(requested)) return requested;
+            // Deterministic fallback: use exactly the username persisted to komi_profiles.
+            // A UUID with dashes would differ from the database-safe 32-hex identity.
+            return 'google_' + String(authUser.id || '').replace(/[^a-fA-F0-9]/g, '').slice(0, 32);
         }
         function komiSafeAccountUsername(username, authUserId) {
             const value = String(username || '').trim();
