@@ -14,7 +14,7 @@ const assert=require('node:assert/strict');
     const originals={
       currentUser,animeList,profileTargetUser,profilePageSection,profileActiveTab,
       profileCollectionSearchQuery,profile:userProfiles[username],
-      statuses:userAnimeStatuses[username],friends:userFriends[username],
+      statuses:userAnimeStatuses[username],protectedFriends:protectedFriendList,
       folders:userCustomFolders[username],walls:profileWalls[username],
       evilProfile:userProfiles[malicious]
     };
@@ -30,7 +30,7 @@ const assert=require('node:assert/strict');
         avatar:'https://example.com/avatar.png'};
       userProfiles[malicious]={displayName:malicious,avatar:'javascript:alert(1)'};
       userAnimeStatuses[username]={'123':'Просмотрено'};
-      userFriends[username]=[malicious];
+      protectedFriendList={owner:'qa-secure',idsByName:new Map([[malicious,'qa-friend-id']])};
       userCustomFolders[username]={[malicious]:['123']};
       profileWalls[username]=[{author:malicious,time:'Now',text:malicious}];
       profileTargetUser=username;
@@ -60,11 +60,12 @@ const assert=require('node:assert/strict');
       };
     }finally{
       currentUser=originals.currentUser;animeList=originals.animeList;
+      protectedFriendList=originals.protectedFriends;
       profileTargetUser=originals.profileTargetUser;profilePageSection=originals.profilePageSection;
       profileActiveTab=originals.profileActiveTab;profileCollectionSearchQuery=originals.profileCollectionSearchQuery;
       for(const [target,original] of [
         [userProfiles,originals.profile],[userAnimeStatuses,originals.statuses],
-        [userFriends,originals.friends],[userCustomFolders,originals.folders],
+        [userCustomFolders,originals.folders],
         [profileWalls,originals.walls]
       ]){
         if(target===userProfiles){if(original===undefined)delete target[username];else target[username]=original;}
