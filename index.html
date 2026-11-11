@@ -3018,6 +3018,9 @@ const adminList = []; // No client-side username grants administrator privileges
             });
 
             window.komiWallProfileName=username;
+            window.komiViewedProfileName=username;
+            window.komiProfileFriendNames=myFriends.slice();
+            window.komiProfileFolderNames=customFolderNames.slice();
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
                 <div class="profile-container komi-profile-v2">
@@ -3027,8 +3030,8 @@ const adminList = []; // No client-side username grants administrator privileges
                             <div class="profile-name-row">
                                 <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2>
                                 ${!isMe && currentUser ? `
-                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend('${username}')">Удалить из друзей</button>` : 
-                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest('${username}')">+ Добавить в друзья</button>`}
+                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
+                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             
@@ -3109,7 +3112,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                     </button>`).join('')}
                             </section>
                             <section><h3>Любимые жанры</h3>
-                                ${topGenres.length ? topGenres.map(([genre,count]) => `<div class="komi-genre-row"><span>${genre}</span><b>${count}</b></div>`).join('') : '<p>Добавь аниме в коллекцию, чтобы увидеть любимые жанры.</p>'}
+                                ${topGenres.length ? topGenres.map(([genre,count]) => `<div class="komi-genre-row"><span>${safeProfileText(genre)}</span><b>${count}</b></div>`).join('') : '<p>Добавь аниме в коллекцию, чтобы увидеть любимые жанры.</p>'}
                             </section>
                             <section><h3>Активность</h3>
                                 <div class="komi-overview-list-row"><span>В библиотеке</span><b>${Object.keys(userStatuses).length}</b></div>
@@ -3124,8 +3127,8 @@ const adminList = []; // No client-side username grants administrator privileges
                     ${customFolderNames.length > 0 || isMe ? `
                         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border);">
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
-                            ${customFolderNames.map(fname => `
-                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab='${fname}'; render()"> ${fname} (${customFolders[fname].length})</button>
+                            ${customFolderNames.map((fname,i) => `
+                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab=window.komiProfileFolderNames[${i}]; render()"> ${safeProfileText(fname)} (${customFolders[fname].length})</button>
                             `).join('')}
                             ${isMe ? `
                                 <div style="display:flex; gap:5px; margin-left:auto; align-items:center;">
@@ -3173,13 +3176,13 @@ const adminList = []; // No client-side username grants administrator privileges
                     </div>
 
                     </div>
-                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map(friend=>`<button class="komi-profile-friend" onclick="openProfile('${friend}')">${friend}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
+                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map((friend,i)=>`<button class="komi-profile-friend" onclick="openProfile(window.komiProfileFriendNames[${i}])">${safeProfileText(friend)}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
                     <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
                     <div class="profile-wall-section">
                         <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
                         <div style="display:flex; gap:6px; margin-bottom:14px;">
-                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall('${username}')">
-                            <button class="btn-glow" style="padding: 7px 16px;" onclick="playSound(); postToProfileWall('${username}')">Отпр.</button>
+                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall(window.komiWallProfileName)">
+                            <button class="btn-glow" style="padding: 7px 16px;" onclick="playSound(); postToProfileWall(window.komiWallProfileName)">Отпр.</button>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:6px;">
                             ${wallMessages.length === 0 ? `
@@ -3192,7 +3195,7 @@ const adminList = []; // No client-side username grants administrator privileges
                                 return `
                                     <div class="wall-message-item">
                                         <div class="wall-message-author" onclick="playSound(); openProfile(window.komiWallAuthorByIndex[${mIdx}])">
-                                            <img src="${senderAvatar}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                            <img src="${safeProfileText(komiSafeUrl(senderAvatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                             <span>${escapeFriendHtml(userProfiles[m.author]?.displayName || m.author)}</span>
                                             <span style="font-size:10px; color:var(--text-muted); margin-left:auto; font-weight:normal;">${escapeFriendHtml(m.time)}</span>
                                             ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">Удалить</button>` : ''}
