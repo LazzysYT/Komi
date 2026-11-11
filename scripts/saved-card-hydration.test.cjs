@@ -71,7 +71,7 @@ test('stale response from a previous account cannot put its cards into a new ses
 });
 test('errors do not delete status data or fabricate saved cards',async()=>{
  const x=fixture({error:'Catalog unavailable'});
- await assert.rejects(x.run(),/Catalog unavailable/,()=>true);
+ await assert.rejects(x.run(),error=>error?.message==='Catalog unavailable');
  assert.equal(x.cards().size,0);
  assert.equal(x.context.userAnimeStatuses.alice['98'],'Просмотрено');
 });
