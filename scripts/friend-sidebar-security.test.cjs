@@ -9,7 +9,7 @@ function extract(a,b) {
  assert.ok(start>=0&&end>start,'missing: '+a);return html.slice(start,end);
 }
 const escapeSource=extract('function escapeFriendHtml(', '        function toggleFriendsDrawer(');
-const section=extract('function handleFriendSearchInput(', '        async function addNotification(');
+const section=extract('function handleFriendSearchInput(', '        let accountNotifications');
 function fixture({friends=[]}={}) {
  const malicious='X"><img src=x onerror=alert(1)>';
  const results={innerHTML:'',style:{display:''}};
@@ -21,8 +21,6 @@ function fixture({friends=[]}={}) {
   window:win,
   currentUser:{username:'owner',authUserId:'owner-id'},
   userProfiles:{[malicious]:{avatar:'" onerror="alert(2)'}},
-  registeredUsers:{},
-  userFriends:{},
   friendsFor:()=>friends,
   encodeURIComponent,
   String

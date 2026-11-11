@@ -1655,7 +1655,7 @@ body > header {
                 <div class="notification-dropdown" id="notifDropdown">
                     <div class="notif-header">
                         <span>Уведомления</span>
-                        <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" onclick="clearNotifications()">Очистить</button>
+                        <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" id="markNotificationsReadBtn" type="button" onclick="markNotificationsRead()" disabled>Отметить прочитанными</button>
                     </div>
                     <div class="notif-list" id="notifListContainer">
                         <div style="padding:12px; text-align:center; color:var(--text-muted); font-size:11px;">Нет новых уведомлений</div>
@@ -1948,8 +1948,8 @@ body > header {
             <form id="loginFormContainer" novalidate onsubmit="handleLoginSubmit(event)">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
                 <div class="form-group">
-                    <label for="loginUsername">Email или старый никнейм Komi</label>
-                    <input type="text" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com или старый ник">
+                    <label for="loginUsername">Email</label>
+                    <input type="email" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com">
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
@@ -2122,20 +2122,16 @@ body > header {
 
         let animeList = defaultAnime;
         function safeParse(raw, fallback) { try { const v=JSON.parse(raw); return v == null ? fallback : v; } catch { return fallback; } }
-        let animeComments = {}; 
-        let userFriends = safeParse(localStorage.getItem('komi_friends'), {}); 
-        let userAnimeStatuses = safeParse(localStorage.getItem('komi_anime_statuses'), {}); 
-        let userCustomFolders = safeParse(localStorage.getItem('komi_custom_folders'), {}); 
-        let userNotifications = safeParse(localStorage.getItem('komi_notifications'), {}); 
+        let userAnimeStatuses = {};
+        let userCustomFolders = {};
         let profileWalls = safeParse(localStorage.getItem('komi_profile_walls'), {}); 
-        let currentUser = safeParse(localStorage.getItem('komi_current_user'), null);
-        let registeredUsers = safeParse(localStorage.getItem('komi_users_db'), {});
+        let currentUser = null;
         let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ★', regDate: '05 ноября 2026 года' }
         };
-        let userFavorites = safeParse(localStorage.getItem('komi_favorites'), {});
-        let userWatchHistory = safeParse(localStorage.getItem('komi_history'), {});
-        let komiEpisodeProgress = safeParse(localStorage.getItem('komi_episode_progress'), {});
+        let userFavorites = {};
+        let userWatchHistory = {};
+        let komiEpisodeProgress = {};
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
@@ -2157,39 +2153,9 @@ body > header {
         
 
         function saveData() {
-            localStorage.setItem('komi_current_user', JSON.stringify(currentUser));
-            localStorage.setItem('komi_users_db', JSON.stringify(registeredUsers));
-            const storedFavorites = { ...userFavorites };
-            if (currentUser?.authUserId) delete storedFavorites[currentUser.username];
-            localStorage.setItem('komi_favorites', JSON.stringify(storedFavorites));
-            const storedHistory = { ...userWatchHistory };
-            if (currentUser?.authUserId) for (const key of Object.keys(storedHistory)) {
-                if (key.startsWith(currentUser.username + '_')) delete storedHistory[key];
-            }
-            localStorage.setItem('komi_history', JSON.stringify(storedHistory));
-            // Supabase Auth progress is server-owned; never cache it in legacy shared browser maps.
-            const storedProgress = { ...komiEpisodeProgress };
-            if (currentUser?.authUserId) for (const key of Object.keys(storedProgress)) {
-                if (key.startsWith(currentUser.username + '_')) delete storedProgress[key];
-            }
-            localStorage.setItem('komi_episode_progress', JSON.stringify(storedProgress));
             localStorage.setItem('komi_search_history', JSON.stringify(searchHistory));
             localStorage.setItem('komi_stats', JSON.stringify(siteStats));
-            localStorage.setItem('komi_friends', JSON.stringify(userFriends));
-            const storedStatuses = { ...userAnimeStatuses };
-            if (currentUser?.authUserId) delete storedStatuses[currentUser.username];
-            localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
-            // Keep legacy local folders intact until an explicit, owner-approved import.
-            const storedFolders = { ...userCustomFolders };
-            if (currentUser?.authUserId) {
-                const archived = safeParse(localStorage.getItem('komi_custom_folders'),{});
-                if (Object.prototype.hasOwnProperty.call(archived,currentUser.username))
-                    storedFolders[currentUser.username] = archived[currentUser.username];
-                else delete storedFolders[currentUser.username];
-            }
-            localStorage.setItem('komi_custom_folders', JSON.stringify(storedFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
-            // Saving browser preferences must not rewrite the shared legacy status blob.
         }
 
 
@@ -2215,8 +2181,6 @@ async function loadDataFromCloud(attempt = 0) {
     try {
         if (!_supabase) throw new Error('Supabase не подключён');
 
-        const settingsPromise = _supabase
-            .from('animes').select('id,content').in('id', [2, 3, 4, 5, 7]);
         const catalog = [];
         let lastId = 0;
         while (true) {
@@ -2258,27 +2222,6 @@ async function loadDataFromCloud(attempt = 0) {
             }
             if (rows.length < pageSize) break;
         }
-        const { data: settings, error: settingsError } = await settingsPromise;
-        if (settingsError) console.warn('Ошибка настроек:', settingsError.message);
-        for (const row of settings || []) {
-            let value;
-            try { value = JSON.parse(row.content || 'null'); } catch { continue; }
-            if (row.id === 2) animeComments = value || {};
-            if (row.id === 3 && !currentUser?.authUserId) userAnimeStatuses = { ...userAnimeStatuses, ...(value || {}) };
-            if (row.id === 4) {
-                const existing = currentUser?.authUserId ? userProfiles[currentUser.username] : null;
-                userProfiles = { ...userProfiles, ...(value || {}) };
-                if (existing) userProfiles[currentUser.username] = existing;
-            }
-            if (row.id === 4 && currentUser && !currentUser.authUserId) {
-                const name = currentUser.username;
-                const avatar = localStorage.getItem('komi_avatar_' + name);
-                if (avatar && (!userProfiles[name]?.avatar || userProfiles[name].avatar.startsWith('https://api.dicebear.com/'))) userProfiles[name] = { ...(userProfiles[name] || {}), avatar };
-            }
-            if (row.id === 5) userNotifications = value || {};
-            if (row.id === 7) userFriends = { ...userFriends, ...(value || {}) };
-        }
-
         animeList = catalog;
         catalogInitialLoadComplete = true;
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
@@ -2298,32 +2241,6 @@ async function loadDataFromCloud(attempt = 0) {
         async function saveAnimeToCloud() {
             // Retired: never overwrite the preserved 16 MB legacy catalog.
             throw new Error('Редактирование каталога доступно только через защищённую форму и anime_catalog.');
-        }
-
-        async function saveStatusesToCloud() {
-            if (_supabase && !currentUser?.authUserId) {
-                try { await _supabase.from('animes').upsert({ id: 3, content: JSON.stringify(userAnimeStatuses) }); } catch(e) {}
-            }
-        }
-
-        async function saveProfilesToCloud() {
-            if (currentUser?.authUserId) return { error: new Error('Use komi_profiles for authenticated users') };
-            if (!_supabase) return { error: new Error('Supabase не подключён') };
-            try { return await _supabase.from('animes').upsert({ id: 4, content: JSON.stringify(userProfiles) }); }
-            catch(error) { return { error }; }
-        }
-
-        async function saveNotificationsToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 5, content: JSON.stringify(userNotifications) }); } catch(e) {}
-            }
-        }
-
-
-        async function saveFriendsToCloud() {
-            if (_supabase) {
-                try { await _supabase.from('animes').upsert({ id: 7, content: JSON.stringify(userFriends) }); } catch(e) {}
-            }
         }
 
         const komiPresenceSession = crypto.randomUUID();
@@ -2348,28 +2265,6 @@ async function loadDataFromCloud(attempt = 0) {
                 }
             }, 4000);
             try {
-                // Preserve the legacy notification/friend refresh until that data is
-                // migrated to per-account tables; do not couple it to public sessions.
-                const presenceUser = currentUser?.username;
-                if (presenceUser) {
-                    const { data: cloudSyncData } = await _supabase.from('animes')
-                        .select('id,content').in('id',[5,7])
-                        .abortSignal(requestController.signal);
-                    if (!requestController.signal.aborted && epoch === presenceRequestEpoch
-                        && cloudSyncData && currentUser?.username === presenceUser) {
-                        for (const row of cloudSyncData) {
-                            try {
-                                if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
-                                if (row.id === 7) {
-                                    const cloudFriends = JSON.parse(row.content || '{}');
-                                    userFriends = { ...userFriends, ...cloudFriends };
-                                }
-                            } catch(error) { console.warn('Invalid legacy social archive:',error); }
-                        }
-                        updateNotificationsUI();
-                    }
-                }
-
                 const {data: count,error} = await _supabase.rpc('komi_site_presence', {
                     p_session:komiPresenceSession
                 }).abortSignal(requestController.signal);
@@ -2471,11 +2366,8 @@ async function loadDataFromCloud(attempt = 0) {
             const query = (document.getElementById('komiFriendsSearch')?.value || '').trim().toLocaleLowerCase();
             const me = currentUser?.username;
             const friends = me ? friendsFor(me) : [];
-            const pendingNames = me ? [
-                ...Object.entries(userNotifications).filter(([name,notifs]) => Array.isArray(notifs) && notifs.some(n => n.friendRequestFrom === me)).map(([name]) => name),
-                ...(protectedFriendSent.owner === currentUser?.authUserId ? protectedFriendSent.names : [])
-            ] : [];
-            // Profiles are synchronized from Supabase (animes row 4); local registrations alone are not globally discoverable.
+            const pendingNames = protectedFriendSent.owner === currentUser?.authUserId
+                ? protectedFriendSent.names : new Set();
             const names = komiFriendsTab === 'friends' ? friends : [...new Set([...Object.keys(userProfiles), ...komiCommunityVerifiedNames])];
             const unique = [...new Set(names)].filter(n => n && n !== me && (
                 n.toLocaleLowerCase().includes(query) || (userProfiles[n]?.displayName || '').toLocaleLowerCase().includes(query)
@@ -2493,7 +2385,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const safeName = escapeFriendHtml(profile.displayName || name);
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
                 const isFriend = friends.includes(name);
-                const isPending = pendingNames.includes(name);
+                const isPending = pendingNames.has(name);
                 const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name) && name !== me);
                 return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
@@ -2514,11 +2406,7 @@ async function loadDataFromCloud(attempt = 0) {
             }
 
             const myFriends = currentUser ? friendsFor(currentUser.username) : [];
-            const combinedPool = Array.from(new Set([
-                ...Object.keys(userProfiles),
-                ...Object.keys(registeredUsers),
-                ...Object.keys(userFriends)
-            ]));
+            const combinedPool = [...new Set([...Object.keys(userProfiles), ...myFriends])];
             const foundResults = combinedPool.filter(name =>
                 name.toLocaleLowerCase().includes(query) && name !== currentUser?.username
             );
@@ -2593,77 +2481,78 @@ async function loadDataFromCloud(attempt = 0) {
             friendsContainer.innerHTML = friendsHtml;
         }
 
-        async function addNotification(username, text, partyId = null, friendRequestFrom = null) {
-            if (!userNotifications[username]) userNotifications[username] = [];
-            userNotifications[username].unshift({ text, partyId, friendRequestFrom, time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}), read: false });
-            await saveNotificationsToCloud();
+        let accountNotifications = { owner: null, rows: [], count: 0 };
+        let notificationRequest = 0;
+        const markingNotifications = new Set();
+
+        async function loadAccountNotifications() {
+            const uid = currentUser?.authUserId;
+            if (!uid || !_supabase) return;
+            const request = ++notificationRequest;
+            const { data, count, error } = await _supabase.from('komi_notifications')
+                .select('id,message,created_at', { count: 'exact' })
+                .eq('recipient_id', uid).is('read_at', null)
+                .order('id', { ascending: false }).limit(50);
+            if (currentUser?.authUserId !== uid || notificationRequest !== request) return;
+            if (error) throw error;
+            accountNotifications = { owner: uid, rows: data, count: count ?? data.length };
             updateNotificationsUI();
         }
 
         function toggleNotifications() {
             const dropdown = document.getElementById('notifDropdown');
-            dropdown.classList.toggle('active');
-            if (dropdown.classList.contains('active')) loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
-            if (currentUser && userNotifications[currentUser.username]) {
-                userNotifications[currentUser.username].forEach(n => n.read = true);
-                saveNotificationsToCloud();
+            if (!dropdown.classList.toggle('active')) return;
+            if (!currentUser?.authUserId) {
+                dropdown.classList.remove('active');
+                openAuthModal('login');
+                return;
+            }
+            loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
+            loadAccountNotifications().catch(() => komiStatusFeedback('Не удалось загрузить уведомления. Откройте список ещё раз.'));
+        }
+
+        async function markNotificationsRead() {
+            const uid = currentUser?.authUserId;
+            if (!uid || !_supabase || markingNotifications.has(uid)) return;
+            markingNotifications.add(uid);
+            updateNotificationsUI();
+            try {
+                const { error } = await _supabase.from('komi_notifications')
+                    .update({ read_at: new Date().toISOString() })
+                    .eq('recipient_id', uid).is('read_at', null);
+                if (error) throw error;
+                if (currentUser?.authUserId === uid) await loadAccountNotifications();
+            } catch {
+                if (currentUser?.authUserId === uid) komiStatusFeedback('Не удалось обновить уведомления. Попробуйте ещё раз.');
+            } finally {
+                markingNotifications.delete(uid);
                 updateNotificationsUI();
             }
         }
 
-        async function clearNotifications() {
-            if (!currentUser) return;
-            userNotifications[currentUser.username] = [];
-            await saveNotificationsToCloud();
-            updateNotificationsUI();
-        }
-
         function updateNotificationsUI() {
-            if (!currentUser) return;
-            const notifs = userNotifications[currentUser.username] || [];
-            const requests = protectedFriendRequests.filter(row => row.owner === currentUser.authUserId);
-            const unreadCount = notifs.filter(n => !n.read).length + requests.length;
+            const uid = currentUser?.authUserId;
+            const ownsNotifications = accountNotifications.owner === uid;
+            const notifs = ownsNotifications ? accountNotifications.rows : [];
+            const requests = protectedFriendRequests.filter(row => row.owner === uid);
+            const unreadCount = (ownsNotifications ? accountNotifications.count : 0) + requests.length;
             const badge = document.getElementById('notifBadge');
-            
-            if (unreadCount > 0) {
-                badge.innerText = unreadCount;
-                badge.style.display = 'flex';
-            } else {
-                badge.style.display = 'none';
-            }
+            badge.textContent = unreadCount;
+            badge.style.display = unreadCount ? 'flex' : 'none';
+            document.getElementById('markNotificationsReadBtn').disabled = !notifs.length || markingNotifications.has(uid);
 
-            const listContainer = document.getElementById('notifListContainer');
-            if (notifs.length || requests.length) {
-                const requestMarkup = requests.map(row =>
-                    '<div class="notif-item">' + escapeFriendHtml(row.name) + ' хочет добавить вас в друзья. ' +
-                    '<button class="btn-glow" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', true)">Принять</button> ' +
-                    '<button class="btn-danger" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', false)">Отклонить</button></div>'
-                ).join('');
-                listContainer.innerHTML = requestMarkup + notifs.map((n, idx) => `
-                    <div class="notif-item">
-                        <span>${escapeFriendHtml(n.text)}</span>
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px; flex-wrap:wrap; gap:6px;">
-                            <span style="font-size:10px; color:var(--text-muted);">${escapeFriendHtml(n.time)}</span>
-                            ${n.partyId ? `<button class="btn-glow" style="padding:2px 6px; font-size:10px;" data-room-id="${escapeFriendHtml(n.partyId)}" onclick="playSound(); joinWatchPartyRoom(this.dataset.roomId)">Войти</button>` : ''}
-                            ${n.friendRequestFrom ? `
-                                <div style="display:flex; gap:4px;">
-                                    <button class="btn-glow" style="padding:2px 6px; font-size:10px;" data-sender="${escapeFriendHtml(n.friendRequestFrom)}" onclick="playSound(); acceptFriendRequest(this.dataset.sender, ${idx})">Принять</button>
-                                    <button class="btn-danger" style="padding:2px 6px; font-size:10px;" onclick="playSound(); declineFriendRequest(${idx})">Отклонить</button>
-                                </div>
-                            ` : ''}
-                        </div>
-                    </div>
-                `).join('');
-            } else {
-                listContainer.innerHTML = `<div style="padding:12px; text-align:center; color:var(--text-muted); font-size:11px;">Нет новых уведомлений</div>`;
-            }
-        }
-
-        async function hashPassword(password) {
-            const msgBuffer = new TextEncoder().encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            const requestMarkup = requests.map(row =>
+                '<div class="notif-item">' + escapeFriendHtml(row.name) + ' хочет добавить вас в друзья. ' +
+                '<button class="btn-glow" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', true)">Принять</button> ' +
+                '<button class="btn-danger" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', false)">Отклонить</button></div>'
+            ).join('');
+            const noticeMarkup = notifs.map(row =>
+                '<div class="notif-item">' + escapeFriendHtml(row.message) +
+                '<br><time datetime="' + escapeFriendHtml(row.created_at) + '">' +
+                escapeFriendHtml(new Date(row.created_at).toLocaleString('ru-RU')) + '</time></div>'
+            ).join('');
+            document.getElementById('notifListContainer').innerHTML = requestMarkup + noticeMarkup ||
+                '<div class="notif-item">Нет новых уведомлений</div>';
         }
 
 
@@ -2853,6 +2742,9 @@ async function loadDataFromCloud(attempt = 0) {
 
         function clearKomiAccountData(user) {
             if (!user?.authUserId) return;
+            notificationRequest++;
+            accountNotifications = { owner: null, rows: [], count: 0 };
+            document.getElementById("notifDropdown")?.classList.remove("active");
             delete userAnimeStatuses[user.username];
             delete userFavorites[user.username];
             delete userCustomFolders[user.username];
@@ -2882,6 +2774,7 @@ async function loadDataFromCloud(attempt = 0) {
             avatarDraft = null;
             currentUser = null;
             saveData();
+            updateNotificationsUI();
             navigate('home');
         }
 
@@ -3227,13 +3120,6 @@ async function loadDataFromCloud(attempt = 0) {
             const watchedCount = statsCounts['Просмотрено'] || 0;
             const calculatedLevel = komiAchievements(username).level;
 
-            let userCommentsCount = 0;
-            Object.values(animeComments).forEach(commList => {
-                commList.forEach(c => {
-                    if (c.username === username) userCommentsCount++;
-                });
-            });
-
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
             const profileSavedCount = profileActiveTab === 'Любимые' ? favoritesCount
                 : customFolderNames.includes(profileActiveTab)
@@ -3347,7 +3233,6 @@ async function loadDataFromCloud(attempt = 0) {
                             <section><h3>Активность</h3>
                                 <div class="komi-overview-list-row"><span>В библиотеке</span><b>${Object.keys(userStatuses).length}</b></div>
                                 <div class="komi-overview-list-row"><span>Друзей</span><b>${myFriends.length}</b></div>
-                                <div class="komi-overview-list-row"><span>Комментариев</span><b>${userCommentsCount}</b></div>
                                 <div class="komi-overview-list-row"><span>Любимое</span><b>${favoritesCount}</b></div>
                             </section>
                         </div>
@@ -3404,7 +3289,6 @@ async function loadDataFromCloud(attempt = 0) {
                             <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span> Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
                             <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Любимые'; render()"><span>♡ Любимое</span> <b>${favoritesCount}</b></div>
                             <div class="profile-menu-item"><span> Друзья</span> <b>${myFriends.length}</b></div>
-                            <div class="profile-menu-item"><span> Комментарии</span> <b>${userCommentsCount}</b></div>
                         </div>
                     </div>
 
@@ -3681,10 +3565,6 @@ async function loadDataFromCloud(attempt = 0) {
                 time: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})
             });
 
-            if (profileOwner !== currentUser.username) {
-                addNotification(profileOwner, `${userProfiles[currentUser.username]?.displayName || currentUser.username} оставил сообщение на вашей стене.`);
-            }
-
             saveData();
             input.value = '';
             render();
@@ -3930,9 +3810,8 @@ async function loadDataFromCloud(attempt = 0) {
         let protectedFriendSent = { owner: null, names: new Set() };
 
         function friendsFor(username) {
-            const legacy = userFriends[username] || [];
-            if (username !== currentUser?.username || protectedFriendList.owner !== currentUser?.authUserId) return legacy;
-            return [...new Set([...legacy, ...protectedFriendList.idsByName.keys()])];
+            if (username !== currentUser?.username || protectedFriendList.owner !== currentUser?.authUserId) return [];
+            return [...protectedFriendList.idsByName.keys()];
         }
         async function loadProtectedFriends() {
             const uid = currentUser?.authUserId;
@@ -3979,101 +3858,39 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         async function sendFriendRequest(targetUsername) {
-            if (!currentUser?.authUserId) { alert('Для заявок в друзья войдите через email или Google. Старые аккаунты пока не привязаны к защищённой системе.'); return; }
-            if (!currentUser) { openAuthModal('login'); return; }
+            const sender = currentUser?.authUserId;
+            if (!sender) { openAuthModal('login'); return; }
             if (currentUser.username === targetUsername) return;
-            if (currentUser.authUserId) {
-                const sender = currentUser.authUserId;
-                try {
-                    const { data: target, error: lookupError } = await _supabase.from('komi_profiles')
-                        .select('user_id').eq('username', targetUsername).maybeSingle();
-                    if (lookupError) throw lookupError;
-                    if (!target) throw new Error('Этот старый профиль ещё не привязан к новому аккаунту.');
-                    if (currentUser?.authUserId !== sender) return;
-                    if (target.user_id === sender || friendsFor(currentUser.username).includes(targetUsername)) return;
-                    const { error } = await _supabase.from('komi_friend_requests')
-                        .insert({ sender_id: sender, receiver_id: target.user_id });
-                    if (error) throw error;
-                    await loadProtectedFriends().catch(e => console.warn('Обновление заявок:', e.message));
-                    alert('Заявка отправлена.');
-                } catch (error) {
-                    alert('Не удалось отправить заявку: ' + error.message);
-                }
-                return;
+            try {
+                const { data: target, error: lookupError } = await _supabase.from('komi_profiles')
+                    .select('user_id').eq('username', targetUsername).maybeSingle();
+                if (lookupError) throw lookupError;
+                if (!target) throw new Error('Профиль пользователя недоступен.');
+                if (currentUser?.authUserId !== sender) return;
+                if (target.user_id === sender || friendsFor(currentUser.username).includes(targetUsername)) return;
+                const { error } = await _supabase.from('komi_friend_requests')
+                    .insert({ sender_id: sender, receiver_id: target.user_id });
+                if (error) throw error;
+                await loadProtectedFriends().catch(e => console.warn('Обновление заявок:', e.message));
+                if (currentUser?.authUserId === sender) alert('Заявка отправлена.');
+            } catch (error) {
+                if (currentUser?.authUserId === sender) alert('Не удалось отправить заявку: ' + error.message);
             }
-            if (!userProfiles[targetUsername]) { alert('Пользователь не найден'); return; }
-            if (friendsFor(currentUser.username).includes(targetUsername)) { alert('Вы уже друзья'); return; }
-            if ((userNotifications[targetUsername] || []).some(n=>n.friendRequestFrom===currentUser.username)) { alert('Заявка уже отправлена'); return; }
-            addNotification(targetUsername, `${currentUser.username} хочет добавить вас в друзья.`, null, currentUser.username);
-            alert(`Запрос отправлен пользователю ${targetUsername}!`);
-            renderFriendsDrawer();
-        }
-
-        async function acceptFriendRequest(senderName, notifIndex) {
-            if (!currentUser) return;
-            const myName = currentUser.username;
-
-            const pendingRequest=(userNotifications[myName]||[]).find(n=>n.friendRequestFrom===senderName);
-            if (!pendingRequest || !userProfiles[senderName]) { alert('Заявка больше не актуальна.'); updateNotificationsUI(); return; }
-            if (!userFriends[myName]) userFriends[myName] = [];
-            if (!userFriends[myName].includes(senderName)) userFriends[myName].push(senderName);
-
-            if (!userFriends[senderName]) userFriends[senderName] = [];
-            if (!userFriends[senderName].includes(myName)) userFriends[senderName].push(myName);
-
-            await saveFriendsToCloud();
-
-            if (userNotifications[myName]) {
-                userNotifications[myName]=userNotifications[myName].filter(n=>n!==pendingRequest);
-                await saveNotificationsToCloud();
-            }
-
-            addNotification(senderName, `${myName} принял(а) ваш запрос в друзья!`);
-            alert(`Теперь вы друзья с ${senderName}!`);
-            render();
-            renderFriendsDrawer();
-        }
-
-        async function declineFriendRequest(notifIndex) {
-            if (!currentUser) return;
-            const myName = currentUser.username;
-
-            if (userNotifications[myName]) {
-                const notice=userNotifications[myName][notifIndex];
-                if (!notice?.friendRequestFrom) return;
-                userNotifications[myName]=userNotifications[myName].filter(n=>n.friendRequestFrom!==notice.friendRequestFrom);
-                await saveNotificationsToCloud();
-                updateNotificationsUI();
-            }
-            alert('Запрос отклонен.');
         }
 
         async function removeFriend(friendUsername) {
-            if (!confirm(`Удалить ${friendUsername} из друзей?`)) return;
-            if (!currentUser) return;
-            const myName = currentUser.username;
-            const uid = currentUser.authUserId;
+            const uid = currentUser?.authUserId;
             const friendId = uid && protectedFriendList.owner === uid && protectedFriendList.idsByName.get(friendUsername);
-            if (friendId) {
-                try {
-                    const { error } = await _supabase.rpc('komi_remove_friend', { p_friend_id: friendId });
-                    if (error) throw error;
-                    if (currentUser?.authUserId !== uid) return;
-                    await loadProtectedFriends();
-                } catch (error) {
-                    alert('Не удалось удалить друга: ' + error.message);
-                    return;
-                }
-                if (!(userFriends[myName] || []).includes(friendUsername)) {
-                    openProfile(friendUsername);
-                    return;
-                }
+            if (!friendId || !confirm("Удалить " + friendUsername + " из друзей?")) return;
+            try {
+                const { error } = await _supabase.rpc("komi_remove_friend", { p_friend_id: friendId });
+                if (error) throw error;
+                if (currentUser?.authUserId !== uid) return;
+                await loadProtectedFriends();
+                if (currentUser?.authUserId === uid) openProfile(friendUsername);
+            } catch (error) {
+                if (currentUser?.authUserId === uid) alert("Не удалось удалить друга: " + error.message);
             }
-            if (userFriends[myName]) userFriends[myName] = userFriends[myName].filter(u => u !== friendUsername);
-            if (userFriends[friendUsername]) userFriends[friendUsername] = userFriends[friendUsername].filter(u => u !== myName);
-            await saveFriendsToCloud();
-            openProfile(friendUsername);
-            renderFriendsDrawer();
         }
 
         function closeSearchDropdown() {
@@ -4556,9 +4373,12 @@ async function loadDataFromCloud(attempt = 0) {
                 if (!session?.user) {
                     if (currentUser?.authUserId) {
                         clearKomiAccountData(currentUser);
+                        currentUser = null;
+                        updateNotificationsUI();
                         closeWatchModal();
                         await leaveWatchPartyRoom();
-                        currentUser = null; saveData(); render();
+                        saveData();
+                        render();
                     }
                     return;
                 }
@@ -4580,6 +4400,7 @@ async function loadDataFromCloud(attempt = 0) {
                 }
                 // Verified Supabase sessions take precedence; legacy browser data is retained.
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
+                updateNotificationsUI();
                 requireServerAdmin(true).catch(e => console.warn('Admin role restore:',e.message));
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
@@ -4612,6 +4433,7 @@ async function loadDataFromCloud(attempt = 0) {
                 await loadAuthenticatedAnimeData();
                 if (typeof aniCoinRequest === 'function') aniCoinRequest('read').catch(() => {});
                 loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
+                loadAccountNotifications().catch(error => console.warn('Уведомления:', error.message));
                 if (location.hash === '#profile') { currentView = 'profile'; profileTargetUser = username; }
                 saveData(); closeAuthModal(); render();
             } catch (error) {
@@ -4663,27 +4485,13 @@ async function loadDataFromCloud(attempt = 0) {
 
         async function handleLoginSubmit(e) {
             e.preventDefault();
-            const username = document.getElementById('loginUsername').value.trim();
-            const passwordInput = document.getElementById('loginPassword').value;
-            if (username.includes('@')) {
-                if (!_supabase) { alert('Сервис входа недоступен'); return; }
-                const { error } = await _supabase.auth.signInWithPassword({ email: username, password: passwordInput });
-                if (error) { alert('Не удалось войти: ' + error.message); return; }
-                currentUser = null;
-                await queueKomiSessionRestore();
-                return;
-            }
-            if (!username || !passwordInput) return;
-
-            const passwordHash = await hashPassword(passwordInput);
-            if (registeredUsers[username] && registeredUsers[username] === passwordHash) {
-                currentUser = { username };
-                saveData();
-                closeAuthModal();
-                render();
-            } else {
-                alert('Неверный логин или пароль!');
-            }
+            const email = document.getElementById("loginUsername").value.trim();
+            const password = document.getElementById("loginPassword").value;
+            if (!email.includes("@") || !password) return;
+            if (!_supabase) { alert("Сервис входа недоступен"); return; }
+            const { error } = await _supabase.auth.signInWithPassword({ email, password });
+            if (error) { alert("Не удалось войти: " + error.message); return; }
+            await queueKomiSessionRestore();
         }
 
         async function handleRegisterSubmit(e) {
@@ -4706,7 +4514,6 @@ async function loadDataFromCloud(attempt = 0) {
                 alert('Проверь почту и подтверди регистрацию. Старые данные Komi останутся на месте.');
                 return;
             }
-            currentUser = null;
             await queueKomiSessionRestore();
             alert('Аккаунт Komi Anime создан. Старый аккаунт Komi не удалён.');
             return;
@@ -5342,7 +5149,6 @@ async function loadDataFromCloud(attempt = 0) {
             siteStats.views++;
             saveData();
             
-            // Existing catalog bootstrapping already loaded comments and profiles.
             // Avoid fetching these tables on each episode switch.
             const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
@@ -5400,7 +5206,6 @@ async function loadDataFromCloud(attempt = 0) {
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
             const displayNumber = Number(currentEp.number) || activeIndex + 1;
 
-            const comments = animeComments[anime.id] || [];
             const userHistoryKey = currentUser ? `${currentUser.username}_${anime.id}` : null;
             const savedTime = userHistoryKey ? (userWatchHistory[userHistoryKey] || 0) : 0;
             const userFavCategory = currentUser ? ((userFavorites[currentUser.username] || {})[anime.id] || '') : '';
