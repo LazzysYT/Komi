@@ -2124,6 +2124,7 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
+        const komiPresenceSession = crypto.randomUUID();
         let presenceRequestInFlight = false;
         let presenceRequestEpoch = 0;
         async function updateOnlinePresence() {
@@ -2140,52 +2141,46 @@ async function loadDataFromCloud(attempt = 0) {
                 requestController.abort();
                 if (epoch === presenceRequestEpoch) {
                     presenceRequestInFlight = false;
-                    const indicator = document.getElementById('onlineCountText');
-                    if (indicator) indicator.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
+                    const el = document.getElementById('onlineCountText');
+                    if (el) el.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
                 }
-            }, 5000);
+            }, 4000);
             try {
-                const now = Date.now();
-                const currentName = currentUser ? currentUser.username : ('Гость_' + myUniqueKey.slice(0,4));
-                
-                const {error: presenceWriteError} = await _supabase.from('online_users').upsert({
-                    session_id: myUniqueKey,
-                    username: currentName,
-                    last_seen: now
-                }, { onConflict: 'session_id' }).abortSignal(requestController.signal);
-                if (presenceWriteError) throw presenceWriteError;
-
-                const expireTime = now - 10000;
-                await _supabase.from('online_users').delete().lt('last_seen', expireTime).abortSignal(requestController.signal);
-
+                // Preserve the legacy notification/friend refresh until that data is
+                // migrated to per-account tables; do not couple it to public sessions.
                 const presenceUser = currentUser?.username;
-                const { data: cloudSyncData } = presenceUser
-                    ? await _supabase.from('animes').select('id,content').in('id', [5, 7]).abortSignal(requestController.signal)
-                    : {};
-                if (!requestController.signal.aborted && epoch === presenceRequestEpoch && cloudSyncData && currentUser?.username === presenceUser) {
-                    cloudSyncData.forEach(row => {
-                        if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
-                        if (row.id === 7) {
-                            const cloudFriends = JSON.parse(row.content || '{}');
-                            userFriends = { ...userFriends, ...cloudFriends };
+                if (presenceUser) {
+                    const { data: cloudSyncData } = await _supabase.from('animes')
+                        .select('id,content').in('id',[5,7])
+                        .abortSignal(requestController.signal);
+                    if (!requestController.signal.aborted && epoch === presenceRequestEpoch
+                        && cloudSyncData && currentUser?.username === presenceUser) {
+                        for (const row of cloudSyncData) {
+                            try {
+                                if (row.id === 5) userNotifications = JSON.parse(row.content || '{}');
+                                if (row.id === 7) {
+                                    const cloudFriends = JSON.parse(row.content || '{}');
+                                    userFriends = { ...userFriends, ...cloudFriends };
+                                }
+                            } catch(error) { console.warn('Invalid legacy social archive:',error); }
                         }
-                    });
-                    updateNotificationsUI();
+                        updateNotificationsUI();
+                    }
                 }
 
-                const {data, error:presenceReadError} = await _supabase.from('online_users').select('username,last_seen').abortSignal(requestController.signal);
-                if (presenceReadError) throw presenceReadError;
-                if (!Array.isArray(data)) throw new Error('Не удалось получить список онлайн');
+                const {data: count,error} = await _supabase.rpc('komi_site_presence', {
+                    p_session:komiPresenceSession
+                }).abortSignal(requestController.signal);
+                if (error) throw error;
                 if (requestController.signal.aborted || epoch !== presenceRequestEpoch) return;
-                const uniqueUsersMap = new Map();
-                for (const item of data) {
-                    if (Number(item.last_seen) > now - 30000 && item.username)
-                        uniqueUsersMap.set(item.username, item);
-                }
-                globalAllOnlineUsersList = Array.from(uniqueUsersMap.values());
+                const online = Number(count);
+                if (!Number.isSafeInteger(online) || online < 0) throw Error('Неверное число онлайн');
+                // The RPC intentionally reveals only an aggregate number, not a list
+                // of usernames, session IDs, timestamps or anonymous visitors.
+                globalAllOnlineUsersList = [];
                 const el = document.getElementById('onlineCountText');
-                if (el) el.innerText = `Онлайн: ${globalAllOnlineUsersList.length}`;
-            } catch(e) {
+                if (el) el.textContent = 'Онлайн: ' + online;
+            } catch(error) {
                 if (epoch === presenceRequestEpoch) {
                     const el = document.getElementById('onlineCountText');
                     if (el) el.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
@@ -2648,7 +2643,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (error) { alert('Не удалось выйти: ' + error.message); return; }
             }
             if (_supabase) {
-                try { await _supabase.from('online_users').delete().eq('session_id', myUniqueKey); } catch(e){}
+                // The private server-side session expires automatically; no public row to delete.
             }
             clearKomiAccountData(signingOut);
             avatarDraft = null;

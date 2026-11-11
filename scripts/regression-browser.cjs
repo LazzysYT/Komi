@@ -280,12 +280,10 @@ const path=require('node:path');
        presenceRequestInFlight=false;
        currentUser=null;
        _supabase={
-         from:()=>({
-           upsert:()=>({abortSignal:signal=>new Promise(resolve=>{
-             if(signal.aborted)resolve({error:{message:'Request cancelled'}});
-             else signal.addEventListener('abort',()=>resolve({error:{message:'Request cancelled'}}),{once:true});
-           })})
-         })
+         rpc:()=>({abortSignal:signal=>new Promise(resolve=>{
+           if(signal.aborted)resolve({error:{message:'Request cancelled'}});
+           else signal.addEventListener('abort',()=>resolve({error:{message:'Request cancelled'}}),{once:true});
+         })})
        };
        const status=document.getElementById('onlineCountText');
        status.textContent='Онлайн: проверяем…';
