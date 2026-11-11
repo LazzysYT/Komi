@@ -64,6 +64,7 @@ test('account list load retains confirmed writes that occur while network is pen
   komiLoadAllFolderItems:async()=>({data:[],error:null}),
   render(){},
   komiHydrateSavedAnimeCards:async()=>{},
+  komiLoadCloudFolders:async()=>{},
   console:{warn(){}}
  });
  vm.runInContext(helpers+load,ctx);
@@ -91,6 +92,7 @@ test('older concurrent account loads cannot replace the newer response',async()=
   komiLoadAllFolderItems:async()=>({data:[],error:null}),
   render(){},
   komiHydrateSavedAnimeCards:async()=>{},
+  komiLoadCloudFolders:async()=>{},
   console:{warn(){}}
  });
  vm.runInContext(helpers+load,ctx);
