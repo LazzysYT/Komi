@@ -14,6 +14,24 @@ Verified:
 - `anon` cannot access `komi_private` directly
 - An anonymous-role RPC call succeeded in a rollback transaction
 
+## Update: November 11, 2026 — partial Phase 1B released
+
+- A separate, CI-tested PR #47 replaced the production client's public
+  `online_users` queries with `komi_site_presence(uuid)`, preserving legacy
+  notifications and friends refresh.
+- Production frontend release `04798400e59e7316e309d4abc2accbde696c7253`
+  is confirmed READY on `komianime.online`.
+- Supabase migration `20261111135055_restrict_legacy_online_users_after_rpc_release`
+  **was applied and verified**: RLS ON, anon SELECT/INSERT and authenticated
+  UPDATE revoked; the aggregate guest RPC still works. Existing session rows
+  were not deleted.
+- `public.animes` remains RLS OFF and is the **only** currently reported
+  public-table RLS-disabled finding. It still serves production legacy
+  comments, profiles, notifications, friends and some local account flows.
+- Do **not** apply the remainder of Phase 1B until a compatible frontend
+  passes real-account E2E. The existing `phase1-restrict.sql` has redundant,
+  idempotent statements for already-protected `online_users`.
+
 ## Phase 1B — pending / release-blocking
 
 1. Verify PR #45 automatic tests, and the deployed Preview against a test
