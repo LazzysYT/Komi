@@ -2758,24 +2758,45 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
-        async function logoutUser() {
+        let komiSignOutInProgress = false;
+        async function logoutUser(scope = 'local') {
             const signingOut = currentUser;
-            await leaveWatchPartyRoom();
-            closeWatchModal();
-            await komiProgressWriter.flush();
-            if (currentUser?.authUserId && _supabase) {
-                const { error } = await _supabase.auth.signOut({ scope: 'local' });
-                if (error) { alert('Не удалось выйти: ' + error.message); return; }
+            if (!signingOut?.authUserId || !_supabase || komiSignOutInProgress) return;
+            komiSignOutInProgress = true;
+            try {
+                await leaveWatchPartyRoom();
+                if (currentUser?.authUserId !== signingOut.authUserId) return;
+                closeWatchModal();
+                await komiProgressWriter.flush();
+                if (currentUser?.authUserId !== signingOut.authUserId) return;
+
+                const { data, error: sessionError } = await _supabase.auth.getSession();
+                if (sessionError) throw sessionError;
+                if (currentUser?.authUserId !== signingOut.authUserId) return;
+                if (data.session) {
+                    if (data.session.user.id !== signingOut.authUserId) return;
+                    const { error } = await _supabase.auth.signOut({ scope });
+                    if (error) throw error;
+                }
+                if (currentUser && currentUser.authUserId !== signingOut.authUserId) return;
+                clearKomiAccountData(signingOut);
+                avatarDraft = null;
+                currentUser = null;
+                saveData();
+                updateNotificationsUI();
+                navigate('home');
+                if (!data.session && scope === 'global') {
+                    komiStatusFeedback('Сеанс истёк. Войдите снова, чтобы завершить сеансы на всех устройствах.');
+                }
+            } catch {
+                if (!currentUser || currentUser.authUserId === signingOut.authUserId) {
+                    komiStatusFeedback(scope === 'global'
+                        ? 'Не удалось завершить все сеансы. Попробуйте ещё раз.'
+                        : 'Не удалось подтвердить выход на сервере. Попробуйте ещё раз.');
+                }
+            } finally {
+                komiSignOutInProgress = false;
             }
-            if (_supabase) {
-                // The private server-side session expires automatically; no public row to delete.
-            }
-            clearKomiAccountData(signingOut);
-            avatarDraft = null;
-            currentUser = null;
-            saveData();
-            updateNotificationsUI();
-            navigate('home');
         }
 
         function komiCatalogLoadingMarkup() {
@@ -3180,6 +3201,7 @@ async function loadDataFromCloud(attempt = 0) {
                                     </div>
                                     <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
+                                <button type="button" class="btn-secondary" onclick="logoutUser('global')">Выйти на всех устройствах</button>
                             </div>
                             ` : ''}
                         </div>
