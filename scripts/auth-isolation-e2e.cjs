@@ -63,6 +63,8 @@ for (const key of required) {
         updatedCount:update.data?.length,updateError:update.error?.message,
         progressCount:progress.data?.length,progressError:progress.error?.message};
     }, {id:animeId,uid:a.uid});
+    if (visibility.readError || visibility.updateError || visibility.progressError)
+      throw Error('Could not verify cross-account RLS: '+JSON.stringify(visibility));
     if (visibility.readCount !== 0 || visibility.updatedCount !== 0 || visibility.progressCount !== 0)
       throw Error('Cross-account data access detected: '+JSON.stringify(visibility));
     await a.page.reload({waitUntil:'domcontentloaded'});
@@ -126,21 +128,35 @@ for (const key of required) {
       throw Error('Email sign-in after logout mixed account state: '+JSON.stringify(switchedAccount));
     }
     results.push('PASS real email login/logout/switch, notification isolation, owner-only RLS, and saved progress after reload');
-    console.log(results.join('\n'));
   } finally {
     if (contexts[0]) {
       const page = contexts[0].pages()[0];
       if (page && !page.isClosed()) {
         const cleanup = await page.evaluate(async id => {
-          const uid = (await _supabase.auth.getUser()).data.user?.id;
-          const progress = await _supabase.from('komi_watch_progress').delete().eq('anime_id',id).eq('user_id',uid);
-          const {error} = await _supabase.from('komi_anime_lists')
-            .delete().eq('anime_id',id).eq('user_id',(await _supabase.auth.getUser()).data.user?.id);
-          return progress.error?.message || error?.message || null;
+          const { data: { user }, error: authError } = await _supabase.auth.getUser();
+          if (authError || !user?.id) return authError?.message || 'Test owner session unavailable';
+          const progress = await _supabase.from('komi_watch_progress')
+            .delete().eq('anime_id',id).eq('user_id',user.id);
+          const { error } = await _supabase.from('komi_anime_lists')
+            .delete().eq('anime_id',id).eq('user_id',user.id);
+          if (progress.error || error) return progress.error?.message || error.message;
+          const [remainingProgress, remainingList] = await Promise.all([
+            _supabase.from('komi_watch_progress').select('anime_id').eq('anime_id',id).eq('user_id',user.id),
+            _supabase.from('komi_anime_lists').select('anime_id').eq('anime_id',id).eq('user_id',user.id)
+          ]);
+          if (remainingProgress.error || remainingList.error)
+            return remainingProgress.error?.message || remainingList.error?.message;
+          if (remainingProgress.data?.length || remainingList.data?.length)
+            return 'Test records remain after cleanup';
+          return null;
         }, animeId).catch(e=>e.message);
-        if (cleanup) console.error('Test record cleanup failed:',cleanup);
+        if (cleanup) {
+          console.error('Test record cleanup failed:',cleanup);
+          process.exitCode = 1;
+        }
       }
     }
     await browser.close();
   }
+  if (!process.exitCode) console.log(results.join('\n'));
 })().catch(e => {console.error(e.message);process.exitCode=1;});
