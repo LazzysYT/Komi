@@ -80,7 +80,52 @@ for (const key of required) {
     }, animeId);
     if (progressRestored.data?.episode_index !== 3 || Number(progressRestored.data?.position_seconds) !== 45)
       throw Error('Progress did not survive reload: '+JSON.stringify(progressRestored));
-    results.push('PASS two real email sessions, list/progress cross-account RLS, persistence after reload');
+    // Notifications must never be readable across confirmed Auth identities.
+    const notificationIsolation = await Promise.all([
+      a.page.evaluate(async () => {
+        const {data,error} = await _supabase.from('komi_notifications')
+          .select('id').eq('recipient_id', currentUser.authUserId).limit(2);
+        await loadAccountNotifications();
+        return {error:error?.message || null, count:data?.length, owner:accountNotifications.owner};
+      }),
+      b.page.evaluate(async uid => {
+        const {data,error} = await _supabase.from('komi_notifications')
+          .select('id').eq('recipient_id',uid).limit(2);
+        return {error:error?.message || null, count:data?.length};
+      }, a.uid)
+    ]);
+    if (notificationIsolation[0].error || notificationIsolation[0].owner !== a.uid ||
+        notificationIsolation[1].count !== 0 || notificationIsolation[1].error) {
+      throw Error('Notification Auth isolation failed: '+JSON.stringify(notificationIsolation));
+    }
+
+    // Exercise the site's actual logout and email login form in the same browser context.
+    // Account A remains signed in in the other browser, so cleanup is never lost.
+    const afterLogout = await b.page.evaluate(async () => {
+      await logoutUser();
+      const {data:{session}} = await _supabase.auth.getSession();
+      return {uid:currentUser?.authUserId ?? null, session:session?.user?.id ?? null,
+        notificationOwner:accountNotifications.owner};
+    });
+    if (afterLogout.uid || afterLogout.session || afterLogout.notificationOwner) {
+      throw Error('Logout retained previous account state: '+JSON.stringify(afterLogout));
+    }
+    await b.page.evaluate(() => openAuthModal('login'));
+    await b.page.locator('#loginUsername').fill(process.env.KOMI_TEST_EMAIL_A);
+    await b.page.locator('#loginPassword').fill(process.env.KOMI_TEST_PASSWORD_A);
+    b.page.on('dialog', dialog => dialog.dismiss());
+    await b.page.locator('#loginFormContainer').evaluate(form => form.requestSubmit());
+    await b.page.waitForFunction(expected => currentUser?.authUserId === expected, a.uid,
+      {timeout:30000});
+    const switchedAccount = await b.page.evaluate(async () => {
+      await loadAccountNotifications();
+      return {uid:currentUser?.authUserId, notificationOwner:accountNotifications.owner,
+        visibleProfile:currentUser?.username};
+    });
+    if (switchedAccount.uid !== a.uid || switchedAccount.notificationOwner !== a.uid) {
+      throw Error('Email sign-in after logout mixed account state: '+JSON.stringify(switchedAccount));
+    }
+    results.push('PASS real email login/logout/switch, notification isolation, owner-only RLS, and saved progress after reload');
     console.log(results.join('\n'));
   } finally {
     if (contexts[0]) {
