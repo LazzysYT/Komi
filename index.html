@@ -4144,14 +4144,22 @@ const adminList = []; // No client-side username grants administrator privileges
 
         // Google identities are namespaced by verified Supabase user ID, never by
         // an editable display name, email, or a privileged local username.
+        function komiReservedAccountName(value) {
+            const name = String(value || '').trim().toLowerCase();
+            return /^(admin|administrator|moderator|mod|staff|support|system|owner|komianime|komi_anime)$/.test(name)
+                || name.startsWith('google_');
+        }
         function googleProfileName(authUser) {
             const requested = String(authUser.user_metadata?.username || '').trim();
-            if (authUser.app_metadata?.provider !== 'google' && /^[A-Za-z0-9_]{3,24}$/.test(requested) && !/^google_/i.test(requested)) return requested;
-            return 'google_' + authUser.id.replace(/[^a-zA-Z0-9_-]/g, '');
+            if (authUser.app_metadata?.provider !== 'google'
+                && /^[A-Za-z0-9_]{3,24}$/.test(requested)
+                && !komiReservedAccountName(requested)) return requested;
+            return 'google_' + String(authUser.id || '').replace(/[^a-fA-F0-9]/g, '');
         }
         function komiSafeAccountUsername(username, authUserId) {
             const value = String(username || '').trim();
-            if (/^[A-Za-z0-9_]{3,48}$/.test(value)) return value;
+            // Reserved labels and Google-ID namespaces may only belong to their server owner.
+            if (/^[A-Za-z0-9_]{3,48}$/.test(value) && !komiReservedAccountName(value)) return value;
             return 'google_' + String(authUserId || '').replace(/[^a-fA-F0-9]/g, '').slice(0, 32);
         }
         function applySavedKomiProfile(username, profile) {
@@ -4297,6 +4305,7 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!username || !email || !passwordInput) return;
             if (!_supabase) { alert('Сервис регистрации недоступен'); return; }
             if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) { alert('Никнейм: 3–24 символа, латиница, цифры и _'); return; }
+            if (komiReservedAccountName(username)) { alert('Этот никнейм зарезервирован. Выбери другой.'); return; }
             if (passwordInput.length < 8) { alert('Пароль должен содержать минимум 8 символов'); return; }
             const { data: signupData, error: signupError } = await _supabase.auth.signUp({
                 email, password: passwordInput,
