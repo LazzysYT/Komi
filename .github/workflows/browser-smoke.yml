@@ -36,10 +36,11 @@ jobs:
           KOMI_TEST_URL: http://127.0.0.1:8765
         run: |
           node scripts/check-syntax.cjs
-          node --test scripts/player-core.test.cjs scripts/catalog-first-paint.test.cjs scripts/friend-sidebar-security.test.cjs scripts/profile-markup-security.test.cjs scripts/presence-rpc.test.cjs scripts/account-reload-race.test.cjs scripts/status-persistence.test.cjs scripts/account-pagination.test.cjs scripts/party-join-guard.test.cjs
+          node --test scripts/player-core.test.cjs scripts/catalog-first-paint.test.cjs scripts/friend-sidebar-security.test.cjs scripts/profile-markup-security.test.cjs scripts/presence-rpc.test.cjs scripts/account-reload-race.test.cjs scripts/status-persistence.test.cjs scripts/account-pagination.test.cjs scripts/party-join-guard.test.cjs scripts/saved-card-hydration.test.cjs
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-preview.log 2>&1 &
           node scripts/regression-browser.cjs
           node scripts/profile-collection-browser.cjs
+          node scripts/saved-card-hydration-browser.cjs
           node scripts/profile-markup-security-browser.cjs
           node scripts/party-regression.cjs
           node scripts/browser-smoke.cjs
