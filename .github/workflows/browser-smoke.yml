@@ -54,15 +54,20 @@ jobs:
       - name: Smoke-test actual komianime.online as a signed-out visitor
         timeout-minutes: 4
         run: node scripts/live-domain-smoke.cjs
-      - name: Run real two-account auth and RLS E2E (when secrets configured)
-        # Real-account credentials are currently rejected by Supabase; run deliberately with valid test accounts.
-        # Automated PR smoke remains mandatory and does not silently report this live-auth test as passed.
-        if: ${{ github.event_name == 'workflow_dispatch' && env.KOMI_TEST_EMAIL_A != '' && env.KOMI_TEST_PASSWORD_A != '' && env.KOMI_TEST_EMAIL_B != '' && env.KOMI_TEST_PASSWORD_B != '' }}
+      - name: Require dedicated test accounts for manual Auth E2E
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        shell: bash
+        run: |
+          for key in KOMI_TEST_EMAIL_A KOMI_TEST_PASSWORD_A KOMI_TEST_EMAIL_B KOMI_TEST_PASSWORD_B; do
+            if [[ -z "${!key}" ]]; then
+              echo "::error::Missing GitHub Actions secret $key. Real two-account E2E was NOT executed."
+              exit 1
+            fi
+          done
+      - name: Run real two-account email auth and RLS E2E
+        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
-          KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
-          KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
-          KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
-          KOMI_TEST_PASSWORD_B: ${{ secrets.KOMI_TEST_PASSWORD_B }}
+          KOMI_TEST_URL: https://komianime.online/
         run: node scripts/auth-isolation-e2e.cjs
       - name: Upload screenshots and results
         if: always()
