@@ -31,7 +31,7 @@ const path=require('node:path');
    const faviconResponse=await page.request.get(new URL('icon.svg',page.url()).href);
    assert.equal(faviconResponse.status(),200);
    assert.ok((await faviconResponse.text()).includes('<svg'),'Favicon should serve valid SVG');
-   assert.equal(await page.locator('#rouletteImage').getAttribute('src'),'./anime-artwork.svg');
+   assert.equal(await page.locator('#rouletteImage').getAttribute('src'),'/anime-artwork.svg');
    assert.equal(await page.locator('#rouletteImage').getAttribute('alt'),'Обложка случайного аниме');
    await page.waitForFunction(()=>document.getElementById('authModal').hasAttribute('inert'));
    const initialA11y=await page.evaluate(()=>({

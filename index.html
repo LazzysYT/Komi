@@ -1593,6 +1593,22 @@ body > header {
 }
 </style>    <link rel="stylesheet" href="./cinema-ui.css">
     <link rel="stylesheet" href="./mono-ui.css">
+<style>
+/* Visible before JavaScript initializes, also reused during a slow catalog request. */
+.komi-static-catalog { width: 100%; }
+.komi-static-catalog .section-header { margin-bottom: 18px; }
+.komi-catalog-skeleton-card {
+    aspect-ratio: 2 / 3;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: linear-gradient(105deg,#161616 20%,#252525 44%,#161616 68%);
+    background-size: 220% 100%;
+    animation: komiCatalogPulse 1.8s ease-in-out infinite;
+}
+.komi-catalog-skeleton-label { margin-top: 16px; color: var(--text-muted); font-size: 13px; }
+@keyframes komiCatalogPulse { from {background-position:100% 0} to {background-position:-100% 0} }
+@media(prefers-reduced-motion:reduce) { .komi-catalog-skeleton-card {animation:none;} }
+</style>
 </head>
 <body>
 
@@ -1671,7 +1687,7 @@ body > header {
         </div>
     </aside>
     <div id="komiFriendsBackdrop" class="komi-friends-backdrop" onclick="closeFriendsDrawer()"></div>
-    <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true">
+    <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" inert>
         <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
         <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." oninput="renderFriendsDrawer()" autocomplete="off" aria-label="Поиск по нику"></div>
         <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" onclick="setFriendsDrawerTab('all')">Все пользователи</button><button id="komiFriendsMyTab" onclick="setFriendsDrawerTab('friends')">Мои друзья</button></div>
@@ -1686,10 +1702,24 @@ body > header {
                 <a href="#shop">Магазин AniCoin</a>
                 <noscript><p>Для интерактивного каталога и просмотра требуется JavaScript.</p></noscript>
             </section>
+            <section id="catalog" class="komi-static-catalog" aria-label="Каталог аниме">
+                <div class="section-header"><h2 class="section-title">Каталог аниме</h2></div>
+                <div id="anime-grid" class="anime-grid" aria-busy="true" aria-label="Загрузка каталога">
+                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
+                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
+                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
+                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
+                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
+                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
+                </div>
+                <p class="komi-catalog-skeleton-label" role="status">Загружаем каталог аниме…</p>
+            </section>
         </main>
     </div>
 
     <!-- Модальные окна -->
+    <!-- The admin form is inert and not mounted for ordinary visitors. Server-side roles remain mandatory. -->
+    <template id="komiAdminAnimeModalTemplate">
     <div class="modal-overlay" id="addModal">
         <div class="modal-content" style="max-width: 650px;">
             <button class="modal-close" onclick="playSound(); closeAddModal()">&times;</button>
@@ -1750,6 +1780,7 @@ body > header {
             </form>
         </div>
     </div>
+    </template>
 
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 360px;">
@@ -1797,7 +1828,7 @@ body > header {
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
             <h3 style="margin-bottom: 14px; font-size: 15px;">◇ Выбираем аниме...</h3>
             <div id="rouletteContainer" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
-                <img id="rouletteImage" src="./anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
+                <img id="rouletteImage" src="/anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
             </div>
             <div id="rouletteTitle" role="status" aria-live="polite" style="font-weight: 700; font-size: 13px; color: white;">Загрузка...</div>
             <div class="komi-roulette-actions">
@@ -2215,16 +2246,22 @@ async function loadDataFromCloud(attempt = 0) {
         function openFriendsDrawer() {
             loadKomiCommunityProfiles().then(() => renderFriendsDrawer()).catch(console.warn);
             const drawer = document.getElementById('komiFriendsDrawer');
+            drawer.removeAttribute('inert');
+            drawer.removeAttribute('aria-hidden');
             drawer.classList.add('open');
-            drawer.setAttribute('aria-hidden','false');
             document.getElementById('komiFriendsBackdrop').classList.add('open');
             document.getElementById('sideFriendsBtn')?.setAttribute('aria-expanded','true');
             renderFriendsDrawer();
             document.getElementById('komiFriendsSearch')?.focus();
         }
         function closeFriendsDrawer() {
-            document.getElementById('komiFriendsDrawer')?.classList.remove('open');
-            document.getElementById('komiFriendsDrawer')?.setAttribute('aria-hidden','true');
+            const drawer = document.getElementById('komiFriendsDrawer');
+            if (drawer?.contains(document.activeElement)) {
+                document.getElementById('sideFriendsBtn')?.focus();
+            }
+            drawer?.classList.remove('open');
+            drawer?.setAttribute('inert', '');
+            drawer?.setAttribute('aria-hidden', 'true');
             document.getElementById('komiFriendsBackdrop')?.classList.remove('open');
             document.getElementById('sideFriendsBtn')?.setAttribute('aria-expanded','false');
         }
@@ -2672,6 +2709,14 @@ const adminList = []; // No client-side username grants administrator privileges
             navigate('home');
         }
 
+        function komiCatalogLoadingMarkup() {
+            return '<section id="catalog" class="komi-static-catalog" aria-label="Каталог аниме">' +
+                '<div class="section-header"><h1 class="section-title">Каталог аниме</h1></div>' +
+                '<div id="anime-grid" class="anime-grid" aria-busy="true" aria-label="Загрузка каталога">' +
+                '<div class="komi-catalog-skeleton-card" aria-hidden="true"></div>'.repeat(6) +
+                '</div><p class="komi-catalog-skeleton-label" role="status">Загружаем каталог аниме…</p></section>';
+        }
+
         function render() {
             renderHeaderUser();
             const container = document.getElementById('mainContainer');
@@ -2682,7 +2727,7 @@ const adminList = []; // No client-side username grants administrator privileges
                     clearInterval(slideInterval);
                     container.innerHTML = catalogInitialLoadFailed
                         ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
-                        : '<section class="komi-catalog-empty" role="status" aria-live="polite"><strong>Загружаем каталог</strong><p>Подборки появятся, когда каталог будет готов.</p></section>';
+                        : komiCatalogLoadingMarkup();
                     return;
                 }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
@@ -2791,7 +2836,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (!catalogInitialLoadComplete) {
                     container.innerHTML = catalogInitialLoadFailed
                       ? '<section class="komi-catalog-empty" role="status"><h1>Не удалось загрузить каталог</h1><button class="komi-catalog-clear" onclick="loadDataFromCloud()">Повторить загрузку</button></section>'
-                      : '<section class="komi-catalog-empty" role="status" aria-live="polite"><h1>Загружаем каталог аниме…</h1><p>Подборки появятся после загрузки.</p></section>';
+                      : komiCatalogLoadingMarkup();
                     return;
                 }
                 const genres = ['Все', ...availableGenresList];
@@ -3377,7 +3422,7 @@ const adminList = []; // No client-side username grants administrator privileges
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
-            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || './anime-artwork.svg');
+            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || '/anime-artwork.svg');
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
@@ -3385,7 +3430,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'./anime-artwork.svg\'">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'/anime-artwork.svg\'">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
@@ -3492,7 +3537,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 titleEl.textContent = catalogInitialLoadComplete
                     ? 'Пока нет аниме с доступными сериями'
                     : 'Каталог загружается. Повтори попытку через несколько секунд.';
-                imgEl.src = './anime-artwork.svg';
+                imgEl.src = '/anime-artwork.svg';
                 modal.classList.add('active');
                 // A stale timer must never dismiss a newer roulette run.
                 setTimeout(() => {
@@ -3569,7 +3614,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 ]).then(([poster]) => {
                     if (run !== komiRouletteRun || token !== imageToken ||
                         !modal.classList.contains('active')) return;
-                    imgEl.src = poster || './anime-artwork.svg';
+                    imgEl.src = poster || '/anime-artwork.svg';
                     imgEl.style.opacity = '1';
                     container?.classList.remove('is-loading');
                     if (poster && poster !== finalItem.poster) {
@@ -3951,7 +3996,12 @@ const adminList = []; // No client-side username grants administrator privileges
 
         function openAddModal(editId = null) {
             if (!requireServerAdmin()) return;
+            if (!document.getElementById('addModal')) {
+                const template = document.getElementById('komiAdminAnimeModalTemplate');
+                if (template) document.body.appendChild(template.content.cloneNode(true));
+            }
             const modal = document.getElementById('addModal');
+            if (!modal) return;
             document.getElementById('editAnimeId').value = '';
             document.getElementById('animeForm').reset();
             renderGenresCheckboxes();
@@ -4002,7 +4052,7 @@ const adminList = []; // No client-side username grants administrator privileges
             modal.classList.add('active');
         }
 
-        function closeAddModal() { komiApiSearchController?.abort(); document.getElementById('addModal').classList.remove('active'); }
+        function closeAddModal() { komiApiSearchController?.abort(); document.getElementById('addModal')?.classList.remove('active'); }
         
         function addEpisodeField() {
             const div = document.createElement('div');
@@ -4846,7 +4896,7 @@ const adminList = []; // No client-side username grants administrator privileges
                 <div class="watch-cinema-layout">
                     ${animeDetailsMarkup(anime)}
                     <div class="crunchy-hero-section">
-                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='./anime-artwork.svg'">
+                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='/anime-artwork.svg'">
                         <div class="crunchy-hero-info">
                             <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
                             <h1>${escapeFriendHtml(anime.title)}</h1>
