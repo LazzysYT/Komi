@@ -36,7 +36,7 @@ test('admin form lives in an inert template until a verified admin action', () =
   assert.match(modalTemplate, /id="animeForm"/);
   const activeHtml = html.replace(/<template id="komiAdminAnimeModalTemplate">[\s\S]*?<\/template>/, '');
   assert.doesNotMatch(activeHtml.slice(0, activeHtml.indexOf('<script src="./player-core.js">')), /id="addModal"/);
-  assert.match(html, /function openAddModal\(editId = null\) \{\s*if \(!requireServerAdmin\(\)\) return;/);
+  assert.match(html, /async function openAddModal\(editId = null\) \{\s*if \(!\(await requireServerAdmin\(\)\)\) return;/);
   assert.match(html, /template\.content\.cloneNode\(true\)/);
 });
 

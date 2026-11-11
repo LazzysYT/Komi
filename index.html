@@ -2242,7 +2242,7 @@ async function loadDataFromCloud(attempt = 0) {
             // Keep the in-memory search collection growing while the remaining pages arrive.
             if (catalog.length) {
                 animeList = catalog.slice();
-                komiMaybeOpenSeoAnime();
+                if (typeof komiMaybeOpenSeoAnime === 'function') komiMaybeOpenSeoAnime();
                 if (!catalogInitialLoadComplete) {
                     catalogInitialLoadComplete = true;
                     render();
