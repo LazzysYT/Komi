@@ -152,9 +152,15 @@ async function enterParty(room) {
     const anime = animeList.find(item => String(item.id) === String(room.anime_id));
     if (anime) {
         try { await ensureKomiAnimeDetails(anime); }
-        catch (error) { alert('Не удалось загрузить серии для комнаты: ' + error.message); return; }
+        catch (error) {
+            // A stale details request must not close a newer room.
+            if (!isActive()) return;
+            await leaveWatchPartyRoom();
+            alert('Не удалось загрузить серии для комнаты: ' + error.message);
+            return;
+        }
     }
-    if (generation !== partyGeneration) return;
+    if (!isActive()) return;
     const options = partyOptions(anime);
 
     partyPanel(`
