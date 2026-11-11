@@ -41,6 +41,11 @@ const assert=require('node:assert/strict');
       const buttons=Array.from(container.querySelectorAll('button'));
       const friend=buttons.find(x=>x.classList.contains('komi-profile-friend'));
       const folder=buttons.find(x=>x.classList.contains('season-tab-btn')&&x.textContent.includes('Evil'));
+      // Genres appear on Overview, while the friends list appears on Friends.
+      const overview=document.createElement('div');
+      profilePageSection='overview';
+      renderProfileView(overview);
+      const genreText=overview.querySelector('.komi-genre-row span')?.textContent||'';
       return {
         fakeImageNodes:container.querySelectorAll('img[src="x"]').length,
         invalidSvgNodes:container.querySelectorAll('img[src^="javascript:"]').length,
@@ -49,7 +54,7 @@ const assert=require('node:assert/strict');
         friendHandler:friend?.getAttribute('onclick')||'',
         folderText:folder?.textContent||'',
         folderHandler:folder?.getAttribute('onclick')||'',
-        genreText:container.querySelector('.komi-genre-row span')?.textContent||'',
+        genreText,
         wallAvatar:container.querySelector('.wall-message-author img')?.getAttribute('src')||'',
         wallHandlers:Array.from(container.querySelectorAll('[onclick]')).map(e=>e.getAttribute('onclick')),
       };
