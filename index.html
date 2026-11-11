@@ -4563,8 +4563,19 @@ async function loadDataFromCloud(attempt = 0) {
                     return;
                 }
                 const username = googleProfileName(session.user);
-                const previousGoogle = Boolean(currentUser?.authUserId);
-                if (previousGoogle && currentUser.username !== username) {
+                const previousVerified = currentUser?.authUserId ? {...currentUser} : null;
+                if (previousVerified && (previousVerified.authUserId !== session.user.id ||
+                    previousVerified.username !== username)) {
+                    // Auth changes can arrive without an explicit sign-out. Never leave
+                    // the preceding owner's private lists or folders in memory/localStorage.
+                    closeWatchModal();
+                    await leaveWatchPartyRoom().catch(error =>
+                        console.warn('Закрытие прежней комнаты:',error.message));
+                    clearKomiAccountData(previousVerified);
+                    protectedFriendRequests = [];
+                    protectedFriendList = {owner:null,idsByName:new Map()};
+                    protectedFriendSent = {owner:null,names:new Set()};
+                    komiAdminVerified = false;
                     currentUser = null;
                 }
                 // Verified Supabase sessions take precedence; legacy browser data is retained.
