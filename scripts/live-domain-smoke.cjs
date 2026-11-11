@@ -44,6 +44,29 @@ fs.mkdirSync(output,{recursive:true});
         assert.equal(posterResponse.status(),200,'Random anime fallback must be publicly served');
         assert.ok((posterResponse.headers()['content-type']||'').includes('image/svg+xml'),
           'Random anime artwork must be served as SVG, not an HTML fallback');
+        if(width===1440){
+          // These must be served as HTML/XML by Vercel, not just appear in GitHub.
+          const detail=await page.request.get(base+'anime/52991',{timeout:30000});
+          assert.equal(detail.status(),200,'SEO anime detail URL must return HTTP 200');
+          assert.match(detail.headers()['content-type']||'',/text\/html/,
+            'Anime detail must be real HTML');
+          const seoHtml=await detail.text();
+          assert.match(seoHtml,/<title>[^<]+Komi Anime<\/title>/);
+          assert.match(seoHtml,/href="https:\/\/komianime\.online\/anime\/52991"/);
+          assert.match(seoHtml,/application\/ld\+json/);
+          const sitemap=await page.request.get(base+'sitemap.xml',{timeout:60000});
+          assert.equal(sitemap.status(),200,'Live XML sitemap must be available');
+          assert.match(sitemap.headers()['content-type']||'',/xml/);
+          const sitemapXml=await sitemap.text();
+          assert.match(sitemapXml,/<urlset/);
+          const indexed=(sitemapXml.match(/<url>/g)||[]).length;
+          assert.ok(indexed>=7000,'Expected 7000+ URLs, got '+indexed);
+          assert.match(sitemapXml,/https:\/\/komianime\.online\/anime\/52991/);
+          const robots=await page.request.get(base+'robots.txt',{timeout:12000});
+          assert.equal(robots.status(),200,'robots.txt must be available');
+          assert.match(await robots.text(),/Sitemap: https:\/\/komianime\.online\/sitemap\.xml/);
+          console.log('PASS SEO production: anime detail, JSON-LD, sitemap',indexed,'URLs, robots');
+        }
         const posterText=await posterResponse.text();
         assert.ok(posterText.includes('<svg')&&posterText.includes('</svg>'),'Poster fallback must be valid SVG markup');
         await page.waitForFunction(()=>{
@@ -72,10 +95,13 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(link.svgVisibility,'visible','Social SVG itself must not be CSS-hidden');
           assert.ok(link.pathArea>10,'Social SVG should contain drawable path geometry');
         }
-        const adminDisabled=await page.evaluate(()=>{
+        const adminDisabled=await page.evaluate(async()=>{
           const originalAlert=window.alert;
           window.alert=()=>{};
-          try {return requireServerAdmin()===false;} finally {window.alert=originalAlert;}
+          try {return (await requireServerAdmin(true))===false
+            && !document.getElementById('adminModal').classList.contains('active')
+            && !document.getElementById('addModal');}
+          finally {window.alert=originalAlert;}
         });
         assert.equal(adminDisabled,true,'Client admin actions must remain disabled for guests');
         await page.locator('#sideFriendsBtn').click({timeout:10000});
