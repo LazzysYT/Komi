@@ -1635,7 +1635,7 @@ body > header {
                 </div>
                 <div class="online-counter">
                     <div class="online-dot"></div>
-                    <span id="onlineCountText" role="status" aria-live="polite">Онлайн: проверяем…</span>
+                    <span id="onlineCountText" role="status" aria-live="polite">Аккаунтов онлайн: проверяем…</span>
                 </div>
             </div>
             
@@ -2249,7 +2249,7 @@ async function loadDataFromCloud(attempt = 0) {
         async function updateOnlinePresence() {
             if (!_supabase || !navigator.onLine) {
                 const label = document.getElementById('onlineCountText');
-                if (label) label.textContent = navigator.onLine ? 'Онлайн: недоступно' : 'Нет соединения';
+                if (label) label.textContent = navigator.onLine ? 'Аккаунтов онлайн: недоступно' : 'Нет соединения';
                 return;
             }
             if (document.hidden || presenceRequestInFlight) return;
@@ -2261,7 +2261,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (epoch === presenceRequestEpoch) {
                     presenceRequestInFlight = false;
                     const el = document.getElementById('onlineCountText');
-                    if (el) el.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
+                    if (el) el.textContent = navigator.onLine ? 'Аккаунтов онлайн: —' : 'Нет соединения';
                 }
             }, 4000);
             try {
@@ -2276,11 +2276,11 @@ async function loadDataFromCloud(attempt = 0) {
                 // of usernames, session IDs, timestamps or anonymous visitors.
                 globalAllOnlineUsersList = [];
                 const el = document.getElementById('onlineCountText');
-                if (el) el.textContent = 'Онлайн: ' + online;
+                if (el) el.textContent = 'Аккаунтов онлайн: ' + online;
             } catch(error) {
                 if (epoch === presenceRequestEpoch) {
                     const el = document.getElementById('onlineCountText');
-                    if (el) el.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
+                    if (el) el.textContent = navigator.onLine ? 'Аккаунтов онлайн: —' : 'Нет соединения';
                 }
             } finally {
                 clearTimeout(requestTimeout);

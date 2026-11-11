@@ -3,6 +3,49 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 
+async function checkCommentCooldown(page) {
+ await page.evaluate(() => {
+   const originalSupabase = _supabase;
+   const originalUser = currentUser;
+   currentUser = { username:'ci_commenter', authUserId:'ci-commenter' };
+   _supabase = {
+     from(table) {
+       if (table !== 'komi_comments') throw Error('Unexpected table: ' + table);
+       return {
+         select() { return this; },
+         eq() { return this; },
+         order() { return this; },
+         async limit() { return {data:[],error:null}; },
+         async insert() {
+           return {error:{code:'PT429',message:'Подождите 10 секунд перед следующим комментарием.'}};
+         }
+       };
+     },
+     rpc() { return { abortSignal:async () => ({data:0}) }; }
+   };
+   window.KomiComments.mount(921102);
+   document.getElementById('watchModal').classList.add('active');
+   window.restoreCommentFixture = () => {
+     closeWatchModal();
+     _supabase = originalSupabase;
+     currentUser = originalUser;
+     delete window.restoreCommentFixture;
+   };
+ });
+ try {
+   const comments = page.locator('#komiAnimeComments');
+   const input = comments.getByRole('textbox', {name:'Текст комментария'});
+   const send = comments.getByRole('button', {name:'Отправить'});
+   await input.fill('Черновик комментария');
+   await send.click();
+   await comments.getByText('Подождите 10 секунд перед следующим комментарием.').waitFor();
+   assert.equal(await input.inputValue(), 'Черновик комментария');
+   assert.equal(await send.isEnabled(), true);
+ } finally {
+   await page.evaluate(() => window.restoreCommentFixture());
+ }
+}
+
 async function checkNotifications(page) {
  await page.evaluate(() => {
    const originalSupabase = _supabase;
@@ -135,6 +178,7 @@ async function checkNotifications(page) {
    assert.equal(initialA11y.drawerHidden,'hidden');
    if (width === 1440 || width === 390) await checkNotifications(page);
    if (width === 1440) {
+     await checkCommentCooldown(page);
      const friends = await page.evaluate(() => {
        const originalUser=currentUser;
        const origVerified=komiCommunityVerifiedNames;
@@ -382,7 +426,7 @@ async function checkNotifications(page) {
          })})
        };
        const status=document.getElementById('onlineCountText');
-       status.textContent='Онлайн: проверяем…';
+       status.textContent='Аккаунтов онлайн: проверяем…';
        try {
          await updateOnlinePresence();
          return {label:status.textContent,inFlight:presenceRequestInFlight};
@@ -391,7 +435,7 @@ async function checkNotifications(page) {
          currentUser=priorUser;
        }
      });
-     assert.equal(presence.label,'Онлайн: —','Hung online request must time out instead of staying on checking');
+     assert.equal(presence.label,'Аккаунтов онлайн: —','Hung online request must time out instead of staying on checking');
      assert.equal(presence.inFlight,false,'Timed-out online request must release the lock');
    }
    await page.screenshot({path:path.join(output,`regression-${width}.png`),fullPage:true});

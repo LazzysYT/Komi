@@ -11,7 +11,7 @@ const source=html.slice(start,end);
 assert.doesNotMatch(source,/\.from\(['"]online_users['"]\)/);
 
 function fixture({user=null,online=true,rpcCount=5}={}){
- const logs=[],label={textContent:'Онлайн: проверяем…'};
+ const logs=[],label={textContent:'Аккаунтов онлайн: проверяем…'};
  let rpcs=0;
  const ctx=vm.createContext({
   crypto:{randomUUID:()=> '00000000-0000-4000-8000-000000000111'},
@@ -35,7 +35,7 @@ function fixture({user=null,online=true,rpcCount=5}={}){
 test('guest online indicator uses only private RPC and returns aggregate number',async()=>{
  const x=fixture();
  await x.update();
- assert.equal(x.label.textContent,'Онлайн: 5');
+ assert.equal(x.label.textContent,'Аккаунтов онлайн: 5');
  assert.equal(x.rpcCalls(),1);
  assert.equal(x.logs[0].method,'komi_site_presence');
  assert.equal(x.logs[0].payload.p_session,'00000000-0000-4000-8000-000000000111');
@@ -44,7 +44,7 @@ test('guest online indicator uses only private RPC and returns aggregate number'
 test('signed-in presence refresh does not read legacy social data',async()=>{
  const x=fixture({user:{username:'alice',authUserId:'alice-id'},rpcCount:3});
  await x.update();
- assert.equal(x.label.textContent,'Онлайн: 3');
+ assert.equal(x.label.textContent,'Аккаунтов онлайн: 3');
  assert.equal(x.rpcCalls(),1);
 });
 test('offline does not call RPC, and invalid count is not shown',async()=>{
@@ -54,5 +54,5 @@ test('offline does not call RPC, and invalid count is not shown',async()=>{
  assert.equal(offline.label.textContent,'Нет соединения');
  const bad=fixture({rpcCount:-1});
  await bad.update();
- assert.equal(bad.label.textContent,'Онлайн: —');
+ assert.equal(bad.label.textContent,'Аккаунтов онлайн: —');
 });
