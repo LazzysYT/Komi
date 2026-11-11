@@ -2685,6 +2685,10 @@ const adminList = []; // No client-side username grants administrator privileges
             if (!user?.authUserId) return;
             delete userAnimeStatuses[user.username];
             delete userFavorites[user.username];
+            if (komiSavedCardsOwner === user.authUserId) {
+                komiSavedAnimeCards.clear();
+                komiSavedCardsOwner = null;
+            }
             for (const data of [komiEpisodeProgress, userWatchHistory]) {
                 for (const key of Object.keys(data)) if (key.startsWith(user.username + '_')) delete data[key];
             }
@@ -3001,6 +3005,13 @@ const adminList = []; // No client-side username grants administrator privileges
             const userStatuses = userAnimeStatuses[username] || {};
             // Rendering a saved collection should not repeatedly scan all 7k+ cards.
             const profileAnimeById = new Map(animeList.map(anime => [String(anime.id), anime]));
+            // The full catalog is loaded in pages. User-owned cards can be resolved
+            // directly while their catalog page has not arrived yet.
+            if (isMe && currentUser?.authUserId === komiSavedCardsOwner) {
+                for (const [id,anime] of komiSavedAnimeCards) {
+                    if (!profileAnimeById.has(id)) profileAnimeById.set(id,anime);
+                }
+            }
             const statsCounts = { 'Просмотрено': 0, 'В планах': 0, 'Смотрю': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
             
             const customFolders = userCustomFolders[username] || {};
@@ -4305,6 +4316,8 @@ const adminList = []; // No client-side username grants administrator privileges
 
         const komiFavoritePending = new Set();
         const komiCollectionMutations = { statuses:new Map(), favorites:new Map() };
+        const komiSavedAnimeCards = new Map();
+        let komiSavedCardsOwner = null;
         let komiCollectionLoadEpoch = 0;
         function komiRecordCollectionMutation(kind, uid, animeId, value) {
             komiCollectionMutations[kind].set(uid + ':' + String(animeId), {value,at:Date.now()});
@@ -4343,6 +4356,8 @@ const adminList = []; // No client-side username grants administrator privileges
                 if (next) userFavorites[user.username][id] = next;
                 else delete userFavorites[user.username][id];
                 saveData();
+                if (next) komiHydrateSavedAnimeCards(user.authUserId)
+                    .catch(error=>console.warn('Карточки избранного:',error.message));
                 komiStatusFeedback(next ? 'Добавлено в избранное' : 'Удалено из избранного');
                 if (document.getElementById('watchModal')?.classList.contains('active') && String(window.komiActiveAnimeId) === String(id))
                     openWatchModal(id,window.komiActiveSeason,window.komiActiveEpisode);
@@ -4410,6 +4425,49 @@ const adminList = []; // No client-side username grants administrator privileges
             return {data:all,error:null};
         }
 
+        // Fetch metadata for only saved items whose catalog pages have not arrived.
+        // Never fetch private lists here; they are already loaded via owner-only RLS.
+        async function komiHydrateSavedAnimeCards(uid) {
+            if (!_supabase || !uid || currentUser?.authUserId !== uid) return;
+            if (komiSavedCardsOwner !== uid) {
+                komiSavedAnimeCards.clear();
+                komiSavedCardsOwner = uid;
+            }
+            const username = currentUser.username;
+            const needed = new Set([
+                ...Object.keys(userAnimeStatuses[username] || {}),
+                ...Object.keys(userFavorites[username] || {})
+            ]);
+            const alreadyLoaded = new Set(animeList.map(item => String(item.id)));
+            const missing = [...needed].filter(id => /^\d+$/.test(id) &&
+                Number.isSafeInteger(Number(id)) && Number(id) > 0 &&
+                !alreadyLoaded.has(id) && !komiSavedAnimeCards.has(id)).slice(0,300);
+            if (!missing.length) return;
+            for (let i=0; i<missing.length; i+=75) {
+                if (currentUser?.authUserId !== uid || currentUser?.username !== username) return;
+                const ids = missing.slice(i,i+75).map(Number);
+                const {data,error} = await _supabase.from('komi_catalog_cards')
+                    .select('shikimori_id,data,updated_at').in('shikimori_id',ids);
+                if (error) throw error;
+                if (currentUser?.authUserId !== uid || currentUser?.username !== username) return;
+                for (const row of data || []) {
+                    const raw = row.data;
+                    const id = String(row.shikimori_id);
+                    if (!raw || typeof raw !== 'object' || !needed.has(id)) continue;
+                    komiSavedAnimeCards.set(id,{
+                        ...raw, id, shikimoriId:Number(row.shikimori_id),
+                        title:raw.title || raw.originalTitle || 'Без названия',
+                        poster:raw.poster || '',
+                        shikiRating:raw.shikiRating || 0,
+                        genres:Array.isArray(raw.genres) ? raw.genres : [],
+                        episodeCount:Math.max(0, Number(raw.episodeCount) || 0),
+                        komiCardUpdatedAt:row.updated_at, episodes:[]
+                    });
+                }
+                render();
+            }
+        }
+
         async function loadAuthenticatedAnimeData() {
             if (!_supabase || !currentUser?.authUserId) return;
             const uid = currentUser.authUserId;
@@ -4461,6 +4519,8 @@ const adminList = []; // No client-side username grants administrator privileges
                 }
             }
             render();
+            komiHydrateSavedAnimeCards(uid)
+                .catch(error=>console.warn('Дополнительные карточки профиля:',error.message));
         }
         async function persistAuthenticatedStatus(animeId, status) {
             const id = Number(animeId);
@@ -4534,6 +4594,8 @@ const adminList = []; // No client-side username grants administrator privileges
                 else delete userAnimeStatuses[user.username][animeId];
                 saveData();
                 render();
+                if (next) komiHydrateSavedAnimeCards(user.authUserId)
+                    .catch(error=>console.warn('Карточки списка:',error.message));
                 komiStatusFeedback(next ? 'Статус сохранён: ' + next : 'Статус снят');
                 if (String(window.komiActiveAnimeId) === String(animeId)) {
                     for (const button of document.querySelectorAll('#watchModalContent [data-watch-status]')) {
