@@ -2,6 +2,91 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+
+async function checkNotifications(page) {
+ await page.evaluate(() => {
+   const originalSupabase = _supabase;
+   const originalLoadFriends = loadProtectedFriends;
+   const owner = { username:'ci_notifications', authUserId:'ci-notification-owner' };
+   const notification = { message:'Сообщение <img src=x>', created_at:'2026-01-01T12:00:00Z' };
+   let unread = true;
+   const updates = [];
+   currentUser = owner;
+   loadProtectedFriends = async () => {};
+   _supabase = {
+     from(table) {
+       if (table !== 'komi_notifications') throw Error('Unexpected table: ' + table);
+       let fields, recipient;
+       return {
+         select() { return this; },
+         update(value) { fields = value; return this; },
+         eq(column, value) {
+           if (column !== 'recipient_id') throw Error('Missing recipient filter');
+           recipient = value;
+           return this;
+         },
+         is(column, value) {
+           if (column !== 'read_at' || value !== null) throw Error('Missing unread filter');
+           if (!fields) return this;
+           updates.push({ fields, recipient });
+           if (updates.length === 1) return Promise.resolve({ error:Error('Temporary failure') });
+           unread = false;
+           return Promise.resolve({ error:null });
+         },
+         order() { return this; },
+         async limit() {
+           const data = recipient === owner.authUserId && unread ? [notification] : [];
+           return { data, count:data.length, error:null };
+         }
+       };
+     },
+     rpc() { return { abortSignal:async () => ({data:0}) }; }
+   };
+   window.komiNotificationTest = {
+     updates,
+     async switchAccount() {
+       clearKomiAccountData(owner);
+       currentUser = { username:'ci_other', authUserId:'ci-other-owner' };
+       updateNotificationsUI();
+       await loadAccountNotifications();
+     },
+     restore() {
+       clearKomiAccountData(currentUser);
+       currentUser = null;
+       loadProtectedFriends = originalLoadFriends;
+       _supabase = originalSupabase;
+       updateNotificationsUI();
+       delete window.komiNotificationTest;
+     }
+   };
+ });
+ try {
+   await page.locator('.komi-side-button[title="Уведомления"]').click();
+   const list = page.locator('#notifListContainer');
+   await list.getByText('Сообщение <img src=x>', { exact:false }).waitFor();
+   assert.equal(await list.locator('img').count(), 0);
+   const mark = page.getByRole('button', { name:'Отметить прочитанными' });
+   await mark.focus();
+   await mark.press('Enter');
+   await page.getByText('Не удалось обновить уведомления.', { exact:false }).waitFor();
+   assert.equal(await mark.isEnabled(), true);
+   await mark.click();
+   await list.getByText('Нет новых уведомлений').waitFor();
+   const updates = await page.evaluate(() => window.komiNotificationTest.updates);
+   assert.equal(updates.length, 2);
+   for (const { recipient, fields } of updates) {
+     assert.equal(recipient, 'ci-notification-owner');
+     assert.deepEqual(Object.keys(fields), ['read_at']);
+     assert.ok(Number.isFinite(Date.parse(fields.read_at)));
+   }
+   await page.evaluate(() => window.komiNotificationTest.switchAccount());
+   assert.equal(await page.locator('#notifDropdown').isVisible(), false);
+   assert.equal(await page.locator('#notifBadge').isVisible(), false);
+ } finally {
+   await page.evaluate(() => window.komiNotificationTest.restore());
+ }
+}
+
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.KOMI_CHROME ? {executablePath:process.env.KOMI_CHROME}:{})});
  const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,{recursive:true});
@@ -9,9 +94,13 @@ const path=require('node:path');
   for(const width of [1440,768,390,375]) {
    const page=await browser.newPage({viewport:{width,height:900}});const errors=[];
    page.on('pageerror',e=>errors.push(e.message));
+   await page.addInitScript(() => {
+     localStorage.setItem('komi_current_user', JSON.stringify({username:'legacy',authUserId:'forged-id'}));
+   });
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    await page.goto(process.env.KOMI_TEST_URL || 'http://127.0.0.1:8765');
    await page.waitForFunction(()=>typeof bindKomiPlayer==='function');
+   assert.equal(await page.evaluate(() => currentUser), null, 'Cached legacy identity must not sign the visitor in');
    if (width === 1440) {
      const direct = await browser.newPage({viewport:{width:1280,height:800}});
      await direct.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
@@ -44,6 +133,7 @@ const path=require('node:path');
    assert.equal(initialA11y.modalInert,true);
    assert.equal(initialA11y.drawerInert,true);
    assert.equal(initialA11y.drawerHidden,'hidden');
+   if (width === 1440 || width === 390) await checkNotifications(page);
    if (width === 1440) {
      const friends = await page.evaluate(() => {
        const originalUser=currentUser;
