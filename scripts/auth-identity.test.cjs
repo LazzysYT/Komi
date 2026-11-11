@@ -5,7 +5,7 @@ const test=require('node:test');
 const assert=require('node:assert/strict');
 
 const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
-const start=html.indexOf('function googleProfileName(');
+const start=html.indexOf('function komiReservedAccountName(');
 const end=html.indexOf('        function applySavedKomiProfile(',start);
 assert.ok(start>=0&&end>start);
 const ctx=vm.createContext({});
