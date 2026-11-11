@@ -2296,73 +2296,93 @@ async function loadDataFromCloud(attempt = 0) {
         function handleFriendSearchInput(inputVal) {
             const listEl = document.getElementById('dynamicFriendSearchResults');
             if (!listEl) return;
-            const query = inputVal.trim().toLowerCase();
-            
+            const query = String(inputVal || '').trim().toLocaleLowerCase();
+
             if (!query) {
+                window.komiSidebarSearchNames = [];
                 listEl.innerHTML = '';
                 listEl.style.display = 'none';
                 return;
             }
 
             const myFriends = currentUser ? friendsFor(currentUser.username) : [];
-            const allKnownNames = Object.keys(userProfiles);
-            const allRegNames = Object.keys(registeredUsers);
-            const combinedPool = Array.from(new Set([...allKnownNames, ...allRegNames, ...Object.keys(userFriends)]));
-            const foundResults = combinedPool.filter(n => n.toLowerCase().includes(query) && (!currentUser || n !== currentUser.username));
+            const combinedPool = Array.from(new Set([
+                ...Object.keys(userProfiles),
+                ...Object.keys(registeredUsers),
+                ...Object.keys(userFriends)
+            ]));
+            const foundResults = combinedPool.filter(name =>
+                name.toLocaleLowerCase().includes(query) && name !== currentUser?.username
+            );
+            window.komiSidebarSearchNames = foundResults;
+            listEl.style.display = 'flex';
 
-            if (foundResults.length > 0) {
-                listEl.style.display = 'flex';
-                listEl.innerHTML = foundResults.map(fName => {
-                    const p = userProfiles[fName] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${fName}` };
-                    const isAlreadyFriend = myFriends.includes(fName);
-                    return `
-                        <div class="sidebar-friend-item" style="justify-content:space-between; margin-bottom:4px;">
-                            <div style="display:flex; align-items:center; gap:8px; cursor:pointer; flex:1; overflow:hidden;" onclick="playSound(); openProfile('${fName}')">
-                                <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                                <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${fName}</span>
-                            </div>
-                            ${isAlreadyFriend ? `<span style="font-size:9px; color:var(--success);">В друзьях</span>` : `<button class="btn-glow" style="padding:2px 6px; font-size:9px;" onclick="playSound(); sendFriendRequest('${fName}')">+ Добавить</button>`}
-                        </div>
-                    `;
-                }).join('');
-            } else {
-                listEl.style.display = 'flex';
-                listEl.innerHTML = `<div style="font-size:10px; color:var(--text-muted); padding:4px; text-align:center;">Никого не найдено</div>`;
+            if (!foundResults.length) {
+                listEl.innerHTML = '<div style="font-size:10px;color:var(--text-muted);padding:4px;text-align:center;">Никого не найдено</div>';
+                return;
             }
+
+            listEl.innerHTML = foundResults.map((name,index) => {
+                const profile = userProfiles[name] || {};
+                const safeName = escapeFriendHtml(name);
+                const safeAvatar = escapeFriendHtml(profile.avatar ||
+                    'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
+                const friend = myFriends.includes(name);
+                return `
+                    <div class="sidebar-friend-item" style="justify-content:space-between;margin-bottom:4px;">
+                        <button type="button" class="komi-friends-identity"
+                            onclick="playSound();openProfile(window.komiSidebarSearchNames[${index}])">
+                            <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
+                                onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                            <span>${safeName}</span>
+                        </button>
+                        ${friend ? '<span style="font-size:9px;color:var(--success);">В друзьях</span>' :
+                            `<button type="button" class="btn-glow" style="padding:2px 6px;font-size:9px;"
+                                onclick="playSound();sendFriendRequest(window.komiSidebarSearchNames[${index}])">+ Добавить</button>`}
+                    </div>`;
+            }).join('');
         }
 
         function renderSidebarFriendsList() {
             const friendsContainer = document.getElementById('sidebarFriendsListContainer');
             if (!friendsContainer) return;
 
-            if (currentUser) {
-                const myFriends = friendsFor(currentUser.username);
-                let friendsHtml = `
-                    <div style="margin-bottom:8px; display:flex; flex-direction:column; gap:4px;">
-                        <input type="text" id="friendSearchInputBox" class="form-control" placeholder="Найти по нику..." oninput="handleFriendSearchInput(this.value)" style="font-size:10px; padding:6px 8px;">
-                        <div id="dynamicFriendSearchResults" style="display:none; flex-direction:column; max-height:120px; overflow-y:auto;"></div>
-                    </div>
-                `;
-
-                if (myFriends.length > 0) {
-                    friendsHtml += myFriends.map(f => {
-                        const p = userProfiles[f] || { avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${f}` };
-                        return `
-                            <div class="sidebar-friend-item" onclick="playSound(); openProfile('${f}')">
-                                <img src="${p.avatar}" class="sidebar-friend-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
-                                <span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${f}</span>
-                                <span style="width:6px; height:6px; border-radius:50%; background:var(--success);"></span>
-                            </div>
-                        `;
-                    }).join('');
-                } else {
-                    friendsHtml += `<span style="color:var(--text-muted); font-size:11px; padding:4px;">Список друзей пуст. Введите ник выше для поиска.</span>`;
-                }
-
-                friendsContainer.innerHTML = friendsHtml;
-            } else {
-                friendsContainer.innerHTML = `<span style="color:var(--text-muted); font-size:11px; padding:4px;">Войдите, чтобы искать друзей</span>`;
+            if (!currentUser) {
+                window.komiSidebarFriendNames = [];
+                friendsContainer.innerHTML = '<span style="color:var(--text-muted);font-size:11px;padding:4px;">Войдите, чтобы искать друзей</span>';
+                return;
             }
+
+            const myFriends = friendsFor(currentUser.username);
+            window.komiSidebarFriendNames = myFriends.slice();
+            let friendsHtml = `
+                <div style="margin-bottom:8px;display:flex;flex-direction:column;gap:4px;">
+                    <input type="text" id="friendSearchInputBox" class="form-control"
+                        placeholder="Найти по нику..." oninput="handleFriendSearchInput(this.value)"
+                        style="font-size:10px;padding:6px 8px;">
+                    <div id="dynamicFriendSearchResults"
+                        style="display:none;flex-direction:column;max-height:120px;overflow-y:auto;"></div>
+                </div>`;
+
+            if (myFriends.length) {
+                friendsHtml += myFriends.map((name,index) => {
+                    const profile = userProfiles[name] || {};
+                    const safeName = escapeFriendHtml(name);
+                    const safeAvatar = escapeFriendHtml(profile.avatar ||
+                        'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
+                    return `
+                        <button type="button" class="sidebar-friend-item"
+                            onclick="playSound();openProfile(window.komiSidebarFriendNames[${index}])">
+                            <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
+                                onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                            <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeName}</span>
+                            <span style="width:6px;height:6px;border-radius:50%;background:var(--success);"></span>
+                        </button>`;
+                }).join('');
+            } else {
+                friendsHtml += '<span style="color:var(--text-muted);font-size:11px;padding:4px;">Список друзей пуст. Введите ник выше для поиска.</span>';
+            }
+            friendsContainer.innerHTML = friendsHtml;
         }
 
         async function addNotification(username, text, partyId = null, friendRequestFrom = null) {

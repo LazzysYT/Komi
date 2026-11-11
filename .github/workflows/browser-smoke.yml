@@ -28,13 +28,15 @@ jobs:
       - name: Install browser testing tools
         run: |
           npm install --no-save playwright@1.58.2
-          npx playwright install --with-deps chromium
+          # Hosted Ubuntu runner already has Chromium runtime libraries. Avoid apt mirrors
+          # here: DNS outages installing optional fonts would block all code tests.
+          npx playwright install chromium
       - name: Run desktop and mobile browser checks
         env:
           KOMI_TEST_URL: http://127.0.0.1:8765
         run: |
           node scripts/check-syntax.cjs
-          node --test scripts/player-core.test.cjs scripts/catalog-first-paint.test.cjs scripts/presence-rpc.test.cjs
+          node --test scripts/player-core.test.cjs scripts/catalog-first-paint.test.cjs scripts/friend-sidebar-security.test.cjs scripts/presence-rpc.test.cjs
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-preview.log 2>&1 &
           node scripts/regression-browser.cjs
           node scripts/party-regression.cjs
