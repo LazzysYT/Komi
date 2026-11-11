@@ -26,7 +26,13 @@ async function attachKomiMedia(video, raw, onError) {
         if (!video.isConnected || video.komiMediaToken !== token) return;
         if (!Hls.isSupported()) throw Error('HLS не поддерживается браузером');
         const hls = video.komiHls = new Hls();
-        hls.on(Hls.Events.ERROR, (_, data) => { if (data.fatal) { hls.destroy(); onError(); } });
+        hls.on(Hls.Events.ERROR, (_, data) => {
+            if (!data.fatal || video.komiMediaToken !== token || video.komiHls !== hls) return;
+            video.komiMediaFailed = true;
+            video.komiHls = null;
+            hls.destroy();
+            onError();
+        });
         hls.loadSource(source.url);
         hls.attachMedia(video);
     } catch { if (video.isConnected && video.komiMediaToken === token) onError(); }
@@ -45,12 +51,17 @@ function bindKomiPlayer(animeId, season, index, raw) {
     const video = document.getElementById('animeVideoPlayer');
     if (!video) return;
     Object.assign(video.dataset, {animeId: String(animeId), season: String(season), episode: String(index), owner: currentUser?.authUserId || currentUser?.username || ''});
-    video.addEventListener('loadedmetadata', () => { restoreKomiVideo(video); video.komiRestored = true; });
+    video.addEventListener('loadedmetadata', () => {
+        video.komiMediaFailed = false;
+        restoreKomiVideo(video);
+        video.komiRestored = true;
+    });
     video.addEventListener('timeupdate', () => saveProgress(animeId, video));
     for (const event of ['pause', 'seeked']) video.addEventListener(event, () => saveProgress(animeId, video, true));
     video.addEventListener('ended', () => { saveProgress(animeId, video, true); playNextEp(animeId, season, index); });
-    video.addEventListener('error', showKomiPlayerError);
-    attachKomiMedia(video, raw, showKomiPlayerError);
+    const showError = () => showKomiPlayerError(video);
+    video.addEventListener('error', showError);
+    attachKomiMedia(video, raw, showError);
 }
 document.addEventListener('visibilitychange', () => {
     if (document.hidden) {

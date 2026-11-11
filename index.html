@@ -4918,18 +4918,20 @@ async function loadDataFromCloud(attempt = 0) {
         function komiSafeUrl(url) {
             try { const u = new URL(url); return u.protocol === 'https:' ? u.href.replace(/"/g,'%22') : ''; } catch { return ''; }
         }
-        function komiPlayerHtml(url, animeId, season, index) {
+        function komiPlayerHtml(url) {
             const source = KomiPlayerCore.source(url);
-            if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии нет доступного плеера. Выберите другой источник.</div>';
+            if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии пока нет доступного плеера.</div>';
             if (source.kind === 'video' || source.kind === 'hls') return '<div class="player-box"><video id="animeVideoPlayer" aria-label="Видеоплеер аниме" controls preload="metadata" playsinline></video></div>';
             // Limit third-party popups. In-player ads are controlled by the external provider.
             const external = new URL(source.url, location.href).origin !== location.origin;
             const sandbox = external ? ' sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"' : '';
             return '<div class="player-box"><iframe title="Видеоплеер аниме" src="'+escapeFriendHtml(source.url)+'"'+sandbox+' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0"></iframe></div><p class="komi-player-hint">Всплывающие окна внешних плееров ограничены. Реклама внутри видео зависит от провайдера.</p>';
         }
-        function showKomiPlayerError() {
-            const wrapper=document.querySelector('#watchModalContent .player-wrapper');
-            if (wrapper && !wrapper.querySelector('.komi-player-notice')) wrapper.insertAdjacentHTML('beforeend','<div class="komi-player-notice">Не удалось загрузить видео. Выберите другой источник.</div>');
+        function showKomiPlayerError(video) {
+            if (video !== document.getElementById('animeVideoPlayer')) return;
+            video.komiMediaFailed = true;
+            document.getElementById('komiPlayerRecovery').hidden = false;
+            document.getElementById('komiPlayerStatus').textContent = 'Не удалось загрузить видео.';
         }
         function restoreKomiVideo(video) {
             const p = getKomiProgress(video.dataset.animeId || window.komiActiveAnimeId);
@@ -5132,9 +5134,8 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         function changePlayerSource(animeId, season, epIdx, sourceName) {
-            activePlayerSource = sourceName;
             try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
-            openWatchModal(animeId, season, epIdx);
+            return openWatchModal(animeId, season, epIdx, sourceName);
         }
 
         // Cache only active title details; card payloads never include playback URLs.
@@ -5167,7 +5168,7 @@ async function loadDataFromCloud(attempt = 0) {
             return request;
         }
 
-        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0) {
+        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null) {
             siteStats.views++;
             saveData();
             
@@ -5211,19 +5212,26 @@ async function loadDataFromCloud(attempt = 0) {
             const sources = currentEp.sources && typeof currentEp.sources === 'object' ? currentEp.sources : { 'Default': currentEp.url || '' };
             const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && komiPlayerKind(sources[name]) !== 'missing');
             if (!sourceNames.length) sourceNames.push('Недоступно');
-            let preferredSource;
-            try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+            let preferredSource = requestedSource;
+            if (preferredSource === null) {
+                try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+            }
             // Prefer built-in HTML5 video or HLS when available, but keep explicit viewer choice.
             const directSource = sourceNames.find(name => ['video', 'hls'].includes(komiPlayerKind(sources[name])));
             activePlayerSource = sourceNames.includes(preferredSource) ? preferredSource : (directSource || sourceNames[0]);
             const activeUrl = sources[activePlayerSource] || '';
+            const selectedSource = activePlayerSource;
+            const alternateSource = sourceNames.length > 1
+                ? sourceNames[(sourceNames.indexOf(selectedSource) + 1) % sourceNames.length]
+                : null;
+            const isExternalPlayer = komiPlayerKind(activeUrl) === 'embed';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
             window.komiActiveEpisode=activeIndex;
             const previousProgress = getKomiProgress(anime.id);
             const resuming = previousProgress?.season === Number(activeSeason) && previousProgress?.index === activeIndex;
             saveKomiEpisode(String(anime.id),activeSeason,activeIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
-            const playerHtml = komiPlayerHtml(activeUrl,String(anime.id),activeSeason,activeIndex);
+            const playerHtml = komiPlayerHtml(activeUrl);
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
             const displayNumber = Number(currentEp.number) || activeIndex + 1;
@@ -5293,7 +5301,15 @@ async function loadDataFromCloud(attempt = 0) {
                                 </div>
                                 <button type="button" class="komi-watch-navbtn primary" ${hasNext?'':'disabled'} onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex + 1})">Следующая →</button>
                             </div>
-                            <p class="komi-watch-help">Если видео не открывается, выбери другую озвучку. Встроенный плеер может не поддерживать сохранение времени просмотра.</p>
+                            ${activeUrl ? `
+                                <div id="komiPlayerRecovery" class="komi-player-notice" ${isExternalPlayer ? '' : 'hidden'}>
+                                    <p id="komiPlayerStatus" role="status">${isExternalPlayer ? 'Если внешний плеер не открывается, повторите загрузку или смените источник.' : ''}</p>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                                        <button id="komiRetryPlayer" type="button" class="btn-secondary">Повторить загрузку</button>
+                                        ${alternateSource ? '<button id="komiAlternatePlayer" type="button" class="btn-secondary">Сменить источник</button>' : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                         <aside class="komi-watch-sidebar" aria-label="Список серий">
                             <div class="komi-watch-side-heading">
@@ -5311,6 +5327,10 @@ async function loadDataFromCloud(attempt = 0) {
                 </div>
             `;
             document.getElementById('watchModal').classList.add('active');
+            document.getElementById('komiRetryPlayer')?.addEventListener('click', () =>
+                openWatchModal(anime.id, activeSeason, activeIndex, selectedSource));
+            document.getElementById('komiAlternatePlayer')?.addEventListener('click', () =>
+                changePlayerSource(anime.id, activeSeason, activeIndex, alternateSource));
             bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl);
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
@@ -5320,6 +5340,7 @@ async function loadDataFromCloud(attempt = 0) {
 
         function saveProgress(animeId, video, force = false) {
             if (!currentUser || !video.komiRestored || !video.isConnected ||
+                video.komiMediaFailed || video.error ||
                 video.dataset.owner !== (currentUser.authUserId || currentUser.username)) return;
             const now = Date.now();
             if (!force && now - (video.komiLastSave || 0) < 10000) return;
