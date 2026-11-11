@@ -2856,6 +2856,7 @@ async function loadDataFromCloud(attempt = 0) {
             delete userAnimeStatuses[user.username];
             delete userFavorites[user.username];
             delete userCustomFolders[user.username];
+            ++komiFolderLoadEpoch;
             if (komiSavedCardsOwner === user.authUserId) {
                 komiSavedAnimeCards.clear();
                 komiSavedCardsOwner = null;
@@ -3545,6 +3546,7 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         const pendingFolderWrites = new Set();
+        let komiFolderLoadEpoch = 0;
         function komiFolderNameAllowed(name) {
             const normalized = String(name ?? '');
             const reserved = new Set(['__proto__','constructor','prototype','Просмотрено','В планах',
@@ -3586,6 +3588,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if(!data||data.name!==name)throw new Error('Сервер не подтвердил папку.');
                 if(currentUser?.authUserId!==owner)return;
                 userCustomFolders[username] ||= Object.create(null);
+                ++komiFolderLoadEpoch;
                 userCustomFolders[username][name]=[];
                 saveData();render();komiStatusFeedback('Папка создана.');
             }catch(error){
@@ -3609,6 +3612,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if(!Array.isArray(data)||!data.some(x=>x.name===folderName))
                     throw new Error('Сервер не подтвердил удаление.');
                 if(currentUser?.authUserId!==owner)return;
+                ++komiFolderLoadEpoch;
                 delete userCustomFolders[username][folderName];
                 if(profileActiveTab===folderName)profileActiveTab='Просмотрено';
                 saveData();render();komiStatusFeedback('Папка удалена.');
@@ -3629,7 +3633,8 @@ async function loadDataFromCloud(attempt = 0) {
             if(pendingFolderWrites.has(key))return;
             pendingFolderWrites.add(key);
             try{
-                const folderNames=Object.keys(archive).filter(komiFolderNameAllowed).slice(0,80);
+                const folderNames=Object.keys(archive).filter(komiFolderNameAllowed);
+                if(folderNames.length>80) throw new Error('Слишком много локальных папок для одного переноса (максимум 80).');
                 const folderRows=folderNames.map(name=>({user_id:owner,name}));
                 const itemRows=[];
                 for(const name of folderNames) {
@@ -4793,6 +4798,7 @@ async function loadDataFromCloud(attempt = 0) {
                         throw new Error('Сервер не подтвердил добавление.');
                 }
                 if(currentUser?.authUserId!==owner)return;
+                ++komiFolderLoadEpoch;
                 userCustomFolders[username][folderName]=exists
                     ?before.filter(x=>String(x)!==String(animeId))
                     :[...before,String(animeId)];
@@ -4875,6 +4881,7 @@ async function loadDataFromCloud(attempt = 0) {
 
         async function komiLoadCloudFolders(uid,username) {
             if(!uid||currentUser?.authUserId!==uid||!_supabase)return;
+            const epoch = ++komiFolderLoadEpoch;
             async function allRows(table,fields,ordered) {
                 const result=[];
                 for(let offset=0;;offset+=500){
@@ -4892,7 +4899,8 @@ async function loadDataFromCloud(attempt = 0) {
                 allRows('komi_custom_folders','name',['name']),
                 allRows('komi_folder_items','folder_name,anime_id',['folder_name','anime_id'])
             ]);
-            if(currentUser?.authUserId!==uid||currentUser?.username!==username)return;
+            if(currentUser?.authUserId!==uid||currentUser?.username!==username||
+               epoch!==komiFolderLoadEpoch)return;
             if(folders.error||items.error){
                 console.warn('Не удалось загрузить папки:',folders.error?.message||items.error?.message);
                 return;
