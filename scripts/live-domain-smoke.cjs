@@ -72,10 +72,15 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(link.svgVisibility,'visible','Social SVG itself must not be CSS-hidden');
           assert.ok(link.pathArea>10,'Social SVG should contain drawable path geometry');
         }
-        const adminDisabled=await page.evaluate(()=>{
+        const adminDisabled=await page.evaluate(async()=>{
           const originalAlert=window.alert;
           window.alert=()=>{};
-          try {return requireServerAdmin()===false;} finally {window.alert=originalAlert;}
+          try {
+            // The role check is async: a Promise is not proof of admin access.
+            // Fresh guest sessions must be denied without any administrative RPC.
+            if (currentUser?.authUserId) return false;
+            return (await requireServerAdmin(true)) === false;
+          } finally {window.alert=originalAlert;}
         });
         assert.equal(adminDisabled,true,'Client admin actions must remain disabled for guests');
         await page.locator('#sideFriendsBtn').click({timeout:10000});
