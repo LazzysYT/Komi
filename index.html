@@ -2179,7 +2179,15 @@ body > header {
             const storedStatuses = { ...userAnimeStatuses };
             if (currentUser?.authUserId) delete storedStatuses[currentUser.username];
             localStorage.setItem('komi_anime_statuses', JSON.stringify(storedStatuses));
-            localStorage.setItem('komi_custom_folders', JSON.stringify(userCustomFolders));
+            // Keep legacy local folders intact until an explicit, owner-approved import.
+            const storedFolders = { ...userCustomFolders };
+            if (currentUser?.authUserId) {
+                const archived = safeParse(localStorage.getItem('komi_custom_folders'),{});
+                if (Object.prototype.hasOwnProperty.call(archived,currentUser.username))
+                    storedFolders[currentUser.username] = archived[currentUser.username];
+                else delete storedFolders[currentUser.username];
+            }
+            localStorage.setItem('komi_custom_folders', JSON.stringify(storedFolders));
             localStorage.setItem('komi_profile_walls', JSON.stringify(profileWalls));
             // Saving browser preferences must not rewrite the shared legacy status blob.
         }
@@ -2847,6 +2855,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (!user?.authUserId) return;
             delete userAnimeStatuses[user.username];
             delete userFavorites[user.username];
+            delete userCustomFolders[user.username];
             if (komiSavedCardsOwner === user.authUserId) {
                 komiSavedAnimeCards.clear();
                 komiSavedCardsOwner = null;
@@ -3349,7 +3358,10 @@ async function loadDataFromCloud(attempt = 0) {
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
                             ${customFolderNames.map((fname,i) => `
                                 <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab=window.komiProfileFolderNames[${i}]; render()"> ${safeProfileText(fname)} (${customFolders[fname].length})</button>
+                                ${isMe && currentUser?.authUserId ? `<button type="button" class="btn-danger" style="padding:4px 7px;border-radius:8px" aria-label="Удалить папку ${safeProfileText(fname)}" title="Удалить папку" onclick="deleteCustomFolder(window.komiProfileFolderNames[${i}])">×</button>` : ''}
                             `).join('')}
+                            ${isMe && currentUser?.authUserId && komiFolderImportableCount(username)
+                                ? `<button class="btn-secondary" type="button" onclick="importLocalCustomFolders()">Импорт локальных папок</button>` : ''}
                             ${isMe ? `
                                 <div style="display:flex; gap:5px; margin-left:auto; align-items:center;">
                                     <input type="text" id="newFolderNameInput" class="form-control" placeholder="Новая папка..." style="max-width:140px; padding:5px 8px; font-size:11px;">
@@ -3532,20 +3544,123 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
-        function createCustomFolder() {
-            if (!currentUser) return;
-            const input = document.getElementById('newFolderNameInput');
-            const name = input ? input.value.trim() : '';
-            if (!name) return;
-
-            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
-            if (!userCustomFolders[currentUser.username][name]) {
-                userCustomFolders[currentUser.username][name] = [];
-                saveData();
-                render();
-            } else {
-                alert('Папка уже существует!');
+        const pendingFolderWrites = new Set();
+        function komiFolderNameAllowed(name) {
+            const normalized = String(name ?? '');
+            const reserved = new Set(['__proto__','constructor','prototype','Просмотрено','В планах',
+                'Смотрю','Отложено','Брошено','Любимые']);
+            return normalized.length>=1 && normalized.length<=40 &&
+                normalized===normalized.trim() && !/[\x00-\x1F\x7F]/.test(normalized) &&
+                !reserved.has(normalized);
+        }
+        function komiLegacyFolderSnapshot(username) {
+            const legacy = safeParse(localStorage.getItem('komi_custom_folders'),{});
+            return legacy && typeof legacy==='object' &&
+                Object.prototype.hasOwnProperty.call(legacy,username) &&
+                legacy[username] && typeof legacy[username]==='object'
+                ? legacy[username] : null;
+        }
+        function komiFolderImportableCount(username) {
+            const archived = komiLegacyFolderSnapshot(username);
+            if (!archived) return 0;
+            return Object.keys(archived).filter(name=>komiFolderNameAllowed(name)).length;
+        }
+        async function createCustomFolder() {
+            if (!currentUser?.authUserId || !_supabase) { openAuthModal('login'); return; }
+            const {username,authUserId:owner} = currentUser;
+            const name = String(document.getElementById('newFolderNameInput')?.value||'').trim();
+            if (!komiFolderNameAllowed(name)) {
+                komiStatusFeedback('Название папки: от 1 до 40 символов, без служебных названий.');
+                return;
             }
+            if (Object.prototype.hasOwnProperty.call(userCustomFolders[username]||{},name)) {
+                komiStatusFeedback('Такая папка уже существует.');return;
+            }
+            const key=owner+':folder:'+name;
+            if(pendingFolderWrites.has(key))return;
+            pendingFolderWrites.add(key);
+            try{
+                const {data,error}=await _supabase.from('komi_custom_folders')
+                    .insert({user_id:owner,name}).select('name').single();
+                if(error)throw error;
+                if(!data||data.name!==name)throw new Error('Сервер не подтвердил папку.');
+                if(currentUser?.authUserId!==owner)return;
+                userCustomFolders[username] ||= Object.create(null);
+                userCustomFolders[username][name]=[];
+                saveData();render();komiStatusFeedback('Папка создана.');
+            }catch(error){
+                if(currentUser?.authUserId===owner)
+                    komiStatusFeedback('Не удалось создать папку: '+error.message);
+            }finally{pendingFolderWrites.delete(key)}
+        }
+        async function deleteCustomFolder(folderName) {
+            if(!currentUser?.authUserId||!_supabase){openAuthModal('login');return}
+            const {username,authUserId:owner}=currentUser;
+            if(!komiFolderNameAllowed(folderName)||
+                !Object.prototype.hasOwnProperty.call(userCustomFolders[username]||{},folderName))return;
+            if(!confirm('Удалить папку «'+folderName+'» и её записи? Сами аниме не удаляются.'))return;
+            const key=owner+':folder:'+folderName;
+            if(pendingFolderWrites.has(key))return;
+            pendingFolderWrites.add(key);
+            try{
+                const {data,error}=await _supabase.from('komi_custom_folders').delete()
+                    .eq('user_id',owner).eq('name',folderName).select('name');
+                if(error)throw error;
+                if(!Array.isArray(data)||!data.some(x=>x.name===folderName))
+                    throw new Error('Сервер не подтвердил удаление.');
+                if(currentUser?.authUserId!==owner)return;
+                delete userCustomFolders[username][folderName];
+                if(profileActiveTab===folderName)profileActiveTab='Просмотрено';
+                saveData();render();komiStatusFeedback('Папка удалена.');
+            }catch(error){
+                if(currentUser?.authUserId===owner)
+                    komiStatusFeedback('Не удалось удалить папку: '+error.message);
+            }finally{pendingFolderWrites.delete(key)}
+        }
+        // The legacy browser archive is not identity proof. Import only after
+        // the authenticated owner explicitly opts in to copying these local files.
+        async function importLocalCustomFolders() {
+            if(!currentUser?.authUserId||!_supabase){openAuthModal('login');return}
+            const {username,authUserId:owner}=currentUser;
+            const archive=komiLegacyFolderSnapshot(username);
+            if(!archive){komiStatusFeedback('Локальных папок не найдено.');return}
+            if(!confirm('Перенести локальные папки из этого браузера в текущий аккаунт? Проверьте, что эти папки ваши. Сохранённые в облаке записи не будут заменены.'))return;
+            const key=owner+':import-local-folders';
+            if(pendingFolderWrites.has(key))return;
+            pendingFolderWrites.add(key);
+            try{
+                const folderNames=Object.keys(archive).filter(komiFolderNameAllowed).slice(0,80);
+                const folderRows=folderNames.map(name=>({user_id:owner,name}));
+                const itemRows=[];
+                for(const name of folderNames) {
+                    const seen=new Set();
+                    for(const raw of Array.isArray(archive[name])?archive[name]:[]){
+                        const id=Number(raw);
+                        if(!Number.isSafeInteger(id)||id<=0||seen.has(id))continue;
+                        seen.add(id);itemRows.push({user_id:owner,folder_name:name,anime_id:id});
+                    }
+                }
+                if(folderRows.length){
+                    const {error}=await _supabase.from('komi_custom_folders').upsert(folderRows,{
+                        onConflict:'user_id,name',ignoreDuplicates:true
+                    });
+                    if(error)throw error;
+                }
+                for(let i=0;i<itemRows.length;i+=100){
+                    const {error}=await _supabase.from('komi_folder_items')
+                        .upsert(itemRows.slice(i,i+100),{
+                            onConflict:'user_id,folder_name,anime_id',ignoreDuplicates:true
+                        });
+                    if(error)throw error;
+                }
+                if(currentUser?.authUserId!==owner)return;
+                await komiLoadCloudFolders(owner,username);
+                komiStatusFeedback('Локальные папки перенесены. Исходная копия сохранена.');
+                render();
+            }catch(error){
+                if(currentUser?.authUserId===owner)
+                    komiStatusFeedback('Перенос не завершён: '+error.message);
+            }finally{pendingFolderWrites.delete(key)}
         }
 
         async function postToProfileWall(profileOwner) {
@@ -4650,20 +4765,43 @@ async function loadDataFromCloud(attempt = 0) {
             return true;
         }
 
-        function addToCustomFolder(id, folderName) {
-            if (!currentUser) { openAuthModal('login'); return; }
-            if (!userCustomFolders[currentUser.username]) userCustomFolders[currentUser.username] = {};
-            if (!userCustomFolders[currentUser.username][folderName]) userCustomFolders[currentUser.username][folderName] = [];
-            
-            const list = userCustomFolders[currentUser.username][folderName];
-            const idx = list.indexOf(id);
-            if (idx > -1) {
-                list.splice(idx, 1);
-            } else {
-                list.push(id);
+        async function addToCustomFolder(id,folderName) {
+            if(!currentUser?.authUserId||!_supabase){openAuthModal('login');return}
+            const {username,authUserId:owner}=currentUser;
+            const animeId=Number(id);
+            if(!Number.isSafeInteger(animeId)||animeId<=0||!komiFolderNameAllowed(folderName)||
+               !Object.prototype.hasOwnProperty.call(userCustomFolders[username]||{},folderName)){
+                komiStatusFeedback('Некорректная папка или ID аниме.');return;
             }
-            saveData();
-            openWatchModal(id);
+            const key=owner+':'+folderName+':'+animeId;
+            if(pendingFolderWrites.has(key))return;
+            pendingFolderWrites.add(key);
+            const before=userCustomFolders[username][folderName];
+            const exists=before.some(x=>String(x)===String(animeId));
+            try{
+                const query=_supabase.from('komi_folder_items');
+                if(exists){
+                    const {error}=await query.delete().eq('user_id',owner)
+                        .eq('folder_name',folderName).eq('anime_id',animeId);
+                    if(error)throw error;
+                }else{
+                    const {data,error}=await query.insert({
+                        user_id:owner,folder_name:folderName,anime_id:animeId
+                    }).select('anime_id').single();
+                    if(error)throw error;
+                    if(!data||Number(data.anime_id)!==animeId)
+                        throw new Error('Сервер не подтвердил добавление.');
+                }
+                if(currentUser?.authUserId!==owner)return;
+                userCustomFolders[username][folderName]=exists
+                    ?before.filter(x=>String(x)!==String(animeId))
+                    :[...before,String(animeId)];
+                saveData();openWatchModal(String(animeId));
+                komiStatusFeedback(exists?'Удалено из папки.':'Добавлено в папку.');
+            }catch(error){
+                if(currentUser?.authUserId===owner)
+                    komiStatusFeedback('Не удалось изменить папку: '+error.message);
+            }finally{pendingFolderWrites.delete(key)}
         }
 
         // Supabase-owned data is loaded from RLS-protected tables, never imported from shared legacy blobs.
@@ -4735,6 +4873,38 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
+        async function komiLoadCloudFolders(uid,username) {
+            if(!uid||currentUser?.authUserId!==uid||!_supabase)return;
+            async function allRows(table,fields,ordered) {
+                const result=[];
+                for(let offset=0;;offset+=500){
+                    if(currentUser?.authUserId!==uid)return {data:[],error:new Error('Аккаунт изменился.')};
+                    let query=_supabase.from(table).select(fields).eq('user_id',uid);
+                    for(const column of ordered)query=query.order(column,{ascending:true});
+                    const {data,error}=await query.range(offset,offset+499);
+                    if(error)return {data:[],error};
+                    result.push(...(data||[]));
+                    if(!data||data.length<500)break;
+                }
+                return {data:result,error:null};
+            }
+            const [folders,items]=await Promise.all([
+                allRows('komi_custom_folders','name',['name']),
+                allRows('komi_folder_items','folder_name,anime_id',['folder_name','anime_id'])
+            ]);
+            if(currentUser?.authUserId!==uid||currentUser?.username!==username)return;
+            if(folders.error||items.error){
+                console.warn('Не удалось загрузить папки:',folders.error?.message||items.error?.message);
+                return;
+            }
+            const loaded=Object.create(null);
+            for(const row of folders.data)if(komiFolderNameAllowed(row.name))loaded[row.name]=[];
+            for(const row of items.data)if(Object.prototype.hasOwnProperty.call(loaded,row.folder_name))
+                loaded[row.folder_name].push(String(row.anime_id));
+            userCustomFolders[username]=loaded;
+            render();
+        }
+
         async function loadAuthenticatedAnimeData() {
             if (!_supabase || !currentUser?.authUserId) return;
             const uid = currentUser.authUserId;
@@ -4788,6 +4958,8 @@ async function loadDataFromCloud(attempt = 0) {
             render();
             komiHydrateSavedAnimeCards(uid)
                 .catch(error=>console.warn('Дополнительные карточки профиля:',error.message));
+            komiLoadCloudFolders(uid,username)
+                .catch(error=>console.warn('Облачные папки:',error.message));
         }
         async function persistAuthenticatedStatus(animeId, status) {
             const id = Number(animeId);
