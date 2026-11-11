@@ -97,3 +97,27 @@ test('cloud folder loading respects account switching and never wipes user data 
  await vm.runInContext("komiLoadCloudFolders('uid-a','alice')",x.ctx);
  assert.deepEqual(Array.from(x.ctx.userCustomFolders.alice['Моя папка']),['12']);
 });
+
+
+test('stale background load does not delete a newly confirmed folder',async()=>{
+ const x=setup();let resolveFolders;
+ const deferred=new Promise(resolve=>resolveFolders=resolve);
+ x.ctx._supabase={from(table){
+   const chain={select(){return this},eq(){return this},order(){return this},
+     range(){return table==='komi_custom_folders'?deferred:Promise.resolve({data:[],error:null})}};
+   return chain;
+ }};
+ const pending=vm.runInContext("komiLoadCloudFolders('uid-a','alice')",x.ctx);
+ x.ctx.userCustomFolders.alice['Новая папка']=[];
+ vm.runInContext('++komiFolderLoadEpoch',x.ctx);
+ resolveFolders({data:[],error:null});
+ await pending;
+ assert.ok(Object.hasOwn(x.ctx.userCustomFolders.alice,'Новая папка'));
+});
+test('declined local import does not modify cloud data or local archive',async()=>{
+ const legacy={alice:{'Личное':['101','102']}};
+ const x=setup({archive:legacy,confirmed:false});
+ await x.import();
+ assert.equal(x.calls.length,0);
+ assert.deepEqual(JSON.parse(x.stored.komi_custom_folders),legacy);
+});
