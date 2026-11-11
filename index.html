@@ -3803,57 +3803,86 @@ const adminList = []; // No client-side username grants administrator privileges
             if (e.key === 'Escape') { closeSearchDropdown(); document.getElementById('searchInput')?.blur(); }
         });
 
+        // Build search suggestions with DOM nodes, never interpolated HTML or
+        // inline JavaScript from catalog metadata.
+        function komiSearchSuggestion(anime, compact = false) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'search-dropdown-item';
+            button.addEventListener('click', () => selectAnimeFromSearch(String(anime.id)));
+
+            const poster = document.createElement('img');
+            poster.src = komiSafeUrl(anime.poster) || '/anime-artwork.svg';
+            poster.alt = '';
+            poster.style.cssText = compact
+                ? 'width:26px;height:36px;object-fit:cover;border-radius:6px;background:#222'
+                : 'width:38px;height:53px;object-fit:cover;border-radius:8px;background:#222';
+            const details = document.createElement('span');
+            details.style.cssText = 'flex:1;min-width:0;text-align:left;overflow:hidden';
+            const name = document.createElement('b');
+            name.textContent = String(anime.title || 'Без названия');
+            name.style.cssText = 'display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
+            details.append(name);
+            if (!compact) {
+                const subtitle = document.createElement('small');
+                subtitle.style.cssText = 'color:#a6a6a6';
+                subtitle.textContent = String(komiAnimeYear(anime) || '') + ' · ' + komiCatalogType(anime);
+                details.append(subtitle);
+            }
+            const rating = document.createElement('span');
+            rating.style.cssText = 'font-size:11px;color:#eaeaea';
+            const score = Number(anime.shikiRating);
+            rating.textContent = '★ ' + (Number.isFinite(score) ? score : 0).toFixed(1);
+            button.append(poster,details,rating);
+            return button;
+        }
+
         function showSearchDropdown() {
             const dd = document.getElementById('searchDropdown');
-            const query = document.getElementById('searchInput').value.trim();
-            if (query) {
-                handleInstantSearch(query);
-            } else {
-                let html = `<div style="padding:5px 10px; font-size:10px; color:var(--text-muted);">Популярное</div>`;
-                animeList.slice(0, 5).forEach(a => {
-                    html += `
-                        <div class="search-dropdown-item" onclick="selectAnimeFromSearch('${a.id}')">
-                            <img src="${a.poster}" style="width:20px; height:28px; object-fit:cover; border-radius:3px;">
-                            <div style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"><b>${a.title}</b></div>
-                            <span style="font-size:10px; color:#eaeaea;">★ ${a.shikiRating || '8.5'}</span>
-                        </div>
-                    `;
-                });
-                dd.innerHTML = html;
-                dd.classList.add('active');
-            }
+            if (!dd) return;
+            const query = document.getElementById('searchInput')?.value.trim() || '';
+            if (query) { handleInstantSearch(query); return; }
+            const heading = document.createElement('div');
+            heading.textContent = 'Популярное';
+            heading.style.cssText = 'padding:5px 10px;font-size:10px;color:var(--text-muted)';
+            dd.replaceChildren(heading,...animeList.slice(0,5).filter(Boolean).map(a=>komiSearchSuggestion(a,true)));
+            dd.classList.add('active');
         }
 
         function handleInstantSearch(q) {
-            const dd=document.getElementById('searchDropdown');
-            if(!dd)return;
-            const input=String(q||'');
-            const query=input.trim().toLocaleLowerCase('ru-RU');
-            if(!query){
-                catalogSearchQuery='';
-                if(currentView==='catalog')komiRefreshCatalogGrid();
+            const dd = document.getElementById('searchDropdown');
+            if (!dd) return;
+            const input = String(q || '');
+            const query = input.trim().toLocaleLowerCase('ru-RU');
+            if (!query) {
+                catalogSearchQuery = '';
+                dd.replaceChildren();
+                if (currentView === 'catalog') komiRefreshCatalogGrid();
                 dd.classList.remove('active');
                 return;
             }
-            const results=animeList.filter(a=>
-                [a.title,a.originalTitle,...(Array.isArray(a.genres)?a.genres:[])]
-                .some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(query))
-            ).slice(0,8);
-            dd.innerHTML=results.length?results.map(a=>
-                '<button type="button" class="search-dropdown-item" onclick="selectAnimeFromSearch(\''+a.id+'\')">'+
-                '<img src="'+escapeFriendHtml(a.poster||'')+'" alt="" style="width:38px;height:53px;object-fit:cover;border-radius:8px;background:#222222">'+
-                '<span style="flex:1;min-width:0;text-align:left"><b style="display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">'+escapeFriendHtml(a.title||'Без названия')+'</b><small style="color:#a6a6a6">'+(komiAnimeYear(a)||'')+' · '+komiCatalogType(a)+'</small></span>'+
-                '<strong style="font-size:11px;color:#eaeaea">★ '+(Number(a.shikiRating)||0).toFixed(1)+'</strong></button>'
-            ).join(''):'<div style="padding:16px;color:#a7a7a7;font-size:12px;text-align:center">По запросу ничего не найдено</div>';
+            const results = animeList.filter(a=>a && [
+                a.title,a.originalTitle,...(Array.isArray(a.genres) ? a.genres : [])
+            ].some(v=>String(v || '').toLocaleLowerCase('ru-RU').includes(query))).slice(0,8);
+            if (results.length) {
+                dd.replaceChildren(...results.map(a=>komiSearchSuggestion(a)));
+            } else {
+                const empty = document.createElement('div');
+                empty.textContent = 'По запросу ничего не найдено';
+                empty.style.cssText = 'padding:16px;color:#a7a7a7;font-size:12px;text-align:center';
+                dd.replaceChildren(empty);
+            }
             dd.classList.add('active');
-            catalogSearchQuery=input.slice(0,120);
-            if(currentView!=='catalog'){
-                currentView='catalog';
-                catalogFilterGenre='Все';catalogFilterYear='Все';catalogFilterType='Все';
+            catalogSearchQuery = input.slice(0,120);
+            if (currentView !== 'catalog') {
+                currentView = 'catalog';
+                catalogFilterGenre = 'Все';
+                catalogFilterYear = 'Все';
+                catalogFilterType = 'Все';
                 render();
             }
-            const field=document.getElementById('komiCatalogSearchInput');
-            if(field && field.value!==catalogSearchQuery)field.value=catalogSearchQuery;
+            const field = document.getElementById('komiCatalogSearchInput');
+            if (field && field.value !== catalogSearchQuery) field.value = catalogSearchQuery;
             komiRefreshCatalogGrid();
         }
 
