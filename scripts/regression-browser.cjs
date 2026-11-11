@@ -248,11 +248,17 @@ async function checkNotifications(page) {
    await page.waitForFunction(()=>currentView==='home');
 
    await page.evaluate(()=>{
-    animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'./anime-artwork.svg',genres:['Драма'],year:2026,shikiRating:8,
+    const hostileMetadata = '<img data-komi-injected src=x>';
+    animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'https://media.test/poster.jpg',
+      genres:[hostileMetadata],year:hostileMetadata,shikiRating:hostileMetadata,type:hostileMetadata,
       episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
     catalogInitialLoadComplete=true;render();
    });
+   assert.match(await page.locator('.hero-meta').textContent(), /<img data-komi-injected/);
+   assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    await page.evaluate(()=>openWatchModal('1'));
+   assert.match(await page.locator('.crunchy-hero-info').textContent(), /<img data-komi-injected/);
+   assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    const mono = await page.evaluate(() => ({
      primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim().toLowerCase(),
      bodyColor:getComputedStyle(document.body).backgroundColor,
