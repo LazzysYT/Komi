@@ -3,6 +3,49 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 
+async function checkCommentCooldown(page) {
+ await page.evaluate(() => {
+   const originalSupabase = _supabase;
+   const originalUser = currentUser;
+   currentUser = { username:'ci_commenter', authUserId:'ci-commenter' };
+   _supabase = {
+     from(table) {
+       if (table !== 'komi_comments') throw Error('Unexpected table: ' + table);
+       return {
+         select() { return this; },
+         eq() { return this; },
+         order() { return this; },
+         async limit() { return {data:[],error:null}; },
+         async insert() {
+           return {error:{code:'PT429',message:'Подождите 10 секунд перед следующим комментарием.'}};
+         }
+       };
+     },
+     rpc() { return { abortSignal:async () => ({data:0}) }; }
+   };
+   window.KomiComments.mount(921102);
+   document.getElementById('watchModal').classList.add('active');
+   window.restoreCommentFixture = () => {
+     closeWatchModal();
+     _supabase = originalSupabase;
+     currentUser = originalUser;
+     delete window.restoreCommentFixture;
+   };
+ });
+ try {
+   const comments = page.locator('#komiAnimeComments');
+   const input = comments.getByRole('textbox', {name:'Текст комментария'});
+   const send = comments.getByRole('button', {name:'Отправить'});
+   await input.fill('Черновик комментария');
+   await send.click();
+   await comments.getByText('Подождите 10 секунд перед следующим комментарием.').waitFor();
+   assert.equal(await input.inputValue(), 'Черновик комментария');
+   assert.equal(await send.isEnabled(), true);
+ } finally {
+   await page.evaluate(() => window.restoreCommentFixture());
+ }
+}
+
 async function checkNotifications(page) {
  await page.evaluate(() => {
    const originalSupabase = _supabase;
@@ -135,6 +178,7 @@ async function checkNotifications(page) {
    assert.equal(initialA11y.drawerHidden,'hidden');
    if (width === 1440 || width === 390) await checkNotifications(page);
    if (width === 1440) {
+     await checkCommentCooldown(page);
      const friends = await page.evaluate(() => {
        const originalUser=currentUser;
        const origVerified=komiCommunityVerifiedNames;
@@ -248,11 +292,17 @@ async function checkNotifications(page) {
    await page.waitForFunction(()=>currentView==='home');
 
    await page.evaluate(()=>{
-    animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'./anime-artwork.svg',genres:['Драма'],year:2026,shikiRating:8,
+    const hostileMetadata = '<img data-komi-injected src=x>';
+    animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'https://media.test/poster.jpg',
+      genres:[hostileMetadata],year:hostileMetadata,shikiRating:hostileMetadata,type:hostileMetadata,
       episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
     catalogInitialLoadComplete=true;render();
    });
+   assert.match(await page.locator('.hero-meta').textContent(), /<img data-komi-injected/);
+   assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    await page.evaluate(()=>openWatchModal('1'));
+   assert.match(await page.locator('.crunchy-hero-info').textContent(), /<img data-komi-injected/);
+   assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    const mono = await page.evaluate(() => ({
      primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim().toLowerCase(),
      bodyColor:getComputedStyle(document.body).backgroundColor,
@@ -292,17 +342,32 @@ async function checkNotifications(page) {
     currentUser={username:'test_viewer'};
     const video=document.getElementById('animeVideoPlayer');
     video.dataset.owner='test_viewer';
+    Object.defineProperty(video,'error',{configurable:true,value:null});
     Object.defineProperty(video,'duration',{configurable:true,value:100});
     Object.defineProperty(video,'currentTime',{configurable:true,writable:true,value:42});
     video.dispatchEvent(new Event('loadedmetadata'));
     saveProgress('1',video,true);
-    closeWatchModal();
+    video.currentTime=0;
+    video.dispatchEvent(new Event('error'));
+    window.komiFailedTestVideo=video;
     return getKomiProgress('1');
    });
    assert.equal(state.time,42);assert.equal(state.duration,100);
-   await page.evaluate(()=>changePlayerSource('1',1,0,'Embed'));
+   await page.getByText('Не удалось загрузить видео.',{exact:true}).waitFor();
+   await page.getByRole('button',{name:'Повторить загрузку'}).click();
+   await page.waitForFunction(()=>!window.komiFailedTestVideo.isConnected && !!document.getElementById('animeVideoPlayer'));
+   assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
+   assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
+   await page.evaluate(()=>document.getElementById('animeVideoPlayer').dispatchEvent(new Event('error')));
+   await page.getByRole('button',{name:'Сменить источник'}).click();
+   await page.locator('#watchModalContent iframe').waitFor();
    assert.equal(await page.locator('#watchModalContent iframe').getAttribute('src'),'https://media.test/player?a=1&b=2');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').duration),100);
+   assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
+   assert.equal(await page.evaluate(()=>localStorage.getItem('komi_source_1')),'Embed');
+   assert.equal(await page.evaluate(()=>window.komiActiveSeason),1);
+   assert.equal(await page.evaluate(()=>window.komiActiveEpisode),0);
+   await page.evaluate(()=>delete window.komiFailedTestVideo);
    await page.evaluate(()=>closeWatchModal());
    await page.locator('#searchInput').fill('Проверка');
    await page.waitForSelector('#komiCatalogGrid .anime-card');
@@ -376,7 +441,7 @@ async function checkNotifications(page) {
          })})
        };
        const status=document.getElementById('onlineCountText');
-       status.textContent='Онлайн: проверяем…';
+       status.textContent='Аккаунтов онлайн: проверяем…';
        try {
          await updateOnlinePresence();
          return {label:status.textContent,inFlight:presenceRequestInFlight};
@@ -385,7 +450,7 @@ async function checkNotifications(page) {
          currentUser=priorUser;
        }
      });
-     assert.equal(presence.label,'Онлайн: —','Hung online request must time out instead of staying on checking');
+     assert.equal(presence.label,'Аккаунтов онлайн: —','Hung online request must time out instead of staying on checking');
      assert.equal(presence.inFlight,false,'Timed-out online request must release the lock');
    }
    await page.screenshot({path:path.join(output,`regression-${width}.png`),fullPage:true});

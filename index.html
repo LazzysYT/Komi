@@ -1635,7 +1635,7 @@ body > header {
                 </div>
                 <div class="online-counter">
                     <div class="online-dot"></div>
-                    <span id="onlineCountText" role="status" aria-live="polite">Онлайн: проверяем…</span>
+                    <span id="onlineCountText" role="status" aria-live="polite">Аккаунтов онлайн: проверяем…</span>
                 </div>
             </div>
             
@@ -2249,7 +2249,7 @@ async function loadDataFromCloud(attempt = 0) {
         async function updateOnlinePresence() {
             if (!_supabase || !navigator.onLine) {
                 const label = document.getElementById('onlineCountText');
-                if (label) label.textContent = navigator.onLine ? 'Онлайн: недоступно' : 'Нет соединения';
+                if (label) label.textContent = navigator.onLine ? 'Аккаунтов онлайн: недоступно' : 'Нет соединения';
                 return;
             }
             if (document.hidden || presenceRequestInFlight) return;
@@ -2261,7 +2261,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (epoch === presenceRequestEpoch) {
                     presenceRequestInFlight = false;
                     const el = document.getElementById('onlineCountText');
-                    if (el) el.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
+                    if (el) el.textContent = navigator.onLine ? 'Аккаунтов онлайн: —' : 'Нет соединения';
                 }
             }, 4000);
             try {
@@ -2276,11 +2276,11 @@ async function loadDataFromCloud(attempt = 0) {
                 // of usernames, session IDs, timestamps or anonymous visitors.
                 globalAllOnlineUsersList = [];
                 const el = document.getElementById('onlineCountText');
-                if (el) el.textContent = 'Онлайн: ' + online;
+                if (el) el.textContent = 'Аккаунтов онлайн: ' + online;
             } catch(error) {
                 if (epoch === presenceRequestEpoch) {
                     const el = document.getElementById('onlineCountText');
-                    if (el) el.textContent = navigator.onLine ? 'Онлайн: —' : 'Нет соединения';
+                    if (el) el.textContent = navigator.onLine ? 'Аккаунтов онлайн: —' : 'Нет соединения';
                 }
             } finally {
                 clearTimeout(requestTimeout);
@@ -2758,24 +2758,45 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
-        async function logoutUser() {
+        let komiSignOutInProgress = false;
+        async function logoutUser(scope = 'local') {
             const signingOut = currentUser;
-            await leaveWatchPartyRoom();
-            closeWatchModal();
-            await komiProgressWriter.flush();
-            if (currentUser?.authUserId && _supabase) {
-                const { error } = await _supabase.auth.signOut({ scope: 'local' });
-                if (error) { alert('Не удалось выйти: ' + error.message); return; }
+            if (!signingOut?.authUserId || !_supabase || komiSignOutInProgress) return;
+            komiSignOutInProgress = true;
+            try {
+                await leaveWatchPartyRoom();
+                if (currentUser?.authUserId !== signingOut.authUserId) return;
+                closeWatchModal();
+                await komiProgressWriter.flush();
+                if (currentUser?.authUserId !== signingOut.authUserId) return;
+
+                const { data, error: sessionError } = await _supabase.auth.getSession();
+                if (sessionError) throw sessionError;
+                if (currentUser?.authUserId !== signingOut.authUserId) return;
+                if (data.session) {
+                    if (data.session.user.id !== signingOut.authUserId) return;
+                    const { error } = await _supabase.auth.signOut({ scope });
+                    if (error) throw error;
+                }
+                if (currentUser && currentUser.authUserId !== signingOut.authUserId) return;
+                clearKomiAccountData(signingOut);
+                avatarDraft = null;
+                currentUser = null;
+                saveData();
+                updateNotificationsUI();
+                navigate('home');
+                if (!data.session && scope === 'global') {
+                    komiStatusFeedback('Сеанс истёк. Войдите снова, чтобы завершить сеансы на всех устройствах.');
+                }
+            } catch {
+                if (!currentUser || currentUser.authUserId === signingOut.authUserId) {
+                    komiStatusFeedback(scope === 'global'
+                        ? 'Не удалось завершить все сеансы. Попробуйте ещё раз.'
+                        : 'Не удалось подтвердить выход на сервере. Попробуйте ещё раз.');
+                }
+            } finally {
+                komiSignOutInProgress = false;
             }
-            if (_supabase) {
-                // The private server-side session expires automatically; no public row to delete.
-            }
-            clearKomiAccountData(signingOut);
-            avatarDraft = null;
-            currentUser = null;
-            saveData();
-            updateNotificationsUI();
-            navigate('home');
         }
 
         function komiCatalogLoadingMarkup() {
@@ -2832,10 +2853,10 @@ async function loadDataFromCloud(attempt = 0) {
                                 ${sliderItems.map((anime, idx) => `
                                     <div class="hero-slide ${idx === currentSlideIndex ? 'active' : ''}" style="background-image: url(&quot;${animeArtwork(anime)}&quot;);">
                                         <div class="hero-meta">
-                                            <span>★ ${anime.shikiRating || '8.5'} Shikimori</span>
-                                            <span>${(anime.genres || [anime.genre || 'Экшен']).join(', ')}</span>
-                                            <span>${anime.year || '2026'}</span>
-                                            <span>${anime.type || 'Сериал'}</span>
+                                            <span>★ ${escapeFriendHtml(anime.shikiRating || '8.5')} Shikimori</span>
+                                            <span>${escapeFriendHtml((Array.isArray(anime.genres) ? anime.genres : [anime.genre || 'Экшен']).join(', '))}</span>
+                                            <span>${escapeFriendHtml(anime.year || '2026')}</span>
+                                            <span>${escapeFriendHtml(anime.type || 'Сериал')}</span>
                                         </div>
                                         <h1>${escapeFriendHtml(anime.title)}</h1>
                                         <p>${cleanAnimeDescription(anime.desc) || 'Описание пока не добавлено.'}</p>
@@ -3180,6 +3201,7 @@ async function loadDataFromCloud(attempt = 0) {
                                     </div>
                                     <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
+                                <button type="button" class="btn-secondary" onclick="logoutUser('global')">Выйти на всех устройствах</button>
                             </div>
                             ` : ''}
                         </div>
@@ -4896,18 +4918,20 @@ async function loadDataFromCloud(attempt = 0) {
         function komiSafeUrl(url) {
             try { const u = new URL(url); return u.protocol === 'https:' ? u.href.replace(/"/g,'%22') : ''; } catch { return ''; }
         }
-        function komiPlayerHtml(url, animeId, season, index) {
+        function komiPlayerHtml(url) {
             const source = KomiPlayerCore.source(url);
-            if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии нет доступного плеера. Выберите другой источник.</div>';
+            if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии пока нет доступного плеера.</div>';
             if (source.kind === 'video' || source.kind === 'hls') return '<div class="player-box"><video id="animeVideoPlayer" aria-label="Видеоплеер аниме" controls preload="metadata" playsinline></video></div>';
             // Limit third-party popups. In-player ads are controlled by the external provider.
             const external = new URL(source.url, location.href).origin !== location.origin;
             const sandbox = external ? ' sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"' : '';
             return '<div class="player-box"><iframe title="Видеоплеер аниме" src="'+escapeFriendHtml(source.url)+'"'+sandbox+' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0"></iframe></div><p class="komi-player-hint">Всплывающие окна внешних плееров ограничены. Реклама внутри видео зависит от провайдера.</p>';
         }
-        function showKomiPlayerError() {
-            const wrapper=document.querySelector('#watchModalContent .player-wrapper');
-            if (wrapper && !wrapper.querySelector('.komi-player-notice')) wrapper.insertAdjacentHTML('beforeend','<div class="komi-player-notice">Не удалось загрузить видео. Выберите другой источник.</div>');
+        function showKomiPlayerError(video) {
+            if (video !== document.getElementById('animeVideoPlayer')) return;
+            video.komiMediaFailed = true;
+            document.getElementById('komiPlayerRecovery').hidden = false;
+            document.getElementById('komiPlayerStatus').textContent = 'Не удалось загрузить видео.';
         }
         function restoreKomiVideo(video) {
             const p = getKomiProgress(video.dataset.animeId || window.komiActiveAnimeId);
@@ -5110,9 +5134,8 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         function changePlayerSource(animeId, season, epIdx, sourceName) {
-            activePlayerSource = sourceName;
             try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
-            openWatchModal(animeId, season, epIdx);
+            return openWatchModal(animeId, season, epIdx, sourceName);
         }
 
         // Cache only active title details; card payloads never include playback URLs.
@@ -5145,7 +5168,7 @@ async function loadDataFromCloud(attempt = 0) {
             return request;
         }
 
-        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0) {
+        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null) {
             siteStats.views++;
             saveData();
             
@@ -5189,19 +5212,26 @@ async function loadDataFromCloud(attempt = 0) {
             const sources = currentEp.sources && typeof currentEp.sources === 'object' ? currentEp.sources : { 'Default': currentEp.url || '' };
             const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && komiPlayerKind(sources[name]) !== 'missing');
             if (!sourceNames.length) sourceNames.push('Недоступно');
-            let preferredSource;
-            try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+            let preferredSource = requestedSource;
+            if (preferredSource === null) {
+                try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+            }
             // Prefer built-in HTML5 video or HLS when available, but keep explicit viewer choice.
             const directSource = sourceNames.find(name => ['video', 'hls'].includes(komiPlayerKind(sources[name])));
             activePlayerSource = sourceNames.includes(preferredSource) ? preferredSource : (directSource || sourceNames[0]);
             const activeUrl = sources[activePlayerSource] || '';
+            const selectedSource = activePlayerSource;
+            const alternateSource = sourceNames.length > 1
+                ? sourceNames[(sourceNames.indexOf(selectedSource) + 1) % sourceNames.length]
+                : null;
+            const isExternalPlayer = komiPlayerKind(activeUrl) === 'embed';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
             window.komiActiveEpisode=activeIndex;
             const previousProgress = getKomiProgress(anime.id);
             const resuming = previousProgress?.season === Number(activeSeason) && previousProgress?.index === activeIndex;
             saveKomiEpisode(String(anime.id),activeSeason,activeIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
-            const playerHtml = komiPlayerHtml(activeUrl,String(anime.id),activeSeason,activeIndex);
+            const playerHtml = komiPlayerHtml(activeUrl);
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
             const displayNumber = Number(currentEp.number) || activeIndex + 1;
@@ -5227,9 +5257,9 @@ async function loadDataFromCloud(attempt = 0) {
                             <h1>${escapeFriendHtml(anime.title)}</h1>
                             <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${cleanAnimeDescription(anime.desc)}</p>
                             <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
-                                <span style="color:#eaeaea; font-weight:700; font-size:11px;">★ ${shikiRating} Shikimori</span>
-                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml((anime.genres||[]).join(', '))}</span>
-                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${anime.year || '2026'}</span>
+                                <span style="color:#eaeaea; font-weight:700; font-size:11px;">★ ${escapeFriendHtml(shikiRating)} Shikimori</span>
+                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml((Array.isArray(anime.genres) ? anime.genres : []).join(', '))}</span>
+                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml(anime.year || '2026')}</span>
                                 <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
                                 <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)"> Party</button>
                             </div>
@@ -5271,7 +5301,15 @@ async function loadDataFromCloud(attempt = 0) {
                                 </div>
                                 <button type="button" class="komi-watch-navbtn primary" ${hasNext?'':'disabled'} onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex + 1})">Следующая →</button>
                             </div>
-                            <p class="komi-watch-help">Если видео не открывается, выбери другую озвучку. Встроенный плеер может не поддерживать сохранение времени просмотра.</p>
+                            ${activeUrl ? `
+                                <div id="komiPlayerRecovery" class="komi-player-notice" ${isExternalPlayer ? '' : 'hidden'}>
+                                    <p id="komiPlayerStatus" role="status">${isExternalPlayer ? 'Если внешний плеер не открывается, повторите загрузку или смените источник.' : ''}</p>
+                                    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+                                        <button id="komiRetryPlayer" type="button" class="btn-secondary">Повторить загрузку</button>
+                                        ${alternateSource ? '<button id="komiAlternatePlayer" type="button" class="btn-secondary">Сменить источник</button>' : ''}
+                                    </div>
+                                </div>
+                            ` : ''}
                         </div>
                         <aside class="komi-watch-sidebar" aria-label="Список серий">
                             <div class="komi-watch-side-heading">
@@ -5289,6 +5327,10 @@ async function loadDataFromCloud(attempt = 0) {
                 </div>
             `;
             document.getElementById('watchModal').classList.add('active');
+            document.getElementById('komiRetryPlayer')?.addEventListener('click', () =>
+                openWatchModal(anime.id, activeSeason, activeIndex, selectedSource));
+            document.getElementById('komiAlternatePlayer')?.addEventListener('click', () =>
+                changePlayerSource(anime.id, activeSeason, activeIndex, alternateSource));
             bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl);
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
@@ -5298,6 +5340,7 @@ async function loadDataFromCloud(attempt = 0) {
 
         function saveProgress(animeId, video, force = false) {
             if (!currentUser || !video.komiRestored || !video.isConnected ||
+                video.komiMediaFailed || video.error ||
                 video.dataset.owner !== (currentUser.authUserId || currentUser.username)) return;
             const now = Date.now();
             if (!force && now - (video.komiLastSave || 0) < 10000) return;

@@ -122,6 +122,10 @@
             await refresh(animeId, true);
             statusMessage(section, 'Комментарий опубликован.');
         } catch (error) {
+            if (error?.code === 'PT429') {
+                statusMessage(section, error.message);
+                return;
+            }
             console.error('Komi comment post:', error);
             statusMessage(section, 'Не удалось отправить комментарий. Попробуй снова.');
         } finally {

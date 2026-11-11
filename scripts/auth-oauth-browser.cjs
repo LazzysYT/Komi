@@ -43,6 +43,25 @@ const assert=require('node:assert/strict');
   assert.equal(state.oauthCount,1);
   assert.equal(state.signupCount,0);
   assert.match(state.errorText,/зарезервирован/);
-  console.log('PASS Google OAuth button and reserved signup handle (mock, no credentials)');
+
+  await page.evaluate(() => {
+   const user = {authUserId:'ci-sign-out',username:'ci_sign_out'};
+   currentUser = user;
+   window.__komiSignOutScopes = [];
+   _supabase = {
+    auth:{
+     async getSession(){return {data:{session:{user:{id:user.authUserId}}},error:null};},
+     async signOut({scope}){window.__komiSignOutScopes.push(scope);return {error:null};}
+    },
+    rpc(){return {abortSignal:async()=>({data:0})};}
+   };
+   closeAuthModal();
+   openProfile(user.username);
+  });
+  await page.getByRole('button',{name:'Настройки',exact:true}).click();
+  await page.getByRole('button',{name:'Выйти на всех устройствах'}).click();
+  await page.waitForFunction(()=>currentUser===null);
+  assert.deepEqual(await page.evaluate(()=>window.__komiSignOutScopes),['global']);
+  console.log('PASS Google OAuth, reserved signup handle, and global sign-out button (mock, no credentials)');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

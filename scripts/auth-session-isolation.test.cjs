@@ -93,3 +93,63 @@ test('legacy-only local account is preserved for explicit import rather than sil
  assert.equal(x.calls.some(c=>c[0]==='clear'),false);
  assert.equal(x.ctx.currentUser.authUserId,'uid-b');
 });
+
+function signOutFixture({sessionId='uid-a', fail=false}={}) {
+ const events=[];
+ const ctx=vm.createContext({
+  currentUser:{authUserId:'uid-a',username:'alice'},
+  avatarDraft:{owner:'uid-a'},
+  _supabase:{auth:{
+   async getSession(){return {data:{session:sessionId?{user:{id:sessionId}}:null},error:null};},
+   async signOut({scope}){
+    events.push(scope);
+    return {error:fail?new Error('Offline'):null};
+   }
+  }},
+  leaveWatchPartyRoom:async()=>{},
+  closeWatchModal:()=>{},
+  komiProgressWriter:{flush:async()=>{}},
+  clearKomiAccountData:user=>events.push('cleared '+user.authUserId),
+  saveData:()=>{},
+  updateNotificationsUI:()=>{},
+  navigate:view=>events.push(view),
+  komiStatusFeedback:message=>events.push(message)
+ });
+ const start=html.indexOf('let komiSignOutInProgress');
+ const end=html.indexOf('function komiCatalogLoadingMarkup',start);
+ assert.ok(start>=0&&end>start);
+ vm.runInContext(html.slice(start,end),ctx);
+ return {ctx,events,run:(scope)=>vm.runInContext('logoutUser('+JSON.stringify(scope)+')',ctx)};
+}
+
+test('default logout is local and the profile can explicitly end all sessions',async()=>{
+ assert.match(html,/onclick="logoutUser\('global'\)">Выйти на всех устройствах/);
+ for(const scope of [undefined,'global']){
+  const x=signOutFixture();
+  await x.run(scope);
+  assert.deepEqual(x.events,[scope??'local','cleared uid-a','home']);
+  assert.equal(x.ctx.currentUser,null);
+  assert.equal(x.ctx.avatarDraft,null);
+ }
+});
+
+test('logout never sends a revocation for a different SDK account',async()=>{
+ const x=signOutFixture({sessionId:'uid-b'});
+ await x.run('global');
+ assert.deepEqual(x.events,[]);
+ assert.equal(x.ctx.currentUser.authUserId,'uid-a');
+});
+
+test('failed or expired global logout does not claim to revoke other sessions',async()=>{
+ const failure=signOutFixture({fail:true});
+ await failure.run('global');
+ assert.equal(failure.events[0],'global');
+ assert.match(failure.events[1],/Не удалось завершить все сеансы/);
+ assert.equal(failure.ctx.currentUser.authUserId,'uid-a');
+
+ const expired=signOutFixture({sessionId:null});
+ await expired.run('global');
+ assert.equal(expired.ctx.currentUser,null);
+ assert.doesNotMatch(expired.events.join('|'),/\bglobal\b/);
+ assert.match(expired.events.at(-1),/Войдите снова/);
+});
