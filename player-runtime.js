@@ -58,7 +58,11 @@ function bindKomiPlayer(animeId, season, index, raw) {
     });
     video.addEventListener('timeupdate', () => saveProgress(animeId, video));
     for (const event of ['pause', 'seeked']) video.addEventListener(event, () => saveProgress(animeId, video, true));
-    video.addEventListener('ended', () => { saveProgress(animeId, video, true); playNextEp(animeId, season, index); });
+    video.addEventListener('ended', () => {
+        saveProgress(animeId, video, true);
+        if (!video.isConnected || window.KomiPlayerUX?.shouldAutoNext?.(video) === false) return;
+        playNextEp(animeId, season, index);
+    });
     const showError = () => showKomiPlayerError(video);
     video.addEventListener('error', showError);
     attachKomiMedia(video, raw, showError);
