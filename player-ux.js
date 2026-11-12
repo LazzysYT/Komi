@@ -147,13 +147,95 @@
     function showPlaybackStatus(context, text) {
         if (context?.note) context.note.textContent = text;
     }
+    const openingCache = new Map();
+    // The IDs supplied here must be MyAnimeList title IDs, not user-provided URLs.
+    function validMalId(value) {
+        const n=Number(value);
+        return Number.isSafeInteger(n) && n > 0 && n <= 9999999;
+    }
+    function pickOpeningInterval(payload, duration) {
+        if (!payload || payload.found !== true || !Array.isArray(payload.results)) return null;
+        const length=Number(duration);
+        if (!Number.isFinite(length) || length<150 || length>21600) return null;
+        const candidates=[];
+        for (const result of payload.results.slice(0,30)) {
+            if (!['op','mixed-op'].includes(result?.skipType)) continue;
+            const start=Number(result?.interval?.startTime);
+            const end=Number(result?.interval?.endTime);
+            const sourceLength=Number(result?.episodeLength);
+            // Different encodes can shift the opening dramatically. Only trust
+            // timings for episodes with a closely matched duration.
+            if (!Number.isFinite(start)||!Number.isFinite(end)||
+                !Number.isFinite(sourceLength)||sourceLength<150 ||
+                Math.abs(sourceLength-length)>Math.max(18,length*.025) ||
+                start<0||end>length-3||end-start<35||end-start>180) continue;
+            candidates.push({start,end,exact:true});
+        }
+        return candidates.sort((a,b)=>a.start-b.start)[0] || null;
+    }
+    async function fetchOpeningInterval(malId, episodeNumber, duration) {
+        if (!validMalId(malId) || !Number.isInteger(Number(episodeNumber)) ||
+            Number(episodeNumber)<1 || Number(episodeNumber)>10000 ||
+            !Number.isFinite(duration) || duration<150 || duration>21600 ||
+            typeof root.fetch!=='function') return null;
+        const key=[Number(malId),Number(episodeNumber),Math.round(duration)].join(':');
+        const prior=openingCache.get(key);
+        if (prior && prior.until>Date.now()) return prior.value;
+        const url=new URL('https://api.aniskip.com/v2/skip-times/'+
+            Number(malId)+'/'+Number(episodeNumber));
+        url.searchParams.append('types','op');
+        url.searchParams.append('types','mixed-op');
+        url.searchParams.set('episodeLength',String(Math.round(duration)));
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),3800);
+        let value=null;
+        try {
+            const response=await root.fetch(url.href,{
+                method:'GET',mode:'cors',credentials:'omit',cache:'no-store',
+                referrerPolicy:'no-referrer',signal:controller.signal,
+                headers:{Accept:'application/json'}
+            });
+            if (response.ok) value=pickOpeningInterval(await response.json(),duration);
+        } catch (_) {
+            // Network failure/CORS/API absence cannot disable native playback.
+        } finally {
+            clearTimeout(timer);
+        }
+        if (openingCache.size>70) openingCache.clear();
+        openingCache.set(key,{value,until:Date.now()+(value?6*3600000:10*60000)});
+        return value;
+    }
+    function updateNextPreview(context) {
+        const next=context?.next;
+        const video=context?.video;
+        if (!next||!video||active!==context)return;
+        const remain=video.duration-video.currentTime;
+        const show=context.hasNext && !context.cancelAutoNext &&
+            Number.isFinite(video.duration) && video.duration>60 &&
+            Number.isFinite(remain) && remain>=0 && remain<=15 && !video.ended;
+        next.hidden=!show;
+        if(show && context.nextCountdown)
+            context.nextCountdown.textContent='Следующая серия через '+Math.max(1,Math.ceil(remain))+' с';
+    }
+    function shouldAutoNext(video) {
+        if(!active || active.video!==video || !video?.isConnected) return true;
+        return !active.cancelAutoNext &&
+            (!active.ownerIsCurrent || active.ownerIsCurrent());
+    }
     function updateSkip(context) {
         if (!context?.skip || !context.video) return;
-        const video = context.video;
-        const duration = video.duration;
-        const time = video.currentTime;
-        context.skip.hidden = !(Number.isFinite(duration) && duration > 100 &&
-            Number.isFinite(time) && time >= 0 && time < 95 && !video.ended);
+        const video=context.video;
+        const duration=video.duration, time=video.currentTime;
+        const exact=context.opening;
+        const validExact=exact && time>=Math.max(0,exact.start-12) &&
+            time<exact.end-2 && exact.end<duration;
+        const manual= !exact && Number.isFinite(duration) && duration>100 &&
+            Number.isFinite(time) && time>=0 && time<95;
+        context.skip.hidden=!(validExact||manual) || video.ended;
+        context.skip.textContent=exact?'⏭ Пропустить опенинг':'⏭ +85 секунд';
+        context.skip.title=exact
+            ? 'Таймкоды AniSkip: от '+Math.round(exact.start)+' до '+Math.round(exact.end)+' секунд.'
+            : 'Приблизительная ручная перемотка. Точное время опенинга неизвестно.';
     }
 
     function mount(settings = {}) {
@@ -170,6 +252,12 @@
             season: Number(settings.season) || 1,
             index: Number(settings.index) || 0,
             hasNext: !!settings.hasNext,
+            malId:settings.malId || null,
+            episodeNumber:Number(settings.episodeNumber) || 0,
+            opening:null,
+            next:null,
+            nextCountdown:null,
+            cancelAutoNext:false,
             client:settings.client || null,
             authId:settings.authId || null,
             ownerIsCurrent:typeof settings.ownerIsCurrent === 'function' ? settings.ownerIsCurrent : null,
@@ -196,8 +284,13 @@
             skip.title = 'Условный пропуск: продолжительность опенинга отличается между сериями.';
             skip.addEventListener('click', () => {
                 if (active !== context || !video.isConnected) return;
-                video.currentTime = seekTarget(video.currentTime, 85, video.duration);
-                showPlaybackStatus(context, 'Перемотка +85 секунд. Проверьте, не пропущена ли часть сюжета.');
+                if(context.opening) {
+                    video.currentTime=Math.min(video.duration-1,context.opening.end);
+                    showPlaybackStatus(context,'Опенинг пропущен по таймкодам AniSkip.');
+                } else {
+                    video.currentTime = seekTarget(video.currentTime, 85, video.duration);
+                    showPlaybackStatus(context,'Перемотка +85 секунд. Проверьте, не пропущена ли часть сюжета.');
+                }
                 updateSkip(context);
             });
             context.skip = skip;
@@ -210,14 +303,53 @@
             explanation.textContent = 'Пробел — пауза, ← / → — 10 сек, ↑ / ↓ — громкость, F — полный экран, M — звук, Shift+N — следующая серия.';
             help.append(summary, explanation);
             bar.append(help);
-            video.addEventListener('loadedmetadata', () => updateSkip(context));
+            video.addEventListener('loadedmetadata', () => {
+                updateSkip(context);
+                updateNextPreview(context);
+                // Request metadata only for a directly controllable native source.
+                // MAL IDs refer to standalone anime titles, not Komi grouped seasons.
+                if (context.season!==1 || !validMalId(context.malId)) return;
+                void fetchOpeningInterval(context.malId,context.episodeNumber,video.duration)
+                    .then(opening=>{
+                        if(active!==context || !video.isConnected)return;
+                        context.opening=opening;
+                        updateSkip(context);
+                    });
+            });
             video.addEventListener('timeupdate', () => {
                 if (active !== context) return;
                 updateSkip(context);
+                updateNextPreview(context);
                 if (Number.isFinite(video.duration) && video.duration > 60 &&
                     video.currentTime / video.duration >= 0.92) markCurrentWatched(context);
             }, {passive:true});
             video.addEventListener('ended', () => markCurrentWatched(context));
+            if(context.hasNext) {
+                const preview=document.createElement('div');
+                preview.className='komi-next-episode-preview';
+                preview.hidden=true;
+                preview.setAttribute('role','group');
+                preview.setAttribute('aria-label','Следующая серия');
+                const label=document.createElement('span');
+                label.className='komi-next-countdown';
+                label.textContent='Следующая серия';
+                context.nextCountdown=label;
+                const now=makeButton('Смотреть сейчас','komi-next-now','Перейти к следующей серии');
+                const cancel=makeButton('Отмена','komi-next-cancel','Отменить автоматический переход');
+                now.addEventListener('click',()=>{
+                    if(active!==context||!video.isConnected)return;
+                    root.openWatchModal?.(context.animeId,context.season,context.index+1);
+                });
+                cancel.addEventListener('click',()=>{
+                    if(active!==context)return;
+                    context.cancelAutoNext=true;
+                    preview.hidden=true;
+                    showPlaybackStatus(context,'Автоматический переход отменён для этой серии.');
+                });
+                preview.append(label,now,cancel);
+                wrapper.append(preview);
+                context.next=preview;
+            }
             // On touch screens video controls remain available; a double tap on
             // the video element (not its native controls) seeks 10 seconds.
             let previousTap = {time:0,side:''};
@@ -295,7 +427,7 @@
         }
     }
     if (typeof document !== 'undefined') document.addEventListener('keydown', handleKeyboard);
-    const api = {mount,seekTarget,watchedStorageKey,readWatched,addWatched,mergeWatched,validMarker,handleKeyboard,loadCloudWatched};
+    const api = {mount,seekTarget,watchedStorageKey,readWatched,addWatched,mergeWatched,validMarker,handleKeyboard,loadCloudWatched,pickOpeningInterval,fetchOpeningInterval,shouldAutoNext};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerUX = api;
 })(globalThis);
