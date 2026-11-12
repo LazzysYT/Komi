@@ -1971,7 +1971,7 @@ body > header {
                 </div>
                 <div class="form-group">
                     <label>Пароль</label>
-                    <input type="password" class="form-control" id="regPassword" required placeholder="Придумайте пароль...">
+                    <input type="password" class="form-control" id="regPassword" required minlength="12" autocomplete="new-password" aria-describedby="komiPasswordHint" placeholder="Минимум 12 символов"><p id="komiPasswordHint" style="color:var(--text-muted);font-size:12px;margin-top:6px;">Используйте уникальную длинную парольную фразу. Пароли существующих аккаунтов не изменяются.</p>
                 </div>
                 <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" onclick="playSound()">Создать аккаунт</button>
             </form>
