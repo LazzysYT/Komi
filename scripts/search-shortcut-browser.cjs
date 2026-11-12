@@ -9,7 +9,7 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
     const failures=[];
     page.on('pageerror',e=>failures.push(e.message));
     await page.route('**/__komi_search_shortcut_fixture__',route=>route.fulfill({
-      status:200,contentType:'text/html',body:`<!doctype html><html lang="ru"><body>
+      status:200,contentType:'text/html; charset=utf-8',body:`<!doctype html><html lang="ru"><head><meta charset="utf-8"></head><body>
       <div class="search-container"><div class="search-bar"><input id="searchInput" value="Фрирен"></div></div>
       <input id="komiCatalogSearchInput" style="display:none">
       <div id="authModal" class="modal-overlay"><div class="modal-content"><input id="modalInput"></div></div>
@@ -19,7 +19,8 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
     await page.keyboard.press('Control+k');
     assert.equal(await page.evaluate(()=>document.activeElement.id),'searchInput');
     assert.equal(await page.evaluate(()=>document.getElementById('searchInput').selectionStart),0);
-    assert.equal(await page.evaluate(()=>document.getElementById('searchInput').selectionEnd),6);
+    assert.equal(await page.evaluate(()=>document.getElementById('searchInput').selectionEnd),
+      await page.evaluate(()=>document.getElementById('searchInput').value.length));
     await page.evaluate(()=>document.getElementById('authModal').classList.add('active'));
     await page.waitForFunction(()=>!document.getElementById('authModal').hasAttribute('inert'));
     await page.locator('#modalInput').focus();
