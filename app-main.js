@@ -2526,7 +2526,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (!_supabase) { alert('Сервис регистрации недоступен'); return; }
             if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) { alert('Никнейм: 3–24 символа, латиница, цифры и _'); return; }
             if (komiReservedAccountName(username)) { alert('Этот никнейм зарезервирован. Выбери другой.'); return; }
-            if (passwordInput.length < 8) { alert('Пароль должен содержать минимум 8 символов'); return; }
+            if (passwordInput.length < 12) { alert('Используйте уникальный пароль минимум из 12 символов.'); return; }
             const { data: signupData, error: signupError } = await _supabase.auth.signUp({
                 email, password: passwordInput,
                 options: { data: { username }, emailRedirectTo: window.location.origin + window.location.pathname }
