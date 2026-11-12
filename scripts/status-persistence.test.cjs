@@ -4,7 +4,7 @@ const path = require('node:path');
 const test = require('node:test');
 const assert = require('node:assert/strict');
 
-const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
 const extract = (start, end) => {
   const from = html.indexOf(start);
   const to = html.indexOf(end, from);
