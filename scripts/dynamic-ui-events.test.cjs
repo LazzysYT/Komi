@@ -8,7 +8,7 @@ test('no dynamic HTML template emits raw inline event handlers',()=>{
  let total=0;
  for(const file of files){
    const source=fs.readFileSync(path.join(root,file),'utf8');
-   assert.doesNotMatch(source,/\bon(?:click|input|change|keydown|keyup|error|focus|submit)="[^"]/i,
+   assert.doesNotMatch(source,/(?<!-)\bon(?:click|input|change|keydown|keyup|error|focus|submit)="[^"]/i,
      file+' still emits executable HTML attributes');
    total+=(source.match(/\bdata-komi-on(?:click|input|change|keydown|error)=/g)||[]).length;
  }
