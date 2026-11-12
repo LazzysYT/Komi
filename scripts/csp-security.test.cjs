@@ -22,9 +22,9 @@ test('production CSP enforces external script boundaries instead of report-only'
   assert.ok(!directives['script-src'].includes("'unsafe-inline'"));
   assert.ok(!directives['script-src-elem'].includes("'unsafe-inline'"));
   assert.ok(directives['script-src-elem'].includes("'self'"));
-  // Legacy onclick/oninput attributes require a separate migration; they
-  // are allowed only under script-src-attr, not for arbitrary <script> tags.
-  assert.deepEqual(directives['script-src-attr'],["'unsafe-inline'"]);
+  // Static and dynamic HTML handlers are delegated through reviewed allowlists.
+  // No browser-executed HTML event-handler attribute may run.
+  assert.deepEqual(directives['script-src-attr'],["'none'"]);
   const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
   const app=fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
   assert.ok(app.length>100000);
