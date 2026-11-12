@@ -57,3 +57,14 @@ test('Google button invokes provider OAuth with first-party redirect and no pass
  assert.equal(x.oauth[0].options.redirectTo,'https://komianime.online/');
  assert.equal(JSON.stringify(x.oauth[0]).includes('password'),false);
 });
+
+test('new sign-ups reject short passwords without making an API call',async()=>{
+ const x=scenario('NormalNickname');
+ x.fields.regPassword.value='Short123!';
+ await x.runSignup();
+ assert.equal(x.signups.length,0);
+ assert.match(x.messages.at(-1),/12 символов/);
+ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+ assert.match(html,/id="regPassword"[^>]*minlength="12"/);
+ assert.match(html,/id="komiPasswordHint"/);
+});
