@@ -258,3 +258,72 @@ header .logo-container .logo-text {
 #randomRouletteModal .komi-roulette-actions {display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-top:16px}
 #randomRouletteModal .komi-roulette-actions button {min-height:42px;padding:10px 16px;border-radius:13px;font-weight:700}
 #randomRouletteModal .komi-roulette-actions [hidden] {display:none !important}
+
+
+/* First paint is a content-led showcase even before JavaScript hydration.
+   The real 36 SEO catalog links below it remain visible and crawlable. */
+.komi-seo-fallback.komi-seo-spotlight {
+  box-sizing:border-box;display:grid;grid-template-columns:minmax(0,1.5fr) minmax(210px,.8fr);
+  position:relative;isolation:isolate;min-height:350px;max-width:1360px;
+  margin:clamp(18px,3vw,38px) auto 28px;padding:clamp(24px,4.5vw,65px);
+  align-items:center;gap:clamp(18px,4vw,58px);
+  overflow:hidden;border-radius:28px;border:1px solid rgba(255,255,255,.09);
+  background:radial-gradient(ellipse 65% 90% at 85% 25%,rgba(193,49,66,.22),transparent 72%),linear-gradient(125deg,#12141d,#09090d 80%);
+  box-shadow:0 22px 58px rgba(0,0,0,.35);
+}
+.komi-seo-spotlight-copy {position:relative;z-index:2;max-width:680px}
+.komi-seo-spotlight-eyebrow {display:block;margin-bottom:14px;color:#ff7882;font-size:11px;font-weight:800;letter-spacing:.17em}
+.komi-seo-fallback.komi-seo-spotlight h1 {font-size:clamp(12px,1.1vw,15px);letter-spacing:.07em;font-weight:600;color:#b9bbc7;margin:0 0 13px}
+.komi-seo-fallback.komi-seo-spotlight h2 {font-size:clamp(27px,3.6vw,50px);line-height:1.13;letter-spacing:-.035em;color:#f5f5f7;margin:0 0 17px}
+.komi-seo-fallback.komi-seo-spotlight p {max-width:600px;font-size:clamp(13px,1.3vw,16px);line-height:1.7;color:#c6c7d0;margin:0 0 20px}
+.komi-seo-spotlight-facts {display:flex;flex-wrap:wrap;gap:9px;margin:0 0 21px}
+.komi-seo-spotlight-facts span {
+  border:1px solid rgba(255,255,255,.11);background:rgba(255,255,255,.055);
+  border-radius:999px;padding:6px 12px;color:#dadbe0;font-size:12px
+}
+.komi-seo-spotlight-actions {display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a {
+  margin:0;display:inline-flex;align-items:center;justify-content:center;
+  min-height:44px;padding:10px 16px;border:1px solid rgba(255,255,255,.18);
+  border-radius:14px;background:rgba(255,255,255,.07);
+  text-decoration:none;color:#f5f5f7;font-size:13px;font-weight:750;
+  transition:background .15s ease,border-color .15s ease
+}
+.komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions .komi-seo-primary-link {
+  border-color:#de3647;background:#db3545;color:white;
+}
+.komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a:hover,
+.komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a:focus-visible {
+  background:#a52533;border-color:#ff6571;color:#fff;outline-offset:3px
+}
+.komi-seo-spotlight-art {position:relative;align-self:stretch;min-height:265px;display:flex;align-items:center;justify-content:center}
+.komi-seo-spotlight-art::before {
+  content:"";position:absolute;inset:10%;border-radius:50%;
+  background:rgba(229,60,75,.15);filter:blur(70px)
+}
+.komi-seo-spotlight-art img {
+  position:relative;max-height:375px;width:auto;max-width:100%;height:auto;aspect-ratio:2 / 3;
+  object-fit:cover;border-radius:18px;border:1px solid rgba(255,255,255,.2);
+  box-shadow:0 18px 52px rgba(0,0,0,.75);transform:rotate(3deg)
+}
+/* Hydrated Home shelves scroll naturally, keeping cards large enough to read. */
+main .komi-feature-section .anime-grid {
+  display:grid !important;grid-auto-flow:column;grid-template-columns:none !important;
+  grid-auto-columns:minmax(162px,190px);gap:15px;overflow-x:auto;overflow-y:hidden;
+  scroll-snap-type:x proximity;scroll-padding-inline:8px;
+  overscroll-behavior-inline:contain;padding:6px 6px 18px;
+  scrollbar-width:thin;scrollbar-color:#65333b #15151b;
+}
+main .komi-feature-section .anime-grid > .anime-card {scroll-snap-align:start;min-width:0}
+@media (max-width:750px) {
+  .komi-seo-fallback.komi-seo-spotlight {grid-template-columns:minmax(0,1fr);gap:6px;padding:25px 20px 18px;min-height:unset}
+  .komi-seo-spotlight-art {grid-row:1;justify-content:flex-end;min-height:160px;max-height:180px}
+  .komi-seo-spotlight-art img {height:170px;max-height:170px}
+  .komi-seo-fallback.komi-seo-spotlight h2 {font-size:clamp(25px,6vw,37px)}
+  .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a {flex-grow:1}
+  main .komi-feature-section .anime-grid {grid-auto-columns:minmax(142px,162px);gap:12px}
+}
+@media(prefers-reduced-motion:reduce) {
+  .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a {transition:none}
+  .komi-seo-spotlight-art img {transform:none}
+}
