@@ -5,12 +5,18 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.KOMI_CHROME?{executablePath:process.env.KOMI_CHROME}:{})});
  let state={id:'test-room',host:'host',anime_id:'1',name:'Тест комнаты',episode:0,source:'Direct',position:0,playing:false,messages:[],changed_at:new Date().toISOString()};
+ let roomCreates=0;
  const pages=[];
  try {
   for(const owner of ['host','viewer']) {
    const page=await browser.newPage();pages.push(page);
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    await page.exposeFunction('testPartyRpc',async(action,args)=>{
+    if(action==='list') return [];
+    if(action==='create') {
+     roomCreates++;
+     Object.assign(state,{name:args.name,anime_id:args.animeId,episode:args.episode,source:args.source,position:0,playing:false});
+    }
     if(action==='state') {assert.equal(owner,'host');Object.assign(state,args,{changed_at:new Date().toISOString()});}
     if(action==='invite') state.invited = args.username;
     if(action==='close') return null;
@@ -76,6 +82,22 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   await pages[0].selectOption('#partyEpisode','0');
   await pages[1].waitForFunction(()=>document.getElementById('partyEmbedElement').getAttribute('src')===null);
   for(const page of pages) await page.evaluate(()=>leaveWatchPartyRoom());
-  console.log('PASS two browser clients: seek, paused state, source switch, entity decoding, leave cleanup (mock RPC/media)');
+  // Browsers can dispatch a valid submit event without a submitter (for example,
+  // Enter or requestSubmit). A duplicate event while the create RPC is pending
+  // must not create a second room.
+  const submitErrors=[];
+  hostPage.on('pageerror',error=>submitErrors.push(error.message));
+  await hostPage.evaluate(()=>openWatchPartyHub());
+  await hostPage.locator('#partyCreateForm').waitFor({timeout:8000});
+  await hostPage.evaluate(()=>{
+    const form=document.getElementById('partyCreateForm');
+    form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+    form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+  });
+  await hostPage.locator('#partyVideoElement').waitFor({timeout:8000});
+  assert.equal(roomCreates,1,'Enter-style duplicate submits must create only one room');
+  assert.deepEqual(submitErrors,[],'Submitting without event.submitter must not throw');
+  await hostPage.evaluate(()=>leaveWatchPartyRoom());
+  console.log('PASS two browser clients: seek, paused state, source switch, entity decoding, leave cleanup and guarded Enter room submission (mock RPC/media)');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
