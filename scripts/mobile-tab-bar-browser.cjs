@@ -10,7 +10,7 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
       const errors=[];
       page.on('pageerror',e=>errors.push(e.message));
       await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
-      await page.waitForSelector('#komiMobileMoreToggle');
+      await page.locator('#komiMobileMoreToggle').waitFor({state:'attached'});
       const mobile=width<=767;
       const state=await page.evaluate(()=>{
         const visible=el=>!!el&&getComputedStyle(el).display!=='none'&&el.getClientRects().length>0;
