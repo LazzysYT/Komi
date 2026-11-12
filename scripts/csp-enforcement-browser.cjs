@@ -51,10 +51,22 @@ const base='http://127.0.0.1:8765/';
         /script-src/.test(event.directive)&&
         event.blocked.includes('untrusted-script.example.invalid')
       ),null,{timeout:10000});
+    // Inline script elements must now be blocked even when they are same-origin.
+    await page.evaluate(()=>{
+      const inline=document.createElement('script');
+      inline.textContent='window.__injectedInlineRan = true';
+      document.body.appendChild(inline);
+    });
+    await page.waitForFunction(()=>window.__komiCspViolations.some(event=>
+      /script-src/.test(event.directive) &&
+      (event.blocked==='inline'||event.blocked==='eval')
+    ),null,{timeout:10000});
+    const injected=await page.evaluate(()=>window.__injectedInlineRan);
+    assert.equal(injected,undefined,'Arbitrary inline <script> should be blocked');
     const violations=await page.evaluate(()=>window.__komiCspViolations);
     assert.ok(violations.some(v=>v.blocked.includes('untrusted-script.example.invalid')));
     assert.equal(errors.length,0,'CSP must not introduce app errors: '+errors.join('; '));
-    console.log('PASS enforced CSP: core app loads and untrusted external scripts are blocked');
+    console.log('PASS enforced CSP: main app works, external and inline script injection blocked');
   } finally {
     await browser.close();
   }
