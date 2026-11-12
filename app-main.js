@@ -1887,6 +1887,7 @@ async function loadDataFromCloud(attempt = 0) {
             }));
             updateNotificationsUI();
             renderFriendsDrawer();
+            window.KomiFriendRooms?.refresh();
         }
 
         async function respondProtectedFriendRequest(id, accept) {
