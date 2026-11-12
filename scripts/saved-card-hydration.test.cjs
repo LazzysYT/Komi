@@ -4,7 +4,7 @@ const vm=require('node:vm');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 
-const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
 const cacheStart=html.indexOf('const komiSavedAnimeCards = new Map();');
 const cacheEnd=html.indexOf('        let komiCollectionLoadEpoch',cacheStart);
 const helperStart=html.indexOf('async function komiHydrateSavedAnimeCards(');
