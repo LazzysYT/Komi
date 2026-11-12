@@ -95,12 +95,23 @@ async function openWatchPartyHub() {
             button.onclick = () => joinWatchPartyRoom(room.id);
             list.append(button);
         }
-        document.getElementById('partyCreateForm').onsubmit = async event => {
+        const createForm = document.getElementById('partyCreateForm');
+        let creatingRoom = false;
+        createForm.onsubmit = async event => {
             event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            event.submitter.disabled = true;
-            try { await createWatchPartyFromAnime(form.get('anime'), form.get('room'), form.has('private')); }
-            finally { event.submitter.disabled = false; }
+            // Enter and requestSubmit() do not always provide a submitter.
+            // Also block duplicate room creation while the RPC is in flight.
+            if (creatingRoom) return;
+            creatingRoom = true;
+            const submitButton = event.submitter || createForm.querySelector('button[type="submit"], button:not([type])');
+            if (submitButton) submitButton.disabled = true;
+            try {
+                const form = new FormData(createForm);
+                await createWatchPartyFromAnime(form.get('anime'), form.get('room'), form.has('private'));
+            } finally {
+                creatingRoom = false;
+                if (submitButton?.isConnected) submitButton.disabled = false;
+            }
         };
     } catch (error) {
         if (generation === partyGeneration) alert('Не удалось загрузить комнаты: ' + error.message);
