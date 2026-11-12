@@ -11,17 +11,25 @@ async function partyCall(action, roomId = null, args = {}) {
 }
 
 function partyOptions(anime) {
-    return (Array.isArray(anime?.episodes) ? anime.episodes : []).flatMap((episode, index) =>
-        Object.entries(episode?.sources || { Default: episode?.url }).flatMap(([source, rawUrl]) => {
-            const {kind, url: safe} = KomiPlayerCore.source(rawUrl);
-            if (!safe) return [];
+    const options = (Array.isArray(anime?.episodes) ? anime.episodes : []).flatMap((episode, index) => {
+        // Some catalog rows still have a plain episode.url rather than sources.
+        const named = episode?.sources && typeof episode.sources === 'object' && !Array.isArray(episode.sources)
+            ? Object.entries(episode.sources) : [];
+        const entries = named.length ? named : [['Основной источник', episode?.url]];
+        return entries.flatMap(([source, rawUrl]) => {
+            const {kind, url} = KomiPlayerCore.source(rawUrl);
+            if (!url) return [];
+            const synchronized = kind === 'video' || kind === 'hls';
             return [{
-                episode: index, source, url: safe,
-                kind: ['video','hls'].includes(kind) ? 'video' : 'iframe',
-                label: `Сезон ${Number(episode.season) || 1} · Серия ${Number(episode.number) || index + 1} · ${source}`
+                episode: index, source, url, synchronized,
+                kind: synchronized ? 'video' : 'iframe',
+                label: `Сезон ${Number(episode.season) || 1} · Серия ${Number(episode.number) || index + 1} · ${source} · ${synchronized ? 'Полная синхронизация' : 'Без общей паузы'}`
             }];
-        })
-    );
+        });
+    });
+    // Prefer controllable HTML5/HLS playback in each episode, but keep all
+    // existing iframe sources available instead of silently removing series.
+    return options.sort((a, b) => a.episode - b.episode || Number(b.synchronized) - Number(a.synchronized));
 }
 
 function partySignedIn() {
@@ -68,6 +76,7 @@ async function openWatchPartyHub() {
                     `<option value="${escapeFriendHtml(anime.id)}">${escapeFriendHtml(anime.title)}</option>`).join('')}</select></label>
                 <label>Комната <input name="room" maxlength="100" placeholder="Совместный просмотр"></label>
                 <label><input type="checkbox" name="private"> Только по приглашению</label>
+                <p class="komi-party-sync-explanation">Полная синхронизация паузы и перемотки работает только с управляемыми MP4/HLS-потоками. Внешние плееры остаются доступными, но синхронизируют только серию и источник.</p>
                 <button class="btn-glow" ${available.length ? '' : 'disabled'}>Создать комнату</button>
             </form>
             <h3>Доступные комнаты</h3>
@@ -192,6 +201,7 @@ async function enterParty(room) {
                     <div class="komi-party-video-frame" id="partyPlayerFrame"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
                     <p id="partyEmbedHint" style="display:none">Внешний плеер: серия и источник меняются для всех участников. Play, паузой и перемоткой стороннего плеера каждый управляет самостоятельно.</p>
                     <p id="partyStatus" role="status"></p>
+                    <p id="partySyncMode" class="komi-party-sync-notice" role="status" aria-live="polite"></p>
                     <div class="komi-party-source-panel">
                         ${host ? '<label for="partyEpisode">Серия и озвучка <select id="partyEpisode"></select></label>' : '<button id="partyUnlock" class="btn-secondary" hidden>Разрешить воспроизведение</button>'}
                     </div>
@@ -218,6 +228,7 @@ async function enterParty(room) {
     const embed = document.getElementById('partyEmbedElement');
     const embedHint = document.getElementById('partyEmbedHint');
     const status = document.getElementById('partyStatus');
+    const syncMode = document.getElementById('partySyncMode');
     const unlock = document.getElementById('partyUnlock');
     const select = document.getElementById('partyEpisode');
     const chatBox = document.getElementById('partyChatBox');
@@ -272,8 +283,14 @@ async function enterParty(room) {
             disposeKomiMedia(video);
             embed.removeAttribute('src');
             loadedOption = null;
+            syncMode.dataset.mode = 'missing';
+            syncMode.textContent = 'Источник недоступен: синхронизация этой серии невозможна.';
             return;
         }
+        syncMode.dataset.mode = option.synchronized ? 'full' : 'limited';
+        syncMode.textContent = option.synchronized
+            ? 'Полная синхронизация: воспроизведение, пауза, перемотка и серия (MP4/HLS).'
+            : 'Ограниченная синхронизация: только серия и озвучка. Пауза и перемотка внешнего плеера не синхронизируются.';
         if (loadedOption !== option) {
             switchingSource = true;
             loadedOption = option;

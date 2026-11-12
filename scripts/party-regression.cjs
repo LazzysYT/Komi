@@ -27,7 +27,7 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
    await page.waitForFunction(()=>typeof enterParty==='function');
    await page.evaluate(async({owner,state})=>{
     currentUser={authUserId:owner,username:owner};
-    animeList=[{id:'1',title:'Тест',komiDetailsLoaded:true,episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}}]}];
+    animeList=[{id:'1',title:'Тест',komiDetailsLoaded:true,episodes:[{season:1,number:1,sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>',Direct:'https://media.test/a.mp4'}}]}];
     _supabase={
       rpc:async(name,{action,args})=>({data:await window.testPartyRpc(action,args)}),
       from:table=>({select:()=>table==='komi_friendships'
@@ -53,6 +53,18 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   assert.equal(state.invited,'friend_test');
   assert.equal(await pages[0].locator('.komi-party-friend-invite').innerText(),'Приглашён');
   const hostPage=pages[0];
+  // Native playback must rank ahead of an iframe even when that iframe is
+  // listed first in the catalog.
+  for(const page of pages) {
+    const options=await page.evaluate(()=>partyOptions(animeList[0]).map(item=>({
+      source:item.source,synchronized:item.synchronized,kind:item.kind
+    })));
+    assert.equal(options[0].source,'Direct');
+    assert.equal(options[0].synchronized,true);
+    assert.equal(options[1].source,'Embed');
+    assert.equal(options[1].synchronized,false);
+    assert.equal(await page.locator('#partySyncMode').getAttribute('data-mode'),'full');
+  }
   const cinema=await hostPage.evaluate(()=>{
     const modal=document.getElementById('watchPartyModalContent');
     const chat=document.getElementById('partyChatBox');
@@ -109,8 +121,13 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   await pages[0].selectOption('#partyEpisode','1');
   await pages[1].waitForFunction(()=>document.getElementById('partyEmbedElement').getAttribute('src')==='https://media.test/player?a=1&b=2');
   assert.equal(state.source,'Embed');assert.equal(state.position,0);
+  for(const page of pages) {
+    assert.equal(await page.locator('#partySyncMode').getAttribute('data-mode'),'limited');
+    assert.match(await page.locator('#partySyncMode').innerText(),/не синхронизируются/);
+  }
   await pages[0].selectOption('#partyEpisode','0');
   await pages[1].waitForFunction(()=>document.getElementById('partyEmbedElement').getAttribute('src')===null);
+  for(const page of pages) assert.equal(await page.locator('#partySyncMode').getAttribute('data-mode'),'full');
   for(const page of pages) await page.evaluate(()=>leaveWatchPartyRoom());
   // Browsers can dispatch a valid submit event without a submitter (for example,
   // Enter or requestSubmit). A duplicate event while the create RPC is pending
@@ -119,6 +136,7 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   hostPage.on('pageerror',error=>submitErrors.push(error.message));
   await hostPage.evaluate(()=>openWatchPartyHub());
   await hostPage.locator('#partyCreateForm').waitFor({timeout:8000});
+  assert.match(await hostPage.locator('.komi-party-sync-explanation').innerText(),/MP4\/HLS/);
   await hostPage.evaluate(()=>{
     const form=document.getElementById('partyCreateForm');
     form.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
@@ -126,6 +144,7 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   });
   await hostPage.locator('#partyVideoElement').waitFor({timeout:8000});
   assert.equal(roomCreates,1,'Enter-style duplicate submits must create only one room');
+  assert.equal(state.source,'Direct','New room should start with controllable media');
   assert.deepEqual(submitErrors,[],'Submitting without event.submitter must not throw');
   await hostPage.evaluate(()=>leaveWatchPartyRoom());
   console.log('PASS two browser clients: seek, play/pause, bidirectional safe chat, source switch, entity decoding, leave cleanup and guarded Enter room submission (mock RPC/media)');
