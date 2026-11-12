@@ -28,8 +28,15 @@ fs.mkdirSync(output,{recursive:true});
             'Production must enforce allowed script elements, not only Report-Only');
           assert.doesNotMatch(enforced,/script-src-elem[^;]*'unsafe-inline'/i,
             'Inline <script> must remain blocked on the real domain');
-          assert.ok(enforced.includes("script-src-attr 'unsafe-inline'"),
-            'Legacy event-handler exception must be separately documented until migrated');
+          const legacyAttrs=enforced.includes("script-src-attr 'unsafe-inline'");
+          const strictAttrs=enforced.includes("script-src-attr 'none'");
+          assert.ok(strictAttrs || legacyAttrs,
+            'Production must explicitly declare the HTML event attribute restriction');
+          if(process.env.KOMI_EXPECT_STRICT_CSP==='1') {
+            assert.ok(strictAttrs,'The deployed release must reject all inline HTML event handlers');
+          } else if(legacyAttrs) {
+            console.warn('Production has previous CSP attr exception; strict deployment not live yet');
+          }
           const appResponse=await page.request.get(base+'app-main.js',{timeout:20000});
           assert.equal(appResponse.status(),200,'Public app-main.js must load after inline script extraction');
           assert.match(appResponse.headers()['content-type']||'',/javascript/i);
