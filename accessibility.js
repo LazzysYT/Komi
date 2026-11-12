@@ -75,6 +75,30 @@
         else modal.classList.remove('active');
     }
     document.addEventListener('keydown',event => {
+        // Keyboard discoverability for the existing header live search.
+        // Don't steal shortcuts from open dialogs or embedded players.
+        if ((event.ctrlKey || event.metaKey) && !event.altKey && !event.shiftKey &&
+            String(event.key).toLowerCase() === 'k') {
+            if (overlays.some(modal => modal.classList.contains('active'))) return;
+            const search = [document.getElementById('searchInput'),document.getElementById('komiCatalogSearchInput')]
+                .find(input => input && input.getClientRects().length && !input.closest('[inert]'));
+            if (search) {
+                event.preventDefault();
+                search.focus({preventScroll:false});
+                search.select?.();
+                return;
+            }
+            if (typeof navigate === 'function') {
+                event.preventDefault();
+                navigate('catalog');
+                requestAnimationFrame(() => {
+                    const field=document.getElementById('komiCatalogSearchInput');
+                    field?.focus({preventScroll:false});
+                    field?.select?.();
+                });
+            }
+            return;
+        }
         if (event.key === 'Escape') {
             const top = overlays.filter(x=>x.classList.contains('active')).at(-1);
             if (top) {event.preventDefault();closeModal(top);return}
