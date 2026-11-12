@@ -23,7 +23,7 @@ test('Legacy Shikimori card images use preview without changing saved URLs',()=>
  assert.ok(staticCard,'Static SEO card 39894 is missing');
  assert.match(staticCard,/\/system\/animes\/preview\/39894\.jpg/);
  assert.match(staticCard,/data-poster-original="https:\/\/shikimori\.one\/system\/animes\/original\/39894\.jpg/);
- assert.match(staticCard,/onerror="komiCardPosterFallback\(this\)"/);
+ assert.match(staticCard,/data-komi-error="poster-error"/);
  assert.match(app,/data-poster-original/);
 });
 
