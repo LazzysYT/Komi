@@ -4,7 +4,7 @@ const vm=require('node:vm');
 const test=require('node:test');
 const assert=require('node:assert/strict');
 
-const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
 const from=html.indexOf('function renderProfileView(');
 const to=html.indexOf('        let avatarDraft = null;',from);
 assert.ok(from>=0&&to>from,'profile renderer not found');
