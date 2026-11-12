@@ -374,7 +374,7 @@ async function loadDataFromCloud(attempt = 0) {
                 n.toLocaleLowerCase().includes(query) || (userProfiles[n]?.displayName || '').toLocaleLowerCase().includes(query)
             )).sort((a,b)=>(userProfiles[a]?.displayName || a).localeCompare(userProfiles[b]?.displayName || b,'ru'));
             if (komiFriendsTab === 'friends' && !me) {
-                list.innerHTML = '<div class="komi-friends-empty"><strong>Войди в аккаунт</strong><p>Чтобы увидеть друзей, нужно авторизоваться.</p><button class="btn-glow" onclick="closeFriendsDrawer();openAuthModal(\'login\')">Войти</button></div>';
+                list.innerHTML = '<div class="komi-friends-empty"><strong>Войди в аккаунт</strong><p>Чтобы увидеть друзей, нужно авторизоваться.</p><button class="btn-glow" data-komi-onclick="closeFriendsDrawer();openAuthModal(\'login\')">Войти</button></div>';
                 return;
             }
             if (!unique.length) {
@@ -388,7 +388,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.has(name);
                 const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name) && name !== me);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
+                return '<div class="komi-friends-person"><button class="komi-friends-identity" data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
         }
@@ -428,14 +428,14 @@ async function loadDataFromCloud(attempt = 0) {
                 return `
                     <div class="sidebar-friend-item" style="justify-content:space-between;margin-bottom:4px;">
                         <button type="button" class="komi-friends-identity"
-                            onclick="playSound();openProfile(window.komiSidebarSearchNames[${index}])">
+                            data-komi-onclick="playSound();openProfile(window.komiSidebarSearchNames[${index}])">
                             <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
-                                onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                             <span>${safeName}</span>
                         </button>
                         ${friend ? '<span style="font-size:9px;color:var(--success);">В друзьях</span>' :
                             `<button type="button" class="btn-glow" style="padding:2px 6px;font-size:9px;"
-                                onclick="playSound();sendFriendRequest(window.komiSidebarSearchNames[${index}])">+ Добавить</button>`}
+                                data-komi-onclick="playSound();sendFriendRequest(window.komiSidebarSearchNames[${index}])">+ Добавить</button>`}
                     </div>`;
             }).join('');
         }
@@ -455,7 +455,7 @@ async function loadDataFromCloud(attempt = 0) {
             let friendsHtml = `
                 <div style="margin-bottom:8px;display:flex;flex-direction:column;gap:4px;">
                     <input type="text" id="friendSearchInputBox" class="form-control"
-                        placeholder="Найти по нику..." oninput="handleFriendSearchInput(this.value)"
+                        placeholder="Найти по нику..." data-komi-oninput="handleFriendSearchInput(this.value)"
                         style="font-size:10px;padding:6px 8px;">
                     <div id="dynamicFriendSearchResults"
                         style="display:none;flex-direction:column;max-height:120px;overflow-y:auto;"></div>
@@ -469,9 +469,9 @@ async function loadDataFromCloud(attempt = 0) {
                         'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
                     return `
                         <button type="button" class="sidebar-friend-item"
-                            onclick="playSound();openProfile(window.komiSidebarFriendNames[${index}])">
+                            data-komi-onclick="playSound();openProfile(window.komiSidebarFriendNames[${index}])">
                             <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
-                                onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                             <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeName}</span>
                             <span style="width:6px;height:6px;border-radius:50%;background:var(--success);"></span>
                         </button>`;
@@ -544,8 +544,8 @@ async function loadDataFromCloud(attempt = 0) {
 
             const requestMarkup = requests.map(row =>
                 '<div class="notif-item">' + escapeFriendHtml(row.name) + ' хочет добавить вас в друзья. ' +
-                '<button class="btn-glow" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', true)">Принять</button> ' +
-                '<button class="btn-danger" onclick="respondProtectedFriendRequest(' + Number(row.id) + ', false)">Отклонить</button></div>'
+                '<button class="btn-glow" data-komi-onclick="respondProtectedFriendRequest(' + Number(row.id) + ', true)">Принять</button> ' +
+                '<button class="btn-danger" data-komi-onclick="respondProtectedFriendRequest(' + Number(row.id) + ', false)">Отклонить</button></div>'
             ).join('');
             const noticeMarkup = notifs.map(row =>
                 '<div class="notif-item">' + escapeFriendHtml(row.message) +
@@ -584,14 +584,14 @@ async function loadDataFromCloud(attempt = 0) {
         }
         function komiCollectionButtons() {
             return Object.entries(komiCollections).map(([key,label]) =>
-                '<button type="button" class="komi-catalog-chip" aria-pressed="'+(currentView==='catalog' && catalogCollection===key)+'" onclick="openKomiCollection(\''+key+'\')">'+label+'</button>').join('');
+                '<button type="button" class="komi-catalog-chip" aria-pressed="'+(currentView==='catalog' && catalogCollection===key)+'" data-komi-onclick="openKomiCollection(\''+key+'\')">'+label+'</button>').join('');
         }
         function komiHomeShelves() {
             const genres = ['Экшен','Романтика','Фэнтези','Комедия','Драма','Спорт'].filter(g => animeList.some(a => (a.genres || []).includes(g)));
             const genreButtons = genres.map(g => '<button type="button" class="komi-catalog-chip" data-komi-genre="'+escapeFriendHtml(g)+'">'+escapeFriendHtml(g)+'</button>').join('');
             const recent = animeList.filter(a=>komiInCollection(a,'recent')).sort((a,b)=>Date.parse(b.lastEpisodeAddedAt)-Date.parse(a.lastEpisodeAddedAt)).slice(0,7);
             return '<section class="komi-feature-section"><h2 class="section-title">Что посмотреть сегодня</h2><div class="komi-catalog-chips">'+komiCollectionButtons()+'</div><div class="komi-catalog-chips" aria-label="Выбор жанра">'+genreButtons+'</div></section>'+
-                (recent.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">Свежие серии</h2><button class="section-see-all" onclick="openKomiCollection(\'recent\')">Все обновления</button></div><div class="anime-grid">'+recent.map(a=>renderCard(a)).join('')+'</div></section>' : '');
+                (recent.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">Свежие серии</h2><button class="section-see-all" data-komi-onclick="openKomiCollection(\'recent\')">Все обновления</button></div><div class="anime-grid">'+recent.map(a=>renderCard(a)).join('')+'</div></section>' : '');
         }
         document.addEventListener('click', event => {
             const button = event.target.closest('[data-komi-genre]');
@@ -630,7 +630,7 @@ async function loadDataFromCloud(attempt = 0) {
             return filtered;
         }
         function komiCatalogChipsMarkup() {
-            return ['Все', ...Array.from({length:3},(_,i)=>String(new Date().getFullYear()-i))].map(y=>'<button type="button" class="komi-catalog-chip'+(catalogFilterYear===y?' active':'')+'" onclick="setKomiCatalogYear(\''+y+'\')">'+(y==='Все'?'Все годы':y)+'</button>').join('');
+            return ['Все', ...Array.from({length:3},(_,i)=>String(new Date().getFullYear()-i))].map(y=>'<button type="button" class="komi-catalog-chip'+(catalogFilterYear===y?' active':'')+'" data-komi-onclick="setKomiCatalogYear(\''+y+'\')">'+(y==='Все'?'Все годы':y)+'</button>').join('');
         }
         function setKomiCatalogYear(year) {catalogFilterYear=String(year);catalogVisibleCount=48;render();}
         function komiResetCatalogFilters() {
@@ -646,11 +646,11 @@ async function loadDataFromCloud(attempt = 0) {
             const more=document.getElementById('komiCatalogMore');
             if(grid)grid.innerHTML=filtered.length
                 ?filtered.slice(0,catalogVisibleCount).map(a=>renderCard(a)).join('')
-                :'<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>';
+                :'<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>';
             if(count)count.textContent='Найдено: '+filtered.length;
             if(more){
                 more.style.display=filtered.length>catalogVisibleCount?'flex':'none';
-                more.innerHTML=filtered.length>catalogVisibleCount?'<button class="btn-glow" onclick="showMoreCatalog()">Показать ещё · '+Math.min(catalogVisibleCount,filtered.length)+' из '+filtered.length+'</button>':'';
+                more.innerHTML=filtered.length>catalogVisibleCount?'<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · '+Math.min(catalogVisibleCount,filtered.length)+' из '+filtered.length+'</button>':'';
             }
         }
         function komiUpdateCatalogQuery(value){
@@ -661,7 +661,7 @@ async function loadDataFromCloud(attempt = 0) {
         function komiIntroMarkup(){
             const currentYearCount=animeList.filter(a=>komiAnimeYear(a)==='2026').length;
             return '<div class="komi-spotlight-heading"><div><div class="komi-spotlight-eyebrow">KOMI ANIME HUB · ТВОЯ БИБЛИОТЕКА</div><h1>Выбирай историю на сегодня</h1><p>Свежие серии, любимые жанры и подборки для любого настроения — всё в одном месте.</p></div><div class="komi-spotlight-metrics"><span><strong>'+animeList.length.toLocaleString('ru-RU')+'</strong> аниме в каталоге</span><span><strong>'+currentYearCount+'</strong> тайтлов 2026</span></div></div>'+
-                '<nav class="komi-fastnav" aria-label="Быстрые разделы"><button class="is-prominent" onclick="showKomiYear(\'2026\')"> Новинки 2026</button><button onclick="navigate(\'catalog\')">▦ Весь каталог</button><button onclick="document.getElementById(\'komiCalendarSection\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})"> Новые серии</button><button onclick="randomAnimeWithAnimation()">◇ Случайное аниме</button></nav>';
+                '<nav class="komi-fastnav" aria-label="Быстрые разделы"><button class="is-prominent" data-komi-onclick="showKomiYear(\'2026\')"> Новинки 2026</button><button data-komi-onclick="navigate(\'catalog\')">▦ Весь каталог</button><button data-komi-onclick="document.getElementById(\'komiCalendarSection\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})"> Новые серии</button><button data-komi-onclick="randomAnimeWithAnimation()">◇ Случайное аниме</button></nav>';
         }
 
         let catalogVisibleCount = 48;
@@ -737,7 +737,7 @@ async function loadDataFromCloud(attempt = 0) {
                 area.replaceChildren(pill);
                 updateNotificationsUI();
             } else {
-                area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" onclick="playSound(); openAuthModal('login')">Войти</button>`;
+                area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" data-komi-onclick="playSound(); openAuthModal('login')">Войти</button>`;
             }
         }
 
@@ -819,7 +819,7 @@ async function loadDataFromCloud(attempt = 0) {
                     if (!catalogInitialLoadFailed && container.querySelector('.komi-seo-card')) return;
                     clearInterval(slideInterval);
                     container.innerHTML = catalogInitialLoadFailed
-                        ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
+                        ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" data-komi-onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
                         : komiCatalogLoadingMarkup();
                     return;
                 }
@@ -839,7 +839,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (currentUser) {
                     const history = Object.entries(komiEpisodeProgress).filter(([key])=>key.startsWith(currentUser.username+'_')).sort((a,b)=>(b[1].updated||0)-(a[1].updated||0)).slice(0,8);
                     const items=history.map(([key,p])=>({anime:animeList.find(a=>String(a.id)===key.slice(currentUser.username.length+1)),p})).filter(x=>x.anime);
-                    if (items.length) continueWatchingHtml='<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">▷ Продолжить просмотр</h2></div><div class="komi-progress-grid">'+items.map(({anime,p})=>'<button class="komi-progress-card" onclick="resumeKomiAnime(\''+anime.id+'\')"><img src="'+escapeFriendHtml(anime.poster||'')+'" loading="lazy" alt=""><span><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small></span></button>').join('')+'</div></section>';
+                    if (items.length) continueWatchingHtml='<section class="komi-feature-section"><div class="section-header"><h2 class="section-title">▷ Продолжить просмотр</h2></div><div class="komi-progress-grid">'+items.map(({anime,p})=>'<button class="komi-progress-card" data-komi-onclick="resumeKomiAnime(\''+anime.id+'\')"><img src="'+escapeFriendHtml(anime.poster||'')+'" loading="lazy" alt=""><span><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small></span></button>').join('')+'</div></section>';
                 }
                 const komiRecommended = komiRecommendations();
                 const komiRecommendedHtml = komiRecommended.length ? '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Тебе понравится</h2></div><div class="anime-grid">'+komiRecommended.map(a=>renderCard(a)).join('')+'</div></section>' : '';
@@ -847,8 +847,8 @@ async function loadDataFromCloud(attempt = 0) {
                 container.innerHTML = `
                     <div class="top-hero-section-grid">
                         <div class="hero-slider-container" id="heroSlider">
-                            <button class="hero-slider-arrow hero-arrow-prev" onclick="playSound(); changeSlide(-1)">❮</button>
-                            <button class="hero-slider-arrow hero-arrow-next" onclick="playSound(); changeSlide(1)">❯</button>
+                            <button class="hero-slider-arrow hero-arrow-prev" data-komi-onclick="playSound(); changeSlide(-1)">❮</button>
+                            <button class="hero-slider-arrow hero-arrow-next" data-komi-onclick="playSound(); changeSlide(1)">❯</button>
                             
                             <div class="hero-slides-wrapper" style="position:relative; width:100%; height:100%;">
                                 ${sliderItems.map((anime, idx) => `
@@ -862,9 +862,9 @@ async function loadDataFromCloud(attempt = 0) {
                                         <h1>${escapeFriendHtml(anime.title)}</h1>
                                         <p>${cleanAnimeDescription(anime.desc) || 'Описание пока не добавлено.'}</p>
                                         <div class="hero-buttons">
-                                            <button class="btn-glow" onclick="playSound(); openWatchModal('${anime.id}')">▷ Смотреть сейчас</button>
-                                            <button class="btn-glow-secondary" onclick="playSound(); openWatchModal('${anime.id}')"> Подробнее</button>
-                                            <button class="btn-glow-secondary" onclick="playSound(); createWatchPartyFromAnime('${anime.id}')"> Party</button>
+                                            <button class="btn-glow" data-komi-onclick="playSound(); openWatchModal('${anime.id}')">▷ Смотреть сейчас</button>
+                                            <button class="btn-glow-secondary" data-komi-onclick="playSound(); openWatchModal('${anime.id}')"> Подробнее</button>
+                                            <button class="btn-glow-secondary" data-komi-onclick="playSound(); createWatchPartyFromAnime('${anime.id}')"> Party</button>
                                         </div>
                                     </div>
                                 `).join('')}
@@ -872,7 +872,7 @@ async function loadDataFromCloud(attempt = 0) {
 
                             <div class="hero-dots">
                                 ${sliderItems.map((_, idx) => `
-                                    <button type="button" class="hero-dot ${idx === currentSlideIndex ? 'active' : ''}" aria-label="Показать аниме ${idx + 1}" onclick="playSound(); setSlide(${idx})"></button>
+                                    <button type="button" class="hero-dot ${idx === currentSlideIndex ? 'active' : ''}" aria-label="Показать аниме ${idx + 1}" data-komi-onclick="playSound(); setSlide(${idx})"></button>
                                 `).join('')}
                             </div>
                         </div>
@@ -888,7 +888,7 @@ async function loadDataFromCloud(attempt = 0) {
                     <section class="komi-feature-section komi-discovery-row">
                         <div class="section-header">
                             <h2 class="section-title">Новинки и продолжения</h2>
-                            <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                            <button class="section-see-all" data-komi-onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
                             ${popularNow.map(a => renderCard(a)).join('')}
@@ -901,7 +901,7 @@ async function loadDataFromCloud(attempt = 0) {
                     <div>
                         <div class="section-header">
                             <h2 class="section-title"> Лучшие по рейтингу</h2>
-                            <button class="section-see-all" onclick="playSound(); navigate('catalog')">Смотреть все</button>
+                            <button class="section-see-all" data-komi-onclick="playSound(); navigate('catalog')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
                             ${bestShiki.length === 0 ? `<div class="empty-state"><h3>Нет доступных аниме в базе</h3></div>` : bestShiki.map(a => renderCard(a)).join('')}
@@ -911,7 +911,7 @@ async function loadDataFromCloud(attempt = 0) {
                     <div>
                         <div class="section-header">
                             <h2 class="section-title"> Лучшие фильмы</h2>
-                            <button class="section-see-all" onclick="playSound(); openKomiCollection('movies')">Смотреть все</button>
+                            <button class="section-see-all" data-komi-onclick="playSound(); openKomiCollection('movies')">Смотреть все</button>
                         </div>
                         <div class="anime-grid">
                             ${bestMovies.length === 0 ? `<div class="empty-state"><h3>Фильмы пока не добавлены</h3></div>` : bestMovies.map(a => renderCard(a)).join('')}
@@ -928,7 +928,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (slideInterval) clearInterval(slideInterval);
                 if (!catalogInitialLoadComplete) {
                     container.innerHTML = catalogInitialLoadFailed
-                      ? '<section class="komi-catalog-empty" role="status"><h1>Не удалось загрузить каталог</h1><button class="komi-catalog-clear" onclick="loadDataFromCloud()">Повторить загрузку</button></section>'
+                      ? '<section class="komi-catalog-empty" role="status"><h1>Не удалось загрузить каталог</h1><button class="komi-catalog-clear" data-komi-onclick="loadDataFromCloud()">Повторить загрузку</button></section>'
                       : komiCatalogLoadingMarkup();
                     return;
                 }
@@ -942,36 +942,36 @@ async function loadDataFromCloud(attempt = 0) {
                     <div class="komi-catalog-header">
                         <div><div class="komi-spotlight-eyebrow">БИБЛИОТЕКА KOMI</div><h1>Каталог аниме</h1>
                         <p>Найди сериал или фильм по названию, жанру, году и типу.</p></div>
-                        <button class="komi-catalog-clear" onclick="komiResetCatalogFilters()">Сбросить фильтры</button>
+                        <button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button>
                     </div>
                     <div class="komi-catalog-search">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
-                        <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме, оригинальное название или жанр..." aria-label="Поиск в каталоге" oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off">
+                        <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме, оригинальное название или жанр..." aria-label="Поиск в каталоге" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off">
                     </div>
                     <div class="komi-catalog-chips" aria-label="Подборки">${komiCollectionButtons()}</div>
                     <div class="komi-catalog-chips">${komiCatalogChipsMarkup()}</div>
                     <div class="catalog-filters-box">
                         <div class="form-group" style="margin:0;">
                             <label>Жанр</label>
-                            <select class="form-control" onchange="catalogFilterGenre=this.value; render()">
+                            <select class="form-control" data-komi-onchange="catalogFilterGenre=this.value; render()">
                                 ${genres.map(g => `<option ${catalogFilterGenre===g?'selected':''}>${g}</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label>Год</label>
-                            <select class="form-control" onchange="catalogFilterYear=this.value; render()">
+                            <select class="form-control" data-komi-onchange="catalogFilterYear=this.value; render()">
                                 ${years.map(y => `<option ${catalogFilterYear===y?'selected':''}>${y}</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label>Тип</label>
-                            <select class="form-control" onchange="catalogFilterType=this.value; render()">
+                            <select class="form-control" data-komi-onchange="catalogFilterType=this.value; render()">
                                 ${types.map(t => `<option ${catalogFilterType===t?'selected':''}>${t}</option>`).join('')}
                             </select>
                         </div>
                         <div class="form-group" style="margin:0;">
                             <label>Сортировка</label>
-                            <select class="form-control" onchange="catalogSort=this.value; render()">
+                            <select class="form-control" data-komi-onchange="catalogSort=this.value; render()">
                                 <option value="popular" ${catalogSort==='popular'?'selected':''}>Актуальные</option>
                                 <option value="updated" ${catalogSort==='updated'?'selected':''}>По обновлению серий</option>
                                 <option value="rating" ${catalogSort==='rating'?'selected':''}>Рейтинг</option>
@@ -982,10 +982,10 @@ async function loadDataFromCloud(attempt = 0) {
                     </div>
                     <div class="komi-catalog-status"><span class="komi-catalog-count" id="komiCatalogCount">Найдено: ${filtered.length}</span><span>Аниме с доступными сериями</span></div>
                     <div class="anime-grid" id="komiCatalogGrid">
-                        ${filtered.length === 0 ? `<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>` : filtered.slice(0, catalogVisibleCount).map(a => renderCard(a)).join('')}
+                        ${filtered.length === 0 ? `<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>` : filtered.slice(0, catalogVisibleCount).map(a => renderCard(a)).join('')}
                     </div>
                     <div id="komiCatalogMore" style="display:${filtered.length > catalogVisibleCount ? 'flex' : 'none'};justify-content:center;margin:24px 0;">
-                        ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
+                        ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
                     </div>
                 `;
             } else if (currentView === 'partners') {
@@ -1067,7 +1067,7 @@ async function loadDataFromCloud(attempt = 0) {
             profileCollectionSearchQuery = input.value;
             const start = input.selectionStart, end = input.selectionEnd;
             render();
-            const restored = document.querySelector('input[oninput="updateProfileCollectionSearch(this)"]');
+            const restored = document.querySelector('input[data-komi-oninput="updateProfileCollectionSearch(this)"]');
             if (restored) {
                 restored.focus({ preventScroll: true });
                 try { restored.setSelectionRange(start, end); } catch (_) {}
@@ -1163,13 +1163,13 @@ async function loadDataFromCloud(attempt = 0) {
             container.innerHTML = `
                 <div class="profile-container komi-profile-v2">
                     <div class="profile-header-card">
-                        <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                        <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
                                 <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2>
                                 ${!isMe && currentUser ? `
-                                    ${amIFriend ? `<button class="btn-danger" onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
-                                     `<button class="btn-glow" onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
+                                    ${amIFriend ? `<button class="btn-danger" data-komi-onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
+                                     `<button class="btn-glow" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             
@@ -1182,8 +1182,8 @@ async function loadDataFromCloud(attempt = 0) {
                             <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 300} из 300 XP <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
                             <div class="profile-reg-date">Дата регистрации: <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
                             <div class="komi-profile-actions">
-                                ${isMe ? '<button class="komi-profile-action" onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
-                                ${isMe ? '<button type="button" class="komi-profile-action" onclick="openAniCoinShop()">Кошелёк AniCoin</button>' : ''}
+                                ${isMe ? '<button class="komi-profile-action" data-komi-onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
+                                ${isMe ? '<button type="button" class="komi-profile-action" data-komi-onclick="openAniCoinShop()">Кошелёк AniCoin</button>' : ''}
                             </div>
 
                             ${isMe ? `
@@ -1194,42 +1194,42 @@ async function loadDataFromCloud(attempt = 0) {
                                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
                                     <div style="flex:2; min-width:160px;">
                                         <label for="avatarFileInput" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Фото с устройства</label>
-                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 4px; font-size:10px;" onchange="handleAvatarFileUpload(event)">
+                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 4px; font-size:10px;" data-komi-onchange="handleAvatarFileUpload(event)">
                                     </div>
                                     <div style="flex:2; min-width:130px;">
                                         <label for="newStatusText" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
                                         <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." maxlength="100" value="${safeProfileText(p.status)}">
                                     </div>
-                                    <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" onclick="playSound(); updateUserProfile(this)">Сохранить</button>
+                                    <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" data-komi-onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
-                                <button type="button" class="btn-secondary" onclick="logoutUser('global')">Выйти на всех устройствах</button>
+                                <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
                             </div>
                             ` : ''}
                         </div>
                     </div>
 
                     <div class="profile-stats-grid">
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['В планах']}</div>
                             <div class="stat-label">В планах</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Смотрю']}</div>
                             <div class="stat-label">Смотрю</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Отложено']}</div>
                             <div class="stat-label">Отложено</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Брошено']}</div>
                             <div class="stat-label">Брошено</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
                             <div class="stat-num">${favoritesCount}</div>
                             <div class="stat-label">Любимое</div>
                         </button>
@@ -1237,16 +1237,16 @@ async function loadDataFromCloud(attempt = 0) {
 
                     <section class="komi-achievement-panel"><div><strong>Достижения</strong><span>${komiAchievements(username).xp} XP</span></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span> Первое достижение впереди</span>'}</div></section>
                     <nav class="komi-profile-tabs" aria-label="Разделы профиля">
-                        <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" onclick="profilePageSection='overview';render()">Профиль</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" onclick="profilePageSection='anime';render()">Аниме</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'friends' ? 'active' : ''}" onclick="profilePageSection='friends';render()">Друзья</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'comments' ? 'active' : ''}" onclick="profilePageSection='comments';render()">Комментарии</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" data-komi-onclick="profilePageSection='overview';render()">Профиль</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" data-komi-onclick="profilePageSection='anime';render()">Аниме</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'friends' ? 'active' : ''}" data-komi-onclick="profilePageSection='friends';render()">Друзья</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'comments' ? 'active' : ''}" data-komi-onclick="profilePageSection='comments';render()">Комментарии</button>
                     </nav>
                     ${profilePageSection === 'overview' ? `
                         <div class="komi-profile-overview">
                             <section><h3>Списки</h3>
                                 ${['Смотрю','В планах','Просмотрено','Брошено'].map((name,i)=>`
-                                    <button class="komi-overview-list-row" onclick="profilePageSection='anime';profileActiveTab='${name}';render()">
+                                    <button class="komi-overview-list-row" data-komi-onclick="profilePageSection='anime';profileActiveTab='${name}';render()">
                                         <span><i class="komi-list-dot dot-${i}"></i>${name}</span><b>${statsCounts[name] || 0}</b>
                                     </button>`).join('')}
                             </section>
@@ -1266,15 +1266,15 @@ async function loadDataFromCloud(attempt = 0) {
                         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border);">
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
                             ${customFolderNames.map((fname,i) => `
-                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" onclick="playSound(); profileActiveTab=window.komiProfileFolderNames[${i}]; render()"> ${safeProfileText(fname)} (${customFolders[fname].length})</button>
-                                ${isMe && currentUser?.authUserId ? `<button type="button" class="btn-danger" style="padding:4px 7px;border-radius:8px" aria-label="Удалить папку ${safeProfileText(fname)}" title="Удалить папку" onclick="deleteCustomFolder(window.komiProfileFolderNames[${i}])">×</button>` : ''}
+                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab=window.komiProfileFolderNames[${i}]; render()"> ${safeProfileText(fname)} (${customFolders[fname].length})</button>
+                                ${isMe && currentUser?.authUserId ? `<button type="button" class="btn-danger" style="padding:4px 7px;border-radius:8px" aria-label="Удалить папку ${safeProfileText(fname)}" title="Удалить папку" data-komi-onclick="deleteCustomFolder(window.komiProfileFolderNames[${i}])">×</button>` : ''}
                             `).join('')}
                             ${isMe && currentUser?.authUserId && komiFolderImportableCount(username)
-                                ? `<button class="btn-secondary" type="button" onclick="importLocalCustomFolders()">Импорт локальных папок</button>` : ''}
+                                ? `<button class="btn-secondary" type="button" data-komi-onclick="importLocalCustomFolders()">Импорт локальных папок</button>` : ''}
                             ${isMe ? `
                                 <div style="display:flex; gap:5px; margin-left:auto; align-items:center;">
                                     <input type="text" id="newFolderNameInput" class="form-control" placeholder="Новая папка..." style="max-width:140px; padding:5px 8px; font-size:11px;">
-                                    <button class="btn-secondary" style="padding:5px 8px; font-size:11px;" onclick="playSound(); createCustomFolder()">+ Папка</button>
+                                    <button class="btn-secondary" style="padding:5px 8px; font-size:11px;" data-komi-onclick="playSound(); createCustomFolder()">+ Папка</button>
                                 </div>
                             ` : ''}
                         </div>
@@ -1285,7 +1285,7 @@ async function loadDataFromCloud(attempt = 0) {
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
                                 <h3 style="font-size:15px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${safeProfileText(profileActiveTab)}</span></h3>
                                 <div style="position:relative; width: 180px;">
-                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
+                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" data-komi-oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
                                 </div>
                             </div>
 
@@ -1309,20 +1309,20 @@ async function loadDataFromCloud(attempt = 0) {
 
                         <div class="profile-sidebar-menu">
                             <h3 style="font-size:12px; font-weight:700; margin-bottom:4px;"> Статистика</h3>
-                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span> Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
-                            <div class="profile-menu-item" onclick="playSound(); profileActiveTab='Любимые'; render()"><span>♡ Любимое</span> <b>${favoritesCount}</b></div>
+                            <div class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span> Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
+                            <div class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Любимые'; render()"><span>♡ Любимое</span> <b>${favoritesCount}</b></div>
                             <div class="profile-menu-item"><span> Друзья</span> <b>${myFriends.length}</b></div>
                         </div>
                     </div>
 
                     </div>
-                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map((friend,i)=>`<button class="komi-profile-friend" onclick="openProfile(window.komiProfileFriendNames[${i}])">${safeProfileText(friend)}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
+                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map((friend,i)=>`<button class="komi-profile-friend" data-komi-onclick="openProfile(window.komiProfileFriendNames[${i}])">${safeProfileText(friend)}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
                     <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
                     <div class="profile-wall-section">
                         <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
                         <div style="display:flex; gap:6px; margin-bottom:14px;">
-                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." onkeydown="if(event.key==='Enter') postToProfileWall(window.komiWallProfileName)">
-                            <button class="btn-glow" style="padding: 7px 16px;" onclick="playSound(); postToProfileWall(window.komiWallProfileName)">Отпр.</button>
+                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." data-komi-onkeydown="if(event.key==='Enter') postToProfileWall(window.komiWallProfileName)">
+                            <button class="btn-glow" style="padding: 7px 16px;" data-komi-onclick="playSound(); postToProfileWall(window.komiWallProfileName)">Отпр.</button>
                         </div>
                         <div style="display:flex; flex-direction:column; gap:6px;">
                             ${wallMessages.length === 0 ? `
@@ -1334,11 +1334,11 @@ async function loadDataFromCloud(attempt = 0) {
                                 const canDelete = currentUser && (currentUser.username === username || currentUser.username === m.author || false);
                                 return `
                                     <div class="wall-message-item">
-                                        <div class="wall-message-author" onclick="playSound(); openProfile(window.komiWallAuthorByIndex[${mIdx}])">
-                                            <img src="${safeProfileText(komiSafeUrl(senderAvatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                        <div class="wall-message-author" data-komi-onclick="playSound(); openProfile(window.komiWallAuthorByIndex[${mIdx}])">
+                                            <img src="${safeProfileText(komiSafeUrl(senderAvatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" data-komi-onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                                             <span>${escapeFriendHtml(userProfiles[m.author]?.displayName || m.author)}</span>
                                             <span style="font-size:10px; color:var(--text-muted); margin-left:auto; font-weight:normal;">${escapeFriendHtml(m.time)}</span>
-                                            ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">Удалить</button>` : ''}
+                                            ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" data-komi-onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">Удалить</button>` : ''}
                                         </div>
                                         <div class="wall-message-text">${escapeFriendHtml(m.text)}</div>
                                     </div>
@@ -1646,10 +1646,10 @@ async function loadDataFromCloud(attempt = 0) {
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
             return '<div class="anime-card" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
-                'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
+                'data-komi-onclick="playSound();openWatchModal(\''+id+'\')" data-komi-onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterOriginalAttr+' onerror="komiCardPosterFallback(this)">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
@@ -2990,7 +2990,7 @@ async function loadDataFromCloud(attempt = 0) {
             const prefix=username+'_';
             const items=Object.entries(komiEpisodeProgress).filter(([key,p])=>key.startsWith(prefix)&&p&&p.updated).sort((a,b)=>b[1].updated-a[1].updated).slice(0,limit).map(([key,p])=>({anime:animeList.find(a=>String(a.id)===key.slice(prefix.length)),p})).filter(x=>x.anime);
             if (!items.length) return '<div class="komi-recent-empty">Здесь появятся аниме, которые ты недавно открывал для просмотра.</div>';
-            return '<div class="komi-recent-grid">'+items.map(({anime,p})=>'<button class="komi-recent-card" onclick="resumeKomiAnime(\''+anime.id+'\')"><img loading="lazy" src="'+escapeFriendHtml(anime.poster||'')+'" alt=""><span class="komi-recent-info"><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small><em>Продолжить →</em></span></button>').join('')+'</div>';
+            return '<div class="komi-recent-grid">'+items.map(({anime,p})=>'<button class="komi-recent-card" data-komi-onclick="resumeKomiAnime(\''+anime.id+'\')"><img loading="lazy" src="'+escapeFriendHtml(anime.poster||'')+'" alt=""><span class="komi-recent-info"><strong>'+escapeFriendHtml(anime.title)+'</strong><small>Сезон '+p.season+' · Серия '+(p.index+1)+'</small><em>Продолжить →</em></span></button>').join('')+'</div>';
         }
 
         function komiAnimeYear(anime) {
@@ -3013,7 +3013,7 @@ async function loadDataFromCloud(attempt = 0) {
             return years.map(year => {
                 const items = animeList.filter(a => komiAnimeYear(a) === year);
                 if (!items.length) return '';
-                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Аниме ' + year + '</h2><button class="section-see-all" onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + items.length + '</button></div><div class="anime-grid">' + items.slice(0, 7).map(a => renderCard(a)).join('') + '</div></section>';
+                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Аниме ' + year + '</h2><button class="section-see-all" data-komi-onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + items.length + '</button></div><div class="anime-grid">' + items.slice(0, 7).map(a => renderCard(a)).join('') + '</div></section>';
             }).join('');
         }
 
@@ -3101,7 +3101,7 @@ async function loadDataFromCloud(attempt = 0) {
               .sort((a,b) => b.date - a.date).slice(0,8);
 
             let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title"> Календарь серий</h2>'+
-                '<button type="button" class="section-see-all" onclick="loadKomiEpisodeSchedule(true)">↻ Обновить расписание</button></div>';
+                '<button type="button" class="section-see-all" data-komi-onclick="loadKomiEpisodeSchedule(true)">↻ Обновить расписание</button></div>';
             if (upcoming.length) {
                 result += '<p class="komi-feature-muted">Ближайшие эфиры · время указано в твоём часовом поясе. Озвучка может появиться позже.</p>';
                 result += '<div class="komi-release-list">' + upcoming.map(entry => {
@@ -3111,8 +3111,8 @@ async function loadDataFromCloud(attempt = 0) {
                     const day = date.toLocaleDateString('ru-RU', {weekday:'short',day:'numeric',month:'short'});
                     const hour = date.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
                     const episodeText = entry.episode ? 'Серия ' + entry.episode : 'Следующая серия';
-                    return '<button type="button" onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
-                        '<img loading="lazy" src="' + poster + '" alt="" class="komi-calendar-poster" onerror="this.style.display=\'none\'">'+
+                    return '<button type="button" data-komi-onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
+                        '<img loading="lazy" src="' + poster + '" alt="" class="komi-calendar-poster" data-komi-onerror="this.style.display=\'none\'">'+
                         '<span class="komi-calendar-info"><small>' + day + ' · ' + hour + '</small><strong>' + title + '</strong><em>' + episodeText + '</em></span>'+
                         '<span class="komi-calendar-tag">Эфир</span></button>';
                 }).join('') + '</div>';
@@ -3127,8 +3127,8 @@ async function loadDataFromCloud(attempt = 0) {
             if (latest.length) {
                 result += '<div class="section-header" style="margin-top:17px"><h3 class="section-title" style="font-size:15px!important"> Добавлены новые серии</h3></div>';
                 result += '<div class="komi-release-list">' + latest.map(entry =>
-                    '<button type="button" onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
-                        '<img loading="lazy" src="' + escapeFriendHtml(entry.anime.poster || '') + '" alt="" class="komi-calendar-poster" onerror="this.style.display=\'none\'">'+
+                    '<button type="button" data-komi-onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
+                        '<img loading="lazy" src="' + escapeFriendHtml(entry.anime.poster || '') + '" alt="" class="komi-calendar-poster" data-komi-onerror="this.style.display=\'none\'">'+
                         '<span class="komi-calendar-info"><small>' + new Date(entry.date).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) + '</small>'+
                         '<strong>' + escapeFriendHtml(entry.anime.title) + '</strong><em>' + (entry.anime.lastEpisodeNumber ? 'Серия ' + Number(entry.anime.lastEpisodeNumber) : 'Новая серия') + '</em></span>'+
                     '</button>').join('') + '</div>';
@@ -3203,18 +3203,18 @@ async function loadDataFromCloud(attempt = 0) {
             if (!anime.komiDetailsLoaded || anime.komiDetailsLoadedAt !== anime.komiCardUpdatedAt) {
                 const modal = document.getElementById('watchModal');
                 const body = document.getElementById('watchModalContent');
-                body.innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><p role="status" style="padding:35px">Загружаем описание и серии…</p>';
+                body.innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button><p role="status" style="padding:35px">Загружаем описание и серии…</p>';
                 modal.classList.add('active');
                 try {
                     await ensureKomiAnimeDetails(anime);
                 } catch (error) {
                     if (requestToken === komiDetailOpenToken && modal.classList.contains('active'))
-                        body.innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button><p role="alert" style="padding:35px">Не удалось загрузить серии. Попробуйте открыть аниме снова.</p>';
+                        body.innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button><p role="alert" style="padding:35px">Не удалось загрузить серии. Попробуйте открыть аниме снова.</p>';
                     return;
                 }
                 if (requestToken !== komiDetailOpenToken || !modal.classList.contains('active')) return;
             }
-            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); window.KomiComments?.mount(anime.id); return; }
+            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); window.KomiComments?.mount(anime.id); return; }
 
             const seasonsMap = {};
             anime.episodes.forEach((ep, idx) => {
@@ -3269,12 +3269,12 @@ async function loadDataFromCloud(attempt = 0) {
             const screenshots = (anime.screenshots && anime.screenshots.length > 0) ? anime.screenshots : [anime.poster, anime.poster, anime.poster, anime.poster];
 
             document.getElementById('watchModalContent').innerHTML = `
-                <button class="komi-watch-expand" onclick="toggleKomiWatchFullscreen()" title="Полный экран">⛶ <span>На весь экран</span></button>
-                <button class="modal-close" onclick="playSound(); closeWatchModal()">&times;</button>
+                <button class="komi-watch-expand" data-komi-onclick="toggleKomiWatchFullscreen()" title="Полный экран">⛶ <span>На весь экран</span></button>
+                <button class="modal-close" data-komi-onclick="playSound(); closeWatchModal()">&times;</button>
                 <div class="watch-cinema-layout">
                     ${animeDetailsMarkup(anime)}
                     <div class="crunchy-hero-section">
-                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" onerror="this.onerror=null;this.src='/anime-artwork.svg'">
+                        <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" data-komi-onerror="this.onerror=null;this.src='/anime-artwork.svg'">
                         <div class="crunchy-hero-info">
                             <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
                             <h1>${escapeFriendHtml(anime.title)}</h1>
@@ -3283,8 +3283,8 @@ async function loadDataFromCloud(attempt = 0) {
                                 <span style="color:#eaeaea; font-weight:700; font-size:11px;">★ ${escapeFriendHtml(shikiRating)} Shikimori</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml((Array.isArray(anime.genres) ? anime.genres : []).join(', '))}</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml(anime.year || '2026')}</span>
-                                <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
-                                <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)"> Party</button>
+                                <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" data-komi-onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
+                                <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" data-komi-onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)"> Party</button>
                             </div>
                         </div>
                     </div>
@@ -3292,7 +3292,7 @@ async function loadDataFromCloud(attempt = 0) {
                     <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:6px 10px; border-radius:8px;">
                         <span style="font-size:11px; color:var(--text-muted);">Статус:</span>
                         ${['Просмотрено', 'В планах', 'Смотрю', 'Отложено', 'Брошено'].map(st => `
-                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" data-watch-status="${st}" aria-pressed="${myCurrentStatus === st}" onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
+                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" data-watch-status="${st}" aria-pressed="${myCurrentStatus === st}" data-komi-onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
                         `).join('')}
                     </div>
 
@@ -3315,14 +3315,14 @@ async function loadDataFromCloud(attempt = 0) {
                             </div>
                             <div class="player-wrapper">${playerHtml}</div>
                             <div class="komi-watch-controls">
-                                <button type="button" class="komi-watch-navbtn" ${hasPrevious?'':'disabled'} onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex - 1})">← Предыдущая</button>
+                                <button type="button" class="komi-watch-navbtn" ${hasPrevious?'':'disabled'} data-komi-onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex - 1})">← Предыдущая</button>
                                 <div class="komi-watch-source">
                                     <label for="komiWatchSourceSelect">Озвучка / плеер</label>
-                                    <select id="komiWatchSourceSelect" onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
+                                    <select id="komiWatchSourceSelect" data-komi-onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
                                         ${sourceNames.map(name => '<option value="' + escapeFriendHtml(name) + '" ' + (name === activePlayerSource ? 'selected' : '') + '>' + escapeFriendHtml(name) + '</option>').join('')}
                                     </select>
                                 </div>
-                                <button type="button" class="komi-watch-navbtn primary" ${hasNext?'':'disabled'} onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex + 1})">Следующая →</button>
+                                <button type="button" class="komi-watch-navbtn primary" ${hasNext?'':'disabled'} data-komi-onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex + 1})">Следующая →</button>
                             </div>
                             ${activeUrl ? `
                                 <div id="komiPlayerRecovery" class="komi-player-notice" ${isExternalPlayer ? '' : 'hidden'}>
@@ -3339,10 +3339,10 @@ async function loadDataFromCloud(attempt = 0) {
                                 <div><small>ВЫБОР СЕРИИ</small><h3>${currentSeasonEpisodes.length} серий</h3></div>
                                 <span>Сезон ${activeSeason}</span>
                             </div>
-                            ${seasonNumbers.length > 1 ? '<div class="season-tabs" aria-label="Выбор сезона">' + seasonNumbers.map(n => '<button type="button" class="season-tab-btn ' + (n===activeSeason?'active':'') + '" onclick="openWatchModal(\'' + anime.id + '\',' + n + ',0)">Сезон ' + n + '</button>').join('') + '</div>' : ''}
-                            <label for="komiEpisodeSearch">Найти серию</label><input id="komiEpisodeSearch" type="search" inputmode="numeric" class="form-control" placeholder="Номер серии" oninput="komiFindEpisode(this.value)"><p id="komiEpisodeSearchStatus" role="status"></p>
+                            ${seasonNumbers.length > 1 ? '<div class="season-tabs" aria-label="Выбор сезона">' + seasonNumbers.map(n => '<button type="button" class="season-tab-btn ' + (n===activeSeason?'active':'') + '" data-komi-onclick="openWatchModal(\'' + anime.id + '\',' + n + ',0)">Сезон ' + n + '</button>').join('') + '</div>' : ''}
+                            <label for="komiEpisodeSearch">Найти серию</label><input id="komiEpisodeSearch" type="search" inputmode="numeric" class="form-control" placeholder="Номер серии" data-komi-oninput="komiFindEpisode(this.value)"><p id="komiEpisodeSearchStatus" role="status"></p>
                             <div class="komi-episode-number-grid" role="group" aria-label="Выбрать серию">
-                                ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
+                                ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" data-komi-onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
                             </div>
                             <p class="komi-watch-side-footnote">Нажми на номер, чтобы перейти к серии.</p>
                         </aside>

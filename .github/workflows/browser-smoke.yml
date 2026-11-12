@@ -59,6 +59,7 @@ jobs:
           node scripts/browser-smoke.cjs
           node scripts/static-anchors-browser.cjs
           node scripts/static-ui-events-browser.cjs
+          node scripts/dynamic-ui-events-browser.cjs
           node scripts/csp-enforcement-browser.cjs
       - name: Smoke-test actual komianime.online as a signed-out visitor
         timeout-minutes: 4

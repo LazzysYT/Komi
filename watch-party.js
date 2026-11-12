@@ -74,7 +74,7 @@ async function openWatchPartyHub() {
         if (generation !== partyGeneration) return;
         const available = animeList.filter(anime => (anime.episodeCount || anime.episodes?.length || 0) > 0);
         partyPanel(`
-            <button class="modal-close" onclick="leaveWatchPartyRoom()">×</button>
+            <button class="modal-close" data-komi-onclick="leaveWatchPartyRoom()">×</button>
             <h2>Совместный просмотр</h2>
             <form id="partyCreateForm">
                 <label>Аниме <input id="partyAnimeSearch" type="search" placeholder="Найти аниме по названию" autocomplete="off" style="width:100%;min-height:44px;margin:8px 0"><select name="anime" required style="width:100%;min-height:44px">${available.map(anime =>
@@ -86,7 +86,7 @@ async function openWatchPartyHub() {
             </form>
             <h3>Доступные комнаты</h3>
             <div id="partyRoomList"></div>
-            <button class="btn-secondary" onclick="openWatchPartyHub()">Обновить список</button>
+            <button class="btn-secondary" data-komi-onclick="openWatchPartyHub()">Обновить список</button>
         `);
         const search = document.getElementById('partyAnimeSearch');
         const animeSelect = document.querySelector('#partyCreateForm select[name="anime"]');
@@ -197,8 +197,8 @@ async function enterParty(room) {
                     <p>${escapeFriendHtml(anime?.title || 'Аниме')} · совместный просмотр</p>
                 </div>
                 <div class="komi-party-head-actions">
-                    <button class="komi-party-fullscreen-btn" type="button" onclick="toggleKomiPartyFullscreen()" aria-pressed="false" aria-label="Развернуть просмотр на весь экран" title="На весь экран">⛶ <span>На весь экран</span></button>
-                    <button class="modal-close" type="button" onclick="leaveWatchPartyRoom()" aria-label="Закрыть комнату">×</button>
+                    <button class="komi-party-fullscreen-btn" type="button" data-komi-onclick="toggleKomiPartyFullscreen()" aria-pressed="false" aria-label="Развернуть просмотр на весь экран" title="На весь экран">⛶ <span>На весь экран</span></button>
+                    <button class="modal-close" type="button" data-komi-onclick="leaveWatchPartyRoom()" aria-label="Закрыть комнату">×</button>
                 </div>
             </div>
             <div class="komi-party-room-layout">

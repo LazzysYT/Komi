@@ -61,7 +61,7 @@ function renderAniCoinShop(container) {
             <p class="komi-spotlight-eyebrow">Komi Anime</p>
             <h1 id="anicoin-title">Магазин AniCoin</h1>
             <p>За каждые 20 минут воспроизведения во встроенном видеоплеере начисляется 1 AniCoin. Паузы, перемотка и внешние плееры не учитываются.</p>
-            ${!owner ? '<button type="button" class="btn-glow" onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
+            ${!owner ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
             ${owner && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
             ${wallet ? `<div class="anicoin-wallet">
                 <div><span>Баланс</span><strong>${wallet.balance} AniCoin</strong></div>
@@ -69,7 +69,7 @@ function renderAniCoinShop(container) {
                     <progress id="anicoin-progress" value="${wallet.seconds}" max="1200"></progress></div>
             </div>` : ''}
             <p role="status">${escapeFriendHtml(aniCoinStatus)}</p>
-            ${owner && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" onclick="openAniCoinShop()">Повторить</button>' : ''}
+            ${owner && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" data-komi-onclick="openAniCoinShop()">Повторить</button>' : ''}
             <div class="anicoin-item"><h2>Товаров пока нет</h2><p>Заработанные AniCoin видны в кошельке.</p></div>
         </section>`;
 }
