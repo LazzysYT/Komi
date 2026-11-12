@@ -1701,6 +1701,10 @@ body > header {
         <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
         <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." oninput="renderFriendsDrawer()" autocomplete="off" aria-label="Поиск по нику"></div>
         <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" onclick="setFriendsDrawerTab('all')">Все пользователи</button><button id="komiFriendsMyTab" onclick="setFriendsDrawerTab('friends')">Мои друзья</button></div>
+        <section id="komiFriendRoomsSection" class="komi-friend-rooms-section" aria-label="Комнаты друзей" hidden>
+            <div class="komi-friend-rooms-heading"><strong>Смотрят вместе</strong><button type="button" id="komiFriendRoomsRefresh">Обновить</button></div>
+            <div id="komiFriendRoomsList" aria-live="polite" aria-relevant="additions text"></div>
+        </section>
         <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
@@ -2020,6 +2024,7 @@ body > header {
     <script src="./player-ux.js"></script>
     <script src="./anime-details.js"></script>
     <script src="./watch-party.js"></script>
+    <script src="./friend-party.js"></script>
     <script src="./anicoin.js"></script>
 </body>
 </html>

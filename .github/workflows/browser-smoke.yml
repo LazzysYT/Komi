@@ -52,6 +52,7 @@ jobs:
           node scripts/cloud-folders-browser.cjs
           node scripts/profile-markup-security-browser.cjs
           node scripts/party-regression.cjs
+          node scripts/friend-party-browser.cjs
           node scripts/player-ux-browser.cjs
           node scripts/browser-smoke.cjs
           node scripts/static-anchors-browser.cjs

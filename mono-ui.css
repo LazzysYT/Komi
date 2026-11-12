@@ -342,3 +342,47 @@ main .komi-feature-section .anime-grid > .anime-card {scroll-snap-align:start;mi
   .search-container .search-bar .komi-search-shortcut {display:none}
   .search-container .search-bar #searchInput {padding-right:12px !important}
 }
+
+
+/* Only server-authorized Watch Party rooms hosted by verified friends appear. */
+#komiFriendsDrawer .komi-friend-rooms-section {
+  margin:12px 10px;padding:13px;border-radius:17px;
+  border:1px solid rgba(255,255,255,.09);
+  background:linear-gradient(140deg,#171922,#101114);
+}
+#komiFriendsDrawer .komi-friend-rooms-section[hidden] {display:none !important}
+#komiFriendsDrawer .komi-friend-rooms-heading {
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px;
+  color:#f3f3f5;font-size:13px
+}
+#komiFriendsDrawer .komi-friend-rooms-heading button {
+  cursor:pointer;border:0;background:transparent;color:#ff7d86;font-size:11px;
+  border-radius:8px;padding:8px
+}
+#komiFriendsDrawer .komi-friend-room-row {
+  display:flex;gap:9px;align-items:center;border-radius:12px;padding:9px 5px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+#komiFriendsDrawer .komi-friend-room-row:last-child {border-bottom:0}
+#komiFriendsDrawer .komi-friend-room-live {
+  width:9px;height:9px;flex:0 0 auto;border-radius:50%;background:#37c685;
+  box-shadow:0 0 0 3px rgba(55,198,133,.12)
+}
+#komiFriendsDrawer .komi-friend-room-description {flex:1;min-width:0;display:grid;gap:3px}
+#komiFriendsDrawer .komi-friend-room-description strong {font-size:12px;color:#f2f2f5;overflow:hidden;text-overflow:ellipsis}
+#komiFriendsDrawer .komi-friend-room-description small {font-size:11px;color:#aeb2bb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#komiFriendsDrawer .komi-friend-room-join {
+  cursor:pointer;min-height:34px;padding:7px 10px;border-radius:10px;
+  border:1px solid rgba(255,69,79,.48);background:rgba(255,69,79,.12);
+  font-size:11px;font-weight:750;color:#ffd6d8
+}
+#komiFriendsDrawer .komi-friend-room-join:hover,
+#komiFriendsDrawer .komi-friend-room-join:focus-visible {
+  background:rgba(255,69,79,.3);outline-offset:2px
+}
+#komiFriendsDrawer .komi-friend-rooms-muted {font-size:12px;color:#afb0bd;line-height:1.5;margin:6px 0}
+@media(max-width:420px) {
+  #komiFriendsDrawer .komi-friend-rooms-section {margin:9px 7px;padding:10px}
+  #komiFriendsDrawer .komi-friend-room-row {flex-wrap:wrap}
+  #komiFriendsDrawer .komi-friend-room-join {margin-left:19px}
+}
