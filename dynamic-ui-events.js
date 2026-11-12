@@ -152,7 +152,8 @@
         komiCardPosterFallback(el);
       };
       if(text==="this.style.display='none'")fn=(_,el)=>{el.style.display='none';el.removeAttribute('data-komi-onerror')};
-      if((match=/^(?:this\.onerror=null;)?this\.src='([^']+)'$/.exec(text)))
+      if((match=/^(?:this\.onerror=null;)?this\.src='([^']+)'$/.exec(text)) &&
+        /^(\/anime-artwork\.svg|\.\/anime-artwork\.svg|https:\/\/api\.dicebear\.com\/7\.x\/bottts\/svg\?seed=(Komi|fallback))$/.test(match[1]))
         fn=(_,el)=>fallback(el,match[1]);
     }
     if(!fn)return null;
