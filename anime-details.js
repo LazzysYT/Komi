@@ -9,7 +9,7 @@ function animeDetailsMarkup(anime) {
     return `
         <div id="komiAnimeBanner" style="height:clamp(90px,20vw,230px);overflow:hidden;border-radius:12px;background:#211923">
             <img src="${animeArtwork(anime)}" alt="" style="width:100%;height:100%;object-fit:cover;object-position:center 30%"
-                 onerror="this.onerror=null;this.src='./anime-artwork.svg'">
+                 data-komi-onerror="this.onerror=null;this.src='./anime-artwork.svg'">
         </div>
         <section id="komiAnimeRelations" style="margin:12px 0" aria-live="polite"></section>
     `;
