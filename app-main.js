@@ -3365,7 +3365,11 @@ async function loadDataFromCloud(attempt = 0) {
                 ownerIsCurrent:() => (currentUser?.authUserId || currentUser?.username || '') === watchedLocalOwner,
                 season:activeSeason,
                 index:activeIndex,
-                hasNext
+                hasNext,
+                // Episode ordinals are per title, which maps to MAL/Shikimori
+                // only for standalone (season=1) entries.
+                malId: anime.shikimoriId || anime.id,
+                episodeNumber:displayNumber
             });
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
