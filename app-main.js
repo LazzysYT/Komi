@@ -3355,7 +3355,18 @@ async function loadDataFromCloud(attempt = 0) {
             document.getElementById('komiAlternatePlayer')?.addEventListener('click', () =>
                 changePlayerSource(anime.id, activeSeason, activeIndex, alternateSource));
             bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl);
-            window.KomiPlayerUX?.mount({animeId:String(anime.id), userId:currentUser?.authUserId || currentUser?.username || '', season:activeSeason, index:activeIndex, hasNext});
+            const watchedOwner = currentUser?.authUserId || null;
+            const watchedLocalOwner = watchedOwner || currentUser?.username || '';
+            window.KomiPlayerUX?.mount({
+                animeId:String(anime.id),
+                userId:watchedLocalOwner,
+                authId:watchedOwner,
+                client:watchedOwner ? _supabase : null,
+                ownerIsCurrent:() => (currentUser?.authUserId || currentUser?.username || '') === watchedLocalOwner,
+                season:activeSeason,
+                index:activeIndex,
+                hasNext
+            });
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
             renderAnimeExtras(anime, seasonNumbers);

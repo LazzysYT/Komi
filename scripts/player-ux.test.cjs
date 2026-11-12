@@ -21,7 +21,8 @@ test('the real watch modal mounts controls without changing stored episode data'
   const app=fs.readFileSync(path.join(root,'app-main.js'),'utf8');
   const ux=fs.readFileSync(path.join(root,'player-ux.js'),'utf8');
   assert.match(html,/<script src="\.\/player-runtime\.js"><\/script>\s*<script src="\.\/player-ux\.js"><\/script>/);
-  assert.match(app,/bindKomiPlayer\(String\(anime\.id\), activeSeason, activeIndex, activeUrl\);\s*window\.KomiPlayerUX\?\.mount/);
+  assert.match(app,/bindKomiPlayer\(String\(anime\.id\), activeSeason, activeIndex, activeUrl\);/);
+  assert.match(app,/window\.KomiPlayerUX\?\.mount\(\{/);
   assert.match(app,/localStorage\.getItem\('komi_source_' \+ anime\.id\)/);
   assert.match(app,/class="komi-episode-number-grid"/);
   assert.match(ux,/video\.addEventListener\('ended', \(\) => markCurrentWatched/);

@@ -1,6 +1,6 @@
 /* Komi Cinema: progressive enhancements for the existing watch modal.
  * Native MP4/HLS only: embedded cross-origin players keep their own controls.
- * No new backend writes; per-episode viewed markers are local and account-scoped.
+ * Completion markers stay in account-scoped local cache and sync through\n * owner-only Supabase RLS for authenticated accounts.
  */
 (function (root) {
     'use strict';
@@ -25,7 +25,7 @@
         if (!key) return [];
         try {
             const parsed = JSON.parse(root.localStorage.getItem(key) || '[]');
-            return Array.isArray(parsed) ? parsed.filter(s => /^\d{1,3}:\d{1,5}$/.test(s)).slice(0, 1800) : [];
+            return Array.isArray(parsed) ? parsed.filter(s => /^\d{1,4}:\d{1,5}$/.test(s)).slice(0, 1800) : [];
         } catch { return []; }
     }
     function addWatched(userId, animeId, season, index) {
@@ -38,6 +38,82 @@
         try { root.localStorage.setItem(key, JSON.stringify([...updated].slice(-1800))); }
         catch { return false; }
         return true;
+    }
+    function validMarker(marker) {
+        const match = /^(\d{1,4}):(\d{1,5})$/.exec(String(marker));
+        if (!match) return false;
+        const season = Number(match[1]);
+        const index = Number(match[2]);
+        return season >= 1 && season <= 1000 && index >= 0 && index <= 9999;
+    }
+    function mergeWatched(userId, animeId, markers) {
+        const key = watchedStorageKey(userId, animeId);
+        if (!key) return [];
+        const merged = [...new Set([...readWatched(userId, animeId), ...(markers || [])]
+            .filter(validMarker))].slice(-1800);
+        try { root.localStorage.setItem(key, JSON.stringify(merged)); } catch {}
+        return merged;
+    }
+    function cloudEnabled(context) {
+        return !!context?.client?.from && !!context.authId &&
+            context.authId === context.userId && /^\d+$/.test(context.animeId) &&
+            (!context.ownerIsCurrent || context.ownerIsCurrent());
+    }
+    function activeCloudContext(context) {
+        return active === context && context.content.isConnected && cloudEnabled(context);
+    }
+    function markerRow(context, marker) {
+        if (!validMarker(marker)) return null;
+        const [season, episode_index] = marker.split(':').map(Number);
+        return {
+            user_id:context.authId,
+            anime_id:Number(context.animeId),
+            season,
+            episode_index
+        };
+    }
+    async function writeCloudWatched(context, markers) {
+        if (!cloudEnabled(context)) return;
+        const rows = [...new Set(markers)].map(marker=>markerRow(context,marker)).filter(Boolean);
+        for (let offset = 0; offset < rows.length; offset += 80) {
+            if (!activeCloudContext(context)) return;
+            const {error} = await context.client.from('komi_watched_episodes')
+                .upsert(rows.slice(offset, offset + 80), {
+                    onConflict:'user_id,anime_id,season,episode_index',
+                    ignoreDuplicates:true
+                });
+            if (error) throw error;
+        }
+    }
+    async function loadCloudWatched(context) {
+        if (!activeCloudContext(context)) return;
+        const cloud = new Set();
+        for (let page = 0; page < 4; page++) {
+            const {data,error} = await context.client.from('komi_watched_episodes')
+                .select('season,episode_index')
+                .eq('user_id',context.authId)
+                .eq('anime_id',Number(context.animeId))
+                .order('season',{ascending:true})
+                .order('episode_index',{ascending:true})
+                .range(page*500,page*500+499);
+            if (error) throw error;
+            if (!activeCloudContext(context)) return;
+            for (const item of data || []) {
+                const marker = String(item.season) + ':' + String(item.episode_index);
+                if (validMarker(marker)) cloud.add(marker);
+            }
+            if (!data || data.length < 500) break;
+        }
+        if (!activeCloudContext(context)) return;
+        const local = readWatched(context.userId,context.animeId);
+        mergeWatched(context.userId,context.animeId,cloud);
+        paintWatched(context);
+        const missing = local.filter(marker=>validMarker(marker)&&!cloud.has(marker));
+        if (missing.length) await writeCloudWatched(context,missing);
+    }
+    function syncError(context) {
+        if (activeCloudContext(context))
+            showPlaybackStatus(context,'Отметки сохранены на этом устройстве. Облачная синхронизация временно недоступна.');
     }
     function isTyping(target) {
         return !!target?.closest?.('input, textarea, select, button, [contenteditable="true"], [role="textbox"]');
@@ -57,12 +133,16 @@
             const idx = Array.prototype.indexOf.call(buttons, button);
             const done = saved.has(context.season + ':' + idx);
             button.classList.toggle('komi-episode-watched', done);
-            if (done) button.title = 'Серия досмотрена на этом устройстве';
+            if (done) button.title = context.authId ? 'Серия досмотрена · синхронизация с аккаунтом' : 'Серия досмотрена на этом устройстве';
         }
     }
     function markCurrentWatched(context) {
-        if (!context?.userId) return;
-        if (addWatched(context.userId, context.animeId, context.season, context.index)) paintWatched(context);
+        if (!context?.userId || (context.ownerIsCurrent && !context.ownerIsCurrent())) return;
+        if (addWatched(context.userId, context.animeId, context.season, context.index)) {
+            paintWatched(context);
+            if (activeCloudContext(context))
+                void writeCloudWatched(context,[context.season+':'+context.index]).catch(()=>syncError(context));
+        }
     }
     function showPlaybackStatus(context, text) {
         if (context?.note) context.note.textContent = text;
@@ -90,6 +170,9 @@
             season: Number(settings.season) || 1,
             index: Number(settings.index) || 0,
             hasNext: !!settings.hasNext,
+            client:settings.client || null,
+            authId:settings.authId || null,
+            ownerIsCurrent:typeof settings.ownerIsCurrent === 'function' ? settings.ownerIsCurrent : null,
             skip: null, note: null
         };
         active = context;
@@ -164,6 +247,7 @@
         context.note = note;
         wrapper.after(bar, note);
         paintWatched(context);
+        if (activeCloudContext(context)) void loadCloudWatched(context).catch(()=>syncError(context));
         return context;
     }
 
@@ -211,7 +295,7 @@
         }
     }
     if (typeof document !== 'undefined') document.addEventListener('keydown', handleKeyboard);
-    const api = {mount,seekTarget,watchedStorageKey,readWatched,addWatched,handleKeyboard};
+    const api = {mount,seekTarget,watchedStorageKey,readWatched,addWatched,mergeWatched,validMarker,handleKeyboard,loadCloudWatched};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerUX = api;
 })(globalThis);

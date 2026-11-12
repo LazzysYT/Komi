@@ -53,6 +53,7 @@ async function get(table,fields){
    ['komi_anime_lists','user_id'],
    ['komi_favorites','user_id'],
    ['komi_watch_progress','user_id'],
+   ['komi_watched_episodes','user_id'],
    ['komi_custom_folders','user_id'],
    ['komi_folder_items','user_id'],
    ['komi_notifications','recipient_id'],
