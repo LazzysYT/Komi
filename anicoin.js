@@ -57,7 +57,7 @@ function renderAniCoinShop(container) {
     const owner = currentUser?.authUserId;
     const wallet = owner && owner === aniCoinOwner ? aniCoinWallet : null;
     container.innerHTML = `
-        <section class="anicoin-shop" aria-labelledby="anicoin-title">
+        <section id="shop" class="anicoin-shop" aria-labelledby="anicoin-title">
             <p class="komi-spotlight-eyebrow">Komi Anime</p>
             <h1 id="anicoin-title">Магазин AniCoin</h1>
             <p>За каждые 20 минут воспроизведения во встроенном видеоплеере начисляется 1 AniCoin. Паузы, перемотка и внешние плееры не учитываются.</p>

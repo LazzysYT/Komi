@@ -1613,6 +1613,10 @@ body > header {
 .komi-static-catalog .komi-seo-card{color:inherit;text-decoration:none}
 .komi-static-catalog .komi-seo-card ~ .komi-catalog-skeleton-card{display:none}
 .komi-static-catalog:has(.komi-seo-card) .komi-catalog-skeleton-label{display:none}
+.komi-static-catalog,.komi-static-shop{scroll-margin-top:92px}
+.komi-static-shop{margin-top:28px;padding:24px;border:1px solid var(--border);border-radius:18px;background:var(--bg-card)}
+.komi-static-shop h2{font-size:20px;line-height:1.4;margin:0 0 10px}
+.komi-static-shop p{color:var(--text-muted);line-height:1.6}
 </style>
 </head>
 <body>
@@ -1709,7 +1713,7 @@ body > header {
             </section>
             <section id="catalog" class="komi-static-catalog" aria-label="Каталог аниме">
                 <div class="section-header"><h2 class="section-title">Каталог аниме</h2></div>
-                <div id="anime-grid" class="anime-grid" aria-busy="true" aria-label="Загрузка каталога">
+                <div id="anime-grid" class="anime-grid" aria-busy="false" aria-label="Каталог аниме">
                 <a class="anime-card komi-seo-card" href="/anime/52991" aria-label="Открыть аниме Провожающая в последний путь Фрирен">
                     <div class="anime-poster-box"><img class="anime-poster" src="https://shikimori.io/uploads/poster/animes/52991/dc841cc9fce2aa1e9907a4b61c5d1d92.jpeg" width="180" height="270" loading="lazy" decoding="async" alt="Постер: Провожающая в последний путь Фрирен"></div>
                     <div class="anime-info"><div class="anime-title">Провожающая в последний путь Фрирен</div><div class="komi-card-meta"><span>2023</span><span>★ 9.25</span></div></div>
@@ -1854,14 +1858,11 @@ body > header {
                     <div class="anime-poster-box"><img class="anime-poster" src="https://shikimori.io/uploads/poster/animes/52215/edd76e69f9cf1b94740a318a57382da4.jpeg" width="180" height="270" loading="lazy" decoding="async" alt="Постер: О движении Земли"></div>
                     <div class="anime-info"><div class="anime-title">О движении Земли</div><div class="komi-card-meta"><span>2024</span><span>★ 8.72</span></div></div>
                 </a>
-                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
-                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
-                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
-                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
-                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
-                <div class="komi-catalog-skeleton-card" aria-hidden="true"></div>
                 </div>
-                <p class="komi-catalog-skeleton-label" role="status">Загружаем каталог аниме…</p>
+            </section>
+            <section id="shop" class="komi-static-shop" aria-labelledby="komi-static-shop-title">
+                <h2 id="komi-static-shop-title">Магазин AniCoin</h2>
+                <p>Магазин и баланс AniCoin доступны после загрузки сайта. Для покупок требуется вход в аккаунт.</p>
             </section>
         </main>
     </div>
@@ -3014,7 +3015,7 @@ async function loadDataFromCloud(attempt = 0) {
                     </section>`;
             } else if (currentView === 'shop') {
                 if (typeof renderAniCoinShop === 'function') renderAniCoinShop(container);
-                else container.innerHTML = '<section class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
+                else container.innerHTML = '<section id="shop" class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
             } else if (currentView === 'profile') {
                 if (slideInterval) clearInterval(slideInterval);
                 renderProfileView(container);
