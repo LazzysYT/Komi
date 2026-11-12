@@ -63,10 +63,38 @@ const base='http://127.0.0.1:8765/';
     ),null,{timeout:10000});
     const injected=await page.evaluate(()=>window.__injectedInlineRan);
     assert.equal(injected,undefined,'Arbitrary inline <script> should be blocked');
+    // Inline event attributes must also be blocked. The delegated dynamic
+    // action router remains usable because it never evaluates attribute text.
+    await page.evaluate(()=>{
+      const malicious=document.createElement('button');
+      malicious.setAttribute('onclick','window.__injectedHandlerRan=true');
+      malicious.textContent='Fake';
+      document.body.append(malicious);
+      malicious.click();
+      malicious.remove();
+    });
+    await page.waitForFunction(()=>window.__komiCspViolations.some(event=>
+      event.directive==='script-src-attr' &&
+      event.blocked==='inline'
+    ),null,{timeout:10000});
+    assert.equal(await page.evaluate(()=>window.__injectedHandlerRan),undefined,
+      'Inline HTML event attributes must be blocked in enforced CSP');
+    await page.locator('#sideCatalogBtn').click();
+    assert.equal(await page.evaluate(()=>currentView),'catalog');
+    await page.evaluate(()=>{
+      const element=document.createElement('button');
+      element.id='cspDynamicControl';
+      element.setAttribute('data-komi-onclick',"navigate('home')");
+      document.body.append(element);
+      element.click();
+      element.remove();
+    });
+    assert.equal(await page.evaluate(()=>currentView),'home',
+      'The delegated dynamic event router must remain usable under strict CSP');
     const violations=await page.evaluate(()=>window.__komiCspViolations);
     assert.ok(violations.some(v=>v.blocked.includes('untrusted-script.example.invalid')));
     assert.equal(errors.length,0,'CSP must not introduce app errors: '+errors.join('; '));
-    console.log('PASS enforced CSP: main app works, external and inline script injection blocked');
+    console.log('PASS strict CSP: app navigation works, external/inline scripts and injected onclick blocked');
   } finally {
     await browser.close();
   }
