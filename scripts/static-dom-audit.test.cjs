@@ -15,13 +15,20 @@ test('social links have inline icons and accessible names', () => {
   }
 });
 
-test('initial main DOM has a populated, accessible catalog loading shell', () => {
+test('initial main DOM has a populated, accessible static catalog and functional anchors', () => {
   const main = html.match(/<main id="mainContainer">([\s\S]*?)<\/main>/)?.[1];
   assert.ok(main);
   assert.match(main, /<section id="catalog"[^>]*aria-label="Каталог аниме"/);
-  assert.match(main, /<div id="anime-grid" class="anime-grid" aria-busy="true"/);
-  assert.ok((main.match(/class="komi-catalog-skeleton-card"/g) || []).length >= 4);
+  assert.match(main, /<div id="anime-grid" class="anime-grid" aria-busy="false"/);
+  assert.ok((main.match(/class="anime-card komi-seo-card"/g) || []).length >= 36);
+  assert.doesNotMatch(main, /Загружаем каталог аниме/);
+  assert.doesNotMatch(main, /class="komi-catalog-skeleton-card"/);
+  assert.match(main, /<section id="shop"[^>]*aria-labelledby="komi-static-shop-title"/);
+  assert.match(main, /href="#catalog"/);
+  assert.match(main, /href="#shop"/);
   assert.match(html, /function komiCatalogLoadingMarkup\(\)/);
+  // The transient placeholder is still used when live data really has no cards.
+  assert.match(html, /<div id="anime-grid" class="anime-grid" aria-busy="true" aria-label="Загрузка каталога">/);
 });
 
 test('all artwork placeholders are root absolute', () => {
