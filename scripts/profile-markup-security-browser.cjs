@@ -51,12 +51,12 @@ const assert=require('node:assert/strict');
         invalidSvgNodes:container.querySelectorAll('img[src^="javascript:"]').length,
         encodedText:container.innerHTML.includes('&lt;img src=x'),
         friendText:friend?.textContent||'',
-        friendHandler:friend?.getAttribute('onclick')||'',
+        friendHandler:friend?.getAttribute('data-komi-onclick')||'',
         folderText:folder?.textContent||'',
-        folderHandler:folder?.getAttribute('onclick')||'',
+        folderHandler:folder?.getAttribute('data-komi-onclick')||'',
         genreText,
         wallAvatar:container.querySelector('.wall-message-author img')?.getAttribute('src')||'',
-        wallHandlers:Array.from(container.querySelectorAll('[onclick]')).map(e=>e.getAttribute('onclick')),
+        wallHandlers:Array.from(container.querySelectorAll('[data-komi-onclick]')).map(e=>e.getAttribute('data-komi-onclick')),
       };
     }finally{
       currentUser=originals.currentUser;animeList=originals.animeList;
