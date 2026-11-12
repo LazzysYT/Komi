@@ -24,11 +24,11 @@ fs.mkdirSync(output,{recursive:true});
         assert.ok(response?.ok(),'Production HTTPS returned '+response?.status());
         if(width===1440) {
           const enforced=(response.headers()['content-security-policy']||'');
-          assert.match(enforced,/script-src-elem\\s+'self'\\s+https:\\/\\/cdn\\.jsdelivr\\.net/i,
+          assert.ok(enforced.includes("script-src-elem 'self' https://cdn.jsdelivr.net"),
             'Production must enforce allowed script elements, not only Report-Only');
           assert.doesNotMatch(enforced,/script-src-elem[^;]*'unsafe-inline'/i,
             'Inline <script> must remain blocked on the real domain');
-          assert.match(enforced,/script-src-attr\\s+'unsafe-inline'/i,
+          assert.ok(enforced.includes("script-src-attr 'unsafe-inline'"),
             'Legacy event-handler exception must be separately documented until migrated');
           const appResponse=await page.request.get(base+'app-main.js',{timeout:20000});
           assert.equal(appResponse.status(),200,'Public app-main.js must load after inline script extraction');
