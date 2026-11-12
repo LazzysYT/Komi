@@ -52,6 +52,7 @@ jobs:
           node scripts/profile-markup-security-browser.cjs
           node scripts/party-regression.cjs
           node scripts/browser-smoke.cjs
+          node scripts/csp-enforcement-browser.cjs
       - name: Smoke-test actual komianime.online as a signed-out visitor
         timeout-minutes: 4
         run: node scripts/live-domain-smoke.cjs
