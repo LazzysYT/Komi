@@ -386,3 +386,126 @@ main .komi-feature-section .anime-grid > .anime-card {scroll-snap-align:start;mi
   #komiFriendsDrawer .komi-friend-room-row {flex-wrap:wrap}
   #komiFriendsDrawer .komi-friend-room-join {margin-left:19px}
 }
+
+
+/* Clear five-item mobile navigation. Desktop left rail remains unchanged.
+   Secondary destinations stay available from the header More control. */
+.komi-mobile-more-toggle,.komi-mobile-more-menu {display:none}
+@media (max-width:767px) {
+  :root {--komi-rail-width:0px}
+  .komi-side-nav {
+    box-sizing:border-box !important;
+    position:fixed !important;inset:auto 0 0 0 !important;
+    z-index:102 !important;
+    display:flex !important;flex-direction:row !important;
+    justify-content:space-between !important;align-items:stretch !important;
+    gap:0 !important;width:100% !important;
+    height:calc(75px + env(safe-area-inset-bottom,0px)) !important;
+    padding:5px max(6px,env(safe-area-inset-left,0px))
+        max(6px,env(safe-area-inset-bottom,0px))
+        max(6px,env(safe-area-inset-right,0px)) !important;
+    overflow:visible !important;
+    background:rgba(10,11,16,.95) !important;
+    backdrop-filter:blur(16px) !important;
+    -webkit-backdrop-filter:blur(16px) !important;
+    border:0 !important;border-top:1px solid rgba(255,255,255,.1) !important;
+    box-shadow:0 -12px 35px rgba(0,0,0,.45);
+  }
+  .komi-side-nav .komi-side-logo {display:none !important}
+  .komi-side-nav .komi-side-links {
+    display:flex !important;flex-direction:row !important;
+    justify-content:space-around !important;align-items:stretch !important;
+    flex:4 1 80% !important;width:80% !important;min-width:0 !important;
+    gap:2px !important;
+  }
+  .komi-side-nav .komi-side-bottom {
+    display:flex !important;flex-direction:row !important;
+    justify-content:center !important;align-items:stretch !important;
+    flex:1 1 20% !important;width:20% !important;min-width:0 !important;
+    gap:0 !important;margin:0 !important;
+  }
+  /* Preserve access to these destinations through the header More button. */
+  .komi-side-nav .komi-side-links > :nth-child(3),
+  .komi-side-nav .komi-side-links > :nth-child(6),
+  .komi-side-nav .komi-side-links > :nth-child(7),
+  .komi-side-nav .komi-side-bottom > :first-child {display:none !important}
+  .komi-side-nav .komi-side-button {
+    display:flex !important;flex:1 1 0 !important;flex-direction:column !important;
+    align-items:center !important;justify-content:center !important;
+    min-width:0 !important;max-width:none !important;width:100% !important;
+    height:62px !important;min-height:57px !important;
+    padding:6px 2px !important;gap:4px !important;
+    border:1px solid transparent !important;border-radius:14px !important;
+    background:transparent !important;color:#aeb0bb !important;
+    transform:none !important;box-shadow:none !important;
+  }
+  .komi-side-nav .komi-side-button svg {
+    width:22px !important;height:22px !important;flex:0 0 22px;
+  }
+  .komi-side-nav .komi-side-button > span:not(#sidebarAvatarIcon) {
+    position:static !important;display:block !important;opacity:1 !important;
+    visibility:visible !important;transform:none !important;
+    width:auto !important;height:auto !important;
+    padding:0 !important;margin:0 !important;border:0 !important;
+    background:none !important;box-shadow:none !important;
+    color:inherit !important;font-size:10px !important;
+    font-weight:650 !important;line-height:1.1 !important;
+    white-space:nowrap !important;pointer-events:none !important;
+  }
+  .komi-side-nav .komi-side-account #sidebarAvatarIcon {
+    position:static !important;display:grid !important;place-items:center !important;
+    transform:none !important;width:22px !important;height:22px !important;
+    min-width:22px !important;border:0 !important;border-radius:50% !important;
+    padding:0 !important;opacity:1 !important;visibility:visible !important;
+    background:none !important;overflow:hidden;
+  }
+  .komi-side-nav .komi-side-account #sidebarAvatarIcon img {
+    width:22px !important;height:22px !important;object-fit:cover;
+  }
+  .komi-side-nav .komi-side-button[aria-current="page"],
+  .komi-side-nav .komi-side-button[aria-expanded="true"] {
+    background:rgba(255,69,79,.13) !important;
+    color:#ff747d !important;border-color:rgba(255,69,79,.24) !important;
+  }
+  .komi-side-nav .komi-side-button:focus-visible {
+    outline:2px solid #ff6875 !important;outline-offset:-2px !important;
+  }
+  body {padding-bottom:calc(88px + env(safe-area-inset-bottom,0px)) !important}
+  .header-inner {position:relative}
+  .komi-mobile-more-toggle {
+    position:absolute;top:5px;right:8px;z-index:1003;
+    display:flex !important;flex-direction:column;align-items:center;justify-content:center;
+    min-height:43px;min-width:45px;padding:3px 6px;
+    border-radius:13px;border:1px solid rgba(255,255,255,.14);
+    background:rgba(19,20,26,.88);color:#efeff2;cursor:pointer;
+    backdrop-filter:blur(12px);
+  }
+  .komi-mobile-more-toggle > span:first-child {font-size:26px;line-height:18px}
+  .komi-mobile-more-caption {font-size:10px;font-weight:650;line-height:15px}
+  .komi-mobile-more-toggle[aria-expanded="true"] {border-color:#ff6875}
+  .komi-mobile-more-menu {
+    position:fixed;top:67px;right:10px;z-index:1200;
+    display:grid !important;gap:4px;
+    width:min(280px,calc(100vw - 20px));
+    padding:9px;border:1px solid rgba(255,255,255,.12);
+    border-radius:17px;background:rgba(17,18,23,.98);
+    box-shadow:0 18px 55px rgba(0,0,0,.7);
+  }
+  .komi-mobile-more-menu[hidden] {display:none !important}
+  .komi-mobile-more-menu button {
+    cursor:pointer;min-height:43px;padding:10px 13px;text-align:left;
+    background:transparent;border:0;border-radius:10px;
+    color:#f1f1f3;font:650 13px/1.4 system-ui,sans-serif;
+  }
+  .komi-mobile-more-menu button:hover,
+  .komi-mobile-more-menu button:focus-visible {
+    background:rgba(255,69,79,.14);outline:2px solid rgba(255,69,79,.7);
+    outline-offset:0;
+  }
+}
+@media (max-width:355px) {
+  .komi-side-nav .komi-side-button > span:not(#sidebarAvatarIcon) {
+    font-size:9px !important;
+  }
+  .komi-side-nav .komi-side-button {padding-inline:1px !important}
+}

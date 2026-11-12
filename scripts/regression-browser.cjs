@@ -104,7 +104,12 @@ async function checkNotifications(page) {
    };
  });
  try {
-   await page.locator('.komi-side-button[title="Уведомления"]').click();
+   if (await page.locator('#komiMobileMoreToggle').isVisible()) {
+     await page.locator('#komiMobileMoreToggle').click();
+     await page.locator('[data-komi-mobile-extra="notifications"]').click();
+   } else {
+     await page.locator('.komi-side-button[title="Уведомления"]').click();
+   }
    const list = page.locator('#notifListContainer');
    await list.getByText('Сообщение <img src=x>', { exact:false }).waitFor();
    assert.equal(await list.locator('img').count(), 0);

@@ -54,6 +54,7 @@ jobs:
           node scripts/party-regression.cjs
           node scripts/friend-party-browser.cjs
           node scripts/player-ux-browser.cjs
+          node scripts/mobile-tab-bar-browser.cjs
           node scripts/browser-smoke.cjs
           node scripts/static-anchors-browser.cjs
           node scripts/csp-enforcement-browser.cjs

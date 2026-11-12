@@ -1653,6 +1653,18 @@ body > header {
             </div>
 
             <div class="nav-actions">
+                <button type="button" id="komiMobileMoreToggle" class="komi-mobile-more-toggle"
+                        aria-haspopup="true" aria-expanded="false" aria-controls="komiMobileMoreMenu"
+                        aria-label="Дополнительные разделы">
+                    <span aria-hidden="true">⋯</span><span class="komi-mobile-more-caption">Ещё</span>
+                </button>
+                <div id="komiMobileMoreMenu" class="komi-mobile-more-menu" role="group"
+                     aria-label="Дополнительные разделы" hidden>
+                    <button type="button" data-komi-mobile-extra="shop">Магазин AniCoin</button>
+                    <button type="button" data-komi-mobile-extra="party">Смотреть с друзьями</button>
+                    <button type="button" data-komi-mobile-extra="notifications">Уведомления</button>
+                    <button type="button" data-komi-mobile-extra="partners">Партнёры</button>
+                </div>
                 <button class="action-icon-btn" id="notifBellBtn" onclick="playSound(); toggleNotifications()" title="Уведомления">
                     ♧
                     <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
@@ -2020,6 +2032,7 @@ body > header {
     <script src="./app-main.js"></script>
     <script src="./komi-comments.js"></script>
     <script src="./accessibility.js"></script>
+    <script src="./mobile-nav.js"></script>
     <script src="./player-runtime.js"></script>
     <script src="./player-ux.js"></script>
     <script src="./anime-details.js"></script>
