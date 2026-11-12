@@ -367,3 +367,32 @@
   #watchModal.komi-lights-off .komi-watch-sidebar,
   #watchModal.komi-lights-off .komi-watch-controls {transition:none}
 }
+
+
+/* Native-video next episode preview: visible only during final 15 seconds. */
+#watchModal .player-wrapper {position:relative}
+#watchModal .komi-next-episode-preview {
+  position:absolute;right:12px;bottom:54px;z-index:5;
+  max-width:min(360px,calc(100% - 24px));padding:12px;
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  background:rgba(14,14,19,.94);border:1px solid rgba(255,255,255,.15);
+  border-radius:16px;box-shadow:0 12px 34px rgba(0,0,0,.65);
+  backdrop-filter:blur(14px);color:#f5f5f7;
+}
+#watchModal .komi-next-episode-preview[hidden] {display:none !important}
+#watchModal .komi-next-countdown {
+  display:block;flex:1 1 100%;font-size:12px;font-weight:750;color:#f3f3f5
+}
+#watchModal .komi-next-episode-preview .komi-cinema-action {
+  min-height:36px;padding:8px 11px;font-size:12px
+}
+#watchModal .komi-next-episode-preview .komi-next-now {
+  background:#d83345;border-color:#f35766;color:#fff
+}
+#watchModal .komi-next-episode-preview .komi-next-cancel {
+  background:#25242c;border-color:rgba(255,255,255,.14)
+}
+@media(max-width:570px) {
+  #watchModal .komi-next-episode-preview {right:8px;bottom:8px;padding:9px;gap:6px}
+  #watchModal .komi-next-episode-preview .komi-cinema-action {font-size:11px;min-height:32px}
+}
