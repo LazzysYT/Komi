@@ -327,3 +327,18 @@ main .komi-feature-section .anime-grid > .anime-card {scroll-snap-align:start;mi
   .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a {transition:none}
   .komi-seo-spotlight-art img {transform:none}
 }
+
+
+/* Discoverable search shortcut without shrinking the header input. */
+.search-container .search-bar {position:relative}
+.search-container .search-bar #searchInput {padding-right:68px !important}
+.search-container .search-bar .komi-search-shortcut {
+  position:absolute;right:11px;top:50%;transform:translateY(-50%);
+  padding:3px 7px;border:1px solid rgba(255,255,255,.15);border-radius:7px;
+  color:#aeb0ba;background:rgba(9,9,13,.75);pointer-events:none;
+  font:650 10px/1.4 system-ui,sans-serif;letter-spacing:.02em
+}
+@media(max-width:620px) {
+  .search-container .search-bar .komi-search-shortcut {display:none}
+  .search-container .search-bar #searchInput {padding-right:12px !important}
+}
