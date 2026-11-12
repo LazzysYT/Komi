@@ -1611,6 +1611,25 @@ async function loadDataFromCloud(attempt = 0) {
                 .replace(/&(?:#?x?[\w]+);/gi, ' ')
                 .replace(/[\u0000-\u001f\s]+/g, ' ').trim());
         }
+        // Shikimori's legacy REST image API exposes original and preview sizes.
+        // Prefer the smaller size in cards without rewriting saved anime metadata.
+        function komiCardPosterSource(raw) {
+            const original = komiSafeUrl(raw) || '/anime-artwork.svg';
+            const usePreview = /^https:\/\/shikimori\.(?:one|io)\/system\/animes\/original\/[0-9]+\.jpg(?:\?[0-9]+)?$/i.test(original);
+            const preferred = usePreview ? original.replace('/system/animes/original/', '/system/animes/preview/') : original;
+            return {preferred, original:usePreview ? original : ''};
+        }
+        function komiCardPosterFallback(img) {
+            if (!img) return;
+            const source = String(img.dataset?.posterOriginal || '');
+            if (source && !img.dataset.posterTriedOriginal && /^https:\/\//i.test(source)) {
+                img.dataset.posterTriedOriginal = '1';
+                img.src = source;
+                return;
+            }
+            img.onerror = null;
+            img.src = '/anime-artwork.svg';
+        }
         function renderCard(anime) {
             const year=komiAnimeYear(anime);
             const type=komiCatalogType(anime);
@@ -1620,7 +1639,9 @@ async function loadDataFromCloud(attempt = 0) {
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
-            const poster=escapeFriendHtml(komiSafeUrl(anime.poster) || komiSafeUrl(anime.banner) || '/anime-artwork.svg');
+            const posterSource=komiCardPosterSource(anime.poster || anime.banner);
+            const poster=escapeFriendHtml(posterSource.preferred);
+            const posterOriginalAttr=posterSource.original ? ' data-poster-original="'+escapeFriendHtml(posterSource.original)+'"' : '';
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
@@ -1628,7 +1649,7 @@ async function loadDataFromCloud(attempt = 0) {
                 'onclick="playSound();openWatchModal(\''+id+'\')" onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+(poster?'':' style="display:none"')+' onerror="this.onerror=null;this.src=\'/anime-artwork.svg\'">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterOriginalAttr+' onerror="komiCardPosterFallback(this)">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
