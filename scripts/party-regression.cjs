@@ -19,6 +19,7 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
     }
     if(action==='state') {assert.equal(owner,'host');Object.assign(state,args,{changed_at:new Date().toISOString()});}
     if(action==='invite') state.invited = args.username;
+    if(action==='chat') state.messages.push({author:owner,text:args.message});
     if(action==='close') return null;
     return {...state,server_now:new Date().toISOString()};
    });
@@ -38,6 +39,11 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
     Object.defineProperty(video,'readyState',{configurable:true,value:4});
     Object.defineProperty(video,'duration',{configurable:true,value:300});
     Object.defineProperty(video,'currentTime',{configurable:true,writable:true,value:0});
+    // Deterministic media controls: this checks synchronization without depending
+    // on a remote video CDN or browser autoplay permissions.
+    Object.defineProperty(video,'paused',{configurable:true,writable:true,value:true});
+    video.play=async()=>{video.paused=false;};
+    video.pause=()=>{video.paused=true;};
     video.dispatchEvent(new Event('loadedmetadata'));
    },{owner,state:{...state,server_now:new Date().toISOString()}});
   }
@@ -76,6 +82,30 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   await pages[0].evaluate(()=>{const video=document.getElementById('partyVideoElement');video.currentTime=85;video.dispatchEvent(new Event('seeked'));});
   await pages[1].waitForFunction(()=>Math.abs(document.getElementById('partyVideoElement').currentTime-85)<0.2);
   assert.equal(state.position,85);
+  // A host play/pause transition must reach the other browser.
+  await pages[0].evaluate(()=>{
+    const video=document.getElementById('partyVideoElement');
+    video.paused=false;
+    video.dispatchEvent(new Event('playing'));
+  });
+  await pages[1].waitForFunction(()=>!document.getElementById('partyVideoElement').paused,{timeout:10000});
+  assert.equal(state.playing,true,'Host playing state must reach server');
+  await pages[0].evaluate(()=>{
+    const video=document.getElementById('partyVideoElement');
+    video.paused=true;
+    video.dispatchEvent(new Event('pause'));
+  });
+  await pages[1].waitForFunction(()=>document.getElementById('partyVideoElement').paused,{timeout:10000});
+  assert.equal(state.playing,false,'Host pause state must reach server');
+  // Both sides can send chat messages, but untrusted text must stay inert.
+  await pages[0].locator('#partyChat input').fill('Сообщение ведущего');
+  await pages[0].locator('#partyChat button').click();
+  await pages[1].locator('#partyChatBox').getByText('host: Сообщение ведущего').waitFor({timeout:10000});
+  await pages[1].locator('#partyChat input').fill('Тест <img src=x onerror=alert(1)>');
+  await pages[1].locator('#partyChat button').click();
+  await pages[0].locator('#partyChatBox').getByText('viewer: Тест <img src=x onerror=alert(1)>').waitFor({timeout:10000});
+  assert.equal(await pages[0].locator('#partyChatBox img').count(),0,'Chat must not turn message text into HTML');
+  assert.equal(state.messages.length,2,'Both messages must reach the server');
   await pages[0].selectOption('#partyEpisode','1');
   await pages[1].waitForFunction(()=>document.getElementById('partyEmbedElement').getAttribute('src')==='https://media.test/player?a=1&b=2');
   assert.equal(state.source,'Embed');assert.equal(state.position,0);
@@ -98,6 +128,6 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   assert.equal(roomCreates,1,'Enter-style duplicate submits must create only one room');
   assert.deepEqual(submitErrors,[],'Submitting without event.submitter must not throw');
   await hostPage.evaluate(()=>leaveWatchPartyRoom());
-  console.log('PASS two browser clients: seek, paused state, source switch, entity decoding, leave cleanup and guarded Enter room submission (mock RPC/media)');
+  console.log('PASS two browser clients: seek, play/pause, bidirectional safe chat, source switch, entity decoding, leave cleanup and guarded Enter room submission (mock RPC/media)');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
