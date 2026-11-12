@@ -42,3 +42,19 @@ test('Watch Party rejects unsafe links without claiming they can synchronize',()
     assert.equal(result.length,1);
     assert.equal(result[0].source,'Safe');
 });
+
+test('Watch Party excludes catalog demo movie stand-ins, not real iframe sources',()=>{
+    const sample='https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4';
+    const result=options([{
+        season:1,number:1,
+        sources:{
+            'Kodik (Ожидает ссылки)':sample,
+            'Old test stream':sample,
+            'External':'https://example.test/player/real-series',
+            'Native':'https://example.test/real-episode.mp4'
+        }
+    }]);
+    assert.deepEqual(Array.from(result,x=>x.source),['Native','External']);
+    assert.equal(result[0].synchronized,true);
+    assert.equal(result[1].synchronized,false);
+});

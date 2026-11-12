@@ -19,6 +19,11 @@ function partyOptions(anime) {
         return entries.flatMap(([source, rawUrl]) => {
             const {kind, url} = KomiPlayerCore.source(rawUrl);
             if (!url) return [];
+            // Legacy imports contain a fake "Kodik (Ожидает ссылки)" source
+            // pointing to a public demo movie, not an episode of this anime.
+            // Never show a stand-in as synchronized playable content.
+            if (/ожидает\s*ссылк|заглушк|placeholder/iu.test(String(source)) ||
+                /^https:\/\/(?:commondatastorage|storage)\.googleapis\.com\/gtv-videos-bucket\/sample\//i.test(url)) return [];
             const synchronized = kind === 'video' || kind === 'hls';
             return [{
                 episode: index, source, url, synchronized,
