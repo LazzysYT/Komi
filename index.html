@@ -1633,7 +1633,7 @@ body > header {
                 </a>
             </nav>
             <div class="logo-area">
-                <div class="logo-container" onclick="playSound(); navigate('home')">
+                <div class="logo-container" data-komi-click="nav-home">
                     <div class="logo-box">K</div>
                     <div class="logo-text">Komi Anime</div>
                 </div>
@@ -1646,7 +1646,7 @@ body > header {
             <div class="search-container">
                 <div class="search-bar">
                     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Название аниме или жанр..." oninput="handleInstantSearch(this.value)" onfocus="showSearchDropdown()">
+                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Название аниме или жанр..." data-komi-input="search-input" data-komi-focus="search-focus">
                     <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
                 </div>
                 <div class="search-dropdown" id="searchDropdown"></div>
@@ -1665,27 +1665,27 @@ body > header {
                     <button type="button" data-komi-mobile-extra="notifications">Уведомления</button>
                     <button type="button" data-komi-mobile-extra="partners">Партнёры</button>
                 </div>
-                <button class="action-icon-btn" id="notifBellBtn" onclick="playSound(); toggleNotifications()" title="Уведомления">
+                <button class="action-icon-btn" id="notifBellBtn" data-komi-click="notifications" title="Уведомления">
                     ♧
                     <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
                 </button>
                 <div class="notification-dropdown" id="notifDropdown">
                     <div class="notif-header">
                         <span>Уведомления</span>
-                        <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" id="markNotificationsReadBtn" type="button" onclick="markNotificationsRead()" disabled>Отметить прочитанными</button>
+                        <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" id="markNotificationsReadBtn" type="button" data-komi-click="notifications-read" disabled>Отметить прочитанными</button>
                     </div>
                     <div class="notif-list" id="notifListContainer">
                         <div style="padding:12px; text-align:center; color:var(--text-muted); font-size:11px;">Нет новых уведомлений</div>
                     </div>
                 </div>
 
-                <button class="nav-btn" id="navHomeBtn" onclick="playSound(); navigate('home')">Главная</button>
-                <button class="nav-btn" id="navCatalogBtn" onclick="playSound(); navigate('catalog')">Каталог</button>
-                <button class="action-icon-btn" id="headerRandomBtn" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме">◇</button>
-                <button class="action-icon-btn" id="headerPartyBtn" onclick="playSound(); openWatchPartyHub()" style="background:rgba(234,234,234,0.12); border-color:rgba(234,234,234,0.3); color:var(--primary);" title="Watch Party"> Party</button>
+                <button class="nav-btn" id="navHomeBtn" data-komi-click="nav-home">Главная</button>
+                <button class="nav-btn" id="navCatalogBtn" data-komi-click="nav-catalog">Каталог</button>
+                <button class="action-icon-btn" id="headerRandomBtn" data-komi-click="random" title="Случайное аниме">◇</button>
+                <button class="action-icon-btn" id="headerPartyBtn" data-komi-click="watch-party" style="background:rgba(234,234,234,0.12); border-color:rgba(234,234,234,0.3); color:var(--primary);" title="Watch Party"> Party</button>
                 
-                <button class="action-icon-btn" id="adminPanelBtn" onclick="playSound(); openAdminPanel()" style="display: none;" title="Админка"></button>
-                <button class="action-icon-btn" id="addAnimeBtn" onclick="playSound(); openAddModal()" style="display: none;" title="Добавить">+ Добавить</button>
+                <button class="action-icon-btn" id="adminPanelBtn" data-komi-click="admin-panel" style="display: none;" title="Админка"></button>
+                <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
 
                 <div id="userHeaderArea"></div>
             </div>
@@ -1693,26 +1693,26 @@ body > header {
     </header>
 
     <aside class="komi-side-nav" aria-label="Навигация Komi">
-        <button class="komi-side-logo" onclick="playSound(); navigate('home')" title="Komi Anime">K</button>
+        <button class="komi-side-logo" data-komi-click="nav-home" title="Komi Anime">K</button>
         <div class="komi-side-links">
-            <button id="sideHomeBtn" class="komi-side-button" onclick="playSound(); navigate('home')" title="Главная" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10m5 10v-7h6v7"/></svg><span>Главная</span></button>
-            <button id="sideCatalogBtn" class="komi-side-button" onclick="playSound(); navigate('catalog')" title="Каталог" aria-label="Каталог"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Каталог</span></button>
-            <button id="sideShopBtn" class="komi-side-button" onclick="openAniCoinShop()" title="Магазин AniCoin" aria-label="Магазин AniCoin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 13H5L4 8Zm5 1V6a3 3 0 0 1 6 0v3"/></svg><span>Магазин</span></button>
-            <button class="komi-side-button" onclick="playSound(); randomAnimeWithAnimation()" title="Случайное аниме" aria-label="Случайное аниме"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg><span>Случайное</span></button>
-            <button id="sideFriendsBtn" class="komi-side-button" onclick="playSound(); toggleFriendsDrawer()" title="Люди и друзья" aria-label="Люди и друзья" aria-expanded="false" aria-controls="komiFriendsDrawer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg><span>Друзья</span></button>
-            <button class="komi-side-button" onclick="playSound(); openWatchPartyHub()" title="Watch Party" aria-label="Watch Party"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Party</span></button>
-            <button id="sidePartnersBtn" class="komi-side-button" onclick="playSound(); navigate('partners')" title="Партнёры" aria-label="Партнёры"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="8.5" height="10" rx="2"/><rect x="13" y="7" width="8.5" height="10" rx="2"/><path d="M10.5 12h3"/></svg><span>Партнёры</span></button>
+            <button id="sideHomeBtn" class="komi-side-button" data-komi-click="nav-home" title="Главная" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10m5 10v-7h6v7"/></svg><span>Главная</span></button>
+            <button id="sideCatalogBtn" class="komi-side-button" data-komi-click="nav-catalog" title="Каталог" aria-label="Каталог"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Каталог</span></button>
+            <button id="sideShopBtn" class="komi-side-button" data-komi-click="shop" title="Магазин AniCoin" aria-label="Магазин AniCoin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 13H5L4 8Zm5 1V6a3 3 0 0 1 6 0v3"/></svg><span>Магазин</span></button>
+            <button class="komi-side-button" data-komi-click="random" title="Случайное аниме" aria-label="Случайное аниме"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg><span>Случайное</span></button>
+            <button id="sideFriendsBtn" class="komi-side-button" data-komi-click="friends" title="Люди и друзья" aria-label="Люди и друзья" aria-expanded="false" aria-controls="komiFriendsDrawer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg><span>Друзья</span></button>
+            <button class="komi-side-button" data-komi-click="watch-party" title="Watch Party" aria-label="Watch Party"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Party</span></button>
+            <button id="sidePartnersBtn" class="komi-side-button" data-komi-click="partners" title="Партнёры" aria-label="Партнёры"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="8.5" height="10" rx="2"/><rect x="13" y="7" width="8.5" height="10" rx="2"/><path d="M10.5 12h3"/></svg><span>Партнёры</span></button>
         </div>
         <div class="komi-side-bottom">
-            <button class="komi-side-button" onclick="playSound(); toggleNotifications()" title="Уведомления" aria-label="Уведомления"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg><span>Уведомления</span></button>
-            <button class="komi-side-button komi-side-account" onclick="playSound(); if(currentUser) openProfile(currentUser.username); else openAuthModal('login')" title="Профиль" aria-label="Профиль"><span id="sidebarAvatarIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></span><span>Профиль</span></button>
+            <button class="komi-side-button" data-komi-click="notifications" title="Уведомления" aria-label="Уведомления"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg><span>Уведомления</span></button>
+            <button class="komi-side-button komi-side-account" data-komi-click="profile" title="Профиль" aria-label="Профиль"><span id="sidebarAvatarIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></span><span>Профиль</span></button>
         </div>
     </aside>
-    <div id="komiFriendsBackdrop" class="komi-friends-backdrop" onclick="closeFriendsDrawer()"></div>
+    <div id="komiFriendsBackdrop" class="komi-friends-backdrop" data-komi-click="friends-close"></div>
     <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" inert>
-        <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" onclick="closeFriendsDrawer()" aria-label="Закрыть">✕</button></div>
-        <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." oninput="renderFriendsDrawer()" autocomplete="off" aria-label="Поиск по нику"></div>
-        <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" onclick="setFriendsDrawerTab('all')">Все пользователи</button><button id="komiFriendsMyTab" onclick="setFriendsDrawerTab('friends')">Мои друзья</button></div>
+        <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" data-komi-click="friends-close" aria-label="Закрыть">✕</button></div>
+        <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." data-komi-input="friends-search" autocomplete="off" aria-label="Поиск по нику"></div>
+        <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" data-komi-click="friends-all">Все пользователи</button><button id="komiFriendsMyTab" data-komi-click="friends-following">Мои друзья</button></div>
         <section id="komiFriendRoomsSection" class="komi-friend-rooms-section" aria-label="Комнаты друзей" hidden>
             <div class="komi-friend-rooms-heading"><strong>Смотрят вместе</strong><button type="button" id="komiFriendRoomsRefresh">Обновить</button></div>
             <div id="komiFriendRoomsList" aria-live="polite" aria-relevant="additions text"></div>
@@ -1867,7 +1867,7 @@ body > header {
                     <div class="anime-info"><div class="anime-title">Волейбол!! 3</div><div class="komi-card-meta"><span>2016</span><span>★ 8.77</span></div></div>
                 </a>
                 <a class="anime-card komi-seo-card" href="/anime/39894" aria-label="Открыть аниме Звучи, эуфониум! 3">
-                    <div class="anime-poster-box"><img class="anime-poster" src="https://shikimori.one/system/animes/preview/39894.jpg?1718615729" data-poster-original="https://shikimori.one/system/animes/original/39894.jpg?1718615729" width="180" height="270" loading="lazy" decoding="async" alt="Постер: Звучи, эуфониум! 3" onerror="komiCardPosterFallback(this)"></div>
+                    <div class="anime-poster-box"><img class="anime-poster" src="https://shikimori.one/system/animes/preview/39894.jpg?1718615729" data-poster-original="https://shikimori.one/system/animes/original/39894.jpg?1718615729" width="180" height="270" loading="lazy" decoding="async" alt="Постер: Звучи, эуфониум! 3" data-komi-error="poster-error"></div>
                     <div class="anime-info"><div class="anime-title">Звучи, эуфониум! 3</div><div class="komi-card-meta"><span>2024</span><span>★ 8.73</span></div></div>
                 </a>
                 <a class="anime-card komi-seo-card" href="/anime/48569" aria-label="Открыть аниме Восемьдесят шесть. Часть 2">
@@ -1904,19 +1904,19 @@ body > header {
     <template id="komiAdminAnimeModalTemplate">
     <div class="modal-overlay" id="addModal">
         <div class="modal-content" style="max-width: 650px;">
-            <button class="modal-close" onclick="playSound(); closeAddModal()">&times;</button>
+            <button class="modal-close" data-komi-click="anime-close">&times;</button>
             <h2 id="modalTitleText" style="margin-bottom: 12px; font-size: 18px;">Добавить / Редактировать аниме</h2>
             
             <div style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px;">
                 <div style="display: flex; gap: 6px;">
                     <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (Shikimori)...">
-                    <button type="button" class="btn-secondary" onclick="searchAnimeFromAPI()"> Найти</button>
-                    <button type="button" class="btn-glow" onclick="importTopSeasonalAnime()"> Топ</button>
+                    <button type="button" class="btn-secondary" data-komi-click="anime-search"> Найти</button>
+                    <button type="button" class="btn-glow" data-komi-click="anime-import"> Топ</button>
                 </div>
                 <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; padding: 4px;"></div>
             </div>
 
-            <form id="animeForm" novalidate onsubmit="saveAnimeForm(event)">
+            <form id="animeForm" novalidate data-komi-submit="anime-submit">
                 <input type="hidden" id="editAnimeId">
                 <div class="form-group">
                     <label for="animeShikimoriId">Shikimori ID (числовой)</label>
@@ -1960,9 +1960,9 @@ body > header {
                 <div class="form-group">
                     <label>Эпизоды</label>
                     <div id="episodesList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:6px;"></div>
-                    <button type="button" class="btn-secondary" onclick="playSound(); addEpisodeField()">+ Добавить эпизод</button>
+                    <button type="button" class="btn-secondary" data-komi-click="episode-add">+ Добавить эпизод</button>
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" onclick="playSound()">Сохранить</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" data-komi-click="sound">Сохранить</button>
             </form>
         </div>
     </div>
@@ -1970,15 +1970,15 @@ body > header {
 
     <div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 360px;">
-            <button class="modal-close" onclick="playSound(); closeAuthModal()">&times;</button>
+            <button class="modal-close" data-komi-click="auth-close">&times;</button>
             <div style="display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
-                <button type="button" class="season-tab-btn active" id="tabLoginBtn" onclick="playSound(); switchAuthTab('login')">Вход</button>
-                <button type="button" class="season-tab-btn" id="tabRegisterBtn" onclick="playSound(); switchAuthTab('register')">Регистрация</button>
+                <button type="button" class="season-tab-btn active" id="tabLoginBtn" data-komi-click="auth-login">Вход</button>
+                <button type="button" class="season-tab-btn" id="tabRegisterBtn" data-komi-click="auth-register">Регистрация</button>
             </div>
 
-            <button type="button" class="komi-google-btn" onclick="showGoogleAuthInfo()"> <span class="komi-google-g">G</span> Продолжить через Google</button>
+            <button type="button" class="komi-google-btn" data-komi-click="auth-google"> <span class="komi-google-g">G</span> Продолжить через Google</button>
             <div class="komi-auth-separator">или через аккаунт Komi</div>
-            <form id="loginFormContainer" novalidate onsubmit="handleLoginSubmit(event)">
+            <form id="loginFormContainer" novalidate data-komi-submit="login-submit">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
                 <div class="form-group">
                     <label for="loginUsername">Email</label>
@@ -1988,10 +1988,10 @@ body > header {
                     <label>Пароль</label>
                     <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" onclick="playSound()">Войти</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" data-komi-click="sound">Войти</button>
             </form>
 
-            <form id="registerFormContainer" novalidate onsubmit="handleRegisterSubmit(event)" style="display: none;">
+            <form id="registerFormContainer" novalidate data-komi-submit="register-submit" style="display: none;">
                 <h2 style="margin-bottom: 12px; font-size: 16px;">Регистрация</h2>
                 <div class="form-group">
                     <label for="regUsername">Никнейм</label>
@@ -2005,7 +2005,7 @@ body > header {
                     <label>Пароль</label>
                     <input type="password" class="form-control" id="regPassword" required minlength="12" autocomplete="new-password" aria-describedby="komiPasswordHint" placeholder="Минимум 12 символов"><p id="komiPasswordHint" style="color:var(--text-muted);font-size:12px;margin-top:6px;">Используйте уникальную длинную парольную фразу. Пароли существующих аккаунтов не изменяются.</p>
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" onclick="playSound()">Создать аккаунт</button>
+                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" data-komi-click="sound">Создать аккаунт</button>
             </form>
         </div>
     </div>
@@ -2018,8 +2018,8 @@ body > header {
             </div>
             <div id="rouletteTitle" role="status" aria-live="polite" style="font-weight: 700; font-size: 13px; color: white;">Загрузка...</div>
             <div class="komi-roulette-actions">
-                <button type="button" id="rouletteRetry" class="btn-secondary" onclick="randomAnimeWithAnimation()" hidden>Попробовать снова</button>
-                <button type="button" class="btn-secondary" onclick="closeKomiRoulette()">Закрыть</button>
+                <button type="button" id="rouletteRetry" class="btn-secondary" data-komi-click="random-try" hidden>Попробовать снова</button>
+                <button type="button" class="btn-secondary" data-komi-click="random-close">Закрыть</button>
             </div>
         </div>
     </div>
@@ -2031,6 +2031,7 @@ body > header {
     <script src="./player-core.js"></script>
     <script src="./app-main.js"></script>
     <script src="./komi-comments.js"></script>
+    <script src="./static-ui-events.js"></script>
     <script src="./accessibility.js"></script>
     <script src="./mobile-nav.js"></script>
     <script src="./player-runtime.js"></script>
