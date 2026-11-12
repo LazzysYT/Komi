@@ -19,6 +19,17 @@ test('production CSP enforces external script boundaries instead of report-only'
   assert.ok(directives['script-src'].includes('https://cdn.jsdelivr.net'));
   assert.ok(!directives['script-src'].includes('https:')&&!directives['script-src'].includes('*'));
   assert.ok(!directives['script-src'].includes("'unsafe-eval'"));
+  assert.ok(!directives['script-src'].includes("'unsafe-inline'"));
+  assert.ok(!directives['script-src-elem'].includes("'unsafe-inline'"));
+  assert.ok(directives['script-src-elem'].includes("'self'"));
+  // Legacy onclick/oninput attributes require a separate migration; they
+  // are allowed only under script-src-attr, not for arbitrary <script> tags.
+  assert.deepEqual(directives['script-src-attr'],["'unsafe-inline'"]);
+  const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+  const app=fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
+  assert.ok(app.length>100000);
+  assert.match(html,/<script src="\.\/app-main\.js"><\/script>/);
+  assert.doesNotMatch(html,/<script\s*>[\s\S]*?<\/script>/);
   assert.ok(directives['style-src'].includes('https://fonts.googleapis.com'));
   assert.ok(directives['font-src'].includes('https://fonts.gstatic.com'));
   assert.ok(directives['worker-src'].includes('blob:'),'hls.js media workers must remain allowed');

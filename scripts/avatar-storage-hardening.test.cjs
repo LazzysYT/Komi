@@ -3,7 +3,7 @@ const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
 const sql=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261112105600_restrict_avatar_uploads.sql'),'utf8');
-const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
 
 test('anonymous avatar upload path is removed while owner folder remains usable',()=>{
   assert.match(sql,/drop\s+policy\s+if\s+exists\s+"Komi public avatar uploads"\s+on\s+storage\.objects/i);

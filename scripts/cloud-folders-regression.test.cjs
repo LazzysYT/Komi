@@ -1,6 +1,6 @@
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const test=require('node:test'),assert=require('node:assert/strict');
-const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
 function segment(a,b){const x=html.indexOf(a),y=html.indexOf(b,x);assert.ok(x>=0&&y>x,'Missing '+a);return html.slice(x,y)}
 const folderActions=segment('const pendingFolderWrites = new Set();','        async function postToProfileWall(');
 const folderItems=segment('async function addToCustomFolder(', '        // Supabase-owned data is loaded');
