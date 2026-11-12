@@ -25,7 +25,7 @@
         if (!key) return [];
         try {
             const parsed = JSON.parse(root.localStorage.getItem(key) || '[]');
-            return Array.isArray(parsed) ? parsed.filter(s => /^\d{1,3}:\d{1,5}$/.test(s)).slice(0, 1800) : [];
+            return Array.isArray(parsed) ? parsed.filter(s => /^\d{1,4}:\d{1,5}$/.test(s)).slice(0, 1800) : [];
         } catch { return []; }
     }
     function addWatched(userId, animeId, season, index) {
@@ -40,7 +40,7 @@
         return true;
     }
     function validMarker(marker) {
-        const match = /^(\\d{1,4}):(\\d{1,5})$/.exec(String(marker));
+        const match = /^(\d{1,4}):(\d{1,5})$/.exec(String(marker));
         if (!match) return false;
         const season = Number(match[1]);
         const index = Number(match[2]);
@@ -56,7 +56,7 @@
     }
     function cloudEnabled(context) {
         return !!context?.client?.from && !!context.authId &&
-            context.authId === context.userId && /^\\d+$/.test(context.animeId) &&
+            context.authId === context.userId && /^\d+$/.test(context.animeId) &&
             (!context.ownerIsCurrent || context.ownerIsCurrent());
     }
     function activeCloudContext(context) {
@@ -137,7 +137,7 @@
         }
     }
     function markCurrentWatched(context) {
-        if (!context?.userId) return;
+        if (!context?.userId || (context.ownerIsCurrent && !context.ownerIsCurrent())) return;
         if (addWatched(context.userId, context.animeId, context.season, context.index)) {
             paintWatched(context);
             if (activeCloudContext(context))
