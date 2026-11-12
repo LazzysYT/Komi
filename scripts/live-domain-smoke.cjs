@@ -22,6 +22,30 @@ fs.mkdirSync(output,{recursive:true});
       try {
         const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
         assert.ok(response?.ok(),'Production HTTPS returned '+response?.status());
+        if(width===1440) {
+          const enforced=(response.headers()['content-security-policy']||'');
+          assert.match(enforced,/script-src-elem\\s+'self'\\s+https:\\/\\/cdn\\.jsdelivr\\.net/i,
+            'Production must enforce allowed script elements, not only Report-Only');
+          assert.doesNotMatch(enforced,/script-src-elem[^;]*'unsafe-inline'/i,
+            'Inline <script> must remain blocked on the real domain');
+          assert.match(enforced,/script-src-attr\\s+'unsafe-inline'/i,
+            'Legacy event-handler exception must be separately documented until migrated');
+          const appResponse=await page.request.get(base+'app-main.js',{timeout:20000});
+          assert.equal(appResponse.status(),200,'Public app-main.js must load after inline script extraction');
+          assert.match(appResponse.headers()['content-type']||'',/javascript/i);
+          assert.ok((await appResponse.body()).length>100000,'Main app script appears truncated');
+          // This changes only the in-memory test page. No user account or
+          // server data is touched.
+          await page.evaluate(()=>{
+            window.__liveCspInlineProbe=false;
+            const inline=document.createElement('script');
+            inline.textContent='window.__liveCspInlineProbe=true';
+            document.body.appendChild(inline);
+          });
+          assert.equal(await page.evaluate(()=>window.__liveCspInlineProbe),false,
+            'Live production CSP must block injected inline JavaScript');
+          console.log('PASS production security headers, external main JS and enforced inline-script block');
+        }
         await page.waitForFunction(()=>typeof catalogInitialLoadComplete!=='undefined' && catalogInitialLoadComplete,null,{timeout:75000});
         await page.waitForSelector('#mainContainer .anime-card',{timeout:30000});
         const initial=await page.evaluate(()=>{
