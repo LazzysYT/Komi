@@ -57,6 +57,9 @@ jobs:
       - name: Smoke-test actual komianime.online as a signed-out visitor
         timeout-minutes: 4
         run: node scripts/live-domain-smoke.cjs
+      - name: Check live public Supabase API exposes no private tables
+        timeout-minutes: 3
+        run: node scripts/live-anon-api-security.cjs
       - name: Require dedicated test accounts for manual Auth E2E
         if: ${{ github.event_name == 'workflow_dispatch' }}
         shell: bash
