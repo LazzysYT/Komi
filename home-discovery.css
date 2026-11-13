@@ -373,11 +373,19 @@ body > header > .header-inner{
   .header-inner .search-container{
     grid-column:2!important;grid-row:1!important;max-width:none!important;min-width:0!important;
   }
-  .header-inner .komi-header-left{grid-column:3!important;grid-row:1!important;max-width:85px!important}
+  .header-inner .komi-header-left{grid-column:3!important;grid-row:1!important;max-width:none!important}
   .header-inner .komi-header-left .nav-actions{gap:5px!important}
-  .header-inner #headerPartyBtn,.header-inner #komiHeaderAniCoin,
   .header-inner #adminPanelBtn,.header-inner #addAnimeBtn{display:none!important}
-  .header-inner #notifBellBtn{display:none!important}
+  .header-inner #headerPartyBtn,.header-inner #komiHeaderAniCoin,
+  .header-inner #notifBellBtn{
+    display:inline-flex!important;width:32px!important;min-width:32px!important;
+    height:35px!important;min-height:35px!important;padding:0!important;
+    font-size:0!important;
+  }
+  .header-inner #headerPartyBtn::after{content:'◇';font-size:18px}
+  .header-inner #komiHeaderAniCoinValue{display:none!important}
+  .header-inner .komi-header-balance-icon{font-size:19px}
+  .header-inner #notifBellBtn{font-size:16px!important}
   .header-inner .search-bar{height:39px!important;min-height:39px!important}
   .header-inner .search-bar input{font-size:11px!important}
   .header-inner .search-bar .komi-search-shortcut{display:none}
@@ -432,7 +440,10 @@ body > header > .header-inner{
   .komi-side-nav .komi-side-button[aria-current="page"]{
     color:#FF454F!important;background:#29202B!important;
   }
-  body .app-layout,body #mainAppLayoutContainer{padding-bottom:calc(78px + env(safe-area-inset-bottom))!important}
+  body .app-layout,body #mainAppLayoutContainer{
+    margin-left:0!important;width:100%!important;max-width:100%!important;
+    padding-bottom:calc(78px + env(safe-area-inset-bottom))!important
+  }
   .komi-home-hero .hero-slider-container{height:385px!important;border-radius:19px!important}
   .komi-home-hero .hero-slide{padding:26px 21px 44px!important}
   .komi-home-hero .hero-slide::before{
