@@ -174,7 +174,11 @@
       context.calendar() +
       (films.length?shelf('Лучшие фильмы','Истории, которые помещаются в один сеанс',films,'movies',context.renderCard,'komi-home-films'):'') +
       context.years() +
-      '<div class="komi-home-browse-footer">'+context.intro()+'</div>' +
+      '<div class="komi-home-browse-footer">'+context.intro()+
+      '<nav class="komi-home-support-links" aria-label="Дополнительные разделы Komi">'+
+      '<button type="button" data-komi-onclick="navigate(\'partners\')">Партнёры</button>'+
+      '<a href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer">TikTok</a>'+
+      '<a href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer">Telegram</a></nav></div>' +
       '</div>';
   }
   function afterRender(container) {
