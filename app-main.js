@@ -689,7 +689,14 @@ async function loadDataFromCloud(attempt = 0) {
             const area = document.getElementById('userHeaderArea');
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
             const headerCoin = document.getElementById('komiHeaderAniCoin');
-            if (headerCoin) headerCoin.hidden = !currentUser?.authUserId;
+            if (headerCoin) {
+                const loggedIn = Boolean(currentUser?.authUserId);
+                headerCoin.hidden = !loggedIn;
+                if (!loggedIn) window.komiHeaderAniCoinOwner = null;
+                const balanceLabel = document.getElementById('komiHeaderAniCoinValue');
+                if (balanceLabel && (!loggedIn || window.komiHeaderAniCoinOwner !== currentUser.authUserId))
+                    balanceLabel.textContent = '—';
+            }
             if (sidebarAvatarIcon) {
                 const avatar = currentUser && (userProfiles[currentUser.username]?.avatar || (!currentUser.authUserId && localStorage.getItem('komi_avatar_' + currentUser.username)));
                 if (avatar) {
