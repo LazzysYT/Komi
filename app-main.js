@@ -3365,7 +3365,9 @@ async function loadDataFromCloud(attempt = 0) {
                 ownerIsCurrent:() => (currentUser?.authUserId || currentUser?.username || '') === watchedLocalOwner,
                 season:activeSeason,
                 index:activeIndex,
-                hasNext
+                hasNext,
+                displayNumber,
+                originalIndex: currentEp.originalIdx
             });
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
