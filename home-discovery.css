@@ -1,0 +1,479 @@
+/* Komi Discovery: UX-informed density, original Komi palette.
+   Scoped home + header. Existing DB, auth and event attributes remain untouched. */
+:root{
+  --bg-main:#09090D;
+  --bg-card:#12141D;
+  --bg-input:#171923;
+  --border:rgba(255,255,255,.07);
+  --primary:#FF454F;
+  --glow:rgba(255,69,79,.17);
+  --text-main:#F5F6FA;
+  --text-muted:#9CA3AF;
+}
+body{background:#09090D;color:#F5F6FA;font-family:'Inter',sans-serif}
+h1,h2,h3,.section-title,.anime-title,.hero-slide h1,.logo-text{
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-weight:800;letter-spacing:-.035em
+}
+#onlineCountText,.online-counter,.komi-card-meta,.anime-rating-badge,
+.komi-header-balance,.komi-home-progress-details small,
+.komi-home-hero .hero-meta,.komi-spotlight-metrics,.stat-num,
+#notifBadge,.komi-home-community-panel,.komi-release-row small{
+  font-variant-numeric:tabular-nums;
+}
+/* Persistent navigation - use old ids and delegate actions in the new composition. */
+body > header{
+  height:64px!important;min-height:64px!important;
+  background:rgba(9,9,13,.86)!important;
+  border-bottom:1px solid rgba(255,255,255,.07)!important;
+  backdrop-filter:blur(16px)!important;-webkit-backdrop-filter:blur(16px)!important;
+  z-index:1000;
+}
+body > header > .header-inner{
+  display:grid!important;grid-template-columns:minmax(200px,1fr) minmax(260px,590px) minmax(225px,1fr)!important;
+  align-items:center!important;gap:clamp(10px,1.45vw,26px)!important;
+  max-width:none!important;min-height:64px!important;height:64px!important;
+  padding:0 clamp(14px,2.2vw,36px)!important;
+}
+.header-inner .logo-area{
+  grid-column:1!important;grid-row:1!important;justify-self:start!important;
+  display:flex!important;align-items:center!important;gap:13px!important;
+  min-width:0;
+}
+.header-inner .logo-area .logo-container{display:flex;align-items:center;gap:9px;cursor:pointer}
+.header-inner .logo-area .logo-box{
+  display:grid;place-items:center;flex-shrink:0;
+  width:39px!important;height:39px!important;
+  border:1px solid rgba(255,69,79,.46)!important;
+  border-radius:12px!important;background:#21151C!important;
+  color:#fff!important;box-shadow:0 0 20px #FF454F15!important;
+  font-weight:800!important;font-size:22px!important;
+}
+.header-inner .logo-area .logo-text{color:#fff!important;font-size:18px!important;white-space:nowrap}
+.header-inner .logo-area .online-counter{
+  display:flex!important;gap:6px!important;align-items:center!important;
+  padding:6px 8px;border:1px solid #273127;
+  border-radius:999px;background:#121B16;
+  max-width:155px;min-width:0;font:600 10px 'Inter',sans-serif;
+}
+.header-inner #onlineCountText{
+  min-width:0;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;
+  color:#B3D6BE;font-size:10px!important;
+}
+.header-inner .online-dot{background:#37D67A!important;box-shadow:0 0 9px #37D67A6b}
+.header-inner .search-container{
+  grid-column:2!important;grid-row:1!important;
+  width:100%!important;max-width:590px!important;min-width:0!important;
+  justify-self:center!important;position:relative;z-index:30
+}
+.header-inner .search-bar{
+  min-height:43px!important;height:43px!important;
+  padding:0 12px!important;border-radius:14px!important;
+  background:rgba(19,20,29,.94)!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  box-shadow:none!important;display:flex;gap:10px;align-items:center;
+}
+.header-inner .search-bar:focus-within{border-color:rgba(255,69,79,.62)!important;box-shadow:0 0 0 3px #FF454F12!important}
+.header-inner .search-bar input{
+  font-family:'Inter',sans-serif;font-size:13px!important;
+  flex:1;min-width:0;color:#F6F7FA!important;background:transparent!important;
+}
+.header-inner .search-bar input::placeholder{color:#858993!important}
+.header-inner .komi-search-shortcut{
+  flex-shrink:0;padding:5px 7px;border:1px solid #343642;
+  border-radius:7px;background:#1F222E;color:#AEB2BF;
+  font:600 10px 'Inter',sans-serif;
+}
+.header-inner .komi-header-left{
+  display:flex!important;grid-column:3!important;grid-row:1!important;
+  justify-self:end!important;align-items:center!important;justify-content:flex-end!important;
+  min-width:0!important;max-width:100%!important;
+}
+.header-inner .komi-header-left .nav-actions{
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;
+  flex-wrap:nowrap!important;gap:7px!important;min-width:0!important;
+}
+.header-inner .komi-header-left .komi-social-links,
+.header-inner #navHomeBtn,.header-inner #navCatalogBtn,
+.header-inner #headerRandomBtn,.header-inner #komiMobileMoreToggle,
+.header-inner #komiMobileMoreMenu{display:none!important}
+.header-inner #headerPartyBtn,
+.header-inner #notifBellBtn,
+.header-inner #komiHeaderAniCoin{
+  min-height:39px!important;height:39px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(255,255,255,.09)!important;
+  color:#F6F6FB!important;background:#181A25!important;
+  font:700 12px 'Inter',sans-serif;
+  padding:0 12px!important;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  box-shadow:none!important;white-space:nowrap;
+}
+.header-inner #headerPartyBtn{order:1;border-color:#FF454F49!important;color:#FFE7E8!important;background:#25171E!important}
+.header-inner #komiHeaderAniCoin{order:2}
+.header-inner #notifBellBtn{order:3}
+.header-inner #userHeaderArea{order:4}
+.header-inner #adminPanelBtn,.header-inner #addAnimeBtn{order:5}
+.header-inner #headerPartyBtn:hover,.header-inner #komiHeaderAniCoin:hover{border-color:#FF454F!important}
+.header-inner #komiHeaderAniCoin{cursor:pointer}
+.header-inner #komiHeaderAniCoin[hidden]{display:none!important}
+.header-inner .komi-header-balance-icon{font-size:18px;color:#FF454F;font-weight:800}
+.header-inner #komiHeaderAniCoinValue{font-variant-numeric:tabular-nums}
+.header-inner #notifBellBtn{min-width:40px!important;width:40px!important;padding:0!important}
+.header-inner #userHeaderArea{min-width:0;display:flex;align-items:center}
+.header-inner #userHeaderArea .user-pill{
+  min-height:39px;max-width:195px;padding:3px 5px;border-radius:12px!important;
+  background:#191B26!important;border:1px solid #2D303C!important;
+}
+.header-inner #userHeaderArea .user-pill span{max-width:65px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.header-inner #userHeaderArea .user-pill button{min-height:30px!important;padding:5px 8px!important;font-size:10px!important}
+.header-inner #userHeaderArea > .nav-btn,
+.header-inner #userHeaderArea button.nav-btn{min-height:38px;border-radius:12px;font-size:12px}
+.header-inner #adminPanelBtn,.header-inner #addAnimeBtn{padding:7px!important;font-size:11px!important}
+.header-inner .search-dropdown{
+  border:1px solid #36333F!important;background:rgba(18,20,29,.98)!important;
+  border-radius:17px!important;box-shadow:0 22px 60px #0009!important;
+  overflow:auto;max-height:min(70dvh,460px);padding:7px!important;
+}
+.header-inner .search-dropdown .search-dropdown-item{
+  min-height:54px;border-radius:11px!important;
+}
+.header-inner .search-dropdown .search-dropdown-item:hover{background:#27202B!important}
+.komi-search-mode-tabs{
+  display:flex;align-items:center;gap:5px;padding:5px;
+  border:1px solid #2B2E38;border-radius:11px;background:#151721;
+  position:sticky;top:0;z-index:1;margin-bottom:9px;
+}
+.komi-search-mode-tabs button{
+  flex:1;min-height:32px;border:0;background:transparent;
+  color:#A8ADBB;border-radius:8px;cursor:pointer;
+  font:700 12px 'Inter',sans-serif;
+}
+.komi-search-mode-tabs button[aria-pressed="true"]{background:#34222D;color:#fff;box-shadow:inset 0 0 0 1px #FF454F55}
+.komi-search-user-result{
+  width:100%;display:flex;align-items:center;gap:12px;min-height:59px;
+  background:transparent;color:#fff;border:0;border-radius:11px;
+  padding:8px 10px;text-align:left;cursor:pointer;
+}
+.komi-search-user-result:hover{background:#25232F}
+.komi-search-user-result img{
+  width:39px;height:39px;object-fit:cover;border-radius:12px;background:#242630;flex-shrink:0
+}
+.komi-search-user-result span{display:grid;gap:2px;min-width:0;overflow:hidden}
+.komi-search-user-result strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.komi-search-user-result small{color:#9CA3AF}
+.komi-search-notice{font:500 12px 'Inter',sans-serif;color:#9CA3AF;padding:15px;line-height:1.6}
+
+/* Left social shortcuts remain accessible outside the simplified header. */
+.komi-side-nav .komi-social-links{
+  display:flex!important;flex-direction:column;gap:8px;
+  padding:9px 0!important;margin:0!important;
+  align-items:center;justify-content:center;
+}
+.komi-side-nav .komi-social-link{display:grid;place-items:center;width:35px;height:35px;border-radius:11px;background:#181A25;border:1px solid #2B2D38}
+.komi-side-nav .komi-social-link svg{width:17px;height:17px}
+
+/* Discovery page */
+#mainContainer:has(.komi-home-discovery){min-width:0}
+.komi-home-discovery{
+  display:flex;flex-direction:column;gap:clamp(24px,3vw,39px);
+  width:100%;min-width:0;color:#F5F6FA;
+}
+.komi-home-discovery .komi-feature-section{margin:0!important;min-width:0}
+.komi-home-hero{min-width:0}
+.komi-home-hero .hero-slider-container{
+  position:relative;height:clamp(330px,36vw,490px)!important;min-height:0!important;
+  border:1px solid #34303B!important;border-radius:24px!important;
+  overflow:hidden;background:#13141D!important;
+}
+.komi-home-hero .hero-slides-wrapper{position:relative;width:100%;height:100%}
+.komi-home-hero .hero-slide{
+  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
+  padding:clamp(24px,4.1vw,58px)!important;
+  background-position:center 34%;background-size:cover;
+}
+.komi-home-hero .hero-slide::before{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(90deg,rgba(7,8,13,.94) 0%,rgba(8,9,15,.75) 37%,rgba(8,9,15,.08) 100%),
+    linear-gradient(0deg,rgba(9,9,13,.8),transparent 55%);
+}
+.komi-home-hero .komi-home-hero-content{position:relative;z-index:1;max-width:620px}
+.komi-home-hero .komi-home-hero-eyebrow{
+  display:flex;align-items:center;gap:8px;letter-spacing:.2em;font:800 10px 'Inter',sans-serif;color:#FFB0B4;
+  margin-bottom:13px;
+}
+.komi-home-live-dot{width:7px;height:7px;background:#FF454F;border-radius:50%;box-shadow:0 0 11px #FF454F77}
+.komi-home-hero .hero-slide h1{
+  font:800 clamp(29px,4vw,58px)/1.12 'Plus Jakarta Sans',sans-serif!important;
+  color:#fff!important;margin:15px 0 12px!important;
+  text-shadow:0 3px 24px #0008;
+}
+.komi-home-hero .hero-slide p{
+  font:400 13px/1.7 'Inter',sans-serif;
+  max-width:560px;max-height:4.8em;overflow:hidden;
+  color:#D2D3DC!important;
+}
+.komi-home-hero .hero-meta{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.komi-home-hero .hero-meta span{
+  border:1px solid rgba(255,255,255,.14)!important;
+  background:rgba(17,18,27,.67)!important;color:#F4F3F6!important;
+  border-radius:999px!important;font:600 11px 'Inter',sans-serif;
+  padding:6px 10px!important;
+}
+.komi-home-hero .hero-meta span:first-child{
+  color:#FFCFD1!important;border-color:#FF454F66!important;background:#3A1C27!important;
+  font-variant-numeric:tabular-nums;
+}
+.komi-home-hero .hero-buttons{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
+.komi-home-hero .hero-buttons button{
+  min-height:43px!important;border-radius:13px!important;
+  padding:11px 17px!important;font:700 13px 'Inter',sans-serif
+}
+.komi-home-hero .hero-buttons .btn-glow{
+  background:#FF454F!important;color:#fff!important;border-color:#FF454F!important;
+  box-shadow:0 7px 27px #FF454F39!important;
+}
+.komi-home-hero .hero-buttons .btn-glow-secondary{
+  background:rgba(25,26,35,.78)!important;border-color:rgba(255,255,255,.18)!important;color:#fff!important;
+}
+.komi-home-hero .hero-slider-arrow{
+  width:42px;height:42px;border-radius:50%!important;
+  background:#13141Bbb!important;border:1px solid #ffffff29!important;
+  top:50%;z-index:9!important;backdrop-filter:blur(8px);
+}
+.komi-home-hero .hero-dots{z-index:9;position:absolute;bottom:18px;right:21px;left:auto}
+.komi-home-hero .hero-dot.active{background:#FF454F!important}
+.komi-home-heading{
+  display:flex;justify-content:space-between;align-items:flex-end;gap:18px;
+  margin-bottom:15px;
+}
+.komi-home-heading > div{min-width:0}
+.komi-home-heading h2{
+  color:#F8F8FB;font:800 clamp(18px,2.1vw,26px)/1.25 'Plus Jakarta Sans',sans-serif;
+  margin:0 0 6px!important;letter-spacing:-.045em;
+}
+.komi-home-subtitle{
+  margin:4px 0 0!important;color:#9CA3AF!important;
+  font:400 13px/1.55 'Inter',sans-serif!important;
+}
+.komi-home-kicker{color:#A0A1AD;font-size:.7em;font-weight:500}
+.komi-home-all{
+  display:inline-flex;gap:6px;align-items:center;justify-content:center;flex-shrink:0;
+  min-height:34px;background:transparent;color:#C5C6CF;text-decoration:none;
+  padding:6px 10px;border:1px solid #373842;border-radius:10px;
+  font:650 11px 'Inter',sans-serif;cursor:pointer;
+}
+.komi-home-all:hover{color:#fff;border-color:#FF454F;background:#281923}
+.komi-home-rail,.komi-home-genre-rail,.komi-home-progress-rail{
+  display:flex;gap:13px;overflow-x:auto;overflow-y:hidden;
+  width:100%;padding:2px 2px 14px;scroll-snap-type:x proximity;
+  scrollbar-width:thin;scrollbar-color:#484351 #11111A;
+}
+.komi-home-rail > .anime-card{
+  flex:0 0 clamp(145px,14vw,184px)!important;min-width:0;
+  scroll-snap-align:start;background:#12141D!important;
+  border:1px solid rgba(255,255,255,.07)!important;
+  border-radius:16px!important;overflow:hidden;
+}
+.komi-home-rail > .anime-card:hover{border-color:#FF454F70!important}
+.komi-home-rail .anime-card .anime-info{min-width:0;padding:10px}
+.komi-home-rail .anime-card .anime-title{font:750 12px/1.45 'Plus Jakarta Sans',sans-serif}
+.komi-home-rail .anime-rating-badge{background:#241A26!important;color:#FFD3D4!important}
+.komi-home-genre-card{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-end;
+  flex:0 0 clamp(154px,17vw,205px);min-width:0;min-height:130px;
+  scroll-snap-align:start;text-align:left;
+  border-radius:17px;border:1px solid rgba(255,255,255,.07);
+  background:linear-gradient(135deg,#191A27,#12141D 73%);color:#F4F4F7;
+  padding:15px 16px;cursor:pointer;transition:transform .18s,border-color .18s,background .18s;
+}
+.komi-home-genre-card:not(:disabled):hover{
+  transform:translateY(-3px);border-color:#FF454F76;
+  background:linear-gradient(135deg,#361E2A,#15141D);
+}
+.komi-home-genre-card:disabled{opacity:.45;cursor:not-allowed}
+.komi-home-genre-symbol{color:#FF454F;font:700 26px/1 'Plus Jakarta Sans';margin-bottom:auto}
+.komi-home-genre-name{font:800 15px 'Plus Jakarta Sans',sans-serif;margin-top:14px}
+.komi-home-genre-caption{font:400 11px 'Inter',sans-serif;color:#9CA3AF;margin-top:5px}
+.komi-home-progress-card{
+  flex:0 0 clamp(175px,20vw,230px);
+  min-width:0;scroll-snap-align:start;
+  display:flex;flex-direction:column;align-items:stretch;gap:9px;
+  padding:0 0 12px;text-align:left;cursor:pointer;
+  border:1px solid rgba(255,255,255,.07);border-radius:16px;
+  overflow:hidden;background:#12141D;color:#fff;
+}
+.komi-home-progress-card:hover{border-color:#FF454F7a}
+.komi-home-progress-art{display:block;position:relative;width:100%;aspect-ratio:16/9;background:#1C1D2A;overflow:hidden}
+.komi-home-progress-art img{width:100%;height:100%;object-fit:cover;display:block}
+.komi-home-progress-track{position:absolute;bottom:0;left:0;right:0;height:4px;background:#323640;display:block}
+.komi-home-progress-track span{display:block;height:100%;background:#FF454F;border-radius:0 2px 2px 0}
+.komi-home-progress-details{display:flex;flex-direction:column;gap:5px;padding:0 12px}
+.komi-home-progress-details strong{font:800 12px/1.4 'Plus Jakarta Sans',sans-serif;max-height:2.8em;overflow:hidden}
+.komi-home-progress-details small{font:500 11px 'Inter',sans-serif;color:#9CA3AF}
+.komi-home-community-panel{
+  background:#12141D;border:1px solid rgba(255,255,255,.07);border-radius:19px;
+  padding:16px;box-shadow:0 14px 35px #0000001a;
+}
+.komi-home-leaderboard-tabs{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.komi-home-leaderboard-tabs button{
+  border:1px solid #343643;border-radius:11px;background:#1A1D29;color:#AEB4C2;
+  padding:10px 14px;min-height:37px;font:700 12px 'Inter',sans-serif;cursor:pointer;
+}
+.komi-home-leaderboard-tabs button[aria-pressed="true"]{
+  background:#392029;color:#FFE4E6;border-color:#FF454Faa;
+}
+.komi-home-community-empty{
+  display:flex;align-items:center;gap:16px;margin-top:14px;
+  padding:18px;border:1px dashed #3A3D48;border-radius:14px;background:#171A24;
+}
+.komi-home-community-mark{
+  display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;
+  border:1px solid #FF454F50;border-radius:15px;background:#311C27;color:#FF454F;font-size:25px;
+}
+.komi-home-community-empty strong{font:750 13px 'Plus Jakarta Sans',sans-serif}
+.komi-home-community-empty p{margin:6px 0 0;color:#9CA3AF;font:400 12px/1.6 'Inter',sans-serif}
+.komi-home-discovery .komi-feature-section .section-header{
+  display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;
+  gap:7px;margin-bottom:13px
+}
+.komi-home-discovery .komi-feature-section .section-header .section-title{
+  font-size:clamp(18px,2vw,25px)!important
+}
+.komi-home-discovery .komi-feature-section .section-header .komi-home-subtitle{
+  flex-basis:100%;order:2;margin-top:-5px!important
+}
+.komi-home-discovery .komi-release-list{
+  border:0;border-radius:17px;background:transparent
+}
+.komi-home-discovery .komi-release-row{
+  border:1px solid #30313C!important;border-radius:14px!important;background:#151722!important;
+}
+.komi-home-browse-footer{
+  margin-top:8px;padding-top:25px;border-top:1px solid #272936
+}
+.komi-home-browse-footer .komi-spotlight-heading{
+  background:#11131B;border:1px solid #2A2D38;border-radius:19px;padding:20px;
+}
+.komi-home-browse-footer .komi-spotlight-heading h1{font-size:25px}
+
+/* Mobile: preserve original rail IDs/actions; display exactly five tabs. */
+@media(max-width:1150px){
+  body > header > .header-inner{
+    grid-template-columns:minmax(165px,auto) minmax(180px,1fr) auto!important;gap:10px!important;
+  }
+  .header-inner .logo-area .online-counter{max-width:110px}
+  .header-inner #userHeaderArea .user-pill span{display:none}
+}
+@media(max-width:767px){
+  body > header{height:64px!important;min-height:64px!important}
+  body > header > .header-inner{
+    grid-template-columns:auto minmax(0,1fr) auto!important;
+    grid-template-rows:64px!important;gap:9px!important;
+    padding:0 11px!important;
+  }
+  .header-inner .logo-area{grid-column:1!important;grid-row:1!important}
+  .header-inner .logo-area .logo-box{width:36px!important;height:36px!important;font-size:20px!important}
+  .header-inner .logo-area .logo-text,.header-inner .logo-area .online-counter{display:none!important}
+  .header-inner .search-container{
+    grid-column:2!important;grid-row:1!important;max-width:none!important;min-width:0!important;
+  }
+  .header-inner .komi-header-left{grid-column:3!important;grid-row:1!important;max-width:none!important}
+  .header-inner .komi-header-left .nav-actions{gap:5px!important}
+  .header-inner #adminPanelBtn,.header-inner #addAnimeBtn{display:none!important}
+  .header-inner #headerPartyBtn,.header-inner #komiHeaderAniCoin,
+  .header-inner #notifBellBtn{
+    display:inline-flex!important;width:32px!important;min-width:32px!important;
+    height:35px!important;min-height:35px!important;padding:0!important;
+    font-size:0!important;
+  }
+  .header-inner #headerPartyBtn::after{content:'◇';font-size:18px}
+  .header-inner #komiHeaderAniCoinValue{display:none!important}
+  .header-inner .komi-header-balance-icon{font-size:19px}
+  .header-inner #notifBellBtn{font-size:16px!important}
+  .header-inner .search-bar{height:39px!important;min-height:39px!important}
+  .header-inner .search-bar input{font-size:11px!important}
+  .header-inner .search-bar .komi-search-shortcut{display:none}
+  .header-inner #userHeaderArea .user-pill{
+    width:38px!important;height:38px!important;padding:2px!important;display:grid;place-items:center
+  }
+  .header-inner #userHeaderArea .user-pill img{width:32px;height:32px;margin:0}
+  .header-inner #userHeaderArea .user-pill span,
+  .header-inner #userHeaderArea .user-pill button{display:none!important}
+  .header-inner #userHeaderArea > button{font-size:10px;padding:5px 9px}
+  .komi-side-nav{
+    position:fixed!important;inset:auto 0 0!important;transform:none!important;
+    width:100%!important;max-width:none!important;
+    height:calc(64px + env(safe-area-inset-bottom))!important;min-height:64px!important;
+    display:flex!important;align-items:flex-start!important;justify-content:space-around!important;
+    flex-direction:row!important;gap:0!important;
+    padding:5px 6px calc(5px + env(safe-area-inset-bottom))!important;
+    border-top:1px solid #36303B!important;border-right:0!important;
+    background:rgba(14,15,22,.97)!important;backdrop-filter:blur(20px);
+    z-index:1100!important;
+  }
+  .komi-side-nav .komi-side-logo,
+  .komi-side-nav .komi-side-links .komi-side-button,
+  .komi-side-nav .komi-side-bottom .komi-side-button,
+  .komi-side-nav .komi-social-links{display:none!important}
+  .komi-side-nav .komi-side-links,.komi-side-nav .komi-side-bottom{
+    display:contents!important;
+  }
+  .komi-side-nav #sideHomeBtn,
+  .komi-side-nav #sideCatalogBtn,
+  .komi-side-nav [data-komi-click="random"],
+  .komi-side-nav #sideFriendsBtn,
+  .komi-side-nav .komi-side-account{
+    display:flex!important;flex:1 1 20%!important;
+    flex-direction:column!important;align-items:center!important;justify-content:center!important;
+    gap:3px!important;width:auto!important;max-width:none!important;height:54px!important;
+    background:transparent!important;border:0!important;border-radius:12px!important;
+    padding:4px 2px!important;color:#A4A8B2!important;
+  }
+  .komi-side-nav #sideHomeBtn{order:1}
+  .komi-side-nav #sideCatalogBtn{order:2}
+  .komi-side-nav [data-komi-click="random"]{order:3}
+  .komi-side-nav #sideFriendsBtn{order:4}
+  .komi-side-nav .komi-side-account{order:5}
+  .komi-side-nav .komi-side-button svg{
+    display:block!important;width:22px!important;height:22px!important;
+    fill:none!important;stroke:currentColor!important;stroke-width:1.8!important;
+  }
+  .komi-side-nav .komi-side-button span{
+    display:block!important;font:600 10px 'Inter',sans-serif!important;
+  }
+  .komi-side-nav .komi-side-button[aria-current="page"]{
+    color:#FF454F!important;background:#29202B!important;
+  }
+  body .app-layout,body #mainAppLayoutContainer{
+    margin-left:0!important;width:100%!important;max-width:100%!important;
+    padding-bottom:calc(78px + env(safe-area-inset-bottom))!important
+  }
+  .komi-home-hero .hero-slider-container{height:385px!important;border-radius:19px!important}
+  .komi-home-hero .hero-slide{padding:26px 21px 44px!important}
+  .komi-home-hero .hero-slide::before{
+    background:linear-gradient(0deg,rgba(8,8,14,.98) 0%,rgba(9,9,13,.63) 62%,rgba(9,9,13,.20) 100%)
+  }
+  .komi-home-hero .hero-slide h1{font-size:clamp(24px,5.8vw,38px)!important}
+  .komi-home-heading{align-items:flex-start}
+  .komi-home-heading h2{font-size:20px}
+  .komi-home-all{font-size:10px;padding:5px 7px}
+  .komi-home-rail > .anime-card{flex-basis:150px!important}
+  .komi-home-genre-card{flex-basis:170px}
+  .komi-home-discovery{gap:26px}
+}
+@media(max-width:430px){
+  .komi-home-hero .hero-slide{padding:25px 17px 40px!important}
+  .komi-home-hero .hero-buttons{gap:7px}
+  .komi-home-hero .hero-buttons button{padding:9px 11px!important;font-size:11px}
+  .komi-home-hero .hero-slide p{font-size:11px;line-height:1.5}
+  .komi-home-hero .hero-meta{gap:4px}
+  .komi-home-hero .hero-meta span{font-size:9px;padding:4px 6px!important}
+  .komi-home-community-empty{flex-direction:column;align-items:flex-start}
+}
+@media(prefers-reduced-motion:reduce){
+  .komi-home-genre-card,.komi-home-rail > .anime-card{transition:none!important}
+}
+
+.komi-home-support-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 0}
+.komi-home-support-links a,.komi-home-support-links button{border:1px solid #333440;background:#191B25;color:#B8BCC9;padding:9px 12px;min-height:38px;text-decoration:none;border-radius:11px;font:600 12px 'Inter',sans-serif;cursor:pointer}
+.komi-home-support-links a:hover,.komi-home-support-links button:hover{border-color:#FF454F;color:#fff}

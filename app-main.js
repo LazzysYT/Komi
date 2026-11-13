@@ -14,7 +14,7 @@
             }
         } catch(e) {}
 
-        const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив'];
+        const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай'];
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playSound() {
@@ -688,6 +688,15 @@ async function loadDataFromCloud(attempt = 0) {
         function renderHeaderUser() {
             const area = document.getElementById('userHeaderArea');
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
+            const headerCoin = document.getElementById('komiHeaderAniCoin');
+            if (headerCoin) {
+                const loggedIn = Boolean(currentUser?.authUserId);
+                headerCoin.hidden = !loggedIn;
+                if (!loggedIn) window.komiHeaderAniCoinOwner = null;
+                const balanceLabel = document.getElementById('komiHeaderAniCoinValue');
+                if (balanceLabel && (!loggedIn || window.komiHeaderAniCoinOwner !== currentUser.authUserId))
+                    balanceLabel.textContent = '—';
+            }
             if (sidebarAvatarIcon) {
                 const avatar = currentUser && (userProfiles[currentUser.username]?.avatar || (!currentUser.authUserId && localStorage.getItem('komi_avatar_' + currentUser.username)));
                 if (avatar) {
@@ -821,6 +830,22 @@ async function loadDataFromCloud(attempt = 0) {
                     container.innerHTML = catalogInitialLoadFailed
                         ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" data-komi-onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
                         : komiCatalogLoadingMarkup();
+                    return;
+                }
+                // New home layout only consumes existing DB-loaded data and handlers.
+                // Keep the legacy branch below as a safe fallback.
+                if (window.KomiHomeDiscovery) {
+                    container.innerHTML = window.KomiHomeDiscovery.render({
+                        animeList, currentUser, progress:komiEpisodeProgress,
+                        currentSlideIndex, renderCard, year:komiAnimeYear,
+                        type:komiCatalogType, artwork:animeArtwork,
+                        describe:cleanAnimeDescription,
+                        recommendations:komiRecommendations,
+                        calendar:komiReleaseCalendar, years:komiYearSections,
+                        intro:komiIntroMarkup
+                    });
+                    window.KomiHomeDiscovery.afterRender(container);
+                    startHeroAutoSlide();
                     return;
                 }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
@@ -1987,11 +2012,19 @@ async function loadDataFromCloud(attempt = 0) {
             const dd = document.getElementById('searchDropdown');
             if (!dd) return;
             const query = document.getElementById('searchInput')?.value.trim() || '';
+            if (window.KomiHybridSearch?.isUsers(query)) {
+                window.KomiHybridSearch.showUsers({
+                    dropdown:dd, query, client:_supabase, user:currentUser,
+                    onProfile:openProfile
+                });
+                return;
+            }
             if (query) { handleInstantSearch(query); return; }
             const heading = document.createElement('div');
             heading.textContent = 'Популярное';
             heading.style.cssText = 'padding:5px 10px;font-size:10px;color:var(--text-muted)';
             dd.replaceChildren(heading,...animeList.slice(0,5).filter(Boolean).map(a=>komiSearchSuggestion(a,true)));
+            window.KomiHybridSearch?.decorate(dd);
             dd.classList.add('active');
         }
 
@@ -1999,6 +2032,13 @@ async function loadDataFromCloud(attempt = 0) {
             const dd = document.getElementById('searchDropdown');
             if (!dd) return;
             const input = String(q || '');
+            if (window.KomiHybridSearch?.isUsers(input)) {
+                window.KomiHybridSearch.showUsers({
+                    dropdown:dd, query:input, client:_supabase, user:currentUser,
+                    onProfile:openProfile
+                });
+                return;
+            }
             const query = input.trim().toLocaleLowerCase('ru-RU');
             if (!query) {
                 catalogSearchQuery = '';
@@ -2018,6 +2058,7 @@ async function loadDataFromCloud(attempt = 0) {
                 empty.style.cssText = 'padding:16px;color:#a7a7a7;font-size:12px;text-align:center';
                 dd.replaceChildren(empty);
             }
+            window.KomiHybridSearch?.decorate(dd);
             dd.classList.add('active');
             catalogSearchQuery = input.slice(0,120);
             if (currentView !== 'catalog') {
@@ -3100,7 +3141,7 @@ async function loadDataFromCloud(attempt = 0) {
             })).filter(x => Number.isFinite(x.date) && x.date <= now && now - x.date <= 3 * 86400000)
               .sort((a,b) => b.date - a.date).slice(0,8);
 
-            let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title"> Календарь серий</h2>'+
+            let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title"> Календарь серий</h2><p class="komi-home-subtitle">Расписание эфиров и последние добавления в каталог</p>'+
                 '<button type="button" class="section-see-all" data-komi-onclick="loadKomiEpisodeSchedule(true)">↻ Обновить расписание</button></div>';
             if (upcoming.length) {
                 result += '<p class="komi-feature-muted">Ближайшие эфиры · время указано в твоём часовом поясе. Озвучка может появиться позже.</p>';
