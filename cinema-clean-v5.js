@@ -114,6 +114,14 @@
     const sidebarHeading = sidebar.querySelector('.komi-watch-side-heading');
     const search = sidebar.querySelector('#komiEpisodeSearch');
     if (sidebarHeading && search) {
+      const seriesTitle = sidebarHeading.querySelector('h3');
+      if (seriesTitle) {
+        seriesTitle.textContent = 'Серии';
+        const countLabel = document.createElement('span');
+        countLabel.className = 'komi-clean-series-count';
+        countLabel.textContent = String(count);
+        seriesTitle.append(countLabel);
+      }
       const slot = document.createElement('div');
       slot.className = 'komi-clean-series-search';
       search.placeholder = 'Номер';
@@ -149,7 +157,7 @@
     if (activeEpisode && !root.matchMedia('(prefers-reduced-motion:reduce)').matches)
       requestAnimationFrame(() => {
         if (isActive() && sidebar.classList.contains('komi-watch-sidebar'))
-          activeEpisode.scrollIntoView({block:'nearest',behavior:'instant'});
+          activeEpisode.scrollIntoView({block:'nearest',behavior:'auto'});
       });
 
     // When the modal is dismissed (without opening another episode), release
