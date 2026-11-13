@@ -32,6 +32,8 @@
         ++epoch;clearTimeout(timer);
         const field=input();
         if(!field)return;
+        if (mode==='anime' && field.value.trim().startsWith('@'))
+          field.value=field.value.replace(/^\s*@/,'');
         field.setAttribute('aria-label',mode==='anime'?'Поиск аниме':'Поиск пользователей');
         field.focus();
         if(field.value.trim())root.handleInstantSearch?.(field.value);
