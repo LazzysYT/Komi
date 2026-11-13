@@ -153,7 +153,7 @@
             el.classList.contains('komi-episode-watched') ? 'Просмотрена' : 'Выбрать серию';
         });
       });
-      observer.observe(grid,{subtree:false,attributes:true,attributeFilter:['class']});
+      observer.observe(grid,{subtree:true,attributes:true,attributeFilter:['class']});
       context.observer = observer;
     }
 
