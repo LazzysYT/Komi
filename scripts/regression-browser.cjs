@@ -355,10 +355,12 @@ async function checkNotifications(page) {
    await page.locator('.komi-episodes-toggle').click();
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
+   if (width<=820) await page.locator('.komi-episodes-toggle').click();
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),1);
    await view.getByRole('button',{name:'Показать серии сеткой'}).click();
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),0);
+   if (width<=820) await page.locator('.komi-episodes-toggle').click();
    await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
 
    const state=await page.evaluate(()=>{
