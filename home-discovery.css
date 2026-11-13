@@ -108,7 +108,11 @@ body > header > .header-inner{
   padding:0 12px!important;display:inline-flex;align-items:center;justify-content:center;gap:6px;
   box-shadow:none!important;white-space:nowrap;
 }
-.header-inner #headerPartyBtn{border-color:#FF454F49!important;color:#FFE7E8!important;background:#25171E!important}
+.header-inner #headerPartyBtn{order:1;border-color:#FF454F49!important;color:#FFE7E8!important;background:#25171E!important}
+.header-inner #komiHeaderAniCoin{order:2}
+.header-inner #notifBellBtn{order:3}
+.header-inner #userHeaderArea{order:4}
+.header-inner #adminPanelBtn,.header-inner #addAnimeBtn{order:5}
 .header-inner #headerPartyBtn:hover,.header-inner #komiHeaderAniCoin:hover{border-color:#FF454F!important}
 .header-inner #komiHeaderAniCoin{cursor:pointer}
 .header-inner #komiHeaderAniCoin[hidden]{display:none!important}
@@ -469,3 +473,7 @@ body > header > .header-inner{
 @media(prefers-reduced-motion:reduce){
   .komi-home-genre-card,.komi-home-rail > .anime-card{transition:none!important}
 }
+
+.komi-home-support-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 0}
+.komi-home-support-links a,.komi-home-support-links button{border:1px solid #333440;background:#191B25;color:#B8BCC9;padding:9px 12px;min-height:38px;text-decoration:none;border-radius:11px;font:600 12px 'Inter',sans-serif;cursor:pointer}
+.komi-home-support-links a:hover,.komi-home-support-links button:hover{border-color:#FF454F;color:#fff}
