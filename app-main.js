@@ -3344,7 +3344,6 @@ async function loadDataFromCloud(attempt = 0) {
                             <div class="komi-episode-number-grid" role="group" aria-label="Выбрать серию">
                                 ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" data-komi-onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
                             </div>
-                            <p class="komi-watch-side-footnote">Нажми на номер, чтобы перейти к серии.</p>
                         </aside>
                     </div>
                 </div>
@@ -3367,7 +3366,11 @@ async function loadDataFromCloud(attempt = 0) {
                 index:activeIndex,
                 hasNext,
                 displayNumber,
-                originalIndex: currentEp.originalIdx
+                originalIndex: currentEp.originalIdx,
+                episodeMeta:currentSeasonEpisodes.map(ep=>({
+                    preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',
+                    duration:ep?.duration ?? ep?.durationSeconds ?? null
+                }))
             });
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
