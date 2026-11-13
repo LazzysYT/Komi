@@ -133,7 +133,7 @@
     const close = content.querySelector('.modal-close');
     if (close) top.append(close);
     content.prepend(top);
-    const initialOpen = drawerPreference === null ? !root.matchMedia('(max-width:820px)').matches : drawerPreference;
+    const initialOpen = drawerPreference === null ? !root.matchMedia('(max-width:860px)').matches : drawerPreference;
     setDrawer(context, initialOpen);
 
     // Blur an actual poster (not a fabricated sample frame) behind native and embedded players.
