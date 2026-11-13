@@ -1,4 +1,4 @@
-/* Komi Cinema — immersive, accessible dark/red viewing surfaces.
+/* Komi Cinema — immersive, accessible dark viewing surfaces.
    Keeps media ownership, episode and room synchronization in the existing JS. */
 #watchModal,
 #watchPartyModal {
@@ -312,38 +312,38 @@
 #watchModal .komi-cinema-toolbar {
   display:flex;align-items:center;gap:10px;flex-wrap:wrap;
   margin:10px 0 3px;padding:11px 12px;
-  background:rgba(18,20,29,.95);
+  background:rgba(20,20,20,.95);
   border:1px solid rgba(255,255,255,.08);
-  border-radius:16px;color:#e8e9ef;
+  border-radius:16px;color:#e9e9e9;
 }
 #watchModal .komi-cinema-action {
   min-height:39px;padding:9px 13px;border-radius:12px;
-  background:#24252c;border:1px solid rgba(255,255,255,.12);
-  color:#f4f4f7;cursor:pointer;font-size:12px;font-weight:700;
+  background:#252525;border:1px solid rgba(255,255,255,.12);
+  color:#f4f4f4;cursor:pointer;font-size:12px;font-weight:700;
   transition:background .2s ease,border-color .2s ease;
 }
-#watchModal .komi-cinema-action:hover {background:#353039;border-color:#ff454f}
+#watchModal .komi-cinema-action:hover {background:#323232;border-color:#ebebeb}
 #watchModal .komi-cinema-action:focus-visible,
 #watchModal .komi-cinema-shortcuts summary:focus-visible {
-  outline:2px solid #ff454f;outline-offset:2px;
+  outline:2px solid #ebebeb;outline-offset:2px;
 }
 #watchModal .komi-cinema-action[aria-pressed="true"] {
-  background:rgba(255,69,79,.2);border-color:#ff454f;color:#fff;
+  background:rgba(255,255,255,.2);border-color:#ebebeb;color:#fff;
 }
-#watchModal .komi-cinema-skip {border-color:#70363b;color:#ffd5d7}
+#watchModal .komi-cinema-skip {border-color:#434343;color:#dedede}
 #watchModal .komi-cinema-skip[hidden] {display:none !important}
 #watchModal .komi-cinema-shortcuts {margin-left:auto;font-size:12px;max-width:100%}
-#watchModal .komi-cinema-shortcuts summary {cursor:pointer;color:#d4d4dc;padding:7px;border-radius:8px}
-#watchModal .komi-cinema-shortcuts p {margin:6px 0;line-height:1.6;color:#bcbcc4;max-width:420px}
-#watchModal .komi-cinema-external-note {font-size:12px;color:#d6c0c1;line-height:1.6;flex:1}
-#watchModal .komi-cinema-action-status {min-height:1em;margin:1px 4px 7px;font-size:12px;color:#f3aeb3}
+#watchModal .komi-cinema-shortcuts summary {cursor:pointer;color:#d5d5d5;padding:7px;border-radius:8px}
+#watchModal .komi-cinema-shortcuts p {margin:6px 0;line-height:1.6;color:#bdbdbd;max-width:420px}
+#watchModal .komi-cinema-external-note {font-size:12px;color:#c5c5c5;line-height:1.6;flex:1}
+#watchModal .komi-cinema-action-status {min-height:1em;margin:1px 4px 7px;font-size:12px;color:#bdbdbd}
 #watchModal .komi-episode-number-grid .komi-episode-watched {opacity:.72;position:relative}
 #watchModal .komi-episode-number-grid .komi-episode-watched::after {
-  content:"✓";position:absolute;right:5px;top:2px;font-size:10px;color:#ff727a;
+  content:"✓";position:absolute;right:5px;top:2px;font-size:10px;color:#ebebeb;
 }
 #watchModal .komi-episode-number-grid .komi-episode-number.active {
-  background:#bd2a39 !important;color:#fff !important;
-  border-color:#f35b68 !important;box-shadow:0 5px 18px rgba(210,44,60,.24) !important;
+  background:#4a4a4a !important;color:#fff !important;
+  border-color:#ebebeb !important;box-shadow:0 5px 18px rgba(80,80,80,.24) !important;
 }
 #watchModal.komi-lights-off {background:rgba(0,0,0,.985) !important;backdrop-filter:blur(24px) !important}
 #watchModal.komi-lights-off .crunchy-hero-section,

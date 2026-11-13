@@ -3278,39 +3278,20 @@ async function loadDataFromCloud(attempt = 0) {
                 <button class="komi-watch-expand" data-komi-onclick="toggleKomiWatchFullscreen()" title="Полный экран">⛶ <span>На весь экран</span></button>
                 <button class="modal-close" data-komi-onclick="playSound(); closeWatchModal()">&times;</button>
                 <div class="watch-cinema-layout">
-                    ${animeDetailsMarkup(anime)}
                     <div class="crunchy-hero-section">
                         <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" data-komi-onerror="this.onerror=null;this.src='/anime-artwork.svg'">
                         <div class="crunchy-hero-info">
-                            <span style="font-size:10px; color:var(--text-muted); text-transform:uppercase; letter-spacing:1px;">Просмотр</span>
                             <h1>${escapeFriendHtml(anime.title)}</h1>
-                            <p style="color:var(--text-muted); font-size:11px; line-height:1.4;">${cleanAnimeDescription(anime.desc)}</p>
-                            <div style="display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:2px;">
+                            <p class="komi-watch-description" tabindex="0">${cleanAnimeDescription(anime.desc)}</p>
+                            <div class="komi-watch-meta">
                                 <span style="color:#eaeaea; font-weight:700; font-size:11px;">★ ${escapeFriendHtml(shikiRating)} Shikimori</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml((Array.isArray(anime.genres) ? anime.genres : []).join(', '))}</span>
-                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml(anime.year || '2026')}</span>
+                                <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml(anime.year || '—')}</span>
                                 <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" data-komi-onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
                                 <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" data-komi-onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)"> Party</button>
                             </div>
                         </div>
                     </div>
-
-                    <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:6px 10px; border-radius:8px;">
-                        <span style="font-size:11px; color:var(--text-muted);">Статус:</span>
-                        ${['Просмотрено', 'В планах', 'Смотрю', 'Отложено', 'Брошено'].map(st => `
-                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" data-watch-status="${st}" aria-pressed="${myCurrentStatus === st}" data-komi-onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
-                        `).join('')}
-                    </div>
-
-                    ${Object.keys(customFolders).length > 0 ? `
-                        <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:6px 10px; border-radius:8px;">
-                            <span style="font-size:11px; color:var(--text-muted);">Папки:</span>
-                            ${Object.keys(customFolders).map(fname => {
-                                const inFolder = (customFolders[fname] || []).includes(anime.id);
-                                return `<button type="button" class="season-tab-btn ${inFolder ? 'active' : ''}" data-komi-folder="${escapeFriendHtml(fname)}"> ${escapeFriendHtml(fname)} ${inFolder ? '✓' : ''}</button>`;
-                            }).join('')}
-                        </div>
-                    ` : ''}
 
                     <div class="komi-watch-stage">
                         <div class="komi-watch-main">
@@ -3352,6 +3333,24 @@ async function loadDataFromCloud(attempt = 0) {
                             </div>
                         </aside>
                     </div>
+                    <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:6px 10px; border-radius:8px;">
+                        <span style="font-size:11px; color:var(--text-muted);">Статус:</span>
+                        ${['Просмотрено', 'В планах', 'Смотрю', 'Отложено', 'Брошено'].map(st => `
+                            <button class="season-tab-btn ${myCurrentStatus === st ? 'active' : ''}" data-watch-status="${st}" aria-pressed="${myCurrentStatus === st}" data-komi-onclick="playSound(); setAnimeStatus('${anime.id}', '${st}')">${st}</button>
+                        `).join('')}
+                    </div>
+
+                    ${Object.keys(customFolders).length > 0 ? `
+                        <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-input); padding:6px 10px; border-radius:8px;">
+                            <span style="font-size:11px; color:var(--text-muted);">Папки:</span>
+                            ${Object.keys(customFolders).map(fname => {
+                                const inFolder = (customFolders[fname] || []).includes(anime.id);
+                                return `<button type="button" class="season-tab-btn ${inFolder ? 'active' : ''}" data-komi-folder="${escapeFriendHtml(fname)}"> ${escapeFriendHtml(fname)} ${inFolder ? '✓' : ''}</button>`;
+                            }).join('')}
+                        </div>
+                    ` : ''}
+
+                    ${animeDetailsMarkup(anime)}
                 </div>
             `;
             document.getElementById('watchModal').classList.add('active');

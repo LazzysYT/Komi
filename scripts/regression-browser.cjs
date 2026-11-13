@@ -338,14 +338,24 @@ async function checkNotifications(page) {
    const cinema = await page.evaluate(() => {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
+     const hero=document.querySelector('#watchModal .crunchy-hero-section').getBoundingClientRect();
+     const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
+     const episode=stage.querySelector('.komi-episode-number.active');
+     const active=getComputedStyle(episode);
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
-     return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,columns:getComputedStyle(stage).gridTemplateColumns };
+     return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
+       heroHeight:hero.height,gap:player.top-hero.bottom,color:active.color,border:active.borderColor,
+       background:active.backgroundColor,before:getComputedStyle(episode,'::before').content,
+       after:getComputedStyle(episode,'::after').content };
    });
    assert.ok(cinema.width >= width * .99, 'Cinema modal should use the full viewport width');
    assert.ok(cinema.height >= 800, 'Cinema modal should use the full viewport height');
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
+   assert.ok(cinema.heroHeight<=165 && cinema.gap>=0 && cinema.gap<=18,JSON.stringify(cinema));
+   assert.deepEqual([cinema.background,cinema.border,cinema.color,cinema.before,cinema.after],
+     ['rgb(238, 238, 238)','rgb(255, 255, 255)','rgb(10, 10, 10)','none','none']);
    await page.waitForSelector('.komi-episodes-toggle');
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-native-hud').count(),1);
