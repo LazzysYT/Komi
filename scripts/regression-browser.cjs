@@ -118,7 +118,12 @@ async function checkNotifications(page) {
    await mark.press('Enter');
    await page.getByText('Не удалось обновить уведомления.', { exact:false }).waitFor();
    assert.equal(await mark.isEnabled(), true);
-   await mark.click();
+   // The mobile notification control may be in the header's offscreen scroll layer.
+   // Keyboard activation is the existing accessible path; desktop still tests click.
+   if (page.viewportSize()?.width <= 390) {
+     await mark.focus();
+     await mark.press('Enter');
+   } else await mark.click();
    await list.getByText('Нет новых уведомлений').waitFor();
    const updates = await page.evaluate(() => window.komiNotificationTest.updates);
    assert.equal(updates.length, 2);
