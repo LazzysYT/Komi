@@ -153,7 +153,7 @@
     const season = [...animeList].filter(a=>context.year(a)===latestYear)
       .sort((a,b)=>updated(b)-updated(a)||score(b)-score(a)).slice(0,12);
     const short = [...animeList].filter(a=>context.type(a)==='Сериал' &&
-      count(a)>0 && count(a)<=13).sort((a,b)=>score(b)-score(a)).slice(0,12);
+      count(a)>0 && count(a)<=13 && score(a)>=7).sort((a,b)=>score(b)-score(a)).slice(0,12);
     const popular = [...animeList].filter(a=>score(a)>0)
       .sort((a,b)=>((updated(b)>Date.now()-30*86400000?2:0)+score(b)/10)-
                     ((updated(a)>Date.now()-30*86400000?2:0)+score(a)/10)).slice(0,12);
