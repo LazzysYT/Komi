@@ -1,0 +1,334 @@
+/* Komi Clean Cinema V5 — scoped to viewing modal, no changes to Watch Party. */
+#watchModal.komi-clean-v5{
+  --komi-clean-bg:#0a0a0b;
+  --komi-clean-card:#171719;
+  --komi-clean-border:#303034;
+  --komi-clean-active:#313134;
+  background:var(--komi-clean-bg)!important;
+  padding:0!important;
+}
+#watchModal.komi-clean-v5 #watchModalContent{
+  box-sizing:border-box!important;
+  width:100vw!important;max-width:100vw!important;
+  height:100dvh!important;max-height:100dvh!important;
+  margin:0!important;padding:0!important;border:0!important;border-radius:0!important;
+  background:var(--komi-clean-bg)!important;
+  overflow-y:auto!important;overflow-x:hidden!important;
+  scrollbar-color:#4e4e52 #0a0a0b;
+}
+#watchModal.komi-clean-v5 .komi-cinema-topbar{
+  position:sticky!important;top:0;z-index:35;
+  justify-content:flex-end;gap:8px;min-height:48px!important;
+  padding:7px clamp(12px,1.8vw,28px)!important;
+  background:rgba(11,11,12,.94)!important;
+  border-bottom:1px solid #252527!important;
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+}
+#watchModal.komi-clean-v5 .komi-cinema-topbar-title,
+#watchModal.komi-clean-v5 .komi-native-fullscreen-toggle,
+#watchModal.komi-clean-v5 .komi-cinema-topbar .komi-watch-expand,
+#watchModal.komi-clean-v5 .komi-cinema-topbar .komi-episodes-toggle{
+  display:none!important;
+}
+#watchModal.komi-clean-v5 .komi-cinema-topbar .komi-cinema-share{
+  min-height:34px!important;padding:6px 11px!important;border-radius:999px!important;
+  background:#1c1c1e!important;color:#efefef!important;border-color:#333337!important;
+}
+#watchModal.komi-clean-v5 .komi-cinema-topbar .modal-close{
+  display:inline-flex!important;align-items:center;justify-content:center;
+  min-width:36px!important;width:36px!important;height:36px!important;
+  border-radius:50%!important;border:1px solid #444448!important;
+  color:#fff!important;background:#222225!important;
+}
+#watchModal.komi-clean-v5 .watch-cinema-layout{
+  display:flex!important;flex-direction:column!important;
+  width:100%;min-width:0;gap:13px!important;
+  height:auto!important;min-height:0!important;
+  overflow:visible!important;
+  padding:14px clamp(12px,1.8vw,28px) 30px!important;
+}
+#watchModal.komi-clean-v5 .komi-watch-stage{
+  position:relative;order:0!important;display:grid!important;
+  grid-template-columns:minmax(0,1fr) clamp(270px,24vw,380px)!important;
+  align-items:stretch!important;gap:clamp(12px,1.2vw,20px)!important;
+  width:100%!important;min-width:0!important;min-height:0!important;
+  height:auto!important;margin:0!important;
+}
+#watchModal.komi-clean-v5 .komi-watch-main{
+  position:relative;display:flex!important;flex-direction:column!important;
+  min-width:0!important;min-height:0!important;gap:0!important;
+}
+#watchModal.komi-clean-v5 .komi-watch-main .komi-player-heading,
+#watchModal.komi-clean-v5 .komi-ambient-glow{display:none!important}
+#watchModal.komi-clean-v5 .player-wrapper.komi-v4-surface{
+  position:relative!important;display:block!important;flex:0 1 auto!important;
+  width:100%!important;min-width:0!important;min-height:0!important;
+  height:auto!important;max-height:calc(100dvh - 157px)!important;
+  aspect-ratio:16/9!important;
+  overflow:hidden!important;border-radius:25px!important;
+  background:#050505!important;
+  border:1px solid #28282c!important;
+  box-shadow:0 16px 50px rgba(0,0,0,.37)!important;
+}
+#watchModal.komi-clean-v5 .player-wrapper.komi-v4-surface > .player-box{
+  position:absolute!important;inset:0!important;
+  width:100%!important;height:100%!important;
+  min-height:0!important;max-height:none!important;
+  aspect-ratio:auto!important;
+}
+#watchModal.komi-clean-v5 .player-wrapper.komi-v4-surface iframe,
+#watchModal.komi-clean-v5 .player-wrapper.komi-v4-surface video{
+  display:block!important;width:100%!important;height:100%!important;
+  max-height:100%!important;object-fit:contain!important;
+  background:#000!important;
+}
+#watchModal.komi-clean-v5 .player-wrapper.komi-v4-surface:fullscreen{
+  width:100vw!important;height:100dvh!important;max-height:none!important;
+  aspect-ratio:auto!important;border-radius:0!important;border:0!important;
+}
+#watchModal.komi-clean-v5 .komi-v4-shade{
+  background:linear-gradient(to bottom,rgba(0,0,0,.52),rgba(0,0,0,.13) 68px,transparent 126px)!important;
+}
+#watchModal.komi-clean-v5 .komi-v4-top{
+  gap:9px!important;padding:clamp(10px,1.5vw,19px)!important;
+}
+#watchModal.komi-clean-v5 .komi-v4-pill,
+#watchModal.komi-clean-v5 .komi-v4-circle{
+  color:#fff!important;background:rgba(30,30,32,.86)!important;
+  border-color:#404045!important;box-shadow:0 5px 22px #0005!important;
+  border-radius:999px!important;
+}
+#watchModal.komi-clean-v5 .komi-v4-pill:hover:not(:disabled),
+#watchModal.komi-clean-v5 .komi-v4-circle:hover:not(:disabled){
+  background:#3d3d40!important;border-color:#bbb!important;
+}
+#watchModal.komi-clean-v5 .komi-v4-picker{max-width:48%!important}
+#watchModal.komi-clean-v5 .komi-v4-source-menu{
+  border-color:#45454a!important;background:rgba(18,18,20,.97)!important;
+}
+#watchModal.komi-clean-v5 .komi-clean-titleline{
+  display:flex;align-items:center;justify-content:space-between;
+  gap:12px;min-height:66px;padding:11px 2px 1px;
+  color:#f7f7f7;
+}
+#watchModal.komi-clean-v5 .komi-clean-title-text{
+  flex:1;min-width:0;
+}
+#watchModal.komi-clean-v5 .komi-clean-title-text h2{
+  margin:0 0 4px!important;font-size:clamp(17px,1.75vw,26px)!important;
+  line-height:1.2;letter-spacing:-.02em;white-space:nowrap;
+  overflow:hidden;text-overflow:ellipsis;
+}
+#watchModal.komi-clean-v5 .komi-clean-title-text p{
+  margin:0!important;font-size:12px;line-height:1.5;
+  font-weight:550;color:#a5a5aa;
+}
+#watchModal.komi-clean-v5 .komi-clean-title-actions{
+  display:flex;align-items:center;gap:10px;flex-shrink:0;
+}
+#watchModal.komi-clean-v5 .komi-clean-title-actions .komi-v4-episode-actions{
+  display:flex!important;gap:7px;pointer-events:auto;
+}
+#watchModal.komi-clean-v5 .komi-clean-title-actions .komi-v4-circle{
+  width:41px!important;height:41px!important;border:1px solid #35353a!important;
+  background:#202022!important;color:#fff!important;
+}
+#watchModal.komi-clean-v5 .komi-clean-title-actions .komi-v4-circle:disabled{
+  opacity:.35!important;
+}
+#watchModal.komi-clean-v5 .komi-clean-more{
+  min-height:38px;padding:8px 12px;border:1px solid #37373b;
+  border-radius:999px;background:#1c1c1e;color:#ccc;
+  font:650 11px 'Plus Jakarta Sans',system-ui,sans-serif;cursor:pointer;
+}
+#watchModal.komi-clean-v5 .komi-clean-more:hover{color:#fff;border-color:#aaa}
+#watchModal.komi-clean-v5 .komi-clean-more:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#watchModal.komi-clean-v5 .komi-watch-sidebar{
+  position:relative!important;align-self:stretch!important;
+  width:100%!important;height:auto!important;
+  min-height:0!important;max-height:calc(100dvh - 82px)!important;
+  padding:14px!important;
+  overflow-x:hidden!important;overflow-y:auto!important;
+  scrollbar-color:#4d4d51 #171719;
+  background:var(--komi-clean-card)!important;
+  border:1px solid #303035!important;border-radius:24px!important;
+  box-shadow:none!important;
+  backdrop-filter:none!important;transform:translateX(0);
+}
+#watchModal.komi-clean-v5 .komi-watch-side-heading{
+  position:sticky;top:-14px;z-index:5;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:9px;min-height:56px;margin:-14px -14px 12px!important;
+  padding:12px 14px 9px;
+  background:rgba(23,23,25,.97);
+  border-bottom:1px solid #252528;
+}
+#watchModal.komi-clean-v5 .komi-watch-side-heading small,
+#watchModal.komi-clean-v5 .komi-watch-side-heading > span{display:none!important}
+#watchModal.komi-clean-v5 .komi-watch-side-heading h3{
+  font-size:17px!important;letter-spacing:-.02em;
+  color:#f7f7f7!important;margin:0!important;white-space:nowrap;
+}
+#watchModal.komi-clean-v5 .komi-clean-series-count{
+  margin-left:7px;font-size:12px;font-weight:600;color:#8f8f94;
+}
+#watchModal.komi-clean-v5 .komi-clean-series-search{width:110px;flex:0 1 110px}
+#watchModal.komi-clean-v5 .komi-clean-series-search input{
+  width:100%!important;min-height:36px!important;
+  border:1px solid #303035!important;border-radius:13px!important;
+  background:#27272a!important;color:#eee!important;
+  padding:8px 11px!important;font-size:12px!important;
+}
+#watchModal.komi-clean-v5 .komi-clean-series-search input::placeholder{color:#96969c}
+#watchModal.komi-clean-v5 .komi-watch-sidebar label[for="komiEpisodeSearch"]{
+  position:absolute!important;width:1px;height:1px;padding:0;overflow:hidden;
+  clip-path:inset(50%);white-space:nowrap;border:0;
+}
+#watchModal.komi-clean-v5 #komiEpisodeSearchStatus:empty{display:none}
+#watchModal.komi-clean-v5 .komi-episode-view-toggle{display:none!important}
+#watchModal.komi-clean-v5 .komi-watch-sidebar .komi-episode-number-grid.komi-clean-series-list{
+  display:grid!important;grid-template-columns:minmax(0,1fr)!important;
+  gap:8px!important;max-height:none!important;overflow:visible!important;
+  padding:0!important;margin:0!important;
+}
+#watchModal.komi-clean-v5 .komi-watch-sidebar .komi-episode-number-grid.komi-clean-series-list .komi-episode-number{
+  display:flex!important;align-items:center!important;
+  gap:12px!important;width:100%!important;
+  min-width:0!important;height:auto!important;min-height:77px!important;
+  padding:8px 9px!important;text-align:left;
+  border-radius:17px!important;border:1px solid transparent!important;
+  background:#242426!important;color:#f2f2f2!important;
+  box-shadow:none!important;transform:none!important;
+  transition:background .18s,border-color .18s!important;
+}
+#watchModal.komi-clean-v5 .komi-watch-sidebar .komi-episode-number-grid.komi-clean-series-list .komi-episode-number:hover{
+  background:#2d2d30!important;border-color:#5b5b60!important;
+}
+#watchModal.komi-clean-v5 .komi-watch-sidebar .komi-episode-number-grid.komi-clean-series-list .komi-episode-number.active{
+  background:#37373a!important;border-color:#9d9da3!important;
+  color:#fff!important;box-shadow:inset 0 0 0 1px #8883!important;
+}
+#watchModal.komi-clean-v5 .komi-episode-number.active::before,
+#watchModal.komi-clean-v5 .komi-episode-number.active::after{
+  content:none!important;display:none!important;
+}
+#watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-list-number{
+  display:none!important;
+}
+#watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-episode-preview,
+#watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-clean-episode-thumb{
+  display:flex!important;align-items:center;justify-content:center;
+  width:110px!important;height:62px!important;
+  min-width:110px!important;max-width:110px!important;flex:0 0 110px!important;
+  object-fit:cover!important;overflow:hidden;
+  border:1px solid #3c3c42;border-radius:12px!important;
+  background:linear-gradient(145deg,#353539,#19191c);
+  color:#b7b7bd;font-weight:800;font-size:21px;
+}
+#watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-list-label{
+  flex:1;min-width:0;color:inherit!important;font-size:14px!important;
+  font-weight:750!important;white-space:normal;line-height:1.35;
+}
+#watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-list-label small{
+  display:block!important;margin-top:5px;font-size:11px!important;
+  color:#9f9fa5!important;font-weight:500!important;
+}
+#watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-episode-number.active .komi-list-label small{
+  color:#c9c9ce!important;
+}
+#watchModal.komi-clean-v5 .komi-watch-sidebar .season-tabs{padding:0!important;margin:0 0 12px!important}
+#watchModal.komi-clean-v5 .komi-watch-sidebar .season-tab-btn{border-radius:12px!important}
+#watchModal.komi-clean-v5 .komi-clean-extras{
+  width:100%;min-width:0;
+  background:#131315;border:1px solid #29292c;border-radius:17px;
+  overflow:hidden;
+}
+#watchModal.komi-clean-v5 .komi-clean-extras > summary{
+  min-height:46px;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding:12px 18px;cursor:pointer;
+  color:#e8e8ea;font-size:13px;font-weight:650;
+  list-style:none;
+}
+#watchModal.komi-clean-v5 .komi-clean-extras > summary::-webkit-details-marker{display:none}
+#watchModal.komi-clean-v5 .komi-clean-extras > summary::after{
+  content:"⌄";font-size:18px;color:#b4b4b8;
+}
+#watchModal.komi-clean-v5 .komi-clean-extras[open] > summary::after{content:"⌃"}
+#watchModal.komi-clean-v5 .komi-clean-extras > summary:focus-visible{outline:2px solid #fff;outline-offset:-3px}
+#watchModal.komi-clean-v5 .komi-clean-extras-body{
+  display:flex;flex-direction:column;gap:14px;
+  padding:16px 18px 22px;border-top:1px solid #2a2a2d;
+}
+#watchModal.komi-clean-v5 .komi-clean-extras-body .crunchy-hero-section{
+  order:0!important;margin:0!important;
+  border:1px solid #313135!important;border-radius:17px!important;
+  padding:13px!important;background:#19191b!important;
+}
+#watchModal.komi-clean-v5 .komi-clean-extras-body .komi-watch-controls{
+  position:relative!important;inset:auto!important;
+  flex-wrap:wrap!important;gap:8px!important;
+  margin:0!important;border-radius:14px!important;
+  background:#1b1b1e!important;border-color:#333337!important;
+}
+#watchModal.komi-clean-v5 .komi-clean-extras-body .komi-cinema-external-note,
+#watchModal.komi-clean-v5 .komi-clean-extras-body .komi-cinema-action-status{
+  color:#aaa;font-size:11px;
+}
+#watchModal.komi-clean-v5 .komi-clean-extras-body .komi-player-notice{border-radius:13px}
+#watchModal.komi-clean-v5 .player-wrapper .komi-player-hint{display:none!important}
+#watchModal.komi-clean-v5.komi-episodes-collapsed .komi-watch-stage{
+  grid-template-columns:minmax(0,1fr) 0fr!important;gap:0!important;
+}
+#watchModal.komi-clean-v5.komi-episodes-collapsed .komi-watch-sidebar{
+  opacity:0!important;visibility:hidden!important;
+  width:0!important;min-width:0!important;max-width:0!important;
+  padding:0!important;border:0!important;
+  transform:translateX(110%)!important;pointer-events:none!important;
+}
+@media(max-width:1100px){
+  #watchModal.komi-clean-v5 .komi-watch-stage{
+    grid-template-columns:minmax(0,1fr) 284px!important;gap:12px!important;
+  }
+  #watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-episode-preview,
+  #watchModal.komi-clean-v5 .komi-episode-number-grid.komi-clean-series-list .komi-clean-episode-thumb{
+    width:91px!important;min-width:91px!important;max-width:91px!important;
+    flex-basis:91px!important;height:54px!important;
+  }
+}
+@media(max-width:860px){
+  #watchModal.komi-clean-v5 .komi-watch-stage,
+  #watchModal.komi-clean-v5.komi-episodes-collapsed .komi-watch-stage{
+    display:block!important;grid-template-columns:1fr!important;
+  }
+  #watchModal.komi-clean-v5 .komi-watch-sidebar{
+    position:absolute!important;top:0;right:0;z-index:28;
+    width:min(88vw,360px)!important;height:auto!important;
+    max-height:min(76dvh,650px)!important;
+    box-shadow:-16px 15px 45px rgba(0,0,0,.7)!important;
+  }
+  #watchModal.komi-clean-v5 .player-wrapper.komi-v4-surface{
+    max-height:60dvh!important;border-radius:20px!important;
+  }
+  #watchModal.komi-clean-v5 .komi-clean-titleline{min-height:58px;padding-top:10px}
+  #watchModal.komi-clean-v5 .komi-clean-title-text h2{font-size:17px!important}
+  #watchModal.komi-clean-v5 .komi-clean-more{padding:7px 9px;font-size:10px}
+}
+@media(max-width:560px){
+  #watchModal.komi-clean-v5 .watch-cinema-layout{padding:10px 9px 20px!important}
+  #watchModal.komi-clean-v5 .komi-cinema-topbar{min-height:42px!important}
+  #watchModal.komi-clean-v5 .player-wrapper.komi-v4-surface{border-radius:16px!important}
+  #watchModal.komi-clean-v5 .komi-clean-titleline{gap:6px;flex-wrap:wrap}
+  #watchModal.komi-clean-v5 .komi-clean-title-text{flex-basis:100%}
+  #watchModal.komi-clean-v5 .komi-clean-title-actions{
+    width:100%;justify-content:space-between;
+  }
+  #watchModal.komi-clean-v5 .komi-clean-title-actions .komi-v4-circle{
+    width:38px!important;height:38px!important;
+  }
+  #watchModal.komi-clean-v5 .komi-clean-extras-body{padding:12px 10px}
+  #watchModal.komi-clean-v5 .komi-watch-side-heading h3{font-size:15px!important}
+}
+@media(prefers-reduced-motion:reduce){
+  #watchModal.komi-clean-v5 .komi-watch-sidebar,
+  #watchModal.komi-clean-v5 .komi-episode-number{transition:none!important}
+}
