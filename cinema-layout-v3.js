@@ -114,7 +114,7 @@
     context.drawer = drawer;
     drawer.addEventListener('click', () => {
       const showing = context.modal.classList.contains('komi-episodes-collapsed');
-      drawerPreference = !showing;
+      drawerPreference = showing;
       setDrawer(context, drawerPreference);
     });
     top.append(title, drawer);
