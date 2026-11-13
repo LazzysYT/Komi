@@ -132,7 +132,7 @@ async function openWatchPartyHub() {
     }
 }
 
-async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false, episodeIndex = null, source = '') {
+async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false, episodeIndex = null, source = '', startPosition = 0) {
     if (!partySignedIn()) return;
     const generation = ++partyGeneration;
     const selectedAnime = animeList.find(anime => String(anime.id) === String(animeId));
@@ -152,6 +152,25 @@ async function createWatchPartyFromAnime(animeId, name = '', privateRoom = false
             name: name.trim() || 'Совместный просмотр', animeId: String(animeId),
             private: privateRoom, episode: initial.episode, source: initial.source
         });
+        // Transfer the exact paused position only when both viewers can control MP4/HLS.
+        // Existing room-state RPC already enforces host ownership; no schema or RLS changes.
+        const seconds = Number(startPosition);
+        if (generation === partyGeneration && initial.synchronized && Number.isFinite(seconds) && seconds > 0) {
+            const position = Math.max(0, Math.min(86400, seconds));
+            try {
+                await partyCall('state', room.id, {
+                    episode: initial.episode, source: initial.source,
+                    position, playing: false
+                });
+                room.position = position;
+                room.playing = false;
+                room.updated_at = new Date().toISOString();
+            } catch (error) {
+                // Never report that the seek was synchronized if the backend refused it.
+                console.warn('Не удалось перенести момент просмотра в комнату:', error.message);
+                alert('Комната создана, но позицию перенести не удалось. Просмотр начнётся с начала серии.');
+            }
+        }
         if (generation === partyGeneration) await enterParty(room);
         else await partyCall('close', room.id);
     } catch (error) { alert('Не удалось создать комнату: ' + error.message); }

@@ -288,8 +288,9 @@
                 break;
             case 'KeyF':
                 event.preventDefault();
-                if (document.fullscreenElement === video) document.exitFullscreen?.();
-                else video.requestFullscreen?.().catch?.(() => {});
+                const surface = context.content.querySelector('.player-wrapper') || video;
+                if (document.fullscreenElement === surface) document.exitFullscreen?.();
+                else surface.requestFullscreen?.().catch?.(() => {});
                 break;
             default: break;
         }

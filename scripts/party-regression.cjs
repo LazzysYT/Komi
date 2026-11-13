@@ -147,6 +147,13 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   assert.equal(state.source,'Direct','New room should start with controllable media');
   assert.deepEqual(submitErrors,[],'Submitting without event.submitter must not throw');
   await hostPage.evaluate(()=>leaveWatchPartyRoom());
+  // Creating a room from a native player should use the current paused position.
+  await hostPage.evaluate(()=>createWatchPartyFromAnime('1','Тест момента',false,0,'Direct',85));
+  await hostPage.locator('#partyVideoElement').waitFor({timeout:8000});
+  assert.equal(state.position,85,'A controllable source must carry the starting playback time into the room');
+  assert.equal(state.playing,false,'A room must start paused at the shared timestamp');
+  assert.equal(roomCreates,2);
+  await hostPage.evaluate(()=>leaveWatchPartyRoom());
   console.log('PASS two browser clients: seek, play/pause, bidirectional safe chat, source switch, entity decoding, leave cleanup and guarded Enter room submission (mock RPC/media)');
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

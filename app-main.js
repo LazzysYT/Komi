@@ -3138,12 +3138,18 @@ async function loadDataFromCloud(attempt = 0) {
 
         function toggleKomiWatchFullscreen() {
             const modal=document.getElementById('watchModal');
-            modal?.classList.toggle('komi-watch-fullscreen');
+            const content=document.getElementById('watchModalContent');
+            if (document.fullscreenElement === content) {
+                document.exitFullscreen?.().catch(() => {});
+            } else if (content?.requestFullscreen && document.fullscreenEnabled) {
+                content.requestFullscreen().catch(() => modal?.classList.toggle('komi-watch-fullscreen'));
+            } else modal?.classList.toggle('komi-watch-fullscreen');
             const button=modal?.querySelector('.komi-watch-expand span');
-            if(button) button.textContent=modal.classList.contains('komi-watch-fullscreen')?'Обычный размер':'На весь экран';
+            if(button) button.textContent=document.fullscreenElement === content?'Обычный размер':'На весь экран';
         }
         function closeWatchModal() {
             ++komiDetailOpenToken;
+            if (document.fullscreenElement?.closest?.('#watchModal')) document.exitFullscreen?.().catch(() => {});
             if (typeof aniCoinStopEmbed === 'function') aniCoinStopEmbed();
             document.getElementById('watchModal')?.classList.remove('komi-watch-fullscreen');
             const videoEl = document.getElementById('animeVideoPlayer');
@@ -3344,7 +3350,6 @@ async function loadDataFromCloud(attempt = 0) {
                             <div class="komi-episode-number-grid" role="group" aria-label="Выбрать серию">
                                 ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" data-komi-onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
                             </div>
-                            <p class="komi-watch-side-footnote">Нажми на номер, чтобы перейти к серии.</p>
                         </aside>
                     </div>
                 </div>
@@ -3365,7 +3370,13 @@ async function loadDataFromCloud(attempt = 0) {
                 ownerIsCurrent:() => (currentUser?.authUserId || currentUser?.username || '') === watchedLocalOwner,
                 season:activeSeason,
                 index:activeIndex,
-                hasNext
+                hasNext,
+                displayNumber,
+                originalIndex: currentEp.originalIdx,
+                episodeMeta:currentSeasonEpisodes.map(ep=>({
+                    preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',
+                    duration:ep?.duration ?? ep?.durationSeconds ?? null
+                }))
             });
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
