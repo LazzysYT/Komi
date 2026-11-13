@@ -14,7 +14,7 @@
             }
         } catch(e) {}
 
-        const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив'];
+        const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай'];
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         function playSound() {
@@ -3141,7 +3141,7 @@ async function loadDataFromCloud(attempt = 0) {
             })).filter(x => Number.isFinite(x.date) && x.date <= now && now - x.date <= 3 * 86400000)
               .sort((a,b) => b.date - a.date).slice(0,8);
 
-            let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title"> Календарь серий</h2>'+
+            let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title"> Календарь серий</h2><p class="komi-home-subtitle">Расписание эфиров и последние добавления в каталог</p>'+
                 '<button type="button" class="section-see-all" data-komi-onclick="loadKomiEpisodeSchedule(true)">↻ Обновить расписание</button></div>';
             if (upcoming.length) {
                 result += '<p class="komi-feature-muted">Ближайшие эфиры · время указано в твоём часовом поясе. Озвучка может появиться позже.</p>';
