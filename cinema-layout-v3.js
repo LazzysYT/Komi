@@ -15,7 +15,7 @@
     return element;
   }
   function currentContext(context) {
-    return current === context && context.modal.classList.contains('active') &&
+    return !!context && current === context && context.modal.classList.contains('active') &&
       context.content.isConnected;
   }
   function setDrawer(context, expanded) {
