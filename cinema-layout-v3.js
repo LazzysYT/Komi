@@ -34,6 +34,19 @@
       episodeButton.dataset.komiEpisodeLabel = label;
       episodeButton.replaceChildren();
       if (list) {
+        const meta = context.episodeMeta?.[index];
+        if (meta?.preview) {
+          let parsed;
+          try { parsed = new URL(meta.preview); } catch {}
+          if (parsed?.protocol === 'https:' && !parsed.username && !parsed.password) {
+            const preview = document.createElement('img');
+            preview.className = 'komi-episode-preview';
+            preview.src = parsed.href;
+            preview.alt = '';
+            preview.loading = 'lazy';
+            episodeButton.append(preview);
+          }
+        }
         const number = document.createElement('strong');
         number.className = 'komi-list-number';
         number.textContent = label;
@@ -41,8 +54,13 @@
         caption.className = 'komi-list-label';
         caption.textContent = 'Серия ' + label;
         const explanation = document.createElement('small');
-        explanation.textContent = episodeButton.classList.contains('active') ? 'Сейчас воспроизводится' :
-          episodeButton.classList.contains('komi-episode-watched') ? 'Просмотрена' : 'Выбрать серию';
+        const seconds = Number(meta?.duration);
+        const duration = Number.isFinite(seconds) && seconds > 0 && seconds < 86400
+          ? ' · ' + Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2,'0')
+          : typeof meta?.duration === 'string' && /^\d{1,3}:\d{2}$/.test(meta.duration)
+            ? ' · ' + meta.duration : '';
+        explanation.textContent = (episodeButton.classList.contains('active') ? 'Сейчас воспроизводится' :
+          episodeButton.classList.contains('komi-episode-watched') ? 'Просмотрена' : 'Выбрать серию') + duration;
         caption.append(explanation);
         episodeButton.append(number, caption);
       } else episodeButton.textContent = label;
@@ -80,6 +98,7 @@
     context.sidebar = sidebar;
     context.grid = grid;
     context.title = heading.querySelector('h2')?.textContent || 'KomiAnime';
+    context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
     current = context;
 
     // The top bar is inside the existing viewport, never overlapping site navigation.
