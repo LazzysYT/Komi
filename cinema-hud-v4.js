@@ -133,17 +133,10 @@
     topActions.append(drawerButton, fullscreen);
     top.append(picker, topActions);
 
-    const bottom = document.createElement('div');
-    bottom.className = 'komi-v4-bottom';
-    const info = document.createElement('div');
-    info.className = 'komi-v4-info';
-    const title = document.createElement('strong');
-    title.textContent = heading.querySelector('h2')?.textContent || 'KomiAnime';
-    const episode = document.createElement('span');
-    const number = Number(settings.displayNumber) || ctx.index + 1;
-    const total = ctx.content.querySelectorAll('.komi-episode-number-grid .komi-episode-number').length;
-    episode.textContent = 'Сезон ' + ctx.season + ' · Серия ' + number + (total ? ' из ' + total : '');
-    info.append(title, episode);
+    // Keep the lower edge completely clear: embedded providers own the
+    // playback timeline, and native <video> owns its browser controls.
+    // Episode navigation remains available in the compact top toolbar,
+    // including when our wrapper is in fullscreen.
     const epActions = document.createElement('div');
     epActions.className = 'komi-v4-episode-actions';
     const previous = button('‹', 'komi-v4-circle', 'Предыдущая серия');
@@ -159,8 +152,8 @@
         root.openWatchModal(ctx.animeId, ctx.season, ctx.index + 1);
     }, { signal });
     epActions.append(previous, next);
-    bottom.append(info, epActions);
-    hud.append(top, bottom);
+    topActions.prepend(epActions);
+    hud.append(top);
     wrapper.append(shade, hud);
 
     document.addEventListener('pointerdown', event => {

@@ -1,27 +1,40 @@
 /* Komi HUD V4: independent, scoped layer over native video / provider iframe. */
 #watchModal .player-wrapper.komi-v4-surface {
   position:relative!important;
+  display:block!important;
   isolation:isolate;
   background:#050505!important;
   border-color:rgba(255,255,255,.34)!important;
   box-shadow:0 20px 60px #000b,0 0 52px #ebebeb16!important;
 }
+/* Prevent a provider hint from taking a second grid row and shrinking the
+   iframe. The entire player surface is reserved for the actual media. */
+#watchModal .player-wrapper.komi-v4-surface > .player-box{
+  display:block!important;position:absolute!important;inset:0;
+  width:100%!important;height:100%!important;
+  min-height:0!important;max-height:none!important;
+  aspect-ratio:auto!important;margin:0!important;
+}
+#watchModal .player-wrapper.komi-v4-surface .player-box iframe,
+#watchModal .player-wrapper.komi-v4-surface .player-box video{
+  display:block!important;width:100%!important;height:100%!important;
+  max-height:none!important;aspect-ratio:auto!important;
+}
+#watchModal .player-wrapper.komi-v4-surface .komi-player-hint{display:none!important}
 #watchModal .player-wrapper.komi-v4-surface .komi-native-hud{display:none!important}
 #watchModal .komi-v4-shade{
   position:absolute;inset:0;z-index:11;pointer-events:none;
-  background:linear-gradient(180deg,rgba(4,4,4,.72) 0%,transparent 21%,transparent 56%,rgba(4,4,4,.68) 100%);
+  background:linear-gradient(180deg,rgba(4,4,4,.52) 0%,rgba(4,4,4,.20) 68px,transparent 128px);
 }
 #watchModal .komi-v4-hud{
   position:absolute;inset:0;z-index:12;display:flex;flex-direction:column;
-  justify-content:space-between;gap:12px;pointer-events:none;
+  justify-content:flex-start;gap:12px;pointer-events:none;
   color:#fff;font-family:'Plus Jakarta Sans',system-ui,sans-serif;
 }
-#watchModal .komi-v4-top,
-#watchModal .komi-v4-bottom{
+#watchModal .komi-v4-top{
   display:flex;justify-content:space-between;align-items:flex-start;
   gap:12px;padding:clamp(12px,1.55vw,22px);
 }
-#watchModal .komi-v4-bottom{align-items:flex-end;padding-bottom:clamp(58px,6vw,78px)}
 #watchModal .komi-v4-picker{position:relative;min-width:0;max-width:min(60%,270px);pointer-events:auto}
 #watchModal .komi-v4-top-actions,#watchModal .komi-v4-episode-actions{
   display:flex;align-items:center;gap:8px;pointer-events:auto;flex-shrink:0
@@ -39,7 +52,7 @@
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;text-align:left
 }
 #watchModal .komi-v4-source-trigger:not(:disabled)::after{content:"⌄";margin-left:10px;color:#ebebeb}
-#watchModal .komi-v4-circle{width:44px;height:44px;border-radius:50%;font-size:28px;line-height:1}
+#watchModal .komi-v4-circle{width:38px;height:40px;border-radius:999px;font-size:25px;line-height:1}
 #watchModal .komi-v4-fullscreen{width:43px;font-size:20px}
 #watchModal .komi-v4-next:not(:disabled){border-color:#ebebeb;background:rgba(51,51,51,.85)}
 #watchModal .komi-v4-pill:not(:disabled):hover,#watchModal .komi-v4-circle:not(:disabled):hover{
@@ -68,12 +81,6 @@
 #watchModal .komi-v4-source-choice[aria-pressed="true"]{
   background:#282828;color:#c7c7c7;border-color:#424242
 }
-#watchModal .komi-v4-info{
-  display:flex;flex-direction:column;gap:5px;min-width:0;max-width:70%;
-  pointer-events:none;text-shadow:0 2px 14px #000,0 1px 3px #000
-}
-#watchModal .komi-v4-info strong{font-size:clamp(13px,1.6vw,21px);line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#watchModal .komi-v4-info span{font-size:clamp(11px,1vw,13px);color:#dedede;font-weight:600}
 #watchModal .player-wrapper.komi-v4-surface:fullscreen{
   width:100vw!important;height:100dvh!important;max-height:none!important;
   border-radius:0!important;border:0!important;aspect-ratio:auto!important
@@ -93,14 +100,11 @@
 #watchModal .player-wrapper.komi-v4-external.komi-v4-idle .komi-v4-shade,
 #watchModal .player-wrapper.komi-v4-external.komi-v4-idle .komi-v4-hud{opacity:1}
 @media (max-width:680px){
-  #watchModal .komi-v4-top,#watchModal .komi-v4-bottom{padding:10px}
-  #watchModal .komi-v4-bottom{padding-bottom:56px}
+  #watchModal .komi-v4-top{padding:10px}
   #watchModal .komi-v4-drawer{font-size:11px;padding:8px 10px}
   #watchModal .komi-v4-fullscreen{width:39px}
   #watchModal .komi-v4-pill{min-height:36px}
   #watchModal .komi-v4-circle{width:38px;height:38px;font-size:24px}
-  #watchModal .komi-v4-info{max-width:52%}
-  #watchModal .komi-v4-info strong{font-size:12px}
   #watchModal .komi-v4-source-menu{width:min(76vw,280px)}
 }
 @media (max-width:410px){
@@ -108,7 +112,6 @@
   #watchModal .komi-v4-drawer{font-size:0}
   #watchModal .komi-v4-drawer::after{content:"☷";font-size:19px}
   #watchModal .komi-v4-source-trigger{max-width:145px}
-  #watchModal .komi-v4-info strong{display:none}
 }
 @media (prefers-reduced-motion:reduce){
   #watchModal .komi-v4-hud,#watchModal .komi-v4-shade,
