@@ -16,7 +16,7 @@
     <link rel="canonical" href="https://komianime.online/">
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <link rel="stylesheet" href="./komi-comments.css">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
     <style>
         :root {
@@ -1596,6 +1596,7 @@ body > header {
     <link rel="stylesheet" href="./cinema-layout-v3.css">
     <link rel="stylesheet" href="./cinema-hud-v4.css">
     <link rel="stylesheet" href="./cinema-clean-v5.css">
+    <link rel="stylesheet" href="./home-discovery.css">
 <style>
 /* Visible before JavaScript initializes, also reused during a slow catalog request. */
 .komi-static-catalog { width: 100%; }
@@ -1750,7 +1751,8 @@ body > header > .header-inner {
                 <button class="nav-btn" id="navHomeBtn" data-komi-click="nav-home">Главная</button>
                 <button class="nav-btn" id="navCatalogBtn" data-komi-click="nav-catalog">Каталог</button>
                 <button class="action-icon-btn" id="headerRandomBtn" data-komi-click="random" title="Случайное аниме">◇</button>
-                <button class="action-icon-btn" id="headerPartyBtn" data-komi-click="watch-party" style="background:rgba(234,234,234,0.12); border-color:rgba(234,234,234,0.3); color:var(--primary);" title="Watch Party"> Party</button>
+                <button class="action-icon-btn" id="headerPartyBtn" data-komi-click="watch-party" title="Смотреть вместе">◇ Party</button>
+                <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true">◇</span><span id="komiHeaderAniCoinValue">—</span></button>
                 
                 <button class="action-icon-btn" id="adminPanelBtn" data-komi-click="admin-panel" style="display: none;" title="Админка"></button>
                 <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
@@ -1772,7 +1774,7 @@ body > header > .header-inner {
             <div class="search-container">
                 <div class="search-bar">
                     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Название аниме или жанр..." data-komi-input="search-input" data-komi-focus="search-focus">
+                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Поиск аниме или @пользователь (Ctrl K)" data-komi-input="search-input" data-komi-focus="search-focus">
                     <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
                 </div>
                 <div class="search-dropdown" id="searchDropdown"></div>
@@ -2119,7 +2121,9 @@ body > header > .header-inner {
     <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1000px;" id="watchPartyModalContent"></div></div>
 
     <script src="./player-core.js"></script>
+    <script src="./home-discovery.js"></script>
     <script src="./app-main.js"></script>
+    <script src="./hybrid-search.js"></script>
     <script src="./komi-comments.js"></script>
     <script src="./static-ui-events.js"></script>
     <script src="./accessibility.js"></script>
