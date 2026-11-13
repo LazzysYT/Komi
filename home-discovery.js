@@ -115,7 +115,7 @@
         const percent=hasProgress?Math.min(100,Math.max(0,position/duration*100)):0;
         const episode=Number(p.index)+1;
         const season=Number(p.season)||1;
-        const image=escape(anime.poster || '/anime-artwork.svg');
+        const image=context.artwork(anime);
         return '<button type="button" class="komi-home-progress-card" data-komi-onclick="resumeKomiAnime(\''+animeId+'\')">' +
           '<span class="komi-home-progress-art"><img src="'+image+'" loading="lazy" decoding="async" alt="">' +
           '<span class="komi-home-progress-track"><span style="width:'+percent.toFixed(2)+'%"></span></span></span>' +
