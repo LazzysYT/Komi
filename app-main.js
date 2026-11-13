@@ -688,6 +688,8 @@ async function loadDataFromCloud(attempt = 0) {
         function renderHeaderUser() {
             const area = document.getElementById('userHeaderArea');
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
+            const headerCoin = document.getElementById('komiHeaderAniCoin');
+            if (headerCoin) headerCoin.hidden = !currentUser?.authUserId;
             if (sidebarAvatarIcon) {
                 const avatar = currentUser && (userProfiles[currentUser.username]?.avatar || (!currentUser.authUserId && localStorage.getItem('komi_avatar_' + currentUser.username)));
                 if (avatar) {
@@ -821,6 +823,22 @@ async function loadDataFromCloud(attempt = 0) {
                     container.innerHTML = catalogInitialLoadFailed
                         ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" data-komi-onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'
                         : komiCatalogLoadingMarkup();
+                    return;
+                }
+                // New home layout only consumes existing DB-loaded data and handlers.
+                // Keep the legacy branch below as a safe fallback.
+                if (window.KomiHomeDiscovery) {
+                    container.innerHTML = window.KomiHomeDiscovery.render({
+                        animeList, currentUser, progress:komiEpisodeProgress,
+                        currentSlideIndex, renderCard, year:komiAnimeYear,
+                        type:komiCatalogType, artwork:animeArtwork,
+                        describe:cleanAnimeDescription,
+                        recommendations:komiRecommendations,
+                        calendar:komiReleaseCalendar, years:komiYearSections,
+                        intro:komiIntroMarkup
+                    });
+                    window.KomiHomeDiscovery.afterRender(container);
+                    startHeroAutoSlide();
                     return;
                 }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
@@ -1987,11 +2005,19 @@ async function loadDataFromCloud(attempt = 0) {
             const dd = document.getElementById('searchDropdown');
             if (!dd) return;
             const query = document.getElementById('searchInput')?.value.trim() || '';
+            if (window.KomiHybridSearch?.isUsers(query)) {
+                window.KomiHybridSearch.showUsers({
+                    dropdown:dd, query, client:_supabase, user:currentUser,
+                    onProfile:openProfile
+                });
+                return;
+            }
             if (query) { handleInstantSearch(query); return; }
             const heading = document.createElement('div');
             heading.textContent = 'Популярное';
             heading.style.cssText = 'padding:5px 10px;font-size:10px;color:var(--text-muted)';
             dd.replaceChildren(heading,...animeList.slice(0,5).filter(Boolean).map(a=>komiSearchSuggestion(a,true)));
+            window.KomiHybridSearch?.decorate(dd);
             dd.classList.add('active');
         }
 
@@ -1999,6 +2025,13 @@ async function loadDataFromCloud(attempt = 0) {
             const dd = document.getElementById('searchDropdown');
             if (!dd) return;
             const input = String(q || '');
+            if (window.KomiHybridSearch?.isUsers(input)) {
+                window.KomiHybridSearch.showUsers({
+                    dropdown:dd, query:input, client:_supabase, user:currentUser,
+                    onProfile:openProfile
+                });
+                return;
+            }
             const query = input.trim().toLocaleLowerCase('ru-RU');
             if (!query) {
                 catalogSearchQuery = '';
@@ -2018,6 +2051,7 @@ async function loadDataFromCloud(attempt = 0) {
                 empty.style.cssText = 'padding:16px;color:#a7a7a7;font-size:12px;text-align:center';
                 dd.replaceChildren(empty);
             }
+            window.KomiHybridSearch?.decorate(dd);
             dd.classList.add('active');
             catalogSearchQuery = input.slice(0,120);
             if (currentView !== 'catalog') {
