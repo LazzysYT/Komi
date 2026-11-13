@@ -1,10 +1,10 @@
 # Komi Anime
 
 ## Context
-Russian-language anime catalogue and viewing application. Existing visual identity is retained: dark surfaces, red Komi accent, poster-led cards, compact navigation. No Japanese-market workflow is implied by anime content.
+Russian-language anime catalogue and viewing application with dark surfaces, white accents, poster-led cards and compact navigation.
 
 ## Runtime tokens
-The final :root declarations and component CSS in index.html own existing colors, type and spacing. This reliability patch does not introduce a second theme. Native video controls own playback, volume, captions, keyboard access and fullscreen. The media viewport retains the site's 16:9 layout.
+`mono-ui.css` owns the shared palette. `cinema-layout-v3.css` and `cinema-hud-v4.css` style the full-window viewer, with compact title information above the 16:9 player and a light selection in the episode panel. Browser and provider video controls handle playback, volume and captions. Komi's player controls handle source selection and fullscreen.
 
 ## Behavior
 Source URLs are parsed once by player-core.js. player-runtime.js owns media initialization and disposal, HLS loading, saved position and form validation. Watch Party reuses that media owner; external embeds synchronize episode/source only. Existing komiStatusFeedback owns transient notices; player and form errors remain inline.

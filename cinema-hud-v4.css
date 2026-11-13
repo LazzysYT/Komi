@@ -2,14 +2,14 @@
 #watchModal .player-wrapper.komi-v4-surface {
   position:relative!important;
   isolation:isolate;
-  background:#050507!important;
-  border-color:rgba(255,69,79,.34)!important;
-  box-shadow:0 20px 60px #000b,0 0 52px #ff454f16!important;
+  background:#050505!important;
+  border-color:rgba(255,255,255,.34)!important;
+  box-shadow:0 20px 60px #000b,0 0 52px #ebebeb16!important;
 }
 #watchModal .player-wrapper.komi-v4-surface .komi-native-hud{display:none!important}
 #watchModal .komi-v4-shade{
   position:absolute;inset:0;z-index:11;pointer-events:none;
-  background:linear-gradient(180deg,rgba(4,4,9,.72) 0%,transparent 21%,transparent 56%,rgba(4,4,9,.68) 100%);
+  background:linear-gradient(180deg,rgba(4,4,4,.72) 0%,transparent 21%,transparent 56%,rgba(4,4,4,.68) 100%);
 }
 #watchModal .komi-v4-hud{
   position:absolute;inset:0;z-index:12;display:flex;flex-direction:column;
@@ -28,7 +28,7 @@
 }
 #watchModal .komi-v4-pill,#watchModal .komi-v4-circle{
   display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  border:1px solid rgba(255,255,255,.19);background:rgba(20,19,27,.78);
+  border:1px solid rgba(255,255,255,.19);background:rgba(20,20,20,.78);
   color:#fff;backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   font:700 12px 'Plus Jakarta Sans',system-ui,sans-serif;
   box-shadow:0 6px 20px #0007;cursor:pointer;transition:background .2s,border-color .2s,transform .2s;
@@ -38,15 +38,15 @@
 #watchModal .komi-v4-source-trigger{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block;text-align:left
 }
-#watchModal .komi-v4-source-trigger:not(:disabled)::after{content:"⌄";margin-left:10px;color:#ff7880}
+#watchModal .komi-v4-source-trigger:not(:disabled)::after{content:"⌄";margin-left:10px;color:#ebebeb}
 #watchModal .komi-v4-circle{width:44px;height:44px;border-radius:50%;font-size:28px;line-height:1}
 #watchModal .komi-v4-fullscreen{width:43px;font-size:20px}
-#watchModal .komi-v4-next:not(:disabled){border-color:#ff454f;background:rgba(127,29,43,.85)}
+#watchModal .komi-v4-next:not(:disabled){border-color:#ebebeb;background:rgba(51,51,51,.85)}
 #watchModal .komi-v4-pill:not(:disabled):hover,#watchModal .komi-v4-circle:not(:disabled):hover{
-  background:rgba(94,34,45,.94);border-color:#ff454f;transform:translateY(-1px)
+  background:rgba(48,48,48,.94);border-color:#ebebeb;transform:translateY(-1px)
 }
 #watchModal .komi-v4-pill:focus-visible,#watchModal .komi-v4-circle:focus-visible,
-#watchModal .komi-v4-source-choice:focus-visible{outline:2px solid #ff454f;outline-offset:3px}
+#watchModal .komi-v4-source-choice:focus-visible{outline:2px solid #ebebeb;outline-offset:3px}
 #watchModal .komi-v4-pill:disabled,#watchModal .komi-v4-circle:disabled{
   cursor:not-allowed;opacity:.47
 }
@@ -54,26 +54,26 @@
   position:absolute;top:calc(100% + 9px);left:0;z-index:22;
   display:flex;flex-direction:column;gap:3px;
   width:clamp(185px,25vw,280px);max-height:45dvh;overflow-y:auto;
-  border:1px solid rgba(255,69,79,.32);border-radius:16px;padding:6px;
-  background:rgba(13,13,19,.97);box-shadow:0 22px 55px #000b;
+  border:1px solid rgba(255,255,255,.32);border-radius:16px;padding:6px;
+  background:rgba(13,13,13,.97);box-shadow:0 22px 55px #000b;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)
 }
 #watchModal .komi-v4-source-menu[hidden]{display:none!important}
 #watchModal .komi-v4-source-choice{
   min-height:37px;padding:9px 11px;border:1px solid transparent;border-radius:10px;
-  background:transparent;color:#f4edf0;text-align:left;font:600 12px 'Plus Jakarta Sans',sans-serif;
+  background:transparent;color:#efefef;text-align:left;font:600 12px 'Plus Jakarta Sans',sans-serif;
   cursor:pointer;overflow-wrap:anywhere
 }
 #watchModal .komi-v4-source-choice:hover,
 #watchModal .komi-v4-source-choice[aria-pressed="true"]{
-  background:#40212b;color:#ffb7bd;border-color:#6d3540
+  background:#282828;color:#c7c7c7;border-color:#424242
 }
 #watchModal .komi-v4-info{
   display:flex;flex-direction:column;gap:5px;min-width:0;max-width:70%;
   pointer-events:none;text-shadow:0 2px 14px #000,0 1px 3px #000
 }
 #watchModal .komi-v4-info strong{font-size:clamp(13px,1.6vw,21px);line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#watchModal .komi-v4-info span{font-size:clamp(11px,1vw,13px);color:#e5dce0;font-weight:600}
+#watchModal .komi-v4-info span{font-size:clamp(11px,1vw,13px);color:#dedede;font-weight:600}
 #watchModal .player-wrapper.komi-v4-surface:fullscreen{
   width:100vw!important;height:100dvh!important;max-height:none!important;
   border-radius:0!important;border:0!important;aspect-ratio:auto!important
