@@ -310,6 +310,12 @@
     context.hud = hud;
   }
 
+  document.addEventListener('fullscreenchange', () => {
+    if (!currentContext(current)) return;
+    const label = current.content.querySelector('.komi-watch-expand span');
+    if (label) label.textContent = document.fullscreenElement === current.content ? 'Обычный размер' : 'На весь экран';
+  });
+
   root.KomiPlayerUX.mount = function cinemaMount(settings = {}) {
     if (current) {
       current.observer?.disconnect();
