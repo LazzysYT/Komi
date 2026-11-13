@@ -3138,12 +3138,18 @@ async function loadDataFromCloud(attempt = 0) {
 
         function toggleKomiWatchFullscreen() {
             const modal=document.getElementById('watchModal');
-            modal?.classList.toggle('komi-watch-fullscreen');
+            const content=document.getElementById('watchModalContent');
+            if (document.fullscreenElement === content) {
+                document.exitFullscreen?.().catch(() => {});
+            } else if (content?.requestFullscreen && document.fullscreenEnabled) {
+                content.requestFullscreen().catch(() => modal?.classList.toggle('komi-watch-fullscreen'));
+            } else modal?.classList.toggle('komi-watch-fullscreen');
             const button=modal?.querySelector('.komi-watch-expand span');
-            if(button) button.textContent=modal.classList.contains('komi-watch-fullscreen')?'Обычный размер':'На весь экран';
+            if(button) button.textContent=document.fullscreenElement === content?'Обычный размер':'На весь экран';
         }
         function closeWatchModal() {
             ++komiDetailOpenToken;
+            if (document.fullscreenElement?.closest?.('#watchModal')) document.exitFullscreen?.().catch(() => {});
             if (typeof aniCoinStopEmbed === 'function') aniCoinStopEmbed();
             document.getElementById('watchModal')?.classList.remove('komi-watch-fullscreen');
             const videoEl = document.getElementById('animeVideoPlayer');
