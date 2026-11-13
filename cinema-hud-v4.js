@@ -38,7 +38,7 @@
     const wrapper = ctx.content.querySelector('.player-wrapper');
     const sourceSelect = ctx.content.querySelector('#komiWatchSourceSelect');
     const heading = ctx.content.querySelector('.komi-player-heading');
-    if (!wrapper || !sourceSelect || !heading) return;
+    if (!wrapper || !sourceSelect || !heading || !wrapper.querySelector('video, iframe')) return;
     ctx.wrapper = wrapper;
     active = ctx;
     activeAbort = new AbortController();
@@ -100,19 +100,22 @@
 
     const topActions = document.createElement('div');
     topActions.className = 'komi-v4-top-actions';
-    const drawerButton = button('☷ Серии', 'komi-v4-pill komi-v4-drawer', 'Открыть список серий');
+    const drawerButton = button('☷ Серии', 'komi-v4-pill komi-v4-drawer', 'Показать или скрыть список серий');
     drawerButton.addEventListener('click', async () => {
       if (!stillCurrent(ctx)) return;
-      if (document.fullscreenElement === wrapper) {
+      const leavingFullscreen = document.fullscreenElement === wrapper;
+      if (leavingFullscreen) {
         try { await document.exitFullscreen(); } catch {}
       }
       const toggle = ctx.content.querySelector('.komi-episodes-toggle');
       if (!toggle) return;
-      if (ctx.modal.classList.contains('komi-episodes-collapsed')) toggle.click();
-      else if (document.fullscreenElement === wrapper) toggle.click();
-      ctx.sidebar?.querySelector('.komi-episode-number.active')?.scrollIntoView?.({
-        block: 'nearest', behavior: 'smooth'
-      });
+      const collapsed = ctx.modal.classList.contains('komi-episodes-collapsed');
+      if (!leavingFullscreen || collapsed) toggle.click();
+      if (!ctx.modal.classList.contains('komi-episodes-collapsed')) {
+        ctx.sidebar?.querySelector('.komi-episode-number.active')?.scrollIntoView?.({
+          block: 'nearest', behavior: 'smooth'
+        });
+      }
     }, { signal });
     const fullscreen = button('⛶', 'komi-v4-pill komi-v4-fullscreen', 'Видео на весь экран');
     const canFullscreen = typeof wrapper.requestFullscreen === 'function' &&
@@ -165,6 +168,7 @@
     }, { signal });
     document.addEventListener('keydown', event => {
       if (event.key === 'Escape' && !pickerMenu.hidden) {
+        event.preventDefault();
         event.stopPropagation();
         closePicker(true);
       }
@@ -191,6 +195,13 @@
       wakeHud();
     }, { signal });
     wakeHud();
+    if (typeof MutationObserver === 'function') {
+      const observer = new MutationObserver(() => {
+        if (active === ctx && !ctx.modal.classList.contains('active')) cleanup();
+      });
+      observer.observe(ctx.modal, { attributes: true, attributeFilter: ['class'] });
+      signal.addEventListener('abort', () => observer.disconnect(), { once: true });
+    }
   }
 
   root.KomiPlayerUX.mount = function mountCinemaHud(settings = {}) {
