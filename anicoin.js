@@ -17,6 +17,13 @@ async function aniCoinRequest(action, options = {}, expectedOwner = currentUser?
     if (currentUser?.authUserId !== owner) return;
     aniCoinOwner = owner;
     aniCoinWallet = data;
+    const headerCoinValue = document.getElementById('komiHeaderAniCoinValue');
+    if (headerCoinValue) {
+        const balance = Number(data && data.balance);
+        headerCoinValue.textContent = Number.isSafeInteger(balance) && balance >= 0
+            ? balance.toLocaleString('ru-RU') : '—';
+        window.komiHeaderAniCoinOwner = owner;
+    }
     if (currentView === 'shop') renderAniCoinShop(document.getElementById('mainContainer'));
     for (const badge of document.querySelectorAll('[data-anicoin-badge]')) {
         badge.textContent = aniCoinBadge();
