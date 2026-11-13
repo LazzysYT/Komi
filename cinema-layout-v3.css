@@ -19,7 +19,7 @@
 #watchModal .komi-cinema-topbar button{
   display:inline-flex;justify-content:center;align-items:center;gap:7px;min-height:38px;
   padding:8px 12px;white-space:nowrap;border:1px solid #42343b;border-radius:11px;
-  background:#1b1820;color:#f7eeee;font:700 12px inherit;cursor:pointer;transition:background .18s,border-color .18s
+  background:#1b1820;color:#f7eeee;font-family:inherit;font-weight:700;font-size:12px;cursor:pointer;transition:background .18s,border-color .18s
 }
 #watchModal .komi-cinema-topbar button:hover{background:#34242c;border-color:#ff454f}
 #watchModal .komi-cinema-topbar button:focus-visible{outline:2px solid #ff454f;outline-offset:2px}
