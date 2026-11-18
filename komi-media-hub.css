@@ -890,7 +890,8 @@
   inset: 0 2.5% 0 auto !important;
   width: min(35%, 430px) !important;
   height: 100% !important;
-  object-fit: contain !important;
+  /* scale-down never enlarges artwork beyond its actual pixel dimensions. */
+  object-fit: scale-down !important;
   object-position: right center !important;
   image-rendering: auto !important;
 }
