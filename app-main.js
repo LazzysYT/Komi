@@ -601,6 +601,14 @@ async function loadDataFromCloud(attempt = 0) {
             catalogSearchQuery=''; catalogVisibleCount=48; catalogFilterGenre=button.dataset.komiGenre;
             navigate('catalog');
         });
+        function komiOpenFullCatalogFilters() {
+            // Keep the first-paint link and hydrated button consistent:
+            // enter the DB-backed catalog and take the visitor to its real controls.
+            navigate('catalog');
+            const search = document.getElementById('komiCatalogSearchInput');
+            if (search) search.focus({preventScroll:false});
+            else document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+        }
         function komiHomeQuickFiltersMarkup() {
             const genreOptions = availableGenresList.filter(genre =>
                 animeList.some(anime => (Array.isArray(anime.genres) ? anime.genres : [anime.genre]).includes(genre)));
@@ -620,7 +628,7 @@ async function loadDataFromCloud(attempt = 0) {
             };
             return '<section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">' +
                 '<div class="section-header"><h2 class="section-title" id="komiHomeQuickFiltersTitle">Быстрые фильтры</h2>' +
-                '<button type="button" class="section-see-all" title="Открыть полную панель фильтрации каталога" aria-label="Все фильтры в каталоге аниме" data-komi-onclick="navigate(\'catalog\')">Все фильтры</button></div>' +
+                '<button type="button" class="section-see-all" title="Открыть полную панель фильтрации каталога" aria-label="Все фильтры в каталоге аниме" data-komi-onclick="komiOpenFullCatalogFilters()">Все фильтры</button></div>' +
                 '<div class="catalog-filters-box" aria-label="Перейти в каталог с выбранным фильтром">' +
                 field('genre','Жанр',genreOptions.map(g => option(g,g))) +
                 field('year','Год',years.map(y => option(y,y))) +

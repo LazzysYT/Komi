@@ -32,6 +32,7 @@
     "loadDataFromCloud(); render()":()=>{loadDataFromCloud();render()},
     "loadDataFromCloud();render()":()=>{loadDataFromCloud();render()},
     "komiResetCatalogFilters()":()=>komiResetCatalogFilters(),
+    "komiOpenFullCatalogFilters()":()=>komiOpenFullCatalogFilters(),
     "showMoreCatalog()":()=>showMoreCatalog(),
     "randomAnimeWithAnimation()":()=>randomAnimeWithAnimation(),
     "loadKomiEpisodeSchedule(true)":()=>loadKomiEpisodeSchedule(true),
