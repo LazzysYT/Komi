@@ -322,7 +322,7 @@ async function checkNotifications(page) {
    const mono = await page.evaluate(() => ({
      primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim().toLowerCase(),
      bodyColor:getComputedStyle(document.body).backgroundColor,
-     link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.endsWith('/mono-ui.css'))
+     link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.includes('/komi.bundle.css?v='))
    }));
    assert.ok(['#fff','#ffffff'].includes(mono.primary),'Komi monochrome accent must remain active');
    assert.ok(mono.link,'Global monochrome CSS must be loaded');
