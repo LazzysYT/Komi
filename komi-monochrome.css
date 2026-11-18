@@ -302,6 +302,9 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
     display:flex!important; color:#f4f4f4!important;
     background:#191919!important; border-color:#444!important;
   }
+  body > header .header-inner #komiMobileMoreMenu:not([hidden]) {
+    display:grid!important; background:rgba(17,17,17,.98)!important; border-color:#555!important;
+  }
   .komi-side-nav .komi-side-button[aria-current="page"],
   .komi-side-nav .komi-side-button[aria-expanded="true"] {
     background:#262626!important; color:#fff!important; border-color:#666!important;
