@@ -22,7 +22,9 @@ module.exports = async function animePage(req,res) {
     const title = plainText(data.title || data.originalTitle || 'Без названия').slice(0,180);
     const description = plainText(data.desc || data.description || '').slice(0,550)
       || ('Информация, постер и серии аниме «'+title+'» в каталоге Komi Anime.');
-    const poster = cachedPosterUrl(safeImage(data.poster || data.banner));
+    const originalPoster = safeImage(data.poster || data.banner);
+    const poster = cachedPosterUrl(originalPoster);
+    const directPosterAttr = poster !== originalPoster ? ' data-poster-direct="'+html(originalPoster)+'"' : '';
     const animeUrl = CANONICAL + '/anime/' + rawId;
     const watchUrl = animeUrl + '#player';
     const kind = String(data.type || '').toLowerCase();
@@ -52,7 +54,7 @@ module.exports = async function animePage(req,res) {
 <script type="application/ld+json">${jsonLd}</script>
 <style>*,*:before,*:after{box-sizing:border-box}body{margin:0;background:#090909;color:#f2f2f2;font:16px/1.6 system-ui,sans-serif}a{color:inherit}header{padding:22px max(24px,5vw);border-bottom:1px solid #282828}header a{text-decoration:none;font-weight:800;font-size:20px}main{max-width:1080px;margin:52px auto;padding:0 24px;display:grid;grid-template-columns:minmax(180px,300px) 1fr;gap:38px}img{display:block;width:100%;border-radius:18px;background:#1e1e1e;border:1px solid #292929}h1{font-size:clamp(28px,4vw,48px);line-height:1.2;margin:0 0 18px}p{color:#c0c0c0}small{color:#a6a6a6}.actions{display:flex;flex-wrap:wrap;gap:14px;margin:24px 0}.action{display:inline-flex;padding:13px 22px;border:1px solid #444;border-radius:12px;text-decoration:none;font-weight:700;background:#191919}.primary{background:#e6e6e6;color:#111}@media(max-width:650px){main{grid-template-columns:1fr;margin:22px auto}img{max-width:260px}}</style>
 </head><body><header><a href="/">Komi Anime</a></header><main>
-<div><img id="komiSeoPoster" src="${html(poster)}" referrerpolicy="no-referrer" alt="Постер: ${html(title)}" loading="eager" width="300" height="450"></div>
+<div><img id="komiSeoPoster" src="${html(poster)}"${directPosterAttr} referrerpolicy="no-referrer" alt="Постер: ${html(title)}" loading="eager" width="300" height="450"></div>
 <article><h1>${html(title)}</h1><small>${html([year,movie?'Фильм':'Сериал'].filter(Boolean).join(' · '))}</small>
 <p>${desc}</p>
 ${genres.length?'<p>Жанры: '+genres.map(html).join(', ')+'</p>':''}
