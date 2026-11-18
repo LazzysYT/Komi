@@ -69,6 +69,7 @@ test('cached poster streams safe image bytes with CDN headers',async()=>{
     assert.equal(res.statusCode,200);
     assert.equal(res.headers['content-type'],'image/jpeg');
     assert.match(res.headers['cache-control'],/s-maxage=86400/);
+    assert.match(res.headers['cache-control'],/max-age=60/);
     assert.deepEqual([...res.body],[255,216,255,217]);
     assert.equal(res.ended,true);
   } finally {global.fetch=prev;}
