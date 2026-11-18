@@ -1049,10 +1049,13 @@ async function loadDataFromCloud(attempt = 0) {
 
         function startHeroAutoSlide() {
             if (slideInterval) clearInterval(slideInterval);
+            slideInterval = null;
+            const slider = document.getElementById('heroSlider');
+            if (!slider || slider.querySelectorAll('.hero-slide').length < 2) return;
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             slideInterval = setInterval(() => {
-                if (document.hidden || document.querySelector('#heroSlider:hover, #heroSlider:focus-within')) return;
-                const maxSlides = document.querySelectorAll('.hero-slide').length;
+                if (!slider.isConnected || document.hidden || slider.matches(':hover, :focus-within')) return;
+                const maxSlides = slider.querySelectorAll('.hero-slide').length;
                 if (maxSlides > 1) {
                     currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
                     updateHeroSlideView();
@@ -1061,7 +1064,8 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         function changeSlide(direction) {
-            const maxSlides = document.querySelectorAll('.hero-slide').length;
+            const slider = document.getElementById('heroSlider');
+            const maxSlides = slider ? slider.querySelectorAll('.hero-slide').length : 0;
             if (!maxSlides) return;
             currentSlideIndex = (currentSlideIndex + direction + maxSlides) % maxSlides;
             updateHeroSlideView();
@@ -1069,22 +1073,30 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         function setSlide(index) {
+            const slider = document.getElementById('heroSlider');
+            const maxSlides = slider ? slider.querySelectorAll('.hero-slide').length : 0;
+            if (!maxSlides || !Number.isInteger(index) || index < 0 || index >= maxSlides) return;
             currentSlideIndex = index;
             updateHeroSlideView();
             startHeroAutoSlide();
         }
 
         function updateHeroSlideView() {
-            const slides = document.querySelectorAll('.hero-slide');
-            const dots = document.querySelectorAll('.hero-dot');
-            if (slides.length) currentSlideIndex %= slides.length;
+            const slider = document.getElementById('heroSlider');
+            if (!slider) return;
+            const slides = slider.querySelectorAll('.hero-slide');
+            const dots = slider.querySelectorAll('.hero-dot');
+            if (!slides.length) return;
+            currentSlideIndex = ((currentSlideIndex % slides.length) + slides.length) % slides.length;
             slides.forEach((slide, idx) => {
-                if (idx === currentSlideIndex) slide.classList.add('active');
-                else slide.classList.remove('active');
+                const active = idx === currentSlideIndex;
+                slide.classList.toggle('active', active);
+                slide.setAttribute('aria-hidden', String(!active));
             });
             dots.forEach((dot, idx) => {
-                if (idx === currentSlideIndex) dot.classList.add('active');
-                else dot.classList.remove('active');
+                const active = idx === currentSlideIndex;
+                dot.classList.toggle('active', active);
+                dot.setAttribute('aria-pressed', String(active));
             });
         }
 
