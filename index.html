@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
     <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
-    <meta name="theme-color" content="#090909">
-    <meta name="komi-ui-revision" content="20261118-interactive-quick-filters">
+    <meta name="theme-color" content="#0E0F13">
+    <meta name="komi-ui-revision" content="20261118-media-hub">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="Komi Anime Hub">
@@ -17,128 +17,60 @@
     <link rel="canonical" href="https://komianime.online/">
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <link rel="stylesheet" href="/komi.bundle.css?v=20261118a">
+    <link rel="stylesheet" href="/komi-media-hub.css">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
-    
-
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
-
 </head>
-<body>
+<body class="komi-media-hub">
     <!-- The fixed interactive sidebar cannot navigate without JavaScript.
          Hide it only for no-JS visitors so it cannot cover SEO links on mobile. -->
-    <noscript><style>.komi-side-nav{display:none!important}</style></noscript>
+    <noscript><style>.komi-media-hub{--hub-rail:0px}.komi-media-hub :is(.komi-side-nav,.komi-hub-overlay,#sideFriendsBtn){display:none!important}</style></noscript>
 
-    <!-- Шапка сайта -->
-    <header>
-            <nav class="komi-social-links komi-header-socials" aria-label="Социальные сети Komi Anime" >
-                <a class="komi-social-link" href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer" title="Komi Anime в TikTok" aria-label="TikTok Komi Anime">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 2h-3.2v13.3a3.1 3.1 0 1 1-2.7-3.1V8.9a6.5 6.5 0 1 0 6 6.4V8.4a8.2 8.2 0 0 0 4.8 1.5V6.7A4.9 4.9 0 0 1 16.7 2Z"/></svg>
-                </a>
-                <a class="komi-social-link" href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer" title="Telegram-канал Komi Anime" aria-label="Telegram Komi Anime">
-                    <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
-                </a>
-            </nav>
-        <div class="header-inner">
-            <div class="komi-header-left">
-
-
-            </div>
-            <div class="logo-area">
-                <div class="logo-container" data-komi-click="nav-home">
-                    <div class="logo-box">K</div>
-                    <div class="logo-text">KomiAnime</div>
-                </div>
-                <div class="online-counter" hidden>
-                    <div class="online-dot"></div>
-                    <span id="onlineCountText" role="status" aria-live="polite"></span>
-                </div>
-            </div>
-            
-            <div class="komi-header-right">
-            <div class="search-container">
-                <div class="search-bar">
-                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Поиск аниме или @пользователь (Ctrl K)" data-komi-input="search-input" data-komi-focus="search-focus">
-                    <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
-                </div>
-                <div class="search-dropdown" id="searchDropdown"></div>
-            </div>
-            <div class="nav-actions">
-                <button type="button" id="komiMobileMoreToggle" class="komi-mobile-more-toggle"
-                        aria-haspopup="true" aria-expanded="false" aria-controls="komiMobileMoreMenu"
-                        aria-label="Дополнительные разделы">
-                    <span aria-hidden="true">⋯</span><span class="komi-mobile-more-caption">Ещё</span>
-                </button>
-                <div id="komiMobileMoreMenu" class="komi-mobile-more-menu" role="group"
-                     aria-label="Дополнительные разделы" hidden>
-                    <button type="button" data-komi-mobile-extra="shop">Магазин AniCoin</button>
-                    <button type="button" data-komi-mobile-extra="party">Смотреть с друзьями</button>
-                    <button type="button" data-komi-mobile-extra="notifications">Уведомления</button>
-                    <button type="button" data-komi-mobile-extra="partners">Партнёры</button>
-                </div>
-                <button class="action-icon-btn" id="notifBellBtn" data-komi-click="notifications" title="Уведомления">
-                    ♧
-                    <span class="notification-badge" id="notifBadge" style="display:none;">0</span>
-                </button>
-                <div class="notification-dropdown" id="notifDropdown">
-                    <div class="notif-header">
-                        <span>Уведомления</span>
-                        <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" id="markNotificationsReadBtn" type="button" data-komi-click="notifications-read" disabled>Отметить прочитанными</button>
-                    </div>
-                    <div class="notif-list" id="notifListContainer">
-                        <div style="padding:12px; text-align:center; color:var(--text-muted); font-size:11px;">Нет новых уведомлений</div>
-                    </div>
-                </div>
-
-                <button class="nav-btn" id="navHomeBtn" data-komi-click="nav-home">Главная</button>
-                <button class="nav-btn" id="navCatalogBtn" data-komi-click="nav-catalog">Каталог</button>
-                <button class="action-icon-btn" id="headerRandomBtn" data-komi-click="random" title="Случайное аниме">◇</button>
-                <button class="action-icon-btn" id="headerPartyBtn" data-komi-click="watch-party" title="Смотреть вместе">◇ Party</button>
-                <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true">◇</span><span id="komiHeaderAniCoinValue">—</span></button>
-                
-                <button class="action-icon-btn" id="adminPanelBtn" data-komi-click="admin-panel" style="display: none;" title="Админка"></button>
-                <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
-
-                <div id="userHeaderArea"></div>
-            </div>
-            </div>
-
-
-        </div>
-    </header>
-
+    <!-- Левый rail на широком экране и нижняя панель на мобильном -->
     <aside class="komi-side-nav" aria-label="Навигация Komi">
-        <button class="komi-side-logo" data-komi-click="nav-home" title="Komi Anime">K</button>
-        <div class="komi-side-links">
-            <button id="sideHomeBtn" class="komi-side-button" data-komi-click="nav-home" title="Главная" aria-label="Главная"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10m5 10v-7h6v7"/></svg><span>Главная</span></button>
-            <button id="sideCatalogBtn" class="komi-side-button" data-komi-click="nav-catalog" title="Каталог" aria-label="Каталог"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg><span>Каталог</span></button>
-            <button id="sideShopBtn" class="komi-side-button" data-komi-click="shop" title="Магазин AniCoin" aria-label="Магазин AniCoin"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 13H5L4 8Zm5 1V6a3 3 0 0 1 6 0v3"/></svg><span>Магазин</span></button>
-            <button class="komi-side-button" data-komi-click="random" title="Случайное аниме" aria-label="Случайное аниме"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><circle cx="9" cy="9" r="1"/><circle cx="15" cy="15" r="1"/><circle cx="15" cy="9" r="1"/><circle cx="9" cy="15" r="1"/></svg><span>Случайное</span></button>
-            <button id="sideFriendsBtn" class="komi-side-button" data-komi-click="friends" title="Люди и друзья" aria-label="Люди и друзья" aria-expanded="false" aria-controls="komiFriendsDrawer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg><span>Друзья</span></button>
-            <button class="komi-side-button" data-komi-click="watch-party" title="Watch Party" aria-label="Watch Party"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Party</span></button>
-            <button id="sidePartnersBtn" class="komi-side-button" data-komi-click="partners" title="Партнёры" aria-label="Партнёры"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="7" width="8.5" height="10" rx="2"/><rect x="13" y="7" width="8.5" height="10" rx="2"/><path d="M10.5 12h3"/></svg><span>Партнёры</span></button>
-        </div>
+        <button type="button" class="komi-side-logo" data-komi-click="nav-home" aria-label="Komi Anime, главная" title="Komi Anime">K</button>
+        <nav class="komi-side-links" aria-label="Разделы Komi">
+            <button id="sideHomeBtn" class="komi-side-button" data-komi-click="nav-home" title="Главная" aria-label="Главная">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7v10H4V10m5 10v-7h6v7"/></svg>
+                <span>Главная</span>
+            </button>
+            <button id="sideCatalogBtn" class="komi-side-button" data-komi-click="nav-catalog" title="Каталог" aria-label="Каталог">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg>
+                <span>Каталог</span>
+            </button>
+            <button type="button" id="sideListsBtn" class="komi-side-button" data-komi-click="my-lists" title="Мои списки" aria-label="Мои списки">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4zM9 8h6m-6 4h6"/></svg>
+                <span>Списки</span>
+            </button>
+            <button id="sideShopBtn" class="komi-side-button" data-komi-click="shop" title="Магазин AniCoin" aria-label="Магазин AniCoin">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 8h16l-1 13H5L4 8Zm5 1V6a3 3 0 0 1 6 0v3"/></svg>
+                <span>Магазин</span>
+            </button>
+            <button class="komi-side-button" data-komi-click="watch-party" title="Смотрят вместе" aria-label="Смотрят вместе"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 20 4-13 9 9-13 4ZM13 4l1 2m5 0-2 2m4 4-3-1M7 3l1 2"/></svg><span>Вместе</span></button>
+        </nav>
         <div class="komi-side-bottom">
-            <button class="komi-side-button" data-komi-click="notifications" title="Уведомления" aria-label="Уведомления"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg><span>Уведомления</span></button>
+            <button type="button" id="notifBellBtn" class="komi-side-button" data-komi-click="notifications" aria-controls="notifDropdown" title="Уведомления" aria-label="Уведомления">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 8a6 6 0 0 0-12 0c0 7-3 8-3 9h18c0-1-3-2-3-9ZM10 21h4"/></svg>
+                <b class="notification-badge" id="notifBadge" style="display:none;">0</b><span class="komi-hub-notif-label">Уведомления</span>
+            </button>
             <button class="komi-side-button komi-side-account" data-komi-click="profile" title="Профиль" aria-label="Профиль"><span id="sidebarAvatarIcon"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-8 16-8 16 0"/></svg></span><span>Профиль</span></button>
+            <div class="notification-dropdown" id="notifDropdown">
+                <div class="notif-header">
+                    <span>Уведомления</span>
+                    <button class="btn-secondary" style="padding:2px 6px; font-size:10px;" id="markNotificationsReadBtn" type="button" data-komi-click="notifications-read" disabled>Отметить прочитанными</button>
+                </div>
+                <div class="notif-list" id="notifListContainer">
+                    <div style="padding:12px; text-align:center; color:var(--text-muted); font-size:11px;">Нет новых уведомлений</div>
+                </div>
+            </div>
         </div>
     </aside>
+    <button type="button" id="sideFriendsBtn" class="komi-hub-community" data-komi-click="friends" title="Люди и друзья" aria-label="Люди и друзья" aria-expanded="false" aria-controls="komiFriendsDrawer"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3 20v-2a6 6 0 0 1 12 0v2M17 5a3 3 0 0 1 0 6m1 4a5 5 0 0 1 3 5"/></svg><span class="komi-hub-community-label">Сообщество</span>
+        <span class="online-counter" hidden><span class="online-dot" aria-hidden="true"></span><span id="onlineCountText" role="status" aria-live="polite"></span></span></button>
     <div id="komiFriendsBackdrop" class="komi-friends-backdrop" data-komi-click="friends-close"></div>
     <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" inert>
-        <div class="komi-friends-heading"><div><div class="komi-friends-kicker">KOMI COMMUNITY</div><h2> Люди и друзья</h2><p>Знакомься с участниками Komi</p></div><button class="komi-friends-close" data-komi-click="friends-close" aria-label="Закрыть">✕</button></div>
+        <div class="komi-friends-heading"><h2>Люди и друзья</h2><button class="komi-friends-close" data-komi-click="friends-close" aria-label="Закрыть">✕</button></div>
         <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." data-komi-input="friends-search" autocomplete="off" aria-label="Поиск по нику"></div>
         <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" data-komi-click="friends-all">Все пользователи</button><button id="komiFriendsMyTab" data-komi-click="friends-following">Мои друзья</button></div>
         <section id="komiFriendRoomsSection" class="komi-friend-rooms-section" aria-label="Комнаты друзей" hidden>
@@ -148,13 +80,56 @@
         <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
+        <header class="komi-hub-overlay" aria-label="Поиск и быстрый доступ">
+            <div class="komi-hub-tools">
+                <details class="komi-hub-tools-menu">
+                    <summary aria-label="Разделы и аккаунт" title="Разделы и аккаунт"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></summary>
+                    <div class="komi-hub-tools-panel">
+                        <nav class="komi-social-links komi-header-socials" aria-label="Социальные сети Komi Anime" >
+                            <a class="komi-social-link" href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer" title="Komi Anime в TikTok" aria-label="TikTok Komi Anime">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M16.7 2h-3.2v13.3a3.1 3.1 0 1 1-2.7-3.1V8.9a6.5 6.5 0 1 0 6 6.4V8.4a8.2 8.2 0 0 0 4.8 1.5V6.7A4.9 4.9 0 0 1 16.7 2Z"/></svg>
+                            </a>
+                            <a class="komi-social-link" href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer" title="Telegram-канал Komi Anime" aria-label="Telegram Komi Anime">
+                                <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
+                            </a>
+                        </nav>
+                        <button type="button" data-komi-click="random">Случайное аниме</button>
+                        <button type="button" data-komi-click="partners">Партнёры</button>
+                        <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true">◇</span><span id="komiHeaderAniCoinValue">—</span></button>
+                        <button class="action-icon-btn" id="adminPanelBtn" data-komi-click="admin-panel" style="display: none;" title="Админка">Админка</button>
+                        <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
+                        <div id="userHeaderArea"></div>
+                    </div>
+                </details>
+                <button type="button" id="komiMobileMoreToggle" class="komi-mobile-more-toggle"
+                    aria-haspopup="true" aria-expanded="false" aria-controls="komiMobileMoreMenu"
+                    aria-label="Дополнительные разделы">
+                    <span aria-hidden="true">⋯</span><span class="komi-mobile-more-caption">Ещё</span>
+                </button>
+                <div id="komiMobileMoreMenu" class="komi-mobile-more-menu" role="group"
+                    aria-label="Дополнительные разделы" hidden>
+                    <button type="button" data-komi-mobile-extra="shop">Магазин AniCoin</button>
+                    <button type="button" data-komi-mobile-extra="party">Смотреть с друзьями</button>
+                    <button type="button" data-komi-mobile-extra="notifications">Уведомления</button>
+                    <button type="button" data-komi-mobile-extra="partners">Партнёры</button>
+                    <button type="button" data-komi-click="random">Случайное аниме</button>
+                </div>
+            </div>
+            <div class="search-container">
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="searchInput" aria-label="Поиск аниме или пользователя" placeholder="Поиск аниме | @поиск пользователя" data-komi-input="search-input" data-komi-focus="search-focus">
+                    <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
+                </div>
+                <div class="search-dropdown" id="searchDropdown"></div>
+            </div>
+        </header>
         <main id="mainContainer">
             <section class="komi-seo-fallback komi-seo-spotlight" aria-label="О Komi Anime Hub">
                 <div class="komi-seo-spotlight-copy">
-                    <span class="komi-seo-spotlight-eyebrow">KOMI ANIME · ВЫБОР ИЗ КАТАЛОГА</span>
-                    <h1>Komi Anime Hub — каталог аниме</h1>
-                    <h2>Провожающая в последний путь Фрирен</h2>
-                    <p>Открывай новые истории, находи серии, сохраняй просмотренное и смотри с друзьями. Поиск по жанрам, личные списки и совместный просмотр — в одном месте.</p>
+                    <span class="komi-seo-spotlight-eyebrow">Выбор Komi Anime</span>
+                    <h1>Провожающая в последний путь Фрирен</h1>
+                    <p>После победы над Королём демонов эльфийка Фрирен отправляется в новый путь и заново открывает ценность времени, проведённого с друзьями.</p>
                     <div class="komi-seo-spotlight-facts" aria-label="Информация об аниме">
                         <span>★ 9.25 Shikimori</span><span>2023</span><span>Сериал</span>
                     </div>
@@ -170,66 +145,62 @@
                          alt="Постер аниме «Провожающая в последний путь Фрирен»">
                 </div>
             </section>
-            <!-- First-paint controls: replaced by DB-backed Home Discovery once the app loads. -->
-            <section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">
-                <div class="section-header">
-                    <h2 class="section-title" id="komiHomeQuickFiltersTitle">Быстрые фильтры</h2>
-                    <a href="/#catalog" class="section-see-all" data-komi-click="home-quick-filters-all" title="Открыть каталог и перейти к поиску и фильтрам" aria-label="Все фильтры в каталоге аниме">Все фильтры</a>
-                </div>
-                <div class="catalog-filters-box" aria-label="Выбрать фильтр каталога аниме">
-                    <div class="form-group" style="margin:0">
-                        <label for="komiHomeQuickFilter-genre" style="display:block!important;margin:0 0 7px!important;font-size:13px!important;font-weight:700!important;color:#eeeeee!important">Жанр</label>
-                        <select id="komiHomeQuickFilter-genre" class="form-control" data-komi-home-filter="genre">
-                            <option value="">Все жанры</option>
-                            <option value="Экшен">Экшен</option>
-                            <option value="Фэнтези">Фэнтези</option>
-                            <option value="Романтика">Романтика</option>
-                            <option value="Комедия">Комедия</option>
-                            <option value="Драма">Драма</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label for="komiHomeQuickFilter-year" style="display:block!important;margin:0 0 7px!important;font-size:13px!important;font-weight:700!important;color:#eeeeee!important">Год</label>
-                        <select id="komiHomeQuickFilter-year" class="form-control" data-komi-home-filter="year">
-                            <option value="">Все годы</option>
-                            <option value="2026">2026</option>
-                            <option value="2025">2025</option>
-                            <option value="2024">2024</option>
-                            <option value="2023">2023</option>
-                            <option value="2022">2022</option>
-                            <option value="2021">2021</option>
-                            <option value="2020">2020</option>
-                            <option value="2019">2019</option>
-                            <option value="2018">2018</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label for="komiHomeQuickFilter-type" style="display:block!important;margin:0 0 7px!important;font-size:13px!important;font-weight:700!important;color:#eeeeee!important">Тип</label>
-                        <select id="komiHomeQuickFilter-type" class="form-control" data-komi-home-filter="type">
-                            <option value="">Все типы</option>
-                            <option value="Сериал">Сериал</option>
-                            <option value="Фильм">Фильм</option>
-                            <option value="OVA">OVA</option>
-                            <option value="ONA">ONA</option>
-                            <option value="Special">Special</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin:0">
-                        <label for="komiHomeQuickFilter-sort" style="display:block!important;margin:0 0 7px!important;font-size:13px!important;font-weight:700!important;color:#eeeeee!important">Сортировка</label>
-                        <select id="komiHomeQuickFilter-sort" class="form-control" data-komi-home-filter="sort">
-                            <option value="">Сортировка</option>
-                            <option value="popular">Актуальные</option>
-                            <option value="updated">По обновлению серий</option>
-                            <option value="rating">По рейтингу</option>
-                            <option value="year">Сначала новые</option>
-                            <option value="alphabet">По алфавиту</option>
-                        </select>
-                    </div>
-                </div>
-                <noscript><p>Для применения фильтров включите JavaScript. Каталог и ссылки на аниме доступны ниже.</p></noscript>
-            </section>
             <section id="catalog" class="komi-static-catalog" aria-label="Каталог аниме">
-                <div class="section-header"><h2 class="section-title">Каталог аниме</h2></div>
+                <section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">
+                    <h2 class="section-title" id="komiHomeQuickFiltersTitle">Каталог аниме</h2>
+                    <div class="catalog-filters-box" role="group" aria-label="Быстрые фильтры">
+                        <div class="form-group" style="margin:0">
+                            <label for="komiHomeQuickFilter-genre">Жанр</label>
+                            <select id="komiHomeQuickFilter-genre" class="form-control" data-komi-home-filter="genre">
+                                <option value="">Все жанры</option>
+                                <option value="Экшен">Экшен</option>
+                                <option value="Фэнтези">Фэнтези</option>
+                                <option value="Романтика">Романтика</option>
+                                <option value="Комедия">Комедия</option>
+                                <option value="Драма">Драма</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label for="komiHomeQuickFilter-year">Год</label>
+                            <select id="komiHomeQuickFilter-year" class="form-control" data-komi-home-filter="year">
+                                <option value="">Все годы</option>
+                                <option value="2026">2026</option>
+                                <option value="2025">2025</option>
+                                <option value="2024">2024</option>
+                                <option value="2023">2023</option>
+                                <option value="2022">2022</option>
+                                <option value="2021">2021</option>
+                                <option value="2020">2020</option>
+                                <option value="2019">2019</option>
+                                <option value="2018">2018</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label for="komiHomeQuickFilter-type">Тип</label>
+                            <select id="komiHomeQuickFilter-type" class="form-control" data-komi-home-filter="type">
+                                <option value="">Все типы</option>
+                                <option value="Сериал">Сериал</option>
+                                <option value="Фильм">Фильм</option>
+                                <option value="OVA">OVA</option>
+                                <option value="ONA">ONA</option>
+                                <option value="Special">Special</option>
+                            </select>
+                        </div>
+                        <div class="form-group" style="margin:0">
+                            <label for="komiHomeQuickFilter-sort">Сортировка</label>
+                            <select id="komiHomeQuickFilter-sort" class="form-control" data-komi-home-filter="sort">
+                                <option value="">Сортировка</option>
+                                <option value="popular">Актуальные</option>
+                                <option value="updated">По обновлению серий</option>
+                                <option value="rating">По рейтингу</option>
+                                <option value="year">Сначала новые</option>
+                                <option value="alphabet">По алфавиту</option>
+                            </select>
+                        </div>
+                    </div>
+                    <a href="/#catalog" class="section-see-all" data-komi-click="home-quick-filters-all" title="Открыть каталог и перейти к поиску и фильтрам" aria-label="Все фильтры в каталоге аниме">Все фильтры</a>
+                    <noscript><p>Для применения фильтров включите JavaScript. Каталог и ссылки на аниме доступны ниже.</p></noscript>
+                </section>
                 <div id="anime-grid" class="anime-grid" aria-busy="false" aria-label="Каталог аниме">
                 <a class="anime-card komi-seo-card" href="/anime/52991" aria-label="Открыть аниме Провожающая в последний путь Фрирен">
                     <div class="anime-poster-box"><img class="anime-poster" src="/api/poster?src=https%3A%2F%2Fshikimori.io%2Fuploads%2Fposter%2Fanimes%2F52991%2Fdc841cc9fce2aa1e9907a4b61c5d1d92.jpeg" data-poster-direct="https://shikimori.io/uploads/poster/animes/52991/dc841cc9fce2aa1e9907a4b61c5d1d92.jpeg" referrerpolicy="no-referrer" data-komi-error="poster-error" width="180" height="270" loading="lazy" decoding="async" alt="Постер: Провожающая в последний путь Фрирен"></div>

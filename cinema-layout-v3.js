@@ -114,7 +114,9 @@
     const shortcuts = ['.komi-side-logo', '#sideHomeBtn', '#sideCatalogBtn', '#sideFriendsBtn',
       '[data-komi-click="watch-party"]', '[data-komi-click="notifications"]', '.komi-side-account'];
     for (const selector of shortcuts) {
-      const original = siteRail?.querySelector(selector);
+      const original = selector === '#sideFriendsBtn'
+        ? document.getElementById('sideFriendsBtn')
+        : siteRail?.querySelector(selector);
       if (!original) continue;
       const label = original.getAttribute('aria-label') || original.title;
       const shortcut = button('', 'komi-watch-rail-button', label);

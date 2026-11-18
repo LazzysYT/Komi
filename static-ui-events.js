@@ -25,9 +25,12 @@
       case 'click:shop': return openAniCoinShop();
       case 'click:friends': return withSound(() => toggleFriendsDrawer());
       case 'click:partners': return withSound(() => navigate('partners'));
+      case 'click:my-lists':
       case 'click:profile': return withSound(() => {
-        if (typeof currentUser !== 'undefined' && currentUser)
+        if (typeof currentUser !== 'undefined' && currentUser) {
+          if (action === 'my-lists') profilePageSection = 'anime';
           return openProfile(currentUser.username);
+        }
         return openAuthModal('login');
       });
       case 'click:friends-close': return closeFriendsDrawer();

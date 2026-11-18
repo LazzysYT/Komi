@@ -68,69 +68,119 @@
       'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="' + path + '"></path></svg>';
   }
+  function artworkImage(anime, context, loading, className = '') {
+    const source = anime.banner || anime.poster;
+    const direct = typeof source === 'string' && /^https:\/\//i.test(source)
+      ? ' data-poster-direct="' + escape(source) + '"' : '';
+    return '<img class="' + className + '" src="' + context.artwork(anime) + '" alt="" loading="' +
+      loading + '" decoding="async" referrerpolicy="no-referrer"' + direct +
+      ' data-komi-onerror="komiCardPosterFallback(this)">';
+  }
+
   function hero(slides, context) {
     if (!slides.length) return '';
     const index = ((Number(context.currentSlideIndex) || 0) % slides.length + slides.length) % slides.length;
+    const total = String(slides.length).padStart(2, '0');
     return '<section class="komi-home-hero" aria-label="Рекомендуем посмотреть">' +
-      '<div class="hero-slider-container" id="heroSlider" aria-roledescription="карусель">' +
-      '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
-      '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button>' +
-      '<div class="hero-slides-wrapper">' + slides.map((anime,i) => {
+      '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка аниме">' +
+      '<div class="hero-slides-wrapper">' + slides.map((anime, i) => {
         const animeId = id(anime);
-        const genres = (Array.isArray(anime.genres) ? anime.genres : []).slice(0,3);
         const year = context.year(anime);
         const description = context.describe(anime.desc);
-        const canAdd = Boolean(context.currentUser && context.currentUser.authUserId);
-        const listAction = canAdd ?
-          'setAnimeStatus(\'' + animeId + '\', \'В планах\')' : 'openAuthModal(\'login\')';
-        return '<article class="hero-slide' + (i===index ? ' active' : '') + '"' +
-          ' style="background-image:url(&quot;' + context.artwork(anime) + '&quot;)"' +
-          ' aria-hidden="' + (i===index ? 'false' : 'true') + '"' +
+        const listAction = context.currentUser?.authUserId
+          ? "setAnimeStatus('" + animeId + "', 'В планах')" : "openAuthModal('login')";
+        const route = '/anime/' + animeId;
+        const category = (Array.isArray(anime.genres) && anime.genres[0]) || 'Выбор Komi Anime';
+
+        return '<article class="hero-slide' + (i === index ? ' active' : '') + '"' +
+          ' aria-hidden="' + (i === index ? 'false' : 'true') + '"' +
           ' aria-label="' + escape(anime.title) + '">' +
+          artworkImage(anime, context, i === index ? 'eager' : 'lazy', 'komi-hub-hero-art') +
           '<div class="komi-home-hero-content">' +
-          '<div class="komi-home-hero-eyebrow"><span class="komi-home-live-dot"></span> ВЫБОР KOMI ANIME</div>' +
-          '<div class="hero-meta"><span>★ ' + escape(rating(anime)) + ' Shikimori</span>' +
-          (year ? '<span>' + escape(year) + '</span>' : '') +
-          genres.map(g => '<span>' + escape(g) + '</span>').join('') + '</div>' +
+          '<div class="komi-hub-hero-kicker"><span>' + escape(category) + '</span>' +
+          '<button type="button" class="komi-hub-save" aria-label="Добавить в список" title="Добавить в список" data-komi-onclick="' + listAction + '">' +
+          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4zM9 10h6m-3-3v6"/></svg></button></div>' +
           '<h1>' + escape(anime.title) + '</h1>' +
           '<p>' + (description || 'Описание тайтла пока не добавлено.') + '</p>' +
-          '<div class="hero-buttons"><button type="button" class="btn-glow" data-komi-onclick="openWatchModal(\''+animeId+'\')">▷ Смотреть аниме</button>' +
-          '<button type="button" class="btn-glow-secondary" data-komi-onclick="' + listAction +
-          '">+ В список</button></div></div></article>';
+          '<div class="hero-meta"><span>★ ' + escape(rating(anime)) + ' Shikimori</span>' +
+          (year ? '<span>' + escape(year) + '</span>' : '') +
+          '<span>' + escape(context.type(anime)) + '</span></div>' +
+          '<div class="hero-buttons"><a class="komi-hub-play" href="' + route + '#player">▷ Смотреть аниме</a>' +
+          '<a class="komi-hub-glass" href="' + route + '">Подробнее</a></div></div>' +
+          (slides.length > 1 ? '<span class="komi-hub-slide-count" aria-hidden="true">' +
+            String(i + 1).padStart(2, '0') + ' <span>/ ' + total + '</span></span>' : '') + '</article>';
       }).join('') + '</div>' +
-      '<div class="hero-dots">' + slides.map((_,i) =>
-        '<button type="button" class="hero-dot' + (i===index?' active':'') +
-        '" aria-label="Показать тайтл ' + (i+1) + '" aria-pressed="' +
-        (i===index ? 'true' : 'false') + '" data-komi-onclick="setSlide('+i+')"></button>'
-      ).join('') + '</div></div></section>';
+      (slides.length > 1 ? '<div class="komi-hub-carousel-controls">' +
+        '<div class="hero-dots" role="group" aria-label="Слайды">' + slides.map((_, i) =>
+          '<button type="button" class="hero-dot' + (i === index ? ' active' : '') +
+          '" aria-label="Показать тайтл ' + (i + 1) + '" aria-pressed="' +
+          (i === index ? 'true' : 'false') + '" data-komi-onclick="setSlide(' + i + ')"></button>'
+        ).join('') + '</div>' +
+        '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
+        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button></div>'
+        : '') + '</div></section>';
   }
-  function continueShelf(context) {
-    if (!context.currentUser || !context.currentUser.authUserId) return '';
+
+  function recentProgress(context, animeList) {
+    if (!context.currentUser?.authUserId) return [];
     const prefix = context.currentUser.username + '_';
-    const lookup = new Map(context.animeList.map(anime => [String(anime.id),anime]));
-    const recent = Object.entries(context.progress || {})
-      .filter(([key,p])=>key.startsWith(prefix) && p && Number.isFinite(Number(p.updated)))
-      .sort((a,b)=>Number(b[1].updated)-Number(a[1].updated)).slice(0,16)
-      .map(([key,p])=>({anime:lookup.get(key.slice(prefix.length)),p})).filter(x=>x.anime).slice(0,8);
+    const lookup = new Map(animeList.map(anime => [String(anime.id), anime]));
+    return Object.entries(context.progress || {})
+      .filter(([key, progress]) => key.startsWith(prefix) && progress && Number.isFinite(Number(progress.updated)))
+      .sort((a, b) => Number(b[1].updated) - Number(a[1].updated)).slice(0, 16)
+      .map(([key, p]) => ({anime: lookup.get(key.slice(prefix.length)), p}))
+      .filter(({anime}) => id(anime)).slice(0, 8);
+  }
+
+  function progressEpisode(anime, progress) {
+    const season = Number(progress.season) || 1;
+    const slot = Number(progress.index);
+    const episodes = Array.isArray(anime.episodes) ? anime.episodes : [];
+    const grouped = root.KomiPlayerCore?.seasonEpisodes(episodes, season) || [];
+    const episode = grouped.find(item => item.slots.includes(slot));
+    return {season, number: Number(episode?.number) || slot + 1, episode};
+  }
+
+  function elapsedTime(value) {
+    const position = Number(value);
+    const seconds = Number.isFinite(position) ? Math.max(0, Math.floor(position)) : 0;
+    const minutes = Math.floor(seconds / 60);
+    const remainder = String(seconds % 60).padStart(2, '0');
+    return minutes + ':' + remainder;
+  }
+
+  function resumeCapsule(item, context) {
+    if (!item) return '';
+    const {anime, p} = item;
+    const {number} = progressEpisode(anime, p);
+    return '<button type="button" class="komi-hub-resume" data-komi-onclick="resumeKomiAnime(\'' + id(anime) + '\')">' +
+      artworkImage({poster: anime.poster || anime.banner}, context, 'eager') +
+      '<span class="komi-hub-resume-copy"><small>Продолжить просмотр</small>' +
+      '<strong>' + escape(anime.title) + '</strong><small>Серия ' + number + '</small></span>' +
+      '<span class="komi-hub-resume-play" aria-hidden="true">▶</span></button>';
+  }
+
+  function continueShelf(recent, context) {
     if (!recent.length) return '';
     return '<section class="komi-home-shelf komi-home-continue komi-feature-section">' +
-      '<div class="komi-home-heading"><div><h2>Продолжить просмотр</h2>' +
-      '<p class="komi-home-subtitle">Возвращайся к сериалам с того же эпизода</p></div></div>' +
-      '<div class="komi-home-progress-rail">' + recent.map(({anime,p})=>{
-        const animeId=id(anime);
-        const position=Number(p.time),duration=Number(p.duration);
-        const hasProgress=Number.isFinite(position)&&Number.isFinite(duration)&&duration>0;
-        const percent=hasProgress?Math.min(100,Math.max(0,position/duration*100)):0;
-        const episode=Number(p.index)+1;
-        const season=Number(p.season)||1;
-        const image=context.artwork(anime);
-        return '<button type="button" class="komi-home-progress-card" data-komi-onclick="resumeKomiAnime(\''+animeId+'\')">' +
-          '<span class="komi-home-progress-art"><img src="'+image+'" loading="lazy" decoding="async" alt="">' +
-          '<span class="komi-home-progress-track"><span style="width:'+percent.toFixed(2)+'%"></span></span></span>' +
-          '<span class="komi-home-progress-details"><strong>'+escape(anime.title)+'</strong>' +
-          '<small>Сезон '+season+' · Серия '+episode+'</small></span></button>';
-      }).join('')+'</div></section>';
+      '<div class="komi-home-heading"><h2>Продолжить просмотр</h2></div>' +
+      '<div class="komi-home-progress-rail">' + recent.map(({anime, p}) => {
+        const position = Number(p.time);
+        const duration = Number(p.duration);
+        const percent = Number.isFinite(position) && Number.isFinite(duration) && duration > 0
+          ? Math.min(100, Math.max(0, position / duration * 100)) : 0;
+        const {season, number, episode} = progressEpisode(anime, p);
+        const preview = [episode?.preview, episode?.thumbnail, episode?.screenshot, anime.screenshots?.[0]]
+          .find(url => typeof url === 'string' && /^https:\/\//i.test(url));
+        return '<button type="button" class="komi-home-progress-card" data-komi-onclick="resumeKomiAnime(\'' + id(anime) + '\')">' +
+          '<span class="komi-home-progress-art">' + artworkImage(preview ? {banner: preview} : anime, context, 'lazy') +
+          '<span class="komi-home-progress-track"><span style="width:' + percent.toFixed(2) + '%"></span></span></span>' +
+          '<span class="komi-home-progress-details"><strong>' + escape(anime.title) + '</strong>' +
+          '<small>Сезон ' + season + ' · Серия ' + number + ' · ' + elapsedTime(position) +
+          '</small></span></button>';
+      }).join('') + '</div></section>';
   }
+
   function leaderboard() {
     // No public opt-in aggregate source currently exists. Never expose other
     // users' owner-only watch progress or wallet rows to manufacture rankings.
@@ -166,12 +216,17 @@
       .sort((a,b)=>((updated(b)>Date.now()-30*86400000?2:0)+score(b)/10)-
                     ((updated(a)>Date.now()-30*86400000?2:0)+score(a)/10)).slice(0,12);
     const recommended = context.recommendations();
+    const history = recentProgress(context, animeList);
+    const catalogPreview = [...new Set([...popular, ...animeList])].slice(0, 12);
     const films = animeList.filter(a=>context.type(a)==='Фильм')
       .sort((a,b)=>score(b)-score(a)).slice(0,10);
     return '<div class="komi-home-discovery">' +
       hero(slider,context) +
+      (slider.length ? resumeCapsule(history[0], context) : '') +
+      continueShelf(history, context) +
+      '<section class="komi-hub-catalog-preview" aria-label="Каталог аниме">' +
       (typeof context.quickFilters === 'function' ? context.quickFilters() : '') +
-      continueShelf({...context,animeList}) +
+      '<div class="anime-grid">' + catalogPreview.map(context.renderCard).join('') + '</div></section>' +
       genreShelf(animeList) +
       shelf('Популярное прямо сейчас','Высокие оценки Shikimori и недавно обновлённые серии',popular,'all',context.renderCard,'komi-home-popular') +
       shelf('Новинки сезона','Релизы '+latestYear+' года из каталога',season,'all',context.renderCard,'komi-home-season') +
