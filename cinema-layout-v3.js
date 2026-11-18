@@ -155,13 +155,6 @@
     if (context.video) {
       if (poster) context.video.poster = poster;
       context.video.addEventListener('durationchange', paintDuration);
-    } else if (poster && wrapper.querySelector('.komi-external-source')) {
-      const artwork = document.createElement('img');
-      artwork.className = 'komi-external-artwork';
-      artwork.alt = '';
-      artwork.src = poster;
-      artwork.addEventListener('error', () => artwork.remove(), {once:true});
-      wrapper.prepend(artwork);
     }
     paintDuration();
     current = context;
@@ -316,7 +309,7 @@
       const time = context.video && Number.isFinite(context.video.currentTime) ? context.video.currentTime : 0;
       root.createWatchPartyFromAnime(context.animeId,'',false,
         Number.isInteger(settings.originalIndex) ? settings.originalIndex : context.index,
-        source?.value || '',time);
+        settings.originalSource || source?.value || '',time);
     });
     controls.append(party);
     const note = content.querySelector('.komi-cinema-action-status');

@@ -48,10 +48,10 @@ function disposeKomiMedia(video) {
     video.querySelectorAll('source').forEach(source => source.remove());
     video.load();
 }
-function bindKomiPlayer(animeId, season, index, raw) {
+function bindKomiPlayer(animeId, season, index, raw, progressIndex = index) {
     const video = document.getElementById('animeVideoPlayer');
     if (!video) return;
-    Object.assign(video.dataset, {animeId: String(animeId), season: String(season), episode: String(index), owner: currentUser?.authUserId || currentUser?.username || ''});
+    Object.assign(video.dataset, {animeId: String(animeId), season: String(season), episode: String(progressIndex), owner: currentUser?.authUserId || currentUser?.username || ''});
     video.addEventListener('loadedmetadata', () => {
         video.komiMediaFailed = false;
         restoreKomiVideo(video);

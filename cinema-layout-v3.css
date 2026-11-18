@@ -114,19 +114,7 @@
   width:100%!important;height:100%!important;max-height:100%!important;
   object-fit:contain;display:block
 }
-#watchModal .komi-external-artwork {
-  position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:.24;pointer-events:none;
-}
-#watchModal .komi-external-source {
-  position:relative;z-index:3;display:grid;justify-items:center;gap:12px;
-  max-width:38ch;margin:20px;padding:18px;text-align:center;color:#fff;
-}
-#watchModal .komi-external-source p {margin:0;font-size:clamp(13px,1vw,18px);font-weight:700}
-#watchModal .komi-external-source a {
-  color:#fff;background:var(--watch-raised);border-radius:999px;padding:10px 16px;font-size:13px;text-decoration:none;
-}
-#watchModal .komi-external-source a:hover,#watchModal .komi-external-source a:focus-visible {background:#454545}
-#watchModal .komi-external-source small {color:#ddd;font-size:12px}
+#watchModal #komiPlayerRecovery a {display:inline-flex;align-items:center;text-decoration:none}
 #watchModal .komi-watch-sidebar{
   display:flex;flex-direction:column;position:relative;z-index:3;min-width:0;width:100%;
   max-height:max(260px,calc(100dvh - 104px))!important;
@@ -243,7 +231,7 @@
 }
 #watchModal .komi-episode-list .komi-episode-number:hover {background:var(--watch-raised);transform:none}
 #watchModal .komi-episode-list .komi-episode-preview {
-  flex:0 0 37%;width:37%;max-width:136px;aspect-ratio:16/9;object-fit:cover;border-radius:11px;background:var(--watch-raised);
+  flex:0 0 37%;width:37%;max-width:136px;height:clamp(44px,4vw,76px);object-fit:cover;border-radius:11px;background:var(--watch-raised);
 }
 #watchModal .komi-episode-list .komi-episode-placeholder {
   display:grid;place-items:center;color:#969696;font-size:15px;font-weight:700;line-height:1;
@@ -304,11 +292,6 @@
   #watchModal .komi-cinema-topbar button{font-size:11px;padding:7px}
   #watchModal .komi-watch-controls{flex-wrap:wrap!important}
   #watchModal .komi-watch-source{flex:1 1 100%}
-}
-@media(max-width:520px){
-  #watchModal .komi-external-source {margin-top:32px;gap:6px;padding:8px 15px}
-  #watchModal .komi-external-source a {padding:7px 12px}
-  #watchModal .komi-external-source small {font-size:11px}
 }
 @media(max-width:520px){
   #watchModal .komi-cinema-topbar .komi-watch-expand span{display:none}
