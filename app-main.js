@@ -1740,8 +1740,10 @@ async function loadDataFromCloud(attempt = 0) {
         // Shared, URL-sanitized artwork resolver for the home hero and player.
         // The live site previously referenced animeArtwork without defining it.
         function animeArtwork(anime) {
-            const source = anime?.banner || anime?.poster;
-            return komiCardPosterSource(source).preferred;
+            // Full-size backgrounds must not use the small /preview/ card image.
+            // Compact catalog cards retain their existing bandwidth-saving previews.
+            const source = komiSafeUrl(anime?.banner || anime?.poster) || '/anime-artwork.svg';
+            return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source) : source;
         }
         function komiCardPosterFallback(img) {
             if (!img) return;
