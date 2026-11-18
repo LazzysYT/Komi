@@ -49,3 +49,22 @@ test('failed write does not block a later snapshot', async () => {
     assert.deepEqual(calls,[1,2]);
     assert.deepEqual(errors,['offline']);
 });
+
+test('sample demonstration clips are not accepted as anime video sources', () => {
+    for (const url of [
+        'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+        'https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
+    ]) assert.deepEqual(source(url), {url:'', kind:'missing'});
+    assert.equal(source('https://media.example.org/anime/1.mp4').kind, 'video');
+});
+test('approved ad-free sources rank first without losing legacy alternatives', () => {
+    const episodes = [
+        {season:1,number:1,sources:{Kodik:'https://kodik.example.org/embed/1'}},
+        {season:1,number:'01',sources:{'Без рекламы · LicensedPartner · Original':'https://cdn.example.org/1.m3u8',
+          Other:'https://other.example.org/embed/1'}}
+    ];
+    const [episode] = seasonEpisodes(episodes, 1);
+    assert.equal(Object.keys(episode.sources)[0], 'Без рекламы · LicensedPartner · Original');
+    assert.equal(Object.keys(episode.sources).length, 3);
+    assert.equal(episode.sources.Kodik, 'https://kodik.example.org/embed/1');
+});
