@@ -236,3 +236,50 @@ body > header > .header-inner > .komi-header-left > .komi-social-links {
 body > header > .header-inner > .komi-header-left > .komi-social-links > a.komi-social-link {
   display:grid!important; visibility:visible!important; opacity:1!important;
 }
+
+/* Single canonical location for social shortcuts: left side of the top header.
+   A direct child of <header>, independent of legacy grid display:none rules. */
+body > header {position:sticky!important;isolation:isolate;overflow:visible!important;}
+body > header > .komi-header-socials {
+  display:flex!important;
+  position:absolute!important;
+  inset:50% auto auto clamp(14px,1.5vw,26px)!important;
+  transform:translateY(-50%)!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  gap:10px!important;
+  margin:0!important;padding:0!important;
+  visibility:visible!important;opacity:1!important;
+  width:max-content!important;height:auto!important;
+  z-index:1100!important;
+}
+body > header > .komi-header-socials > a.komi-social-link {
+  display:grid!important;place-items:center!important;
+  visibility:visible!important;opacity:1!important;
+  flex:0 0 42px!important;width:42px!important;height:42px!important;
+  background:#171717!important;color:#fff!important;
+  border:1px solid #424242!important;border-radius:13px!important;
+  text-decoration:none!important;pointer-events:auto!important;
+}
+body > header > .komi-header-socials > a.komi-social-link svg {
+  display:block!important;fill:currentColor!important;width:20px!important;height:20px!important;
+}
+body > header > .header-inner > .komi-header-left {
+  pointer-events:none!important;
+}
+.komi-side-nav a[href*="tiktok.com"],
+.komi-side-nav a[href*="t.me/"],
+.komi-side-nav .komi-social-links,
+.komi-side-nav .komi-social-link {
+  display:none!important;visibility:hidden!important;
+}
+@media(max-width:1190px){
+  body > header > .komi-header-socials {top:31px!important;}
+}
+@media(max-width:767px){
+  body > header > .komi-header-socials {top:29px!important;left:10px!important;gap:6px!important;}
+  body > header > .komi-header-socials > a.komi-social-link {
+    flex-basis:33px!important;width:33px!important;height:33px!important;
+  }
+}
