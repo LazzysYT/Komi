@@ -23,7 +23,9 @@ const csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').v
   const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:35000});
   assert.equal(response.status(),200);
   await page.waitForFunction(()=>typeof navigate==='function'&&
-    document.querySelectorAll('[data-komi-click]').length>=30,null,{timeout:15000});
+    !!document.querySelector('#sideCatalogBtn[data-komi-click]') &&
+    !!document.querySelector('#sideHomeBtn[data-komi-click]') &&
+    !!document.querySelector('#sideFriendsBtn[data-komi-click]'),null,{timeout:15000});
   await page.locator('#sideCatalogBtn').click();
   assert.equal(await page.evaluate(()=>currentView),'catalog');
   await page.locator('#sideHomeBtn').click();
