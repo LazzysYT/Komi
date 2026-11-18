@@ -54,7 +54,8 @@ test('watch link uses the same-tab handoff and never exposes ?anime= routing', (
   const run = simulateBridge('#player');
   assert.deepEqual(run.redirects, ['/']);
   assert.equal(run.storage.get('komi_watch_deeplink_v1'), '52991');
-  assert.doesNotMatch(bridge, /\?anime=/);
+  assert.match(bridge, /window\.location\.replace\('\/'\)/);
+  assert.doesNotMatch(bridge, /window\.location\.replace\('\/\?anime=/);
   assert.match(main, /sessionStorage\.getItem\('komi_watch_deeplink_v1'\)/);
   assert.match(main, /history\.replaceState\(null, '', '\/anime\/' \+ requested \+ '#player'\)/);
   assert.doesNotMatch(home, /href="\/\?anime=/);
