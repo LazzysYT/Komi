@@ -27,7 +27,7 @@ test('initial main DOM has a populated, accessible static catalog and functional
   const actions = main.match(/<div class="komi-seo-spotlight-actions">([\s\S]*?)<\/div>/)?.[1];
   assert.ok(actions);
   assert.equal((actions.match(/<a\b/g) || []).length, 2, 'Hero should have exactly two actions');
-  assert.match(actions, /href="\/\?anime=52991"/);
+  assert.match(actions, /href="\/anime\/52991#player"/);
   assert.match(actions, /href="\/anime\/52991"/);
   assert.match(html, /function komiCatalogLoadingMarkup\(\)/);
   // The transient placeholder is still used when live data really has no cards.
