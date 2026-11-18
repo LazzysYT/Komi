@@ -62,13 +62,19 @@
           '<span class="komi-home-genre-caption">' + escape(option.subtitle) + '</span></button>';
       }).join('') + '</div></section>';
   }
+  function heroChevron(direction) {
+    const path = direction === 'left' ? 'm15 18-6-6 6-6' : 'm9 18 6-6-6-6';
+    return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" ' +
+      'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      '<path d="' + path + '"></path></svg>';
+  }
   function hero(slides, context) {
     if (!slides.length) return '';
     const index = ((Number(context.currentSlideIndex) || 0) % slides.length + slides.length) % slides.length;
     return '<section class="komi-home-hero" aria-label="Рекомендуем посмотреть">' +
-      '<div class="hero-slider-container" id="heroSlider">' +
-      '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">❮</button>' +
-      '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">❯</button>' +
+      '<div class="hero-slider-container" id="heroSlider" aria-roledescription="карусель">' +
+      '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
+      '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button>' +
       '<div class="hero-slides-wrapper">' + slides.map((anime,i) => {
         const animeId = id(anime);
         const genres = (Array.isArray(anime.genres) ? anime.genres : []).slice(0,3);
@@ -79,6 +85,7 @@
           'setAnimeStatus(\'' + animeId + '\', \'В планах\')' : 'openAuthModal(\'login\')';
         return '<article class="hero-slide' + (i===index ? ' active' : '') + '"' +
           ' style="background-image:url(&quot;' + context.artwork(anime) + '&quot;)"' +
+          ' aria-hidden="' + (i===index ? 'false' : 'true') + '"' +
           ' aria-label="' + escape(anime.title) + '">' +
           '<div class="komi-home-hero-content">' +
           '<div class="komi-home-hero-eyebrow"><span class="komi-home-live-dot"></span> ВЫБОР KOMI ANIME</div>' +
@@ -93,7 +100,8 @@
       }).join('') + '</div>' +
       '<div class="hero-dots">' + slides.map((_,i) =>
         '<button type="button" class="hero-dot' + (i===index?' active':'') +
-        '" aria-label="Показать тайтл ' + (i+1) + '" data-komi-onclick="setSlide('+i+')"></button>'
+        '" aria-label="Показать тайтл ' + (i+1) + '" aria-pressed="' +
+        (i===index ? 'true' : 'false') + '" data-komi-onclick="setSlide('+i+')"></button>'
       ).join('') + '</div></div></section>';
   }
   function continueShelf(context) {
