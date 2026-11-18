@@ -622,14 +622,13 @@ async function loadDataFromCloud(attempt = 0) {
             const field = (key, label, values) => {
                 const id = 'komiHomeQuickFilter-' + key;
                 return '<div class="form-group" style="margin:0">' +
-                    '<label for="' + id + '" style="display:block!important;margin:0 0 7px!important;font-size:13px!important;font-weight:700!important;color:#eeeeee!important">' + label + '</label>' +
+                    '<label for="' + id + '">' + label + '</label>' +
                     '<select id="' + id + '" class="form-control" data-komi-home-filter="' + key + '">' +
                     '<option value="">' + placeholders[key] + '</option>' + values.join('') + '</select></div>';
             };
             return '<section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">' +
-                '<div class="section-header"><h2 class="section-title" id="komiHomeQuickFiltersTitle">Быстрые фильтры</h2>' +
-                '<button type="button" class="section-see-all" title="Открыть полную панель фильтрации каталога" aria-label="Все фильтры в каталоге аниме" data-komi-onclick="komiOpenFullCatalogFilters()">Все фильтры</button></div>' +
-                '<div class="catalog-filters-box" aria-label="Перейти в каталог с выбранным фильтром">' +
+                '<h2 class="section-title" id="komiHomeQuickFiltersTitle">Каталог аниме</h2>' +
+                '<div class="catalog-filters-box" role="group" aria-label="Быстрые фильтры">' +
                 field('genre','Жанр',genreOptions.map(g => option(g,g))) +
                 field('year','Год',years.map(y => option(y,y))) +
                 field('type','Тип',types.map(t => option(t,t))) +
@@ -639,7 +638,8 @@ async function loadDataFromCloud(attempt = 0) {
                     option('rating','По рейтингу'),
                     option('year','Сначала новые'),
                     option('alphabet','По алфавиту')
-                ]) + '</div></section>';
+                ]) + '</div>' +
+                '<button type="button" class="section-see-all" title="Открыть полную панель фильтрации каталога" aria-label="Все фильтры в каталоге аниме" data-komi-onclick="komiOpenFullCatalogFilters()">Все фильтры</button></section>';
         }
         document.addEventListener('change', event => {
             const select = event.target.closest?.('#komiHomeQuickFilters select[data-komi-home-filter]');
@@ -1032,47 +1032,46 @@ async function loadDataFromCloud(attempt = 0) {
                 const filtered = komiCatalogFiltered();
 
                 container.innerHTML = `
-                    <div class="komi-catalog-header">
-                        <div><div class="komi-spotlight-eyebrow">БИБЛИОТЕКА KOMI</div><h1>Каталог аниме</h1>
-                        <p>Найди сериал или фильм по названию, жанру, году и типу.</p></div>
-                        <button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button>
-                    </div>
+                    <section class="komi-hub-catalog-toolbar" aria-labelledby="komiFullCatalogTitle">
+                        <h1 id="komiFullCatalogTitle">Каталог аниме</h1>
+                        <div class="catalog-filters-box" role="group" aria-label="Фильтры каталога">
+                            <div class="form-group" style="margin:0;">
+                                <label for="komiCatalogGenre">Жанр</label>
+                                <select id="komiCatalogGenre" class="form-control" data-komi-onchange="catalogFilterGenre=this.value; render()">
+                                    ${genres.map(g => `<option value="${escapeFriendHtml(g)}" ${catalogFilterGenre===g?'selected':''}>${g === 'Все' ? 'Все жанры' : escapeFriendHtml(g)}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label for="komiCatalogYear">Год</label>
+                                <select id="komiCatalogYear" class="form-control" data-komi-onchange="catalogFilterYear=this.value; render()">
+                                    ${years.map(y => `<option value="${y}" ${catalogFilterYear===y?'selected':''}>${y === 'Все' ? 'Все годы' : y}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label for="komiCatalogType">Тип</label>
+                                <select id="komiCatalogType" class="form-control" data-komi-onchange="catalogFilterType=this.value; render()">
+                                    ${types.map(t => `<option value="${t}" ${catalogFilterType===t?'selected':''}>${t === 'Все' ? 'Все типы' : t}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin:0;">
+                                <label for="komiCatalogSort">Сортировка</label>
+                                <select id="komiCatalogSort" class="form-control" data-komi-onchange="catalogSort=this.value; render()">
+                                    <option value="popular" ${catalogSort==='popular'?'selected':''}>Актуальные</option>
+                                    <option value="updated" ${catalogSort==='updated'?'selected':''}>По обновлению серий</option>
+                                    <option value="rating" ${catalogSort==='rating'?'selected':''}>Рейтинг</option>
+                                    <option value="year" ${catalogSort==='year'?'selected':''}>Сначала новые по году</option>
+                                    <option value="alphabet" ${catalogSort==='alphabet'?'selected':''}>Алфавит</option>
+                                </select>
+                            </div>
+                        </div>
+                        <button type="button" class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button>
+                    </section>
                     <div class="komi-catalog-search">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
                         <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме, оригинальное название или жанр..." aria-label="Поиск в каталоге" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off">
                     </div>
                     <div class="komi-catalog-chips" aria-label="Подборки">${komiCollectionButtons()}</div>
                     <div class="komi-catalog-chips">${komiCatalogChipsMarkup()}</div>
-                    <div class="catalog-filters-box">
-                        <div class="form-group" style="margin:0;">
-                            <label>Жанр</label>
-                            <select class="form-control" data-komi-onchange="catalogFilterGenre=this.value; render()">
-                                ${genres.map(g => `<option ${catalogFilterGenre===g?'selected':''}>${g}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0;">
-                            <label>Год</label>
-                            <select class="form-control" data-komi-onchange="catalogFilterYear=this.value; render()">
-                                ${years.map(y => `<option ${catalogFilterYear===y?'selected':''}>${y}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0;">
-                            <label>Тип</label>
-                            <select class="form-control" data-komi-onchange="catalogFilterType=this.value; render()">
-                                ${types.map(t => `<option ${catalogFilterType===t?'selected':''}>${t}</option>`).join('')}
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0;">
-                            <label>Сортировка</label>
-                            <select class="form-control" data-komi-onchange="catalogSort=this.value; render()">
-                                <option value="popular" ${catalogSort==='popular'?'selected':''}>Актуальные</option>
-                                <option value="updated" ${catalogSort==='updated'?'selected':''}>По обновлению серий</option>
-                                <option value="rating" ${catalogSort==='rating'?'selected':''}>Рейтинг</option>
-                                <option value="year" ${catalogSort==='year'?'selected':''}>Сначала новые по году</option>
-                                <option value="alphabet" ${catalogSort==='alphabet'?'selected':''}>Алфавит</option>
-                            </select>
-                        </div>
-                    </div>
                     <div class="komi-catalog-status"><span class="komi-catalog-count" id="komiCatalogCount">Найдено: ${filtered.length}</span><span>Аниме с доступными сериями</span></div>
                     <div class="anime-grid" id="komiCatalogGrid">
                         ${filtered.length === 0 ? `<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>` : filtered.slice(0, catalogVisibleCount).map(a => renderCard(a)).join('')}

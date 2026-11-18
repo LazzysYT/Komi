@@ -5,12 +5,13 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const {sources,buildCSS}=require('./build-css.cjs');
-test('single external local stylesheet, no inline head CSS, Google Fonts separate',()=>{
+test('media hub stylesheet follows the single generated bundle, with no inline head CSS',()=>{
   const head=fs.readFileSync(path.join(root,'index.html'),'utf8').split('</head>')[0];
   const local=[...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]
     .filter(m=>!m[0].includes('fonts.googleapis.com'));
-  assert.equal(local.length,1);
+  assert.equal(local.length,2);
   assert.match(local[0][0],/href="\/komi\.bundle\.css\?v=\d+[a-z]"/);
+  assert.match(local[1][0],/href="\/komi-media-hub\.css"/);
   assert.doesNotMatch(head,/<style(?:\s|>)/i);
   assert.match(head,/fonts\.googleapis\.com/);
 });

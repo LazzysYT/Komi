@@ -29,13 +29,13 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
       });
       if(mobile){
         assert.equal(state.navCount,5,'Mobile should expose exactly five primary tabs at '+width+': '+JSON.stringify(state));
-        assert.deepEqual(state.labels,['Главная','Каталог','Случайное аниме','Люди и друзья','Профиль']);
+        assert.deepEqual(state.labels,['Главная','Каталог','Мои списки','Уведомления','Профиль']);
         assert.equal(state.moreVisible,true);
         assert.ok(state.railWidth<=width+2,'Mobile bar overflows the viewport');
         assert.ok(state.railTop>650,'Mobile navigation must stay at the bottom of the screen');
         await page.locator('#komiMobileMoreToggle').click();
         assert.equal(await page.locator('#komiMobileMoreToggle').getAttribute('aria-expanded'),'true');
-        assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),4);
+        assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),5);
         await page.keyboard.press('Escape');
         assert.equal(await page.locator('#komiMobileMoreToggle').getAttribute('aria-expanded'),'false');
         assert.equal(await page.evaluate(()=>document.activeElement.id),'komiMobileMoreToggle');
@@ -49,7 +49,7 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
         assert.equal(new URL(page.url()).hash,'');
       }else{
         assert.equal(state.moreVisible,false,'Desktop should not show mobile More menu');
-        assert.ok(state.navCount>=8,'Desktop original navigation must remain intact');
+        assert.ok(state.navCount>=7,'Desktop hub rail retains all core controls; community stays in its own overlay button');
       }
       assert.equal(errors.length,0,'Unexpected page error at '+width+': '+errors.join('; '));
       console.log('PASS mobile navigation '+width,JSON.stringify(state));

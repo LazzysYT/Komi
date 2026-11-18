@@ -33,13 +33,13 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    assert.equal(await page.locator('#komiHomeQuickFilters .section-see-all').getAttribute('data-komi-click'),
      'home-quick-filters-all','First-paint anchor must activate the full catalog after hydration');
    assert.equal(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
-     '20261118-interactive-quick-filters');
-   const initialOrder=await page.evaluate(() => {
+     '20261118-media-hub');
+   const catalogContainsFilters=await page.evaluate(() => {
      const filters=document.getElementById('komiHomeQuickFilters');
      const catalog=document.getElementById('catalog');
-     return !!(filters.compareDocumentPosition(catalog) & Node.DOCUMENT_POSITION_FOLLOWING);
+     return catalog.contains(filters);
    });
-   assert.equal(initialOrder,true,'First-paint quick filters must be above static catalog');
+   assert.equal(catalogContainsFilters,true,'Media Hub places first-paint filters inside the static catalog');
    assert.equal(await page.locator('aside.komi-side-nav').evaluate(el=>getComputedStyle(el).display),
      'none','Inert fixed sidebar must not cover static links without JavaScript');
    const socials=page.locator('nav[aria-label="Социальные сети Komi Anime"] a');
