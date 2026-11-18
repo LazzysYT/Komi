@@ -219,3 +219,20 @@ a:focus-visible,button:focus-visible,input:focus-visible {outline-color:#ddd!imp
 .komi-home-discovery .komi-home-hero .hero-slide-indicator.active {background:#fff!important;}
 .komi-home-discovery .komi-home-hero .btn-primary,
 .komi-home-discovery .komi-home-hero .komi-primary-action {background:#eee!important;color:#111!important;border-color:#eee!important;box-shadow:none!important;}
+
+/* User-requested: hide admin management controls only, keep authorized backend intact. */
+body > header #adminPanelBtn,
+body > header #addAnimeBtn {
+  display:none!important;
+  visibility:hidden!important;
+}
+/* Social links must be visible in the LEFT header region, never in the rail. */
+body > header > .header-inner > .komi-header-left,
+body > header > .header-inner > .komi-header-left > .komi-social-links {
+  display:flex!important;
+  visibility:visible!important;
+  opacity:1!important;
+}
+body > header > .header-inner > .komi-header-left > .komi-social-links > a.komi-social-link {
+  display:grid!important; visibility:visible!important; opacity:1!important;
+}
