@@ -1,5 +1,6 @@
 'use strict';
 const {CANONICAL,html,safeImage,plainText,read,send} = require('./_seo');
+const {cachedPosterUrl} = require('../poster-cache-client');
 module.exports = async function animePage(req,res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.setHeader('Allow','GET, HEAD');
@@ -21,7 +22,7 @@ module.exports = async function animePage(req,res) {
     const title = plainText(data.title || data.originalTitle || 'Без названия').slice(0,180);
     const description = plainText(data.desc || data.description || '').slice(0,550)
       || ('Информация, постер и серии аниме «'+title+'» в каталоге Komi Anime.');
-    const poster = safeImage(data.poster || data.banner);
+    const poster = cachedPosterUrl(safeImage(data.poster || data.banner));
     const animeUrl = CANONICAL + '/anime/' + rawId;
     const watchUrl = animeUrl + '#player';
     const kind = String(data.type || '').toLowerCase();
