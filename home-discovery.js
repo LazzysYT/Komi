@@ -8,8 +8,11 @@
     {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]
   ));
   function rating(anime) {
-    const score = Number(anime && anime.shikiRating);
-    return Number.isFinite(score) && score > 0 ? score.toFixed(1) : '—';
+    const raw = anime && anime.shikiRating;
+    const score = Number(raw);
+    if (Number.isFinite(score) && score > 0) return score.toFixed(1);
+    // Preserve supplied text as plain, escaped text (never as HTML).
+    return typeof raw === 'string' && raw.trim() ? raw.trim().slice(0, 80) : '—';
   }
   function score(anime) { return Number(anime && anime.shikiRating) || 0; }
   function count(anime) {
