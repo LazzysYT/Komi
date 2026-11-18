@@ -13,13 +13,20 @@ test('animeArtwork is defined before the card renderer and reuses the safe poste
   assert.ok(app.indexOf(helper[0])<app.indexOf('function renderCard('));
   const calls=[];
   const artwork=vm.runInNewContext('('+helper[0].trim()+')',{
-    komiCardPosterSource(source) {
+    // Match the live high-resolution source path, rather than the older
+    // preview-thumbnail helper, which is intended only for catalog cards.
+    komiSafeUrl(source) {
+      if (!source || !String(source).startsWith('https://')) return '';
+      return String(source);
+    },
+    komiCachedPosterUrl(source) {
       calls.push(source);
-      return {preferred:source||'/anime-artwork.svg'};
+      return source;
     }
   });
   assert.equal(artwork({poster:'https://example.com/poster.jpg'}),'https://example.com/poster.jpg');
   assert.equal(artwork({banner:'https://example.com/banner.jpg',poster:'https://example.com/poster.jpg'}),'https://example.com/banner.jpg');
+  assert.equal(artwork({banner:'javascript:alert(1)'}),'/anime-artwork.svg');
   assert.equal(artwork({}),'/anime-artwork.svg');
-  assert.deepEqual(calls,['https://example.com/poster.jpg','https://example.com/banner.jpg',undefined]);
+  assert.deepEqual(calls,['https://example.com/poster.jpg','https://example.com/banner.jpg','/anime-artwork.svg','/anime-artwork.svg']);
 });
