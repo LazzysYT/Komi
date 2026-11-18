@@ -116,7 +116,7 @@
             showPlaybackStatus(context,'Отметки сохранены на этом устройстве. Облачная синхронизация временно недоступна.');
     }
     function isTyping(target) {
-        return !!target?.closest?.('input, textarea, select, button, [contenteditable="true"], [role="textbox"]');
+        return !!target?.closest?.('input, textarea, select, button, summary, [contenteditable="true"], [role="textbox"]');
     }
     function makeButton(text, className, label) {
         const button = document.createElement('button');
@@ -218,8 +218,7 @@
                     video.currentTime / video.duration >= 0.92) markCurrentWatched(context);
             }, {passive:true});
             video.addEventListener('ended', () => markCurrentWatched(context));
-            // On touch screens video controls remain available; a double tap on
-            // the video element (not its native controls) seeks 10 seconds.
+            // A double tap on the video surface seeks 10 seconds.
             let previousTap = {time:0,side:''};
             video.addEventListener('pointerup', event => {
                 if (event.pointerType !== 'touch' || active !== context) return;
