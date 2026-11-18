@@ -368,19 +368,20 @@ async function checkNotifications(page) {
    }));
    assert.ok(['#fff','#ffffff'].includes(mono.primary),'Komi monochrome accent must remain active');
    assert.ok(mono.link,'Global monochrome CSS must be loaded');
-   const emblems = await page.evaluate(() => {
-      const get = selector => {
-        const element = document.querySelector(selector);
-        const style = getComputedStyle(element);
-        return {background:style.backgroundColor,color:style.color,border:style.borderTopColor};
-      };
-      return {side:get('.komi-side-logo'),header:get('.logo-box'),heading:get('.logo-text')};
+   const shell = await page.evaluate(() => {
+     const sideLogo = document.querySelector('.komi-side-logo');
+     const style = getComputedStyle(sideLogo);
+     return {
+       logoBackground:style.backgroundColor,
+       logoInk:style.color,
+       hasOverlay:!!document.querySelector('header.komi-hub-overlay'),
+       hasSearch:!!document.querySelector('header.komi-hub-overlay #searchInput'),
+       hasCommunity:!!document.querySelector('#sideFriendsBtn[aria-controls="komiFriendsDrawer"]')
+     };
    });
-   assert.equal(emblems.side.background,'rgb(255, 69, 79)','Media hub sidebar emblem uses the new red accent');
-   assert.equal(emblems.side.color,'rgb(24, 7, 10)','Media hub emblem uses contrast ink');
-   assert.equal(emblems.header.background,'rgb(20, 20, 20)','Header emblem keeps its dark surface');
-   assert.equal(emblems.header.color,'rgb(255, 255, 255)','Header emblem K stays white');
-   assert.equal(emblems.heading.color,'rgb(255, 255, 255)','Brand name must be pure white');
+   assert.equal(shell.logoBackground,'rgb(255, 69, 79)','Media hub sidebar emblem uses the new red accent');
+   assert.equal(shell.logoInk,'rgb(24, 7, 10)','Media hub emblem uses contrast ink');
+   assert.ok(shell.hasOverlay && shell.hasSearch && shell.hasCommunity,'New hub shell must expose search and community controls');
 
    await page.waitForSelector('#animeVideoPlayer');
    const playback = page.getByRole('group',{name:'Управление видео'});
