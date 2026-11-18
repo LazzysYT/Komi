@@ -108,7 +108,8 @@ async function checkNotifications(page) {
      await page.locator('#komiMobileMoreToggle').click();
      await page.locator('[data-komi-mobile-extra="notifications"]').click();
    } else {
-     await page.locator('.komi-side-button[title="Уведомления"]').click();
+     await page.locator('.komi-side-button[title="Уведомления"], #notifBellBtn')
+       .filter({visible:true}).first().click();
    }
    const list = page.locator('#notifListContainer');
    await list.getByText('Сообщение <img src=x>', { exact:false }).waitFor();
