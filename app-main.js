@@ -1300,6 +1300,7 @@ async function loadDataFromCloud(attempt = 0) {
                             <div class="komi-profile-actions">
                                 ${isMe ? '<button class="komi-profile-action" data-komi-onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
                                 ${isMe ? '<button type="button" class="komi-profile-action" data-komi-onclick="openAniCoinShop()">Кошелёк AniCoin</button>' : ''}
+                                ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти из аккаунта</button>' : ''}
                             </div>
 
                             ${isMe ? `
@@ -1739,8 +1740,10 @@ async function loadDataFromCloud(attempt = 0) {
         // Shared, URL-sanitized artwork resolver for the home hero and player.
         // The live site previously referenced animeArtwork without defining it.
         function animeArtwork(anime) {
-            const source = anime?.banner || anime?.poster;
-            return komiCardPosterSource(source).preferred;
+            // Full-size backgrounds must not use the small /preview/ card image.
+            // Compact catalog cards retain their existing bandwidth-saving previews.
+            const source = komiSafeUrl(anime?.banner || anime?.poster) || '/anime-artwork.svg';
+            return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source) : source;
         }
         function komiCardPosterFallback(img) {
             if (!img) return;
@@ -2563,6 +2566,7 @@ async function loadDataFromCloud(attempt = 0) {
                 regDate: profile.created_at ? new Date(profile.created_at).toLocaleDateString('ru-RU') : ''
             };
         }
+        let komiSessionRetryCount = 0;
         async function restoreGoogleSession() {
             if (!_supabase) return;
             try {
@@ -2599,6 +2603,8 @@ async function loadDataFromCloud(attempt = 0) {
                 // Verified Supabase sessions take precedence; legacy browser data is retained.
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
                 updateNotificationsUI();
+                // Show the restored account immediately. Profile/list network reads may be slow.
+                renderHeaderUser();
                 requireServerAdmin(true).catch(e => console.warn('Admin role restore:',e.message));
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
@@ -2647,6 +2653,12 @@ async function loadDataFromCloud(attempt = 0) {
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
+                // A transient auth/network error must not require a manual login.
+                // Retry once; the 'online' listener handles longer disconnections.
+                if (komiSessionRetryCount < 1 && navigator.onLine !== false) {
+                    komiSessionRetryCount++;
+                    setTimeout(() => queueKomiSessionRestore(), 2500);
+                }
             }
         }
         // Keep async profile loads in order when OAuth and initial-session events overlap.
@@ -3767,3 +3779,4 @@ async function loadDataFromCloud(attempt = 0) {
         window.addEventListener('pageshow', event => {
             if (event.persisted) queueKomiSessionRestore();
         });
+        window.addEventListener('online', () => { if (_supabase) queueKomiSessionRestore(); });

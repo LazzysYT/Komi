@@ -59,5 +59,18 @@
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
     }
+  ],
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "www.komianime.online"
+        }
+      ],
+      "destination": "https://komianime.online/:path*",
+      "permanent": true
+    }
   ]
 }
