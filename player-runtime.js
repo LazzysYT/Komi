@@ -15,6 +15,8 @@ function loadKomiHls() {
 async function attachKomiMedia(video, raw, onError) {
     const source = KomiPlayerCore.source(raw);
     const token = video.komiMediaToken = {};
+    clearTimeout(video.komiHlsRetryTimer);
+    video.komiHlsRetryTimer = null;
     video.komiHls?.destroy();
     video.komiHls = null;
     if (source.kind !== 'hls' || video.canPlayType('application/vnd.apple.mpegurl')) {
@@ -26,12 +28,38 @@ async function attachKomiMedia(video, raw, onError) {
         if (!video.isConnected || video.komiMediaToken !== token) return;
         if (!Hls.isSupported()) throw Error('HLS не поддерживается браузером');
         const hls = video.komiHls = new Hls();
-        hls.on(Hls.Events.ERROR, (_, data) => {
-            if (!data.fatal || video.komiMediaToken !== token || video.komiHls !== hls) return;
+        let networkRetries = 0;
+        let mediaRetries = 0;
+        const active = () => video.isConnected && video.komiMediaToken === token && video.komiHls === hls;
+        const fail = () => {
+            if (!active()) return;
+            clearTimeout(video.komiHlsRetryTimer);
+            video.komiHlsRetryTimer = null;
             video.komiMediaFailed = true;
             video.komiHls = null;
             hls.destroy();
             onError();
+        };
+        hls.on(Hls.Events.ERROR, (_, data) => {
+            if (!data?.fatal || !active()) return;
+            if (data.type === Hls.ErrorTypes.NETWORK_ERROR && networkRetries < 2) {
+                // Retry temporary network failures twice, with bounded backoff.
+                // Never revive a player after a source switch or modal close.
+                if (video.komiHlsRetryTimer != null) return;
+                const delay = 500 * (2 ** networkRetries++);
+                video.komiHlsRetryTimer = setTimeout(() => {
+                    video.komiHlsRetryTimer = null;
+                    if (!active()) return;
+                    try { hls.startLoad(); } catch { fail(); }
+                }, delay);
+                return;
+            }
+            if (data.type === Hls.ErrorTypes.MEDIA_ERROR && mediaRetries < 1) {
+                mediaRetries++;
+                try { hls.recoverMediaError(); } catch { fail(); }
+                return;
+            }
+            fail();
         });
         hls.loadSource(source.url);
         hls.attachMedia(video);
@@ -41,6 +69,8 @@ function disposeKomiMedia(video) {
     if (!video) return;
     video.komiControls?.dispose();
     video.komiMediaToken = null;
+    clearTimeout(video.komiHlsRetryTimer);
+    video.komiHlsRetryTimer = null;
     video.komiHls?.destroy();
     video.komiHls = null;
     video.pause();
