@@ -30,6 +30,8 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    assert.deepEqual(placeholders.map(row=>row.label),['Жанр','Год','Тип','Сортировка']);
    assert.ok(placeholders.every(row=>row.visible),'Filter labels must be visually present before JS');
    assert.equal(await page.locator('#komiHomeQuickFilters .section-see-all').getAttribute('href'),'/#catalog');
+   assert.equal(await page.locator('#komiHomeQuickFilters .section-see-all').getAttribute('data-komi-click'),
+     'home-quick-filters-all','First-paint anchor must activate the full catalog after hydration');
    assert.equal(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
      '20261118-static-quick-filters');
    const initialOrder=await page.evaluate(() => {
@@ -41,8 +43,9 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    const socials=page.locator('nav[aria-label="Социальные сети Komi Anime"] a');
    assert.equal(await socials.count(),2);
    for(const link of await socials.all())assert.equal(await link.locator('svg path').count(),1);
-   await page.goto(base+'#catalog',{waitUntil:'domcontentloaded'});
-   assert.equal(new URL(page.url()).hash,'#catalog');
+   await page.locator('#komiHomeQuickFilters .section-see-all').click();
+   assert.equal(new URL(page.url()).hash,'#catalog',
+     'With JS disabled the first-paint link must still reach the static catalog');
    const catalogTop=await page.locator('main section#catalog').evaluate(el=>el.getBoundingClientRect().top);
    assert.ok(catalogTop>=-110&&catalogTop<300,'Catalog link must scroll to catalog: '+catalogTop);
    await page.goto(base+'#shop',{waitUntil:'domcontentloaded'});
