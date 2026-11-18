@@ -376,11 +376,10 @@ async function checkNotifications(page) {
       };
       return {side:get('.komi-side-logo'),header:get('.logo-box'),heading:get('.logo-text')};
    });
-   assert.equal(emblems.side.background,'rgb(0, 0, 0)','Sidebar emblem must remain black');
-   assert.equal(emblems.header.background,'rgb(20, 20, 20)','Header emblem uses the Komi monochrome theme');
-   for (const icon of [emblems.side,emblems.header]) {
-     assert.equal(icon.color,'rgb(255, 255, 255)','Komi emblem K must be white');
-   }
+   assert.equal(emblems.side.background,'rgb(255, 69, 79)','Media hub sidebar emblem uses the new red accent');
+   assert.equal(emblems.side.color,'rgb(24, 7, 10)','Media hub emblem uses contrast ink');
+   assert.equal(emblems.header.background,'rgb(20, 20, 20)','Header emblem keeps its dark surface');
+   assert.equal(emblems.header.color,'rgb(255, 255, 255)','Header emblem K stays white');
    assert.equal(emblems.heading.color,'rgb(255, 255, 255)','Brand name must be pure white');
 
    await page.waitForSelector('#animeVideoPlayer');
