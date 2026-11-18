@@ -882,3 +882,30 @@
 
 /* Accessible site title for the non-JavaScript first paint. */
 .komi-media-hub .komi-seo-spotlight-copy > h1 {position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;padding:0!important;margin:0!important;border:0!important}
+
+/* Native-resolution hero: only verified widescreen media fills the full banner.
+ * Ordinary portrait covers render on the right instead of being stretched 5x.
+ */
+.komi-media-hub .komi-home-hero .hero-slide.komi-hd-poster .komi-hub-hero-art {
+  inset: 0 2.5% 0 auto !important;
+  width: min(35%, 430px) !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: right center !important;
+  image-rendering: auto !important;
+}
+.komi-media-hub .komi-home-hero .hero-slide.komi-hd-wide .komi-hub-hero-art {
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center 28% !important;
+}
+@media (max-width: 768px) {
+  .komi-media-hub .komi-home-hero .hero-slide.komi-hd-poster .komi-hub-hero-art {
+    inset: 4% 2% auto auto !important;
+    width: min(65%, 320px) !important;
+    height: 66% !important;
+    object-position: right top !important;
+  }
+}
