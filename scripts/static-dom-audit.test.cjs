@@ -24,8 +24,11 @@ test('initial main DOM has a populated, accessible static catalog and functional
   assert.doesNotMatch(main, /Загружаем каталог аниме/);
   assert.doesNotMatch(main, /class="komi-catalog-skeleton-card"/);
   assert.match(main, /<section id="shop"[^>]*aria-labelledby="komi-static-shop-title"/);
-  assert.match(main, /href="#catalog"/);
-  assert.match(main, /href="#shop"/);
+  const actions = main.match(/<div class="komi-seo-spotlight-actions">([\s\S]*?)<\/div>/)?.[1];
+  assert.ok(actions);
+  assert.equal((actions.match(/<a\b/g) || []).length, 2, 'Hero should have exactly two actions');
+  assert.match(actions, /href="\/\?anime=52991"/);
+  assert.match(actions, /href="\/anime\/52991"/);
   assert.match(html, /function komiCatalogLoadingMarkup\(\)/);
   // The transient placeholder is still used when live data really has no cards.
   assert.match(html, /<div id="anime-grid" class="anime-grid" aria-busy="true" aria-label="Загрузка каталога">/);
@@ -58,4 +61,18 @@ test('friends drawer is inert at rest and accessibility state tracks opening and
   assert.match(close, /contains\(document\.activeElement\)/);
   assert.match(close, /setAttribute\('inert'/);
   assert.match(close, /setAttribute\('aria-hidden', 'true'\)/);
+});
+
+test('SEO posters have safe delegated fallback and presence starts hidden', () => {
+  const seo = html.match(/<main id="mainContainer">([\s\S]*?)<\/main>/)?.[1];
+  assert.ok(seo);
+  const posterTags = [...seo.matchAll(/<img class="anime-poster"[^>]*>/g)].map(m => m[0]);
+  assert.ok(posterTags.length >= 36);
+  for (const poster of posterTags) {
+    assert.match(poster, /data-komi-error="poster-error"/);
+    assert.match(poster, /referrerpolicy="no-referrer"/);
+  }
+  assert.match(seo, /data-komi-error="poster-error"\s+width="360"/);
+  assert.match(html, /class="online-counter" hidden/);
+  assert.doesNotMatch(html, /Аккаунтов онлайн: проверяем…/);
 });

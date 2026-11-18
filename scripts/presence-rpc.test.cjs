@@ -11,7 +11,8 @@ const source=html.slice(start,end);
 assert.doesNotMatch(source,/\.from\(['"]online_users['"]\)/);
 
 function fixture({user=null,online=true,rpcCount=5}={}){
- const logs=[],label={textContent:'Аккаунтов онлайн: проверяем…'};
+ const counter={hidden:true};
+ const logs=[],label={textContent:'',closest:()=>counter};
  let rpcs=0;
  const ctx=vm.createContext({
   crypto:{randomUUID:()=> '00000000-0000-4000-8000-000000000111'},
@@ -29,13 +30,14 @@ function fixture({user=null,online=true,rpcCount=5}={}){
   }
  });
  vm.runInContext(source,ctx);
- return {ctx,logs,label,rpcCalls:()=>rpcs,
+ return {ctx,logs,label,counter,rpcCalls:()=>rpcs,
   update:()=>vm.runInContext('updateOnlinePresence()',ctx)};
 }
 test('guest online indicator uses only private RPC and returns aggregate number',async()=>{
  const x=fixture();
  await x.update();
  assert.equal(x.label.textContent,'Аккаунтов онлайн: 5');
+ assert.equal(x.counter.hidden,false);
  assert.equal(x.rpcCalls(),1);
  assert.equal(x.logs[0].method,'komi_site_presence');
  assert.equal(x.logs[0].payload.p_session,'00000000-0000-4000-8000-000000000111');
@@ -51,8 +53,13 @@ test('offline does not call RPC, and invalid count is not shown',async()=>{
  const offline=fixture({online:false});
  await offline.update();
  assert.equal(offline.rpcCalls(),0);
- assert.equal(offline.label.textContent,'Нет соединения');
+ assert.equal(offline.label.textContent,'');
+ assert.equal(offline.counter.hidden,true);
  const bad=fixture({rpcCount:-1});
  await bad.update();
- assert.equal(bad.label.textContent,'Аккаунтов онлайн: —');
+ assert.equal(bad.label.textContent,'');
+ assert.equal(bad.counter.hidden,true);
+ const zero=fixture({rpcCount:0});
+ await zero.update();
+ assert.equal(zero.counter.hidden,true);
 });

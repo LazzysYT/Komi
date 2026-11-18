@@ -512,13 +512,14 @@ async function checkNotifications(page) {
        status.textContent='Аккаунтов онлайн: проверяем…';
        try {
          await updateOnlinePresence();
-         return {label:status.textContent,inFlight:presenceRequestInFlight};
+         return {label:status.textContent,hidden:status.closest('.online-counter').hidden,inFlight:presenceRequestInFlight};
        } finally {
          _supabase=priorClient;
          currentUser=priorUser;
        }
      });
-     assert.equal(presence.label,'Аккаунтов онлайн: —','Hung online request must time out instead of staying on checking');
+     assert.equal(presence.label,'','Hung online request must clear the loading label');
+     assert.equal(presence.hidden,true,'Hung online request must hide the counter');
      assert.equal(presence.inFlight,false,'Timed-out online request must release the lock');
    }
    await page.screenshot({path:path.join(output,`regression-${width}.png`),fullPage:true});
