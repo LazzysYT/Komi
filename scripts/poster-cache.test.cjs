@@ -68,8 +68,8 @@ test('cached poster streams safe image bytes with CDN headers',async()=>{
     assert.equal(fetched,validShiki);
     assert.equal(res.statusCode,200);
     assert.equal(res.headers['content-type'],'image/jpeg');
-    assert.match(res.headers['cache-control'],/s-maxage=86400/);
-    assert.match(res.headers['cache-control'],/max-age=60/);
+    assert.match(res.headers['cache-control'],/s-maxage=2592000/);
+    assert.match(res.headers['cache-control'],/max-age=604800/);
     assert.deepEqual([...res.body],[255,216,255,217]);
     assert.equal(res.ended,true);
   } finally {global.fetch=prev;}
@@ -95,4 +95,26 @@ test('cache API blocks SSRF, redirects, unsupported MIME and over-size images',a
       assert.equal(res.headers['cache-control'],'no-store');
     }
   } finally {global.fetch=previous;}
+});
+
+test('mutable legacy poster URLs keep short CDN and browser freshness',async()=>{
+  const prev=global.fetch;
+  global.fetch=async()=>({
+    status:200,headers:new Headers({'content-type':'image/jpeg','content-length':'4'}),
+    body:mockStream([0xff,0xd8,0xff,0xd9])
+  });
+  try {
+    for(const source of [validOld,
+      'https://shikimori.io/uploads/poster/animes/1/abc.jpg']) {
+      const res=mockRes();
+      await handler({method:'GET',query:{src:source}},res);
+      assert.equal(res.statusCode,200);
+      assert.match(res.headers['cache-control'],/s-maxage=86400/);
+      assert.match(res.headers['cache-control'],/max-age=60/);
+    }
+    const aniList=mockRes();
+    await handler({method:'GET',query:{src:validAniList}},aniList);
+    assert.equal(aniList.statusCode,200);
+    assert.match(aniList.headers['cache-control'],/s-maxage=2592000/);
+  } finally {global.fetch=prev;}
 });
