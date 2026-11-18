@@ -28,16 +28,20 @@ test('discovery renders one visible slide and one selected indicator', () => {
     type:()=> 'Сериал', renderCard:()=>'<div></div>',
     recommendations:()=>[], calendar:()=>'', years:()=>'', intro:()=>''
   });
-  assert.equal((result.match(/class="hero-slide(?: active)?"/g)||[]).length, 3);
-  assert.equal((result.match(/class="hero-slide active"/g)||[]).length, 1);
-  assert.equal((result.match(/aria-hidden="false"/g)||[]).length, 1);
-  assert.equal((result.match(/aria-hidden="true"/g)||[]).length, 2);
-  assert.equal((result.match(/class="hero-dot active"/g)||[]).length, 1);
-  assert.equal((result.match(/aria-pressed="true"/g)||[]).length, 1);
-  assert.match(result, /data-komi-onclick="changeSlide\(-1\)"/);
-  assert.match(result, /data-komi-onclick="changeSlide\(1\)"/);
-  assert.match(result, /data-komi-onclick="setSlide\(1\)"/);
-  assert.match(result, /<svg viewBox="0 0 24 24"/);
+  // Other home sections also contain aria-hidden and aria-pressed controls.
+  // Assert only against the hero carousel, not the entire home page.
+  const heroMarkup = result.match(/<section class="komi-home-hero"[\s\S]*?<\/section>/)?.[0] || '';
+  assert.ok(heroMarkup, 'hero section rendered');
+  assert.equal((heroMarkup.match(/class="hero-slide(?: active)?"/g)||[]).length, 3);
+  assert.equal((heroMarkup.match(/class="hero-slide active"/g)||[]).length, 1);
+  assert.equal((heroMarkup.match(/aria-hidden="false"/g)||[]).length, 1);
+  assert.equal((heroMarkup.match(/aria-hidden="true"/g)||[]).length, 2);
+  assert.equal((heroMarkup.match(/class="hero-dot active"/g)||[]).length, 1);
+  assert.equal((heroMarkup.match(/aria-pressed="true"/g)||[]).length, 1);
+  assert.match(heroMarkup, /data-komi-onclick="changeSlide\(-1\)"/);
+  assert.match(heroMarkup, /data-komi-onclick="changeSlide\(1\)"/);
+  assert.match(heroMarkup, /data-komi-onclick="setSlide\(1\)"/);
+  assert.match(heroMarkup, /<svg viewBox="0 0 24 24"/);
 });
 
 test('manual and automatic slide updates remain scoped to heroSlider', () => {
