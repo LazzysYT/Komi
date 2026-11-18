@@ -92,6 +92,17 @@
                 (['video','hls'].includes(item.kind) ||
                  !eligible.some(other => ['video','hls'].includes(other.kind))));
         }
+        // A temporary partner iframe is an ordinary external player: not a
+        // certified ad-free direct stream. Prefer it only in normal mode.
+        if (!chosen && !options.adFreeOnly && options.partnerPreferred) {
+            chosen = eligible.find(item => item.name === options.partnerPreferred &&
+                item.kind === 'embed' && (() => {
+                    try {
+                        const host=new URL(item.url).hostname.toLowerCase();
+                        return host === 'anivibe.pro' || host.endsWith('.anivibe.pro');
+                    } catch { return false; }
+                })());
+        }
         if (!chosen) chosen = eligible.find(item => ['video','hls'].includes(item.kind)) || eligible[0];
         return {
             name: chosen?.name || '',
