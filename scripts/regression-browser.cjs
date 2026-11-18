@@ -152,6 +152,7 @@ async function checkNotifications(page) {
      localStorage.setItem('komi_current_user', JSON.stringify({username:'legacy',authUserId:'forged-id'}));
    });
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+   await page.route(/^https:\/\/media\.test\/player\?/,route=>route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<button type="button" style="margin:80px">Запустить видео</button><script>document.querySelector("button").onclick = event => { event.target.textContent = "Видео запущено"; };</script>'}));
    await page.goto(process.env.KOMI_TEST_URL || 'http://127.0.0.1:8765');
    await page.waitForFunction(()=>typeof bindKomiPlayer==='function');
    assert.equal(await page.evaluate(() => currentUser), null, 'Cached legacy identity must not sign the visitor in');
@@ -306,7 +307,7 @@ async function checkNotifications(page) {
     const hostileMetadata = '<img data-komi-injected src=x>';
     animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'https://media.test/poster.jpg',
       genres:[hostileMetadata],year:hostileMetadata,shikiRating:hostileMetadata,type:hostileMetadata,
-      episodes:[{season:1,number:1,sources:{Direct:'https://media.test/a.mp4',Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
+      episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
     catalogInitialLoadComplete=true;render();
    });
    assert.match(await page.locator('.hero-meta').textContent(), /<img data-komi-injected/);
@@ -391,6 +392,7 @@ async function checkNotifications(page) {
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-placeholder').count(),2);
+   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
    await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
    await page.getByRole('button',{name:'Очистить поиск серии'}).click();
@@ -402,8 +404,10 @@ async function checkNotifications(page) {
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
 
-   const state=await page.evaluate(()=>{
+   const state=await page.evaluate(async ()=>{
     currentUser={username:'test_viewer'};
+    saveKomiEpisode('1',1,1,42,100);
+    await openWatchModal('1');
     const video=document.getElementById('animeVideoPlayer');
     video.dataset.owner='test_viewer';
     Object.defineProperty(video,'error',{configurable:true,value:null});
@@ -417,6 +421,7 @@ async function checkNotifications(page) {
     return getKomiProgress('1');
    });
    assert.equal(state.time,42);assert.equal(state.duration,100);
+   assert.equal(state.index,1,'Progress on the old second row still belongs to the combined first episode');
    await page.getByText('Не удалось загрузить видео.',{exact:true}).waitFor();
    assert.equal(await playback.getByRole('slider',{name:'Позиция видео'}).isDisabled(),true);
    await page.getByRole('button',{name:'Повторить загрузку'}).click();
@@ -428,7 +433,12 @@ async function checkNotifications(page) {
    const providerLink = page.getByRole('link',{name:'Открыть у провайдера',exact:false});
    await providerLink.waitFor();
    assert.equal(await playback.count(),0);
-   assert.equal(await page.locator('#watchModal .player-wrapper iframe').count(),0);
+   const providerFrame = page.locator('#watchModal .player-wrapper iframe');
+   assert.equal(await providerFrame.getAttribute('src'),'https://media.test/player?a=1&b=2');
+   assert.doesNotMatch(await providerFrame.getAttribute('sandbox'),/allow-popups|allow-top-navigation/);
+   const provider = providerFrame.contentFrame();
+   await provider.getByRole('button',{name:'Запустить видео'}).click();
+   await provider.getByRole('button',{name:'Видео запущено'}).waitFor();
    assert.equal(await providerLink.getAttribute('href'),'https://media.test/player?a=1&b=2');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').duration),100);
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);

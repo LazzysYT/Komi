@@ -38,12 +38,12 @@
     const wrapper = ctx.content.querySelector('.player-wrapper');
     const sourceSelect = ctx.content.querySelector('#komiWatchSourceSelect');
     const heading = ctx.content.querySelector('.komi-player-heading');
-    if (!wrapper || !sourceSelect || !heading || !wrapper.querySelector('video, .komi-external-source')) return;
+    if (!wrapper || !sourceSelect || !heading || !wrapper.querySelector('video, iframe')) return;
     ctx.wrapper = wrapper;
     active = ctx;
     activeAbort = new AbortController();
     const signal = activeAbort.signal;
-    const external = !!wrapper.querySelector('.komi-external-source');
+    const external = !!wrapper.querySelector('iframe');
     const video = wrapper.querySelector('video');
     wrapper.classList.add('komi-v4-surface');
     wrapper.classList.toggle('komi-v4-external', external);

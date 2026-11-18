@@ -131,17 +131,19 @@
         const buttons = context.content.querySelectorAll('.komi-episode-number-grid button');
         for (const button of buttons) {
             const idx = Array.prototype.indexOf.call(buttons, button);
-            const done = saved.has(context.season + ':' + idx);
+            const slots = context.episodeSlots?.[idx] || [idx];
+            const done = slots.some(slot => saved.has(context.season + ':' + slot));
             button.classList.toggle('komi-episode-watched', done);
             if (done) button.title = context.authId ? 'Серия досмотрена · синхронизация с аккаунтом' : 'Серия досмотрена на этом устройстве';
         }
     }
     function markCurrentWatched(context) {
         if (!context?.userId || (context.ownerIsCurrent && !context.ownerIsCurrent())) return;
-        if (addWatched(context.userId, context.animeId, context.season, context.index)) {
+        const slot = context.episodeSlots?.[context.index]?.[0] ?? context.index;
+        if (addWatched(context.userId, context.animeId, context.season, slot)) {
             paintWatched(context);
             if (activeCloudContext(context))
-                void writeCloudWatched(context,[context.season+':'+context.index]).catch(()=>syncError(context));
+                void writeCloudWatched(context,[context.season+':'+slot]).catch(()=>syncError(context));
         }
     }
     function showPlaybackStatus(context, text) {
@@ -169,6 +171,7 @@
             userId: settings.userId || '',
             season: Number(settings.season) || 1,
             index: Number(settings.index) || 0,
+            episodeSlots: settings.episodeSlots,
             hasNext: !!settings.hasNext,
             client:settings.client || null,
             authId:settings.authId || null,

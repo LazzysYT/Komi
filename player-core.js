@@ -19,6 +19,41 @@
         } catch { return {url: '', kind: 'missing'}; }
     }
     function finite(value) { return Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0; }
+    function episodeSeason(episode) { return Number(episode?.season) || 1; }
+    function seasonEpisodes(episodes, season) {
+        const records = episodes.map((episode, index) => ({episode, index}))
+            .filter(({episode}) => episode && episodeSeason(episode) === season)
+            .sort((a, b) => (Number(a.episode.number) || 0) - (Number(b.episode.number) || 0));
+        const byNumber = new Map();
+        const merged = [];
+        records.forEach(({episode, index}, slot) => {
+            const number = String(episode.number ?? '').trim();
+            const key = /^\d+$/.test(number) ? Number(number) : null;
+            let item = key === null ? null : byNumber.get(key);
+            if (!item) {
+                item = {...episode, originalIdx: index, slots: [], sources: Object.create(null), origins: Object.create(null)};
+                merged.push(item);
+                if (key !== null) byNumber.set(key, item);
+            }
+            item.slots.push(slot);
+            for (const field of ['preview', 'thumbnail', 'screenshot', 'duration', 'durationSeconds']) {
+                if (!item[field] && episode[field]) item[field] = episode[field];
+            }
+            const declared = Object.entries(episode.sources || {})
+                .map(([name, raw]) => [name, source(raw).url]).filter(([, url]) => url);
+            const entries = declared.length ? declared : [['Default', source(episode.url).url]];
+            for (const [name, url] of entries) {
+                if (!url) continue;
+                let label = name;
+                let suffix = 2;
+                while (item.sources[label] && item.sources[label] !== url) label = name + ' (' + suffix++ + ')';
+                if (item.sources[label]) continue;
+                item.sources[label] = url;
+                item.origins[label] = {index, name: declared.length ? name : 'Основной источник'};
+            }
+        });
+        return merged;
+    }
     function createWriter(write, onError = () => {}) {
         const entries = new Map();
         return {
@@ -40,7 +75,7 @@
             flush() { return Promise.all([...entries.values()].map(entry => entry.promise)); }
         };
     }
-    const api = {source, finite, createWriter};
+    const api = {source, finite, episodeSeason, seasonEpisodes, createWriter};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerCore = api;
 })(globalThis);

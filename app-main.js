@@ -2979,8 +2979,7 @@ async function loadDataFromCloud(attempt = 0) {
         function komiProgressKey(animeId) { return currentUser ? currentUser.username + '_' + animeId : ''; }
         function getKomiProgress(animeId) { return komiEpisodeProgress[komiProgressKey(animeId)] || null; }
         function resumeKomiAnime(animeId) {
-            const p = getKomiProgress(animeId);
-            openWatchModal(String(animeId), p ? p.season : null, p ? p.index : 0);
+            openWatchModal(String(animeId));
         }
         function saveKomiEpisode(animeId, season, index, time=0, duration=0) {
             if (!currentUser) return;
@@ -3000,9 +2999,10 @@ async function loadDataFromCloud(attempt = 0) {
             const source = KomiPlayerCore.source(url);
             if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии пока нет доступного плеера.</div>';
             if (source.kind === 'video' || source.kind === 'hls') return '<div class="player-box"><video id="animeVideoPlayer" aria-label="Видеоплеер аниме" controls preload="metadata" playsinline></video></div>';
-            return '<div class="komi-external-source"><p>Для этой озвучки пока доступен только внешний источник.</p><a href="' +
-                escapeFriendHtml(source.url) + '" target="_blank" rel="noopener" referrerpolicy="strict-origin-when-cross-origin">Открыть у провайдера ↗</a>' +
-                '<small>В новой вкладке у провайдера может быть реклама.</small></div>';
+            const originPermission = new URL(source.url).origin === location.origin ? '' : ' allow-same-origin';
+            return '<div class="player-box"><iframe title="Внешний видеоплеер" src="' +
+                escapeFriendHtml(source.url) + '" sandbox="allow-scripts allow-forms allow-presentation' + originPermission +
+                '" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
         }
         function showKomiPlayerError(video) {
             if (video !== document.getElementById('animeVideoPlayer')) return;
@@ -3012,14 +3012,14 @@ async function loadDataFromCloud(attempt = 0) {
         }
         function restoreKomiVideo(video) {
             const p = getKomiProgress(video.dataset.animeId || window.komiActiveAnimeId);
-            if (p && p.season === window.komiActiveSeason && p.index === window.komiActiveEpisode && p.time > 0 && (!video.duration || p.time < video.duration-5)) {
+            if (p && p.season === Number(video.dataset.season) && p.index === Number(video.dataset.episode) && p.time > 0 && (!video.duration || p.time < video.duration-5)) {
                 try { video.currentTime = p.time; } catch(e) {}
             }
         }
         function playNextEp(animeId, season, index) {
             const anime = animeList.find(a=>String(a.id)===String(animeId));
             if (!anime) return;
-            const eps=anime.episodes.filter(ep=>Number(ep.season||1)===Number(season));
+            const eps = KomiPlayerCore.seasonEpisodes(anime.episodes, Number(season));
             if (index+1<eps.length) openWatchModal(String(animeId),season,index+1);
         }
         function komiAchievements(username) {
@@ -3276,24 +3276,19 @@ async function loadDataFromCloud(attempt = 0) {
             }
             if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); window.KomiComments?.mount(anime.id); return; }
 
-            const seasonsMap = {};
-            anime.episodes.forEach((ep, idx) => {
-                const season = Number(ep?.season) || 1;
-                if (!seasonsMap[season]) seasonsMap[season] = [];
-                seasonsMap[season].push({ ...ep, originalIdx: idx });
-            });
-            const seasonNumbers = Object.keys(seasonsMap).map(Number).sort((a,b) => a - b);
+            const seasonNumbers = [...new Set(anime.episodes.map(KomiPlayerCore.episodeSeason))].sort((a,b) => a - b);
             const progressForResume = selectedSeason === null ? getKomiProgress(anime.id) : null;
             const seasonWanted = selectedSeason === null ? Number(progressForResume?.season) : Number(selectedSeason);
-            const activeSeason = seasonsMap[seasonWanted] ? seasonWanted : seasonNumbers[0];
-            const currentSeasonEpisodes = seasonsMap[activeSeason] || [];
-            currentSeasonEpisodes.sort((a,b) => (Number(a.number)||0) - (Number(b.number)||0));
-            const targetIndex = progressForResume?.season === activeSeason ? Number(progressForResume.index) : Number(selectedEpIdx);
+            const activeSeason = seasonNumbers.includes(seasonWanted) ? seasonWanted : seasonNumbers[0];
+            const currentSeasonEpisodes = KomiPlayerCore.seasonEpisodes(anime.episodes, activeSeason);
+            const targetIndex = progressForResume?.season === activeSeason
+                ? currentSeasonEpisodes.findIndex(episode => episode.slots.includes(Number(progressForResume.index)))
+                : Number(selectedEpIdx);
             const activeIndex = Number.isInteger(targetIndex) && targetIndex >= 0 && targetIndex < currentSeasonEpisodes.length ? targetIndex : 0;
             const currentEp = currentSeasonEpisodes[activeIndex];
             if (!currentEp) return;
-            const sources = currentEp.sources && typeof currentEp.sources === 'object' ? currentEp.sources : { 'Default': currentEp.url || '' };
-            const sourceNames = Object.keys(sources).filter(name => typeof sources[name] === 'string' && komiPlayerKind(sources[name]) !== 'missing');
+            const {sources} = currentEp;
+            const sourceNames = Object.keys(sources);
             if (!sourceNames.length) sourceNames.push('Недоступно');
             let preferredSource = requestedSource;
             if (preferredSource === null) {
@@ -3305,15 +3300,19 @@ async function loadDataFromCloud(attempt = 0) {
             activePlayerSource = canUsePreferred ? preferredSource : (directSources[0] || sourceNames[0]);
             const activeUrl = sources[activePlayerSource] || '';
             const selectedSource = activePlayerSource;
+            const sourceOrigin = currentEp.origins[selectedSource] || {index:currentEp.originalIdx, name:selectedSource};
+            const activeOrigin = activeUrl ? new URL(activeUrl).origin : '';
             const alternateSource = directSources.find(name => name !== selectedSource) ||
+                sourceNames.find(name => name !== selectedSource && new URL(sources[name]).origin !== activeOrigin) ||
                 sourceNames.find(name => name !== selectedSource);
             const isExternalPlayer = komiPlayerKind(activeUrl) === 'embed';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
             window.komiActiveEpisode=activeIndex;
             const previousProgress = getKomiProgress(anime.id);
-            const resuming = previousProgress?.season === Number(activeSeason) && previousProgress?.index === activeIndex;
-            saveKomiEpisode(String(anime.id),activeSeason,activeIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
+            const resuming = previousProgress?.season === activeSeason && currentEp.slots.includes(previousProgress.index);
+            const progressIndex = resuming ? previousProgress.index : currentEp.slots[0];
+            saveKomiEpisode(String(anime.id),activeSeason,progressIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
             const playerHtml = komiPlayerHtml(activeUrl);
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
@@ -3342,7 +3341,7 @@ async function loadDataFromCloud(attempt = 0) {
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml((Array.isArray(anime.genres) ? anime.genres : []).join(', '))}</span>
                                 <span style="background:var(--bg-input); padding:2px 6px; border-radius:5px; font-size:10px; border:1px solid var(--border);">${escapeFriendHtml(anime.year || '—')}</span>
                                 <button class="btn-secondary" style="padding:3px 8px; font-size:10px;" data-komi-onclick="playSound(); toggleFavorite('${anime.id}', 'Любимые')">★ ${userFavCategory ? 'В избранном' : 'В избранное'}</button>
-                                <button class="btn-glow-secondary" style="padding:3px 8px; font-size:10px;" data-komi-onclick="playSound(); createWatchPartyFromAnime('${anime.id}', '', false, ${currentEp.originalIdx}, document.getElementById('komiWatchSourceSelect').value)"> Party</button>
+                                <button type="button" class="btn-glow-secondary" id="komiWatchDetailsParty" style="padding:3px 8px; font-size:10px;"> Party</button>
                             </div>
                         </div>
                     </div>
@@ -3367,12 +3366,13 @@ async function loadDataFromCloud(attempt = 0) {
                                     </select>
                                 </div>
                             </div>
-                            ${activeUrl && !isExternalPlayer ? `
-                                <div id="komiPlayerRecovery" class="komi-player-notice" hidden>
-                                    <p id="komiPlayerStatus" role="status"></p>
+                            ${activeUrl ? `
+                                <div id="komiPlayerRecovery" class="komi-player-notice" ${isExternalPlayer ? '' : 'hidden'}>
+                                    <p id="komiPlayerStatus" role="status">${isExternalPlayer ? 'Если видео не запускается, смените озвучку или откройте источник отдельно. У провайдера может быть реклама.' : ''}</p>
                                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
                                         <button id="komiRetryPlayer" type="button" class="btn-secondary">Повторить загрузку</button>
                                         ${alternateSource ? '<button id="komiAlternatePlayer" type="button" class="btn-secondary">Сменить источник</button>' : ''}
+                                        ${isExternalPlayer ? '<a class="btn-secondary" target="_blank" rel="noopener" href="' + escapeFriendHtml(activeUrl) + '">Открыть у провайдера ↗</a>' : ''}
                                     </div>
                                 </div>
                             ` : ''}
@@ -3423,7 +3423,11 @@ async function loadDataFromCloud(attempt = 0) {
                 openWatchModal(anime.id, activeSeason, activeIndex, selectedSource));
             document.getElementById('komiAlternatePlayer')?.addEventListener('click', () =>
                 changePlayerSource(anime.id, activeSeason, activeIndex, alternateSource));
-            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl);
+            document.getElementById('komiWatchDetailsParty')?.addEventListener('click', () => {
+                playSound();
+                createWatchPartyFromAnime(anime.id, '', false, sourceOrigin.index, sourceOrigin.name);
+            });
+            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl, progressIndex);
             const watchedOwner = currentUser?.authUserId || null;
             const watchedLocalOwner = watchedOwner || currentUser?.username || '';
             window.KomiPlayerUX?.mount({
@@ -3437,7 +3441,9 @@ async function loadDataFromCloud(attempt = 0) {
                 hasNext,
                 displayNumber,
                 watchStill: Array.isArray(anime.screenshots) ? anime.screenshots[0] : '',
-                originalIndex: currentEp.originalIdx,
+                originalIndex: sourceOrigin.index,
+                originalSource: sourceOrigin.name,
+                episodeSlots: currentSeasonEpisodes.map(episode => episode.slots),
                 episodeMeta:currentSeasonEpisodes.map(ep=>({
                     preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',
                     duration:ep?.duration ?? ep?.durationSeconds ?? null
