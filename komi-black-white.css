@@ -325,3 +325,52 @@
     transform: none !important;
   }
 }
+
+/* Komi nickname header layout: no technical ID or vertical logout text. */
+.komi-media-hub .komi-hub-tools-panel #userHeaderArea {
+  width: 100% !important;
+  min-width: 0 !important;
+}
+.komi-media-hub .komi-hub-tools-panel #userHeaderArea .user-pill {
+  display: flex !important;
+  flex-direction: row !important;
+  align-items: center !important;
+  flex-wrap: nowrap !important;
+  gap: 8px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 6px 8px !important;
+  border-radius: 14px !important;
+}
+.komi-media-hub .komi-hub-tools-panel #userHeaderArea .user-avatar-small {
+  flex: 0 0 28px !important;
+  width: 28px !important;
+  height: 28px !important;
+}
+.komi-media-hub .komi-hub-tools-panel #userHeaderArea .komi-header-username {
+  display: block !important;
+  flex: 1 1 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: normal !important;
+  line-height: 1.3 !important;
+}
+.komi-media-hub .komi-hub-tools-panel #userHeaderArea .user-pill > button {
+  display: inline-flex !important;
+  flex: 0 0 auto !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: auto !important;
+  min-width: 68px !important;
+  margin: 0 !important;
+  padding: 8px 10px !important;
+  white-space: nowrap !important;
+  overflow-wrap: normal !important;
+  word-break: keep-all !important;
+}

@@ -753,6 +753,16 @@ async function loadDataFromCloud(attempt = 0) {
             renderHeaderUser();
         }
 
+        // The database username is an ownership key, not a public-facing nickname.
+        // Prefer the saved, user-editable profile display name without changing identity.
+        function komiVisibleUsername(username, profile, isOwnProfile = false) {
+            const handle = String(username ?? '').trim();
+            const nickname = String(profile?.displayName ?? '').trim();
+            const isTechnicalId = value => /^google_[a-f0-9]{12,}$/i.test(value);
+            if (nickname && !isTechnicalId(nickname)) return nickname.slice(0, 40);
+            if (handle && !isTechnicalId(handle)) return handle;
+            return isOwnProfile ? 'Мой профиль' : 'Пользователь Komi';
+        }
         function renderHeaderUser() {
             const area = document.getElementById('userHeaderArea');
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
@@ -802,7 +812,9 @@ async function loadDataFromCloud(attempt = 0) {
                     ? avatar : 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(username);
                 img.onerror = () => { img.onerror = null; img.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback'; };
                 const name = document.createElement('span');
-                name.textContent = username;
+                name.className = 'komi-header-username';
+                name.textContent = komiVisibleUsername(username, p, true);
+                name.title = name.textContent;
                 const logout = document.createElement('button');
                 logout.type = 'button';
                 logout.textContent = 'Выйти';
@@ -1270,7 +1282,7 @@ async function loadDataFromCloud(attempt = 0) {
                         <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
-                                <h2>${safeProfileText(p.displayName || (username.startsWith('google_') ? (isMe ? 'Мой профиль' : 'Пользователь Komi') : username))}</h2>
+                                <h2>${safeProfileText(komiVisibleUsername(username, p, isMe))}</h2>
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" data-komi-onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
                                      `<button class="btn-glow" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
@@ -2607,13 +2619,24 @@ async function loadDataFromCloud(attempt = 0) {
                     else if (savedProfile) {
                         if (currentUser?.authUserId === session.user.id) applySavedKomiProfile(username, savedProfile);
                     } else {
+                        const firstDisplayName = String(
+                            session.user.user_metadata?.user_name ||
+                            session.user.user_metadata?.preferred_username ||
+                            session.user.user_metadata?.username ||
+                            session.user.user_metadata?.full_name ||
+                            'Пользователь Komi'
+                        ).trim().slice(0, 40);
                         const { error: createError } = await _supabase.from('komi_profiles').insert({
                             user_id: session.user.id, username: komiSafeAccountUsername(username, session.user.id),
-                            display_name: String(session.user.user_metadata?.full_name || session.user.user_metadata?.username || 'Пользователь Komi').slice(0, 40),
+                            display_name: firstDisplayName,
                             avatar_url: userProfiles[username]?.avatar || null,
                             bio: userProfiles[username]?.status || 'Новичок ★'
                         });
                         if (createError) console.warn('Profile create:', createError.message);
+                        else if (currentUser?.authUserId === session.user.id && userProfiles[username]) {
+                            // Display the newly created nickname immediately, without a reload.
+                            userProfiles[username].displayName = firstDisplayName;
+                        }
                     }
                 } catch (profileError) { console.warn('Profile sync:', profileError); }
                 await loadAuthenticatedAnimeData();

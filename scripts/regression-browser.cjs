@@ -414,6 +414,45 @@ async function checkNotifications(page) {
    assert.equal(uiPolish.stored, 'off');
    assert.equal(uiPolish.restored, 'true');
 
+   if (width === 1440) {
+     const nicknameLayout = await page.evaluate(() => {
+       const technical = 'google_307c6306cdcb490d908646046af07c61';
+       const savedUser = currentUser;
+       const savedProfile = userProfiles[technical];
+       const details = document.querySelector('.komi-hub-tools-menu');
+       const wasOpen = details.open;
+       try {
+         currentUser = {username:technical, authUserId:'nickname-browser-test'};
+         userProfiles[technical] = {displayName:'НикKomi', avatar:''};
+         details.open = true;
+         renderHeaderUser();
+         const label = document.querySelector('#userHeaderArea .komi-header-username');
+         const logout = document.querySelector('#userHeaderArea .user-pill > button');
+         return {
+           label:label?.textContent,
+           title:label?.title,
+           logout:logout?.textContent,
+           logoutWhiteSpace:getComputedStyle(logout).whiteSpace,
+           labelWhiteSpace:getComputedStyle(label).whiteSpace,
+           internalIdExposed:document.querySelector('#userHeaderArea')?.textContent.includes(technical)
+         };
+       } finally {
+         currentUser = savedUser;
+         if (savedProfile === undefined) delete userProfiles[technical];
+         else userProfiles[technical] = savedProfile;
+         details.open = wasOpen;
+         renderHeaderUser();
+       }
+     });
+     assert.equal(nicknameLayout.label, 'НикKomi');
+     assert.equal(nicknameLayout.title, 'НикKomi');
+     assert.equal(nicknameLayout.logout, 'Выйти');
+     assert.equal(nicknameLayout.logoutWhiteSpace, 'nowrap');
+     assert.equal(nicknameLayout.labelWhiteSpace, 'nowrap');
+     assert.equal(nicknameLayout.internalIdExposed, false);
+   }
+
+
 
    await page.waitForSelector('#animeVideoPlayer');
    const playback = page.getByRole('group',{name:'Управление видео'});
