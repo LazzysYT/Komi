@@ -170,6 +170,7 @@
       .sort((a,b)=>score(b)-score(a)).slice(0,10);
     return '<div class="komi-home-discovery">' +
       hero(slider,context) +
+      (typeof context.quickFilters === 'function' ? context.quickFilters() : '') +
       continueShelf({...context,animeList}) +
       genreShelf(animeList) +
       shelf('Популярное прямо сейчас','Высокие оценки Shikimori и недавно обновлённые серии',popular,'all',context.renderCard,'komi-home-popular') +
