@@ -167,13 +167,17 @@ let catalogInitialLoadFailed = false;
 let komiSeoDeepLinkOpened = false;
 function komiMaybeOpenSeoAnime() {
     if (komiSeoDeepLinkOpened) return;
-    const requested = new URLSearchParams(location.search).get('anime');
+    // Support existing shared /?anime= links while normalizing to a single permalink.
+    const legacyId = new URLSearchParams(location.search).get('anime');
+    let pendingId = '';
+    try { pendingId = sessionStorage.getItem('komi_watch_deeplink_v1') || ''; } catch {}
+    const requested = legacyId || pendingId;
     if (!requested || !/^[1-9][0-9]{0,11}$/.test(requested)) return;
     if (!animeList.some(anime => String(anime.id) === requested)) return;
     komiSeoDeepLinkOpened = true;
-    const next = new URL(location.href);
-    next.searchParams.delete('anime');
-    history.replaceState(null, '', next.pathname + next.search + next.hash);
+    try { sessionStorage.removeItem('komi_watch_deeplink_v1'); } catch {}
+    // SEO detail, incoming legacy links and the active player share this URL.
+    history.replaceState(null, '', '/anime/' + requested + '#player');
     setTimeout(() => openWatchModal(requested), 0);
 }
 
@@ -670,7 +674,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
             const route = view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : view === 'partners' ? '#partners' : '';
-            if (location.hash !== route) history.replaceState(null, '', location.pathname + location.search + route);
+            if (location.pathname !== '/' || location.search || location.hash !== route) history.replaceState(null, '', '/' + route);
             render();
             renderHeaderUser();
         }
@@ -678,7 +682,7 @@ async function loadDataFromCloud(attempt = 0) {
         function openProfile(username) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
-            if (location.hash !== '#profile') history.replaceState(null, '', location.pathname + location.search + '#profile');
+            if (location.pathname !== '/' || location.search || location.hash !== '#profile') history.replaceState(null, '', '/#profile');
             profileTargetUser = username;
             render();
             renderHeaderUser();
@@ -2431,7 +2435,7 @@ async function loadDataFromCloud(attempt = 0) {
             try {
                 const { error } = await _supabase.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: window.location.origin + window.location.pathname }
+                    options: { redirectTo: window.location.origin + '/' }
                 });
                 if (error) throw error;
             } catch (error) {
@@ -2610,7 +2614,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (passwordInput.length < 12) { alert('Используйте уникальный пароль минимум из 12 символов.'); return; }
             const { data: signupData, error: signupError } = await _supabase.auth.signUp({
                 email, password: passwordInput,
-                options: { data: { username }, emailRedirectTo: window.location.origin + window.location.pathname }
+                options: { data: { username }, emailRedirectTo: window.location.origin + '/' }
             });
             if (signupError) { alert('Не удалось зарегистрироваться: ' + signupError.message); return; }
             if (!signupData.session) {

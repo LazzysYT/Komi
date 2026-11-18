@@ -96,6 +96,15 @@ fs.mkdirSync(output,{recursive:true});
           const robots=await page.request.get(base+'robots.txt',{timeout:12000});
           assert.equal(robots.status(),200,'robots.txt must be available');
           assert.match(await robots.text(),/Sitemap: https:\/\/komianime\.online\/sitemap\.xml/);
+          // Only check mirror indexing after deployment to main; PR previews
+          // deliberately run against the previous production build.
+          if (process.env.GITHUB_EVENT_NAME === 'push' && process.env.GITHUB_REF === 'refs/heads/main') {
+            const mirror=await page.request.get('https://komi-six.vercel.app/anime/52991',{timeout:30000});
+            assert.equal(mirror.status(),200,'Production mirror anime page must respond');
+            assert.match(mirror.headers()['x-robots-tag']||'',/noindex/i,'Mirror title must not be indexed');
+            assert.doesNotMatch(detail.headers()['x-robots-tag']||'',/noindex/i,'Primary canonical title must be indexable');
+            console.log('PASS mirror noindex and canonical production indexing');
+          }
           console.log('PASS SEO production: anime detail, JSON-LD, sitemap',indexed,'URLs, robots');
         }
         const posterText=await posterResponse.text();
