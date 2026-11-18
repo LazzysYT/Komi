@@ -25,7 +25,28 @@
     context.sidebar.inert = hidden;
     context.sidebar.setAttribute('aria-hidden', String(hidden));
     context.drawer.setAttribute('aria-expanded', String(expanded));
-    context.drawer.textContent = expanded ? 'Скрыть серии [→|]' : 'Показать серии [|←]';
+    context.drawer.textContent = expanded ? 'Скрыть серии' : 'Серии';
+  }
+  function episodePreview(raw) {
+    try {
+      const url = new URL(raw);
+      if (url.protocol === 'https:' && !url.username && !url.password) return url.href;
+    } catch {}
+    return '';
+  }
+  function durationLabel(raw) {
+    const seconds = typeof raw === 'string' && /^\d{1,3}:[0-5]\d$/.test(raw)
+      ? Number(raw.split(':')[0]) * 60 + Number(raw.split(':')[1]) : Number(raw);
+    if (!Number.isFinite(seconds) || seconds <= 0 || seconds >= 86400) return '';
+    return seconds < 60 ? Math.ceil(seconds) + ' с' : Math.round(seconds / 60) + ' мин';
+  }
+  function paintEpisodeCaption(button) {
+    const caption = button.querySelector('.komi-list-label small');
+    if (!caption) return;
+    caption.textContent = button.classList.contains('active') ? 'Сейчас смотришь' :
+      [button.dataset.episodeDuration, button.classList.contains('komi-episode-watched') ? 'Просмотрена' : '']
+        .filter(Boolean).join(' · ');
+    caption.hidden = !caption.textContent;
   }
   function setListMode(context, list) {
     context.grid.classList.toggle('komi-episode-list', list);
@@ -35,37 +56,31 @@
       episodeButton.replaceChildren();
       if (list) {
         const meta = context.episodeMeta?.[index];
-        if (meta?.preview) {
-          let parsed;
-          try { parsed = new URL(meta.preview); } catch {}
-          if (parsed?.protocol === 'https:' && !parsed.username && !parsed.password) {
-            const preview = document.createElement('img');
-            preview.className = 'komi-episode-preview';
-            preview.src = parsed.href;
-            preview.alt = '';
-            preview.loading = 'lazy';
-            episodeButton.append(preview);
-          }
-        }
-        const number = document.createElement('strong');
-        number.className = 'komi-list-number';
-        number.textContent = label;
+        const preview = document.createElement('img');
+        preview.className = 'komi-episode-preview';
+        preview.src = episodePreview(meta?.preview) || context.poster;
+        preview.alt = '';
+        preview.loading = 'lazy';
+        preview.addEventListener('error', () => {
+          if (preview.src === context.fallbackPoster) return;
+          preview.src = preview.src === context.poster ? context.fallbackPoster : context.poster;
+        });
         const caption = document.createElement('span');
         caption.className = 'komi-list-label';
         caption.textContent = 'Серия ' + label;
         const explanation = document.createElement('small');
-        const seconds = Number(meta?.duration);
-        const duration = Number.isFinite(seconds) && seconds > 0 && seconds < 86400
-          ? ' · ' + Math.floor(seconds / 60) + ':' + String(Math.floor(seconds % 60)).padStart(2,'0')
-          : typeof meta?.duration === 'string' && /^\d{1,3}:\d{2}$/.test(meta.duration)
-            ? ' · ' + meta.duration : '';
-        explanation.textContent = (episodeButton.classList.contains('active') ? 'Сейчас воспроизводится' :
-          episodeButton.classList.contains('komi-episode-watched') ? 'Просмотрена' : 'Выбрать серию') + duration;
+        episodeButton.dataset.episodeDuration = durationLabel(meta?.duration);
         caption.append(explanation);
-        episodeButton.append(number, caption);
+        episodeButton.append(preview, caption);
+        paintEpisodeCaption(episodeButton);
       } else episodeButton.textContent = label;
     });
     context.viewButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === (list ? 'list' : 'grid'))));
+    const activeEpisode = context.grid.querySelector('[aria-current="true"]');
+    if (activeEpisode && !context.sidebar.inert) {
+      const offset = activeEpisode.getBoundingClientRect().bottom - context.grid.getBoundingClientRect().bottom;
+      if (offset > 0) context.grid.scrollTop += offset;
+    }
   }
   function setStatus(context, message) {
     if (currentContext(context) && context.note) context.note.textContent = message;
@@ -84,7 +99,7 @@
     } catch (error) {
       if (error?.name === 'AbortError') return;
     }
-    root.prompt?.('Ссылка на аниме:', url);
+    setStatus(context,'Ссылка на аниме: ' + url);
   }
   function enhance(context, settings) {
     const content = context.content;
@@ -97,8 +112,21 @@
     if (!wrapper || !sidebar || !controls || !grid || !heading) return;
     context.sidebar = sidebar;
     context.grid = grid;
-    context.title = heading.querySelector('h2')?.textContent || 'KomiAnime';
+    context.title = heading.querySelector('h1')?.textContent || 'KomiAnime';
     context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
+    context.fallbackPoster = new URL('/anime-artwork.svg', location.href).href;
+    context.poster = content.querySelector('.crunchy-hero-poster')?.src || context.fallbackPoster;
+    const currentEpisode = context.episodeMeta[context.index];
+    const durationNode = heading.querySelector('.komi-current-duration');
+    const paintDuration = () => {
+      const duration = durationLabel(context.video?.duration) || durationLabel(currentEpisode?.duration);
+      if (durationNode) durationNode.textContent = duration ? ' · ' + duration : '';
+    };
+    if (context.video) {
+      context.video.poster = episodePreview(currentEpisode?.preview) || episodePreview(settings.watchStill) || context.poster;
+      context.video.addEventListener('durationchange', paintDuration);
+    }
+    paintDuration();
     current = context;
 
     // The top bar is inside the existing viewport, never overlapping site navigation.
@@ -117,36 +145,29 @@
       drawerPreference = showing;
       setDrawer(context, drawerPreference);
     });
-    top.append(title, drawer);
+    const search = button('Поиск аниме', 'komi-cinema-search', 'Открыть поиск аниме');
+    search.addEventListener('click', () => {
+      root.closeWatchModal();
+      const inputs = ['searchInput','komiCatalogSearchInput'];
+      const visibleSearch = () => inputs.map(id => document.getElementById(id)).find(input => input?.getClientRects().length);
+      const input = visibleSearch();
+      if (input) input.focus();
+      else {
+        root.navigate('catalog');
+        visibleSearch()?.focus();
+      }
+    });
+    top.append(drawer, search);
     const share = button('↗ Поделиться', 'komi-cinema-share', 'Поделиться ссылкой на это аниме');
     share.addEventListener('click', () => void shareAnime(context));
-    top.append(share);
-    const native = button('⛶ Видео', 'komi-native-fullscreen-toggle', 'Нативный полноэкранный просмотр с кнопкой следующей серии');
-    native.disabled = !document.fullscreenEnabled || typeof wrapper.requestFullscreen !== 'function';
-    native.addEventListener('click', () => {
-      if (document.fullscreenElement === wrapper) document.exitFullscreen?.();
-      else wrapper.requestFullscreen?.().catch(()=>setStatus(context,'Нативный полный экран недоступен в браузере.'));
-    });
-    top.append(native);
+    controls.append(share);
     const expanded = content.querySelector('.komi-watch-expand');
-    if (expanded) top.append(expanded);
+    if (expanded) controls.append(expanded);
     const close = content.querySelector('.modal-close');
     if (close) top.append(close);
     content.prepend(top);
-    const initialOpen = drawerPreference === null ? !root.matchMedia('(max-width:860px)').matches : drawerPreference;
+    const initialOpen = drawerPreference ?? true;
     setDrawer(context, initialOpen);
-
-    // Blur an actual poster (not a fabricated sample frame) behind native and embedded players.
-    const poster = content.querySelector('.crunchy-hero-poster');
-    if (poster?.getAttribute('src')) {
-      const glow = document.createElement('img');
-      glow.className = 'komi-ambient-glow';
-      glow.alt = '';
-      glow.setAttribute('aria-hidden','true');
-      glow.src = poster.src;
-      glow.loading = 'lazy';
-      main.insertBefore(glow,wrapper);
-    }
 
     const view = document.createElement('div');
     view.className = 'komi-episode-view-toggle';
@@ -158,19 +179,15 @@
     listButton.dataset.view = 'list';
     context.viewButtons = [gridButton,listButton];
     view.append(gridButton,listButton);
-    grid.parentNode.insertBefore(view,grid);
+    grid.after(view);
     gridButton.addEventListener('click', () => setListMode(context,false));
     listButton.addEventListener('click', () => setListMode(context,true));
-    setListMode(context,grid.children.length >= 6 && grid.children.length <= 24);
+    setListMode(context,true);
     // Cloud watched markers may arrive asynchronously; refresh captions when painted.
     if (root.MutationObserver) {
       const observer = new MutationObserver(() => {
         if (!currentContext(context) || !grid.classList.contains('komi-episode-list')) return;
-        grid.querySelectorAll('.komi-episode-number').forEach(el => {
-          const small = el.querySelector('.komi-list-label small');
-          if (small) small.textContent = el.classList.contains('active') ? 'Сейчас воспроизводится' :
-            el.classList.contains('komi-episode-watched') ? 'Просмотрена' : 'Выбрать серию';
-        });
+        grid.querySelectorAll('.komi-episode-number').forEach(paintEpisodeCaption);
       });
       observer.observe(grid,{subtree:true,attributes:true,attributeFilter:['class']});
       context.observer = observer;
@@ -206,8 +223,9 @@
     const auto = new Option('Авто','-1');
     quality.add(auto);
     quality.disabled = true;
+    qualityLabel.hidden = true;
     qualityLabel.append(quality);
-    controls.append(qualityLabel);
+    (wrapper.querySelector('.komi-playback-menu') || controls).append(qualityLabel);
     function refreshQualities() {
       const levels = context.video?.komiHls?.levels;
       if (!levels?.length) return;
@@ -220,6 +238,7 @@
         quality.add(new Option(label,String(index)));
       });
       quality.disabled = false;
+      qualityLabel.hidden = false;
     }
     quality.addEventListener('change', () => {
       if (context.video?.komiHls) context.video.komiHls.currentLevel = Number(quality.value);
@@ -234,8 +253,7 @@
       const skip = toolbar.querySelector('.komi-cinema-skip');
       if (skip) skip.textContent = '⏭ +85с';
     }
-    const next = controls.querySelector('.komi-watch-navbtn.primary');
-    if (next) next.textContent = 'Следующая серия →';
+    const next = heading.querySelector('.komi-watch-navbtn.primary');
     if (context.video && next && context.hasNext) {
       const check = () => {
         const video=context.video;
@@ -268,7 +286,9 @@
         play.setAttribute('aria-hidden',String(play.hidden));
       };
       play.addEventListener('click', () => {
-        video.play().catch(()=>setStatus(context,'Не удалось начать воспроизведение.'));
+        const playback = wrapper.querySelector('.komi-playback [data-control="play"]');
+        if (playback) playback.click();
+        else video.play().catch(()=>setStatus(context,'Не удалось начать воспроизведение.'));
       });
       video.addEventListener('play',paint);
       video.addEventListener('pause',paint);

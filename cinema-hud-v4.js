@@ -118,14 +118,18 @@
       }
     }, { signal });
     const fullscreen = button('⛶', 'komi-v4-pill komi-v4-fullscreen', 'Видео на весь экран');
-    const canFullscreen = typeof wrapper.requestFullscreen === 'function' &&
+    fullscreen.innerHTML = '<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M9 4H5a1 1 0 0 0-1 1v4m11-5h4a1 1 0 0 1 1 1v4M4 15v4a1 1 0 0 0 1 1h4m11-5v4a1 1 0 0 1-1 1h-4"/></svg>';
+    const canUseWrapperFullscreen = typeof wrapper.requestFullscreen === 'function' &&
       document.fullscreenEnabled !== false;
-    fullscreen.disabled = !canFullscreen;
+    const canUseVideoFullscreen = typeof video?.webkitEnterFullscreen === 'function';
+    fullscreen.disabled = !canUseWrapperFullscreen && !canUseVideoFullscreen;
     fullscreen.addEventListener('click', async () => {
       if (!stillCurrent(ctx)) return;
       try {
         if (document.fullscreenElement === wrapper) await document.exitFullscreen();
-        else await wrapper.requestFullscreen();
+        else if (canUseWrapperFullscreen) await wrapper.requestFullscreen();
+        else if (video.webkitDisplayingFullscreen) video.webkitExitFullscreen();
+        else video.webkitEnterFullscreen();
       } catch {
         ctx.note && (ctx.note.textContent = 'Полноэкранный режим недоступен в этом браузере.');
       }
@@ -133,10 +137,6 @@
     topActions.append(drawerButton, fullscreen);
     top.append(picker, topActions);
 
-    // Keep the lower edge completely clear: embedded providers own the
-    // playback timeline, and native <video> owns its browser controls.
-    // Episode navigation remains available in the compact top toolbar,
-    // including when our wrapper is in fullscreen.
     const epActions = document.createElement('div');
     epActions.className = 'komi-v4-episode-actions';
     const previous = button('‹', 'komi-v4-circle', 'Предыдущая серия');
@@ -155,6 +155,7 @@
     topActions.prepend(epActions);
     hud.append(top);
     wrapper.append(shade, hud);
+    wrapper.querySelector('.komi-playback-row')?.append(fullscreen);
 
     document.addEventListener('pointerdown', event => {
       if (!picker.contains(event.target)) closePicker(false);
@@ -172,16 +173,20 @@
     function wakeHud() {
       wrapper.classList.remove('komi-v4-idle');
       clearTimeout(idleTimer);
-      if (video && document.fullscreenElement === wrapper) {
+      if (video && !video.paused && !video.komiMediaFailed) {
         idleTimer = setTimeout(() => {
-          if (stillCurrent(ctx) && document.fullscreenElement === wrapper &&
-              !wrapper.matches(':focus-within') && pickerMenu.hidden)
+          if (stillCurrent(ctx) && !video.paused && !video.komiMediaFailed &&
+              !wrapper.querySelector(':focus-visible, select:focus, details[open]') && pickerMenu.hidden)
             wrapper.classList.add('komi-v4-idle');
         }, 3200);
       }
     }
     wrapper.addEventListener('pointermove', wakeHud, { passive: true, signal });
+    wrapper.addEventListener('pointerdown', wakeHud, { passive: true, signal });
     wrapper.addEventListener('focusin', wakeHud, { signal });
+    video?.addEventListener('playing', wakeHud, { signal });
+    video?.addEventListener('pause', wakeHud, { signal });
+    video?.addEventListener('error', wakeHud, { signal });
     document.addEventListener('fullscreenchange', () => {
       fullscreen.setAttribute('aria-label', document.fullscreenElement === wrapper ?
         'Выйти из полноэкранного режима' : 'Видео на весь экран');

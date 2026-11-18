@@ -601,12 +601,14 @@ async function loadDataFromCloud(attempt = 0) {
             navigate('catalog');
         });
         function komiFindEpisode(value) {
-            const buttons = document.querySelectorAll('.komi-episode-number-grid button');
+            const query = value.trim();
+            const buttons = document.querySelectorAll('#watchModal .komi-episode-number-grid button');
             let count = 0;
             for (const button of buttons) {
-                button.hidden = !!value && !button.textContent.trim().includes(value.trim());
+                button.hidden = !!query && !button.dataset.episodeNumber.includes(query);
                 if (!button.hidden) count++;
             }
+            document.getElementById('komiClearEpisodeSearch').hidden = !value;
             document.getElementById('komiEpisodeSearchStatus').textContent = count ? '' : 'Серия не найдена. Измените номер.';
         }
         function komiCatalogFiltered() {
@@ -3329,12 +3331,12 @@ async function loadDataFromCloud(attempt = 0) {
 
             document.getElementById('watchModalContent').innerHTML = `
                 <button class="komi-watch-expand" data-komi-onclick="toggleKomiWatchFullscreen()" title="Полный экран">⛶ <span>На весь экран</span></button>
-                <button class="modal-close" data-komi-onclick="playSound(); closeWatchModal()">&times;</button>
+                <button class="modal-close" aria-label="Закрыть просмотр" data-komi-onclick="playSound(); closeWatchModal()">&times;</button>
                 <div class="watch-cinema-layout">
                     <div class="crunchy-hero-section">
                         <img src="${animeArtwork({poster:anime.poster})}" class="crunchy-hero-poster" alt="" data-komi-onerror="this.onerror=null;this.src='/anime-artwork.svg'">
                         <div class="crunchy-hero-info">
-                            <h1>${escapeFriendHtml(anime.title)}</h1>
+                            <h2>Об аниме</h2>
                             <p class="komi-watch-description" tabindex="0">${cleanAnimeDescription(anime.desc)}</p>
                             <div class="komi-watch-meta">
                                 <span style="color:#eaeaea; font-weight:700; font-size:11px;">★ ${escapeFriendHtml(shikiRating)} Shikimori</span>
@@ -3348,21 +3350,23 @@ async function loadDataFromCloud(attempt = 0) {
 
                     <div class="komi-watch-stage">
                         <div class="komi-watch-main">
+                            <div class="player-wrapper">${playerHtml}</div>
                             <div class="komi-player-heading">
-                                <div><small>СМОТРЕТЬ ОНЛАЙН · KOMI</small><h2>${escapeFriendHtml(anime.title)}</h2>
-                                    <span>Сезон ${activeSeason} · Серия ${displayNumber} из ${currentSeasonEpisodes.length}</span>
+                                <div><h1>${escapeFriendHtml(anime.title)}</h1>
+                                    <p>${seasonNumbers.length > 1 ? 'Сезон ' + activeSeason + ' · ' : ''}Серия ${displayNumber} из ${currentSeasonEpisodes.length}<span class="komi-current-duration"></span></p>
+                                </div>
+                                <div class="komi-episode-navigation" role="group" aria-label="Навигация по сериям">
+                                    <button type="button" class="komi-watch-navbtn" aria-label="Предыдущая серия" ${hasPrevious?'':'disabled'} data-komi-onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex - 1})">‹</button>
+                                    <button type="button" class="komi-watch-navbtn primary" aria-label="Следующая серия" ${hasNext?'':'disabled'} data-komi-onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex + 1})">›</button>
                                 </div>
                             </div>
-                            <div class="player-wrapper">${playerHtml}</div>
                             <div class="komi-watch-controls">
-                                <button type="button" class="komi-watch-navbtn" ${hasPrevious?'':'disabled'} data-komi-onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex - 1})">← Предыдущая</button>
                                 <div class="komi-watch-source">
                                     <label for="komiWatchSourceSelect">Озвучка / плеер</label>
                                     <select id="komiWatchSourceSelect" data-komi-onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
                                         ${sourceNames.map(name => '<option value="' + escapeFriendHtml(name) + '" ' + (name === activePlayerSource ? 'selected' : '') + '>' + escapeFriendHtml(name) + '</option>').join('')}
                                     </select>
                                 </div>
-                                <button type="button" class="komi-watch-navbtn primary" ${hasNext?'':'disabled'} data-komi-onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex + 1})">Следующая →</button>
                             </div>
                             ${activeUrl ? `
                                 <div id="komiPlayerRecovery" class="komi-player-notice" ${isExternalPlayer ? '' : 'hidden'}>
@@ -3376,13 +3380,16 @@ async function loadDataFromCloud(attempt = 0) {
                         </div>
                         <aside class="komi-watch-sidebar" aria-label="Список серий">
                             <div class="komi-watch-side-heading">
-                                <div><small>ВЫБОР СЕРИИ</small><h3>${currentSeasonEpisodes.length} серий</h3></div>
-                                <span>Сезон ${activeSeason}</span>
+                                <h3>Серии <span>${currentSeasonEpisodes.length}</span></h3>
+                                <div class="komi-episode-search">
+                                    <input id="komiEpisodeSearch" type="search" inputmode="numeric" aria-label="Номер серии" class="form-control" placeholder="Номер" data-komi-oninput="komiFindEpisode(this.value)">
+                                    <button id="komiClearEpisodeSearch" type="button" aria-label="Очистить поиск серии" hidden>×</button>
+                                </div>
                             </div>
                             ${seasonNumbers.length > 1 ? '<div class="season-tabs" aria-label="Выбор сезона">' + seasonNumbers.map(n => '<button type="button" class="season-tab-btn ' + (n===activeSeason?'active':'') + '" data-komi-onclick="openWatchModal(\'' + anime.id + '\',' + n + ',0)">Сезон ' + n + '</button>').join('') + '</div>' : ''}
-                            <label for="komiEpisodeSearch">Найти серию</label><input id="komiEpisodeSearch" type="search" inputmode="numeric" class="form-control" placeholder="Номер серии" data-komi-oninput="komiFindEpisode(this.value)"><p id="komiEpisodeSearchStatus" role="status"></p>
+                            <p id="komiEpisodeSearchStatus" role="status"></p>
                             <div class="komi-episode-number-grid" role="group" aria-label="Выбрать серию">
-                                ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" data-komi-onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
+                                ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" data-episode-number="'+(Number(ep.number)||i+1)+'" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" data-komi-onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
                             </div>
                         </aside>
                     </div>
@@ -3407,6 +3414,12 @@ async function loadDataFromCloud(attempt = 0) {
                 </div>
             `;
             document.getElementById('watchModal').classList.add('active');
+            document.getElementById('komiClearEpisodeSearch').addEventListener('click', () => {
+                const search = document.getElementById('komiEpisodeSearch');
+                search.value = '';
+                komiFindEpisode('');
+                search.focus();
+            });
             document.getElementById('komiRetryPlayer')?.addEventListener('click', () =>
                 openWatchModal(anime.id, activeSeason, activeIndex, selectedSource));
             document.getElementById('komiAlternatePlayer')?.addEventListener('click', () =>
@@ -3424,6 +3437,7 @@ async function loadDataFromCloud(attempt = 0) {
                 index:activeIndex,
                 hasNext,
                 displayNumber,
+                watchStill: Array.isArray(anime.screenshots) ? anime.screenshots[0] : '',
                 originalIndex: currentEp.originalIdx,
                 episodeMeta:currentSeasonEpisodes.map(ep=>({
                     preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',

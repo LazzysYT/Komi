@@ -336,17 +336,29 @@ async function checkNotifications(page) {
    assert.equal(emblems.heading.color,'rgb(255, 255, 255)','Brand name must be pure white');
 
    await page.waitForSelector('#animeVideoPlayer');
+   const playback = page.getByRole('group',{name:'Управление видео'});
+   assert.equal(await playback.count(),1);
+   assert.equal(await page.locator('#animeVideoPlayer').evaluate(video=>video.controls),false);
+   const settings = playback.locator('details');
+   await settings.locator('summary').focus();
+   await page.keyboard.press('Space');
+   assert.equal(await settings.getAttribute('open'),'');
+   await page.keyboard.press('Escape');
+   assert.equal(await settings.getAttribute('open'),null);
    const cinema = await page.evaluate(() => {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
-     const hero=document.querySelector('#watchModal .crunchy-hero-section').getBoundingClientRect();
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
+     const heading=stage.querySelector('.komi-player-heading').getBoundingClientRect();
+     const sidebar=stage.querySelector('.komi-watch-sidebar').getBoundingClientRect();
      const episode=stage.querySelector('.komi-episode-number.active');
      const active=getComputedStyle(episode);
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       heroHeight:hero.height,gap:player.top-hero.bottom,color:active.color,border:active.borderColor,
+       titleGap:heading.top-player.bottom,sidebarAfterVideo:sidebar.top>=player.bottom,
+       sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
+       color:active.color,border:active.borderColor,
        background:active.backgroundColor,before:getComputedStyle(episode,'::before').content,
        after:getComputedStyle(episode,'::after').content };
    });
@@ -354,29 +366,33 @@ async function checkNotifications(page) {
    assert.ok(cinema.height >= 800, 'Cinema modal should use the full viewport height');
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
-   assert.ok(cinema.heroHeight<=165 && cinema.gap>=0 && cinema.gap<=18,JSON.stringify(cinema));
+   assert.ok(cinema.titleGap>=0 && cinema.titleGap<=24,JSON.stringify(cinema));
+   assert.ok(width>820 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
    assert.deepEqual([cinema.background,cinema.border,cinema.color,cinema.before,cinema.after],
-     ['rgb(238, 238, 238)','rgb(255, 255, 255)','rgb(10, 10, 10)','none','none']);
+     ['rgb(40, 40, 40)','rgba(0, 0, 0, 0)','rgb(255, 255, 255)','none','none']);
    await page.waitForSelector('.komi-episodes-toggle');
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-native-hud').count(),1);
-   assert.equal(await page.locator('.komi-ambient-glow').count(),1);
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
    assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
-   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),String(width>820));
+   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
    await page.locator('.komi-episodes-toggle').click();
-   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),String(width<=820));
-   assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),String(width>820));
+   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
+   assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),'true');
    await page.locator('.komi-episodes-toggle').click();
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
-   if (width<=820) await page.locator('.komi-episodes-toggle').click();
+   assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list img').count(),2);
+   await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
+   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
+   await page.getByRole('button',{name:'Очистить поиск серии'}).click();
+   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),true);
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),1);
    await view.getByRole('button',{name:'Показать серии сеткой'}).click();
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),0);
-   if (width<=820) await page.locator('.komi-episodes-toggle').click();
+   await view.getByRole('button',{name:'Показать серии списком'}).click();
    await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
 
    const state=await page.evaluate(()=>{
@@ -395,6 +411,7 @@ async function checkNotifications(page) {
    });
    assert.equal(state.time,42);assert.equal(state.duration,100);
    await page.getByText('Не удалось загрузить видео.',{exact:true}).waitFor();
+   assert.equal(await playback.getByRole('slider',{name:'Позиция видео'}).isDisabled(),true);
    await page.getByRole('button',{name:'Повторить загрузку'}).click();
    await page.waitForFunction(()=>!window.komiFailedTestVideo.isConnected && !!document.getElementById('animeVideoPlayer'));
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
@@ -402,6 +419,7 @@ async function checkNotifications(page) {
    await page.evaluate(()=>document.getElementById('animeVideoPlayer').dispatchEvent(new Event('error')));
    await page.getByRole('button',{name:'Сменить источник'}).click();
    await page.locator('#watchModalContent iframe').waitFor();
+   assert.equal(await playback.count(),0);
    assert.equal(await page.locator('#watchModalContent iframe').getAttribute('src'),'https://media.test/player?a=1&b=2');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').duration),100);
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);

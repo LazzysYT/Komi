@@ -1,11 +1,11 @@
-/* Komi HUD V4: independent, scoped layer over native video / provider iframe. */
+/* Komi HUD V4: scoped layer over direct video or a provider iframe. */
 #watchModal .player-wrapper.komi-v4-surface {
   position:relative!important;
   display:block!important;
   isolation:isolate;
   background:#050505!important;
-  border-color:rgba(255,255,255,.34)!important;
-  box-shadow:0 20px 60px #000b,0 0 52px #ebebeb16!important;
+  border-color:transparent!important;
+  box-shadow:none!important;
 }
 /* Prevent a provider hint from taking a second grid row and shrinking the
    iframe. The entire player surface is reserved for the actual media. */
@@ -96,6 +96,9 @@
 #watchModal .player-wrapper.komi-v4-surface.komi-v4-idle .komi-v4-hud{
   opacity:0;transition:opacity .25s ease
 }
+#watchModal .komi-v4-idle .komi-v4-picker,
+#watchModal .komi-v4-idle .komi-v4-top-actions,
+#watchModal .komi-v4-idle .komi-v4-episode-actions {pointer-events:none}
 #watchModal .player-wrapper.komi-v4-surface .komi-v4-hud:focus-within{opacity:1!important}
 #watchModal .player-wrapper.komi-v4-external.komi-v4-idle .komi-v4-shade,
 #watchModal .player-wrapper.komi-v4-external.komi-v4-idle .komi-v4-hud{opacity:1}
@@ -116,4 +119,114 @@
 @media (prefers-reduced-motion:reduce){
   #watchModal .komi-v4-hud,#watchModal .komi-v4-shade,
   #watchModal .komi-v4-pill,#watchModal .komi-v4-circle{transition:none!important}
+}
+
+#watchModal .komi-playback {
+  position:absolute;inset:auto 0 0;z-index:13;
+  padding:clamp(24px,4vw,75px) clamp(10px,1.45vw,26px) max(clamp(10px,1.65vw,30px),env(safe-area-inset-bottom));
+  background:linear-gradient(transparent,rgba(10,10,10,.8) 75%,#101010);
+  color:var(--text-main,#f4f4f4);color-scheme:dark;
+}
+#watchModal .komi-playback-row {
+  display:flex;align-items:center;gap:clamp(5px,.75vw,14px);
+}
+#watchModal .komi-playback button,
+#watchModal .komi-playback select,
+#watchModal .komi-playback-state button {
+  cursor:pointer;color:inherit;background:#151515;border:1px solid #525252;
+  border-radius:8px;min-height:36px;font:inherit;font-size:12px;
+}
+#watchModal .komi-playback-row > button,
+#watchModal .komi-playback-settings > summary {
+  display:grid;place-items:center;flex:none;width:clamp(36px,3.2vw,58px);height:clamp(36px,3.2vw,58px);
+  min-height:0;padding:0;border:0;border-radius:50%;background:var(--watch-raised);color:#fff;
+  box-shadow:none;cursor:pointer;
+}
+#watchModal .komi-playback-settings > summary::-webkit-details-marker {display:none}
+#watchModal .komi-playback-row > button[hidden] {display:none}
+#watchModal .komi-playback button:disabled {opacity:.5;cursor:default}
+#watchModal .komi-playback-row > button:not(:disabled):hover,
+#watchModal .komi-playback-settings > summary:hover,
+#watchModal .komi-playback-settings[open] > summary {background:#3d3d3d}
+#watchModal .komi-playback-row > [data-control="play"] {
+  width:clamp(38px,3.65vw,66px);height:clamp(38px,3.65vw,66px);
+}
+#watchModal .komi-playback [data-control="play"] span {
+  width:0;height:0;border-block:6px solid transparent;border-left:9px solid currentColor;
+}
+#watchModal .komi-playback [data-playing="true"] span {
+  width:10px;height:12px;border-block:0;border-inline:3px solid currentColor;
+}
+#watchModal .komi-playback [data-muted="false"] .komi-sound-off,
+#watchModal .komi-playback [data-muted="true"] .komi-sound-waves {display:none}
+#watchModal .komi-playback input {
+  margin:0;accent-color:var(--text-main,#f4f4f4);cursor:pointer;
+}
+#watchModal .komi-playback input:disabled {cursor:default}
+#watchModal .komi-playback .komi-playback-seek {
+  display:block;flex:1 1 0;min-width:20px;height:32px;appearance:none;background:transparent;
+}
+#watchModal .komi-playback-seek::-webkit-slider-runnable-track {
+  height:clamp(5px,.55vw,10px);border-radius:999px;
+  background:linear-gradient(to right,var(--text-main,#f4f4f4) var(--komi-played,0%),#3d3d3d var(--komi-played,0%));
+}
+#watchModal .komi-playback-seek::-moz-range-track {
+  height:clamp(5px,.55vw,10px);border-radius:999px;
+  background:linear-gradient(to right,var(--text-main,#f4f4f4) var(--komi-played,0%),#3d3d3d var(--komi-played,0%));
+}
+#watchModal .komi-playback-seek::-webkit-slider-thumb {
+  appearance:none;width:12px;height:12px;margin-top:calc((clamp(5px,.55vw,10px) - 12px)/2);
+  border-radius:50%;background:var(--text-main,#f4f4f4);opacity:0;
+}
+#watchModal .komi-playback-seek::-moz-range-thumb {
+  width:12px;height:12px;border:0;border-radius:50%;background:var(--text-main,#f4f4f4);opacity:0;
+}
+#watchModal .komi-playback-seek:is(:hover,:focus-visible)::-webkit-slider-thumb{opacity:1}
+#watchModal .komi-playback-seek:is(:hover,:focus-visible)::-moz-range-thumb{opacity:1}
+#watchModal .komi-playback-settings {flex:none}
+#watchModal .komi-playback-menu {
+  position:absolute;right:clamp(10px,1.45vw,26px);bottom:calc(max(clamp(10px,1.65vw,30px),env(safe-area-inset-bottom)) + clamp(38px,3.65vw,66px) + 8px);
+  display:grid;gap:8px;width:min(240px,calc(100% - 20px));max-height:min(240px,32vw);
+  overflow:auto;overscroll-behavior:contain;scrollbar-color:#555 var(--watch-panel);
+  padding:12px;background:var(--watch-panel);border:1px solid #404040;border-radius:15px;box-shadow:0 12px 28px #0009;
+}
+#watchModal .komi-playback-menu label {display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px}
+#watchModal .komi-playback-settings:not([open]) .komi-playback-menu {display:none}
+#watchModal .komi-playback-menu label[hidden]{display:none}
+#watchModal .komi-playback-menu select {padding:0 4px;max-width:110px}
+#watchModal .komi-playback-volume {width:94px;min-height:28px}
+#watchModal .komi-playback-jump {display:grid;grid-template-columns:1fr 1fr;gap:6px}
+#watchModal .komi-playback-time {
+  flex:none;font-size:clamp(11px,1.12vw,19px);font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap;
+}
+#watchModal .komi-playback :is(button,input,select,summary):focus-visible,
+#watchModal .komi-playback-state button:focus-visible {outline:2px solid #fff;outline-offset:1px}
+#watchModal .komi-playback :is(button,select):not(:disabled):hover,
+#watchModal .komi-playback-state button:hover {border-color:#eee}
+#watchModal .komi-playback-state {
+  position:absolute;inset:50% auto auto 50%;transform:translate(-50%,-65%);
+  z-index:12;max-width:90%;width:max-content;padding:8px 14px;
+  display:flex;align-items:center;flex-wrap:wrap;justify-content:center;gap:8px;
+  color:#fff;background:#151515;border-radius:8px;font-size:13px;
+}
+#watchModal .komi-playback-state[hidden],
+#watchModal .komi-playback-state button[hidden],
+#watchModal .komi-playback select[hidden] {display:none}
+#watchModal .komi-playback-state button {padding-inline:8px}
+#watchModal .komi-playback-custom .komi-cinema-bigplay,
+#watchModal .komi-playback-custom:not(:fullscreen) .komi-v4-top,
+#watchModal .komi-playback-custom:not(:fullscreen) .komi-v4-shade {display:none}
+#watchModal .komi-playback-custom .komi-v4-bottom {display:none}
+#watchModal .komi-playback-custom:fullscreen .komi-v4-bottom {
+  display:flex;padding-bottom:calc(78px + env(safe-area-inset-bottom));
+}
+#watchModal .komi-playback-running.komi-v4-idle .komi-playback {opacity:0;pointer-events:none}
+@media(max-width:520px){
+  #watchModal .komi-playback-row {flex-wrap:wrap;row-gap:0}
+  #watchModal .komi-playback .komi-playback-seek {order:-1;flex:0 0 100%;height:22px}
+  #watchModal .komi-playback-time {flex:1 1 auto}
+}
+@media(max-width:360px){
+  #watchModal .komi-playback-row {column-gap:4px}
+  #watchModal .komi-playback-row > button,#watchModal .komi-playback-settings > summary {width:32px;height:36px}
 }
