@@ -96,6 +96,7 @@
         const category = (Array.isArray(anime.genres) && anime.genres[0]) || 'Выбор Komi Anime';
 
         return '<article class="hero-slide' + (i === index ? ' active' : '') + '"' +
+          ' data-komi-anime-id="' + animeId + '"' +
           ' aria-hidden="' + (i === index ? 'false' : 'true') + '"' +
           ' aria-label="' + escape(anime.title) + '">' +
           artworkImage(anime, context, i === index ? 'eager' : 'lazy', 'komi-hub-hero-art') +
