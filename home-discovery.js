@@ -73,8 +73,11 @@
   }
   function artworkImage(anime, context, loading, className = '') {
     const source = anime.banner || anime.poster;
-    const direct = typeof source === 'string' && /^https:\/\//i.test(source)
-      ? ' data-poster-direct="' + escape(source) + '"' : '';
+    const directSource = className === 'komi-hub-hero-art' && typeof source === 'string'
+      ? source.replace(/(https:\/\/shikimori\.(?:io|one)\/system\/animes\/)preview(\/[1-9]\d*\.jpe?g(?:\?\d+)?)/i, '$1original$2')
+      : source;
+    const direct = typeof directSource === 'string' && /^https:\/\//i.test(directSource)
+      ? ' data-poster-direct="' + escape(directSource) + '"' : '';
     return '<img class="' + className + '" src="' + context.artwork(anime) + '" alt="" loading="' +
       loading + '" decoding="async" referrerpolicy="no-referrer"' + direct +
       ' data-komi-onerror="komiCardPosterFallback(this)">';
