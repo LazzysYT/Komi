@@ -601,6 +601,62 @@ async function loadDataFromCloud(attempt = 0) {
             catalogSearchQuery=''; catalogVisibleCount=48; catalogFilterGenre=button.dataset.komiGenre;
             navigate('catalog');
         });
+        function komiHomeQuickFiltersMarkup() {
+            const genreOptions = availableGenresList.filter(genre =>
+                animeList.some(anime => (Array.isArray(anime.genres) ? anime.genres : [anime.genre]).includes(genre)));
+            const years = [...new Set(animeList.map(komiAnimeYear).filter(Boolean))]
+                .sort((a,b) => Number(b)-Number(a));
+            const types = ['Сериал','Фильм','OVA','ONA','Special']
+                .filter(type => animeList.some(anime => komiCatalogType(anime) === type));
+            const option = (value, label) =>
+                '<option value="' + escapeFriendHtml(value) + '">' + escapeFriendHtml(label) + '</option>';
+            const field = (key, label, values) => {
+                const id = 'komiHomeQuickFilter-' + key;
+                return '<div class="form-group" style="margin:0">' +
+                    '<label for="' + id + '">' + label + '</label>' +
+                    '<select id="' + id + '" class="form-control" data-komi-home-filter="' + key + '">' +
+                    '<option value="">Выбрать</option>' + values.join('') + '</select></div>';
+            };
+            return '<section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">' +
+                '<div class="section-header"><h2 class="section-title" id="komiHomeQuickFiltersTitle">Быстрые фильтры</h2>' +
+                '<button type="button" class="section-see-all" data-komi-onclick="navigate(\'catalog\')">Все фильтры</button></div>' +
+                '<div class="catalog-filters-box" aria-label="Перейти в каталог с выбранным фильтром">' +
+                field('genre','Жанр',genreOptions.map(g => option(g,g))) +
+                field('year','Год',years.map(y => option(y,y))) +
+                field('type','Тип',types.map(t => option(t,t))) +
+                field('sort','Сортировка',[
+                    option('popular','Актуальные'),
+                    option('updated','По обновлению серий'),
+                    option('rating','По рейтингу'),
+                    option('year','Сначала новые'),
+                    option('alphabet','По алфавиту')
+                ]) + '</div></section>';
+        }
+        document.addEventListener('change', event => {
+            const select = event.target.closest?.('#komiHomeQuickFilters select[data-komi-home-filter]');
+            if (!select || !select.value) return;
+            const kind = select.dataset.komiHomeFilter;
+            const value = select.value;
+            if (kind === 'genre' && !availableGenresList.includes(value)) return;
+            if (kind === 'year' && (!/^(?:19|20)\d{2}$/.test(value) ||
+                !animeList.some(anime => komiAnimeYear(anime) === value))) return;
+            if (kind === 'type' && !['Сериал','Фильм','OVA','ONA','Special'].includes(value)) return;
+            if (kind === 'sort' && !['popular','updated','rating','year','alphabet'].includes(value)) return;
+            if (!['genre','year','type','sort'].includes(kind)) return;
+            catalogCollection = 'all';
+            catalogFilterGenre = 'Все';
+            catalogFilterYear = 'Все';
+            catalogFilterType = 'Все';
+            catalogSort = 'popular';
+            catalogSearchQuery = '';
+            catalogVisibleCount = 48;
+            if (kind === 'genre') catalogFilterGenre = value;
+            else if (kind === 'year') catalogFilterYear = value;
+            else if (kind === 'type') catalogFilterType = value;
+            else catalogSort = value;
+            navigate('catalog');
+        });
+
         function komiFindEpisode(value) {
             const query = value.trim();
             const buttons = document.querySelectorAll('#watchModal .komi-episode-number-grid button');
@@ -845,7 +901,7 @@ async function loadDataFromCloud(attempt = 0) {
                         describe:cleanAnimeDescription,
                         recommendations:komiRecommendations,
                         calendar:komiReleaseCalendar, years:komiYearSections,
-                        intro:komiIntroMarkup
+                        intro:komiIntroMarkup, quickFilters:komiHomeQuickFiltersMarkup
                     });
                     window.KomiHomeDiscovery.afterRender(container);
                     startHeroAutoSlide();
