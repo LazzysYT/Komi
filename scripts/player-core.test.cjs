@@ -68,3 +68,37 @@ test('approved ad-free sources rank first without losing legacy alternatives', (
     assert.equal(Object.keys(episode.sources).length, 3);
     assert.equal(episode.sources.Kodik, 'https://kodik.example.org/embed/1');
 });
+
+test('strict ad-free selection blocks all non-approved players and preserves alternatives', () => {
+    const sources = {
+        Kodik:'https://kodik.example.org/embed/123',
+        Direct:'https://media.example.org/anime/1.mp4',
+        'Без рекламы · Licensed · Original':'https://partner.example.org/anime/1.m3u8'
+    };
+    const strict = require('../player-core').selectPlaybackSource(sources, {
+        adFreeOnly:true, preferredSource:'Kodik', requestedSource:'Direct'
+    });
+    assert.equal(strict.name,'Без рекламы · Licensed · Original');
+    assert.equal(strict.approvedCount,1);
+    assert.deepEqual(strict.availableNames,['Без рекламы · Licensed · Original']);
+    const normal = require('../player-core').selectPlaybackSource(sources,{adFreeOnly:false,preferredSource:'Kodik'});
+    assert.equal(normal.name,'Без рекламы · Licensed · Original');
+    const manuallySelected = require('../player-core').selectPlaybackSource(sources,{adFreeOnly:false,requestedSource:'Kodik'});
+    assert.equal(manuallySelected.name,'Kodik');
+});
+test('a generic direct URL or ad-free-labelled iframe never qualifies as verified ad-free', () => {
+    const {selectPlaybackSource,verifiedAdFree} = require('../player-core');
+    const iframe = 'https://kodik.example.org/embed/1';
+    const video = 'https://cdn.example.org/video.mp4';
+    assert.equal(verifiedAdFree('Без рекламы · fake',iframe),false);
+    assert.equal(verifiedAdFree('Direct',video),false);
+    const selection = selectPlaybackSource({
+        'Без рекламы · Unsuitable':iframe,
+        Direct:video,
+        Kodik:iframe
+    },{adFreeOnly:true});
+    assert.equal(selection.strictBlocked,true);
+    assert.equal(selection.url,'');
+    assert.deepEqual(selection.availableNames,[]);
+    assert.equal(selectPlaybackSource({Direct:video},{adFreeOnly:false}).url,video);
+});
