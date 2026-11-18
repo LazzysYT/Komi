@@ -233,7 +233,7 @@
                 } else previousTap = {time:now,side};
             });
             updateSkip(context);
-        } else {
+        } else if (wrapper.querySelector('iframe')) {
             const notice = document.createElement('span');
             notice.className = 'komi-cinema-external-note';
             notice.textContent = 'Внешний плеер: пауза, перемотка и горячие клавиши управляются самим провайдером.';
