@@ -33,11 +33,11 @@ test('discovery renders one visible slide and one selected indicator', () => {
   const heroMarkup = result.match(/<section class="komi-home-hero"[\s\S]*?<\/section>/)?.[0] || '';
   assert.ok(heroMarkup, 'hero section rendered');
   // CSS classes are an unordered set: HD artwork adds its own layout class.
-  const slides = [...heroMarkup.matchAll(/<article class="([^"]*\\bhero-slide\\b[^"]*)"[^>]*aria-hidden="(true|false)"/g)];
+  const slides = [...heroMarkup.matchAll(/<article class="([^"]*\bhero-slide\b[^"]*)"[^>]*aria-hidden="(true|false)"/g)];
   assert.equal(slides.length, 3);
-  assert.equal(slides.filter(([, classes]) => classes.split(/\\s+/).includes('active')).length, 1);
+  assert.equal(slides.filter(([, classes]) => classes.split(/\s+/).includes('active')).length, 1);
   // The two SVG chevrons are also aria-hidden, so count slide articles only.
-  assert.equal(slides.filter(([, classes, hidden]) => hidden === 'false' && classes.split(/\\s+/).includes('active')).length, 1);
+  assert.equal(slides.filter(([, classes, hidden]) => hidden === 'false' && classes.split(/\s+/).includes('active')).length, 1);
   assert.equal(slides.filter(([, , hidden]) => hidden === 'true').length, 2);
   assert.equal((heroMarkup.match(/class="hero-dot active"/g)||[]).length, 1);
   assert.equal((heroMarkup.match(/aria-pressed="true"/g)||[]).length, 1);
