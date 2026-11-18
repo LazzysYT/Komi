@@ -102,3 +102,27 @@ test('a generic direct URL or ad-free-labelled iframe never qualifies as verifie
     assert.deepEqual(selection.availableNames,[]);
     assert.equal(selectPlaybackSource({Direct:video},{adFreeOnly:false}).url,video);
 });
+
+test('prioritize signed AniVibe partner iframe only when appropriate and preserve fallback', () => {
+    const {selectPlaybackSource}=require('../player-core');
+    const sources={
+        Kodik:'https://kodik.example/embed/1',
+        Direct:'https://media.example/video/1.mp4',
+        'AniVibe · партнёрский':'https://player.anivibe.pro/embed?token=temporary'
+    };
+    const preferred=selectPlaybackSource(sources,{partnerPreferred:'AniVibe · партнёрский'});
+    assert.equal(preferred.name,'AniVibe · партнёрский');
+    assert.equal(preferred.approvedCount,0);
+    const manual=selectPlaybackSource(sources,{requestedSource:'Kodik',partnerPreferred:'AniVibe · партнёрский'});
+    assert.equal(manual.name,'Kodik');
+    const strict=selectPlaybackSource(sources,{adFreeOnly:true,partnerPreferred:'AniVibe · партнёрский'});
+    assert.equal(strict.strictBlocked,true);
+    assert.equal(strict.url,'');
+    const missing=selectPlaybackSource({Kodik:sources.Kodik,Direct:sources.Direct},{partnerPreferred:'AniVibe · партнёрский'});
+    assert.equal(missing.name,'Direct');
+});
+test('a lookalike external host cannot be selected as AniVibe partner priority',()=>{
+    const {selectPlaybackSource}=require('../player-core');
+    const s={'AniVibe · партнёрский':'https://anivibe.pro.evil.example/embed',Direct:'https://safe.example/x.mp4'};
+    assert.equal(selectPlaybackSource(s,{partnerPreferred:'AniVibe · партнёрский'}).name,'Direct');
+});
