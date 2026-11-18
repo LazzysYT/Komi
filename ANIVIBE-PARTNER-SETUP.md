@@ -30,3 +30,16 @@ AniVibe has publicly stated that signed-in users receive ad-free playback **exce
 - \`russianAudio: "unconfirmed"\` means no unambiguous audio-language evidence was found; it **does not** prove Russian audio is absent. Studio names and Russian subtitles are not enough.
 - \`adFreeConfirmed\` remains false even when a title has Russian audio metadata. The partner says guest players can show pre-roll ads; the iframe cannot be certified until guest playback/partner terms are verified.
 - Never bulk-run the 8,163-title catalog against the user-facing API. Use bounded metadata checks and provider agreement for large-scale sync.
+
+
+## Dynamic player priority (site-wide, on-demand)
+
+KomiAnime now contains a **site-wide dynamic partner-player hook**. When `ANIVIBE_PARTNER_EMBED_ENABLED=true` is set **after provider partnership and guest iframe terms are confirmed**, the viewer opens a catalog episode and the site:
+1. reads `GET /api/anivibe?enabled=1` (cheap, no upstream call);
+2. requests `GET /api/anivibe?availability=<Shikimori ID>` (metadata, 15-min server-side cache);
+3. obtains `POST /api/anivibe` for **only the selected episode**, not all catalog entries;
+4. prefers the resulting official AniVibe iframe in normal playback unless the viewer selected another source. The user can switch to existing providers at any time.
+
+The signed URL is never persisted in the database and is never included in a static list of sources. Invalid/unavailable/over-quota sources safely fall back to the previously working player. This does not create missing episodes that the catalog has not identified. Embeds are not counted as certified ad-free MP4/HLS streams; the strict "Только без рекламы" toggle continues to exclude unverified partner iframe streams. Availability metadata may not explicitly label Russian audio, so the player cannot guarantee that every episode has the requested Russian dub; guest ad-free behavior remains unverified by the API.
+
+Partner quotas are 20 embed tokens per minute and 1000/day; the provider quota is authoritative. Avoid background token sweeps.
