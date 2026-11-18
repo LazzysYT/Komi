@@ -2435,7 +2435,7 @@ async function loadDataFromCloud(attempt = 0) {
             try {
                 const { error } = await _supabase.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: window.location.origin + window.location.pathname }
+                    options: { redirectTo: window.location.origin + '/' }
                 });
                 if (error) throw error;
             } catch (error) {
@@ -2614,7 +2614,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (passwordInput.length < 12) { alert('Используйте уникальный пароль минимум из 12 символов.'); return; }
             const { data: signupData, error: signupError } = await _supabase.auth.signUp({
                 email, password: passwordInput,
-                options: { data: { username }, emailRedirectTo: window.location.origin + window.location.pathname }
+                options: { data: { username }, emailRedirectTo: window.location.origin + '/' }
             });
             if (signupError) { alert('Не удалось зарегистрироваться: ' + signupError.message); return; }
             if (!signupData.session) {
