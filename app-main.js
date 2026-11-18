@@ -1742,7 +1742,12 @@ async function loadDataFromCloud(attempt = 0) {
         function animeArtwork(anime) {
             // Full-size backgrounds must not use the small /preview/ card image.
             // Compact catalog cards retain their existing bandwidth-saving previews.
-            const source = komiSafeUrl(anime?.banner || anime?.poster) || '/anime-artwork.svg';
+            let source = komiSafeUrl(anime?.banner || anime?.poster) || '/anime-artwork.svg';
+            // Never stretch the tiny Shikimori preview into the fullscreen hero.
+            // Keep preview handling for compact catalog cards in komiCardPosterSource.
+            if (/^https:\/\/shikimori\.(?:io|one)\/system\/animes\/preview\/[1-9]\d*\.jpe?g(?:\?\d+)?$/i.test(source)) {
+                source = source.replace('/system/animes/preview/', '/system/animes/original/');
+            }
             return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source) : source;
         }
         function komiCardPosterFallback(img) {

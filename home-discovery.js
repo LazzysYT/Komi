@@ -73,8 +73,11 @@
   }
   function artworkImage(anime, context, loading, className = '') {
     const source = anime.banner || anime.poster;
-    const direct = typeof source === 'string' && /^https:\/\//i.test(source)
-      ? ' data-poster-direct="' + escape(source) + '"' : '';
+    const directSource = className === 'komi-hub-hero-art' && typeof source === 'string'
+      ? source.replace(/(https:\/\/shikimori\.(?:io|one)\/system\/animes\/)preview(\/[1-9]\d*\.jpe?g(?:\?\d+)?)/i, '$1original$2')
+      : source;
+    const direct = typeof directSource === 'string' && /^https:\/\//i.test(directSource)
+      ? ' data-poster-direct="' + escape(directSource) + '"' : '';
     return '<img class="' + className + '" src="' + context.artwork(anime) + '" alt="" loading="' +
       loading + '" decoding="async" referrerpolicy="no-referrer"' + direct +
       ' data-komi-onerror="komiCardPosterFallback(this)">';
@@ -88,6 +91,10 @@
       '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка аниме">' +
       '<div class="hero-slides-wrapper">' + slides.map((anime, i) => {
         const animeId = id(anime);
+        // Shikimori IDs match MAL IDs; keep the site's own ID for navigation.
+        const malId = String(anime.shikimoriId || anime.idMal || anime.malId || animeId);
+        const still = Array.isArray(anime.screenshots)
+          ? anime.screenshots.find(url => typeof url === 'string' && /^https:\/\//i.test(url)) : '';
         const year = context.year(anime);
         const description = context.describe(anime.desc);
         const listAction = context.currentUser?.authUserId
@@ -95,8 +102,9 @@
         const route = '/anime/' + animeId;
         const category = (Array.isArray(anime.genres) && anime.genres[0]) || 'Выбор Komi Anime';
 
-        return '<article class="hero-slide' + (i === index ? ' active' : '') + '"' +
-          ' data-komi-anime-id="' + animeId + '"' +
+        return '<article class="hero-slide komi-hd-poster' + (i === index ? ' active' : '') + '"' +
+          ' data-komi-anime-id="' + escape(malId) + '"' +
+          (still ? ' data-komi-hero-still="' + escape(still) + '"' : '') +
           ' aria-hidden="' + (i === index ? 'false' : 'true') + '"' +
           ' aria-label="' + escape(anime.title) + '">' +
           artworkImage(anime, context, i === index ? 'eager' : 'lazy', 'komi-hub-hero-art') +
