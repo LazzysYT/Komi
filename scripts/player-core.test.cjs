@@ -1,6 +1,6 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
-const {source, finite, createWriter} = require('../player-core');
+const {source, finite, seasonEpisodes, createWriter} = require('../player-core');
 test('legacy iframe entities and protocol-relative sources are decoded once', () => {
     assert.equal(source('<iframe src="//example.test/player?id=1&amp;episode=2"></iframe>').url, 'https://example.test/player?id=1&episode=2');
     assert.equal(source('https://example.test/a.m3u8?token=x').kind, 'hls');
@@ -9,6 +9,23 @@ test('legacy iframe entities and protocol-relative sources are decoded once', ()
 });
 test('unknown and live durations never persist NaN or Infinity', () => {
     for (const value of [NaN, Infinity, -4, undefined]) assert.equal(finite(value), 0);
+});
+test('padded episode numbers share a row and preserve sources and old progress slots', () => {
+    const episodes = [
+        {season:1, number:2, url:'https://example.test/2.mp4'},
+        {season:1, number:'01', sources:{Dub:'https://example.test/1.m3u8'}},
+        {season:1, number:'1', preview:'frame.jpg', sources:{Dub:'https://example.test/1b.mp4', Sub:'https://example.test/1'}},
+        {season:2, number:1, url:'https://example.test/s2.mp4'}
+    ];
+    const [first, second] = seasonEpisodes(episodes, 1);
+    assert.equal(first.preview, 'frame.jpg');
+    assert.deepEqual(first.slots, [0, 1]);
+    assert.deepEqual(second.slots, [2]);
+    assert.deepEqual({...first.sources}, {
+        Dub:'https://example.test/1.m3u8', 'Dub (2)':'https://example.test/1b.mp4', Sub:'https://example.test/1'
+    });
+    assert.deepEqual(first.origins['Dub (2)'], {index:2, name:'Dub'});
+    assert.deepEqual(second.origins.Default, {index:0, name:'Основной источник'});
 });
 test('slow persistence is ordered and intermediate updates are coalesced', async () => {
     const calls = [];
