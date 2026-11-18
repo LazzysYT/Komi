@@ -1706,6 +1706,64 @@ body > header > .header-inner {
   .header-inner .logo-area .logo-box { width: 31px; height: 31px; }
 }
 </style>
+
+<style>
+/* Stable three-zone desktop header: socials | centered identity | search and actions. */
+body > header > .header-inner {
+  display: grid;
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  gap: clamp(12px,1.5vw,24px);
+  align-items: center;
+}
+.header-inner .komi-header-left {
+  grid-column: 1; grid-row: 1; min-width: 0;
+  justify-self: start; display: flex; align-items: center;
+}
+.header-inner .komi-header-left .komi-social-links {
+  position: static; transform: none; margin: 0;
+  display: flex; flex-wrap: nowrap; gap: 9px;
+}
+.header-inner .logo-area {
+  grid-column: 2; grid-row: 1; justify-self: center;
+  order: initial; white-space: nowrap;
+}
+.header-inner .search-container {
+  grid-column: 3; grid-row: 1; justify-self: stretch;
+  width: 100%; max-width: none; min-width: 0; flex: none;
+}
+.header-inner .nav-actions {
+  grid-column: 3; grid-row: 2; justify-self: end;
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+  justify-content: flex-end; max-width: 100%; min-width: 0;
+}
+/* The top row stays aligned while admin-only controls occupy their own right-aligned row. */
+.header-inner .nav-actions #adminPanelBtn,
+.header-inner .nav-actions #addAnimeBtn { white-space: nowrap; }
+.header-inner .search-container .search-dropdown { z-index: 100; }
+@media (min-width: 1101px) {
+  .header-inner .nav-actions { position: absolute; right: 18px; top: calc(100% + 5px); }
+  .header-inner .nav-actions:has(#addAnimeBtn:not([style*="display: none"])) {
+    position: static; grid-column: 3; grid-row: 1; justify-self: end;
+    margin-left: 0; transform: translateY(0);
+  }
+  .header-inner:has(.nav-actions #addAnimeBtn:not([style*="display: none"])) .search-container { padding-right: 125px; }
+}
+@media (max-width: 1100px) {
+  .header-inner .logo-area .online-counter { display: flex; }
+  .header-inner .nav-actions { position: static; }
+  body > header > .header-inner { grid-template-columns: minmax(0,1fr) auto; }
+  .header-inner .komi-header-left { grid-column: 1; grid-row: 1; }
+  .header-inner .logo-area { grid-column: 2; grid-row: 1; }
+  .header-inner .search-container { grid-column: 1 / -1; grid-row: 2; width: 100%; }
+  .header-inner .nav-actions { grid-column: 1 / -1; grid-row: 3; }
+}
+@media (max-width: 600px) {
+  .header-inner .logo-area { gap: 6px; }
+  .header-inner .logo-area .online-counter { display: none; }
+  .header-inner .komi-header-left .komi-social-link { width: 34px; height: 34px; }
+  .header-inner .nav-actions { justify-content: flex-end; }
+}
+</style>
 </head>
 <body>
 
@@ -1721,6 +1779,27 @@ body > header > .header-inner {
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
                 </a>
             </nav>
+
+            </div>
+            <div class="logo-area">
+                <div class="logo-container" data-komi-click="nav-home">
+                    <div class="logo-box">K</div>
+                    <div class="logo-text">Komi Anime</div>
+                </div>
+                <div class="online-counter">
+                    <div class="online-dot"></div>
+                    <span id="onlineCountText" role="status" aria-live="polite">Аккаунтов онлайн: проверяем…</span>
+                </div>
+            </div>
+            
+            <div class="search-container">
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Поиск аниме или @пользователь (Ctrl K)" data-komi-input="search-input" data-komi-focus="search-focus">
+                    <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
+                </div>
+                <div class="search-dropdown" id="searchDropdown"></div>
+            </div>
             <div class="nav-actions">
                 <button type="button" id="komiMobileMoreToggle" class="komi-mobile-more-toggle"
                         aria-haspopup="true" aria-expanded="false" aria-controls="komiMobileMoreMenu"
@@ -1758,26 +1837,6 @@ body > header > .header-inner {
                 <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
 
                 <div id="userHeaderArea"></div>
-            </div>
-            </div>
-            <div class="logo-area">
-                <div class="logo-container" data-komi-click="nav-home">
-                    <div class="logo-box">K</div>
-                    <div class="logo-text">Komi Anime</div>
-                </div>
-                <div class="online-counter">
-                    <div class="online-dot"></div>
-                    <span id="onlineCountText" role="status" aria-live="polite">Аккаунтов онлайн: проверяем…</span>
-                </div>
-            </div>
-            
-            <div class="search-container">
-                <div class="search-bar">
-                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Поиск аниме или @пользователь (Ctrl K)" data-komi-input="search-input" data-komi-focus="search-focus">
-                    <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
-                </div>
-                <div class="search-dropdown" id="searchDropdown"></div>
             </div>
 
 
