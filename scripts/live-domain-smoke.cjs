@@ -119,15 +119,21 @@ fs.mkdirSync(output,{recursive:true});
           const robots=await page.request.get(base+'robots.txt',{timeout:12000});
           assert.equal(robots.status(),200,'robots.txt must be available');
           assert.match(await robots.text(),/Sitemap: https:\/\/komianime\.online\/sitemap\.xml/);
-          // Only check mirror indexing after deployment to main; PR previews
-          // deliberately run against the previous production build.
-          if (process.env.GITHUB_EVENT_NAME === 'push' && process.env.GITHUB_REF === 'refs/heads/main') {
-            const mirror=await page.request.get('https://komi-six.vercel.app/anime/52991',{timeout:30000});
-            assert.equal(mirror.status(),200,'Production mirror anime page must respond');
-            assert.match(mirror.headers()['x-robots-tag']||'',/noindex/i,'Mirror title must not be indexed');
-            assert.doesNotMatch(detail.headers()['x-robots-tag']||'',/noindex/i,'Primary canonical title must be indexable');
-            console.log('PASS mirror noindex and canonical production indexing');
-          }
+          // This is a production domain, not a preview deployment: it must be
+          // public even when Vercel Authentication protects preview branches.
+          // Run on PRs too, so changing Vercel's project-level SSO settings
+          // cannot silently break shared anime links.
+          const mirror=await page.request.get('https://komi-six.vercel.app/anime/52991',{timeout:30000});
+          assert.equal(mirror.status(),200,'Public production mirror must not require Vercel sign-in');
+          assert.match(mirror.headers()['content-type']||'',/text\/html/i,'Mirror route must serve SSR HTML');
+          const mirrorHtml=await mirror.text();
+          assert.match(mirrorHtml,/rel="canonical" href="https:\/\/komianime\.online\/anime\/52991"/,
+            'Mirror SSR title must point to canonical primary-domain URL');
+          assert.match(mirrorHtml,/Фрирен/,'Mirror SSR route must render the real anime title');
+          assert.doesNotMatch(mirrorHtml,/Vercel Authentication|PERMISSION_DENIED/i);
+          assert.match(mirror.headers()['x-robots-tag']||'',/noindex/i,'Mirror title must not be indexed');
+          assert.doesNotMatch(detail.headers()['x-robots-tag']||'',/noindex/i,'Primary canonical title must be indexable');
+          console.log('PASS public mirror /anime/52991, canonical SEO, noindex and production routing');
           console.log('PASS SEO production: anime detail, JSON-LD, sitemap',indexed,'URLs, robots');
         }
         const posterText=await posterResponse.text();
