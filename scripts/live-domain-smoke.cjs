@@ -42,6 +42,17 @@ fs.mkdirSync(output,{recursive:true});
           assert.match(appResponse.headers()['content-type']||'',/javascript/i);
           assert.ok((await appResponse.body()).length>100000,'Main app script appears truncated');
           if (process.env.GITHUB_EVENT_NAME === 'push' && process.env.GITHUB_REF === 'refs/heads/main') {
+            // A live source check catches stale HTML / wrong alias even if
+            // hydrated JavaScript happens to show the right filter controls.
+            const homepageHtml=await response.text();
+            assert.match(homepageHtml,/name="komi-ui-revision" content="20261118-interactive-quick-filters"/,
+              'Main domain must serve the new homepage HTML rather than cached old markup');
+            assert.match(homepageHtml,/data-komi-click="home-quick-filters-all"/,
+              'The first-paint all-filters link needs a real JavaScript navigation action');
+            for(const label of ['Все жанры','Все годы','Все типы','Сортировка'])
+              assert.ok(homepageHtml.includes('<option value="">'+label+'</option>'),
+                'Main domain HTML must contain filter caption '+label);
+            console.log('PASS production first-paint quick filter captions, version and all-filters action');
             const css=await page.request.get(base+'komi.bundle.css?v=20261118a',{timeout:20000});
             assert.equal(css.status(),200,'Bundled CSS must be available on production');
             assert.match(css.headers()['content-type']||'',/text\/css/,'Bundle must be served as CSS');
