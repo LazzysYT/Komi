@@ -47,9 +47,18 @@ module.exports = async function animePage(req,res) {
 <html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>${richTitle}</title><meta name="description" content="${desc}">
 <meta name="robots" content="index,follow"><link rel="canonical" href="${animeUrl}">
-<meta property="og:type" content="video.other"><meta property="og:title" content="${richTitle}">
+<meta property="og:type" content="website"><meta property="og:locale" content="ru_RU">
+<meta property="og:site_name" content="Komi Anime">
+<meta property="og:title" content="${richTitle}">
 <meta property="og:description" content="${desc}"><meta property="og:url" content="${animeUrl}">
-<meta property="og:image" content="${html(coverUrl)}"><meta name="twitter:card" content="summary_large_image">
+<meta property="og:image" content="${html(coverUrl)}">
+<meta property="og:image:secure_url" content="${html(coverUrl)}">
+<meta property="og:image:alt" content="Постер аниме «${html(title)}»">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="${richTitle}">
+<meta name="twitter:description" content="${desc}">
+<meta name="twitter:image" content="${html(coverUrl)}">
+<meta name="twitter:image:alt" content="Постер аниме «${html(title)}»">
 <meta name="komi-anime-id" content="${rawId}"><script defer src="/anime-watch-bridge.js"></script>
 <script type="application/ld+json">${jsonLd}</script>
 <style>*,*:before,*:after{box-sizing:border-box}body{margin:0;background:#090909;color:#f2f2f2;font:16px/1.6 system-ui,sans-serif}a{color:inherit}header{padding:22px max(24px,5vw);border-bottom:1px solid #282828}header a{text-decoration:none;font-weight:800;font-size:20px}main{max-width:1080px;margin:52px auto;padding:0 24px;display:grid;grid-template-columns:minmax(180px,300px) 1fr;gap:38px}img{display:block;width:100%;border-radius:18px;background:#1e1e1e;border:1px solid #292929}h1{font-size:clamp(28px,4vw,48px);line-height:1.2;margin:0 0 18px}p{color:#c0c0c0}small{color:#a6a6a6}.actions{display:flex;flex-wrap:wrap;gap:14px;margin:24px 0}.action{display:inline-flex;padding:13px 22px;border:1px solid #444;border-radius:12px;text-decoration:none;font-weight:700;background:#191919}.primary{background:#e6e6e6;color:#111}@media(max-width:650px){main{grid-template-columns:1fr;margin:22px auto}img{max-width:260px}}</style>
