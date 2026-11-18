@@ -34,8 +34,9 @@ test('discovery renders one visible slide and one selected indicator', () => {
   assert.ok(heroMarkup, 'hero section rendered');
   assert.equal((heroMarkup.match(/class="hero-slide(?: active)?"/g)||[]).length, 3);
   assert.equal((heroMarkup.match(/class="hero-slide active"/g)||[]).length, 1);
-  assert.equal((heroMarkup.match(/aria-hidden="false"/g)||[]).length, 1);
-  assert.equal((heroMarkup.match(/aria-hidden="true"/g)||[]).length, 2);
+  // The two SVG chevrons are also aria-hidden, so count slide articles only.
+  assert.equal((heroMarkup.match(/<article class="hero-slide(?: active)?"[^>]*aria-hidden="false"/g)||[]).length, 1);
+  assert.equal((heroMarkup.match(/<article class="hero-slide(?: active)?"[^>]*aria-hidden="true"/g)||[]).length, 2);
   assert.equal((heroMarkup.match(/class="hero-dot active"/g)||[]).length, 1);
   assert.equal((heroMarkup.match(/aria-pressed="true"/g)||[]).length, 1);
   assert.match(heroMarkup, /data-komi-onclick="changeSlide\(-1\)"/);
