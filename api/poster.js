@@ -2,8 +2,19 @@
 // Public, bounded poster cache endpoint. No caller-controlled hosts or redirects.
 const {validatePosterSource} = require('../poster-cache-client');
 const MAX_BYTES = 3 * 1024 * 1024;
-// Vercel consumes and strips s-maxage. Keep a short explicit browser TTL too.
-const CACHE_HEADER = 'public, max-age=60, s-maxage=86400, stale-while-revalidate=604800';
+// URLs containing a content fingerprint can stay cached much longer without
+// hiding future poster updates: when an image changes, its URL changes as well.
+// Legacy Shikimori /system/animes/.../<id>.jpg is NOT fingerprinted.
+const IMMUTABLE_CACHE_HEADER = 'public, max-age=604800, s-maxage=2592000, stale-while-revalidate=604800';
+const MUTABLE_CACHE_HEADER = 'public, max-age=60, s-maxage=86400, stale-while-revalidate=604800';
+function posterCacheHeader(source) {
+  const url=new URL(source);
+  const path=url.pathname;
+  const fingerprintedShikimori=/^\/uploads\/poster\/animes\/\d+\/[a-f0-9]{16,}\.(?:jpe?g|png|webp|avif)$/i.test(path);
+  const fingerprintedAniList=/^\/file\/anilistcdn\/media\/anime\/cover\/(?:large|medium|extraLarge)\/[A-Za-z0-9_-]+-[A-Za-z0-9_-]{8,}\.(?:jpe?g|png|webp|avif)$/i.test(path);
+  return (fingerprintedShikimori || fingerprintedAniList) && !url.search
+    ? IMMUTABLE_CACHE_HEADER : MUTABLE_CACHE_HEADER;
+}
 const TYPES = new Set(['image/jpeg','image/png','image/webp','image/avif','image/gif']);
 function sendFailure(res, status) {
   res.statusCode = status;
@@ -52,7 +63,7 @@ module.exports = async function cachedPoster(req,res) {
     if (bytes && !bytes.length) return sendFailure(res,502);
     res.statusCode=200;
     res.setHeader('Content-Type',type);
-    res.setHeader('Cache-Control',CACHE_HEADER);
+    res.setHeader('Cache-Control',posterCacheHeader(source));
     res.setHeader('X-Content-Type-Options','nosniff');
     if (bytes) res.setHeader('Content-Length',String(bytes.length));
     res.end(req.method==='HEAD'?'':bytes);
