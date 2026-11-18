@@ -114,3 +114,20 @@ test('GET availability rejects arbitrary IDs; production embed remains off',asyn
   assert.equal(res.statusCode,404);
   assert.equal(res.body.error,'not_found');
 });
+
+test('enabled probe does not invoke partner API and returns disabled by default',async()=>{
+    const key=process.env.ANIVIBE_API_KEY,flag=process.env.ANIVIBE_PARTNER_EMBED_ENABLED;
+    process.env.ANIVIBE_API_KEY='unit-test-key';
+    delete process.env.ANIVIBE_PARTNER_EMBED_ENABLED;
+    try{
+        const res={setHeader(){},end(payload){this.body=JSON.parse(payload)}};
+        await handler({method:'GET',query:{enabled:'1'},headers:{}},res);
+        assert.equal(res.statusCode,200);
+        assert.deepEqual(res.body,{service:'anivibe',embedEnabled:false});
+    }finally{
+        if(key===undefined)delete process.env.ANIVIBE_API_KEY;
+        else process.env.ANIVIBE_API_KEY=key;
+        if(flag===undefined)delete process.env.ANIVIBE_PARTNER_EMBED_ENABLED;
+        else process.env.ANIVIBE_PARTNER_EMBED_ENABLED=flag;
+    }
+});
