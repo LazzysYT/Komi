@@ -9,9 +9,10 @@ test('media hub stylesheet follows the single generated bundle, with no inline h
   const head=fs.readFileSync(path.join(root,'index.html'),'utf8').split('</head>')[0];
   const local=[...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]
     .filter(m=>!m[0].includes('fonts.googleapis.com'));
-  assert.equal(local.length,2);
+  assert.equal(local.length,3);
   assert.match(local[0][0],/href="\/komi\.bundle\.css\?v=\d+[a-z]"/);
   assert.match(local[1][0],/href="\/komi-media-hub\.css"/);
+  assert.match(local[2][0],/href="\/komi-black-white\.css\?v=\d+[a-z]"/);
   assert.doesNotMatch(head,/<style(?:\s|>)/i);
   assert.match(head,/fonts\.googleapis\.com/);
 });
