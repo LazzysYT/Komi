@@ -132,7 +132,7 @@ test('markup and CSS encode separate contained and widescreen layouts', () => {
   assert.match(home, /hero-slide komi-hd-poster/);
   assert.match(home, /data-komi-anime-id/);
   assert.match(css, /hero-slide\.komi-hd-poster \.komi-hub-hero-art/);
-  assert.match(css, /object-fit: contain !important/);
+  assert.match(css, /object-fit: scale-down !important/);
   assert.match(css, /hero-slide\.komi-hd-wide \.komi-hub-hero-art/);
   assert.match(css, /object-fit: cover !important/);
 });
