@@ -11,6 +11,11 @@
     switch (kind + ':' + action) {
       case 'click:nav-home': return withSound(() => navigate('home'));
       case 'click:nav-catalog': return withSound(() => navigate('catalog'));
+      case 'click:home-quick-filters-all':
+        // Preserve the native link for JavaScript-off and modifier-key navigation.
+        if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        return komiOpenFullCatalogFilters();
       case 'click:notifications': return withSound(() => toggleNotifications());
       case 'click:notifications-read': return markNotificationsRead();
       case 'click:random': return withSound(() => randomAnimeWithAnimation());
