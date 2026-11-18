@@ -247,10 +247,17 @@ async function loadDataFromCloud(attempt = 0) {
         const komiPresenceSession = crypto.randomUUID();
         let presenceRequestInFlight = false;
         let presenceRequestEpoch = 0;
+        function showOnlinePresence(count) {
+            const label = document.getElementById('onlineCountText');
+            if (!label) return;
+            const counter = label.closest('.online-counter');
+            const valid = Number.isSafeInteger(count) && count >= 1;
+            label.textContent = valid ? 'Аккаунтов онлайн: ' + count : '';
+            if (counter) counter.hidden = !valid;
+        }
         async function updateOnlinePresence() {
             if (!_supabase || !navigator.onLine) {
-                const label = document.getElementById('onlineCountText');
-                if (label) label.textContent = navigator.onLine ? 'Аккаунтов онлайн: недоступно' : 'Нет соединения';
+                showOnlinePresence(null);
                 return;
             }
             if (document.hidden || presenceRequestInFlight) return;
@@ -261,8 +268,7 @@ async function loadDataFromCloud(attempt = 0) {
                 requestController.abort();
                 if (epoch === presenceRequestEpoch) {
                     presenceRequestInFlight = false;
-                    const el = document.getElementById('onlineCountText');
-                    if (el) el.textContent = navigator.onLine ? 'Аккаунтов онлайн: —' : 'Нет соединения';
+                    showOnlinePresence(null);
                 }
             }, 4000);
             try {
@@ -273,16 +279,10 @@ async function loadDataFromCloud(attempt = 0) {
                 if (requestController.signal.aborted || epoch !== presenceRequestEpoch) return;
                 const online = Number(count);
                 if (!Number.isSafeInteger(online) || online < 0) throw Error('Неверное число онлайн');
-                // The RPC intentionally reveals only an aggregate number, not a list
-                // of usernames, session IDs, timestamps or anonymous visitors.
                 globalAllOnlineUsersList = [];
-                const el = document.getElementById('onlineCountText');
-                if (el) el.textContent = 'Аккаунтов онлайн: ' + online;
+                showOnlinePresence(online);
             } catch(error) {
-                if (epoch === presenceRequestEpoch) {
-                    const el = document.getElementById('onlineCountText');
-                    if (el) el.textContent = navigator.onLine ? 'Аккаунтов онлайн: —' : 'Нет соединения';
-                }
+                if (epoch === presenceRequestEpoch) showOnlinePresence(null);
             } finally {
                 clearTimeout(requestTimeout);
                 if (epoch === presenceRequestEpoch) presenceRequestInFlight = false;
@@ -292,10 +292,7 @@ async function loadDataFromCloud(attempt = 0) {
         setInterval(updateOnlinePresence, 8000);
         document.addEventListener('visibilitychange', updateOnlinePresence);
         window.addEventListener('online', updateOnlinePresence);
-        window.addEventListener('offline', () => {
-            const indicator = document.getElementById('onlineCountText');
-            if (indicator) indicator.textContent = 'Нет соединения';
-        });
+        window.addEventListener('offline', () => showOnlinePresence(null));
         updateOnlinePresence();
 
 
@@ -1678,6 +1675,13 @@ async function loadDataFromCloud(attempt = 0) {
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
+            const status = currentUser?.authUserId ? userAnimeStatuses[currentUser.username]?.[id] : '';
+            const safeStatus = ['Просмотрено','В планах','Смотрю','Отложено','Брошено','Любимые'].includes(status) ? status : '';
+            const progress = currentUser?.authUserId ? komiEpisodeProgress[currentUser.username + '_' + id] : null;
+            const progressIndex = Number(progress?.index);
+            const episode = progress?.updated && Number.isSafeInteger(progressIndex) && progressIndex >= 0 ? progressIndex + 1 : null;
+            const statusText = safeStatus + (safeStatus === 'Смотрю' && episode ? ' · ' + episode + ' серия' : '');
+            const statusMarkup = safeStatus ? '<span class="komi-card-status" title="' + escapeFriendHtml(statusText) + '">' + escapeFriendHtml(statusText) + '</span>' : '';
             const posterSource=komiCardPosterSource(anime.poster || anime.banner);
             const poster=escapeFriendHtml(posterSource.preferred);
             const posterOriginalAttr=posterSource.original ? ' data-poster-original="'+escapeFriendHtml(posterSource.original)+'"' : '';
@@ -1687,7 +1691,7 @@ async function loadDataFromCloud(attempt = 0) {
             return '<div class="anime-card" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
                 'data-komi-onclick="playSound();openWatchModal(\''+id+'\')" data-komi-onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
-                '<div class="anime-poster-box">'+
+                '<div class="anime-poster-box">'+statusMarkup+
                     '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
