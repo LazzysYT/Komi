@@ -379,8 +379,8 @@ async function checkNotifications(page) {
        hasCommunity:!!document.querySelector('#sideFriendsBtn[aria-controls="komiFriendsDrawer"]')
      };
    });
-   assert.equal(shell.logoBackground,'rgb(255, 69, 79)','Media hub sidebar emblem uses the new red accent');
-   assert.equal(shell.logoInk,'rgb(24, 7, 10)','Media hub emblem uses contrast ink');
+   assert.equal(shell.logoBackground,'rgb(245, 245, 245)','Media hub sidebar emblem uses the monochrome accent');
+   assert.equal(shell.logoInk,'rgb(9, 9, 9)','Media hub emblem preserves legible monochrome contrast');
    assert.ok(shell.hasOverlay && shell.hasSearch && shell.hasCommunity,'New hub shell must expose search and community controls');
 
    await page.waitForSelector('#animeVideoPlayer');
