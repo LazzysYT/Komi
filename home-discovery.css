@@ -187,23 +187,33 @@ body > header > .header-inner{
 }
 .komi-home-hero .hero-slides-wrapper{position:relative;width:100%;height:100%}
 .komi-home-hero .hero-slide{
-  position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;
+  position:absolute;inset:0;display:none;flex-direction:column;justify-content:flex-end;
   padding:clamp(24px,4.1vw,58px)!important;
   background-position:center 34%;background-size:cover;
+}
+/* An inactive slide must not remain in the layout: it would paint over active
+   titles and leave invisible watch/list buttons in the interaction layer. */
+.komi-home-hero .hero-slide.active{
+  display:flex;
+  animation:komiHeroReveal .38s cubic-bezier(.2,.65,.2,1) both;
+}
+@keyframes komiHeroReveal{
+  from{opacity:0;transform:translateY(7px)}
+  to{opacity:1;transform:translateY(0)}
 }
 .komi-home-hero .hero-slide::before{
   content:"";position:absolute;inset:0;pointer-events:none;
   background:linear-gradient(90deg,rgba(7,8,13,.94) 0%,rgba(8,9,15,.75) 37%,rgba(8,9,15,.08) 100%),
     linear-gradient(0deg,rgba(9,9,13,.8),transparent 55%);
 }
-.komi-home-hero .komi-home-hero-content{position:relative;z-index:1;max-width:620px}
+.komi-home-hero .komi-home-hero-content{position:relative;z-index:1;max-width:min(700px,100%)}
 .komi-home-hero .komi-home-hero-eyebrow{
   display:flex;align-items:center;gap:8px;letter-spacing:.2em;font:800 10px 'Inter',sans-serif;color:#FFB0B4;
   margin-bottom:13px;
 }
 .komi-home-live-dot{width:7px;height:7px;background:#FF454F;border-radius:50%;box-shadow:0 0 11px #FF454F77}
 .komi-home-hero .hero-slide h1{
-  font:800 clamp(29px,4vw,58px)/1.12 'Plus Jakarta Sans',sans-serif!important;
+  font:800 clamp(28px,3.4vw,52px)/1.12 'Plus Jakarta Sans',sans-serif!important;
   color:#fff!important;margin:15px 0 12px!important;
   text-shadow:0 3px 24px #0008;
 }
@@ -235,13 +245,57 @@ body > header > .header-inner{
 .komi-home-hero .hero-buttons .btn-glow-secondary{
   background:rgba(25,26,35,.78)!important;border-color:rgba(255,255,255,.18)!important;color:#fff!important;
 }
+/* Modern carousel controls: accessible hit areas, quiet glass surface and
+   clear red active state. Keep the legacy class names and click handlers. */
 .komi-home-hero .hero-slider-arrow{
-  width:42px;height:42px;border-radius:50%!important;
-  background:#13141Bbb!important;border:1px solid #ffffff29!important;
-  top:50%;z-index:9!important;backdrop-filter:blur(8px);
+  width:46px!important;height:46px!important;min-width:46px;min-height:46px;
+  border-radius:16px!important;top:50%;z-index:9!important;
+  background:linear-gradient(145deg,rgba(40,41,53,.88),rgba(12,13,20,.90))!important;
+  border:1px solid rgba(255,255,255,.22)!important;
+  box-shadow:0 8px 24px rgba(0,0,0,.35),inset 0 1px rgba(255,255,255,.07);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  color:#F8F8FC!important;
+  transition:background .2s,border-color .2s,box-shadow .2s,transform .2s;
 }
-.komi-home-hero .hero-dots{z-index:9;position:absolute;bottom:18px;right:21px;left:auto}
-.komi-home-hero .hero-dot.active{background:#FF454F!important}
+.komi-home-hero .hero-slider-arrow svg{display:block;width:20px;height:20px;pointer-events:none}
+.komi-home-hero .hero-slider-arrow:hover{
+  background:linear-gradient(145deg,rgba(91,35,51,.95),rgba(30,20,31,.95))!important;
+  border-color:rgba(255,69,79,.75)!important;
+  box-shadow:0 8px 28px rgba(255,69,79,.18),inset 0 1px rgba(255,255,255,.08);
+  transform:translateY(-50%) scale(1.06);
+}
+.komi-home-hero .hero-slider-arrow:active{transform:translateY(-50%) scale(.96)}
+.komi-home-hero .hero-slider-arrow:focus-visible,
+.komi-home-hero .hero-dot:focus-visible{
+  outline:2px solid #FF626B!important;outline-offset:3px;
+}
+.komi-home-hero .hero-dots{
+  position:absolute;z-index:9;bottom:18px;right:23px;left:auto;
+  display:flex;align-items:center;gap:2px;padding:5px 7px;
+  border-radius:15px;border:1px solid rgba(255,255,255,.13);
+  background:rgba(14,15,24,.78);box-shadow:0 8px 26px rgba(0,0,0,.36);
+  backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+}
+.komi-home-hero .hero-dot,
+.komi-home-hero .hero-dot.active{
+  appearance:none;display:flex;align-items:center;justify-content:center;
+  width:34px!important;min-width:34px;height:30px!important;min-height:30px;
+  padding:0;border:0!important;border-radius:10px!important;
+  background:transparent!important;box-shadow:none!important;
+  cursor:pointer;transition:background .2s,transform .2s;
+}
+.komi-home-hero .hero-dot::before{
+  content:'';display:block;width:17px;height:5px;border-radius:999px;
+  background:#777B8B;box-shadow:inset 0 1px rgba(255,255,255,.15);
+  transition:width .24s ease,background .24s ease,box-shadow .24s ease;
+}
+.komi-home-hero .hero-dot.active{width:40px!important;min-width:40px}
+.komi-home-hero .hero-dot.active::before{
+  width:28px;background:#FF454F;box-shadow:0 0 12px rgba(255,69,79,.58);
+}
+.komi-home-hero .hero-dot:hover{background:rgba(255,255,255,.08)!important}
+.komi-home-hero .hero-dot:hover:not(.active)::before{background:#D5D6DE}
+.komi-home-hero .hero-dot:active{transform:scale(.91)}
 .komi-home-heading{
   display:flex;justify-content:space-between;align-items:flex-end;gap:18px;
   margin-bottom:15px;
@@ -449,7 +503,14 @@ body > header > .header-inner{
     padding-bottom:calc(78px + env(safe-area-inset-bottom))!important
   }
   .komi-home-hero .hero-slider-container{height:385px!important;border-radius:19px!important}
-  .komi-home-hero .hero-slide{padding:26px 21px 44px!important}
+  .komi-home-hero .hero-slide{padding:26px 21px 52px!important}
+  .komi-home-hero .hero-slider-arrow{
+    width:38px!important;height:38px!important;min-width:38px;min-height:38px;
+    border-radius:13px!important;
+  }
+  .komi-home-hero .hero-arrow-prev{left:10px}
+  .komi-home-hero .hero-arrow-next{right:10px}
+  .komi-home-hero .hero-dots{bottom:10px;right:50%;transform:translateX(50%)}
   .komi-home-hero .hero-slide::before{
     background:linear-gradient(0deg,rgba(8,8,14,.98) 0%,rgba(9,9,13,.63) 62%,rgba(9,9,13,.20) 100%)
   }
@@ -462,7 +523,7 @@ body > header > .header-inner{
   .komi-home-discovery{gap:26px}
 }
 @media(max-width:430px){
-  .komi-home-hero .hero-slide{padding:25px 17px 40px!important}
+  .komi-home-hero .hero-slide{padding:25px 17px 54px!important}
   .komi-home-hero .hero-buttons{gap:7px}
   .komi-home-hero .hero-buttons button{padding:9px 11px!important;font-size:11px}
   .komi-home-hero .hero-slide p{font-size:11px;line-height:1.5}
@@ -471,7 +532,10 @@ body > header > .header-inner{
   .komi-home-community-empty{flex-direction:column;align-items:flex-start}
 }
 @media(prefers-reduced-motion:reduce){
-  .komi-home-genre-card,.komi-home-rail > .anime-card{transition:none!important}
+  .komi-home-genre-card,.komi-home-rail > .anime-card,
+  .komi-home-hero .hero-slider-arrow,.komi-home-hero .hero-dot,
+  .komi-home-hero .hero-dot::before{transition:none!important}
+  .komi-home-hero .hero-slide.active{animation:none!important}
 }
 
 .komi-home-support-links{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 0}
