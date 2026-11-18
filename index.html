@@ -1708,60 +1708,60 @@ body > header > .header-inner {
 </style>
 
 <style>
-/* Stable three-zone desktop header: socials | centered identity | search and actions. */
+/* Keep all existing controls and callbacks, but give each header zone a stable place. */
 body > header > .header-inner {
-  display: grid;
-  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
-  gap: clamp(12px,1.5vw,24px);
-  align-items: center;
+ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+ align-items:center; gap:clamp(12px,1.4vw,24px);
 }
 .header-inner .komi-header-left {
-  grid-column: 1; grid-row: 1; min-width: 0;
-  justify-self: start; display: flex; align-items: center;
+ grid-column:1;grid-row:1;justify-self:start;min-width:0;
+ display:flex;align-items:center;
 }
 .header-inner .komi-header-left .komi-social-links {
-  position: static; transform: none; margin: 0;
-  display: flex; flex-wrap: nowrap; gap: 9px;
+ position:static;inset:auto;transform:none;display:flex;
+ align-items:center;flex-wrap:nowrap;gap:9px;margin:0;
 }
 .header-inner .logo-area {
-  grid-column: 2; grid-row: 1; justify-self: center;
-  order: initial; white-space: nowrap;
+ grid-column:2;grid-row:1;justify-self:center;order:initial;
+ white-space:nowrap;
 }
-.header-inner .search-container {
-  grid-column: 3; grid-row: 1; justify-self: stretch;
-  width: 100%; max-width: none; min-width: 0; flex: none;
+.header-inner .komi-header-right {
+ grid-column:3;grid-row:1;justify-self:stretch;
+ min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:10px;
 }
-.header-inner .nav-actions {
-  grid-column: 3; grid-row: 2; justify-self: end;
-  display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-  justify-content: flex-end; max-width: 100%; min-width: 0;
+.header-inner .komi-header-right .search-container {
+ grid-column:auto;grid-row:auto;justify-self:auto;
+ width:auto;max-width:none;min-width:135px;flex:1 1 260px;
 }
-/* The top row stays aligned while admin-only controls occupy their own right-aligned row. */
+.header-inner .komi-header-right .nav-actions {
+ grid-column:auto;grid-row:auto;position:relative;inset:auto;
+ display:flex;align-items:center;flex:0 0 auto;justify-content:flex-end;
+ flex-wrap:nowrap;gap:7px;min-width:0;max-width:100%;
+}
 .header-inner .nav-actions #adminPanelBtn,
-.header-inner .nav-actions #addAnimeBtn { white-space: nowrap; }
-.header-inner .search-container .search-dropdown { z-index: 100; }
-@media (min-width: 1101px) {
-  .header-inner .nav-actions { position: absolute; right: 18px; top: calc(100% + 5px); }
-  .header-inner .nav-actions:has(#addAnimeBtn:not([style*="display: none"])) {
-    position: static; grid-column: 3; grid-row: 1; justify-self: end;
-    margin-left: 0; transform: translateY(0);
-  }
-  .header-inner:has(.nav-actions #addAnimeBtn:not([style*="display: none"])) .search-container { padding-right: 125px; }
+.header-inner .nav-actions #addAnimeBtn {white-space:nowrap;}
+.header-inner .search-container .search-dropdown {z-index:100;}
+@media(max-width:1350px) {
+ body > header > .header-inner {grid-template-columns:auto minmax(0,1fr);gap:10px 16px;}
+ .header-inner .komi-header-left {grid-column:1;grid-row:1;}
+ .header-inner .logo-area {grid-column:2;grid-row:1;justify-self:center;}
+ .header-inner .logo-area .online-counter {display:flex;}
+ .header-inner .komi-header-right {grid-column:1/-1;grid-row:2;}
+ .header-inner .komi-header-right .search-container {flex:1 1 auto;}
 }
-@media (max-width: 1100px) {
-  .header-inner .logo-area .online-counter { display: flex; }
-  .header-inner .nav-actions { position: static; }
-  body > header > .header-inner { grid-template-columns: minmax(0,1fr) auto; }
-  .header-inner .komi-header-left { grid-column: 1; grid-row: 1; }
-  .header-inner .logo-area { grid-column: 2; grid-row: 1; }
-  .header-inner .search-container { grid-column: 1 / -1; grid-row: 2; width: 100%; }
-  .header-inner .nav-actions { grid-column: 1 / -1; grid-row: 3; }
+@media(max-width:760px) {
+ .header-inner .logo-area .online-counter {display:none;}
+ .header-inner .komi-header-right {gap:7px;min-width:0;}
+ .header-inner .komi-header-right .nav-actions {flex-wrap:wrap;max-width:45%;}
+ .header-inner .komi-header-right .search-container {min-width:0;}
+ .header-inner .komi-header-left .komi-social-link {width:34px;height:34px;}
 }
-@media (max-width: 600px) {
-  .header-inner .logo-area { gap: 6px; }
-  .header-inner .logo-area .online-counter { display: none; }
-  .header-inner .komi-header-left .komi-social-link { width: 34px; height: 34px; }
-  .header-inner .nav-actions { justify-content: flex-end; }
+@media(max-width:460px) {
+ .header-inner .logo-area .logo-text {font-size:15px;}
+ .header-inner .logo-area .logo-box {width:32px;height:32px;}
+ .header-inner .komi-header-right {flex-wrap:wrap;}
+ .header-inner .komi-header-right .search-container {flex:1 0 100%;}
+ .header-inner .komi-header-right .nav-actions {max-width:100%;margin-left:auto;}
 }
 </style>
 </head>
@@ -1792,6 +1792,7 @@ body > header > .header-inner {
                 </div>
             </div>
             
+            <div class="komi-header-right">
             <div class="search-container">
                 <div class="search-bar">
                     <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
@@ -1837,6 +1838,7 @@ body > header > .header-inner {
                 <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
 
                 <div id="userHeaderArea"></div>
+            </div>
             </div>
 
 
