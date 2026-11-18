@@ -129,7 +129,10 @@ fs.mkdirSync(output,{recursive:true});
           assert.match(sitemapXml,/https:\/\/komianime\.online\/anime\/52991/);
           const robots=await page.request.get(base+'robots.txt',{timeout:12000});
           assert.equal(robots.status(),200,'robots.txt must be available');
-          assert.match(await robots.text(),/Sitemap: https:\/\/komianime\.online\/sitemap\.xml/);
+          const robotsText=await robots.text();
+          assert.match(robotsText,/Sitemap: https:\/\/komianime\.online\/sitemap\.xml/);
+          assert.match(robotsText,/Allow:\s*\//);
+          assert.doesNotMatch(robotsText,/Disallow:\s*\/anime\//,'Anime pages must be crawlable');
           // This is a production domain, not a preview deployment: it must be
           // public even when Vercel Authentication protects preview branches.
           // Run on PRs too, so changing Vercel's project-level SSO settings
@@ -144,6 +147,35 @@ fs.mkdirSync(output,{recursive:true});
           assert.doesNotMatch(mirrorHtml,/Vercel Authentication|PERMISSION_DENIED/i);
           assert.match(mirror.headers()['x-robots-tag']||'',/noindex/i,'Mirror title must not be indexed');
           assert.doesNotMatch(detail.headers()['x-robots-tag']||'',/noindex/i,'Primary canonical title must be indexable');
+          // Unlike a raw HTTP GET, these checks exercise an actual fresh browser
+          // context (incognito-equivalent), direct address-bar navigation and F5.
+          // Never use the SPA home page as a fallback for title detail SSR.
+          for(const host of ['komianime.online','komi-six.vercel.app']){
+            const isolated=await browser.newContext({viewport:{width:1280,height:800}});
+            try{
+              const titleTab=await isolated.newPage();
+              const directUrl='https://'+host+'/anime/52991';
+              const direct=await titleTab.goto(directUrl,{waitUntil:'domcontentloaded',timeout:45000});
+              assert.equal(direct?.status(),200,'Fresh direct title route failed on '+host);
+              assert.equal(new URL(titleTab.url()).pathname,'/anime/52991');
+              assert.match(await titleTab.locator('h1').innerText(),/Фрирен/);
+              assert.equal(await titleTab.locator('link[rel="canonical"]').getAttribute('href'),
+                'https://komianime.online/anime/52991');
+              assert.match(await titleTab.locator('meta[property="og:image"]').getAttribute('content'),
+                /^https:\/\/komianime\.online\/api\/poster\?src=/);
+              const refreshed=await titleTab.reload({waitUntil:'domcontentloaded',timeout:45000});
+              assert.equal(refreshed?.status(),200,'F5 direct title reload failed on '+host);
+              assert.equal(new URL(titleTab.url()).pathname,'/anime/52991');
+              assert.match(await titleTab.locator('h1').innerText(),/Фрирен/);
+              console.log('PASS isolated browser direct URL + F5 on',host);
+            }finally{await isolated.close()}
+          }
+          if(process.env.GITHUB_EVENT_NAME === 'push' && process.env.GITHUB_REF === 'refs/heads/main'){
+            assert.match(seoHtml,/<meta name="twitter:image" content="https:\/\/komianime\.online\/api\/poster\?src=/);
+            assert.match(seoHtml,/<meta property="og:image:alt" content="Постер аниме/);
+            assert.match(seoHtml,/<meta property="og:site_name" content="Komi Anime">/);
+            console.log('PASS production per-anime OpenGraph and Twitter metadata');
+          }
           console.log('PASS public mirror /anime/52991, canonical SEO, noindex and production routing');
           console.log('PASS SEO production: anime detail, JSON-LD, sitemap',indexed,'URLs, robots');
         }

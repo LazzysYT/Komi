@@ -40,6 +40,8 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
      return !!(filters.compareDocumentPosition(catalog) & Node.DOCUMENT_POSITION_FOLLOWING);
    });
    assert.equal(initialOrder,true,'First-paint quick filters must be above static catalog');
+   assert.equal(await page.locator('aside.komi-side-nav').evaluate(el=>getComputedStyle(el).display),
+     'none','Inert fixed sidebar must not cover static links without JavaScript');
    const socials=page.locator('nav[aria-label="Социальные сети Komi Anime"] a');
    assert.equal(await socials.count(),2);
    for(const link of await socials.all())assert.equal(await link.locator('svg path').count(),1);
