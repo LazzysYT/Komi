@@ -8,8 +8,15 @@
 
   const poster = document.getElementById('komiSeoPoster');
   if (poster) {
+    const direct = poster.getAttribute('data-poster-direct') || '';
+    let triedDirect = false;
     const fallback = () => {
       if (poster.getAttribute('src') === '/anime-artwork.svg') return;
+      if (!triedDirect && /^https:\/\//i.test(direct)) {
+        triedDirect = true;
+        poster.src = direct;
+        return;
+      }
       poster.src = '/anime-artwork.svg';
     };
     poster.addEventListener('error', fallback);
