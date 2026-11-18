@@ -1724,6 +1724,12 @@ async function loadDataFromCloud(attempt = 0) {
             const proxied = typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(preferred) : preferred;
             return {preferred:proxied, original:usePreview ? original : '', direct:proxied !== preferred ? preferred : ''};
         }
+        // Shared, URL-sanitized artwork resolver for the home hero and player.
+        // The live site previously referenced animeArtwork without defining it.
+        function animeArtwork(anime) {
+            const source = anime?.banner || anime?.poster;
+            return komiCardPosterSource(source).preferred;
+        }
         function komiCardPosterFallback(img) {
             if (!img) return;
             const direct = String(img.dataset?.posterDirect || '');
