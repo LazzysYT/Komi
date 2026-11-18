@@ -4131,3 +4131,24 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
   }
 }
 
+/* Strict approved ad-free player mode */
+/* Black-and-white, opt-in ad-free source filtering. Source rights are checked server-side. */
+#watchModal .komi-adfree-option{display:flex;align-items:center;gap:10px;flex-wrap:wrap;min-width:0}
+#watchModal .komi-adfree-toggle{font:600 12px/1.3 Inter,sans-serif;letter-spacing:.01em;
+    border:1px solid #686868;border-radius:12px;background:#191919;color:#f4f4f4;
+    padding:10px 13px;min-height:39px;cursor:pointer;transition:background .15s,border-color .15s}
+#watchModal .komi-adfree-toggle:hover,#watchModal .komi-adfree-toggle:focus-visible{background:#303030;border-color:#fff}
+#watchModal .komi-adfree-toggle:focus-visible{outline:2px solid #fff;outline-offset:3px}
+#watchModal .komi-adfree-toggle.is-active{background:#e8e8e8;color:#111;border-color:#fff}
+#watchModal .komi-adfree-caption{font:400 11px/1.45 Inter,sans-serif;color:#bababa;max-width:240px}
+#watchModal .komi-adfree-empty{display:flex;flex-direction:column;justify-content:center;
+    min-height:220px;padding:26px;border:1px dashed #505050;border-radius:16px;
+    background:#111;color:#f6f6f6;text-align:center}
+#watchModal .komi-adfree-empty strong{font:700 17px/1.4 Inter,sans-serif}
+#watchModal .komi-adfree-empty p{margin:8px auto 0;max-width:420px;color:#bcbcbc;font:400 13px/1.6 Inter,sans-serif}
+@media(max-width:620px){#watchModal .komi-adfree-option{width:100%}
+#watchModal .komi-adfree-toggle{width:100%}
+#watchModal .komi-adfree-caption{max-width:100%;text-align:center}}
+@media(prefers-reduced-motion:reduce){#watchModal .komi-adfree-toggle{transition:none}}
+
+
