@@ -16,17 +16,21 @@
     if (poster.complete && poster.naturalWidth === 0) fallback();
   }
 
-  const wantsPlayer = location.hash.toLowerCase() === '#player' ||
-    new URLSearchParams(location.search).get('autoplay') === '1';
-  if (!wantsPlayer) return;
+  function openRequestedPlayer() {
+    const wantsPlayer = location.hash.toLowerCase() === '#player' ||
+      new URLSearchParams(location.search).get('autoplay') === '1';
+    if (!wantsPlayer) return;
 
-  try {
-    sessionStorage.setItem('komi_watch_deeplink_v1', id);
-  } catch {
-    const message = document.getElementById('komiSeoWatchNotice');
-    if (message) message.textContent = 'Не удалось автоматически открыть просмотр. Разрешите хранение данных сайта и повторите попытку.';
-    return;
+    try {
+      sessionStorage.setItem('komi_watch_deeplink_v1', id);
+    } catch {
+      const message = document.getElementById('komiSeoWatchNotice');
+      if (message) message.textContent = 'Не удалось автоматически открыть просмотр. Разрешите хранение данных сайта и повторите попытку.';
+      return;
+    }
+    // A same-tab handoff opens the existing native player without a public /?anime= URL.
+    window.location.replace('/');
   }
-  // A same-tab handoff opens the existing native player without a public /?anime= URL.
-  window.location.replace('/');
+  window.addEventListener('hashchange', openRequestedPlayer);
+  openRequestedPlayer();
 })();
