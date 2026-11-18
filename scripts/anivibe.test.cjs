@@ -62,7 +62,7 @@ test('POST embed is OFF by default even when key exists; no network or key leak'
     await handler({method:'POST',headers:{origin:'https://komianime.online',host:'komianime.online'},body:{shikimoriId:52991,episode:1}},res);
     assert.equal(res.statusCode,403);
     assert.deepEqual(res.body,{error:'partner_embed_not_approved'});
-    assert.doesNotMatch(JSON.stringify(res.body),'unit-test-key');
+    assert.doesNotMatch(JSON.stringify(res.body),/unit-test-key/);
     assert.equal(headers['Cache-Control'],'no-store');
   } finally {
     if(previous===undefined) delete ENV.ANIVIBE_API_KEY; else ENV.ANIVIBE_API_KEY=previous;
