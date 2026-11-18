@@ -1706,6 +1706,64 @@ body > header > .header-inner {
   .header-inner .logo-area .logo-box { width: 31px; height: 31px; }
 }
 </style>
+
+<style>
+/* Keep all existing controls and callbacks, but give each header zone a stable place. */
+body > header > .header-inner {
+ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+ align-items:center; gap:clamp(12px,1.4vw,24px);
+}
+.header-inner .komi-header-left {
+ grid-column:1;grid-row:1;justify-self:start;min-width:0;
+ display:flex;align-items:center;
+}
+.header-inner .komi-header-left .komi-social-links {
+ position:static;inset:auto;transform:none;display:flex;
+ align-items:center;flex-wrap:nowrap;gap:9px;margin:0;
+}
+.header-inner .logo-area {
+ grid-column:2;grid-row:1;justify-self:center;order:initial;
+ white-space:nowrap;
+}
+.header-inner .komi-header-right {
+ grid-column:3;grid-row:1;justify-self:stretch;
+ min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:10px;
+}
+.header-inner .komi-header-right .search-container {
+ grid-column:auto;grid-row:auto;justify-self:auto;
+ width:auto;max-width:none;min-width:135px;flex:1 1 260px;
+}
+.header-inner .komi-header-right .nav-actions {
+ grid-column:auto;grid-row:auto;position:relative;inset:auto;
+ display:flex;align-items:center;flex:0 0 auto;justify-content:flex-end;
+ flex-wrap:nowrap;gap:7px;min-width:0;max-width:100%;
+}
+.header-inner .nav-actions #adminPanelBtn,
+.header-inner .nav-actions #addAnimeBtn {white-space:nowrap;}
+.header-inner .search-container .search-dropdown {z-index:100;}
+@media(max-width:1350px) {
+ body > header > .header-inner {grid-template-columns:auto minmax(0,1fr);gap:10px 16px;}
+ .header-inner .komi-header-left {grid-column:1;grid-row:1;}
+ .header-inner .logo-area {grid-column:2;grid-row:1;justify-self:center;}
+ .header-inner .logo-area .online-counter {display:flex;}
+ .header-inner .komi-header-right {grid-column:1/-1;grid-row:2;}
+ .header-inner .komi-header-right .search-container {flex:1 1 auto;}
+}
+@media(max-width:760px) {
+ .header-inner .logo-area .online-counter {display:none;}
+ .header-inner .komi-header-right {gap:7px;min-width:0;}
+ .header-inner .komi-header-right .nav-actions {flex-wrap:wrap;max-width:45%;}
+ .header-inner .komi-header-right .search-container {min-width:0;}
+ .header-inner .komi-header-left .komi-social-link {width:34px;height:34px;}
+}
+@media(max-width:460px) {
+ .header-inner .logo-area .logo-text {font-size:15px;}
+ .header-inner .logo-area .logo-box {width:32px;height:32px;}
+ .header-inner .komi-header-right {flex-wrap:wrap;}
+ .header-inner .komi-header-right .search-container {flex:1 0 100%;}
+ .header-inner .komi-header-right .nav-actions {max-width:100%;margin-left:auto;}
+}
+</style>
 </head>
 <body>
 
@@ -1721,6 +1779,28 @@ body > header > .header-inner {
                     <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
                 </a>
             </nav>
+
+            </div>
+            <div class="logo-area">
+                <div class="logo-container" data-komi-click="nav-home">
+                    <div class="logo-box">K</div>
+                    <div class="logo-text">Komi Anime</div>
+                </div>
+                <div class="online-counter">
+                    <div class="online-dot"></div>
+                    <span id="onlineCountText" role="status" aria-live="polite">Аккаунтов онлайн: проверяем…</span>
+                </div>
+            </div>
+            
+            <div class="komi-header-right">
+            <div class="search-container">
+                <div class="search-bar">
+                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Поиск аниме или @пользователь (Ctrl K)" data-komi-input="search-input" data-komi-focus="search-focus">
+                    <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
+                </div>
+                <div class="search-dropdown" id="searchDropdown"></div>
+            </div>
             <div class="nav-actions">
                 <button type="button" id="komiMobileMoreToggle" class="komi-mobile-more-toggle"
                         aria-haspopup="true" aria-expanded="false" aria-controls="komiMobileMoreMenu"
@@ -1759,25 +1839,6 @@ body > header > .header-inner {
 
                 <div id="userHeaderArea"></div>
             </div>
-            </div>
-            <div class="logo-area">
-                <div class="logo-container" data-komi-click="nav-home">
-                    <div class="logo-box">K</div>
-                    <div class="logo-text">Komi Anime</div>
-                </div>
-                <div class="online-counter">
-                    <div class="online-dot"></div>
-                    <span id="onlineCountText" role="status" aria-live="polite">Аккаунтов онлайн: проверяем…</span>
-                </div>
-            </div>
-            
-            <div class="search-container">
-                <div class="search-bar">
-                    <svg viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" aria-label="Поиск аниме" placeholder="Поиск аниме или @пользователь (Ctrl K)" data-komi-input="search-input" data-komi-focus="search-focus">
-                    <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
-                </div>
-                <div class="search-dropdown" id="searchDropdown"></div>
             </div>
 
 
