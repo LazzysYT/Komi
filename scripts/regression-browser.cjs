@@ -303,6 +303,32 @@ async function checkNotifications(page) {
    await page.evaluate(()=>{location.hash=''});
    await page.waitForFunction(()=>currentView==='home');
 
+   // Home quick filters should open the existing catalog, not create a second,
+   // inconsistent filtering implementation.
+   await page.evaluate(() => {
+     animeList=[
+       {id:'101',title:'Сериал 2026',poster:'',genres:['Экшен'],year:'2026',type:'Сериал',shikiRating:8.4,episodeCount:2},
+       {id:'102',title:'Фильм 2025',poster:'',genres:['Драма'],year:'2025',type:'Фильм',shikiRating:8.8,episodeCount:1}
+     ];
+     catalogInitialLoadComplete=true;
+     render();
+   });
+   const quick=page.locator('#komiHomeQuickFilters select[data-komi-home-filter]');
+   assert.equal(await quick.count(),4,'Home needs four usable quick filter selectors');
+   for(const [kind,value,expected] of [
+     ['year','2026','catalogFilterYear'],
+     ['genre','Экшен','catalogFilterGenre'],
+     ['type','Фильм','catalogFilterType'],
+     ['sort','rating','catalogSort']
+   ]) {
+     await page.locator('#komiHomeQuickFilter-'+kind).selectOption(value);
+     await page.waitForFunction(()=>currentView==='catalog');
+     assert.equal(await page.evaluate(name=>eval(name),expected),value,'Quick filter '+kind+' must update catalog state');
+     assert.equal(await page.locator('#komiCatalogGrid .anime-card').count()>0,true,'Filtered catalog must still show matching cards');
+     await page.evaluate(()=>navigate('home'));
+     await page.waitForSelector('#komiHomeQuickFilters');
+   }
+
    await page.evaluate(()=>{
     const hostileMetadata = '<img data-komi-injected src=x>';
     animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'https://media.test/poster.jpg',
