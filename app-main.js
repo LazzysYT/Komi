@@ -3310,6 +3310,55 @@ async function loadDataFromCloud(attempt = 0) {
         function setKomiAdFreeOnly(enabled) {
             try { localStorage.setItem(KOMI_ADFREE_ONLY_KEY, String(Boolean(enabled))); } catch {}
         }
+        // Every supported anime can request a *fresh* signed AniVibe iframe on
+        // demand. Never store temporary partner URLs in Supabase or localStorage.
+        // Guest iframe advertising and Russian audio vary by provider/episode:
+        // do not certify this embed as "Без рекламы" without partner evidence.
+        const KOMI_ANIVIBE_LABEL = 'AniVibe · партнёрский';
+        let komiAniVibeFeatureCache = {until:0,promise:null};
+        async function komiAniVibeEnabled() {
+            const now=Date.now();
+            if (komiAniVibeFeatureCache.promise && komiAniVibeFeatureCache.until>now)
+                return komiAniVibeFeatureCache.promise;
+            komiAniVibeFeatureCache={
+                until:now+60000,
+                promise:fetch('/api/anivibe?enabled=1',{
+                    credentials:'same-origin',cache:'no-store',
+                    signal:AbortSignal.timeout(2500)
+                }).then(async r=>r.ok && (await r.json()).embedEnabled===true).catch(()=>false)
+            };
+            return komiAniVibeFeatureCache.promise;
+        }
+        async function komiAniVibeEpisodeSource(shikimoriId, episodeNumber) {
+            if(!Number.isSafeInteger(shikimoriId) || shikimoriId<=0 ||
+               !Number.isSafeInteger(episodeNumber) || episodeNumber<=0 || episodeNumber>1000)
+                return '';
+            if(!await komiAniVibeEnabled()) return '';
+            try {
+                const check=await fetch('/api/anivibe?availability='+shikimoriId,{
+                    credentials:'same-origin',cache:'no-store',
+                    signal:AbortSignal.timeout(4500)
+                });
+                if(!check.ok) return '';
+                const metadata=await check.json();
+                if(metadata.available!==true || metadata.embedEnabled!==true) return '';
+                // Only ask for one short-lived token when the viewer opens a
+                // real episode. The backend checks the origin and token limits.
+                const signed=await fetch('/api/anivibe',{
+                    method:'POST',credentials:'same-origin',cache:'no-store',
+                    headers:{'Content-Type':'application/json'},
+                    body:JSON.stringify({shikimoriId,episode:episodeNumber}),
+                    signal:AbortSignal.timeout(7500)
+                });
+                if(!signed.ok) return '';
+                const body=await signed.json();
+                const source=KomiPlayerCore.source(body.url);
+                if(source.kind!=='embed') return '';
+                const host=new URL(source.url).hostname.toLowerCase();
+                return host==='anivibe.pro' || host.endsWith('.anivibe.pro')
+                    ? source.url : '';
+            } catch { return ''; }
+        }
         function changePlayerSource(animeId, season, epIdx, sourceName) {
             try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
             return openWatchModal(animeId, season, epIdx, sourceName);
@@ -3381,16 +3430,36 @@ async function loadDataFromCloud(attempt = 0) {
             const activeIndex = Number.isInteger(targetIndex) && targetIndex >= 0 && targetIndex < currentSeasonEpisodes.length ? targetIndex : 0;
             const currentEp = currentSeasonEpisodes[activeIndex];
             if (!currentEp) return;
-            const {sources} = currentEp;
+            const sources = {...currentEp.sources};
             const adFreeOnly = komiAdFreeOnly();
             let preferredSource = requestedSource;
             if (preferredSource === null) {
                 try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
             }
+            // Respect an explicit source choice. For everyone else, prefer a
+            // usable partner iframe where a token for this exact episode exists.
+            // Strict ad-free mode NEVER treats an unverified iframe as ad-free.
+            const tryPartner=!adFreeOnly &&
+                (requestedSource===null || requestedSource===KOMI_ANIVIBE_LABEL) &&
+                (!preferredSource || preferredSource===KOMI_ANIVIBE_LABEL);
+            if (tryPartner) {
+                const pending=document.getElementById('watchModalContent');
+                pending.innerHTML='<button class="modal-close" data-komi-onclick="closeWatchModal()" aria-label="Закрыть">×</button>' +
+                    '<p role="status" style="padding:35px">Подбираем доступный плеер для серии…</p>';
+                document.getElementById('watchModal').classList.add('active');
+                const signedUrl=await komiAniVibeEpisodeSource(
+                    Number(anime.shikimoriId || anime.id),
+                    Number(currentEp.number) || activeIndex + 1
+                );
+                if(requestToken!==komiDetailOpenToken ||
+                   !document.getElementById('watchModal').classList.contains('active')) return;
+                if(signedUrl) sources[KOMI_ANIVIBE_LABEL]=signedUrl;
+            }
             const sourcePlan = KomiPlayerCore.selectPlaybackSource(sources, {
                 requestedSource,
                 preferredSource,
-                adFreeOnly
+                adFreeOnly,
+                partnerPreferred: sources[KOMI_ANIVIBE_LABEL] ? KOMI_ANIVIBE_LABEL : null
             });
             const sourceNames = sourcePlan.availableNames.length ? sourcePlan.availableNames : ['Недоступно'];
             const directSources = sourceNames.filter(name => ['video', 'hls'].includes(komiPlayerKind(sources[name])));
