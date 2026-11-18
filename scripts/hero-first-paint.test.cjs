@@ -13,7 +13,7 @@ test('first-paint hero is content-led but keeps readable SEO metadata',()=>{
   assert.match(intro,/<h2>Провожающая в последний путь Фрирен<\/h2>/);
   const links = intro.match(/<div class="komi-seo-spotlight-actions">([\s\S]*?)<\/div>/)?.[1] || '';
   assert.equal((links.match(/<a\b/g) || []).length, 2);
-  assert.match(links,/href="\/\?anime=52991"/);
+  assert.match(links,/href="\/anime\/52991#player"/);
   assert.match(links,/href="\/anime\/52991"/);
   assert.match(intro,/alt="Постер аниме/);
   assert.match(intro,/fetchpriority="high"/);
