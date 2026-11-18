@@ -54,6 +54,11 @@ test('anime SEO handler validates IDs and escapes catalog text',async()=>{
     assert.doesNotMatch(res.body,/<script>alert\(2\)<\/script>/);
     assert.doesNotMatch(res.body,/src="javascript:/);
     assert.match(res.body,/application\/ld\+json/);
+    assert.match(res.body,/href="https:\/\/komianime\.online\/anime\/42#player"/);
+    assert.match(res.body,/src="\/anime-watch-bridge\.js"/);
+    assert.match(res.body,/name="komi-anime-id" content="42"/);
+    assert.doesNotMatch(res.body,/\?anime=42/);
+    assert.match(res.body,/og:image" content="https:\/\/komianime\.online\/anime-artwork\.svg"/);
   }finally{global.fetch=previous;}
 });
 test('dynamic sitemap publishes a valid URL collection with dates',async()=>{
@@ -75,4 +80,12 @@ test('dynamic sitemap publishes a valid URL collection with dates',async()=>{
     assert.match(res.body,/https:\/\/komianime\.online\/anime\/42/);
     assert.match(res.body,/<lastmod>2026-11-11<\/lastmod>/);
   }finally{global.fetch=previous;}
+});
+
+test('non-canonical hosts use noindex header without affecting the primary domain',()=>{
+  const noindex = config.headers.find(rule =>
+    rule.headers?.some(h => h.key.toLowerCase() === 'x-robots-tag'));
+  assert.ok(noindex,'Missing mirror noindex rule');
+  assert.ok(noindex.missing?.some(v => v.type === 'host' && /komianime/.test(v.value)));
+  assert.match(JSON.stringify(noindex.headers),/noindex/);
 });
