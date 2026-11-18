@@ -41,6 +41,26 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(appResponse.status(),200,'Public app-main.js must load after inline script extraction');
           assert.match(appResponse.headers()['content-type']||'',/javascript/i);
           assert.ok((await appResponse.body()).length>100000,'Main app script appears truncated');
+          if (process.env.GITHUB_EVENT_NAME === 'push' && process.env.GITHUB_REF === 'refs/heads/main') {
+            const css=await page.request.get(base+'komi.bundle.css?v=20261118a',{timeout:20000});
+            assert.equal(css.status(),200,'Bundled CSS must be available on production');
+            assert.match(css.headers()['content-type']||'',/text\/css/,'Bundle must be served as CSS');
+            assert.ok((await css.body()).length>200000,'Bundled CSS is missing some source styles');
+            const denied=await page.request.get(
+              base+'api/poster?src='+encodeURIComponent('https://127.0.0.1/private'),
+              {timeout:20000});
+            assert.equal(denied.status(),400,'Poster endpoint must reject arbitrary hosts before fetch');
+            const poster=await page.request.get(
+              base+'api/poster?src='+encodeURIComponent(
+                'https://shikimori.io/uploads/poster/animes/52991/dc841cc9fce2aa1e9907a4b61c5d1d92.jpeg'),
+              {timeout:30000});
+            assert.ok([200,502].includes(poster.status()),'Poster cache route must exist and handle upstream outages');
+            if (poster.status()===200) {
+              assert.match(poster.headers()['content-type']||'',/^image\//);
+              assert.match(poster.headers()['cache-control']||'',/s-maxage=86400/);
+            } else console.warn('Poster upstream unavailable; browser fallback to direct/local remains active');
+            console.log('PASS production combined stylesheet and poster cache validation');
+          }
           // This changes only the in-memory test page. No user account or
           // server data is touched.
           await page.evaluate(()=>{

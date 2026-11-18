@@ -1657,10 +1657,17 @@ async function loadDataFromCloud(attempt = 0) {
             const original = komiSafeUrl(raw) || '/anime-artwork.svg';
             const usePreview = /^https:\/\/shikimori\.(?:one|io)\/system\/animes\/original\/[0-9]+\.jpg(?:\?[0-9]+)?$/i.test(original);
             const preferred = usePreview ? original.replace('/system/animes/original/', '/system/animes/preview/') : original;
-            return {preferred, original:usePreview ? original : ''};
+            const proxied = typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(preferred) : preferred;
+            return {preferred:proxied, original:usePreview ? original : '', direct:proxied !== preferred ? preferred : ''};
         }
         function komiCardPosterFallback(img) {
             if (!img) return;
+            const direct = String(img.dataset?.posterDirect || '');
+            if (direct && !img.dataset.posterTriedDirect && /^https:\/\//i.test(direct)) {
+                img.dataset.posterTriedDirect = '1';
+                img.src = direct;
+                return;
+            }
             const source = String(img.dataset?.posterOriginal || '');
             if (source && !img.dataset.posterTriedOriginal && /^https:\/\//i.test(source)) {
                 img.dataset.posterTriedOriginal = '1';
@@ -1688,6 +1695,7 @@ async function loadDataFromCloud(attempt = 0) {
             const statusMarkup = safeStatus ? '<span class="komi-card-status" title="' + escapeFriendHtml(statusText) + '">' + escapeFriendHtml(statusText) + '</span>' : '';
             const posterSource=komiCardPosterSource(anime.poster || anime.banner);
             const poster=escapeFriendHtml(posterSource.preferred);
+            const posterDirectAttr=posterSource.direct ? ' data-poster-direct="'+escapeFriendHtml(posterSource.direct)+'"' : '';
             const posterOriginalAttr=posterSource.original ? ' data-poster-original="'+escapeFriendHtml(posterSource.original)+'"' : '';
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
@@ -1696,7 +1704,7 @@ async function loadDataFromCloud(attempt = 0) {
                 'data-komi-onclick="playSound();openWatchModal(\''+id+'\')" data-komi-onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+statusMarkup+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
+                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterDirectAttr+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
                 '</div>'+
@@ -1743,7 +1751,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const timeout = setTimeout(() => finish(''), maxWait);
                 image.onload = () => finish(safe);
                 image.onerror = () => finish('');
-                image.src = safe;
+                image.src = typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(safe) : safe;
             });
             komiRoulettePosterCache.set(safe, pending);
             if (komiRoulettePosterCache.size > 80) {

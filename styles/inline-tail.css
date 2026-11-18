@@ -1,0 +1,172 @@
+/* Original inline style block 8; order preserved. */
+
+/* Visible before JavaScript initializes, also reused during a slow catalog request. */
+.komi-static-catalog { width: 100%; }
+.komi-static-catalog .section-header { margin-bottom: 18px; }
+.komi-catalog-skeleton-card {
+    aspect-ratio: 2 / 3;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: linear-gradient(105deg,#161616 20%,#252525 44%,#161616 68%);
+    background-size: 220% 100%;
+    animation: komiCatalogPulse 1.8s ease-in-out infinite;
+}
+.komi-catalog-skeleton-label { margin-top: 16px; color: var(--text-muted); font-size: 13px; }
+@keyframes komiCatalogPulse { from {background-position:100% 0} to {background-position:-100% 0} }
+@media(prefers-reduced-motion:reduce) { .komi-catalog-skeleton-card {animation:none;} }
+
+
+/* Original inline style block 9; order preserved. */
+
+.komi-static-catalog .komi-seo-card{color:inherit;text-decoration:none}
+.komi-static-catalog .komi-seo-card ~ .komi-catalog-skeleton-card{display:none}
+.komi-static-catalog:has(.komi-seo-card) .komi-catalog-skeleton-label{display:none}
+.komi-static-catalog,.komi-static-shop{scroll-margin-top:92px}
+.komi-static-shop{margin-top:28px;padding:24px;border:1px solid var(--border);border-radius:18px;background:var(--bg-card)}
+.komi-static-shop h2{font-size:20px;line-height:1.4;margin:0 0 10px}
+.komi-static-shop p{color:var(--text-muted);line-height:1.6}
+
+
+/* Original inline style block 10; order preserved. */
+
+/* Header layout fix: social links and privileged actions share one in-flow group,
+   never independently layer over one another. */
+body > header > .header-inner {
+  grid-template-columns: minmax(0,1fr) auto minmax(0,1fr);
+  align-items: center;
+}
+.header-inner .komi-header-left {
+  grid-column: 1;
+  grid-row: 1;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  min-width: 0;
+  justify-self: start;
+}
+.header-inner .komi-header-left .komi-social-links {
+  position: static;
+  left: auto;
+  top: auto;
+  transform: none;
+  grid-column: auto;
+  flex: 0 0 auto;
+  margin: 0;
+}
+.header-inner .komi-header-left .nav-actions {
+  position: relative;
+  grid-column: auto;
+  grid-row: auto;
+  justify-self: auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 7px;
+  min-width: 0;
+  max-width: 100%;
+}
+.header-inner .komi-header-left #adminPanelBtn,
+.header-inner .komi-header-left #addAnimeBtn {
+  white-space: nowrap;
+  border-radius: 13px;
+  min-height: 39px;
+}
+@media (max-width: 1100px) {
+  .header-inner .logo-area .online-counter { display: none; }
+}
+@media (max-width: 800px) {
+  body > header > .header-inner {
+    grid-template-columns: minmax(0,1fr) auto;
+    gap: 10px;
+  }
+  .header-inner .komi-header-left { grid-column: 1; grid-row: 1; }
+  .header-inner .logo-area {
+    grid-column: 2;
+    grid-row: 1;
+    justify-self: end;
+  }
+  .header-inner .search-container {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: stretch;
+    width: 100%;
+    max-width: none;
+  }
+}
+@media (max-width: 767px) {
+  .header-inner .komi-header-left #komiMobileMoreToggle {
+    position: static;
+    top: auto;
+    right: auto;
+  }
+}
+@media (max-width: 460px) {
+  .header-inner .komi-header-left { align-items: flex-start; gap: 6px; }
+  .header-inner .komi-header-left .nav-actions { gap: 5px; }
+  .header-inner .komi-header-left #adminPanelBtn,
+  .header-inner .komi-header-left #addAnimeBtn { min-height: 35px; padding: 6px 8px; font-size: 11px; }
+  .header-inner .logo-area .logo-text { font-size: 15px; }
+  .header-inner .logo-area .logo-box { width: 31px; height: 31px; }
+}
+
+
+/* Original inline style block 11; order preserved. */
+
+/* Keep all existing controls and callbacks, but give each header zone a stable place. */
+body > header > .header-inner {
+ display:grid; grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);
+ align-items:center; gap:clamp(12px,1.4vw,24px);
+}
+.header-inner .komi-header-left {
+ grid-column:1;grid-row:1;justify-self:start;min-width:0;
+ display:flex;align-items:center;
+}
+.header-inner .komi-header-left .komi-social-links {
+ position:static;inset:auto;transform:none;display:flex;
+ align-items:center;flex-wrap:nowrap;gap:9px;margin:0;
+}
+.header-inner .logo-area {
+ grid-column:2;grid-row:1;justify-self:center;order:initial;
+ white-space:nowrap;
+}
+.header-inner .komi-header-right {
+ grid-column:3;grid-row:1;justify-self:stretch;
+ min-width:0;display:flex;align-items:center;justify-content:flex-end;gap:10px;
+}
+.header-inner .komi-header-right .search-container {
+ grid-column:auto;grid-row:auto;justify-self:auto;
+ width:auto;max-width:none;min-width:135px;flex:1 1 260px;
+}
+.header-inner .komi-header-right .nav-actions {
+ grid-column:auto;grid-row:auto;position:relative;inset:auto;
+ display:flex;align-items:center;flex:0 0 auto;justify-content:flex-end;
+ flex-wrap:nowrap;gap:7px;min-width:0;max-width:100%;
+}
+.header-inner .nav-actions #adminPanelBtn,
+.header-inner .nav-actions #addAnimeBtn {white-space:nowrap;}
+.header-inner .search-container .search-dropdown {z-index:100;}
+@media(max-width:1350px) {
+ body > header > .header-inner {grid-template-columns:auto minmax(0,1fr);gap:10px 16px;}
+ .header-inner .komi-header-left {grid-column:1;grid-row:1;}
+ .header-inner .logo-area {grid-column:2;grid-row:1;justify-self:center;}
+ .header-inner .logo-area .online-counter {display:flex;}
+ .header-inner .komi-header-right {grid-column:1/-1;grid-row:2;}
+ .header-inner .komi-header-right .search-container {flex:1 1 auto;}
+}
+@media(max-width:760px) {
+ .header-inner .logo-area .online-counter {display:none;}
+ .header-inner .komi-header-right {gap:7px;min-width:0;}
+ .header-inner .komi-header-right .nav-actions {flex-wrap:wrap;max-width:45%;}
+ .header-inner .komi-header-right .search-container {min-width:0;}
+ .header-inner .komi-header-left .komi-social-link {width:34px;height:34px;}
+}
+@media(max-width:460px) {
+ .header-inner .logo-area .logo-text {font-size:15px;}
+ .header-inner .logo-area .logo-box {width:32px;height:32px;}
+ .header-inner .komi-header-right {flex-wrap:wrap;}
+ .header-inner .komi-header-right .search-container {flex:1 0 100%;}
+ .header-inner .komi-header-right .nav-actions {max-width:100%;margin-left:auto;}
+}
+
