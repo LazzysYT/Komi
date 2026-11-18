@@ -29,7 +29,7 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    assert.deepEqual(placeholders.map(row=>row.placeholder),['Все жанры','Все годы','Все типы','Сортировка']);
    assert.deepEqual(placeholders.map(row=>row.label),['Жанр','Год','Тип','Сортировка']);
    assert.ok(placeholders.every(row=>row.visible),'Filter labels must be visually present before JS');
-   assert.equal(await page.locator('#komiHomeQuickFilters .section-see-all').getAttribute('href'),' /#catalog'.trim());
+   assert.equal(await page.locator('#komiHomeQuickFilters .section-see-all').getAttribute('href'),'/#catalog');
    assert.equal(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
      '20261118-static-quick-filters');
    const initialOrder=await page.evaluate(() => {
