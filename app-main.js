@@ -2566,6 +2566,7 @@ async function loadDataFromCloud(attempt = 0) {
                 regDate: profile.created_at ? new Date(profile.created_at).toLocaleDateString('ru-RU') : ''
             };
         }
+        let komiSessionRetryCount = 0;
         async function restoreGoogleSession() {
             if (!_supabase) return;
             try {
@@ -2602,6 +2603,8 @@ async function loadDataFromCloud(attempt = 0) {
                 // Verified Supabase sessions take precedence; legacy browser data is retained.
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
                 updateNotificationsUI();
+                // Show the restored account immediately. Profile/list network reads may be slow.
+                renderHeaderUser();
                 requireServerAdmin(true).catch(e => console.warn('Admin role restore:',e.message));
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
@@ -2650,6 +2653,12 @@ async function loadDataFromCloud(attempt = 0) {
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
+                // A transient auth/network error must not require a manual login.
+                // Retry once; the 'online' listener handles longer disconnections.
+                if (komiSessionRetryCount < 1 && navigator.onLine !== false) {
+                    komiSessionRetryCount++;
+                    setTimeout(() => queueKomiSessionRestore(), 2500);
+                }
             }
         }
         // Keep async profile loads in order when OAuth and initial-session events overlap.
