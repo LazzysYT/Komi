@@ -3297,6 +3297,14 @@ async function loadDataFromCloud(attempt = 0) {
             document.getElementById('watchModalContent').replaceChildren();
         }
 
+        const KOMI_ADFREE_ONLY_KEY = 'komi_adfree_only_v1';
+        function komiAdFreeOnly() {
+            try { return localStorage.getItem(KOMI_ADFREE_ONLY_KEY) === 'true'; }
+            catch { return false; }
+        }
+        function setKomiAdFreeOnly(enabled) {
+            try { localStorage.setItem(KOMI_ADFREE_ONLY_KEY, String(Boolean(enabled))); } catch {}
+        }
         function changePlayerSource(animeId, season, epIdx, sourceName) {
             try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
             return openWatchModal(animeId, season, epIdx, sourceName);
@@ -3369,17 +3377,20 @@ async function loadDataFromCloud(attempt = 0) {
             const currentEp = currentSeasonEpisodes[activeIndex];
             if (!currentEp) return;
             const {sources} = currentEp;
-            const sourceNames = Object.keys(sources);
-            if (!sourceNames.length) sourceNames.push('Недоступно');
+            const adFreeOnly = komiAdFreeOnly();
             let preferredSource = requestedSource;
             if (preferredSource === null) {
                 try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
             }
+            const sourcePlan = KomiPlayerCore.selectPlaybackSource(sources, {
+                requestedSource,
+                preferredSource,
+                adFreeOnly
+            });
+            const sourceNames = sourcePlan.availableNames.length ? sourcePlan.availableNames : ['Недоступно'];
             const directSources = sourceNames.filter(name => ['video', 'hls'].includes(komiPlayerKind(sources[name])));
-            const canUsePreferred = sourceNames.includes(preferredSource) &&
-                (requestedSource !== null || directSources.includes(preferredSource) || !directSources.length);
-            activePlayerSource = canUsePreferred ? preferredSource : (directSources[0] || sourceNames[0]);
-            const activeUrl = sources[activePlayerSource] || '';
+            activePlayerSource = sourcePlan.name || 'Недоступно';
+            const activeUrl = sourcePlan.url;
             const selectedSource = activePlayerSource;
             const sourceOrigin = currentEp.origins[selectedSource] || {index:currentEp.originalIdx, name:selectedSource};
             const activeOrigin = activeUrl ? new URL(activeUrl).origin : '';
@@ -3393,8 +3404,11 @@ async function loadDataFromCloud(attempt = 0) {
             const previousProgress = getKomiProgress(anime.id);
             const resuming = previousProgress?.season === activeSeason && currentEp.slots.includes(previousProgress.index);
             const progressIndex = resuming ? previousProgress.index : currentEp.slots[0];
-            saveKomiEpisode(String(anime.id),activeSeason,progressIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
-            const playerHtml = komiPlayerHtml(activeUrl);
+            // Selecting a blocked ad-supported source is not a watch event.
+            if (activeUrl) saveKomiEpisode(String(anime.id),activeSeason,progressIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
+            const playerHtml = sourcePlan.strictBlocked
+                ? '<div class="komi-adfree-empty" role="status"><strong>Безрекламный источник пока недоступен</strong><p>Для этой серии нет проверенного прямого потока. Обычные плееры останутся доступны, если выключить режим.</p></div>'
+                : komiPlayerHtml(activeUrl);
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
             const displayNumber = Number(currentEp.number) || activeIndex + 1;
@@ -3445,6 +3459,12 @@ async function loadDataFromCloud(attempt = 0) {
                                     <select id="komiWatchSourceSelect" data-komi-onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
                                         ${sourceNames.map(name => '<option value="' + escapeFriendHtml(name) + '" ' + (name === activePlayerSource ? 'selected' : '') + '>' + escapeFriendHtml(name) + '</option>').join('')}
                                     </select>
+                                </div>
+                                <div class="komi-adfree-option">
+                                    <button type="button" id="komiAdFreeOnlyToggle" class="komi-adfree-toggle ${adFreeOnly ? 'is-active' : ''}" aria-pressed="${adFreeOnly}" title="В строгом режиме включаются только одобренные прямые источники">
+                                        ${adFreeOnly ? '✓ Только без рекламы' : '◇ Только без рекламы'}
+                                    </button>
+                                    <span class="komi-adfree-caption" role="status">${sourcePlan.approvedCount > 0 ? 'Для этой серии есть одобренный прямой поток' : 'Проверенного источника без рекламы пока нет'}</span>
                                 </div>
                             </div>
                             ${activeUrl ? `
@@ -3499,6 +3519,10 @@ async function loadDataFromCloud(attempt = 0) {
                 search.value = '';
                 komiFindEpisode('');
                 search.focus();
+            });
+            document.getElementById('komiAdFreeOnlyToggle')?.addEventListener('click', () => {
+                setKomiAdFreeOnly(!adFreeOnly);
+                openWatchModal(anime.id, activeSeason, activeIndex);
             });
             document.getElementById('komiRetryPlayer')?.addEventListener('click', () =>
                 openWatchModal(anime.id, activeSeason, activeIndex, selectedSource));
