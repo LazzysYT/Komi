@@ -1,5 +1,6 @@
 let partyRoom;
 let partyTimer;
+let partyVisibilityListener = null;
 let partyGeneration = 0;
 let partyWrites = Promise.resolve();
 let partyHeartbeat = 0;
@@ -189,6 +190,10 @@ async function enterParty(room) {
     const generation = partyGeneration;
     const isActive = () => partyGeneration === generation && partyRoom?.id === room.id;
     clearTimeout(partyTimer);
+    if (partyVisibilityListener) {
+        document.removeEventListener('visibilitychange', partyVisibilityListener);
+        partyVisibilityListener = null;
+    }
     partyRoom = room;
     partyHeartbeat = 0;
     closeWatchModal();
@@ -341,7 +346,10 @@ async function enterParty(room) {
         if (host || video.readyState < 1) return;
         const elapsed = state.playing ? Math.max(0, Date.parse(state.server_now) - Date.parse(state.changed_at) + performance.now() - sampleAt) / 1000 : 0;
         const desired = Math.min(video.duration || Infinity, Number(state.position) + elapsed);
-        if (Math.abs(video.currentTime - desired) > (state.playing ? 0.7 : 0.12)) video.currentTime = desired;
+        // Ignore network jitter during playback; correct only meaningful drift.
+        // Paused rooms use a slightly tighter bound for repeatable seeks.
+        if (Number.isFinite(desired) && Math.abs(video.currentTime - desired) > (state.playing ? 1.75 : 0.5))
+            video.currentTime = desired;
         if (!state.playing) {
             video.pause();
             unlock.hidden = true;
@@ -491,12 +499,24 @@ async function enterParty(room) {
         unlock.onclick = () => { if (isActive()) applyState(partyRoom); };
     }
     applyState(room);
+    // Background tabs are throttled by browsers: refetch the authoritative room
+    // immediately when the viewer returns, instead of waiting for the next timer.
+    partyVisibilityListener = () => {
+        if (document.hidden || !isActive() || sampling) return;
+        clearTimeout(partyTimer);
+        void poll();
+    };
+    document.addEventListener('visibilitychange', partyVisibilityListener);
     poll();
 }
 
 function leaveWatchPartyRoom() {
     ++partyGeneration;
     clearTimeout(partyTimer);
+    if (partyVisibilityListener) {
+        document.removeEventListener('visibilitychange', partyVisibilityListener);
+        partyVisibilityListener = null;
+    }
     const room = partyRoom;
     const embed = document.getElementById('partyEmbedElement');
     if (embed) embed.removeAttribute('src');
