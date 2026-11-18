@@ -1300,6 +1300,7 @@ async function loadDataFromCloud(attempt = 0) {
                             <div class="komi-profile-actions">
                                 ${isMe ? '<button class="komi-profile-action" data-komi-onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
                                 ${isMe ? '<button type="button" class="komi-profile-action" data-komi-onclick="openAniCoinShop()">Кошелёк AniCoin</button>' : ''}
+                                ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти из аккаунта</button>' : ''}
                             </div>
 
                             ${isMe ? `
@@ -3767,3 +3768,4 @@ async function loadDataFromCloud(attempt = 0) {
         window.addEventListener('pageshow', event => {
             if (event.persisted) queueKomiSessionRestore();
         });
+        window.addEventListener('online', () => { if (_supabase) queueKomiSessionRestore(); });
