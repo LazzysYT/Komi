@@ -283,3 +283,9 @@ body > header > .header-inner > .komi-header-left {
     flex-basis:33px!important;width:33px!important;height:33px!important;
   }
 }
+
+/* The count is visible only when the live RPC returns a positive integer. */
+body > header .header-inner .logo-area .online-counter[hidden] { display:none!important; }
+/* Consistent titles and private viewing status in catalog cards. */
+.anime-card .anime-title { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; min-height:2.6em; }
+.anime-card .komi-card-status { position:absolute; top:8px; right:8px; z-index:2; max-width:calc(100% - 76px); padding:5px 8px; border:1px solid #5a5a5a; border-radius:9px; background:rgba(12,12,12,.93); color:#fafafa; font:650 10px/1.25 Inter,sans-serif; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; pointer-events:none; }
