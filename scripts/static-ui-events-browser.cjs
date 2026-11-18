@@ -28,6 +28,23 @@ const csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').v
   assert.equal(await page.evaluate(()=>currentView),'catalog');
   await page.locator('#sideHomeBtn').click();
   assert.equal(await page.evaluate(()=>currentView),'home');
+  // Simulate clicking the server-delivered first-paint link before Home Discovery
+  // replaces it; JS navigation should open full controls, not just scroll a hash.
+  await page.evaluate(() => {
+    const fixture=document.createElement('div');
+    fixture.id='komiStaticQuickFilterLinkFixture';
+    fixture.innerHTML='<a href="/#catalog" data-komi-click="home-quick-filters-all">Все фильтры</a>';
+    document.body.append(fixture);
+  });
+  await page.locator('#komiStaticQuickFilterLinkFixture a').click();
+  assert.equal(await page.evaluate(()=>currentView),'catalog',
+    'Static first-paint all-filters action must open the interactive catalog');
+  assert.equal(new URL(page.url()).hash,'#catalog');
+  const catalogSearch=await page.locator('#komiCatalogSearchInput').count();
+  if(catalogSearch) assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput');
+  await page.evaluate(()=>document.getElementById('komiStaticQuickFilterLinkFixture').remove());
+  await page.locator('#sideHomeBtn').click();
+  assert.equal(await page.evaluate(()=>currentView),'home');
   await page.locator('#sideFriendsBtn').click();
   assert.equal(await page.locator('#komiFriendsDrawer').evaluate(el=>el.classList.contains('open')),true);
   await page.locator('#komiFriendsMyTab').click();
