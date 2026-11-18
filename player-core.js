@@ -66,6 +66,41 @@
         }
         return merged;
     }
+    // The licensed partner bot is the only intended producer of this label.
+    // Never infer "ad-free" from an arbitrary direct MP4/HLS link.
+    function verifiedAdFree(name, raw) {
+        const item = source(raw);
+        return typeof name === 'string' && name.startsWith('Без рекламы · ') &&
+            ['video', 'hls'].includes(item.kind);
+    }
+    function selectPlaybackSource(sources, options = {}) {
+        const entries = Object.entries(sources && typeof sources === 'object' ? sources : {})
+            .map(([name, raw]) => ({name, ...source(raw)}))
+            .filter(item => item.url);
+        const approved = entries.filter(item => verifiedAdFree(item.name, item.url));
+        const eligible = options.adFreeOnly ? approved : entries;
+        let chosen;
+        // A conscious source choice wins when the strict filter allows it.
+        if (options.requestedSource != null) {
+            chosen = eligible.find(item => item.name === options.requestedSource);
+        }
+        // Otherwise always prefer a licensed ad-free option, even over a
+        // previously saved external iframe or non-approved direct file.
+        if (!chosen && approved.length) chosen = approved[0];
+        if (!chosen && options.preferredSource != null) {
+            chosen = eligible.find(item => item.name === options.preferredSource &&
+                (['video','hls'].includes(item.kind) ||
+                 !eligible.some(other => ['video','hls'].includes(other.kind))));
+        }
+        if (!chosen) chosen = eligible.find(item => ['video','hls'].includes(item.kind)) || eligible[0];
+        return {
+            name: chosen?.name || '',
+            url: chosen?.url || '',
+            availableNames: eligible.map(item => item.name),
+            approvedCount: approved.length,
+            strictBlocked: Boolean(options.adFreeOnly && !approved.length)
+        };
+    }
     function createWriter(write, onError = () => {}) {
         const entries = new Map();
         return {
@@ -87,7 +122,7 @@
             flush() { return Promise.all([...entries.values()].map(entry => entry.promise)); }
         };
     }
-    const api = {source, finite, episodeSeason, seasonEpisodes, createWriter};
+    const api = {source, finite, episodeSeason, seasonEpisodes, verifiedAdFree, selectPlaybackSource, createWriter};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerCore = api;
 })(globalThis);
