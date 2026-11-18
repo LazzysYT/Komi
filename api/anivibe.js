@@ -161,6 +161,11 @@ function send(res,status,body) {
 async function handler(req,res) {
   const key=credential(process.env.ANIVIBE_API_KEY);
   if(req.method === 'GET') {
+    // Cheap feature probe: do not call the partner profile endpoint on every
+    // episode switch and never expose the secret or frame URL.
+    if(String(req.query?.enabled || '') === '1')
+      return send(res,200,{service:'anivibe',
+        embedEnabled:!!key && process.env.ANIVIBE_PARTNER_EMBED_ENABLED === 'true'});
     if(String(req.query?.check || '') === '1') {
       if (!key) return send(res,503,{service:'anivibe',connection:'not_configured',embedEnabled:false});
       try {
@@ -185,13 +190,15 @@ async function handler(req,res) {
     const now=Date.now();
     const cached=availabilityCache.get(id);
     if(cached && cached.until>now)
-      return send(res,200,{service:'anivibe',shikimoriId:id,...cached.summary});
+      return send(res,200,{service:'anivibe',shikimoriId:id,...cached.summary,
+        embedEnabled:process.env.ANIVIBE_PARTNER_EMBED_ENABLED === 'true'});
     if(!limitRequest(req)) return send(res,429,{error:'rate_limited'});
     try {
       const summary=await checkAvailability(id,key);
       if(availabilityCache.size>=MAX_AVAILABILITY_CACHE) availabilityCache.clear();
       availabilityCache.set(id,{until:now+AVAILABILITY_TTL_MS,summary});
-      return send(res,200,{service:'anivibe',shikimoriId:id,...summary});
+      return send(res,200,{service:'anivibe',shikimoriId:id,...summary,
+        embedEnabled:process.env.ANIVIBE_PARTNER_EMBED_ENABLED === 'true'});
     } catch {
       return send(res,502,{error:'partner_unreachable'});
     }
