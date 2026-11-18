@@ -36,7 +36,9 @@ const csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').v
     fixture.innerHTML='<a href="/#catalog" data-komi-click="home-quick-filters-all">Все фильтры</a>';
     document.body.append(fixture);
   });
-  await page.locator('#komiStaticQuickFilterLinkFixture a').click();
+  // Activate the delegated event directly: the synthetic body fixture may
+  // sit beneath the fixed sidebar, unlike the actual homepage control.
+  await page.evaluate(()=>document.querySelector('#komiStaticQuickFilterLinkFixture a').click());
   assert.equal(await page.evaluate(()=>currentView),'catalog',
     'Static first-paint all-filters action must open the interactive catalog');
   assert.equal(new URL(page.url()).hash,'#catalog');
