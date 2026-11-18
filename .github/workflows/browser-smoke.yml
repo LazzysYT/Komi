@@ -39,6 +39,7 @@ jobs:
         env:
           KOMI_TEST_URL: http://127.0.0.1:8765
         run: |
+          node scripts/build-css.cjs --check
           node scripts/check-syntax.cjs
           node --check scripts/auth-isolation-e2e.cjs
           node --test scripts/*.test.cjs
