@@ -38,6 +38,8 @@ function fixture({previous={authUserId:'uid-a',username:'google_user_a'},
   // Production declares this counter directly before restoreGoogleSession().
   // This VM harness evaluates only the extracted function, so supply it.
   komiSessionRetryCount:0,
+  // The real browser provides navigator; the isolated VM needs a minimal stub.
+  navigator:{onLine:true},
   clearKomiAccountData(user){
    calls.push(['clear',user.authUserId,user.username]);
    delete ctx.userAnimeStatuses[user.username];
