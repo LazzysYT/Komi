@@ -6,6 +6,7 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
  const browser=await chromium.launch({headless:true,...(process.env.KOMI_CHROME?{executablePath:process.env.KOMI_CHROME}:{})});
  let state={id:'test-room',host:'host',anime_id:'1',name:'Тест комнаты',episode:0,source:'Direct',position:0,playing:false,messages:[],changed_at:new Date().toISOString()};
  let roomCreates=0;
+ let viewerReads=0;
  const pages=[];
  try {
   for(const owner of ['host','viewer']) {
@@ -13,6 +14,7 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    await page.exposeFunction('testPartyRpc',async(action,args)=>{
     if(action==='list') return [];
+    if(action==='read' && owner==='viewer') viewerReads++;
     if(action==='create') {
      roomCreates++;
      Object.assign(state,{name:args.name,anime_id:args.animeId,episode:args.episode,source:args.source,position:0,playing:false});
@@ -109,6 +111,17 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   });
   await pages[1].waitForFunction(()=>document.getElementById('partyVideoElement').paused,{timeout:10000});
   assert.equal(state.playing,false,'Host pause state must reach server');
+  // A backgrounded guest should catch up as soon as the tab becomes visible.
+  // Use a real visibilitychange listener, not a synthetic room RPC.
+  await pages[1].waitForTimeout(250);
+  const readsBeforeResume=viewerReads;
+  await pages[1].evaluate(()=>{
+    Object.defineProperty(document,'hidden',{configurable:true,value:false});
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await pages[1].waitForTimeout(200);
+  assert.ok(viewerReads>readsBeforeResume,
+    'Resuming a background room must immediately request fresh server state');
   // Both sides can send chat messages, but untrusted text must stay inert.
   await pages[0].locator('#partyChat input').fill('Сообщение ведущего');
   await pages[0].locator('#partyChat button').click();
@@ -129,6 +142,11 @@ const output=path.join(__dirname,'../browser-test-results');fs.mkdirSync(output,
   await pages[1].waitForFunction(()=>document.getElementById('partyEmbedElement').getAttribute('src')===null);
   for(const page of pages) assert.equal(await page.locator('#partySyncMode').getAttribute('data-mode'),'full');
   for(const page of pages) await page.evaluate(()=>leaveWatchPartyRoom());
+  const readsAfterLeave=viewerReads;
+  await pages[1].evaluate(()=>document.dispatchEvent(new Event('visibilitychange')));
+  await pages[1].waitForTimeout(180);
+  assert.equal(viewerReads,readsAfterLeave,
+    'Foreground listener must be removed when the participant leaves');
   // Browsers can dispatch a valid submit event without a submitter (for example,
   // Enter or requestSubmit). A duplicate event while the create RPC is pending
   // must not create a second room.
