@@ -17,6 +17,18 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    assert.equal(await page.locator('main#mainContainer .komi-catalog-skeleton-label').count(),0);
    assert.equal(await page.locator('main#mainContainer section#catalog').count(),1);
    assert.equal(await page.locator('main#mainContainer section#shop').count(),1);
+   const quickFilters=page.locator('main#mainContainer #komiHomeQuickFilters select[data-komi-home-filter]');
+   assert.equal(await quickFilters.count(),4,'Quick filters should be in server-delivered HTML before JS');
+   assert.deepEqual(await quickFilters.evaluateAll(elements=>elements.map(el=>el.dataset.komiHomeFilter)),
+     ['genre','year','type','sort']);
+   assert.equal(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
+     '20261118-static-quick-filters');
+   const initialOrder=await page.evaluate(() => {
+     const filters=document.getElementById('komiHomeQuickFilters');
+     const catalog=document.getElementById('catalog');
+     return !!(filters.compareDocumentPosition(catalog) & Node.DOCUMENT_POSITION_FOLLOWING);
+   });
+   assert.equal(initialOrder,true,'First-paint quick filters must be above static catalog');
    const socials=page.locator('nav[aria-label="Социальные сети Komi Anime"] a');
    assert.equal(await socials.count(),2);
    for(const link of await socials.all())assert.equal(await link.locator('svg path').count(),1);
