@@ -21,3 +21,12 @@ Verified 18 November 2026: \`ANIVIBE_API_KEY\` exists as a **sensitive Productio
 6. Set \`ANIVIBE_PARTNER_EMBED_ENABLED=true\` only after separate security/rate-limit review and production smoke tests.
 
 AniVibe has publicly stated that signed-in users receive ad-free playback **except Kodik**, while some public anime pages still show «Реклама перед серией». That is not a guarantee that anonymous partner embeds are ad-free.
+
+
+## Availability diagnostic (read-only)
+
+- \`GET /api/anivibe?availability=52991\` looks up the AniVibe episodes metadata using the server-only API key, returning the episode count and the count with **explicitly tagged Russian audio** when that metadata is present. It does **not** create tokens, inspect or fetch video streams, or claim ad-free playback.
+- Accepts only numeric Shikimori IDs; bounded to 1,500 episode rows in the structural inspector, per-IP best-effort rate limiting and a short per-instance cache.
+- \`russianAudio: "unconfirmed"\` means no unambiguous audio-language evidence was found; it **does not** prove Russian audio is absent. Studio names and Russian subtitles are not enough.
+- \`adFreeConfirmed\` remains false even when a title has Russian audio metadata. The partner says guest players can show pre-roll ads; the iframe cannot be certified until guest playback/partner terms are verified.
+- Never bulk-run the 8,163-title catalog against the user-facing API. Use bounded metadata checks and provider agreement for large-scale sync.

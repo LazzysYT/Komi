@@ -69,3 +69,48 @@ test('POST embed is OFF by default even when key exists; no network or key leak'
     if(prevEnabled===undefined) delete ENV.ANIVIBE_PARTNER_EMBED_ENABLED; else ENV.ANIVIBE_PARTNER_EMBED_ENABLED=prevEnabled;
   }
 });
+
+test('ad-free can never be confirmed from partner metadata alone',()=>{
+  const {summarizeAvailability}=handler.internals;
+  assert.deepEqual(summarizeAvailability(404,null),{
+    available:false,episodeCount:0,russianAudioEpisodes:0,
+    russianAudio:'unconfirmed',adFreeConfirmed:false
+  });
+  assert.deepEqual(summarizeAvailability(200,{data:{message:'ok'}}),{
+    available:null,episodeCount:null,russianAudioEpisodes:0,
+    russianAudio:'unconfirmed',adFreeConfirmed:false
+  });
+});
+test('only explicit Russian audio language evidence is counted; subtitles do not qualify',()=>{
+  const {summarizeAvailability}=handler.internals;
+  const summary=summarizeAvailability(200,{data:{episodes:[
+    {episode:1,audio:[{language:'ru-RU',type:'dub'}]},
+    {episode:2,subtitles:[{language:'ru'}],audio:[{language:'ja'}]},
+    {episode:3,dubs:[{language:'russian'}]},
+    {episode:4,dubs:[{studio:'AniDUB'}]},
+    {episode:5,voiceovers:[{language:'english'}]}
+  ]}});
+  assert.equal(summary.available,true);
+  assert.equal(summary.episodeCount,5);
+  assert.equal(summary.russianAudioEpisodes,2);
+  assert.equal(summary.russianAudio,'metadata_evidence');
+  assert.equal(summary.adFreeConfirmed,false);
+});
+test('API checkAvailability only reads episode metadata; never fetches embed tokens',async()=>{
+  const {checkAvailability}=handler.internals;
+  const fetched=[];
+  const result=await checkAvailability(52991,'unit-test-key',async(url,options)=>{
+    fetched.push({url,method:options.method});
+    return {ok:true,status:200,headers:{get:()=>null},text:async()=>JSON.stringify({data:{episodes:[{number:1}]}})};
+  });
+  assert.deepEqual(fetched,[{url:'https://anivibe.pro/api/v1/anime/52991/episodes',method:'GET'}]);
+  assert.equal(result.episodeCount,1);
+  assert.equal(result.russianAudio,'unconfirmed');
+});
+test('GET availability rejects arbitrary IDs; production embed remains off',async()=>{
+  const headers={};
+  const res={setHeader(k,v){headers[k]=v},end(payload){this.body=JSON.parse(payload)}};
+  await handler({method:'GET',query:{availability:'1e3'},headers:{}},res);
+  assert.equal(res.statusCode,404);
+  assert.equal(res.body.error,'not_found');
+});

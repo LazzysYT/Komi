@@ -12,6 +12,57 @@ const MAX_JSON = 128 * 1024;
 const HEALTH_TTL_MS = 5 * 60_000;
 const healthCache = {until:0,value:null};
 const recentIpRequests = new Map();
+const availabilityCache = new Map();
+const AVAILABILITY_TTL_MS = 15 * 60_000;
+const MAX_AVAILABILITY_CACHE = 64;
+
+// Prefer explicit Russian AUDIO metadata; subtitles and studio brand names
+// alone do not prove that a Russian audio track exists.
+function russianAudioLanguage(value) {
+  return typeof value === 'string' && /^(?:ru|ru-ru|russian|русск(?:ий|ая|ое))(?:\s|$)/i.test(value.trim());
+}
+function explicitRussianAudio(track, depth=0) {
+  if (!track || typeof track !== 'object' || depth > 4) return false;
+  if (Array.isArray(track)) return track.some(item=>explicitRussianAudio(item,depth+1));
+  if (['language','lang','audio_language','audioLanguage','dub_language','dubLanguage','locale']
+    .some(key=>russianAudioLanguage(track[key]))) return true;
+  return Object.entries(track).some(([key,value])=>
+    /^(?:audio|audios|dubs|dub|voice|voices|voiceover|voiceovers|tracks|translations)$/i.test(key)
+    && explicitRussianAudio(value,depth+1));
+}
+function episodeRows(payload) {
+  const obj=payload && typeof payload==='object' ? payload : {};
+  const data=obj.data && typeof obj.data==='object' ? obj.data : obj;
+  const collections=[data.episodes,data.items,data.results,obj.episodes,obj.items,obj.results,data,obj];
+  return collections.find(Array.isArray) || null;
+}
+function summarizeAvailability(status,payload) {
+  if(status===404) return {available:false,episodeCount:0,russianAudioEpisodes:0,russianAudio:'unconfirmed',adFreeConfirmed:false};
+  if(status!==200) return {available:null,episodeCount:null,russianAudioEpisodes:0,russianAudio:'unconfirmed',adFreeConfirmed:false};
+  const episodes=episodeRows(payload);
+  // An HTTP 200 without a recognizable episode array is not proof of availability.
+  if(!episodes) return {available:null,episodeCount:null,russianAudioEpisodes:0,russianAudio:'unconfirmed',adFreeConfirmed:false};
+  const bounded=episodes.slice(0,1500);
+  const russianAudioEpisodes=bounded.filter(episode=>{
+    if(!episode || typeof episode!=='object') return false;
+    return Object.entries(episode).some(([key,value])=>
+      /^(?:audio|audios|dubs|dub|voice|voices|voiceover|voiceovers|tracks|translations)$/i.test(key)
+      && explicitRussianAudio(value,0));
+  }).length;
+  return {
+    available:episodes.length>0,
+    episodeCount:episodes.length,
+    russianAudioEpisodes,
+    russianAudio:russianAudioEpisodes ? 'metadata_evidence' : 'unconfirmed',
+    // A language tag cannot prove the absence of ads in a third-party iframe.
+    adFreeConfirmed:false
+  };
+}
+async function checkAvailability(id,key,fetchFn=fetch) {
+  const result=await callPartner('/api/v1/anime/'+id+'/episodes',key,fetchFn);
+  return summarizeAvailability(result.status,result.data);
+}
+
 
 function integer(value, max) {
   const raw = String(value ?? '');
@@ -110,20 +161,39 @@ function send(res,status,body) {
 async function handler(req,res) {
   const key=credential(process.env.ANIVIBE_API_KEY);
   if(req.method === 'GET') {
-    if (String(req.query?.check || '') !== '1') return send(res,404,{error:'not_found'});
-    if (!key) return send(res,503,{service:'anivibe',connection:'not_configured',embedEnabled:false});
-    try {
-      const now=Date.now();
-      if(healthCache.until <= now || !healthCache.value) {
-        healthCache.value=await checkPartner(key);
-        healthCache.until=now+HEALTH_TTL_MS;
+    if(String(req.query?.check || '') === '1') {
+      if (!key) return send(res,503,{service:'anivibe',connection:'not_configured',embedEnabled:false});
+      try {
+        const now=Date.now();
+        if(healthCache.until <= now || !healthCache.value) {
+          healthCache.value=await checkPartner(key);
+          healthCache.until=now+HEALTH_TTL_MS;
+        }
+        return send(res,200,{
+          service:'anivibe', ...healthCache.value,
+          embedEnabled:process.env.ANIVIBE_PARTNER_EMBED_ENABLED === 'true'
+        });
+      } catch {
+        return send(res,502,{service:'anivibe',connection:'unreachable',sampleAnime:'skipped',embedEnabled:false});
       }
-      return send(res,200,{
-        service:'anivibe', ...healthCache.value,
-        embedEnabled:process.env.ANIVIBE_PARTNER_EMBED_ENABLED === 'true'
-      });
+    }
+    // Read-only, bounded diagnostics by exact Shikimori ID. No signed tokens,
+    // video URLs or unvetted provider titles are ever returned here.
+    const id=integer(req.query?.availability,100000000);
+    if(!id) return send(res,404,{error:'not_found'});
+    if(!key) return send(res,503,{service:'anivibe',availability:'not_configured'});
+    const now=Date.now();
+    const cached=availabilityCache.get(id);
+    if(cached && cached.until>now)
+      return send(res,200,{service:'anivibe',shikimoriId:id,...cached.summary});
+    if(!limitRequest(req)) return send(res,429,{error:'rate_limited'});
+    try {
+      const summary=await checkAvailability(id,key);
+      if(availabilityCache.size>=MAX_AVAILABILITY_CACHE) availabilityCache.clear();
+      availabilityCache.set(id,{until:now+AVAILABILITY_TTL_MS,summary});
+      return send(res,200,{service:'anivibe',shikimoriId:id,...summary});
     } catch {
-      return send(res,502,{service:'anivibe',connection:'unreachable',sampleAnime:'skipped',embedEnabled:false});
+      return send(res,502,{error:'partner_unreachable'});
     }
   }
   if(req.method !== 'POST') {
@@ -157,4 +227,4 @@ async function handler(req,res) {
   }
 }
 module.exports=handler;
-module.exports.internals={integer,partnerUrl,iframeUrl,credential,parseJson,callPartner,checkPartner,requestAllowed,limitRequest};
+module.exports.internals={integer,partnerUrl,iframeUrl,credential,parseJson,callPartner,checkPartner,checkAvailability,summarizeAvailability,episodeRows,explicitRussianAudio,requestAllowed,limitRequest};
