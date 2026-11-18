@@ -2,7 +2,8 @@
 // Public, bounded poster cache endpoint. No caller-controlled hosts or redirects.
 const {validatePosterSource} = require('../poster-cache-client');
 const MAX_BYTES = 3 * 1024 * 1024;
-const CACHE_HEADER = 'public, s-maxage=86400, stale-while-revalidate=604800';
+// Vercel consumes and strips s-maxage. Keep a short explicit browser TTL too.
+const CACHE_HEADER = 'public, max-age=60, s-maxage=86400, stale-while-revalidate=604800';
 const TYPES = new Set(['image/jpeg','image/png','image/webp','image/avif','image/gif']);
 function sendFailure(res, status) {
   res.statusCode = status;
