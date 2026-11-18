@@ -315,6 +315,14 @@ async function checkNotifications(page) {
    });
    const quick=page.locator('#komiHomeQuickFilters select[data-komi-home-filter]');
    assert.equal(await quick.count(),4,'Home needs four usable quick filter selectors');
+   const quickLabels=await quick.evaluateAll(elements=>elements.map(select=>({
+     first:select.options[0]?.textContent.trim(),
+     label:document.querySelector('label[for="'+select.id+'"]')?.textContent.trim(),
+     display:getComputedStyle(document.querySelector('label[for="'+select.id+'"]')).display
+   })));
+   assert.deepEqual(quickLabels.map(row=>row.first),['Все жанры','Все годы','Все типы','Сортировка']);
+   assert.deepEqual(quickLabels.map(row=>row.label),['Жанр','Год','Тип','Сортировка']);
+   assert.ok(quickLabels.every(row=>row.display!=='none'),'All quick filter labels must be visible');
    for(const [kind,value,expected] of [
      ['year','2026','catalogFilterYear'],
      ['genre','Экшен','catalogFilterGenre'],
@@ -328,6 +336,11 @@ async function checkNotifications(page) {
      await page.evaluate(()=>navigate('home'));
      await page.waitForSelector('#komiHomeQuickFilters');
    }
+   await page.locator('#komiHomeQuickFilters .section-see-all').click();
+   await page.waitForFunction(()=>currentView==='catalog');
+   assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
 
    await page.evaluate(()=>{
     const hostileMetadata = '<img data-komi-injected src=x>';

@@ -610,16 +610,17 @@ async function loadDataFromCloud(attempt = 0) {
                 .filter(type => animeList.some(anime => komiCatalogType(anime) === type));
             const option = (value, label) =>
                 '<option value="' + escapeFriendHtml(value) + '">' + escapeFriendHtml(label) + '</option>';
+            const placeholders = {genre:'Все жанры',year:'Все годы',type:'Все типы',sort:'Сортировка'};
             const field = (key, label, values) => {
                 const id = 'komiHomeQuickFilter-' + key;
                 return '<div class="form-group" style="margin:0">' +
-                    '<label for="' + id + '">' + label + '</label>' +
+                    '<label for="' + id + '" style="display:block!important;margin:0 0 7px!important;font-size:13px!important;font-weight:700!important;color:#eeeeee!important">' + label + '</label>' +
                     '<select id="' + id + '" class="form-control" data-komi-home-filter="' + key + '">' +
-                    '<option value="">Выбрать</option>' + values.join('') + '</select></div>';
+                    '<option value="">' + placeholders[key] + '</option>' + values.join('') + '</select></div>';
             };
             return '<section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">' +
                 '<div class="section-header"><h2 class="section-title" id="komiHomeQuickFiltersTitle">Быстрые фильтры</h2>' +
-                '<button type="button" class="section-see-all" data-komi-onclick="navigate(\'catalog\')">Все фильтры</button></div>' +
+                '<button type="button" class="section-see-all" title="Открыть полную панель фильтрации каталога" aria-label="Все фильтры в каталоге аниме" data-komi-onclick="navigate(\'catalog\')">Все фильтры</button></div>' +
                 '<div class="catalog-filters-box" aria-label="Перейти в каталог с выбранным фильтром">' +
                 field('genre','Жанр',genreOptions.map(g => option(g,g))) +
                 field('year','Год',years.map(y => option(y,y))) +

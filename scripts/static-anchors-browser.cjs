@@ -21,6 +21,15 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    assert.equal(await quickFilters.count(),4,'Quick filters should be in server-delivered HTML before JS');
    assert.deepEqual(await quickFilters.evaluateAll(elements=>elements.map(el=>el.dataset.komiHomeFilter)),
      ['genre','year','type','sort']);
+   const placeholders=await quickFilters.evaluateAll(elements=>elements.map(el=>({
+     placeholder:el.options[0].textContent.trim(),
+     label:document.querySelector('label[for="'+el.id+'"]')?.textContent.trim()||'',
+     visible:!!document.querySelector('label[for="'+el.id+'"]')?.getBoundingClientRect().height
+   })));
+   assert.deepEqual(placeholders.map(row=>row.placeholder),['Все жанры','Все годы','Все типы','Сортировка']);
+   assert.deepEqual(placeholders.map(row=>row.label),['Жанр','Год','Тип','Сортировка']);
+   assert.ok(placeholders.every(row=>row.visible),'Filter labels must be visually present before JS');
+   assert.equal(await page.locator('#komiHomeQuickFilters .section-see-all').getAttribute('href'),'/#catalog');
    assert.equal(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
      '20261118-static-quick-filters');
    const initialOrder=await page.evaluate(() => {
