@@ -319,7 +319,7 @@ async function checkNotifications(page) {
      bodyColor:getComputedStyle(document.body).backgroundColor,
      link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.endsWith('/mono-ui.css'))
    }));
-   assert.equal(mono.primary,'#ff454f','Komi red accent must remain active');
+   assert.equal(mono.primary,'#fff','Komi monochrome theme must use a white primary accent');
    assert.ok(mono.link,'Global monochrome CSS must be loaded');
    const emblems = await page.evaluate(() => {
       const get = selector => {
@@ -330,7 +330,7 @@ async function checkNotifications(page) {
       return {side:get('.komi-side-logo'),header:get('.logo-box'),heading:get('.logo-text')};
    });
    assert.equal(emblems.side.background,'rgb(0, 0, 0)','Sidebar emblem must remain black');
-   assert.equal(emblems.header.background,'rgb(33, 21, 28)','Header emblem uses the Komi red-black theme');
+   assert.equal(emblems.header.background,'rgb(20, 20, 20)','Header emblem uses the Komi black-and-white theme');
    for (const icon of [emblems.side,emblems.header]) {
      assert.equal(icon.color,'rgb(255, 255, 255)','Komi emblem K must be white');
    }
