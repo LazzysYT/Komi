@@ -57,7 +57,10 @@ fs.mkdirSync(output,{recursive:true});
             assert.ok([200,502].includes(poster.status()),'Poster cache route must exist and handle upstream outages');
             if (poster.status()===200) {
               assert.match(poster.headers()['content-type']||'',/^image\//);
-              assert.match(poster.headers()['cache-control']||'',/s-maxage=86400/);
+              // Vercel strips s-maxage before forwarding the response to browsers.
+              assert.match(poster.headers()['cache-control']||'',/max-age=60/);
+              const cacheResult=poster.headers()['x-vercel-cache']||'unknown';
+              console.log('Poster CDN cache result:',cacheResult);
             } else console.warn('Poster upstream unavailable; browser fallback to direct/local remains active');
             console.log('PASS production combined stylesheet and poster cache validation');
           }
