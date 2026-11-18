@@ -2,7 +2,9 @@ const animeExtrasCache = new Map();
 const animeArtworkFallback = './anime-artwork.svg';
 
 function animeArtwork(anime) {
-    return escapeFriendHtml(komiSafeUrl(anime?.banner || anime?.poster) || animeArtworkFallback);
+    const original = komiSafeUrl(anime?.banner || anime?.poster) || animeArtworkFallback;
+    const cached = typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(original) : original;
+    return escapeFriendHtml(cached);
 }
 
 function animeDetailsMarkup(anime) {
@@ -62,7 +64,7 @@ async function renderAnimeExtras(anime, seasons = []) {
         const details = await animeExtrasCache.get(id);
         if (!section.isConnected) return;
         const artwork = komiSafeUrl(details?.bannerImage) || (!komiSafeUrl(anime.poster) && komiSafeUrl(details?.coverImage?.extraLarge));
-        if (artwork) banner.src = artwork;
+        if (artwork) banner.src = typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(artwork) : artwork;
         const labels = { PREQUEL: 'Предыдущая часть', SEQUEL: 'Продолжение', SIDE_STORY: 'Ответвление',
             PARENT: 'Основная история', SUMMARY: 'Пересказ', ALTERNATIVE: 'Альтернативная версия',
             SPIN_OFF: 'Спин-офф', OTHER: 'Связанная часть' };
