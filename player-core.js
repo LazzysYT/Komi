@@ -13,6 +13,9 @@
         try {
             const url = new URL(value);
             if (url.protocol !== 'https:' || url.username || url.password) throw Error('Invalid source');
+            // Public demo clips are not episodes. Refuse even stale cached links.
+            if (['commondatastorage.googleapis.com', 'storage.googleapis.com'].includes(url.hostname.toLowerCase()) &&
+                url.pathname.startsWith('/gtv-videos-bucket/sample/')) throw Error('Not anime media');
             const kind = /\.(mp4|webm|ogg)$/i.test(url.pathname) ? 'video'
                 : /\.m3u8$/i.test(url.pathname) ? 'hls' : 'embed';
             return {url: url.href, kind};
@@ -52,6 +55,15 @@
                 item.origins[label] = {index, name: declared.length ? name : 'Основной источник'};
             }
         });
+        // A licensed, verified ad-free stream should be the first playback option
+        // even when duplicate legacy episode rows were coalesced above.
+        for (const item of merged) {
+            const ranked = Object.entries(item.sources).sort(([a], [b]) =>
+                Number(b.startsWith('Без рекламы · ')) - Number(a.startsWith('Без рекламы · ')));
+            const preferred = Object.create(null);
+            for (const [label, url] of ranked) preferred[label] = url;
+            item.sources = preferred;
+        }
         return merged;
     }
     function createWriter(write, onError = () => {}) {
