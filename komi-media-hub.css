@@ -465,7 +465,7 @@
   cursor: pointer;
 }
 .komi-media-hub .komi-home-hero .hero-slide h1,
-.komi-media-hub .komi-seo-fallback.komi-seo-spotlight h1 {
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -850,7 +850,7 @@
     background: linear-gradient(0deg, var(--hub-bg), rgba(14, 15, 19, .9) 46%, rgba(14, 15, 19, .26) 82%, transparent);
   }
   .komi-media-hub .komi-home-hero .hero-slide h1,
-  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h1 {
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 {
     font-size: clamp(28px, 6.5vw, 42px) !important;
   }
   .komi-media-hub .komi-home-hero .hero-slide p,
@@ -879,3 +879,6 @@
     transition: none !important;
   }
 }
+
+/* Accessible site title for the non-JavaScript first paint. */
+.komi-media-hub .komi-hub-site-heading {position:absolute!important;width:1px!important;height:1px!important;overflow:hidden!important;clip:rect(0 0 0 0)!important;clip-path:inset(50%)!important;white-space:nowrap!important;padding:0!important;margin:0!important;border:0!important}
