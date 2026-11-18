@@ -323,7 +323,7 @@ async function checkNotifications(page) {
    ]) {
      await page.locator('#komiHomeQuickFilter-'+kind).selectOption(value);
      await page.waitForFunction(()=>currentView==='catalog');
-     assert.equal(await page.evaluate(name=>eval(name),expected),value,'Quick filter '+kind+' must update catalog state');
+     assert.equal(await page.evaluate(name=>({catalogFilterYear,catalogFilterGenre,catalogFilterType,catalogSort})[name],expected),value,'Quick filter '+kind+' must update catalog state');
      assert.equal(await page.locator('#komiCatalogGrid .anime-card').count()>0,true,'Filtered catalog must still show matching cards');
      await page.evaluate(()=>navigate('home'));
      await page.waitForSelector('#komiHomeQuickFilters');
