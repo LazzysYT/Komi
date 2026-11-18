@@ -289,3 +289,27 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
 /* Consistent titles and private viewing status in catalog cards. */
 .anime-card .anime-title { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; overflow:hidden; min-height:2.6em; }
 .anime-card .komi-card-status { position:absolute; top:8px; right:8px; z-index:2; max-width:calc(100% - 76px); padding:5px 8px; border:1px solid #5a5a5a; border-radius:9px; background:rgba(12,12,12,.93); color:#fafafa; font:650 10px/1.25 Inter,sans-serif; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; pointer-events:none; }
+
+/* Restore the intended five mobile tabs and the accessible More menu.
+ * home-discovery.css hides all .komi-side-button children with a more specific
+ * selector; the generic show rules do not override that hide declaration. */
+@media (max-width:767px) {
+  .komi-side-nav .komi-side-links [data-komi-click="random"],
+  .komi-side-nav .komi-side-bottom .komi-side-account {
+    display:flex!important;
+  }
+  body > header .header-inner #komiMobileMoreToggle {
+    display:flex!important; color:#f4f4f4!important;
+    background:#191919!important; border-color:#444!important;
+  }
+  .komi-side-nav .komi-side-button[aria-current="page"],
+  .komi-side-nav .komi-side-button[aria-expanded="true"] {
+    background:#262626!important; color:#fff!important; border-color:#666!important;
+  }
+  body > header #komiMobileMoreToggle[aria-expanded="true"],
+  .komi-mobile-more-menu button:hover,
+  .komi-mobile-more-menu button:focus-visible {
+    border-color:#aaa!important; background:#282828!important;
+    outline-color:#ccc!important;
+  }
+}
