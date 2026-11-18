@@ -74,3 +74,9 @@ test('broken SEO poster uses local SVG; no external executable error handler', (
   assert.equal(run.image.src, '/anime-artwork.svg');
   assert.ok(run.posterEvents.has('error'));
 });
+
+test('auth callbacks never point to the SEO-only /anime/:id route', () => {
+  assert.doesNotMatch(main, /window\.location\.origin \+ window\.location\.pathname/);
+  assert.match(main, /redirectTo: window\.location\.origin \+ '\/'/);
+  assert.match(main, /emailRedirectTo: window\.location\.origin \+ '\/'/);
+});
