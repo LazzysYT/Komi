@@ -311,7 +311,11 @@ async function checkNotifications(page) {
    });
    assert.match(await page.locator('.hero-meta').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
-   await page.evaluate(()=>openWatchModal('1'));
+   await page.evaluate(()=>{
+     localStorage.setItem('komi_source_1','Embed');
+     return openWatchModal('1');
+   });
+   assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
    assert.match(await page.locator('.crunchy-hero-info').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    const mono = await page.evaluate(() => ({
@@ -319,7 +323,7 @@ async function checkNotifications(page) {
      bodyColor:getComputedStyle(document.body).backgroundColor,
      link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.endsWith('/mono-ui.css'))
    }));
-   assert.equal(mono.primary,'#ff454f','Komi red accent must remain active');
+   assert.ok(['#fff','#ffffff'].includes(mono.primary),'Komi monochrome accent must remain active');
    assert.ok(mono.link,'Global monochrome CSS must be loaded');
    const emblems = await page.evaluate(() => {
       const get = selector => {
@@ -330,7 +334,7 @@ async function checkNotifications(page) {
       return {side:get('.komi-side-logo'),header:get('.logo-box'),heading:get('.logo-text')};
    });
    assert.equal(emblems.side.background,'rgb(0, 0, 0)','Sidebar emblem must remain black');
-   assert.equal(emblems.header.background,'rgb(33, 21, 28)','Header emblem uses the Komi red-black theme');
+   assert.equal(emblems.header.background,'rgb(20, 20, 20)','Header emblem uses the Komi monochrome theme');
    for (const icon of [emblems.side,emblems.header]) {
      assert.equal(icon.color,'rgb(255, 255, 255)','Komi emblem K must be white');
    }
@@ -373,6 +377,8 @@ async function checkNotifications(page) {
      ['rgb(40, 40, 40)','rgba(0, 0, 0, 0)','rgb(255, 255, 255)','none','none']);
    await page.waitForSelector('.komi-episodes-toggle');
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
+   assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
+   assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),true);
    assert.equal(await page.locator('.komi-native-hud').count(),1);
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
@@ -384,7 +390,7 @@ async function checkNotifications(page) {
    await page.locator('.komi-episodes-toggle').click();
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
-   assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list img').count(),2);
+   assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-placeholder').count(),2);
    await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
    await page.getByRole('button',{name:'Очистить поиск серии'}).click();
@@ -419,9 +425,11 @@ async function checkNotifications(page) {
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
    await page.evaluate(()=>document.getElementById('animeVideoPlayer').dispatchEvent(new Event('error')));
    await page.getByRole('button',{name:'Сменить источник'}).click();
-   await page.locator('#watchModalContent iframe').waitFor();
+   const providerLink = page.getByRole('link',{name:'Открыть у провайдера',exact:false});
+   await providerLink.waitFor();
    assert.equal(await playback.count(),0);
-   assert.equal(await page.locator('#watchModalContent iframe').getAttribute('src'),'https://media.test/player?a=1&b=2');
+   assert.equal(await page.locator('#watchModal .player-wrapper iframe').count(),0);
+   assert.equal(await providerLink.getAttribute('href'),'https://media.test/player?a=1&b=2');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').duration),100);
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
    assert.equal(await page.evaluate(()=>localStorage.getItem('komi_source_1')),'Embed');

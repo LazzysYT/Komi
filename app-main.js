@@ -3000,10 +3000,9 @@ async function loadDataFromCloud(attempt = 0) {
             const source = KomiPlayerCore.source(url);
             if (!source.url) return '<div class="komi-player-notice" role="status">Для этой серии пока нет доступного плеера.</div>';
             if (source.kind === 'video' || source.kind === 'hls') return '<div class="player-box"><video id="animeVideoPlayer" aria-label="Видеоплеер аниме" controls preload="metadata" playsinline></video></div>';
-            // Limit third-party popups. In-player ads are controlled by the external provider.
-            const external = new URL(source.url, location.href).origin !== location.origin;
-            const sandbox = external ? ' sandbox="allow-scripts allow-same-origin allow-forms allow-presentation"' : '';
-            return '<div class="player-box"><iframe title="Видеоплеер аниме" src="'+escapeFriendHtml(source.url)+'"'+sandbox+' allow="autoplay; fullscreen; picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0"></iframe></div><p class="komi-player-hint">Всплывающие окна внешних плееров ограничены. Реклама внутри видео зависит от провайдера.</p>';
+            return '<div class="komi-external-source"><p>Для этой озвучки пока доступен только внешний источник.</p><a href="' +
+                escapeFriendHtml(source.url) + '" target="_blank" rel="noopener" referrerpolicy="strict-origin-when-cross-origin">Открыть у провайдера ↗</a>' +
+                '<small>В новой вкладке у провайдера может быть реклама.</small></div>';
         }
         function showKomiPlayerError(video) {
             if (video !== document.getElementById('animeVideoPlayer')) return;
@@ -3300,14 +3299,14 @@ async function loadDataFromCloud(attempt = 0) {
             if (preferredSource === null) {
                 try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
             }
-            // Prefer built-in HTML5 video or HLS when available, but keep explicit viewer choice.
-            const directSource = sourceNames.find(name => ['video', 'hls'].includes(komiPlayerKind(sources[name])));
-            activePlayerSource = sourceNames.includes(preferredSource) ? preferredSource : (directSource || sourceNames[0]);
+            const directSources = sourceNames.filter(name => ['video', 'hls'].includes(komiPlayerKind(sources[name])));
+            const canUsePreferred = sourceNames.includes(preferredSource) &&
+                (requestedSource !== null || directSources.includes(preferredSource) || !directSources.length);
+            activePlayerSource = canUsePreferred ? preferredSource : (directSources[0] || sourceNames[0]);
             const activeUrl = sources[activePlayerSource] || '';
             const selectedSource = activePlayerSource;
-            const alternateSource = sourceNames.length > 1
-                ? sourceNames[(sourceNames.indexOf(selectedSource) + 1) % sourceNames.length]
-                : null;
+            const alternateSource = directSources.find(name => name !== selectedSource) ||
+                sourceNames.find(name => name !== selectedSource);
             const isExternalPlayer = komiPlayerKind(activeUrl) === 'embed';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
@@ -3368,9 +3367,9 @@ async function loadDataFromCloud(attempt = 0) {
                                     </select>
                                 </div>
                             </div>
-                            ${activeUrl ? `
-                                <div id="komiPlayerRecovery" class="komi-player-notice" ${isExternalPlayer ? '' : 'hidden'}>
-                                    <p id="komiPlayerStatus" role="status">${isExternalPlayer ? 'Если внешний плеер не открывается, повторите загрузку или смените источник.' : ''}</p>
+                            ${activeUrl && !isExternalPlayer ? `
+                                <div id="komiPlayerRecovery" class="komi-player-notice" hidden>
+                                    <p id="komiPlayerStatus" role="status"></p>
                                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
                                         <button id="komiRetryPlayer" type="button" class="btn-secondary">Повторить загрузку</button>
                                         ${alternateSource ? '<button id="komiAlternatePlayer" type="button" class="btn-secondary">Сменить источник</button>' : ''}

@@ -213,15 +213,27 @@
 #watchModal .komi-playback-state button[hidden],
 #watchModal .komi-playback select[hidden] {display:none}
 #watchModal .komi-playback-state button {padding-inline:8px}
-#watchModal .komi-playback-custom .komi-cinema-bigplay,
-#watchModal .komi-playback-custom:not(:fullscreen) .komi-v4-top,
-#watchModal .komi-playback-custom:not(:fullscreen) .komi-v4-shade {display:none}
-#watchModal .komi-playback-custom .komi-v4-bottom {display:none}
-#watchModal .komi-playback-custom:fullscreen .komi-v4-bottom {
-  display:flex;padding-bottom:calc(78px + env(safe-area-inset-bottom));
+#watchModal .komi-playback-failed .komi-cinema-bigplay,
+#watchModal .komi-v4-surface:not(:fullscreen) .komi-v4-top-actions {display:none}
+#watchModal .komi-playback-custom:not(.komi-playback-running,.komi-playback-failed)::before {
+  content:"";position:absolute;inset:0;z-index:7;pointer-events:none;background:rgba(0,0,0,.48);
+}
+#watchModal .komi-playback-custom .komi-cinema-bigplay {
+  width:clamp(50px,5vw,92px);height:clamp(50px,5vw,92px);font-size:clamp(18px,2vw,33px);
+  border:0;background:#262626;
+}
+#watchModal .komi-v4-source-trigger {
+  min-height:clamp(36px,3.2vw,56px);padding-inline:clamp(12px,1.2vw,22px);
+  font-size:clamp(12px,1vw,18px);background:#252525;border:0;
+}
+#watchModal .komi-playback-row > .komi-quality-control span {display:none}
+#watchModal .komi-playback-row > .komi-quality-control select {
+  min-height:clamp(36px,3.2vw,58px);padding:0 15px;border:0;border-radius:999px;
+  background:var(--watch-raised);color:#fff;font-size:clamp(12px,1vw,18px);font-weight:750;
 }
 #watchModal .komi-playback-running.komi-v4-idle .komi-playback {opacity:0;pointer-events:none}
 @media(max-width:520px){
+  #watchModal .komi-playback-custom .komi-cinema-bigplay {top:44%}
   #watchModal .komi-playback-row {flex-wrap:wrap;row-gap:0}
   #watchModal .komi-playback .komi-playback-seek {order:-1;flex:0 0 100%;height:22px}
   #watchModal .komi-playback-time {flex:1 1 auto}

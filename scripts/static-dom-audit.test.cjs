@@ -5,7 +5,7 @@ const path = require('node:path');
 const html = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
 
 test('social links have inline icons and accessible names', () => {
-  const nav = html.match(/<nav class="komi-social-links"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
+  const nav = html.match(/<nav\b[^>]*aria-label="Социальные сети Komi Anime"[^>]*>([\s\S]*?)<\/nav>/)?.[1];
   assert.ok(nav, 'Missing social navigation');
   for (const label of ['TikTok Komi Anime', 'Telegram Komi Anime']) {
     const anchor = [...nav.matchAll(/<a\b[^>]*>[\s\S]*?<\/a>/g)]
