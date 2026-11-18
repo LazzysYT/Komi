@@ -24,7 +24,7 @@ function scenario(ensure) {
      ctx.partyRoom=null;
    }
  });
- vm.runInContext('var partyRoom=null,partyGeneration=1,partyTimer=0,partyHeartbeat=0;',ctx);
+ vm.runInContext('var partyRoom=null,partyGeneration=1,partyTimer=0,partyHeartbeat=0,partyVisibilityListener=null;',ctx);
  vm.runInContext(earlyJoin,ctx);
  const room={id:'test-room',host:'host-owner',anime_id:'anime-1'};
  return {ctx,room,alerts,closings};
