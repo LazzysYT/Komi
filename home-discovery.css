@@ -93,7 +93,7 @@ body > header > .header-inner{
   display:flex!important;align-items:center!important;justify-content:flex-end!important;
   flex-wrap:nowrap!important;gap:7px!important;min-width:0!important;
 }
-.header-inner .komi-header-left .komi-social-links,
+/* Social links are displayed in the header's left zone. */
 .header-inner #navHomeBtn,.header-inner #navCatalogBtn,
 .header-inner #headerRandomBtn,.header-inner #komiMobileMoreToggle,
 .header-inner #komiMobileMoreMenu{display:none!important}
