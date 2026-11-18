@@ -379,9 +379,41 @@ async function checkNotifications(page) {
        hasCommunity:!!document.querySelector('#sideFriendsBtn[aria-controls="komiFriendsDrawer"]')
      };
    });
-   assert.equal(shell.logoBackground,'rgb(245, 245, 245)','Media hub sidebar emblem uses the monochrome accent');
-   assert.equal(shell.logoInk,'rgb(9, 9, 9)','Media hub emblem preserves legible monochrome contrast');
+   assert.equal(shell.logoBackground,'rgb(5, 5, 5)','Media hub sidebar emblem has a black background');
+   assert.equal(shell.logoInk,'rgb(255, 255, 255)','Media hub sidebar emblem has white K');
    assert.ok(shell.hasOverlay && shell.hasSearch && shell.hasCommunity,'New hub shell must expose search and community controls');
+
+   const uiPolish = await page.evaluate(() => {
+     const details = document.querySelector('.komi-hub-tools-menu');
+     details.open = true;
+     const socials = [...details.querySelectorAll('.komi-header-socials a')].map(link => {
+       const rect = link.getBoundingClientRect();
+       return { label: link.textContent.trim(), top: rect.top, bottom: rect.bottom,
+                width: rect.width, display: getComputedStyle(link).display };
+     });
+     details.open = false;
+     const desktop = document.querySelector('#komiSoundToggle');
+     const mobile = document.querySelector('#komiMobileSoundToggle');
+     const initial = desktop.getAttribute('aria-pressed');
+     desktop.click();
+     const muted = desktop.getAttribute('aria-pressed');
+     const synced = mobile.getAttribute('aria-pressed');
+     const stored = localStorage.getItem('komi.ui.sound.enabled');
+     desktop.click();
+     const restored = desktop.getAttribute('aria-pressed');
+     return {socials, initial, muted, synced, stored, restored};
+   });
+   assert.deepEqual(uiPolish.socials.map(x=>x.label), ['Telegram', 'TikTok']);
+   assert.ok(uiPolish.socials.every(x=>x.width >= 175 && x.display === 'flex'),
+             'Social accounts must be separately visible as full-width menu controls');
+   assert.ok(uiPolish.socials[1].top >= uiPolish.socials[0].bottom + 2,
+             'Telegram and TikTok must never overlap');
+   assert.equal(uiPolish.initial, 'true');
+   assert.equal(uiPolish.muted, 'false');
+   assert.equal(uiPolish.synced, 'false');
+   assert.equal(uiPolish.stored, 'off');
+   assert.equal(uiPolish.restored, 'true');
+
 
    await page.waitForSelector('#animeVideoPlayer');
    const playback = page.getByRole('group',{name:'Управление видео'});
