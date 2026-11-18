@@ -33,7 +33,7 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    assert.equal(await page.locator('#komiHomeQuickFilters .section-see-all').getAttribute('data-komi-click'),
      'home-quick-filters-all','First-paint anchor must activate the full catalog after hydration');
    assert.equal(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
-     '20261118-interactive-quick-filters');
+     '20261118-media-hub');
    const initialOrder=await page.evaluate(() => {
      const filters=document.getElementById('komiHomeQuickFilters');
      const catalog=document.getElementById('catalog');
