@@ -1313,18 +1313,26 @@ async function loadDataFromCloud(attempt = 0) {
             window.komiProfileFolderNames=customFolderNames.slice();
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
-                <div class="profile-container komi-profile-v2">
-                    <div class="profile-header-card">
+                <section id="profile" class="profile-container komi-profile-v2" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
+                    <div class="profile-header-card" data-profile-hero>
+                        <div class="profile-cover" data-profile-cover aria-hidden="true"></div>
+                        <div class="profile-hero-tools">
+                            ${isMe ? '<button type="button" class="profile-glass" data-profile-edit aria-expanded="false" aria-controls="profile-settings">Редактировать профиль</button>' : ''}
+                            <button type="button" class="profile-glass" data-profile-share>Поделиться</button>
+                        </div>
+                        <div class="profile-avatar-frame" data-profile-frame>
                         <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                        </div>
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
-                                <h2>${safeProfileText(komiVisibleUsername(username, p, isMe))}</h2>
+                                <h2 data-profile-field="display-name">${safeProfileText(komiVisibleUsername(username, p, isMe))}</h2>
                                 ${!isMe && currentUser ? `
                                     ${amIFriend ? `<button class="btn-danger" data-komi-onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
                                      `<button class="btn-glow" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
                                 ` : ''}
                             </div>
                             
+                            <p class="profile-bio" data-profile-field="bio">${safeProfileText(p.bio || 'Твоя история в мире аниме.')}</p>
                             <div class="profile-badges-row">
                                 ${isMe ? `<span class="profile-badge-item" data-anicoin-badge ${typeof aniCoinBadge === 'function' && aniCoinBadge() ? '' : 'hidden'}>${typeof aniCoinBadge === 'function' ? escapeFriendHtml(aniCoinBadge()) : ''}</span>` : ''}
                                 <div class="profile-badge-level">Уровень ${calculatedLevel} </div>
@@ -1332,16 +1340,15 @@ async function loadDataFromCloud(attempt = 0) {
                             </div>
 
                             <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 300} из 300 XP <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
-                            <div class="profile-reg-date">Дата регистрации: <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
+                            <div class="profile-reg-date">С нами с <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
                             <div class="komi-profile-actions">
                                 ${isMe ? '<button class="komi-profile-action" data-komi-onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
-                                <button type="button" class="komi-profile-action komi-profile-share" data-komi-onclick="komiCopyProfileLink()" aria-label="Скопировать ссылку на профиль">⧉ Поделиться</button>
-                                ${isMe ? '<button type="button" class="komi-profile-action" data-komi-onclick="openAniCoinShop()">Кошелёк AniCoin</button>' : ''}
+                                ${isMe ? '<button type="button" class="komi-profile-action" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
                                 ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти из аккаунта</button>' : ''}
                             </div>
 
                             ${isMe ? `
-                            <div class="profile-settings-box">
+                            <div class="profile-settings-box" id="profile-settings">
                                 <h4> Настройки профиля</h4>
                                 <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
                                 <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
@@ -1362,7 +1369,7 @@ async function loadDataFromCloud(attempt = 0) {
                         </div>
                     </div>
 
-                    <div class="profile-stats-grid">
+                    <div class="profile-stats-grid" ${profilePageSection === 'anime' ? '' : 'hidden'}>
                         <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
@@ -1389,38 +1396,8 @@ async function loadDataFromCloud(attempt = 0) {
                         </button>
                     </div>
 
-                    <section class="komi-achievement-panel"><div><strong>Достижения</strong><span>${komiAchievements(username).xp} XP</span></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span> Первое достижение впереди</span>'}</div></section>
-                    <nav class="komi-profile-tabs" aria-label="Разделы профиля">
-                        <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" data-komi-onclick="profilePageSection='overview';render()">Профиль</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" data-komi-onclick="profilePageSection='anime';render()">Аниме</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'friends' ? 'active' : ''}" data-komi-onclick="profilePageSection='friends';render()">Друзья</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'comments' ? 'active' : ''}" data-komi-onclick="profilePageSection='comments';render()">Комментарии</button>
-                    </nav>
-                    ${profilePageSection === 'overview' ? `
-                        <div class="komi-profile-overview">
-                            <section><h3>Списки</h3>
-                                ${['Смотрю','В планах','Просмотрено','Брошено'].map((name,i)=>`
-                                    <button class="komi-overview-list-row" data-komi-onclick="profilePageSection='anime';profileActiveTab='${name}';render()">
-                                        <span><i class="komi-list-dot dot-${i}"></i>${name}</span><b>${statsCounts[name] || 0}</b>
-                                    </button>`).join('')}
-                            </section>
-                            <section><h3>Любимые жанры</h3>
-                                ${topGenres.length ? topGenres.map(([genre,count]) => `<div class="komi-genre-row"><span>${safeProfileText(genre)}</span><b>${count}</b></div>`).join('') : '<p>Добавь аниме в коллекцию, чтобы увидеть любимые жанры.</p>'}
-                            </section>
-                            <section><h3>Активность</h3>
-                                <div class="komi-overview-list-row"><span>В библиотеке</span><b>${Object.keys(userStatuses).length}</b></div>
-                                <div class="komi-overview-list-row"><span>Друзей</span><b>${myFriends.length}</b></div>
-                                <div class="komi-overview-list-row"><span>Любимое</span><b>${favoritesCount}</b></div>
-                            </section>
-                        </div>
-                        <section class="komi-profile-showcase" aria-label="Витрина избранного">
-                            <h3>Витрина избранного</h3>
-                            ${profileShowcase.length
-                                ? `<div class="anime-grid">${profileShowcase.map(an => renderCard(an)).join('')}</div>`
-                                : '<p>Здесь появятся аниме из твоего избранного, когда они загрузятся из каталога.</p>'}
-                        </section>
-                        <div class="komi-profile-ratings"><h3>Оценки</h3><p>Оценённые аниме появятся в твоей коллекции.</p></div>
-                    ` : ''}
+                    ${KomiProfileUI.navigation(profilePageSection, myFriends.length)}
+                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection}) : ''}
                     <div class="komi-profile-anime-section" style="display:${profilePageSection === 'anime' ? 'block' : 'none'}">
                     ${customFolderNames.length > 0 || isMe ? `
                         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border);">
@@ -1507,7 +1484,7 @@ async function loadDataFromCloud(attempt = 0) {
                         </div>
                     </div>
                     </div>
-                </div>
+                </section>
             `;
         }
 
