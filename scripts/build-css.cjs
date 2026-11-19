@@ -14,7 +14,7 @@ const sources=[
   'cinema-layout-v3.css','cinema-hud-v4.css','cinema-clean-v5.css',
   'home-discovery.css','styles/inline-tail.css','komi-monochrome.css',
   // Legacy bundle first, followed by exactly the old link order for the hub UI.
-  'komi-media-hub.css','komi-black-white.css','profile-premium-mono.css'
+  'komi-media-hub.css','komi-black-white.css','profile-premium-mono.css','cinema-watch-monochrome.css'
 ];
 function buildCSS(){
   return sources.map(relative => {
