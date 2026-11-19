@@ -21,3 +21,18 @@ test('Premium visible from desktop, mobile and AniCoin shop without touching acc
  assert.match(shop,/href="\/premium\.html"/);
  assert.doesNotMatch(shop,/service_role|isAdmin\s*=\s*true|raw_user_meta_data/);
 });
+
+test('Lava checkout widget is embedded in both Premium page and shop',()=>{
+ const page=read('premium.html');
+ const shop=read('anicoin.js');
+ const src='https://widget.lava.top/e5879a10-267e-4d27-bff1-e9c3b1562c2e';
+ for(const file of [page,shop]){
+   assert.ok(file.includes(src));
+   assert.match(file,/<iframe[^>]+title="Lava\.top/);
+   assert.match(file,/width="350" height="60"/);
+   assert.match(file,/allow="payment"/);
+ }
+ assert.match(page,/Если виджет не открылся/);
+ assert.match(page,/Автоматическая активация Premium внутри KomiAnime пока не подключена/);
+ assert.doesNotMatch(page,/service_role|premium_active\s*=\s*true/);
+});

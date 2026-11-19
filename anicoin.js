@@ -73,7 +73,11 @@ function renderAniCoinShop(container) {
                 <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Подписка · Lava.top</p>
                 <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
                 <p>Поддержи развитие сайта. Оформление подписки проходит на Lava.top с ежемесячным продлением. Привилегии на KomiAnime пока не активируются автоматически.</p>
-                <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px;padding:12px 20px;border-radius:14px;">Подробнее о Premium</a>
+                <div class="komi-lava-checkout" style="display:flex;align-items:center;min-height:60px;margin-top:16px" aria-label="Оформление подписки Komi Premium">
+                    <iframe title="Lava.top — оформить Komi Premium" src="https://widget.lava.top/e5879a10-267e-4d27-bff1-e9c3b1562c2e" style="border:none;width:350px;max-width:100%;height:60px;display:block" width="350" height="60" loading="lazy" allow="payment"></iframe>
+                </div>
+                <p style="font-size:12px;margin:9px 0 8px;">Оплата через Lava.top на этой странице. Доступность зависит от одобрения домена Lava.top.</p>
+                <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px;padding:12px 20px;border-radius:14px;">Подробности и запасной способ оплаты</a>
             </article>
             ${!owner ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
             ${owner && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
