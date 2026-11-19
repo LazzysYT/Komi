@@ -3,92 +3,135 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#070707">
-  <title>Komi Premium — оформление подписки | KomiAnime</title>
-  <meta name="description" content="Komi Premium — ежемесячная подписка для поддержки развития KomiAnime.">
+  <meta name="theme-color" content="#09090B">
+  <meta name="description" content="Komi Premium — студия оформления профиля, значки Premium, темы и магазин AniCoin.">
+  <title>Студия оформления · Komi Premium | KomiAnime</title>
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-  <style>
-    :root{color-scheme:dark;--ink:#f4f4f5;--dim:#a1a1aa;--line:#2b2b2d;--pane:#111113}
-    *{box-sizing:border-box} html{min-height:100%;background:#080809}
-    body{margin:0;color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;background:radial-gradient(ellipse 65% 40% at 65% 5%,#262629 0%,#0a0a0b 65%,transparent 100%),#080809;min-height:100vh;line-height:1.55}
-    a{color:inherit} a:focus-visible{outline:3px solid #d4d4d8;outline-offset:4px}
-    .topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:auto;max-width:1120px;padding:23px 24px}
-    .brand{display:inline-flex;align-items:center;gap:12px;font-weight:800;font-size:19px;text-decoration:none;letter-spacing:-.05em}
-    .brand-mark{display:grid;place-items:center;width:42px;height:42px;background:#f4f4f5;color:#090909;border-radius:14px;font-size:28px;font-family:"Plus Jakarta Sans",sans-serif}
-    .back{color:#bcbcc2;text-decoration:none;font-size:14px;padding:10px 13px;border:1px solid var(--line);border-radius:12px}
-    .back:hover{background:#222225;color:#fff}
-    main{max-width:1120px;margin:auto;padding:clamp(18px,3vw,48px) 24px 172px}
-    .intro{max-width:760px}.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid #404044;border-radius:99px;background:#ffffff08;font-weight:750;letter-spacing:.16em;font-size:11px}
-    h1,h2{font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.055em;line-height:1.08}
-    h1{font-size:clamp(44px,8vw,82px);margin:20px 0 18px}
-    h1 span{color:#9d9da3}
-    .lead{font-size:clamp(16px,2.2vw,20px);color:#c9c9cf;max-width:620px;margin:0 0 36px}
-    .layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.8fr);gap:24px}
-    .card{background:linear-gradient(145deg,#18181a,#0f0f11);border:1px solid #373739;border-radius:26px;padding:clamp(22px,4vw,38px);box-shadow:0 24px 75px #0005}
-    .card h2{font-size:clamp(25px,4vw,36px);margin:0 0 10px}.card p{color:var(--dim)}
-    .period{font-size:13px;text-transform:uppercase;letter-spacing:.11em;color:#c8c8ca;font-weight:700}
-    .button{display:flex;justify-content:center;align-items:center;text-align:center;gap:9px;background:#fff;color:#080809;text-decoration:none;font-weight:800;border-radius:16px;padding:17px 22px;min-height:58px;margin:24px 0 14px;transition:transform .18s,background .18s}
-    .button:hover{transform:translateY(-2px);background:#dfdfe2}
-    .button:focus-visible{outline:3px solid white;outline-offset:4px}
-    .button:active{transform:translateY(0)}
-    .small{font-size:12px;line-height:1.6;color:#a4a4ac}
-    .note{margin:20px 0 0;padding:18px;border:1px solid #4b4b50;border-radius:16px;background:#ffffff08;color:#dedee1;font-size:14px}
-    .note strong{display:block;color:#fff;margin-bottom:5px}
-    .steps{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:18px}
-    .steps li{display:flex;gap:15px;align-items:flex-start;color:#c3c3c9}
-    .steps b{flex:none;display:grid;place-items:center;background:#252528;border:1px solid #49494f;border-radius:11px;width:34px;height:34px;color:white;font-size:13px}
-    .steps strong{display:block;color:white;margin-bottom:3px}
-    footer{margin-top:30px;font-size:13px;color:#8c8c92}
-    .premium-perks{margin-top:30px}.premium-perks h2{font-size:30px;margin:0 0 18px}.premium-perks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.premium-perks-grid article{padding:21px;background:#111114;border:1px solid #343436;border-radius:18px}.premium-perks-grid span{font-size:24px;color:#fff}.premium-perks-grid h3{font-size:17px;margin:11px 0 5px}.premium-perks-grid p,.premium-perks>p{font-size:13px;color:#a6a6ac;line-height:1.65}
-    @media(max-width:760px){.premium-perks-grid{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.topbar{padding:18px 18px}.back{font-size:12px}main{padding:35px 18px 55px}h1{font-size:clamp(42px,12vw,68px)}}
-    @media(prefers-reduced-motion:reduce){.button{transition:none}}
-  </style>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/premium-studio.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
+  <script defer src="/premium-studio.js"></script>
 </head>
 <body>
   <header class="topbar">
-    <a class="brand" href="/" aria-label="Komi Anime — главная"><span class="brand-mark" aria-hidden="true">K</span><span>KomiAnime</span></a>
-    <a class="back" href="/#shop">Вернуться в магазин</a>
+    <a class="brand" href="/" aria-label="KomiAnime — главная"><span class="brand-mark" aria-hidden="true">K</span><span>Komi<span class="brand-soft">Anime</span></span></a>
+    <div class="header-actions"><a href="/#profile" class="subtle-link">Мой профиль</a><a href="/" class="back">← На главную</a></div>
   </header>
+
   <main>
-    <div class="intro">
-      <span class="eyebrow">✧ KOMI PREMIUM</span>
-      <h1>Komi <span>Premium.</span></h1>
-      <p class="lead">Особый статус, анимированный профиль и бонусы для твоего аккаунта.</p>
-    </div>
-    <div class="layout">
-      <section class="card" aria-labelledby="plan-title">
-        <div class="period">Ежемесячная подписка</div>
-        <h2 id="plan-title">Komi Premium</h2>
-        <p>Ежемесячная подписка с автоматическим продлением. Цена по умолчанию откроется в долларах США (USD). Итоговая сумма и способы оплаты будут показаны до подтверждения покупки.</p>
-        <a class="button" id="premium-checkout" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd?currency=USD" target="_blank" rel="noopener noreferrer" aria-label="Оформить ежемесячную подписку Komi Premium">Оформить Premium <span aria-hidden="true">↗</span></a>
-        <p class="small">Оплата защищена, данные банковской карты обрабатывает Lava.top. Отменить подписку можно через платёжный сервис.</p>
-        <div class="note" role="note">
-          <strong>О статусе Premium</strong>
-          После подтверждённой оплаты Premium должен активироваться в аккаунте KomiAnime, если платёжное уведомление успешно доставлено. Используй тот же подтверждённый e-mail, что и на сайте. Автоматическая активация находится в бета-тестировании; при задержке проверь статус покупки.
+    <section class="intro" aria-labelledby="studio-title">
+      <div class="section-crumb">KOMI PREMIUM <span aria-hidden="true">/</span> PERSONALIZATION</div>
+      <div class="intro-title-line">
+        <div>
+          <h1 id="studio-title">Студия <span>оформления.</span></h1>
+          <p class="lead">Собери свой стиль, оцени результат до сохранения и настрой профиль так, как нравится.</p>
         </div>
-      </section>
-      <section class="card" aria-labelledby="how-title">
-        <h2 id="how-title">Как это работает</h2>
-        <ol class="steps">
-          <li><b>1</b><div><strong>Выбери Premium</strong>Кнопка «Оформить Premium» ведёт напрямую к оформлению подписки, минуя профиль продавца.</div></li>
-          <li><b>2</b><div><strong>Проверь условия</strong>Посмотри цену, валюту, способ оплаты и условия ежемесячного продления перед подтверждением.</div></li>
-          <li><b>3</b><div><strong>Управляй подпиской</strong>Управлять продлением и отменой можно в платёжном сервисе.</div></li>
-        </ol>
-      </section>
-    </div>
-    <section class="premium-perks" aria-label="Возможности подписки">
-      <h2>Что входит в Premium</h2>
-      <div class="premium-perks-grid">
-        <article><span>✦</span><h3>Анимированные аватары</h3><p>Загружай GIF-аватарку и выделяйся в профиле.</p></article>
-        <article><span>▣</span><h3>Живой фон профиля</h3><p>Добавляй анимированную GIF-обложку.</p></article>
-        <article><span>✶</span><h3>+2000 XP</h3><p>Разовый бонус опыта, достаточный для 5-го уровня при старте с нуля.</p></article>
-        <article><span>◈</span><h3>+500 AniCoin</h3><p>Один подарок на аккаунт при первой активации Premium.</p></article>
+        <div class="access-tag" id="premium-access" role="status" aria-live="polite">Проверка аккаунта…</div>
       </div>
-      <p>Все зарегистрированные пользователи также могут получать 1 AniCoin за 20 минут подтверждённого воспроизведения во встроенном плеере.</p>
     </section>
-    <footer>KomiAnime · Beta · Premium не влияет на доступность бесплатного каталога.</footer>
+
+    <section id="studio" class="studio-layout" aria-label="Настройки внешнего вида">
+      <div class="studio-controls">
+        <section class="surface" aria-labelledby="badge-title">
+          <div class="section-heading">
+            <div><div class="step-number">01 / ЗНАЧОК</div><h2 id="badge-title">Значок Premium</h2><p>20 вариантов оформления. Выбранный вариант отобразится в профиле и комментариях.</p></div>
+            <span class="count">20 вариантов</span>
+          </div>
+          <div class="badge-grid" id="badge-grid" role="group" aria-label="Выбор значка Premium"></div>
+        </section>
+
+        <section class="surface" aria-labelledby="identity-title">
+          <div class="section-heading">
+            <div><div class="step-number">02 / ПРОФИЛЬ</div><h2 id="identity-title">Стиль ника и статус</h2><p>Изменения сразу видны справа. В базе они появятся после сохранения.</p></div>
+          </div>
+          <h3 class="field-heading">Градиент ника</h3>
+          <div class="gradient-grid" id="gradient-grid" role="group" aria-label="Градиент ника"></div>
+          <h3 class="field-heading status-label">Эмодзи-статус</h3>
+          <div class="emoji-grid" id="emoji-grid" role="group" aria-label="Эмодзи-статус"></div>
+        </section>
+
+        <section class="surface" aria-labelledby="audio-title">
+          <div class="section-heading">
+            <div><div class="step-number">03 / ЗВУК</div><h2 id="audio-title">Оригинальная тема профиля</h2><p>Короткие мелодии создаются Web Audio прямо в браузере. Никаких сторонних записей.</p></div>
+          </div>
+          <div class="audio-grid" id="audio-grid" role="group" aria-label="Музыкальная тема"></div>
+          <p class="muted mini-note">В профиле музыка запускается только после нажатия посетителя. Тест здесь воспроизводится по твоему нажатию.</p>
+        </section>
+
+        <section class="surface" aria-labelledby="store-title">
+          <div class="section-heading">
+            <div><div class="step-number">04 / МАГАЗИН</div><h2 id="store-title">Premium-магазин</h2><p>Примерка бесплатна. Покупка и надевание выполняются отдельными кнопками через защищённую серверную функцию.</p></div>
+            <div class="wallet-pill" id="store-balance" aria-live="polite">◈ — AniCoin</div>
+          </div>
+          <div class="store-grid" id="store-grid"></div>
+          <p class="feedback" id="store-status" role="status" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <aside class="preview-column" aria-labelledby="live-preview-title">
+        <section class="surface live-preview">
+          <div class="preview-heading">
+            <div><div class="step-number">LIVE PREVIEW</div><h2 id="live-preview-title">Живой предпросмотр</h2></div>
+            <span class="live-dot"><i aria-hidden="true"></i> LIVE</span>
+          </div>
+          <p class="preview-hint">Так другие пользователи будут видеть твой профиль.</p>
+          <div class="preview-profile">
+            <div class="preview-cover" aria-hidden="true"><span>KOMI<span class="cover-soft">ANIME</span></span></div>
+            <div class="preview-profile-body">
+              <div class="preview-avatar-holder">
+                <div class="preview-avatar-frame" id="preview-avatar-frame"><img id="preview-avatar" alt="Аватар пользователя" hidden><span id="preview-avatar-fallback" aria-hidden="true">K</span></div>
+              </div>
+              <div class="preview-user-row"><strong id="preview-name">Пользователь Komi</strong><span id="preview-emoji" class="preview-emoji" hidden></span></div>
+              <div class="preview-badge" id="preview-badge">✦ PREMIUM</div>
+              <div class="preview-title-line"><span id="preview-title" class="earned-title" hidden></span><span id="try-on-note" class="try-on-note" hidden>Предпросмотр · не куплено</span></div>
+              <p class="preview-caption">Твой стиль. Твоя коллекция.</p>
+            </div>
+          </div>
+
+          <div class="comment-preview" aria-label="Пример комментария под аниме">
+            <div class="comment-header">ПРИМЕР В КОММЕНТАРИЯХ</div>
+            <div class="comment-row">
+              <div class="comment-avatar" id="comment-avatar-frame"><img id="comment-avatar" alt="" hidden><span id="comment-avatar-fallback" aria-hidden="true">K</span></div>
+              <div class="comment-content">
+                <div class="comment-byline"><strong id="comment-name">Пользователь Komi</strong><span id="comment-badge" class="comment-badge">✦ PREMIUM</span></div>
+                <p>Эта серия — просто невероятная! ✨</p>
+                <span class="comment-time">Пример сообщения · только предпросмотр</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="preview-actions">
+            <p class="feedback" id="save-status" role="status" aria-live="polite"></p>
+            <button id="save-style" type="button" class="primary-button" disabled>Сохранить стиль <span aria-hidden="true">↗</span></button>
+            <p class="fine-print" id="studio-availability">Войди в аккаунт с активным Premium, чтобы сохранять изменения.</p>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <section class="subscription-grid" aria-labelledby="subscription-title">
+      <div class="surface subscribe-card">
+        <div class="step-number">KOMI PREMIUM / ПОДПИСКА</div>
+        <h2 id="subscription-title">Открой всё оформление.</h2>
+        <p>Анимированный аватар, живая обложка, 20 значков, стили ника и бонусы XP/AniCoin. Подписка оформляется отдельно; покупки в магазине — за AniCoin.</p>
+        <a class="button" id="premium-checkout" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd?currency=USD" target="_blank" rel="noopener noreferrer">Оформить Premium <span aria-hidden="true">↗</span></a>
+        <p class="fine-print">Ежемесячная подписка с автоматическим продлением. Цена по умолчанию откроется в долларах США (USD). Итоговая сумма, способы оплаты и условия будут показаны до подтверждения в Lava.top. Отмена — через платёжный сервис.</p>
+      </div>
+      <div class="surface perks-card">
+        <div class="step-number">ВОЗМОЖНОСТИ</div>
+        <h2>Всё для твоего профиля</h2>
+        <div class="perks-list">
+          <div><span>✦</span><p><strong>20 значков Premium</strong><small>Выбор оформления значка в профиле</small></p></div>
+          <div><span>▣</span><p><strong>GIF-аватар и обложка</strong><small>Загрузка в настройках профиля</small></p></div>
+          <div><span>✶</span><p><strong>+2000 XP и +500 AniCoin</strong><small>Разовые бонусы при первой активации</small></p></div>
+          <div><span>♫</span><p><strong>Оригинальные аудио-темы</strong><small>Музыка, создаваемая браузером</small></p></div>
+        </div>
+        <p class="fine-print">Автоматическая активация находится в бета-тестировании. После подтверждённой оплаты Premium должен активироваться в аккаунте при успешном уведомлении; при задержке проверь статус покупки. Бесплатный каталог остаётся доступным всем.</p>
+      </div>
+    </section>
+    <footer>KomiAnime · Beta · Студия оформления</footer>
   </main>
 </body>
 </html>
