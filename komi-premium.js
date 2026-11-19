@@ -111,6 +111,7 @@ function renderPage(container){
   '</div></section></section>';
   window.KomiPremiumThemes?.mount(container,owner,on);
  window.KomiPremiumDecor?.mount(container,owner,on);
+ window.KomiPremiumStore?.mount(container,owner,on);
 }
 function stamp(){
  return JSON.stringify([[...activeIds].sort(),[...rewards.entries()].sort(),[...media.entries()].sort()]);
@@ -138,6 +139,7 @@ async function refresh(force){
    apply(document);
    window.KomiPremiumThemes?.refresh();
    window.KomiPremiumDecor?.refresh();
+   window.KomiPremiumStore?.refresh();
   }catch(e){
    activeIds=new Set();rewards=new Map();media=new Map();last=0;loaded=false;
    apply(document);console.warn('Premium status unavailable',e?.message||String(e));
@@ -149,6 +151,7 @@ function setClient(c){
  client=c||null;last=0;loaded=false;activeIds=new Set();names=new Map();rewards=new Map();media=new Map();
  window.KomiPremiumThemes?.setClient(client);
  window.KomiPremiumDecor?.setClient(client);
+ window.KomiPremiumStore?.setClient(client);
  if(client){refresh(true);client.auth.onAuthStateChange(()=>Promise.resolve().then(()=>refresh(true)));}
 }
 function start(){
