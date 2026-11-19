@@ -65,11 +65,8 @@
       if (toolbar.isConnected) toolbar.remove();
     }
     const recovery = find('#komiPlayerRecovery');
-    const recoveryActions = recovery?.querySelector('div');
-    if (recoveryActions) {
-      for (const child of [...recoveryActions.children]) menu.append(child);
-      recoveryActions.remove();
-    }
+    // Keep actionable recovery controls visible when a source fails.
+    // They must not be hidden inside the closed overflow menu.
     if (menu.children.length) { more.append(menu); right.append(more); }
     const note = find('.komi-cinema-action-status');
     controls.replaceChildren(left, right);
