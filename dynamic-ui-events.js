@@ -7,7 +7,7 @@
   'use strict';
   if (typeof document === 'undefined') return;
   const allowedStatuses=new Set(['Просмотрено','В планах','Смотрю','Отложено','Брошено','Любимые']);
-  const allowedSections=new Set(['overview','anime','friends','comments']);
+  const allowedSections=new Set(['overview','anime','history','achievements','friends','comments']);
   const allowedCollections=new Set(['all','recent','short','movies','best']);
   const safeAnimeId=/^[1-9][0-9]{0,14}$/;
   const isId=id=>safeAnimeId.test(String(id||''))&&Number.isSafeInteger(Number(id));
@@ -85,7 +85,7 @@
     if((match=/^setAnimeStatus\('([0-9]{1,15})', '([^']+)'\)$/.exec(text)) &&
       isId(match[1]) && allowedStatuses.has(match[2]))
       return ()=>setAnimeStatus(match[1],match[2]);
-    if((match=/^profilePageSection='(overview|anime|friends|comments)';\s*render\(\)$/.exec(text)) &&
+    if((match=/^profilePageSection='(overview|anime|history|achievements|friends|comments)';\s*render\(\)$/.exec(text)) &&
       allowedSections.has(match[1]))
       return ()=>{profilePageSection=match[1];render()};
     if((match=/^profilePageSection='anime';\s*profileActiveTab='([^']+)';\s*render\(\)$/.exec(text)) &&
