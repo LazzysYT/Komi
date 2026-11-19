@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#070707">
   <title>Komi Premium — оформление подписки | KomiAnime</title>
-  <meta name="description" content="Komi Premium — ежемесячная подписка для поддержки развития KomiAnime. Оплата через Lava.top.">
+  <meta name="description" content="Komi Premium — ежемесячная подписка для поддержки развития KomiAnime.">
   <link rel="icon" type="image/svg+xml" href="/icon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
@@ -19,10 +19,10 @@
     .brand-mark{display:grid;place-items:center;width:42px;height:42px;background:#f4f4f5;color:#090909;border-radius:14px;font-size:28px;font-family:"Plus Jakarta Sans",sans-serif}
     .back{color:#bcbcc2;text-decoration:none;font-size:14px;padding:10px 13px;border:1px solid var(--line);border-radius:12px}
     .back:hover{background:#222225;color:#fff}
-    main{max-width:1120px;margin:auto;padding:clamp(20px,5vw,75px) 24px 88px}
+    main{max-width:1120px;margin:auto;padding:clamp(18px,3vw,48px) 24px 88px}
     .intro{max-width:760px}.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid #404044;border-radius:99px;background:#ffffff08;font-weight:750;letter-spacing:.16em;font-size:11px}
     h1,h2{font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.055em;line-height:1.08}
-    h1{font-size:clamp(46px,9vw,92px);margin:24px 0 20px}
+    h1{font-size:clamp(44px,8vw,82px);margin:20px 0 18px}
     h1 span{color:#9d9da3}
     .lead{font-size:clamp(16px,2.2vw,20px);color:#c9c9cf;max-width:620px;margin:0 0 36px}
     .layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.8fr);gap:24px}
@@ -31,10 +31,9 @@
     .period{font-size:13px;text-transform:uppercase;letter-spacing:.11em;color:#c8c8ca;font-weight:700}
     .button{display:flex;justify-content:center;align-items:center;text-align:center;gap:9px;background:#fff;color:#080809;text-decoration:none;font-weight:800;border-radius:16px;padding:17px 22px;min-height:58px;margin:24px 0 14px;transition:transform .18s,background .18s}
     .button:hover{transform:translateY(-2px);background:#dfdfe2}
+    .button:focus-visible{outline:3px solid white;outline-offset:4px}
+    .button:active{transform:translateY(0)}
     .small{font-size:12px;line-height:1.6;color:#a4a4ac}
-    .lava-checkout{display:flex;align-items:center;justify-content:flex-start;width:100%;min-height:60px;margin:24px 0 10px}
-    .checkout-caption{font-size:13px;line-height:1.65;color:#c3c3c8}
-    .checkout-fallback{display:inline-block;margin:0 0 18px;color:#dbdbe0;font-size:13px;text-underline-offset:3px}
     .note{margin:20px 0 0;padding:18px;border:1px solid #4b4b50;border-radius:16px;background:#ffffff08;color:#dedee1;font-size:14px}
     .note strong{display:block;color:#fff;margin-bottom:5px}
     .steps{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:18px}
@@ -54,31 +53,27 @@
   <main>
     <div class="intro">
       <span class="eyebrow">✧ KOMI PREMIUM</span>
-      <h1>Больше, чем <span>аниме.</span></h1>
-      <p class="lead">Поддержи развитие KomiAnime через официальную страницу ежемесячной подписки на Lava.top.</p>
+      <h1>Komi <span>Premium.</span></h1>
+      <p class="lead">Поддержи развитие KomiAnime и помоги сделать проект ещё лучше.</p>
     </div>
     <div class="layout">
       <section class="card" aria-labelledby="plan-title">
         <div class="period">Ежемесячная подписка</div>
         <h2 id="plan-title">Komi Premium</h2>
-        <p>Стоимость и доступные способы оплаты будут показаны до подтверждения покупки на Lava.top. Подписка автоматически продлевается каждый месяц, пока ты её не отменишь.</p>
-        <div class="lava-checkout" aria-label="Оформление подписки Komi Premium">
-          <iframe title="Lava.top — оформить Komi Premium" style="border:none;display:block;max-width:100%;width:350px;height:60px" width="350" height="60" loading="eager" allow="payment" src="https://widget.lava.top/e5879a10-267e-4d27-bff1-e9c3b1562c2e"></iframe>
-        </div>
-        <p class="checkout-caption">Нажми кнопку выше, чтобы открыть безопасную форму оплаты Lava.top на этой странице. Возможность оплаты зависит от одобрения домена Lava.top.</p>
-        <a class="checkout-fallback" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd" target="_blank" rel="noopener noreferrer">Если виджет не открылся — оплатить на Lava.top ↗</a>
-        <div class="small">Оплата и данные банковской карты обрабатываются Lava.top, не KomiAnime. Отменить подписку можно через Lava.top.</div>
+        <p>Ежемесячная подписка с автоматическим продлением. Итоговая цена, валюта и способы оплаты будут показаны до подтверждения покупки.</p>
+        <a class="button" id="premium-checkout" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd" target="_blank" rel="noopener noreferrer" aria-label="Оформить ежемесячную подписку Komi Premium">Оформить Premium <span aria-hidden="true">↗</span></a>
+        <p class="small">Оплата защищена, данные банковской карты обрабатывает Lava.top. Отменить подписку можно через платёжный сервис.</p>
         <div class="note" role="note">
-          <strong>Важная информация до покупки</strong>
-          Автоматическая активация Premium внутри KomiAnime пока не подключена. Покупка сейчас поддерживает проект, но сама по себе не открывает платные функции сайта. При оформлении укажи тот же e-mail, что и в аккаунте KomiAnime, чтобы упростить дальнейшую привязку.
+          <strong>О статусе Premium</strong>
+          Автоматическая активация Premium внутри KomiAnime пока не подключена. Сейчас подписка поддерживает развитие проекта и не открывает дополнительных функций сайта. При оформлении используй e-mail своего аккаунта KomiAnime, чтобы упростить привязку в будущем.
         </div>
       </section>
       <section class="card" aria-labelledby="how-title">
         <h2 id="how-title">Как это работает</h2>
         <ol class="steps">
-          <li><b>1</b><div><strong>Выбери Premium</strong>Нажми кнопку Lava.top на этой странице, чтобы начать оплату без перехода в профиль продавца.</div></li>
+          <li><b>1</b><div><strong>Выбери Premium</strong>Кнопка «Оформить Premium» ведёт напрямую к оформлению подписки, минуя профиль продавца.</div></li>
           <li><b>2</b><div><strong>Проверь условия</strong>Посмотри цену, валюту, способ оплаты и условия ежемесячного продления перед подтверждением.</div></li>
-          <li><b>3</b><div><strong>Управляй подпиской</strong>Продление и отмена управляются на стороне Lava.top.</div></li>
+          <li><b>3</b><div><strong>Управляй подпиской</strong>Управлять продлением и отменой можно в платёжном сервисе.</div></li>
         </ol>
       </section>
     </div>
