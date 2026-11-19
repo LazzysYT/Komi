@@ -50,6 +50,16 @@ test('admin form lives in an inert template until a verified admin action', () =
   assert.match(html, /template\.content\.cloneNode\(true\)/);
 });
 
+
+test('guest navigation and community have readable first-paint fallback before auth hydration', () => {
+  const markup = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  assert.match(markup, /id="userHeaderArea"><button[^>]+data-komi-onclick="playSound\(\); openAuthModal\('login'\)"/);
+  assert.match(markup, /id="komiFriendsDrawerList"[^>]*aria-live="polite"/);
+  assert.match(markup, /Подключаем список пользователей/);
+  assert.match(html, /function renderHeaderUser\(\)/);
+  assert.match(html, /area\.replaceChildren\(pill\)/);
+});
+
 test('friends drawer is inert at rest and accessibility state tracks opening and closing', () => {
   assert.match(html, /<aside id="komiFriendsDrawer"[^>]*\binert>/);
   assert.doesNotMatch(html, /<aside id="komiFriendsDrawer"[^>]*aria-hidden="true"/);

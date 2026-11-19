@@ -49,12 +49,28 @@ module.exports = async function cachedPoster(req,res) {
   const controller=new AbortController();
   const timeout=setTimeout(()=>controller.abort(),7500);
   try {
-    const upstream=await fetch(source, {
-      method: req.method,
-      redirect:'manual',
-      headers:{Accept:'image/avif,image/webp,image/jpeg,image/png,image/gif'},
-      signal:controller.signal
-    });
+    // Some image CDNs change their image hostname or path. Follow only
+    // validated image URLs on our explicit public-host allowlist, never a
+    // caller-controlled URL, and never more than two redirects.
+    let fetchedUrl=source;
+    let upstream;
+    for (let hop=0;hop<=2;hop++) {
+      upstream=await fetch(fetchedUrl, {
+        method:req.method,
+        redirect:'manual',
+        headers:{Accept:'image/avif,image/webp,image/jpeg,image/png,image/gif'},
+        signal:controller.signal
+      });
+      if (![301,302,303,307,308].includes(upstream.status)) break;
+      let next='';
+      try {
+        const location=upstream.headers.get('location');
+        if (location) next=validatePosterSource(new URL(location,fetchedUrl).href);
+      } catch {}
+      if (!next || next===fetchedUrl || hop===2) return sendFailure(res,502);
+      try { await upstream.body?.cancel?.(); } catch {}
+      fetchedUrl=next;
+    }
     const type=(upstream.headers.get('content-type') || '').split(';')[0].trim().toLowerCase();
     const length=Number(upstream.headers.get('content-length'));
     if (upstream.status !== 200 || !TYPES.has(type) ||
@@ -63,7 +79,7 @@ module.exports = async function cachedPoster(req,res) {
     if (bytes && !bytes.length) return sendFailure(res,502);
     res.statusCode=200;
     res.setHeader('Content-Type',type);
-    res.setHeader('Cache-Control',posterCacheHeader(source));
+    res.setHeader('Cache-Control',posterCacheHeader(fetchedUrl));
     res.setHeader('X-Content-Type-Options','nosniff');
     if (bytes) res.setHeader('Content-Length',String(bytes.length));
     res.end(req.method==='HEAD'?'':bytes);
