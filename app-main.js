@@ -1315,7 +1315,7 @@ async function loadDataFromCloud(attempt = 0) {
             window.komiProfileFolderNames=customFolderNames.slice();
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
-                <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-red" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
+                <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-mono" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
                     <div class="profile-header-card" data-profile-hero>
                         <div class="profile-cover" data-profile-cover aria-hidden="true">${komiSafeUrl(p.banner || p.cover || p.coverUrl) ? `<img src="${safeProfileText(komiSafeUrl(p.banner || p.cover || p.coverUrl))}" alt="" loading="lazy">` : ''}</div>
                         <div class="profile-hero-tools">
@@ -1375,6 +1375,14 @@ async function loadDataFromCloud(attempt = 0) {
                                 <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
                             </div>
                             ` : ''}
+
+                    <div class="profile-summary-strip" aria-label="Краткая статистика профиля">
+                       <div class="profile-summary-item profile-summary-level"><strong>${calculatedLevel}</strong><span>Уровень</span></div>
+                       <div class="profile-summary-item"><strong>${statsCounts['Просмотрено']}</strong><span>Просмотрено</span></div>
+                       <div class="profile-summary-item"><strong>${Object.keys(userStatuses).length}</strong><span>В списках</span></div>
+                       <div class="profile-summary-item"><strong>${favoritesCount}</strong><span>Избранное</span></div>
+                       <div class="profile-summary-item"><strong>${myFriends.length}</strong><span>Друзей</span></div>
+                    </div>
 
                     <div class="profile-stats-grid" ${profilePageSection === 'anime' ? '' : 'hidden'}>
                         <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Просмотрено'}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">

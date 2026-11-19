@@ -1,0 +1,191 @@
+<!-- Dynamic #profile template for KomiAnime, 2026-11-19 monochrome refinement.
+Source of truth: app-main.js/renderProfileView() and profile-premium.js.
+All ${...} expressions are active runtime bindings, not literal HTML placeholders.
+Do not paste into index.html: app-main.js already renders it dynamically.
+Color/style source: profile-premium-mono.css (last in komi.bundle.css).
+-->
+<section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-mono" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
+                    <div class="profile-header-card" data-profile-hero>
+                        <div class="profile-cover" data-profile-cover aria-hidden="true">${komiSafeUrl(p.banner || p.cover || p.coverUrl) ? `<img src="${safeProfileText(komiSafeUrl(p.banner || p.cover || p.coverUrl))}" alt="" loading="lazy">` : ''}</div>
+                        <div class="profile-hero-tools">
+                            ${isMe ? '<button type="button" class="profile-glass profile-glass-edit" data-profile-edit aria-expanded="false" aria-controls="profile-settings"><span aria-hidden="true">✎</span> Редактировать</button>' : ''}
+                            ${isMe ? '<button type="button" class="profile-glass" data-profile-settings aria-expanded="false" aria-controls="profile-settings"><span aria-hidden="true">⚙</span> Настройки</button>' : ''}
+                            <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">↗ Поделиться ссылкой</span><span class="profile-share-copied" aria-hidden="true">✓ Скопировано</span></button>
+                        </div>
+                        <div class="profile-avatar-frame" data-profile-frame="${['red','neon','white'].includes(p.frame) ? safeProfileText(p.frame) : 'none'}">
+                            <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                            ${isMe ? '<span class="profile-presence is-online" title="Вы сейчас онлайн" aria-label="Сейчас онлайн"></span>' : ''}
+                        </div>
+                        <div class="profile-info-grid">
+                            <div class="profile-name-row">
+                                <h2 data-profile-field="display-name">${safeProfileText(komiVisibleUsername(username, p, isMe))}</h2>
+                                ${p.title ? `<span class="profile-title-badge" title="Титул пользователя">${safeProfileText(p.title)}</span>` : ''}
+                                ${isMe && typeof aniCoinBadge === 'function' && aniCoinBadge() ? `<span class="profile-title-badge profile-title-earned" data-anicoin-badge>${escapeFriendHtml(aniCoinBadge())}</span>` : ''}
+                            </div>
+                            
+                            <p class="profile-bio" data-profile-field="bio">${safeProfileText(p.bio || 'Твоя история в мире аниме.')}</p>
+                            <div class="profile-badges-row">
+                                <span class="profile-badge-level">✦ Уровень ${calculatedLevel}</span>
+                                <span class="profile-badge-item" data-profile-presence>${safeProfileText(p.status || 'Люблю аниме')}</span>
+                                <span class="profile-badge-item">◉ Друзей: ${myFriends.length}</span>
+                                <span class="profile-badge-item profile-reg-date">С нами с ${escapeFriendHtml(p.regDate || 'Не указана')}</span>
+                                ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
+                            </div>
+
+                            <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 300} из 300 XP <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
+                            <div class="komi-profile-actions profile-hero-actions">
+                                ${!isMe && currentUser ? `
+                                    ${amIFriend
+                                      ? `<button type="button" class="profile-hero-action profile-hero-action-muted" data-komi-onclick="playSound(); removeFriend(window.komiViewedProfileName)">✓ В друзьях · Удалить</button>`
+                                      : `<button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
+                                    <button type="button" class="profile-hero-action profile-hero-action-muted" data-profile-party="${safeProfileText(username)}">▷ Смотреть вместе</button>
+                                ` : ''}
+                                ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти</button>' : ''}
+                            </div>
+
+                        </div>
+                    </div>
+                    ${isMe ? `
+                            <div class="profile-settings-box" id="profile-settings">
+                                <h4> Настройки профиля</h4>
+                                <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
+                                <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
+                                <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+                                    <div style="flex:2; min-width:160px;">
+                                        <label for="avatarFileInput" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Фото с устройства</label>
+                                        <input type="file" id="avatarFileInput" accept="image/*" class="form-control" style="padding: 4px; font-size:10px;" data-komi-onchange="handleAvatarFileUpload(event)">
+                                    </div>
+                                    <div style="flex:2; min-width:130px;">
+                                        <label for="newStatusText" style="font-size:10px; color:var(--text-muted); margin-bottom:2px; display:block;">Текст статуса</label>
+                                        <input type="text" id="newStatusText" class="form-control" placeholder="Твой статус..." maxlength="100" value="${safeProfileText(p.status)}">
+                                    </div>
+                                    <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" data-komi-onclick="playSound(); updateUserProfile(this)">Сохранить</button>
+                                </div>
+                                <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
+                            </div>
+                            ` : ''}
+
+                    <div class="profile-summary-strip" aria-label="Краткая статистика профиля">
+                       <div class="profile-summary-item profile-summary-level"><strong>${calculatedLevel}</strong><span>Уровень</span></div>
+                       <div class="profile-summary-item"><strong>${statsCounts['Просмотрено']}</strong><span>Просмотрено</span></div>
+                       <div class="profile-summary-item"><strong>${Object.keys(userStatuses).length}</strong><span>В списках</span></div>
+                       <div class="profile-summary-item"><strong>${favoritesCount}</strong><span>Избранное</span></div>
+                       <div class="profile-summary-item"><strong>${myFriends.length}</strong><span>Друзей</span></div>
+                    </div>
+
+                    <div class="profile-stats-grid" ${profilePageSection === 'anime' ? '' : 'hidden'}>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Просмотрено'}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
+                            <div class="stat-num">${statsCounts['Просмотрено']}</div>
+                            <div class="stat-label">Просмотрено</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'В планах'}" data-komi-onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
+                            <div class="stat-num">${statsCounts['В планах']}</div>
+                            <div class="stat-label">В планах</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Смотрю'}" data-komi-onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
+                            <div class="stat-num">${statsCounts['Смотрю']}</div>
+                            <div class="stat-label">Смотрю</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Отложено'}" data-komi-onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
+                            <div class="stat-num">${statsCounts['Отложено']}</div>
+                            <div class="stat-label">Отложено</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Брошено'}" data-komi-onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
+                            <div class="stat-num">${statsCounts['Брошено']}</div>
+                            <div class="stat-label">Брошено</div>
+                        </button>
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Любимые'}" data-komi-onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
+                            <div class="stat-num">${favoritesCount}</div>
+                            <div class="stat-label">Любимое</div>
+                        </button>
+                    </div>
+
+                    ${KomiProfileUI.navigation(profilePageSection, myFriends.length, Object.keys(userStatuses).length, komiAchievements(username).badges.length)}
+                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection}) : ''}
+                    <div class="komi-profile-anime-section" style="display:${profilePageSection === 'anime' ? 'block' : 'none'}">
+                    ${customFolderNames.length > 0 || isMe ? `
+                        <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border);">
+                            <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
+                            ${customFolderNames.map((fname,i) => `
+                                <button class="season-tab-btn ${profileActiveTab === fname ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab=window.komiProfileFolderNames[${i}]; render()"> ${safeProfileText(fname)} (${customFolders[fname].length})</button>
+                                ${isMe && currentUser?.authUserId ? `<button type="button" class="btn-danger" style="padding:4px 7px;border-radius:8px" aria-label="Удалить папку ${safeProfileText(fname)}" title="Удалить папку" data-komi-onclick="deleteCustomFolder(window.komiProfileFolderNames[${i}])">×</button>` : ''}
+                            `).join('')}
+                            ${isMe && currentUser?.authUserId && komiFolderImportableCount(username)
+                                ? `<button class="btn-secondary" type="button" data-komi-onclick="importLocalCustomFolders()">Импорт локальных папок</button>` : ''}
+                            ${isMe ? `
+                                <div style="display:flex; gap:5px; margin-left:auto; align-items:center;">
+                                    <input type="text" id="newFolderNameInput" class="form-control" placeholder="Новая папка..." style="max-width:140px; padding:5px 8px; font-size:11px;">
+                                    <button class="btn-secondary" style="padding:5px 8px; font-size:11px;" data-komi-onclick="playSound(); createCustomFolder()">+ Папка</button>
+                                </div>
+                            ` : ''}
+                        </div>
+                    ` : ''}
+
+                    <div class="profile-layout-grid">
+                        <div class="profile-main-content">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                                <h3 style="font-size:15px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${safeProfileText(profileActiveTab)}</span></h3>
+                                <div style="position:relative; width: 180px;">
+                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" data-komi-oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
+                                </div>
+                            </div>
+
+                            ${missingProfileCards > 0 ? `
+                                <p class="komi-profile-notice" role="status" style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">
+                                    ${missingProfileCards} сохранённых аниме ещё загружаются или отсутствуют в каталоге. Статусы не удалены.
+                                </p>
+                            ` : ''}
+                            ${searchedList.length === 0 ? `
+                                <div class="empty-state">
+                                    <div style="font-size:26px; margin-bottom:6px;"></div>
+                                    <h3 style="font-size:13px; margin-bottom:3px;">${profileCollectionSearchQuery ? 'По запросу ничего не найдено' : profileSavedCount ? 'Ожидаем карточки каталога' : 'В этой категории пока пусто'}</h3>
+                                    <p style="font-size:11px; color:var(--text-muted);">${profileSavedCount ? 'Сохранённые записи останутся в аккаунте.' : 'Добавляйте аниме из каталога или при просмотре.'}</p>
+                                </div>
+                            ` : `
+                                <div class="anime-grid">
+                                    ${searchedList.map(an => renderCard(an)).join('')}
+                                </div>
+                            `}
+                        </div>
+
+                        <div class="profile-sidebar-menu">
+                            <h3 style="font-size:12px; font-weight:700; margin-bottom:4px;"> Статистика</h3>
+                            <div class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span> Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
+                            <div class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Любимые'; render()"><span>♡ Любимое</span> <b>${favoritesCount}</b></div>
+                            <div class="profile-menu-item"><span> Друзья</span> <b>${myFriends.length}</b></div>
+                        </div>
+                    </div>
+
+                    </div>
+                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map((friend,i)=>`<button class="komi-profile-friend" data-komi-onclick="openProfile(window.komiProfileFriendNames[${i}])">${safeProfileText(friend)}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
+                    <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
+                    <div class="profile-wall-section">
+                        <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
+                        <div style="display:flex; gap:6px; margin-bottom:14px;">
+                            <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." data-komi-onkeydown="if(event.key==='Enter') postToProfileWall(window.komiWallProfileName)">
+                            <button class="btn-glow" style="padding: 7px 16px;" data-komi-onclick="playSound(); postToProfileWall(window.komiWallProfileName)">Отпр.</button>
+                        </div>
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            ${wallMessages.length === 0 ? `
+                                <div style="color:var(--text-muted); font-size:11px; text-align:center; padding:16px; background:var(--bg-input); border-radius:8px; border:1px dashed var(--border);">
+                                    На стене пока нет сообщений. Будьте первыми!
+                                </div>
+                            ` : wallMessages.map((m, mIdx) => {
+                                const senderAvatar = (userProfiles[m.author] || {}).avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.author}`;
+                                const canDelete = currentUser && (currentUser.username === username || currentUser.username === m.author || false);
+                                return `
+                                    <div class="wall-message-item">
+                                        <div class="wall-message-author" data-komi-onclick="playSound(); openProfile(window.komiWallAuthorByIndex[${mIdx}])">
+                                            <img src="${safeProfileText(komiSafeUrl(senderAvatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" data-komi-onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                            <span>${escapeFriendHtml(userProfiles[m.author]?.displayName || m.author)}</span>
+                                            <span style="font-size:10px; color:var(--text-muted); margin-left:auto; font-weight:normal;">${escapeFriendHtml(m.time)}</span>
+                                            ${canDelete ? `<button class="btn-danger" style="padding:2px 5px; font-size:10px; margin-left:4px;" data-komi-onclick="playSound(); deleteWallMessage(window.komiWallProfileName, ${mIdx})">Удалить</button>` : ''}
+                                        </div>
+                                        <div class="wall-message-text">${escapeFriendHtml(m.text)}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                    </div>
+                </section>

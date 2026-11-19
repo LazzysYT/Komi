@@ -10,7 +10,7 @@ const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 test('monochrome profile stylesheet loads last and only restyles profile UI', () => {
   const html = read('index.html');
   const css = read('komi-black-white.css').split('/* KomiAnime profile 2026-11-19')[1];
-  assert.ok(html.includes('komi.bundle.css?v=20261119c'));
+  assert.ok(html.includes('komi.bundle.css?v=20261119d'));
   const bundle=read('komi.bundle.css');
   assert.ok(bundle.includes(read('komi-black-white.css').trim()),
     'Premium profile styles must remain in the final CSS bundle');
