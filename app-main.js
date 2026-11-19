@@ -3951,7 +3951,12 @@ async function loadDataFromCloud(attempt = 0) {
                 episodeSlots: currentSeasonEpisodes.map(episode => episode.slots),
                 episodeMeta:currentSeasonEpisodes.map(ep=>({
                     preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',
-                    duration:ep?.duration ?? ep?.durationSeconds ?? null
+                    duration:ep?.duration ?? ep?.durationSeconds ?? null,
+                    // Trusted catalog metadata only; player validates each time range against media duration.
+                    introStart:ep?.introStart ?? ep?.opStart ?? ep?.opening?.start ?? null,
+                    introEnd:ep?.introEnd ?? ep?.opEnd ?? ep?.opening?.end ?? null,
+                    outroStart:ep?.outroStart ?? ep?.edStart ?? ep?.ending?.start ?? null,
+                    outroEnd:ep?.outroEnd ?? ep?.edEnd ?? ep?.ending?.end ?? null
                 }))
             });
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))

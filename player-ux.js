@@ -158,6 +158,42 @@
             Number.isFinite(time) && time >= 0 && time < 95 && !video.ended);
     }
 
+    // Only verified episode metadata can authorize skipping OP/ED. No fixed-duration guessing.
+    function validSegment(start, end, duration) {
+        if (start == null || end == null || !Number.isFinite(Number(start)) ||
+            !Number.isFinite(Number(end)) || !Number.isFinite(duration)) return null;
+        const a = Number(start), b = Number(end);
+        return a >= 0 && b > a && b <= duration && b - a <= 210 ? {start:a,end:b} : null;
+    }
+    function nativePreference(name) {
+        try { return root.localStorage?.getItem('komi_native_' + name) === '1'; }
+        catch { return false; }
+    }
+    function saveNativePreference(name,value) {
+        try { root.localStorage?.setItem('komi_native_' + name, value ? '1' : '0'); }
+        catch { /* Private browsing may block localStorage. */ }
+    }
+    function maybeAutoSkip(context) {
+        if (active !== context || !context.video?.isConnected || !context.autoSkip ||
+            !root.KomiPremium?.isActiveId?.(context.authId) ||
+            context.video.seeking || context.video.ended) return;
+        const video = context.video;
+        const meta = context.episodeMeta || {};
+        const opening = validSegment(meta.introStart,meta.introEnd,video.duration);
+        const ending = validSegment(meta.outroStart,meta.outroEnd,video.duration);
+        const time = Number(video.currentTime);
+        if (!Number.isFinite(time)) return;
+        if (opening && !context.skippedOpening && time >= opening.start && time < opening.end) {
+            context.skippedOpening = true;
+            video.currentTime = opening.end;
+            showPlaybackStatus(context, 'Опенинг пропущен по подтверждённым таймкодам серии.');
+        } else if (ending && !context.skippedEnding && time >= ending.start && time < ending.end) {
+            context.skippedEnding = true;
+            video.currentTime = ending.end;
+            showPlaybackStatus(context, 'Эндинг пропущен по подтверждённым таймкодам серии.');
+        }
+    }
+
     function mount(settings = {}) {
         if (typeof document === 'undefined') return;
         const modal = document.getElementById('watchModal');
@@ -176,6 +212,9 @@
             client:settings.client || null,
             authId:settings.authId || null,
             ownerIsCurrent:typeof settings.ownerIsCurrent === 'function' ? settings.ownerIsCurrent : null,
+            episodeMeta: settings.episodeMeta?.[Number(settings.index) || 0] || {},
+            autoSkip: nativePreference('autoskip'), autoNext: nativePreference('autonext'),
+            skippedOpening:false, skippedEnding:false,
             skip: null, note: null
         };
         active = context;
@@ -205,6 +244,28 @@
             });
             context.skip = skip;
             bar.append(skip);
+            const autoNext = makeButton('⏭ Автоследующая серия', 'komi-native-autonext',
+                'Переход к следующей серии после завершения встроенного видео');
+            autoNext.setAttribute('aria-pressed',String(context.autoNext));
+            autoNext.addEventListener('click',()=>{
+                context.autoNext = !context.autoNext;
+                saveNativePreference('autonext',context.autoNext);
+                autoNext.setAttribute('aria-pressed',String(context.autoNext));
+                showPlaybackStatus(context,context.autoNext ? 'Автопереход включён' : 'Автопереход выключен');
+            });
+            bar.append(autoNext);
+            if (settings.authId && root.KomiPremium?.isActiveId?.(settings.authId)) {
+                const autoSkip = makeButton('⏭ Пропуск OP/ED', 'komi-native-autoskip',
+                    'Только для Premium и только при наличии таймкодов открытия/концовки');
+                autoSkip.setAttribute('aria-pressed',String(context.autoSkip));
+                autoSkip.addEventListener('click',()=>{
+                    context.autoSkip = !context.autoSkip;
+                    saveNativePreference('autoskip',context.autoSkip);
+                    autoSkip.setAttribute('aria-pressed',String(context.autoSkip));
+                    showPlaybackStatus(context,context.autoSkip ? 'Пропуск по таймкодам включён' : 'Пропуск выключен');
+                });
+                bar.append(autoSkip);
+            }
             const help = document.createElement('details');
             help.className = 'komi-cinema-shortcuts';
             const summary = document.createElement('summary');
@@ -217,10 +278,18 @@
             video.addEventListener('timeupdate', () => {
                 if (active !== context) return;
                 updateSkip(context);
+                maybeAutoSkip(context);
                 if (Number.isFinite(video.duration) && video.duration > 60 &&
                     video.currentTime / video.duration >= 0.92) markCurrentWatched(context);
             }, {passive:true});
             video.addEventListener('ended', () => markCurrentWatched(context));
+            video.addEventListener('ended', () => {
+                if (active !== context || !video.isConnected) return;
+                if (context.autoNext && context.hasNext && context.modal.classList.contains('active') &&
+                    typeof root.openWatchModal === 'function') {
+                    root.openWatchModal(context.animeId, context.season, context.index + 1);
+                }
+            });
             // A double tap on the video surface seeks 10 seconds.
             let previousTap = {time:0,side:''};
             video.addEventListener('pointerup', event => {
@@ -298,7 +367,7 @@
         }
     }
     if (typeof document !== 'undefined') document.addEventListener('keydown', handleKeyboard);
-    const api = {mount,seekTarget,watchedStorageKey,readWatched,addWatched,mergeWatched,validMarker,handleKeyboard,loadCloudWatched};
+    const api = {mount,seekTarget,validSegment,watchedStorageKey,readWatched,addWatched,mergeWatched,validMarker,handleKeyboard,loadCloudWatched};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerUX = api;
 })(globalThis);
