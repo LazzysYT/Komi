@@ -14,7 +14,7 @@
     // Timecodes are DOM nodes, never HTML; only native media elements can seek.
     function appendTimecodes(target, body) {
         const text = String(body || '');
-        const pattern = /\\b(?:(\\d{1,2}):)?([0-5]?\\d):([0-5]\\d)\\b/g;
+        const pattern = /\b(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\b/g;
         let cursor = 0;
         for (const match of text.matchAll(pattern)) {
             const index = match.index;
