@@ -1,0 +1,2 @@
+[functions.lava-premium-webhook]
+verify_jwt = false
