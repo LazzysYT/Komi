@@ -51,7 +51,7 @@ test('nickname strip truncates, and account actions do not wrap vertically',()=>
   assert.equal(visible(technical,{displayName:'A'.repeat(50)},true).length,40);
   assert.match(theme,/\.komi-header-username[\s\S]*?text-overflow: ellipsis !important/);
   assert.match(theme,/\.user-pill > button[\s\S]*?white-space: nowrap !important/);
-  assert.ok(html.includes('komi.bundle.css?v=20261119a'), 'Consolidated CSS must be linked');
+  assert.ok(html.includes('komi.bundle.css?v=20261119b'), 'Consolidated CSS must be linked');
   const bundle=fs.readFileSync(path.join(root,'komi.bundle.css'),'utf8');
   assert.ok(bundle.includes(theme.trim()),'Header nickname and logout styles must remain in the CSS bundle');
 });

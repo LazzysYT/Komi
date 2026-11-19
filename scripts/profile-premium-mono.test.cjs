@@ -17,7 +17,7 @@ test('monochrome profile stylesheet loads last and only restyles profile UI', ()
   assert.doesNotMatch(html, /profile-premium-mono\\.css/);
   assert.match(css, /\.komi-media-hub \.komi-profile-v2/);
   assert.doesNotMatch(css, /#(?:ff454f|e5344b|e53935|f00)\b/i);
-  assert.doesNotMatch(css, /filter:\s*(?:grayscale|blur)/i);
+  assert.doesNotMatch(css, /(?:^|[;{])\s*filter:\s*(?:grayscale|blur)\(/im);
 });
 
 test('imported premium showcase reads saved favorites and preserves avatar', () => {

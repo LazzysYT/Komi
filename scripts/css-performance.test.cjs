@@ -10,7 +10,8 @@ test('one local stylesheet retains cascade order of all source layers',()=>{
   const stylesheetLinks=[...html.matchAll(/<link\s+[^>]*rel="stylesheet"[^>]*href="([^"]+)"/g)]
     .map(match=>match[1]);
   const localStyles=stylesheetLinks.filter(href=>href.startsWith('/'));
-  assert.deepEqual(localStyles,['/komi.bundle.css?v=20261119a']);
+  assert.equal(localStyles.length,1);
+  assert.match(localStyles[0],/^\/komi\.bundle\.css\?v=\d+[a-z]$/);
   const all=builder.sources;
   assert.equal(all.at(-2),'komi-media-hub.css');
   assert.equal(all.at(-1),'komi-black-white.css');
