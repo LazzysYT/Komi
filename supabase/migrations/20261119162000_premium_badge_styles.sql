@@ -14,15 +14,15 @@ create policy "Active Premium can choose own badge"
   on public.komi_premium_badge_styles for insert to authenticated
   with check (user_id = (select auth.uid()) and exists (
     select 1 from public.komi_premium_badges p
-    where p.user_id = (select auth.uid()) and p.active_until > now()
+    where p.user_id = (select auth.uid())
   ));
 create policy "Active Premium can update own badge"
   on public.komi_premium_badge_styles for update to authenticated
   using (user_id = (select auth.uid()) and exists (
     select 1 from public.komi_premium_badges p
-    where p.user_id = (select auth.uid()) and p.active_until > now()
+    where p.user_id = (select auth.uid())
   ))
   with check (user_id = (select auth.uid()) and exists (
     select 1 from public.komi_premium_badges p
-    where p.user_id = (select auth.uid()) and p.active_until > now()
+    where p.user_id = (select auth.uid())
   ));
