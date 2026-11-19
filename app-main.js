@@ -17,11 +17,19 @@
         window.KomiPremium?.setClient(_supabase);
         window.KomiPremiumMedia?.setClient(_supabase);
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай'];
-        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        let audioCtx = null; // Create only after a user gesture; audio support is optional.
         
         function playSound() {
             try {
-                if (audioCtx.state === 'suspended') audioCtx.resume();
+                if (!audioCtx) {
+                    const AudioCtor = window.AudioContext || window.webkitAudioContext;
+                    if (!AudioCtor) return;
+                    audioCtx = new AudioCtor();
+                }
+                if (audioCtx.state === 'suspended') {
+                    const resumed = audioCtx.resume();
+                    if (resumed && typeof resumed.catch === 'function') resumed.catch(() => {});
+                }
                 const osc = audioCtx.createOscillator();
                 const gain = audioCtx.createGain();
                 osc.type = 'triangle';
@@ -53,17 +61,8 @@
                 year: '2016',
                 type: 'Фильм',
                 desc: 'Молодой человек Сёя Исида раскаявается в том, что в школе издевался над глухой одноклассницей Сёко.',
-                episodes: [
-                    { 
-                        season: 1, 
-                        title: 'Фильм', 
-                        sources: {
-                            'Kodik': '<iframe src="https://kodik.info/serial/49733/843198357832?only_episode=true" allowfullscreen></iframe>',
-                            'Direct MP4': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-                        }
-                    }
-                ],
-                ratings: { Admin: 9.8 }
+                episodes: [],
+                ratings: {}
             },
             {
                 id: 'anime_2',
@@ -81,17 +80,8 @@
                 year: '2022',
                 type: 'Сериал',
                 desc: 'История одаренного футбольного юноши, стремящегося к вершинам профессионального спорта.',
-                episodes: [
-                    { 
-                        season: 1, 
-                        title: 'Эпизод 1', 
-                        sources: {
-                            'Kodik': '<iframe src="https://kodik.info/serial/49733/843198357832?only_episode=true" allowfullscreen></iframe>',
-                            'Direct MP4': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-                        }
-                    }
-                ],
-                ratings: { Admin: 8.9 }
+                episodes: [],
+                ratings: {}
             },
             {
                 id: 'anime_3',
@@ -109,17 +99,8 @@
                 year: '2007',
                 type: 'Сериал',
                 desc: 'Повседневная жизнь японских школьниц, их увлечения аниме, видеоиграми и учебой.',
-                episodes: [
-                    { 
-                        season: 1, 
-                        title: 'Эпизод 1', 
-                        sources: {
-                            'Kodik': '<iframe src="https://kodik.info/serial/49733/843198357832?only_episode=true" allowfullscreen></iframe>',
-                            'Direct MP4': 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4'
-                        }
-                    }
-                ],
-                ratings: { Admin: 8.5 }
+                episodes: [],
+                ratings: {}
             }
         ];
 
