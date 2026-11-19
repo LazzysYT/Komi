@@ -29,6 +29,7 @@ async function aniCoinRequest(action, options = {}, expectedOwner = currentUser?
         badge.textContent = aniCoinBadge();
         badge.hidden = !badge.textContent;
     }
+    if (window.KomiProfileUI?.syncWallet) window.KomiProfileUI.syncWallet();
     return data;
 }
 
