@@ -15,6 +15,7 @@
         } catch(e) {}
 
         window.KomiPremium?.setClient(_supabase);
+        window.KomiPremiumMedia?.setClient(_supabase);
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай'];
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -137,7 +138,7 @@
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
-        let currentView = location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : location.hash === '#partners' ? 'partners' : 'home';
+        let currentView = location.hash === '#premium' ? 'premium' : location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : location.hash === '#partners' ? 'partners' : 'home';
         const komiSharedProfileQuery = new URLSearchParams(location.search).get('profile');
         let profileTargetUser = location.hash === '#profile' && /^[A-Za-z0-9_.-]{1,80}$/.test(komiSharedProfileQuery || '') ? komiSharedProfileQuery : null;
         if (profileTargetUser) currentView = 'profile';
@@ -741,7 +742,7 @@ async function loadDataFromCloud(attempt = 0) {
         function navigate(view) {
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
-            const route = view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : view === 'partners' ? '#partners' : '';
+            const route = view === 'premium' ? '#premium' : view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : view === 'partners' ? '#partners' : '';
             if (location.pathname !== '/' || location.search || location.hash !== route) history.replaceState(null, '', '/' + route);
             render();
             renderHeaderUser();
@@ -1156,6 +1157,9 @@ async function loadDataFromCloud(attempt = 0) {
             } else if (currentView === 'shop') {
                 if (typeof renderAniCoinShop === 'function') renderAniCoinShop(container);
                 else container.innerHTML = '<section id="shop" class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
+            } else if (currentView === 'premium') {
+                if (window.KomiPremium?.renderPage) window.KomiPremium.renderPage(container);
+                else container.innerHTML = '<section class="komi-premium-page"><h1>Komi Premium</h1><p>Загрузка раздела Premium…</p></section>';
             } else if (currentView === 'profile') {
                 if (slideInterval) clearInterval(slideInterval);
                 renderProfileView(container);
@@ -1349,7 +1353,7 @@ async function loadDataFromCloud(attempt = 0) {
                               <h3>Особый статус в сообществе</h3>
                               <p>Подтверждённая подписка. Значок Premium виден другим пользователям рядом с никнеймом.</p>
                             </section>
-                            <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 300} из 300 XP <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
+                            <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 500} из 500 XP <progress max="500" value="${komiAchievements(username).xp % 500}"></progress></label></div>
                             <div class="komi-profile-actions profile-hero-actions">
                                 ${!isMe && currentUser ? `
                                     ${amIFriend
@@ -1364,6 +1368,19 @@ async function loadDataFromCloud(attempt = 0) {
                     </div>
                     ${isMe ? `
                             <div class="profile-settings-box" id="profile-settings">
+                                <section class="komi-premium-profile-media" data-komi-premium-editor data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Анимация профиля">
+                                    <p class="komi-premium-eyebrow">✦ PREMIUM · Оформление профиля</p>
+                                    <p>Анимированные GIF-изображения видны другим пользователям, пока подписка активна.</p>
+                                    <div class="komi-premium-media-inputs">
+                                        <label>Анимированная аватарка (GIF, до 6 МБ)
+                                          <input type="file" accept="image/gif,.gif" data-komi-premium-upload="avatar">
+                                        </label>
+                                        <label>Анимированный фон профиля (GIF, до 8 МБ)
+                                          <input type="file" accept="image/gif,.gif" data-komi-premium-upload="background">
+                                        </label>
+                                    </div>
+                                    <p data-komi-premium-upload-status role="status" aria-live="polite"></p>
+                                </section>
                                 <h4> Настройки профиля</h4>
                                 <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
                                 <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
@@ -3194,8 +3211,9 @@ async function loadDataFromCloud(attempt = 0) {
             const watched=Object.values(statuses).filter(v=>v==='Просмотрено').length;
             const watching=Object.values(statuses).filter(v=>v==='Смотрю').length;
             const friends=friendsFor(username).length;
-            const xp=watched*100+watching*20+friends*15;
-            return {watched,watching,friends,xp,level:Math.floor(xp/300)+1,badges:[watched>=1&&' Первый просмотр',watched>=10&&' 10 аниме',watched>=50&&' Знаток аниме',friends>=1&&' Первый друг',watching>=5&&' Марафон'].filter(Boolean)};
+            const premiumXp=window.KomiPremium?.xpForUsername(username) || 0;
+            const xp=watched*100+watching*20+friends*15+premiumXp;
+            return {watched,watching,friends,xp,premiumXp,level:Math.floor(xp/500)+1,badges:[watched>=1&&' Первый просмотр',watched>=10&&' 10 аниме',watched>=50&&' Знаток аниме',friends>=1&&' Первый друг',watching>=5&&' Марафон'].filter(Boolean)};
         }
         function komiRecommendations() {
             if (!currentUser) return [];

@@ -41,7 +41,8 @@
     .steps b{flex:none;display:grid;place-items:center;background:#252528;border:1px solid #49494f;border-radius:11px;width:34px;height:34px;color:white;font-size:13px}
     .steps strong{display:block;color:white;margin-bottom:3px}
     footer{margin-top:30px;font-size:13px;color:#8c8c92}
-    @media(max-width:760px){.layout{grid-template-columns:1fr}.topbar{padding:18px 18px}.back{font-size:12px}main{padding:35px 18px 55px}h1{font-size:clamp(42px,12vw,68px)}}
+    .premium-perks{margin-top:30px}.premium-perks h2{font-size:30px;margin:0 0 18px}.premium-perks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}.premium-perks-grid article{padding:21px;background:#111114;border:1px solid #343436;border-radius:18px}.premium-perks-grid span{font-size:24px;color:#fff}.premium-perks-grid h3{font-size:17px;margin:11px 0 5px}.premium-perks-grid p,.premium-perks>p{font-size:13px;color:#a6a6ac;line-height:1.65}
+    @media(max-width:760px){.premium-perks-grid{grid-template-columns:1fr}.layout{grid-template-columns:1fr}.topbar{padding:18px 18px}.back{font-size:12px}main{padding:35px 18px 55px}h1{font-size:clamp(42px,12vw,68px)}}
     @media(prefers-reduced-motion:reduce){.button{transition:none}}
   </style>
 </head>
@@ -54,7 +55,7 @@
     <div class="intro">
       <span class="eyebrow">✧ KOMI PREMIUM</span>
       <h1>Komi <span>Premium.</span></h1>
-      <p class="lead">Поддержи развитие KomiAnime и помоги сделать проект ещё лучше.</p>
+      <p class="lead">Особый статус, анимированный профиль и бонусы для твоего аккаунта.</p>
     </div>
     <div class="layout">
       <section class="card" aria-labelledby="plan-title">
@@ -65,7 +66,7 @@
         <p class="small">Оплата защищена, данные банковской карты обрабатывает Lava.top. Отменить подписку можно через платёжный сервис.</p>
         <div class="note" role="note">
           <strong>О статусе Premium</strong>
-          Автоматическая активация Premium внутри KomiAnime пока не подключена. Сейчас подписка поддерживает развитие проекта и не открывает дополнительных функций сайта. При оформлении используй e-mail своего аккаунта KomiAnime, чтобы упростить привязку в будущем.
+          После подтверждённой оплаты Premium должен активироваться в аккаунте KomiAnime, если платёжное уведомление успешно доставлено. Используй тот же подтверждённый e-mail, что и на сайте. Автоматическая активация находится в бета-тестировании; при задержке проверь статус покупки.
         </div>
       </section>
       <section class="card" aria-labelledby="how-title">
@@ -77,6 +78,16 @@
         </ol>
       </section>
     </div>
+    <section class="premium-perks" aria-label="Возможности подписки">
+      <h2>Что входит в Premium</h2>
+      <div class="premium-perks-grid">
+        <article><span>✦</span><h3>Анимированные аватары</h3><p>Загружай GIF-аватарку и выделяйся в профиле.</p></article>
+        <article><span>▣</span><h3>Живой фон профиля</h3><p>Добавляй анимированную GIF-обложку.</p></article>
+        <article><span>✶</span><h3>+2000 XP</h3><p>Разовый бонус опыта, достаточный для 5-го уровня при старте с нуля.</p></article>
+        <article><span>◈</span><h3>+500 AniCoin</h3><p>Один подарок на аккаунт при первой активации Premium.</p></article>
+      </div>
+      <p>Все зарегистрированные пользователи также могут получать 1 AniCoin за 20 минут подтверждённого воспроизведения во встроенном плеере.</p>
+    </section>
     <footer>KomiAnime · Beta · Premium не влияет на доступность бесплатного каталога.</footer>
   </main>
 </body>

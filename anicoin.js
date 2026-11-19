@@ -68,11 +68,11 @@ function renderAniCoinShop(container) {
         <section id="shop" class="anicoin-shop" aria-labelledby="anicoin-title">
             <p class="komi-spotlight-eyebrow">Komi Anime</p>
             <h1 id="anicoin-title">Магазин AniCoin</h1>
-            <p>За каждые 20 минут воспроизведения во встроенном видеоплеере начисляется 1 AniCoin. Паузы, перемотка и внешние плееры не учитываются.</p>
+            <p>1 AniCoin начисляется за каждые 20 минут реального воспроизведения во встроенном видеоплеере. Для внешних плееров доступен отдельный учёт активного времени при открытом окне.</p>
             <article class="anicoin-item" aria-labelledby="komi-premium-shop-title">
                 <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Ежемесячная подписка</p>
                 <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
-                <p>Поддержи развитие KomiAnime. Цена при оформлении по умолчанию показывается в USD; подписка продлевается каждый месяц. Premium-функции пока не включаются автоматически.</p>
+                <p>Анимированный профиль, разовые +2000 XP и +500 AniCoin, публичный значок Premium. Стоимость будет показана в USD. Бонусы начисляются после подтверждённой активации аккаунта.</p>
                 <a class="btn-secondary" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd?currency=USD" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:16px;padding:14px 22px;border-radius:14px;background:#f5f5f5;color:#090909;font-weight:750;">Оформить Premium ↗</a>
                 <div><a href="/premium.html" style="display:inline-block;margin-top:12px;font-size:13px;text-decoration:underline;text-underline-offset:3px;">Условия подписки</a></div>
             </article>
@@ -222,3 +222,68 @@ function aniCoinStartEmbed() {
 
 // Initial shop deep-link: subsequent hash changes use the central vanilla-JS router.
 if (location.hash === '#shop') openAniCoinShop();
+
+
+/* External embeds cannot report their exact playback state across origins.
+ * Explicit user opt-in counts only foreground time while the video iframe is visible.
+ * Native HTML5 players continue to earn automatically from real playing/timeupdate events.
+ */
+function aniCoinMountEmbedControls() {
+    const modal = document.getElementById('watchModal');
+    if (!modal || !modal.classList.contains('active')) {
+        if (aniCoinEmbedSession) aniCoinStopEmbed();
+        return;
+    }
+    const box = modal.querySelector('#watchModalContent .player-box');
+    const iframe = box?.querySelector('iframe');
+    if (!iframe || !currentUser?.authUserId) return;
+    if (box.parentElement?.querySelector('[data-komi-embed-coins]')) return;
+    const controls = document.createElement('div');
+    controls.className = 'komi-embed-coin-controls';
+    controls.setAttribute('data-komi-embed-coins', '');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = '◈ Начать учёт AniCoin';
+    button.setAttribute('data-komi-coin-embed-start', '');
+    const stop = document.createElement('button');
+    stop.type = 'button';
+    stop.textContent = 'Остановить';
+    stop.hidden = true;
+    stop.setAttribute('data-komi-coin-embed-stop', '');
+    const description = document.createElement('p');
+    description.id = 'komi-embed-coin-status';
+    description.textContent = '1 AniCoin за 20 минут активного времени в открытом плеере. Внешний плеер не передаёт данные о паузах — останови учёт, если не смотришь.';
+    controls.append(button, stop, description);
+    box.insertAdjacentElement('afterend', controls);
+}
+function aniCoinInitEmbedControls() {
+    const modal = document.getElementById('watchModal');
+    if (!modal) return;
+    const refresh = () => aniCoinMountEmbedControls();
+    const observer = new MutationObserver(refresh);
+    observer.observe(modal, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+    aniCoinMountEmbedControls();
+    document.addEventListener('click', event => {
+        const begin = event.target.closest?.('[data-komi-coin-embed-start]');
+        const end = event.target.closest?.('[data-komi-coin-embed-stop]');
+        if (begin) {
+            aniCoinStartEmbed();
+            begin.hidden = true;
+            const stop = begin.parentElement.querySelector('[data-komi-coin-embed-stop]');
+            if (stop) stop.hidden = false;
+        }
+        if (end) {
+            aniCoinStopEmbed();
+            end.hidden = true;
+            const start = end.parentElement.querySelector('[data-komi-coin-embed-start]');
+            if (start) start.hidden = false;
+            const info = end.parentElement.querySelector('#komi-embed-coin-status');
+            if (info) info.textContent = 'Учёт активного времени остановлен.';
+        }
+    });
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', aniCoinInitEmbedControls, {once:true});
+} else {
+    aniCoinInitEmbedControls();
+}

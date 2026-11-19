@@ -813,3 +813,83 @@ background:radial-gradient(ellipse at 90% 0,#c3a46721,transparent 65%),#111114;c
 .komi-premium-showcase p{color:#bfc0c9;font-size:13px!important;line-height:1.55;margin:0}
 .komi-comment-name .komi-premium-badge,.komi-friends-identity strong .komi-premium-badge{font-size:9px!important;padding:3px 7px}
 @media(max-width:520px){.komi-premium-showcase{border-radius:16px;padding:15px}#profile .profile-name-row .komi-premium-badge{padding:5px 8px;font-size:9px!important}}
+
+/* Komi Premium: monochrome rail destination, bento perks, GIF profile media. */
+.komi-side-nav .komi-side-premium{position:relative}
+.komi-side-nav .komi-side-premium svg{stroke:#f8f8f8}
+.komi-side-nav .komi-side-premium:hover,.komi-side-nav .komi-side-premium:focus-visible{
+ background:#f3f3f3!important;color:#090909!important}
+.komi-side-nav .komi-side-premium:hover svg,.komi-side-nav .komi-side-premium:focus-visible svg{
+ stroke:#090909}
+.komi-premium-page{width:min(100%,1250px);min-width:0;margin:0 auto;padding:clamp(20px,4vw,48px);
+ color:#f4f4f5;font-family:Inter,system-ui,sans-serif}
+.komi-premium-head{display:flex;align-items:flex-start;justify-content:space-between;gap:24px;
+ border:1px solid #ffffff14;border-radius:26px;padding:clamp(24px,4vw,46px);
+ background:radial-gradient(circle at 90% 15%,#ffffff13,transparent 40%),#0e0e10;
+ box-shadow:0 16px 50px #0006}
+.komi-premium-kicker{font-size:11px!important;font-weight:800!important;letter-spacing:.2em!important;
+ color:#bfbfc3!important;margin:0 0 16px!important}
+.komi-premium-head h1{font-family:"Plus Jakarta Sans",Inter,sans-serif;font-size:clamp(38px,5.6vw,76px)!important;
+ letter-spacing:-.065em!important;line-height:1.04!important;margin:0 0 18px!important;color:#fff}
+.komi-premium-head p:not(.komi-premium-kicker){font-size:15px!important;color:#aeafb6!important;line-height:1.65!important;
+ margin:0!important;max-width:540px}
+.komi-premium-status{display:inline-flex;align-items:center;min-height:36px;padding:9px 13px;
+ border:1px solid #e7e7e74f;border-radius:99px;background:#ffffff0e;color:#f0f0f0;
+ font-size:11px!important;letter-spacing:.08em;font-weight:850;white-space:nowrap}
+.komi-premium-perks-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+ gap:16px;margin-top:18px}
+.komi-premium-feature{min-width:0;background:#121214;border:1px solid #ffffff1a;border-radius:22px;
+ padding:27px;transition:transform .18s,border-color .18s}
+.komi-premium-feature:hover{transform:translateY(-3px);border-color:#ffffff50}
+.komi-premium-feature>span{display:grid;place-items:center;width:47px;height:47px;border-radius:14px;
+ font-size:25px;background:#f1f1f3;color:#090909}
+.komi-premium-feature h2{font-family:"Plus Jakarta Sans",Inter,sans-serif;font-size:19px!important;
+ font-weight:800!important;line-height:1.3!important;color:#fff!important;margin:17px 0 8px!important}
+.komi-premium-feature p{color:#a7a7ad!important;font-size:13px!important;line-height:1.6!important;margin:0!important}
+.komi-premium-bottom{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:18px 0;
+ padding:28px;background:#171719;border:1px solid #ffffff24;border-radius:22px}
+.komi-premium-bottom h2{font-size:24px!important;margin:0 0 8px!important;color:#fff}
+.komi-premium-bottom p{font-size:13px!important;line-height:1.6!important;color:#b5b5bc!important;margin:0!important}
+.komi-premium-bottom .komi-premium-fine{font-size:11px!important;color:#85858d!important;margin-top:13px!important}
+.komi-premium-actions{display:flex;flex-direction:column;align-items:stretch;gap:10px;min-width:190px}
+.komi-premium-action,.komi-premium-action-secondary{display:flex;align-items:center;justify-content:center;
+ min-height:44px;padding:11px 18px;border-radius:13px;text-align:center;font-weight:800;text-decoration:none!important;
+ font-size:13px!important}
+.komi-premium-action{background:#f5f5f5;border:1px solid #f5f5f5;color:#101012!important;cursor:pointer}
+.komi-premium-action-secondary{background:#242426;border:1px solid #ffffff2b;color:#e7e7eb!important}
+.komi-premium-action:hover{background:#dedee2}
+.komi-premium-action:focus-visible,.komi-premium-action-secondary:focus-visible{
+ outline:2px solid #fff;outline-offset:3px}
+.komi-premium-profile-media{padding:15px 0 8px;border-top:1px solid #ffffff22;margin-top:18px}
+.komi-premium-profile-media[hidden]{display:none!important}
+.komi-premium-profile-media .komi-premium-eyebrow{font-size:11px!important;color:#eee!important;
+ font-weight:800;letter-spacing:.15em}
+.komi-premium-profile-media p{color:#b2b2b8;font-size:12px;line-height:1.55;margin:7px 0 14px}
+.komi-premium-media-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.komi-premium-media-inputs label{min-width:0;padding:12px;background:#ffffff0b;
+ border:1px solid #ffffff23;border-radius:12px;color:#ededf1;font-size:12px}
+.komi-premium-media-inputs input{display:block;max-width:100%;margin-top:9px;font-size:11px;color:#bbb}
+.komi-embed-coin-controls{display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+ border:1px solid #ffffff24;padding:12px 14px;margin:12px 0;border-radius:14px;background:#111114}
+.komi-embed-coin-controls button{border:1px solid #f5f5f5;background:#f5f5f5;color:#090909;
+ border-radius:10px;padding:9px 13px;font-size:12px;font-weight:750;cursor:pointer}
+.komi-embed-coin-controls p{flex:1;min-width:180px;margin:0!important;
+ color:#b8b8bf!important;font-size:12px!important;line-height:1.55!important}
+@media(max-width:740px){
+ .komi-premium-head,.komi-premium-bottom{flex-direction:column;align-items:stretch}
+ .komi-premium-status{align-self:flex-start}
+ .komi-premium-perks-grid{grid-template-columns:1fr}
+ .komi-premium-feature{padding:20px}
+ .komi-premium-actions{width:100%}
+ .komi-premium-page{padding:16px}
+}
+@media(max-width:470px){.komi-premium-media-inputs{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.komi-premium-feature{transition:none!important}
+ .komi-premium-feature:hover{transform:none!important}}
+
+/* Keep the existing five-tab mobile navigation; Premium remains in menu/shop. */
+@media(max-width:767px){.komi-side-nav .komi-side-premium{display:none!important}}
+
+/* Explicit ID wins over the strongly scoped mobile tab display overrides. */
+#sidePremiumBtn{display:none!important}
+@media(min-width:768px){#sidePremiumBtn{display:flex!important}}
