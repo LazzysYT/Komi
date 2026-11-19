@@ -103,7 +103,8 @@
     if(ctx.section!=='overview')return '';
 
     var favoriteIds=Object.keys(userFavorites[ctx.username]||{});
-    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,4);
+    var premiumShowcase=window.KomiPremium?.isActiveName?.(ctx.username)===true;
+    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,premiumShowcase?6:4);
     var statusColors=['#F1F1F1','#D0D0D0','#A8A8A8','#7F7F7F','#535353'];
     var segmentNames=statusNames.map((name,i)=>[name,number(ctx.statsCounts[name]),statusColors[i]]);
     var distribution=segmentNames.map(([name,count,color])=>
