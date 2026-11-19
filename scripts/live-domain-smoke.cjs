@@ -45,7 +45,7 @@ fs.mkdirSync(output,{recursive:true});
             // A live source check catches stale HTML / wrong alias even if
             // hydrated JavaScript happens to show the right filter controls.
             const homepageHtml=await response.text();
-            assert.match(homepageHtml,/name="komi-ui-revision" content="20261118-media-hub(?:-mono)?"/,
+            assert.match(homepageHtml,/name="komi-ui-revision" content="(?:20261118-media-hub(?:-mono)?|20261119-fullbleed-hero)"/,
               'Main domain must serve the Media Hub homepage while deployment aliases converge');
             assert.match(homepageHtml,/data-komi-click="home-quick-filters-all"/,
               'The first-paint all-filters link needs a real JavaScript navigation action');
@@ -53,7 +53,9 @@ fs.mkdirSync(output,{recursive:true});
               assert.ok(homepageHtml.includes('<option value="">'+label+'</option>'),
                 'Main domain HTML must contain filter caption '+label);
             console.log('PASS production first-paint quick filter captions, version and all-filters action');
-            const css=await page.request.get(base+'komi.bundle.css?v=20261118a',{timeout:20000});
+            const cssHref=homepageHtml.match(/href="(\/komi\.bundle\.css\?v=[^"]+)"/)?.[1]
+               || '/komi.bundle.css';
+             const css=await page.request.get(new URL(cssHref,base).href,{timeout:20000});
             assert.equal(css.status(),200,'Bundled CSS must be available on production');
             assert.match(css.headers()['content-type']||'',/text\/css/,'Bundle must be served as CSS');
             assert.ok((await css.body()).length>200000,'Bundled CSS is missing some source styles');

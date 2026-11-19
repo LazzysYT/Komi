@@ -9,10 +9,8 @@ test('media hub stylesheet follows the single generated bundle, with no inline h
   const head=fs.readFileSync(path.join(root,'index.html'),'utf8').split('</head>')[0];
   const local=[...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]
     .filter(m=>!m[0].includes('fonts.googleapis.com'));
-  assert.equal(local.length,3);
+  assert.equal(local.length,1,'All local CSS layers are bundled into one request');
   assert.match(local[0][0],/href="\/komi\.bundle\.css\?v=\d+[a-z]"/);
-  assert.match(local[1][0],/href="\/komi-media-hub\.css"/);
-  assert.match(local[2][0],/href="\/komi-black-white\.css\?v=\d+[a-z]"/);
   assert.doesNotMatch(head,/<style(?:\s|>)/i);
   assert.match(head,/fonts\.googleapis\.com/);
 });
@@ -20,7 +18,8 @@ test('generated CSS maintains source order and matches committed artifact',()=>{
   const expected=[
     'komi-comments.css','styles/inline-head.css','cinema-ui.css','mono-ui.css',
     'cinema-layout-v3.css','cinema-hud-v4.css','cinema-clean-v5.css',
-    'home-discovery.css','styles/inline-tail.css','komi-monochrome.css'
+    'home-discovery.css','styles/inline-tail.css','komi-monochrome.css',
+    'komi-media-hub.css','komi-black-white.css'
   ];
   assert.deepEqual(sources,expected);
   const saved=fs.readFileSync(path.join(root,'komi.bundle.css'),'utf8');

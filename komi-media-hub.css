@@ -924,3 +924,104 @@
     object-position: center 28% !important;
   }
 }
+
+/* Mobile profile: prevent long display names, folders and status text from
+ * expanding the viewport. This layer follows the bundled profile styles. */
+.komi-media-hub .komi-profile-v2 {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100% !important;
+}
+.komi-media-hub .komi-profile-v2 :is(
+  .profile-header-card, .profile-info-grid, .profile-name-row,
+  .profile-badges-row, .profile-settings-box, .profile-layout-grid,
+  .profile-main-content, .profile-sidebar-menu, .komi-profile-actions,
+  .komi-profile-overview, .komi-profile-overview section,
+  .komi-profile-friends-section, .komi-profile-comments-section
+) {
+  box-sizing: border-box;
+  min-width: 0;
+  max-width: 100%;
+}
+.komi-media-hub .komi-profile-v2 .profile-name-row {
+  width: 100%;
+  flex-wrap: wrap;
+}
+.komi-media-hub .komi-profile-v2 .profile-name-row h2,
+.komi-media-hub .komi-profile-v2 :is(
+  .profile-badge-item, .profile-badge-level, .profile-reg-date,
+  .komi-profile-friend, .komi-profile-overview p,
+  .komi-overview-list-row span, .komi-genre-row span
+) {
+  min-width: 0;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-actions {
+  width: 100%;
+  flex-wrap: wrap;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-action {
+  max-width: 100%;
+  white-space: normal;
+}
+.komi-media-hub .komi-profile-v2 .profile-stat-card .stat-label {
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.komi-media-hub .komi-profile-v2 .profile-settings-box {
+  overflow-wrap: anywhere;
+}
+.komi-media-hub .komi-profile-v2 .profile-settings-box input {
+  max-width: 100%;
+}
+@media (max-width: 620px) {
+  .komi-media-hub .komi-profile-v2 {
+    padding: 0 0 22px !important;
+    gap: 14px !important;
+  }
+  .komi-media-hub .komi-profile-v2 .profile-header-card {
+    padding: 22px 14px !important;
+    border-radius: 22px !important;
+  }
+  .komi-media-hub .komi-profile-v2 .profile-name-row h2 {
+    font-size: clamp(20px, 6vw, 27px) !important;
+    line-height: 1.2;
+  }
+  .komi-media-hub .komi-profile-v2 .profile-avatar-box {
+    width: 88px !important;
+    height: 88px !important;
+  }
+  .komi-media-hub .komi-profile-v2 .profile-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 5px !important;
+    padding: 7px !important;
+  }
+  .komi-media-hub .komi-profile-v2 .profile-stat-card {
+    border-right: 0 !important;
+    border-radius: 14px !important;
+    padding: 11px 5px !important;
+  }
+  .komi-media-hub .komi-profile-v2 .komi-profile-tabs {
+    box-sizing: border-box;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    max-width: 100%;
+    padding: 5px !important;
+    border-radius: 16px;
+  }
+  .komi-media-hub .komi-profile-v2 .komi-profile-tab {
+    min-width: 0;
+    min-height: 44px;
+    padding: 9px 5px !important;
+    font-size: 12px !important;
+    border-radius: 12px;
+    white-space: normal;
+  }
+  .komi-media-hub .komi-profile-v2 .profile-settings-box {
+    padding: 14px 10px !important;
+  }
+}

@@ -42,10 +42,12 @@ jobs:
           node scripts/build-css.cjs --check
           node scripts/check-syntax.cjs
           node --check scripts/auth-isolation-e2e.cjs
+          node --check scripts/party-real-auth-e2e.cjs
           node --test scripts/*.test.cjs
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-preview.log 2>&1 &
           node scripts/regression-browser.cjs
           node scripts/profile-collection-browser.cjs
+          node scripts/mobile-profile-browser.cjs
           node scripts/saved-card-hydration-browser.cjs
           node scripts/auth-oauth-browser.cjs
           node scripts/search-suggestions-browser.cjs
@@ -83,6 +85,11 @@ jobs:
         env:
           KOMI_TEST_URL: https://komianime.online/
         run: node scripts/auth-isolation-e2e.cjs
+      - name: Run real two-account private Watch Party E2E
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          KOMI_TEST_URL: https://komianime.online/
+        run: node scripts/party-real-auth-e2e.cjs
       - name: Upload screenshots and results
         if: always()
         uses: actions/upload-artifact@v4

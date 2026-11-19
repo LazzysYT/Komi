@@ -1363,27 +1363,27 @@ async function loadDataFromCloud(attempt = 0) {
                     </div>
 
                     <div class="profile-stats-grid">
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Просмотрено'}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'В планах' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'В планах'}" data-komi-onclick="playSound(); profileActiveTab='В планах'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['В планах']}</div>
                             <div class="stat-label">В планах</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Смотрю' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Смотрю'}" data-komi-onclick="playSound(); profileActiveTab='Смотрю'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Смотрю']}</div>
                             <div class="stat-label">Смотрю</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Отложено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Отложено'}" data-komi-onclick="playSound(); profileActiveTab='Отложено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Отложено']}</div>
                             <div class="stat-label">Отложено</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Брошено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Брошено'}" data-komi-onclick="playSound(); profileActiveTab='Брошено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Брошено']}</div>
                             <div class="stat-label">Брошено</div>
                         </button>
-                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" data-komi-onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
+                        <button type="button" class="profile-stat-card ${profileActiveTab === 'Любимые' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Любимые'}" data-komi-onclick="playSound(); profileActiveTab='Любимые'; profilePageSection='anime'; render()">
                             <div class="stat-num">${favoritesCount}</div>
                             <div class="stat-label">Любимое</div>
                         </button>
@@ -1391,10 +1391,10 @@ async function loadDataFromCloud(attempt = 0) {
 
                     <section class="komi-achievement-panel"><div><strong>Достижения</strong><span>${komiAchievements(username).xp} XP</span></div><div class="komi-badges">${komiAchievements(username).badges.length?komiAchievements(username).badges.map(b=>'<span>'+b+'</span>').join(''):'<span> Первое достижение впереди</span>'}</div></section>
                     <nav class="komi-profile-tabs" aria-label="Разделы профиля">
-                        <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" data-komi-onclick="profilePageSection='overview';render()">Профиль</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" data-komi-onclick="profilePageSection='anime';render()">Аниме</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'friends' ? 'active' : ''}" data-komi-onclick="profilePageSection='friends';render()">Друзья</button>
-                        <button class="komi-profile-tab ${profilePageSection === 'comments' ? 'active' : ''}" data-komi-onclick="profilePageSection='comments';render()">Комментарии</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'overview' ? 'active' : ''}" aria-pressed="${profilePageSection === 'overview'}" data-komi-onclick="profilePageSection='overview';render()">Профиль</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'anime' ? 'active' : ''}" aria-pressed="${profilePageSection === 'anime'}" data-komi-onclick="profilePageSection='anime';render()">Аниме</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'friends' ? 'active' : ''}" aria-pressed="${profilePageSection === 'friends'}" data-komi-onclick="profilePageSection='friends';render()">Друзья</button>
+                        <button class="komi-profile-tab ${profilePageSection === 'comments' ? 'active' : ''}" aria-pressed="${profilePageSection === 'comments'}" data-komi-onclick="profilePageSection='comments';render()">Комментарии</button>
                     </nav>
                     ${profilePageSection === 'overview' ? `
                         <div class="komi-profile-overview">
