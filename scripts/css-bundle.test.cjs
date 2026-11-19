@@ -17,9 +17,9 @@ test('media hub stylesheet follows the single generated bundle, with no inline h
 test('generated CSS maintains source order and matches committed artifact',()=>{
   const expected=[
     'komi-comments.css','styles/inline-head.css','cinema-ui.css','mono-ui.css',
-    'cinema-layout-v3.css','cinema-hud-v4.css','cinema-clean-v5.css',
+    'cinema-layout-v3.css','cinema-hud-v4.css','cinema-clean-v5.css','cinema-watch-monochrome.css',
     'home-discovery.css','styles/inline-tail.css','komi-monochrome.css',
-    'komi-media-hub.css','komi-black-white.css','profile-premium-mono.css','cinema-watch-monochrome.css'
+    'komi-media-hub.css','komi-black-white.css','profile-premium-mono.css'
   ];
   assert.deepEqual(sources,expected);
   const saved=fs.readFileSync(path.join(root,'komi.bundle.css'),'utf8');
