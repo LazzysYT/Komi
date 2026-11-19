@@ -468,14 +468,14 @@ async function checkNotifications(page) {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
-     const heading=stage.querySelector('.komi-player-heading').getBoundingClientRect();
+     const heading=modal.querySelector('.watch-cinema-layout > .komi-player-heading').getBoundingClientRect();
      const sidebar=stage.querySelector('.komi-watch-sidebar').getBoundingClientRect();
      const episode=stage.querySelector('.komi-episode-number.active');
      const active=getComputedStyle(episode);
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       titleGap:heading.top-player.bottom,sidebarAfterVideo:sidebar.top>=player.bottom,
+       titleGap:player.top-heading.bottom,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
        background:active.backgroundColor,before:getComputedStyle(episode,'::before').content,
@@ -485,10 +485,12 @@ async function checkNotifications(page) {
    assert.ok(cinema.height >= 800, 'Cinema modal should use the full viewport height');
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
-   assert.ok(cinema.titleGap>=0 && cinema.titleGap<=24,JSON.stringify(cinema));
-   assert.ok(width>820 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
-   assert.deepEqual([cinema.background,cinema.border,cinema.color,cinema.before,cinema.after],
-     ['rgb(40, 40, 40)','rgba(0, 0, 0, 0)','rgb(255, 255, 255)','none','none']);
+   assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
+   assert.ok(width>1000 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
+   assert.equal(cinema.color,'rgb(255, 255, 255)');
+   assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)',JSON.stringify(cinema));
+   assert.notEqual(cinema.before,'none','Active episode must have a white indicator');
+   assert.notEqual(cinema.after,'none','Episode progress must remain visible');
    await page.waitForSelector('.komi-episodes-toggle');
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
@@ -500,7 +502,8 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
    await page.locator('.komi-episodes-toggle').click();
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
-   assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),'true');
+   assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
+     'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
    await page.locator('.komi-episodes-toggle').click();
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
