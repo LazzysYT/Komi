@@ -16,7 +16,7 @@ test('server authenticates player and calculates XP only from real database rows
 test('Premium XP multiplier is server-controlled, excludes gift and previously awarded quests',()=>{
  assert.match(sql,/base_xp\*3\/2/);
  assert.match(sql,/\+welcome_xp\+quest_xp/);
- assert.match(sql,/b?\.active_until>now\(\)/);
+ assert.match(sql,/p\.active_until>now\(\)/);
  assert.doesNotMatch(sql,/update public\.|insert into public\.|delete from public\./i);
 });
 test('owner profile only reads verified XP, with cross-account cache isolation',()=>{
