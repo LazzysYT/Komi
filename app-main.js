@@ -536,6 +536,26 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
+        // Informational digest only: no fabricated unread count, no server notification writes.
+        // The user's own saved lists are owner-scoped; never use another person's library.
+        function komiRecentEpisodeDigest(statuses, catalog, now = Date.now()) {
+            const items = [], seen = new Set();
+            for (const anime of catalog || []) {
+                const id = String(anime?.id || '');
+                if (!/^[1-9][0-9]{0,11}$/.test(id) || seen.has(id)) continue;
+                if (!['Смотрю', 'В планах'].includes(statuses?.[id])) continue;
+                const count = Number(anime.episodeCount);
+                const updated = Date.parse(anime.lastEpisodeAddedAt || '');
+                if (!Number.isInteger(count) || count < 1 || !Number.isFinite(updated) ||
+                    updated > now || updated < now - 14 * 86400000) continue;
+                const title = String(anime.title || '').trim().slice(0, 120);
+                if (!title) continue;
+                seen.add(id);
+                items.push({ id, title, episodeCount: count, updated });
+            }
+            return items.sort((a, b) => b.updated - a.updated).slice(0, 5);
+        }
+
         function updateNotificationsUI() {
             const uid = currentUser?.authUserId;
             const ownsNotifications = accountNotifications.owner === uid;
@@ -557,7 +577,22 @@ async function loadDataFromCloud(attempt = 0) {
                 '<br><time datetime="' + escapeFriendHtml(row.created_at) + '">' +
                 escapeFriendHtml(new Date(row.created_at).toLocaleString('ru-RU')) + '</time></div>'
             ).join('');
-            document.getElementById('notifListContainer').innerHTML = requestMarkup + noticeMarkup ||
+            // Not part of the unread bell counter: these are catalog updates, not
+            // user-directed unread messages. Only use this verified owner's lists.
+            const digest = uid && currentUser?.username
+                ? komiRecentEpisodeDigest(userAnimeStatuses[currentUser.username] || {}, animeList)
+                : [];
+            const digestMarkup = digest.length
+                ? '<div class="notif-item"><strong>Недавно обновлены серии из моего списка</strong></div>' +
+                  digest.map(entry =>
+                    '<div class="notif-item"><a href="/anime/' + entry.id + '">' +
+                    escapeFriendHtml(entry.title) + '</a><br>' +
+                    'Серий в каталоге: ' + entry.episodeCount +
+                    ' · ' + escapeFriendHtml(new Date(entry.updated).toLocaleDateString('ru-RU')) + '</div>'
+                  ).join('')
+                : '';
+
+            document.getElementById('notifListContainer').innerHTML = requestMarkup + noticeMarkup + digestMarkup ||
                 '<div class="notif-item">Нет новых уведомлений</div>';
         }
 
