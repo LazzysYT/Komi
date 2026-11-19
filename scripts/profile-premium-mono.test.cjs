@@ -10,19 +10,20 @@ const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 test('monochrome profile stylesheet loads last and only restyles profile UI', () => {
   const html = read('index.html');
   const css = read('komi-black-white.css').split('/* KomiAnime profile 2026-11-19')[1];
-  assert.ok(html.includes('komi-black-white.css?v=20261119a'));
+  assert.ok(html.includes('komi-black-white.css?v=20261119b'));
   assert.doesNotMatch(html, /profile-premium-mono\\.css/);
   assert.match(css, /\.komi-media-hub \.komi-profile-v2/);
   assert.doesNotMatch(css, /#(?:ff454f|e5344b|e53935|f00)\b/i);
   assert.doesNotMatch(css, /filter:\s*(?:grayscale|blur)/i);
 });
 
-test('showcase reads saved favorites instead of generating dummy content', () => {
-  const code = read('app-main.js');
-  assert.match(code, /const profileShowcase = Object\.keys\(userFavorites\[username\] \|\| \{\}\)/);
-  assert.match(code, /profileShowcase\.map\(an => renderCard\(an\)\)/);
-  assert.match(code, /profileShowcase\.length/);
-  assert.match(code, /komiSafeUrl\(p\.avatar\)/);
+test('premium showcase uses actual account favorites and preserves the existing avatar', () => {
+  const app = read('app-main.js');
+  const premium = read('profile-premium.js');
+  assert.match(premium, /Object\\.keys\\(userFavorites\\[ctx\\.username\\]\\|\\|\\{\\}\\)/);
+  assert.match(premium, /favoriteAnime=favoriteIds\\.map/);
+  assert.match(app, /komiSafeUrl\\(p\\.avatar\\)/);
+  assert.match(app, /KomiProfileUI\\.content/);
 });
 
 test('public profile route and clipboard URL use the same canonical account handle', async () => {
