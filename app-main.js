@@ -1276,25 +1276,41 @@ async function loadDataFromCloud(attempt = 0) {
                 komiQuestRewardState.owner !== owner) return;
             const data = komiQuestRewardState.data;
             const claims = new Set((Array.isArray(data?.claims) ? data.claims : [])
-                .filter(item=>item.day === data.server_day).map(item=>item.id));
+                .filter(item => item.day === data.server_day).map(item => item.id));
             const available = data?.available || {};
             const messages = {
-                checkin:'Ежедневная отметка',watch:'20 минут настоящего просмотра',
+                checkin:'Ежедневная отметка', watch:'20 минут настоящего просмотра',
                 comment:'Комментарий (не менее 10 символов)'
             };
             for (const button of panel.querySelectorAll('[data-quest-reward-id]')) {
                 const id = button.dataset.questRewardId;
                 const claimed = claims.has(id);
-                button.disabled = komiQuestRewardState.busy || !data || claimed || !available[id];
-                button.textContent = claimed ? 'Получено ✓' : available[id] ? 'Забрать награду' : 'Не выполнено';
-                const label = button.closest('[data-quest-reward-row]')?.querySelector('strong');
-                if (label) label.textContent = messages[id] || id;
+                const ready = Boolean(available[id]);
+                const row = button.closest('[data-quest-reward-row]');
+                button.disabled = komiQuestRewardState.busy || !data || claimed || !ready;
+                button.textContent = claimed ? 'Получено ✓' : ready ? 'Забрать' : data ? 'В процессе' : 'Проверяем…';
+                button.setAttribute('aria-label', claimed ? 'Награда получена' : ready ? 'Забрать награду' : 'Задание ещё не выполнено');
+                if (row) {
+                    row.dataset.questState = claimed ? 'claimed' : ready ? 'ready' : data ? 'pending' : 'loading';
+                    const label = row.querySelector('.profile-daily-task-title');
+                    if (label) label.textContent = messages[id] || id;
+                    const fill = row.querySelector('[data-quest-progress-fill]');
+                    if (fill) fill.style.width = claimed || ready ? '100%' : '0%';
+                    const hint = row.querySelector('[data-quest-progress-label]');
+                    if (hint) hint.textContent = claimed ? 'Выполнено' : ready ? 'Цель достигнута' : data ? 'Ожидает выполнения' : 'Проверка…';
+                }
             }
-            const output=panel.querySelector('[data-quest-reward-status]');
-            if(output) output.textContent=komiQuestRewardState.error ||
+            const badge = panel.querySelector('[data-quest-xp-badge]');
+            if (badge) {
+                const multiplier = Number(data?.premium_xp_multiplier);
+                badge.textContent = 'Серверный XP · ' +
+                    (data && Number.isFinite(multiplier) && multiplier > 0
+                        ? multiplier.toLocaleString('ru-RU') + '×' : '…');
+            }
+            const output = panel.querySelector('[data-quest-reward-status]');
+            if (output) output.textContent = komiQuestRewardState.error ||
                 (komiQuestRewardState.busy ? 'Проверяем награды…' : data
-                    ? 'Серверный XP за задания: '+data.quest_xp_total+
-                        ' · множитель '+data.premium_xp_multiplier+'×'
+                    ? 'Получено за задания: ' + data.quest_xp_total + ' XP · по данным сервера'
                     : 'Проверка заданий недоступна');
         }
         async function komiDailyQuestRewardRead(action='read',quest=null) {
@@ -1350,18 +1366,37 @@ async function loadDataFromCloud(attempt = 0) {
             const total = panel.querySelector('[data-komi-daily-total]');
             const status = panel.querySelector('[data-komi-daily-status]');
             const action = panel.querySelector('[data-komi-click="daily-checkin"]');
-            if (streak) streak.textContent = value ? String(Math.max(0, Number(value.streak_days) || 0)) : '—';
-            if (total) total.textContent = value ? String(Math.max(0, Number(value.total_days) || 0)) : '—';
+            const refresh = panel.querySelector('[data-komi-daily-refresh]');
+            if (streak) streak.textContent = value ? String(Math.max(0, Number(value.streak_days) || 0)) : '0';
+            if (total) total.textContent = value ? String(Math.max(0, Number(value.total_days) || 0)) : '0';
             if (status) status.textContent = state.error ||
                 (state.claiming ? 'Сохраняем отметку…' :
                     !fresh ? 'Загружаем активность…' :
-                    value.checked_today ? 'Сегодня отмечено · дни считаются по UTC' :
-                    'Можно отметить сегодняшний день · по UTC');
+                    value.checked_today ? 'Сегодня отмечено · время UTC' :
+                    'Можно отметить сегодняшний день · время UTC');
+            if (refresh) refresh.disabled = state.claiming || Boolean(state.inflight);
             if (action) {
-                action.disabled = state.claiming || Boolean(state.inflight) || (fresh && Boolean(value?.checked_today));
-                action.textContent = state.claiming ? 'Сохраняем…' :
-                    (fresh && value?.checked_today) ? 'Отмечено ✓' :
-                    (!fresh && !state.inflight) ? 'Повторить' : 'Отметить день';
+                action.disabled = state.claiming || Boolean(state.inflight) || !fresh || Boolean(value?.checked_today);
+                action.textContent = state.claiming ? 'Отмечаем…' :
+                    fresh && value?.checked_today ? 'Отмечено ✓' : 'Отметить день';
+            }
+            // The RPC provides a confirmed consecutive streak, not a full history.
+            // Only days inside that verified streak are highlighted.
+            const currentUTC = new Date(today + 'T00:00:00Z');
+            const weekPosition = (currentUTC.getUTCDay() + 6) % 7;
+            const streakDays = fresh ? Math.max(0, Number(value.streak_days) || 0) : 0;
+            const lastCheckedOffset = fresh ? (value.checked_today ? 0 : -1) : -8;
+            for (const day of panel.querySelectorAll?.('[data-komi-weekday]') || []) {
+                const weekday = Number(day.dataset.komiWeekday);
+                if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) continue;
+                const offset = weekday - weekPosition;
+                const checked = offset <= lastCheckedOffset && offset > lastCheckedOffset - streakDays;
+                const isToday = offset === 0;
+                day.dataset.state = checked ? 'checked' : isToday ? 'today' : offset > 0 ? 'future' : 'neutral';
+                const circle = day.querySelector('.profile-week-circle');
+                if (circle) circle.textContent = checked ? '✓' : isToday ? '•' : '·';
+                day.setAttribute('aria-label', checked ? 'Отмечено в текущем стрике' :
+                    isToday ? 'Сегодня, отметки пока нет' : 'Отметка за этот день не подтверждена');
             }
         }
         async function komiDailyActivityRead(force = false) {
