@@ -17,13 +17,13 @@ test('monochrome profile stylesheet loads last and only restyles profile UI', ()
   assert.doesNotMatch(css, /filter:\s*(?:grayscale|blur)/i);
 });
 
-test('premium showcase uses actual account favorites and preserves the existing avatar', () => {
+test('premium showcase uses real saved favorites and preserves existing avatars', () => {
   const app = read('app-main.js');
   const premium = read('profile-premium.js');
-  assert.match(premium, /Object\\.keys\\(userFavorites\\[ctx\\.username\\]\\|\\|\\{\\}\\)/);
-  assert.match(premium, /favoriteAnime=favoriteIds\\.map/);
-  assert.match(app, /komiSafeUrl\\(p\\.avatar\\)/);
-  assert.match(app, /KomiProfileUI\\.content/);
+  assert.ok(premium.includes('Object.keys(userFavorites[ctx.username]||{})'));
+  assert.ok(premium.includes('favoriteAnime=favoriteIds.map'));
+  assert.ok(app.includes('komiSafeUrl(p.avatar)'));
+  assert.ok(app.includes('KomiProfileUI.content'));
 });
 
 test('public profile route and clipboard URL use the same canonical account handle', async () => {
