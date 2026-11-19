@@ -1443,6 +1443,58 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         function safeProfileText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+        const komiPrivacyState = {owner:null,data:null,busy:false,error:'',request:0};
+        function komiPrivacyPaint() {
+            const uid=currentUser?.authUserId;
+            const panel=document.querySelector('[data-komi-privacy-panel]');
+            if(!uid || panel?.dataset.komiPrivacyPanel!==uid ||
+                komiPrivacyState.owner!==uid) return;
+            for(const button of panel.querySelectorAll('[data-privacy-switch]')) {
+                const field=button.dataset.privacySwitch;
+                const enabled=Boolean(komiPrivacyState.data?.[field]);
+                button.disabled=komiPrivacyState.busy || !komiPrivacyState.data;
+                button.setAttribute('aria-pressed',String(enabled));
+                button.textContent=enabled?'Включено ✓':'Выключено';
+            }
+            const status=panel.querySelector('[data-privacy-status]');
+            if(status)status.textContent=komiPrivacyState.error ||
+                (komiPrivacyState.busy?'Сохраняем настройки…':
+                    komiPrivacyState.data?'Настройки сохраняются на сервере для вашего аккаунта.':'Загружаем настройки…');
+        }
+        async function komiPrivacyRequest(field=null) {
+            const uid=currentUser?.authUserId;
+            if(!uid || !_supabase || komiPrivacyState.busy)return;
+            if(komiPrivacyState.owner!==uid) {
+                komiPrivacyState.owner=uid;komiPrivacyState.data=null;
+            }
+            const request=++komiPrivacyState.request;
+            const value=field ? !Boolean(komiPrivacyState.data?.[field]):null;
+            komiPrivacyState.busy=true;komiPrivacyState.error='';
+            komiPrivacyPaint();
+            try {
+                const {data,error}=await _supabase.rpc('komi_privacy', {
+                    p_action:field?'update':'read',
+                    p_invisible:field==='invisible'?value:null,
+                    p_hide_profile:field==='hide_profile'?value:null
+                });
+                if(error)throw error;
+                if(!data || typeof data.invisible!=='boolean' ||
+                    typeof data.hide_profile!=='boolean')throw Error('Invalid privacy response');
+                if(currentUser?.authUserId!==uid || komiPrivacyState.request!==request)return;
+                komiPrivacyState.data=data;
+                if(field==='invisible')void updateOnlinePresence();
+            }catch(error){
+                if(currentUser?.authUserId===uid && komiPrivacyState.request===request){
+                    komiPrivacyState.error='Не удалось сохранить настройки приватности.';
+                    console.warn('Komi privacy:',error?.message||String(error));
+                }
+            }finally{
+                if(komiPrivacyState.request===request){
+                    komiPrivacyState.busy=false;komiPrivacyPaint();
+                }
+            }
+        }
+
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
@@ -1630,6 +1682,21 @@ async function loadDataFromCloud(attempt = 0) {
                                     <p data-komi-premium-upload-status role="status" aria-live="polite"></p>
                                 </section>
                                 <h4> Настройки профиля</h4>
+                                ${currentUser?.authUserId ? `
+                                <section data-komi-privacy-panel="${safeProfileText(currentUser.authUserId)}"
+                                    aria-label="Приватность аккаунта" style="margin:12px 0;padding:12px;border:1px solid #ffffff24;border-radius:12px">
+                                  <h5>Приватность</h5>
+                                  <p>Невидимка исключает аккаунт из счётчика онлайн. Закрытый профиль скрывает его данные от других аккаунтов. Уже опубликованные комментарии остаются видимыми.</p>
+                                  <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0">
+                                    <span>Режим невидимки</span>
+                                    <button type="button" class="btn-secondary" data-privacy-switch="invisible" disabled>Загружаем…</button>
+                                  </div>
+                                  <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0">
+                                    <span>Скрыть профиль от других аккаунтов</span>
+                                    <button type="button" class="btn-secondary" data-privacy-switch="hide_profile" disabled>Загружаем…</button>
+                                  </div>
+                                  <small data-privacy-status role="status" aria-live="polite"></small>
+                                </section>` : ''}
                                 <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
                                 <input type="text" id="newDisplayName" maxlength="40" class="form-control" placeholder="Твой никнейм" value="${safeProfileText(p.displayName || '')}">
                                 <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
@@ -1806,6 +1873,16 @@ async function loadDataFromCloud(attempt = 0) {
             `;
             if (isMe && currentUser?.authUserId) {
                 void komiDailyActivityRead();
+                const privacyPanel=container.querySelector('[data-komi-privacy-panel]');
+                privacyPanel?.addEventListener('click',event=>{
+                    const button=event.target.closest('[data-privacy-switch]');
+                    if(!button || button.disabled || !privacyPanel.contains(button))return;
+                    if(!['invisible','hide_profile'].includes(button.dataset.privacySwitch))return;
+                    void komiPrivacyRequest(button.dataset.privacySwitch);
+                });
+                if(komiPrivacyState.owner===currentUser.authUserId && komiPrivacyState.data)
+                    komiPrivacyPaint();
+                else void komiPrivacyRequest();
                 const questPanel=container.querySelector('[data-komi-quest-rewards]');
                 questPanel?.addEventListener('click',event=>{
                     const button=event.target.closest('[data-quest-reward-id]');
