@@ -55,6 +55,8 @@
   function makeClick(text) {
     if(Object.hasOwn(fixed,text))return fixed[text];
     let match;
+    if((match=/^setKomiCalendarDay\(([0-7])\)$/.exec(text)))
+      return ()=>setKomiCalendarDay(match[1]);
     if((match=/^navigate\('(home|catalog|shop|partners)'\)$/.exec(text)))
       return ()=>navigate(match[1]);
     if((match=/^openKomiCollection\('([a-z]+)'\)$/.exec(text)) && allowedCollections.has(match[1]))

@@ -3326,6 +3326,16 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
+        let komiCalendarDayFilter = 'all';
+        function setKomiCalendarDay(day) {
+            const allowed = ['all','1','2','3','4','5','6','0'];
+            const value = String(day) === '7' ? 'all' : String(day);
+            if (!allowed.includes(value)) return;
+            komiCalendarDayFilter = value;
+            const section = document.getElementById('komiCalendarSection');
+            if (section) section.outerHTML = komiReleaseCalendar();
+        }
+
         function komiReleaseCalendar() {
             const now = Date.now();
             const maxTime = now + 14 * 86400000;
@@ -3341,7 +3351,10 @@ async function loadDataFromCloud(attempt = 0) {
                         : live?.episode
                 };
             }).filter(x => Number.isFinite(x.date) && x.date > now && x.date < maxTime)
-              .sort((a,b) => a.date - b.date).slice(0,18);
+              .sort((a,b) => a.date - b.date)
+              .filter(x => komiCalendarDayFilter === 'all' ||
+                  String(new Date(x.date).getDay()) === komiCalendarDayFilter)
+              .slice(0,24);
             const latest = animeList.map(anime => ({
                 anime,
                 date: Date.parse(anime.lastEpisodeAddedAt)
@@ -3350,6 +3363,12 @@ async function loadDataFromCloud(attempt = 0) {
 
             let result = '<section class="komi-feature-section" id="komiCalendarSection"><div class="section-header"><h2 class="section-title"> Календарь серий</h2><p class="komi-home-subtitle">Расписание эфиров и последние добавления в каталог</p>'+
                 '<button type="button" class="section-see-all" data-komi-onclick="loadKomiEpisodeSchedule(true)">↻ Обновить расписание</button></div>';
+            const days = [['all','Все'],['1','Пн'],['2','Вт'],['3','Ср'],['4','Чт'],['5','Пт'],['6','Сб'],['0','Вс']];
+            result += '<div class="komi-calendar-weekdays" role="group" aria-label="День недели" style="display:flex;gap:7px;flex-wrap:wrap;margin:14px 0">' +
+                days.map(([value,label]) => '<button type="button" class="btn-secondary" aria-pressed="' +
+                    (komiCalendarDayFilter === value ? 'true' : 'false') +
+                    '" style="min-width:39px;padding:8px 10px;opacity:' + (komiCalendarDayFilter === value ? '1' : '.65') +
+                    '" data-komi-onclick="setKomiCalendarDay(' + (value === 'all' ? '7' : value) + ')">' + label + '</button>').join('') + '</div>';
             if (upcoming.length) {
                 result += '<p class="komi-feature-muted">Ближайшие эфиры · время указано в твоём часовом поясе. Озвучка может появиться позже.</p>';
                 result += '<div class="komi-release-list">' + upcoming.map(entry => {
@@ -3369,7 +3388,7 @@ async function loadDataFromCloud(attempt = 0) {
                     ? 'Проверяем подтверждённое расписание на ближайшие 14 дней…'
                     : komiCalendarError
                         ? 'Не удалось получить расписание из AniList. Попробуй обновить позже.'
-                        : 'На ближайшие 14 дней пока нет подтверждённых дат для аниме из каталога.';
+                        : 'На выбранный день пока нет подтверждённых дат для аниме из каталога.';
                 result += '<p class="komi-feature-muted">' + message + '</p>';
             }
             if (latest.length) {
