@@ -31,6 +31,8 @@ test('unknown status and duplicate favorite categories cannot make fake mileston
 });
 test('quests are shown only for verified owner, without client XP or wallet grants',()=>{
  assert.match(source,/const profileQuests = isMe && currentUser\?\.authUserId \?/);
- assert.match(source,/data-komi-quests/);
+ assert.doesNotMatch(source,/data-komi-quests/, 'Duplicate quest row should be absent above profile tabs');
+ const bento=fs.readFileSync(path.join(__dirname,'../profile-premium.js'),'utf8');
+ assert.match(bento,/data-komi-quests/, 'Achievement progress now belongs inside Bento widget');
  assert.doesNotMatch(source.slice(start,end),/\.rpc\(|aniCoin|premium|xp\s*\+=|localStorage/);
 });

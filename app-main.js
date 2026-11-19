@@ -1276,25 +1276,41 @@ async function loadDataFromCloud(attempt = 0) {
                 komiQuestRewardState.owner !== owner) return;
             const data = komiQuestRewardState.data;
             const claims = new Set((Array.isArray(data?.claims) ? data.claims : [])
-                .filter(item=>item.day === data.server_day).map(item=>item.id));
+                .filter(item => item.day === data.server_day).map(item => item.id));
             const available = data?.available || {};
             const messages = {
-                checkin:'Ежедневная отметка',watch:'20 минут настоящего просмотра',
+                checkin:'Ежедневная отметка', watch:'20 минут настоящего просмотра',
                 comment:'Комментарий (не менее 10 символов)'
             };
             for (const button of panel.querySelectorAll('[data-quest-reward-id]')) {
                 const id = button.dataset.questRewardId;
                 const claimed = claims.has(id);
-                button.disabled = komiQuestRewardState.busy || !data || claimed || !available[id];
-                button.textContent = claimed ? 'Получено ✓' : available[id] ? 'Забрать награду' : 'Не выполнено';
-                const label = button.closest('[data-quest-reward-row]')?.querySelector('strong');
-                if (label) label.textContent = messages[id] || id;
+                const ready = Boolean(available[id]);
+                const row = button.closest('[data-quest-reward-row]');
+                button.disabled = komiQuestRewardState.busy || !data || claimed || !ready;
+                button.textContent = claimed ? 'Получено ✓' : ready ? 'Забрать' : data ? 'В процессе' : 'Проверяем…';
+                button.setAttribute('aria-label', claimed ? 'Награда получена' : ready ? 'Забрать награду' : 'Задание ещё не выполнено');
+                if (row) {
+                    row.dataset.questState = claimed ? 'claimed' : ready ? 'ready' : data ? 'pending' : 'loading';
+                    const label = row.querySelector('.profile-daily-task-title');
+                    if (label) label.textContent = messages[id] || id;
+                    const fill = row.querySelector('[data-quest-progress-fill]');
+                    if (fill) fill.style.width = claimed || ready ? '100%' : '0%';
+                    const hint = row.querySelector('[data-quest-progress-label]');
+                    if (hint) hint.textContent = claimed ? 'Выполнено' : ready ? 'Цель достигнута' : data ? 'Ожидает выполнения' : 'Проверка…';
+                }
             }
-            const output=panel.querySelector('[data-quest-reward-status]');
-            if(output) output.textContent=komiQuestRewardState.error ||
+            const badge = panel.querySelector('[data-quest-xp-badge]');
+            if (badge) {
+                const multiplier = Number(data?.premium_xp_multiplier);
+                badge.textContent = 'Серверный XP · ' +
+                    (data && Number.isFinite(multiplier) && multiplier > 0
+                        ? multiplier.toLocaleString('ru-RU') + '×' : '…');
+            }
+            const output = panel.querySelector('[data-quest-reward-status]');
+            if (output) output.textContent = komiQuestRewardState.error ||
                 (komiQuestRewardState.busy ? 'Проверяем награды…' : data
-                    ? 'Серверный XP за задания: '+data.quest_xp_total+
-                        ' · множитель '+data.premium_xp_multiplier+'×'
+                    ? 'Получено за задания: ' + data.quest_xp_total + ' XP · по данным сервера'
                     : 'Проверка заданий недоступна');
         }
         async function komiDailyQuestRewardRead(action='read',quest=null) {
@@ -1350,18 +1366,37 @@ async function loadDataFromCloud(attempt = 0) {
             const total = panel.querySelector('[data-komi-daily-total]');
             const status = panel.querySelector('[data-komi-daily-status]');
             const action = panel.querySelector('[data-komi-click="daily-checkin"]');
-            if (streak) streak.textContent = value ? String(Math.max(0, Number(value.streak_days) || 0)) : '—';
-            if (total) total.textContent = value ? String(Math.max(0, Number(value.total_days) || 0)) : '—';
+            const refresh = panel.querySelector('[data-komi-daily-refresh]');
+            if (streak) streak.textContent = value ? String(Math.max(0, Number(value.streak_days) || 0)) : '0';
+            if (total) total.textContent = value ? String(Math.max(0, Number(value.total_days) || 0)) : '0';
             if (status) status.textContent = state.error ||
                 (state.claiming ? 'Сохраняем отметку…' :
                     !fresh ? 'Загружаем активность…' :
-                    value.checked_today ? 'Сегодня отмечено · дни считаются по UTC' :
-                    'Можно отметить сегодняшний день · по UTC');
+                    value.checked_today ? 'Сегодня отмечено · время UTC' :
+                    'Можно отметить сегодняшний день · время UTC');
+            if (refresh) refresh.disabled = state.claiming || Boolean(state.inflight);
             if (action) {
-                action.disabled = state.claiming || Boolean(state.inflight) || (fresh && Boolean(value?.checked_today));
-                action.textContent = state.claiming ? 'Сохраняем…' :
-                    (fresh && value?.checked_today) ? 'Отмечено ✓' :
-                    (!fresh && !state.inflight) ? 'Повторить' : 'Отметить день';
+                action.disabled = state.claiming || Boolean(state.inflight) || !fresh || Boolean(value?.checked_today);
+                action.textContent = state.claiming ? 'Отмечаем…' :
+                    fresh && value?.checked_today ? 'Отмечено ✓' : 'Отметить день';
+            }
+            // The RPC provides a confirmed consecutive streak, not a full history.
+            // Only days inside that verified streak are highlighted.
+            const currentUTC = new Date(today + 'T00:00:00Z');
+            const weekPosition = (currentUTC.getUTCDay() + 6) % 7;
+            const streakDays = fresh ? Math.max(0, Number(value.streak_days) || 0) : 0;
+            const lastCheckedOffset = fresh ? (value.checked_today ? 0 : -1) : -8;
+            for (const day of panel.querySelectorAll?.('[data-komi-weekday]') || []) {
+                const weekday = Number(day.dataset.komiWeekday);
+                if (!Number.isInteger(weekday) || weekday < 0 || weekday > 6) continue;
+                const offset = weekday - weekPosition;
+                const checked = offset <= lastCheckedOffset && offset > lastCheckedOffset - streakDays;
+                const isToday = offset === 0;
+                day.dataset.state = checked ? 'checked' : isToday ? 'today' : offset > 0 ? 'future' : 'neutral';
+                const circle = day.querySelector('.profile-week-circle');
+                if (circle) circle.textContent = checked ? '✓' : isToday ? '•' : '·';
+                day.setAttribute('aria-label', checked ? 'Отмечено в текущем стрике' :
+                    isToday ? 'Сегодня, отметки пока нет' : 'Отметка за этот день не подтверждена');
             }
         }
         async function komiDailyActivityRead(force = false) {
@@ -1616,22 +1651,17 @@ async function loadDataFromCloud(attempt = 0) {
                 }
             }
             const watchedCount = statsCounts['Просмотрено'] || 0;
-            const calculatedLevel = komiAchievements(username).level;
+            const profileExperience = komiAchievements(username);
+            const calculatedLevel = profileExperience.level;
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
             // Only real saved entries are shown: no fictional showcase data.
             const showcasePremium = window.KomiPremium?.isActiveName?.(username) === true;
-            const showcaseLimit = showcasePremium ? 6 : 3;
-            const profileShowcase = Object.keys(userFavorites[username] || {})
-                .filter(id => /^[1-9][0-9]{0,14}$/.test(String(id)))
-                .map(id => profileAnimeById.get(String(id))).filter(Boolean).slice(0, showcaseLimit);
-            const showcaseMarkup = profileShowcase.map(anime =>
-                '<a class="komi-profile-showcase-item" href="/anime/' + encodeURIComponent(String(anime.id)) +
-                '" style="display:flex;align-items:center;gap:9px;min-width:0;padding:8px;border:1px solid #ffffff22;border-radius:12px;color:inherit;text-decoration:none">' +
-                (komiSafeUrl(anime.poster) ? '<img src="' + safeProfileText(komiSafeUrl(anime.poster)) +
-                '" alt="" loading="lazy" width="42" height="58" style="width:42px;height:58px;object-fit:cover;border-radius:6px">' : '') +
-                '<span style="font-size:12px;font-weight:600;overflow-wrap:anywhere">' + safeProfileText(anime.title) +
-                '</span></a>').join('');
+            const xpProgress = Math.max(0, profileExperience.xp % 500);
+            const confirmedMultiplier = isMe && komiQuestRewardState.owner === currentUser?.authUserId
+                ? Number(komiQuestRewardState.data?.premium_xp_multiplier) : NaN;
+            const xpMultiplier = Number.isFinite(confirmedMultiplier) && confirmedMultiplier >= 1
+                ? confirmedMultiplier : (showcasePremium ? 1.5 : 1);
             const profileSavedCount = profileActiveTab === 'Любимые' ? favoritesCount
                 : customFolderNames.includes(profileActiveTab)
                     ? (customFolders[profileActiveTab] || []).length
@@ -1672,7 +1702,6 @@ async function loadDataFromCloud(attempt = 0) {
                             
                             <p class="profile-bio" data-profile-field="bio">${safeProfileText(p.bio || 'Твоя история в мире аниме.')}</p>
                             <div class="profile-badges-row">
-                                <span class="profile-badge-level">✦ Уровень ${calculatedLevel}</span>
                                 <span class="profile-badge-item" data-profile-presence>${safeProfileText(p.status || 'Люблю аниме')}</span>
                                 <span class="profile-badge-item">◉ Друзей: ${myFriends.length}</span>
                                 ${tasteCompatibility}
@@ -1685,13 +1714,11 @@ async function loadDataFromCloud(attempt = 0) {
                               <h3>Особый статус в сообществе</h3>
                               <p>Подтверждённая подписка. Значок Premium виден другим пользователям рядом с никнеймом.</p>
                             </section>
-                            <section class="komi-profile-anime-showcase" aria-label="Любимые аниме" style="margin:12px 0">
-                                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
-                                    <strong>♡ Любимые аниме</strong><small>${profileShowcase.length} / ${showcaseLimit}${showcasePremium ? " · Premium" : ""}</small>
-                                </div>
-                                ${showcaseMarkup ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">${showcaseMarkup}</div>` : `<p class="komi-feature-muted">Пока нет добавленных в любимые аниме.</p>`}
-                            </section>
-                            <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 500} из 500 XP <progress max="500" value="${komiAchievements(username).xp % 500}"></progress></label></div>
+                            <div class="komi-level-progress profile-xp-capsule" aria-label="Уровень ${calculatedLevel}, ${xpProgress} из 500 XP, множитель ${xpMultiplier}x">
+                                <span class="profile-xp-level">Уровень <strong>${calculatedLevel}</strong></span>
+                                <span class="profile-xp-bar"><span>${xpProgress} / 500 XP</span><progress max="500" value="${xpProgress}">${xpProgress} из 500</progress></span>
+                                <span class="profile-xp-multiplier">×${xpMultiplier.toLocaleString('ru-RU')}</span>
+                            </div>
                             <div class="komi-profile-actions profile-hero-actions">
                                 ${!isMe && currentUser ? `
                                     ${amIFriend
@@ -1699,7 +1726,6 @@ async function loadDataFromCloud(attempt = 0) {
                                       : `<button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
                                     <button type="button" class="profile-hero-action profile-hero-action-muted" data-profile-party="${safeProfileText(username)}">▷ Смотреть вместе</button>
                                 ` : ''}
-                                ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти</button>' : ''}
                             </div>
 
                         </div>
@@ -1748,51 +1774,57 @@ async function loadDataFromCloud(attempt = 0) {
                                     </div>
                                     <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" data-komi-onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
-                                <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
+                                <div class="profile-settings-session-actions">
+                                    <button type="button" class="btn-secondary profile-settings-logout" data-komi-onclick="logoutUser('local')">Выйти из аккаунта</button>
+                                    <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
+                                </div>
                             </div>
                             ` : ''}
 
                     ${isMe && currentUser?.authUserId ? `
-                    <section class="profile-summary-strip" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
-                        <div class="profile-summary-item"><strong data-komi-daily-streak>—</strong><span>Дней подряд</span></div>
-                        <div class="profile-summary-item"><strong data-komi-daily-total>—</strong><span>Всего отметок</span></div>
-                        <div class="profile-summary-item">
-                            <button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-click="daily-checkin" disabled>Отметить день</button>
+                    <section class="profile-activity-card" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
+                        <div class="profile-activity-heading">
+                            <div class="profile-activity-heading-main">
+                                <span class="profile-activity-eyebrow">Ежедневная активность</span>
+                                <h3><strong data-komi-daily-streak>0</strong> дней подряд</h3>
+                            </div>
+                            <div class="profile-activity-tools">
+                                <span class="profile-activity-total">Всего: <strong data-komi-daily-total>0</strong></span>
+                                <button type="button" class="profile-refresh-icon" data-komi-daily-refresh aria-label="Обновить ежедневную активность" title="Обновить активность">↻</button>
+                            </div>
+                        </div>
+                        <div class="profile-week-tracker" role="group" aria-label="Отметки за неделю по UTC">
+                            ${['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map((day,index)=>`
+                                <span class="profile-week-day" data-komi-weekday="${index}" data-state="pending">
+                                    <span class="profile-week-circle" aria-hidden="true">·</span>
+                                    <span class="profile-week-label">${day}</span>
+                                </span>`).join('')}
+                        </div>
+                        <div class="profile-activity-footer">
                             <span data-komi-daily-status role="status" aria-live="polite">Загружаем активность…</span>
+                            <button type="button" class="profile-checkin-button" data-komi-click="daily-checkin" disabled>Отметить день</button>
                         </div>
-                    </section>
-                    ` : ''}
+                    </section>` : ''}
                     ${isMe && currentUser?.authUserId ? `
-                    <section class="profile-summary-strip" data-komi-quest-rewards="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневные квесты с серверными наградами">
-                      ${[['checkin','Ежедневная отметка','20 XP + 1 AniCoin'],
-                          ['watch','20 минут просмотра','30 XP + 1 AniCoin'],
-                          ['comment','Комментарий от 10 символов','10 XP']].map(([id,label,reward])=>`
-                        <div class="profile-summary-item" data-quest-reward-row>
-                          <strong>${label}</strong><span>${reward}</span>
-                          <button type="button" class="profile-hero-action" data-quest-reward-id="${id}" disabled>Проверяем…</button>
-                        </div>`).join('')}
-                      <p data-quest-reward-status role="status" aria-live="polite">Проверяем награды…</p>
-                    </section>
-                    ` : ''}
-                    ${profileQuests.length ? `
-                    <section class="profile-summary-strip" data-komi-quests aria-label="Квесты Komi — цели без ограничения по времени">
-                      ${profileQuests.map(quest => `
-                        <div class="profile-summary-item" data-komi-quest-state="${quest.value >= quest.target ? 'complete' : 'in-progress'}">
-                          <strong>${quest.value} / ${quest.target}</strong>
-                          <span>${quest.value >= quest.target ? '✓ ' : ''}${safeProfileText(quest.label)}</span>
+                    <section class="profile-daily-quests" data-komi-quest-rewards="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневные задания с серверными наградами">
+                        <div class="profile-daily-heading"><h3>Ежедневные задания</h3><span class="profile-server-xp-badge" data-quest-xp-badge>Серверный XP · …</span></div>
+                        <div class="profile-daily-grid">
+                            ${[['checkin','Ежедневная отметка','20 XP + 1 AniCoin'],
+                                ['watch','20 минут просмотра','30 XP + 1 AniCoin'],
+                                ['comment','Комментарий от 10 символов','10 XP']].map(([id,label,reward])=>`
+                                <div class="profile-daily-task" data-quest-reward-row data-quest-state="loading">
+                                    <strong class="profile-daily-task-title">${label}</strong>
+                                    <small class="profile-daily-reward">${reward}</small>
+                                    <span class="profile-daily-progress" aria-hidden="true"><i data-quest-progress-fill></i></span>
+                                    <div class="profile-daily-task-footer">
+                                        <span class="profile-daily-task-hint" data-quest-progress-label>Проверка…</span>
+                                        <button type="button" class="profile-quest-status-pill" data-quest-reward-id="${id}" disabled>Проверяем…</button>
+                                    </div>
+                                </div>`).join('')}
                         </div>
-                      `).join('')}
-                    </section>
-                    ` : ''}
-                    <div class="profile-summary-strip" aria-label="Краткая статистика профиля">
-                       <div class="profile-summary-item profile-summary-level"><strong>${calculatedLevel}</strong><span>Уровень</span></div>
-                       <div class="profile-summary-item"><strong>${statsCounts['Просмотрено']}</strong><span>Просмотрено</span></div>
-                       <div class="profile-summary-item"><strong>${Object.keys(userStatuses).length}</strong><span>В списках</span></div>
-                       <div class="profile-summary-item"><strong>${favoritesCount}</strong><span>Избранное</span></div>
-                       <div class="profile-summary-item"><strong>${myFriends.length}</strong><span>Друзей</span></div>
-                    </div>
-
-                    <div class="profile-stats-grid" ${profilePageSection === 'anime' ? '' : 'hidden'}>
+                        <p class="profile-daily-message" data-quest-reward-status role="status" aria-live="polite">Проверяем награды…</p>
+                    </section>` : ''}
+                                        <div class="profile-stats-grid" ${profilePageSection === 'anime' ? '' : 'hidden'}>
                         <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Просмотрено'}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
@@ -1922,6 +1954,12 @@ async function loadDataFromCloud(attempt = 0) {
                 if(komiPrivacyState.owner===currentUser.authUserId && komiPrivacyState.data)
                     komiPrivacyPaint();
                 else void komiPrivacyRequest();
+                const activityPanel=container.querySelector('[data-komi-daily-activity]');
+                activityPanel?.addEventListener('click', event => {
+                    const button = event.target.closest('[data-komi-daily-refresh]');
+                    if (!button || button.disabled || !activityPanel.contains(button)) return;
+                    void komiDailyActivityRead(true);
+                });
                 const questPanel=container.querySelector('[data-komi-quest-rewards]');
                 questPanel?.addEventListener('click',event=>{
                     const button=event.target.closest('[data-quest-reward-id]');

@@ -36,16 +36,26 @@
     ).join('')+'</nav>';
   }
   function achievementWidget(username,isMe){
-    var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,badges:[]};
+    var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,watched:0,watching:0,friends:0,badges:[]};
     var badges=Array.isArray(info.badges)?info.badges:[];
-    var tiles=Array.from({length:Math.max(3,Math.min(6,badges.length||3))},(_,i)=>{
-      var label=badges[i]?String(badges[i]).trim():'Достижение ещё не получено';
-      return '<div class="profile-achievement'+(badges[i]?' is-earned':' is-locked')+'" tabindex="0" data-profile-tilt title="'+escapeText(label)+'">'+
-        '<span aria-hidden="true">'+(badges[i]?'✦':'◇')+'</span><small>'+escapeText(badges[i]?label:'Впереди')+'</small></div>';
+    // Only existing confirmed list/friend counters drive achievement progress.
+    var definitions=[
+      ['Первый просмотр',info.watched,1],
+      ['10 аниме',info.watched,10],
+      ['Знаток аниме',info.watched,50],
+      ['Первый друг',info.friends,1],
+      ['Марафон',info.watching,5]
+    ];
+    var tiles=definitions.map(([label,count,target])=>{
+      var progress=Math.min(target,number(count)),earned=progress>=target;
+      return '<div class="profile-achievement'+(earned?' is-earned':' is-locked')+'" tabindex="0" data-profile-tilt title="'+escapeText(label)+': '+progress+'/'+target+'">'+
+        '<span class="profile-achievement-icon" aria-hidden="true">'+(earned?'✦':'◇')+'</span>'+
+        '<span class="profile-achievement-progress">'+progress+'/'+target+'</span>'+
+        '<small>'+escapeText(label)+'</small></div>';
     }).join('');
     return '<section class="profile-widget profile-achievement-widget">'+
       header('Витрина достижений','<span class="profile-caption">'+format(info.xp)+' XP</span>')+
-      '<div class="profile-achievements">'+tiles+'</div>'+
+      '<div class="profile-achievements"'+(isMe?' data-komi-quests':'')+'>'+tiles+'</div>'+
       (!badges.length?'<p class="profile-achievements-empty">Первое достижение ещё впереди — начни просмотр или добавь друга.</p>':'')+
       (isMe?'<button type="button" class="profile-shop-link" data-komi-onclick="openAniCoinShop()">✧ Открыть магазин AniCoin</button>':'')+'</section>';
   }
@@ -93,7 +103,8 @@
     if(ctx.section!=='overview')return '';
 
     var favoriteIds=Object.keys(userFavorites[ctx.username]||{});
-    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,4);
+    var premiumShowcase=window.KomiPremium?.isActiveName?.(ctx.username)===true;
+    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,premiumShowcase?6:4);
     var statusColors=['#F1F1F1','#D0D0D0','#A8A8A8','#7F7F7F','#535353'];
     var segmentNames=statusNames.map((name,i)=>[name,number(ctx.statsCounts[name]),statusColors[i]]);
     var distribution=segmentNames.map(([name,count,color])=>
@@ -106,14 +117,15 @@
     ).join('');
     var metrics='<div class="profile-metrics">'+
       '<div class="profile-metric"><strong data-profile-count="'+fullCounts+'">'+format(fullCounts)+'</strong><span>Тайтлов в списке</span></div>'+
-      '<div class="profile-metric"><strong data-profile-field="episodes">—</strong><span>Серий посмотрено¹</span></div>'+
-      '<div class="profile-metric"><strong data-profile-field="hours">—</strong><span>Часов просмотра¹</span></div>'+
-      '<div class="profile-metric"><strong data-profile-field="meanScore">—</strong><span>Средняя оценка¹</span></div></div>';
-    var stats='<section class="profile-widget profile-stats-widget">'+header('Статистика просмотра','<span class="profile-caption">'+format(fullCounts)+' тайтлов</span>')+
+      '<div class="profile-metric"><strong class="is-missing" data-profile-field="episodes">0</strong><span>Серий посмотрено</span></div>'+
+      '<div class="profile-metric"><strong class="is-missing" data-profile-field="hours">0</strong><span>Часов просмотра</span></div>'+
+      '<div class="profile-metric"><strong class="is-missing" data-profile-field="meanScore">0</strong><span>Средняя оценка</span></div></div>';
+    var stats='<section class="profile-widget profile-stats-widget">'+header('Статистика просмотра','<span class="profile-stats-heading-meta"><span class="profile-caption">'+format(fullCounts)+' тайтлов</span>'+
+        '<span class="profile-info-popover"><button type="button" class="profile-info-trigger" aria-label="О показателях просмотра" aria-describedby="profile-stats-help">i</button>'+
+        '<span class="profile-info-tooltip" role="tooltip" id="profile-stats-help">Показатели обновятся при наличии проверенных данных просмотра и оценок.</span></span></span>')+
       '<div class="profile-distribution" role="group" aria-label="Распределение статусов аниме">'+
       (fullCounts?distribution:'<span class="profile-distribution-empty"></span>')+'</div>'+
-      '<div class="profile-legend">'+legend+'</div>'+metrics+
-      '<p class="profile-data-note">¹ Показатели обновятся при наличии проверенных данных просмотра и оценок.</p></section>';
+      '<div class="profile-legend">'+legend+'</div>'+metrics+'</section>';
     var watching='<section class="profile-widget profile-continue-widget">'+header(ctx.isMe?'Продолжить просмотр':'Коллекция',
       ctx.isMe?'<button type="button" class="profile-text-button" data-komi-onclick="profilePageSection=\'history\';render()">История ↗</button>':'')+
       '<div class="profile-watch-grid">'+(ctx.isMe?watchCards(ctx,2)||blank('Пока нет записей просмотра. Открой любое аниме из каталога.'):blank('Сохранённые аниме доступны на вкладке «Списки».'))+'</div></section>';
@@ -123,7 +135,11 @@
         return '<a href="/anime/'+encodeURIComponent(anime.id)+'" data-profile-anime="'+id+'" title="'+escapeText(anime.title)+'" aria-label="Открыть '+escapeText(anime.title)+'">'+
         (poster?'<img loading="lazy" src="'+escapeText(poster)+'" alt="">':'<div class="profile-favorite-missing">K</div>')+
         '<strong>'+escapeText(anime.title)+'</strong></a>';
-      }).join('')||blank(favoriteIds.length?'Постеры избранного ещё подгружаются из каталога.':'Добавь аниме в избранное, чтобы заполнить витрину.'))+'</div></section>';
+      }).join('')||(favoriteIds.length
+        ? blank('Постеры избранного ещё загружаются из каталога.')
+        : Array.from({length:3},()=>ctx.isMe
+            ? '<button type="button" class="profile-favorite-add" data-profile-add-favorite title="Выбрать аниме в каталоге" aria-label="Добавить аниме в избранное"><span aria-hidden="true">+</span></button>'
+            : '<div class="profile-favorite-add is-disabled" aria-label="Пустой слот избранного"><span aria-hidden="true">+</span></div>').join('')))+'</div></section>';
     var friends='<section class="profile-widget profile-friends-widget">'+header('Друзья','<span class="profile-caption">'+ctx.myFriends.length+'</span>')+
       '<div class="profile-friends-mini">'+(ctx.myFriends.slice(0,3).map((name,i)=>{
         var p=userProfiles[name]||{},label=typeof komiVisibleUsername==='function'?komiVisibleUsername(name,p,false):String(p.displayName||name);
@@ -176,7 +192,8 @@
     for(var key of ['episodes','hours','meanScore']){
       var element=profile.querySelector('[data-profile-field="'+key+'"]'),value=data[key];
       if(!element)continue;
-      if(value==null||!Number.isFinite(Number(value))||Number(value)<0){element.textContent='—';element.removeAttribute('data-profile-count');continue;}
+      if(value==null||!Number.isFinite(Number(value))||Number(value)<0){element.textContent='0';element.classList.add('is-missing');element.removeAttribute('data-profile-count');continue;}
+      element.classList.remove('is-missing');
       element.textContent=format(value);
       element.dataset.profileCount=String(value);
     }
@@ -253,6 +270,7 @@
       if(typeof openWatchPartyHub==='function')openWatchPartyHub();
     }
     if(button.matches('[data-profile-rooms]'))openFriendsDrawer();
+    if(button.matches('[data-profile-add-favorite]'))navigate('catalog');
     if(button.matches('[data-profile-resume]')&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){
       event.preventDefault();resumeKomiAnime(button.dataset.profileResume);
     }

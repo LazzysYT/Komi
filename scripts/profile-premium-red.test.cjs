@@ -35,7 +35,7 @@ test('Premium monochrome reference is scoped to existing profile and bundled las
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(css,/profile-tabs-ready::before/);
  assert.ok(bundle.endsWith('/* --- profile-premium-mono.css --- */\n'+css+'\n'));
- assert.ok(html.includes('komi.bundle.css?v=20261119d'));
+ assert.ok(html.includes('komi.bundle.css?v=20261119e'));
  assert.equal((html.match(/<link rel="stylesheet" href="\/komi\.bundle/g)||[]).length,1);
 });
 test('Profile hero preserves data bindings, avatar upload, friends and login',()=>{
@@ -46,7 +46,7 @@ test('Profile hero preserves data bindings, avatar upload, friends and login',()
   'data-profile-balance','id="profile-settings"','id="avatarFileInput"',
   'updateUserProfile(this)','sendFriendRequest(window.komiViewedProfileName)',
   'removeFriend(window.komiViewedProfileName)','data-profile-party',
-  "logoutUser(\\'local\\')",'data-profile-share'
+  "logoutUser('local')",'data-profile-share'
  ])assert.ok(app.includes(token),token+' missing');
  assert.ok(app.includes('userAnimeStatuses[username]'));
  assert.ok(app.includes('KomiProfileUI.content'));
@@ -57,7 +57,9 @@ test('Bento views use real saved data and server-backed metrics are never fabric
  for(const phrase of ['Топ избранного','Продолжить просмотр','Статистика просмотра','Витрина достижений','Тестовое аниме','Серия 3'])
    assert.ok(html.includes(phrase),phrase);
  assert.ok(html.includes('/api/poster?src='));
- for(const k of ['episodes','hours','meanScore'])assert.match(html,new RegExp('data-profile-field="'+k+'">—'));
+ for(const k of ['episodes','hours','meanScore'])assert.match(html,new RegExp('data-profile-field="'+k+'">0'));
+  assert.match(html,/profile-info-tooltip/);
+  assert.match(html,/profile-achievement-progress/);
  assert.match(html,/profile-distribution-part/);
  assert.match(html,/--profile-segment:#F1F1F1/);
 });
