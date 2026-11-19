@@ -1495,6 +1495,44 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
+        // Server-certified XP controls the signed-in owner's level. Account changes
+        // invalidate the cache; public profiles retain their legacy display calculation.
+        const komiServerXpState={owner:null,data:null,inflight:null,at:0};
+        async function komiVerifiedXpRead(force=false) {
+            const owner=currentUser?.authUserId;
+            if(!owner||!_supabase)return;
+            if(komiServerXpState.owner!==owner){
+                komiServerXpState.owner=owner;komiServerXpState.data=null;
+                komiServerXpState.inflight=null;komiServerXpState.at=0;
+            }
+            if(komiServerXpState.inflight)return komiServerXpState.inflight;
+            if(!force&&Date.now()-komiServerXpState.at<15000)return;
+            const task=(async()=>{
+                try{
+                    const {data,error}=await _supabase.rpc('komi_verified_xp');
+                    if(error)throw error;
+                    if(!data||!Number.isSafeInteger(data.xp)||data.xp<0||
+                        !Number.isSafeInteger(data.level)||data.level<1)
+                        throw Error('Invalid verified XP');
+                    if(currentUser?.authUserId!==owner)return;
+                    const previous=komiServerXpState.data?.xp;
+                    komiServerXpState.data=data;komiServerXpState.at=Date.now();
+                    if(previous!==data.xp&&currentView==='profile'&&
+                       (profileTargetUser||currentUser?.username)===currentUser.username){
+                        const root=document.getElementById('mainContainer');
+                        if(root)renderProfileView(root);
+                    }
+                }catch(error){
+                    if(currentUser?.authUserId===owner){
+                        console.warn('Verified XP:',error?.message||String(error));
+                        komiServerXpState.at=Date.now()-10000;
+                    }
+                }finally{if(komiServerXpState.inflight===task)komiServerXpState.inflight=null;}
+            })();
+            komiServerXpState.inflight=task;
+            return task;
+        }
+
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
@@ -1873,6 +1911,7 @@ async function loadDataFromCloud(attempt = 0) {
             `;
             if (isMe && currentUser?.authUserId) {
                 void komiDailyActivityRead();
+                void komiVerifiedXpRead();
                 const privacyPanel=container.querySelector('[data-komi-privacy-panel]');
                 privacyPanel?.addEventListener('click',event=>{
                     const button=event.target.closest('[data-privacy-switch]');
@@ -3593,7 +3632,10 @@ async function loadDataFromCloud(attempt = 0) {
             const questXp = currentUser?.username === username &&
                 komiQuestRewardState.owner === currentUser?.authUserId
                 ? Number(komiQuestRewardState.data?.quest_xp_total)||0 : 0;
-            const xp=watched*100+watching*20+friends*15+premiumXp+questXp;
+            const verified = currentUser?.username===username &&
+                komiServerXpState.owner===currentUser?.authUserId
+                ? komiServerXpState.data : null;
+            const xp=verified?.xp ?? (watched*100+watching*20+friends*15+premiumXp+questXp);
             return {watched,watching,friends,xp,premiumXp,level:Math.floor(xp/500)+1,badges:[watched>=1&&' Первый просмотр',watched>=10&&' 10 аниме',watched>=50&&' Знаток аниме',friends>=1&&' Первый друг',watching>=5&&' Марафон'].filter(Boolean)};
         }
         function komiRecommendations() {
