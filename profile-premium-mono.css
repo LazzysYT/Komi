@@ -889,3 +889,7 @@ background:radial-gradient(ellipse at 90% 0,#c3a46721,transparent 65%),#111114;c
 
 /* Keep the existing five-tab mobile navigation; Premium remains in menu/shop. */
 @media(max-width:767px){.komi-side-nav .komi-side-premium{display:none!important}}
+
+/* Explicit ID wins over the strongly scoped mobile tab display overrides. */
+#sidePremiumBtn{display:none!important}
+@media(min-width:768px){#sidePremiumBtn{display:flex!important}}
