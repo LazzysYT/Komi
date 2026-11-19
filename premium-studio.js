@@ -93,7 +93,7 @@
     const img = $(imgId), fallback = $(fallbackId);
     if (!img || !fallback) return;
     const src = safeHttpsUrl(url);
-    if (!src) { img.hidden = true; fallback.hidden = false; return; }
+    if (!src) { img.onload = null; img.onerror = null; img.removeAttribute('src'); img.hidden = true; fallback.hidden = false; return; }
     img.onload = () => { if (img.src === src) { img.hidden = false; fallback.hidden = true; } };
     img.onerror = () => { img.hidden = true; fallback.hidden = false; };
     img.src = src;
@@ -319,11 +319,12 @@
       const heading=document.createElement('h3');heading.textContent=product.label;
       const subtitle=document.createElement('p');subtitle.className='store-subtitle';
       const owned=owns(product.id);
-      const currentlyEquipped=activeItem(product.type)===product.id && state.trial[product.type]===null;
+      const equippedId=state.wallet?.[product.type==='frame'?'frame_id':'title_id'] || state.equipped[product.type==='frame'?'frame_id':'title_id'];
+      const currentlyEquipped=equippedId===product.id;
       subtitle.textContent=owned ? currentlyEquipped?'Надето':'Уже куплено' : product.cost+' AniCoin';
       const controls=document.createElement('div');controls.className='store-controls';
       const preview=document.createElement('button');
-      preview.className='store-action store-try';preview.type='button';preview.textContent=isTrial?'Примеряется ✓':'Примерить';
+      preview.className='store-action store-try';preview.type='button';preview.textContent=isTrial?'Снять примерку':'Примерить';
       preview.addEventListener('click',event=>{event.stopPropagation();tryOn(product);});
       const action=document.createElement('button');
       action.className='store-action';action.type='button';
@@ -345,9 +346,9 @@
     });
   }
   function tryOn(product) {
-    state.trial[product.type]=product.id;
+    state.trial[product.type]=state.trial[product.type]===product.id?null:product.id;
     updatePreview();paintStore();
-    message('store-status',owns(product.id)?'Можно примерять купленные предметы без надевания.':
+    message('store-status',!state.trial[product.type]?'Примерка снята.':owns(product.id)?'Можно примерять купленные предметы без надевания.':
       'Предпросмотр: предмет ещё не куплен. AniCoin не списаны.');
   }
   function assertResponse(result) {
