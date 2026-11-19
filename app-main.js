@@ -1229,6 +1229,100 @@ async function loadDataFromCloud(attempt = 0) {
                 try { restored.setSelectionRange(start, end); } catch (_) {}
             }
         }
+        // Optional activity is stored by verified Supabase UID, never by editable nickname.
+        // This state only caches server responses; no dates or rewards are user-authored.
+        const komiDailyActivityState = { owner: null, data: null, inflight: null, claiming: false, error: '' };
+        function komiDailyActivityPaint() {
+            const uid = currentUser?.authUserId;
+            const panel = document.querySelector('[data-komi-daily-activity]');
+            if (!uid || !panel || panel.getAttribute('data-komi-daily-activity') !== uid) return;
+            const state = komiDailyActivityState;
+            if (state.owner !== uid) return;
+            const value = state.data;
+            const today = new Date().toISOString().slice(0, 10);
+            const fresh = value?.server_day === today;
+            const streak = panel.querySelector('[data-komi-daily-streak]');
+            const total = panel.querySelector('[data-komi-daily-total]');
+            const status = panel.querySelector('[data-komi-daily-status]');
+            const action = panel.querySelector('[data-komi-click="daily-checkin"]');
+            if (streak) streak.textContent = value ? String(Math.max(0, Number(value.streak_days) || 0)) : '—';
+            if (total) total.textContent = value ? String(Math.max(0, Number(value.total_days) || 0)) : '—';
+            if (status) status.textContent = state.error ||
+                (state.claiming ? 'Сохраняем отметку…' :
+                    !fresh ? 'Загружаем активность…' :
+                    value.checked_today ? 'Сегодня отмечено · дни считаются по UTC' :
+                    'Можно отметить сегодняшний день · по UTC');
+            if (action) {
+                action.disabled = state.claiming || Boolean(state.inflight) || (fresh && Boolean(value?.checked_today));
+                action.textContent = state.claiming ? 'Сохраняем…' :
+                    (fresh && value?.checked_today) ? 'Отмечено ✓' :
+                    (!fresh && !state.inflight) ? 'Повторить' : 'Отметить день';
+            }
+        }
+        async function komiDailyActivityRead(force = false) {
+            const uid = currentUser?.authUserId;
+            if (!uid || !_supabase || !document.querySelector('[data-komi-daily-activity]')) return;
+            const state = komiDailyActivityState;
+            if (state.owner !== uid) {
+                state.owner = uid; state.data = null; state.inflight = null;
+                state.claiming = false; state.error = '';
+            }
+            const today = new Date().toISOString().slice(0, 10);
+            if (!force && state.data?.server_day === today) { komiDailyActivityPaint(); return; }
+            if (state.inflight) { komiDailyActivityPaint(); return state.inflight; }
+            let task;
+            task = (async () => {
+                try {
+                    const { data, error } = await _supabase.rpc('komi_daily_activity', { p_action: 'read' });
+                    if (error) throw error;
+                    if (!data || typeof data.checked_today !== 'boolean' ||
+                        !Number.isInteger(data.streak_days) || !Number.isInteger(data.total_days) ||
+                        !/^\d{4}-\d{2}-\d{2}$/.test(String(data.server_day || '')))
+                        throw new Error('Invalid activity response');
+                    if (state.owner !== uid || currentUser?.authUserId !== uid) return;
+                    state.data = data; state.error = '';
+                } catch (error) {
+                    if (state.owner === uid && currentUser?.authUserId === uid) {
+                        state.error = 'Активность недоступна. Можно повторить.';
+                        console.warn('Komi daily activity read:', error);
+                    }
+                } finally {
+                    if (state.inflight === task) state.inflight = null;
+                    komiDailyActivityPaint();
+                }
+            })();
+            state.inflight = task;
+            komiDailyActivityPaint();
+            return task;
+        }
+        async function komiDailyActivityCheckin() {
+            const uid = currentUser?.authUserId;
+            const state = komiDailyActivityState;
+            if (!uid || !_supabase || state.owner !== uid || state.claiming || state.inflight) return;
+            const today = new Date().toISOString().slice(0, 10);
+            if (!state.data || state.data.server_day !== today) return komiDailyActivityRead(true);
+            if (state.data.checked_today) return;
+            state.claiming = true;
+            komiDailyActivityPaint();
+            try {
+                const { data, error } = await _supabase.rpc('komi_daily_activity', { p_action: 'checkin' });
+                if (error) throw error;
+                if (!data || typeof data.checked_today !== 'boolean' || !data.checked_today ||
+                    !Number.isInteger(data.total_days) || !Number.isInteger(data.streak_days))
+                    throw new Error('Invalid activity confirmation');
+                if (state.owner !== uid || currentUser?.authUserId !== uid) return;
+                state.data = data; state.error = '';
+            } catch (error) {
+                if (state.owner === uid && currentUser?.authUserId === uid) {
+                    state.error = 'Не удалось отметить день. Попробуй ещё раз.';
+                    console.warn('Komi daily activity check-in:', error);
+                }
+            } finally {
+                if (state.owner === uid) state.claiming = false;
+                komiDailyActivityPaint();
+            }
+        }
+
         function safeProfileText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
@@ -1417,6 +1511,16 @@ async function loadDataFromCloud(attempt = 0) {
                             </div>
                             ` : ''}
 
+                    ${isMe && currentUser?.authUserId ? `
+                    <section class="profile-summary-strip" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
+                        <div class="profile-summary-item"><strong data-komi-daily-streak>—</strong><span>Дней подряд</span></div>
+                        <div class="profile-summary-item"><strong data-komi-daily-total>—</strong><span>Всего отметок</span></div>
+                        <div class="profile-summary-item">
+                            <button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-click="daily-checkin" disabled>Отметить день</button>
+                            <span data-komi-daily-status role="status" aria-live="polite">Загружаем активность…</span>
+                        </div>
+                    </section>
+                    ` : ''}
                     <div class="profile-summary-strip" aria-label="Краткая статистика профиля">
                        <div class="profile-summary-item profile-summary-level"><strong>${calculatedLevel}</strong><span>Уровень</span></div>
                        <div class="profile-summary-item"><strong>${statsCounts['Просмотрено']}</strong><span>Просмотрено</span></div>
@@ -1542,6 +1646,7 @@ async function loadDataFromCloud(attempt = 0) {
                     </div>
                 </section>
             `;
+            if (isMe && currentUser?.authUserId) void komiDailyActivityRead();
         }
 
         let avatarDraft = null;
