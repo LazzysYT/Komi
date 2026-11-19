@@ -186,6 +186,21 @@ async function joinWatchPartyRoom(id) {
     } catch (error) { alert('Не удалось войти в комнату: ' + error.message); }
 }
 
+async function partyQueueCall(roomId, action, options={}) {
+    const {data,error}=await _supabase.rpc('komi_party_queue',{
+        p_room_id:roomId,p_action:action,
+        p_episode:options.episode??null,p_source:options.source??null,
+        p_entry_id:options.entryId??null
+    });
+    if(error)throw error;
+    return data;
+}
+async function partyPresenceCall(roomId, action='touch') {
+    const {data,error}=await _supabase.rpc('komi_party_presence',{p_room_id:roomId,p_action:action});
+    if(error)throw error;
+    return Array.isArray(data)?data:[];
+}
+
 async function enterParty(room) {
     const generation = partyGeneration;
     const isActive = () => partyGeneration === generation && partyRoom?.id === room.id;
@@ -210,6 +225,15 @@ async function enterParty(room) {
         }
     }
     if (!isActive()) return;
+    let initialMembers=[];
+    try { initialMembers=await partyPresenceCall(room.id); }
+    catch(error){
+        if(!isActive())return;
+        await leaveWatchPartyRoom();
+        alert('Не удалось присоединиться: '+error.message);
+        return;
+    }
+    if (!isActive()) return;
     const options = partyOptions(anime);
 
     partyPanel(`
@@ -219,6 +243,7 @@ async function enterParty(room) {
                     <div class="komi-party-kicker">KOMI WATCH PARTY <span class="komi-party-role">${host ? 'ВЕДУЩИЙ' : 'ЗРИТЕЛЬ'}</span></div>
                     <h2>${escapeFriendHtml(room.name)}</h2>
                     <p>${escapeFriendHtml(anime?.title || 'Аниме')} · совместный просмотр</p>
+                    <div id="partyParticipants" role="group" aria-label="Участники Watch Party"></div>
                 </div>
                 <div class="komi-party-head-actions">
                     <button class="komi-party-fullscreen-btn" type="button" data-komi-onclick="toggleKomiPartyFullscreen()" aria-pressed="false" aria-label="Развернуть просмотр на весь экран" title="На весь экран">⛶ <span>На весь экран</span></button>
@@ -234,6 +259,11 @@ async function enterParty(room) {
                     <div class="komi-party-source-panel">
                         ${host ? '<label for="partyEpisode">Серия и озвучка <select id="partyEpisode"></select></label>' : '<button id="partyUnlock" class="btn-secondary" hidden>Разрешить воспроизведение</button>'}
                     </div>
+                    <section class="komi-party-queue-panel" aria-label="Очередь Watch Party" style="padding:10px;border:1px solid #ffffff33;border-radius:12px;margin:12px 0">
+                        <h3 style="font-size:14px;margin:0 0 6px">Очередь серий</h3>
+                        ${host ? '<button type="button" id="partyQueueAdd" class="btn-secondary">+ Добавить выбранную серию</button> <button type="button" id="partyQueueNext" class="btn-secondary">Следующая из очереди</button>' : ''}
+                        <div id="partyQueueList" role="list" aria-live="polite"></div>
+                    </section>
                 </section>
                 <section class="komi-party-social-panel" aria-label="Чат и реакции Watch Party">
                     <div class="komi-party-panel-heading"><h3>Чат комнаты</h3><small>Общайтесь во время просмотра</small></div>
@@ -262,6 +292,69 @@ async function enterParty(room) {
     const select = document.getElementById('partyEpisode');
     const chatBox = document.getElementById('partyChatBox');
     const chatForm = document.getElementById('partyChat');
+    const memberList=document.getElementById('partyParticipants');
+    const queueList=document.getElementById('partyQueueList');
+    let lastQueueRefresh=0,lastPresenceRefresh=performance.now();
+    function showMembers(members){
+        if(!isActive()||!memberList)return;
+        const count=Array.isArray(members)?members.length:0;
+        const cap=Number(room.max_participants)||0;
+        memberList.replaceChildren();
+        const caption=document.createElement('small');
+        caption.textContent='Участники: '+count+(cap?' / '+cap:'');
+        memberList.append(caption);
+        for(const member of (Array.isArray(members)?members:[]).slice(0,20)){
+            const label=document.createElement('span');
+            label.className='komi-party-member';
+            label.style.cssText='display:inline-block;margin:3px 5px;padding:3px 7px;border:1px solid #ffffff33;border-radius:9px;font-size:11px';
+            label.textContent=String(member.displayName||member.username||'Участник').slice(0,60)+(member.host?' ★':'');
+            memberList.append(label);
+        }
+    }
+    showMembers(initialMembers);
+    async function refreshQueue(){
+        if(!isActive())return;
+        const data=await partyQueueCall(room.id,'read');
+        if(!isActive()||!queueList)return;
+        queueList.replaceChildren();
+        const items=Array.isArray(data?.items)?data.items:[];
+        if(!items.length){const empty=document.createElement('small');empty.textContent='Очередь пуста';queueList.append(empty);}
+        for(const item of items.slice(0,30)){
+            const row=document.createElement('div');
+            row.setAttribute('role','listitem');
+            row.style.cssText='display:flex;align-items:center;gap:8px;margin-top:6px';
+            const label=document.createElement('span');
+            label.textContent='Серия '+(Number(item.episode)+1)+' · '+String(item.source||'').slice(0,120);
+            row.append(label);
+            if(host){
+                const remove=document.createElement('button');
+                remove.type='button';remove.className='btn-secondary';remove.textContent='× Убрать';
+                remove.addEventListener('click',async()=>{
+                    try{await partyQueueCall(room.id,'remove',{entryId:Number(item.id)});await refreshQueue();}
+                    catch(error){status.textContent='Очередь: '+error.message;}
+                });
+                row.append(remove);
+            }
+            queueList.append(row);
+        }
+        lastQueueRefresh=performance.now();
+    }
+    if(host){
+        document.getElementById('partyQueueAdd')?.addEventListener('click',async()=>{
+            const selected=options[Number(select?.value)];
+            if(!selected)return;
+            try{await partyQueueCall(room.id,'add',{episode:selected.episode,source:selected.source});await refreshQueue();}
+            catch(error){status.textContent='Очередь: '+error.message;}
+        });
+        document.getElementById('partyQueueNext')?.addEventListener('click',async()=>{
+            try{
+                await partyQueueCall(room.id,'next');
+                const state=await partyCall('read',room.id);
+                if(isActive()){partyRoom=state;applyState(state);await refreshQueue();}
+            }catch(error){status.textContent='Очередь: '+error.message;}
+        });
+    }
+    void refreshQueue().catch(error=>{if(isActive())status.textContent='Очередь: '+error.message;});
     let lastMessages = '';
     function showMessages(messages = []) {
         const serialized = JSON.stringify(messages);
@@ -290,7 +383,7 @@ async function enterParty(room) {
         const message = field.value.trim();
         if (message && await postMessage(message) && field.value.trim() === message) field.value = '';
     };
-    for (const reaction of ['Класс', 'Нравится', 'Смешно', 'Удивило', 'Отлично']) {
+    for (const reaction of ['🔥 Класс', '❤️ Нравится', '😂 Смешно', '😮 Удивило', '👏 Отлично']) {
         const button = document.createElement('button');
         button.className = 'party-react-btn';
         button.textContent = reaction;
@@ -388,6 +481,16 @@ async function enterParty(room) {
                 applyState(state);
             }
             if (heartbeat) partyHeartbeat = performance.now();
+            if (performance.now()-lastPresenceRefresh>12000) {
+                const members=await partyPresenceCall(room.id);
+                if(isActive())showMembers(members);
+                lastPresenceRefresh=performance.now();
+            }
+            if (performance.now()-lastQueueRefresh>12000) {
+                try{await refreshQueue();}catch(error){
+                    if(isActive())console.warn('Komi Party queue:',error?.message||String(error));
+                }
+            }
         } catch (error) {
             status.textContent = 'Связь с комнатой: ' + error.message;
             if (!host && loadedOption?.kind !== 'iframe') video.pause();
@@ -518,6 +621,7 @@ function leaveWatchPartyRoom() {
         partyVisibilityListener = null;
     }
     const room = partyRoom;
+    if(room?.id && _supabase) void partyPresenceCall(room.id,'leave').catch(()=>{});
     const embed = document.getElementById('partyEmbedElement');
     if (embed) embed.removeAttribute('src');
     partyRoom = null;
