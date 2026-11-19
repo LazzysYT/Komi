@@ -10,11 +10,11 @@ const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 test('monochrome profile stylesheet loads last and only restyles profile UI', () => {
   const html = read('index.html');
   const css = read('komi-black-white.css').split('/* KomiAnime profile 2026-11-19')[1];
-  assert.ok(html.includes('komi.bundle.css?v=20261119e'));
+  assert.ok(/href="\/komi\.bundle\.css\?v=[A-Za-z0-9._-]+"/.test(html));
   const bundle=read('komi.bundle.css');
   assert.ok(bundle.includes(read('komi-black-white.css').trim()),
     'Premium profile styles must remain in the final CSS bundle');
-  assert.doesNotMatch(html, /profile-premium-mono\\.css/);
+  assert.doesNotMatch(html, /profile-premium-mono\.css/);
   assert.match(css, /\.komi-media-hub \.komi-profile-v2/);
   assert.doesNotMatch(css, /#(?:ff454f|e5344b|e53935|f00)\b/i);
   assert.doesNotMatch(css, /(?:^|[;{])\s*filter:\s*(?:grayscale|blur)\(/im);
@@ -70,4 +70,17 @@ test('CSP action dispatcher explicitly allows profile share, not arbitrary JS', 
   assert.equal(sandbox.KomiDynamicEvents.supports('click','fetch("https://evil.example")'),false);
   listeners.click({target:{closest:()=>({getAttribute:()=> 'komiCopyProfileLink()'})}});
   assert.equal(clicks,1);
+});
+
+// Regression: legacy base CSS declares an 180px ::after square.
+// This overlay must cover the entire animated Premium banner instead.
+test('Premium GIF cover gradient overlays the full header, never a corner square', () => {
+  const css=read('profile-premium-mono.css');
+  const bundle=read('komi.bundle.css');
+  const pattern=/#profile\.komi-profile-premium-mono \.profile-header-card::after\{([^}]*)\}/;
+  const overlay=css.match(pattern)?.[1];
+  assert.ok(overlay,'Premium overlay CSS must be present');
+  assert.match(overlay,/width:100%!important;height:100%!important/);
+  assert.match(bundle,pattern);
+  assert.ok(bundle.includes('width:100%!important;height:100%!important'));
 });

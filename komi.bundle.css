@@ -5945,6 +5945,8 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
 }
 #profile.komi-profile-premium-mono .profile-header-card::after{
   content:""!important;position:absolute;inset:0;z-index:-1;display:block!important;
+  /* Override legacy 180px square: the GIF cover overlay must fill the entire header. */
+  width:100%!important;height:100%!important;
   background:linear-gradient(180deg,rgba(15,15,15,.15) 0%,rgba(15,15,15,.85) 75%,#0F0F0F 100%)!important;
   pointer-events:none;
 }
