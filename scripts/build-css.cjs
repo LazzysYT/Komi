@@ -12,7 +12,9 @@ const root=path.resolve(__dirname,'..');
 const sources=[
   'komi-comments.css','styles/inline-head.css','cinema-ui.css','mono-ui.css',
   'cinema-layout-v3.css','cinema-hud-v4.css','cinema-clean-v5.css',
-  'home-discovery.css','styles/inline-tail.css','komi-monochrome.css'
+  'home-discovery.css','styles/inline-tail.css','komi-monochrome.css',
+  // Legacy bundle first, followed by exactly the old link order for the hub UI.
+  'komi-media-hub.css','komi-black-white.css'
 ];
 function buildCSS(){
   return sources.map(relative => {
