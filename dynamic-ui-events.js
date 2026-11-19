@@ -46,6 +46,7 @@
     "updateUserProfile(this)":(_,el)=>updateUserProfile(el),
     "logoutUser('global')":()=>logoutUser('global'),
     "openProfile(window.komiViewedProfileName)":()=>openProfile(root.komiViewedProfileName),
+    "komiCopyProfileLink()":()=>komiCopyProfileLink(),
     "removeFriend(window.komiViewedProfileName)":()=>removeFriend(root.komiViewedProfileName),
     "sendFriendRequest(window.komiViewedProfileName)":()=>sendFriendRequest(root.komiViewedProfileName),
     "postToProfileWall(window.komiWallProfileName)":()=>postToProfileWall(root.komiWallProfileName)
