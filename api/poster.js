@@ -7,7 +7,7 @@ const MAX_BYTES = 3 * 1024 * 1024;
 // Legacy Shikimori /system/animes/.../<id>.jpg is NOT fingerprinted.
 const IMMUTABLE_CACHE_HEADER = 'public, max-age=604800, s-maxage=2592000, stale-while-revalidate=604800';
 const MUTABLE_CACHE_HEADER = 'public, max-age=60, s-maxage=86400, stale-while-revalidate=604800';
-function posterCacheHeader(fetchedUrl) {
+function posterCacheHeader(source) {
   const url=new URL(source);
   const path=url.pathname;
   const fingerprintedShikimori=/^\/uploads\/poster\/animes\/\d+\/[a-f0-9]{16,}\.(?:jpe?g|png|webp|avif)$/i.test(path);
@@ -79,7 +79,7 @@ module.exports = async function cachedPoster(req,res) {
     if (bytes && !bytes.length) return sendFailure(res,502);
     res.statusCode=200;
     res.setHeader('Content-Type',type);
-    res.setHeader('Cache-Control',posterCacheHeader(source));
+    res.setHeader('Cache-Control',posterCacheHeader(fetchedUrl));
     res.setHeader('X-Content-Type-Options','nosniff');
     if (bytes) res.setHeader('Content-Length',String(bytes.length));
     res.end(req.method==='HEAD'?'':bytes);
