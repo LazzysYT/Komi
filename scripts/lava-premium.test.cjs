@@ -4,11 +4,13 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.join(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
-const checkout='https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd';
+const checkout='https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd?currency=USD';
 
 test('Premium checkout has a working native clickable checkout link, not a broken iframe',()=>{
  const page=read('premium.html');
  assert.ok(page.includes(checkout));
+ assert.match(page,/Цена по умолчанию откроется в долларах США \(USD\)/);
+ assert.doesNotMatch(page,/\/f1b11818-74d5-4e94-a013-15d89a545cdd\"/);
  assert.match(page,/<a class="button" id="premium-checkout" href="https:\/\/app\.lava\.top\/products\//);
  assert.match(page,/target="_blank" rel="noopener noreferrer"/);
  assert.match(page,/Оформить Premium/);
@@ -28,6 +30,7 @@ test('Shop links directly to checkout and also to Premium details',()=>{
  const shop=read('anicoin.js');
  const index=read('index.html');
  assert.ok(shop.includes(checkout));
+ assert.match(shop,/оформлении по умолчанию показывается в USD/);
  assert.match(shop,/href="\/premium\.html"/);
  assert.match(shop,/Оформить Premium/);
  assert.ok((index.match(/href="\/premium\.html"/g)||[]).length>=3);
