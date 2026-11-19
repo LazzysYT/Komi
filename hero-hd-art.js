@@ -1,14 +1,14 @@
 /* Komi Anime: progressive hero artwork with native-resolution fallbacks.
  * Requests public metadata only; does not send account information.
  * Wide images must be genuinely wide and high resolution. Low-resolution
- * posters stay in the contained portrait layout rather than filling the hero.
+ * portraits fill the entire hero with soft focus instead of a narrow strip.
  */
 (function (root) {
   'use strict';
 
   const API = 'https://graphql.anilist.co';
   const SELECTOR = '.komi-home-hero .hero-slide[data-komi-anime-id]';
-  const CACHE_PREFIX = 'komi_hd_hero_v2_';
+  const CACHE_PREFIX = 'komi_hd_hero_v3_';
   const FOUND_TTL = 24 * 60 * 60 * 1000;
   const MISSING_TTL = 60 * 60 * 1000;
   const cache = new Map();
@@ -64,9 +64,12 @@
 
   function updateLayout(slide, img) {
     if (!img || !img.naturalHeight) return;
-    const wide = img.naturalWidth >= 1200 && img.naturalWidth / img.naturalHeight >= 1.6;
+    const ratio = img.naturalWidth / img.naturalHeight;
+    const wide = img.naturalWidth >= 1200 && ratio >= 1.6;
+    const softWide = !wide && img.naturalWidth >= 900 && ratio >= 1.55;
     slide.classList.toggle('komi-hd-wide', wide);
-    slide.classList.toggle('komi-hd-poster', !wide);
+    slide.classList.toggle('komi-hd-softwide', softWide);
+    slide.classList.toggle('komi-hd-poster', !wide && !softWide);
   }
 
   function bindImage(slide) {
@@ -98,29 +101,42 @@
     const img = bindImage(slide);
     if (!img) return;
     const still = safeStill(slide.dataset.komiHeroStill);
-    const signature = [entry.banner, still, entry.cover].join('|');
+    const originalPoster = safeStill(img.dataset.posterDirect);
+    const signature = [entry.banner, still, entry.cover, originalPoster].join('|');
     if (img.dataset.komiHeroChecked === signature) return;
     img.dataset.komiHeroChecked = signature;
 
-    // Real landscape artwork: never promote a 400px cover into a 1800px hero.
-    for (const url of [entry.banner, still]) {
+    // Prefer the largest real widescreen image (banner or anime screenshot).
+    // At 900-1199px, slight softening prevents visible upscaling artifacts.
+    let bestLandscape = null;
+    for (const url of new Set([entry.banner, still].filter(Boolean))) {
       const result = await preflight(url);
       if (!img.isConnected || img.dataset.komiHeroChecked !== signature) return;
-      if (result && result.width >= 1200 && result.height > 0 &&
-          result.width / result.height >= 1.6) {
-        if (img.src !== url) img.src = url;
-        return;
+      if (result && result.width >= 900 && result.height > 0 &&
+          result.width / result.height >= 1.55 &&
+          (!bestLandscape || result.width > bestLandscape.width)) {
+        bestLandscape = result;
       }
     }
+    if (bestLandscape) {
+      if (img.src !== bestLandscape.url) img.src = bestLandscape.url;
+      return;
+    }
 
-    // If no usable landscape art exists, a higher-quality portrait cover is
-    // fine, but it remains contained on the right. It is NEVER stretched.
-    if (entry.cover) {
-      const result = await preflight(entry.cover);
+    // No HD landscape: fill the full hero with a softly blurred portrait.
+    // Use the original cover if it has better native dimensions than the proxy.
+    let bestPortrait = null;
+    for (const url of new Set([entry.cover, originalPoster].filter(Boolean))) {
+      const result = await preflight(url);
       if (!img.isConnected || img.dataset.komiHeroChecked !== signature) return;
-      const prior = img.naturalWidth || 0;
       if (result && result.width >= 480 && result.height > result.width * 1.05 &&
-          result.width > prior + 90 && img.src !== result.url) img.src = result.url;
+          (!bestPortrait || result.width > bestPortrait.width)) {
+        bestPortrait = result;
+      }
+    }
+    if (bestPortrait && bestPortrait.width > (img.naturalWidth || 0) + 90 &&
+        img.src !== bestPortrait.url) {
+      img.src = bestPortrait.url;
     }
   }
 

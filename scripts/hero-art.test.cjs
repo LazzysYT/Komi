@@ -110,7 +110,7 @@ test('hero uses one filtered Page query and upgrades a real landscape banner', a
   assert.equal(result.slides[1].classes.has('komi-hd-poster'), true);
 });
 
-test('missing landscape keeps small poster contained; no false HD upgrade', async () => {
+test('missing landscape fills hero softly; no false HD upgrade', async () => {
   const badBanner = 'https://s4.anilist.co/file/anilistcdn/media/anime/banner/low.jpg';
   const cover = 'https://s4.anilist.co/file/anilistcdn/media/anime/cover/extraLarge/big.jpg';
   const result = await runFixture({
@@ -128,11 +128,24 @@ test('empty AniList response leaves the existing image intact', async () => {
   assert.equal(result.slides[0].classes.has('komi-hd-poster'), true);
 });
 
-test('markup and CSS encode separate contained and widescreen layouts', () => {
+test('CSS encodes full-bleed soft fallback and native HD wide layouts', () => {
   assert.match(home, /hero-slide komi-hd-poster/);
   assert.match(home, /data-komi-anime-id/);
   assert.match(css, /hero-slide\.komi-hd-poster \.komi-hub-hero-art/);
-  assert.match(css, /object-fit: scale-down !important/);
+  assert.match(css, /hero-slide\\.komi-hd-softwide \\.komi-hub-hero-art/);
+  assert.match(css, /filter: blur\\(14px\\)/);
+  assert.doesNotMatch(css, /object-fit: scale-down !important/);
   assert.match(css, /hero-slide\.komi-hd-wide \.komi-hub-hero-art/);
   assert.match(css, /object-fit: cover !important/);
+});
+
+test('medium native-resolution landscape fills hero with slight softening', async () => {
+  const mediumBanner = 'https://s4.anilist.co/file/anilistcdn/media/anime/banner/medium.jpg';
+  const result = await runFixture({
+    media:[{idMal:52991, isAdult:false, bannerImage:mediumBanner,coverImage:null}],
+    imageSizes:{[mediumBanner]:[1050,590]}
+  });
+  assert.equal(result.slides[0].img.src, mediumBanner);
+  assert.equal(result.slides[0].classes.has('komi-hd-softwide'), true);
+  assert.equal(result.slides[0].classes.has('komi-hd-poster'), false);
 });
