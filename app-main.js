@@ -4069,7 +4069,7 @@ async function loadDataFromCloud(attempt = 0) {
             const userHistoryKey = currentUser ? `${currentUser.username}_${anime.id}` : null;
             const savedTime = userHistoryKey ? (userWatchHistory[userHistoryKey] || 0) : 0;
             const userFavCategory = currentUser ? ((userFavorites[currentUser.username] || {})[anime.id] || '') : '';
-            const shikiRating = anime.shikiRating || '8.5';
+            const shikiRating = anime.shikiRating || '—';
             const myCurrentStatus = currentUser && userAnimeStatuses[currentUser.username] ? (userAnimeStatuses[currentUser.username][anime.id] || '') : '';
             
             const customFolders = currentUser ? (userCustomFolders[currentUser.username] || {}) : {};
