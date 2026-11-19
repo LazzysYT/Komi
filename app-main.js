@@ -1295,6 +1295,23 @@ async function loadDataFromCloud(attempt = 0) {
                 genres.filter(Boolean).forEach(g => { genreTotals[g] = (genreTotals[g] || 0) + 1; });
             });
             const topGenres = Object.entries(genreTotals).sort((a,b) => b[1] - a[1]).slice(0,5);
+            // Compare only locally available, real watched records for an accepted friend.
+            // Missing/private collections never produce a fabricated compatibility score.
+            let tasteCompatibility = '';
+            if (!isMe && amIFriend && currentUser?.username) {
+                const watched = name => new Set(Object.entries(userAnimeStatuses[name] || {})
+                    .filter(([,status]) => status === 'Просмотрено')
+                    .map(([id]) => String(id)));
+                const mine = watched(currentUser.username);
+                const theirs = watched(username);
+                if (mine.size >= 3 && theirs.size >= 3) {
+                    const shared = [...mine].filter(id => theirs.has(id)).length;
+                    const union = new Set([...mine,...theirs]).size;
+                    const percent = union ? Math.round(100 * shared / union) : 0;
+                    tasteCompatibility = '<span class="profile-badge-item" title="Доля общих просмотренных аниме среди всех уникальных просмотренных вами обоими">♡ Совместимость: ' +
+                        percent + '% · общих: ' + shared + '</span>';
+                }
+            }
             const watchedCount = statsCounts['Просмотрено'] || 0;
             const calculatedLevel = komiAchievements(username).level;
 
@@ -1344,6 +1361,7 @@ async function loadDataFromCloud(attempt = 0) {
                                 <span class="profile-badge-level">✦ Уровень ${calculatedLevel}</span>
                                 <span class="profile-badge-item" data-profile-presence>${safeProfileText(p.status || 'Люблю аниме')}</span>
                                 <span class="profile-badge-item">◉ Друзей: ${myFriends.length}</span>
+                                ${tasteCompatibility}
                                 <span class="profile-badge-item profile-reg-date">С нами с ${escapeFriendHtml(p.regDate || 'Не указана')}</span>
                                 ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
                             </div>
