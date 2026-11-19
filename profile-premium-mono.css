@@ -798,3 +798,18 @@
   }
 }
 
+
+/* Verified server-issued Komi Premium identity */
+.komi-premium-badge{display:inline-flex;align-items:center;margin:0 2px 0 8px;padding:5px 10px;border-radius:999px;
+border:1px solid #dacf9c;background:linear-gradient(105deg,#322b20,#0c0c0f 70%,#242018);color:#fff3c4!important;
+box-shadow:0 0 16px #b09c5c35,inset 0 1px 0 #ffffff22;font:800 10px/1.2 Inter,system-ui,sans-serif!important;
+letter-spacing:.09em;vertical-align:middle;white-space:nowrap}
+#profile .profile-name-row .komi-premium-badge{padding:7px 13px;font-size:11px!important}
+.komi-premium-showcase{margin:14px 0;padding:19px 20px;border:1px solid #b9aa7d6c;border-radius:20px;
+background:radial-gradient(ellipse at 90% 0,#c3a46721,transparent 65%),#111114;color:#fff;box-shadow:0 14px 40px #0006}
+.komi-premium-showcase[hidden]{display:none!important}
+.komi-premium-eyebrow{color:#f1daa0;font-size:11px!important;letter-spacing:.15em;font-weight:800}
+.komi-premium-showcase h3{color:#fff;font-size:20px!important;font-weight:800;margin:8px 0 5px}
+.komi-premium-showcase p{color:#bfc0c9;font-size:13px!important;line-height:1.55;margin:0}
+.komi-comment-name .komi-premium-badge,.komi-friends-identity strong .komi-premium-badge{font-size:9px!important;padding:3px 7px}
+@media(max-width:520px){.komi-premium-showcase{border-radius:16px;padding:15px}#profile .profile-name-row .komi-premium-badge{padding:5px 8px;font-size:9px!important}}
