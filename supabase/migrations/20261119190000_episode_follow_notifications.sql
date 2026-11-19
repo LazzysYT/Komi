@@ -1,5 +1,5 @@
 -- Opt-in notifications when the verified catalog grows by up to 3 actual episodes.
--- Additive: no modifications to existing notification rows, wallets or subscriptions.
+-- Additive: leaves existing notification rows, payment data and subscriptions intact.
 create table if not exists public.komi_episode_follows (
   user_id uuid not null references auth.users(id) on delete cascade,
   anime_id bigint not null references public.anime_catalog(shikimori_id) on delete cascade,
@@ -31,11 +31,13 @@ begin
     then jsonb_array_length(new.data->'episodes') else 0 end;
   -- Ignore importing many historical episodes and incomplete cards.
   if old_count < 1 or new_count <= old_count or new_count > old_count+3 then return new; end if;
-  if not exists (
-    select 1 from jsonb_array_elements(new.data->'episodes') e
-    where (e->>'url' is not null and length(e->>'url')>8)
-       or (jsonb_typeof(e->'sources')='object' and e->'sources'<>'{}'::jsonb)
-    offset old_count
+  -- The newest episode must have a playable source; never alert for placeholders.
+  if not (
+    coalesce(length(new.data->'episodes'->(new_count-1)->>'url'),0) > 8
+    or (
+      jsonb_typeof(new.data->'episodes'->(new_count-1)->'sources') = 'object'
+      and new.data->'episodes'->(new_count-1)->'sources' <> '{}'::jsonb
+    )
   ) then return new; end if;
   title_text := left(coalesce(nullif(new.data->>'title',''),'Аниме'),90);
   insert into public.komi_notifications(recipient_id,actor_id,kind,message)
