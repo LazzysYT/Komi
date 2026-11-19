@@ -68,3 +68,26 @@ test('new sign-ups reject short passwords without making an API call',async()=>{
  assert.match(html,/id="regPassword"[^>]*minlength="12"/);
  assert.match(html,/id="komiPasswordHint"/);
 });
+
+
+test('Google login from the legacy Vercel hostname returns to the canonical Komi domain',async()=>{
+ const x=scenario();
+ x.context.window.location.origin='https://komi-six.vercel.app';
+ await x.runOAuth();
+ assert.equal(x.oauth[0].options.redirectTo,'https://komianime.online/');
+});
+test('email confirmation from the legacy Vercel hostname returns to the canonical Komi domain',async()=>{
+ const x=scenario('NormalNickname');
+ x.context.window.location.origin='https://komi-six.vercel.app';
+ await x.runSignup();
+ assert.equal(x.signups[0].options.emailRedirectTo,'https://komianime.online/');
+});
+test('legacy Vercel homepage redirects to Komi, without redirecting anime SEO pages',()=>{
+ const config=JSON.parse(fs.readFileSync(path.join(__dirname,'../vercel.json'),'utf8'));
+ const rule=config.redirects.find(r=>r.source==='/'&&r.has?.some(h=>h.type==='host'&&h.value.includes('komi-six')));
+ assert.ok(rule,'old Vercel homepage must have a host-specific canonical redirect');
+ assert.equal(rule.destination,'https://komianime.online/');
+ assert.equal(rule.permanent,true);
+ assert.ok(!config.redirects.some(r=>r.source==='/:path*'&&r.has?.some(h=>String(h.value).includes('komi-six'))),
+   'anime detail routes must remain accessible on legacy mirror for SEO testing');
+});
