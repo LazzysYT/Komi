@@ -18,10 +18,13 @@ test('Premium checkout has a working native clickable checkout link, not a broke
  assert.doesNotMatch(page,/widget\.lava\.top/);
 });
 
-test('Komi Premium has correct recurring terms and no invented perks',()=>{
+test('Komi Premium discloses recurring terms and verified access without false guarantees',()=>{
  const page=read('premium.html');
  assert.match(page,/Ежемесячная подписка с автоматическим продлением/);
- assert.match(page,/Автоматическая активация Premium внутри KomiAnime пока не подключена/);
+ assert.match(page,/Автоматическая активация находится в бета-тестировании/);
+ assert.match(page,/при задержке проверь статус покупки/);
+ assert.match(page,/2000 XP/);
+ assert.match(page,/500 AniCoin/);
  assert.doesNotMatch(page,/автоматически активируется|реклама отключена|без рекламы навсегда/i);
  assert.ok((page.match(/Lava\.top/g)||[]).length<=1,'Payment processor is not repeated');
 });
@@ -30,7 +33,8 @@ test('Shop links directly to checkout and also to Premium details',()=>{
  const shop=read('anicoin.js');
  const index=read('index.html');
  assert.ok(shop.includes(checkout));
- assert.match(shop,/оформлении по умолчанию показывается в USD/);
+ assert.match(shop,/Стоимость будет показана в USD/);
+ assert.match(shop,/после подтверждённой активации аккаунта/);
  assert.match(shop,/href="\/premium\.html"/);
  assert.match(shop,/Оформить Premium/);
  assert.ok((index.match(/href="\/premium\.html"/g)||[]).length>=3);
