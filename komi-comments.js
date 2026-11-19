@@ -55,6 +55,7 @@
             const card = element('article', 'komi-comment');
             const head = element('div', 'komi-comment-header');
             const name = element('strong', 'komi-comment-name', String(item.author_name || 'Участник Komi').slice(0, 60));
+            if (item.user_id) name.dataset.komiPremiumId = String(item.user_id);
             const date = element('time', 'komi-comment-date', formatDate(item.created_at));
             if (item.created_at) date.dateTime = item.created_at;
             head.append(name, date);

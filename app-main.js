@@ -14,6 +14,7 @@
             }
         } catch(e) {}
 
+        window.KomiPremium?.setClient(_supabase);
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай'];
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -391,7 +392,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.has(name);
                 const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name) && name !== me);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong>'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
+                return '<div class="komi-friends-person"><button class="komi-friends-identity" data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong data-komi-premium-username="'+escapeFriendHtml(name)+'">'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
         }
@@ -1328,7 +1329,7 @@ async function loadDataFromCloud(attempt = 0) {
                             ${isMe ? '<span class="profile-presence is-online" title="Вы сейчас онлайн" aria-label="Сейчас онлайн"></span>' : ''}
                         </div>
                         <div class="profile-info-grid">
-                            <div class="profile-name-row">
+                            <div class="profile-name-row" data-komi-premium-username="${safeProfileText(username)}">
                                 <h2 data-profile-field="display-name">${safeProfileText(komiVisibleUsername(username, p, isMe))}</h2>
                                 ${p.title ? `<span class="profile-title-badge" title="Титул пользователя">${safeProfileText(p.title)}</span>` : ''}
                                 ${isMe && typeof aniCoinBadge === 'function' && aniCoinBadge() ? `<span class="profile-title-badge profile-title-earned" data-anicoin-badge>${escapeFriendHtml(aniCoinBadge())}</span>` : ''}
@@ -1343,6 +1344,11 @@ async function loadDataFromCloud(attempt = 0) {
                                 ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
                             </div>
 
+                            <section class="komi-premium-showcase" data-komi-premium-panel data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Подписка Komi Premium">
+                              <span class="komi-premium-eyebrow">✦ KOMI PREMIUM · ACTIVE</span>
+                              <h3>Особый статус в сообществе</h3>
+                              <p>Подтверждённая подписка. Значок Premium виден другим пользователям рядом с никнеймом.</p>
+                            </section>
                             <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 300} из 300 XP <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
                             <div class="komi-profile-actions profile-hero-actions">
                                 ${!isMe && currentUser ? `
