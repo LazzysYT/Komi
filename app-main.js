@@ -1947,7 +1947,16 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         function randomAnimeWithAnimation() {
-            const items = komiRandomPlayableAnime(animeList);
+            const mood = document.getElementById('komiRouletteMood')?.value || 'all';
+            const allPlayable = komiRandomPlayableAnime(animeList);
+            const genres = {fantasy:['фэнтези','fantasy'],comedy:['комедия','comedy'],romance:['романтика','romance'],action:['экшен','боевик','action']};
+            const items = allPlayable.filter(item => {
+                if (mood === 'all') return true;
+                if (mood === 'short') return Number(item.episodeCount) > 0 && Number(item.episodeCount) <= 12;
+                if (mood === 'top') return Number(item.shikiRating || item.score || item.rating || 0) >= 8.5;
+                const values = [item.genres, item.genre].flat(Infinity).filter(Boolean).map(g => String(g?.name || g).toLowerCase());
+                return (genres[mood] || []).some(genre => values.some(value => value.includes(genre)));
+            });
             const modal = document.getElementById('randomRouletteModal');
             const imgEl = document.getElementById('rouletteImage');
             const titleEl = document.getElementById('rouletteTitle');
@@ -1957,7 +1966,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (retry) retry.hidden = Boolean(items.length);
             if (!items.length) {
                 titleEl.textContent = catalogInitialLoadComplete
-                    ? 'Пока нет аниме с доступными сериями'
+                    ? (allPlayable.length ? 'По этому фильтру пока нет подходящих аниме. Выбери другой.' : 'Пока нет аниме с доступными сериями')
                     : 'Каталог загружается. Повтори попытку через несколько секунд.';
                 imgEl.src = '/anime-artwork.svg';
                 modal.classList.add('active');
