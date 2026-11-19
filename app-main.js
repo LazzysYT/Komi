@@ -15,6 +15,7 @@
         } catch(e) {}
 
         window.KomiPremium?.setClient(_supabase);
+        window.KomiPremiumMedia?.setClient(_supabase);
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай'];
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
@@ -1367,7 +1368,7 @@ async function loadDataFromCloud(attempt = 0) {
                     </div>
                     ${isMe ? `
                             <div class="profile-settings-box" id="profile-settings">
-                                <section class="komi-premium-profile-media" data-komi-premium-editor hidden aria-label="Анимация профиля">
+                                <section class="komi-premium-profile-media" data-komi-premium-editor data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Анимация профиля">
                                     <p class="komi-premium-eyebrow">✦ PREMIUM · Оформление профиля</p>
                                     <p>Анимированные GIF-изображения видны другим пользователям, пока подписка активна.</p>
                                     <div class="komi-premium-media-inputs">
