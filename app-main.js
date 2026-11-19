@@ -137,7 +137,9 @@
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
         let currentView = location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : location.hash === '#partners' ? 'partners' : 'home';
-        let profileTargetUser = null;
+        const komiSharedProfileQuery = new URLSearchParams(location.search).get('profile');
+        let profileTargetUser = location.hash === '#profile' && /^[A-Za-z0-9_.-]{1,80}$/.test(komiSharedProfileQuery || '') ? komiSharedProfileQuery : null;
+        if (profileTargetUser) currentView = 'profile';
         let profileActiveTab = 'Просмотрено';
         let profilePageSection = 'overview';
         let profileCollectionSearchQuery = '';
@@ -745,12 +747,43 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         function openProfile(username) {
+            const handle = String(username || currentUser?.username || '').trim();
+            if (!handle) { openAuthModal('login'); return; }
             if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
-            if (location.pathname !== '/' || location.search || location.hash !== '#profile') history.replaceState(null, '', '/#profile');
-            profileTargetUser = username;
+            const isOwn = currentUser?.username === handle;
+            const route = isOwn ? '/#profile' : '/?profile=' + encodeURIComponent(handle) + '#profile';
+            if (location.pathname + location.search + location.hash !== route) history.replaceState(null, '', route);
+            profileTargetUser = handle;
             render();
             renderHeaderUser();
+        }
+
+        async function komiCopyProfileLink() {
+            const handle = String(window.komiViewedProfileName || '').trim();
+            if (!/^[A-Za-z0-9_.-]{1,80}$/.test(handle)) {
+                komiStatusFeedback('Не удалось подготовить ссылку на профиль.');
+                return;
+            }
+            const link = new URL('/', location.origin);
+            link.searchParams.set('profile', handle);
+            link.hash = 'profile';
+            try {
+                if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
+                await navigator.clipboard.writeText(link.href);
+                komiStatusFeedback('Ссылка на профиль скопирована.');
+            } catch (error) {
+                const fallback = document.createElement('textarea');
+                fallback.value = link.href;
+                fallback.setAttribute('readonly', '');
+                fallback.style.position = 'fixed';
+                fallback.style.top = '-9999px';
+                document.body.appendChild(fallback);
+                fallback.select();
+                const copied = typeof document.execCommand === 'function' && document.execCommand('copy');
+                fallback.remove();
+                komiStatusFeedback(copied ? 'Ссылка на профиль скопирована.' : 'Не удалось скопировать ссылку. Проверьте разрешения браузера.');
+            }
         }
 
         // The database username is an ownership key, not a public-facing nickname.
@@ -1259,6 +1292,9 @@ async function loadDataFromCloud(attempt = 0) {
             const calculatedLevel = komiAchievements(username).level;
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
+            // Only real saved entries are shown: no fictional showcase data.
+            const profileShowcase = Object.keys(userFavorites[username] || {})
+                .map(id => profileAnimeById.get(String(id))).filter(Boolean).slice(0, 4);
             const profileSavedCount = profileActiveTab === 'Любимые' ? favoritesCount
                 : customFolderNames.includes(profileActiveTab)
                     ? (customFolders[profileActiveTab] || []).length
@@ -1299,6 +1335,7 @@ async function loadDataFromCloud(attempt = 0) {
                             <div class="profile-reg-date">Дата регистрации: <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
                             <div class="komi-profile-actions">
                                 ${isMe ? '<button class="komi-profile-action" data-komi-onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
+                                <button type="button" class="komi-profile-action komi-profile-share" data-komi-onclick="komiCopyProfileLink()" aria-label="Скопировать ссылку на профиль">⧉ Поделиться</button>
                                 ${isMe ? '<button type="button" class="komi-profile-action" data-komi-onclick="openAniCoinShop()">Кошелёк AniCoin</button>' : ''}
                                 ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти из аккаунта</button>' : ''}
                             </div>
@@ -1376,6 +1413,12 @@ async function loadDataFromCloud(attempt = 0) {
                                 <div class="komi-overview-list-row"><span>Любимое</span><b>${favoritesCount}</b></div>
                             </section>
                         </div>
+                        <section class="komi-profile-showcase" aria-label="Витрина избранного">
+                            <h3>Витрина избранного</h3>
+                            ${profileShowcase.length
+                                ? `<div class="anime-grid">${profileShowcase.map(an => renderCard(an)).join('')}</div>`
+                                : '<p>Здесь появятся аниме из твоего избранного, когда они загрузятся из каталога.</p>'}
+                        </section>
                         <div class="komi-profile-ratings"><h3>Оценки</h3><p>Оценённые аниме появятся в твоей коллекции.</p></div>
                     ` : ''}
                     <div class="komi-profile-anime-section" style="display:${profilePageSection === 'anime' ? 'block' : 'none'}">
@@ -2654,7 +2697,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (typeof aniCoinRequest === 'function') aniCoinRequest('read').catch(() => {});
                 loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
                 loadAccountNotifications().catch(error => console.warn('Уведомления:', error.message));
-                if (location.hash === '#profile') { currentView = 'profile'; profileTargetUser = username; }
+                if (location.hash === '#profile' && !new URLSearchParams(location.search).get('profile')) { currentView = 'profile'; profileTargetUser = username; }
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
@@ -3761,7 +3804,14 @@ async function loadDataFromCloud(attempt = 0) {
             } else if (hash === '#partners') {
                 if (currentView !== 'partners') { currentView='partners'; render(); }
             } else if (hash === '#profile') {
-                if (currentUser) {
+                const sharedName = new URLSearchParams(location.search).get('profile');
+                if (/^[A-Za-z0-9_.-]{1,80}$/.test(sharedName || '')) {
+                    if (currentView !== 'profile' || profileTargetUser !== sharedName) {
+                        profileTargetUser = sharedName;
+                        currentView = 'profile';
+                        render();
+                    }
+                } else if (currentUser) {
                     profileTargetUser=currentUser.username;
                     if (currentView !== 'profile') { currentView='profile'; render(); }
                 } else openAuthModal('login');
