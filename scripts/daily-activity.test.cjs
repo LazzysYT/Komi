@@ -77,7 +77,9 @@ test('failed read cannot fabricate an activity or mark',async()=>{
  await x.read();
  assert.equal(x.state().data,null);
  assert.match(x.fields['[data-komi-daily-status]'].textContent,/недоступна/i);
- assert.equal(x.fields['[data-komi-click="daily-checkin"]'].textContent,'Повторить');
+ assert.equal(x.fields['[data-komi-click="daily-checkin"]'].textContent,'Отметить день');
+ assert.equal(x.fields['[data-komi-click="daily-checkin"]'].disabled,true);
+ assert.match(script,/data-komi-daily-refresh/, 'Refresh icon is available when the RPC fails');
 });
 
 test('a pending response from an old account never reaches the next user',async()=>{
