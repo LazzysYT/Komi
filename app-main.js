@@ -1662,17 +1662,6 @@ async function loadDataFromCloud(attempt = 0) {
                 ? Number(komiQuestRewardState.data?.premium_xp_multiplier) : NaN;
             const xpMultiplier = Number.isFinite(confirmedMultiplier) && confirmedMultiplier >= 1
                 ? confirmedMultiplier : (showcasePremium ? 1.5 : 1);
-            const showcaseLimit = showcasePremium ? 6 : 3;
-            const profileShowcase = Object.keys(userFavorites[username] || {})
-                .filter(id => /^[1-9][0-9]{0,14}$/.test(String(id)))
-                .map(id => profileAnimeById.get(String(id))).filter(Boolean).slice(0, showcaseLimit);
-            const showcaseMarkup = profileShowcase.map(anime =>
-                '<a class="komi-profile-showcase-item" href="/anime/' + encodeURIComponent(String(anime.id)) +
-                '" style="display:flex;align-items:center;gap:9px;min-width:0;padding:8px;border:1px solid #ffffff22;border-radius:12px;color:inherit;text-decoration:none">' +
-                (komiSafeUrl(anime.poster) ? '<img src="' + safeProfileText(komiSafeUrl(anime.poster)) +
-                '" alt="" loading="lazy" width="42" height="58" style="width:42px;height:58px;object-fit:cover;border-radius:6px">' : '') +
-                '<span style="font-size:12px;font-weight:600;overflow-wrap:anywhere">' + safeProfileText(anime.title) +
-                '</span></a>').join('');
             const profileSavedCount = profileActiveTab === 'Любимые' ? favoritesCount
                 : customFolderNames.includes(profileActiveTab)
                     ? (customFolders[profileActiveTab] || []).length
@@ -1724,12 +1713,6 @@ async function loadDataFromCloud(attempt = 0) {
                               <span class="komi-premium-eyebrow">✦ KOMI PREMIUM · ACTIVE</span>
                               <h3>Особый статус в сообществе</h3>
                               <p>Подтверждённая подписка. Значок Premium виден другим пользователям рядом с никнеймом.</p>
-                            </section>
-                            <section class="komi-profile-anime-showcase" aria-label="Любимые аниме" style="margin:12px 0">
-                                <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px">
-                                    <strong>♡ Любимые аниме</strong><small>${profileShowcase.length} / ${showcaseLimit}${showcasePremium ? " · Premium" : ""}</small>
-                                </div>
-                                ${showcaseMarkup ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">${showcaseMarkup}</div>` : `<p class="komi-feature-muted">Пока нет добавленных в любимые аниме.</p>`}
                             </section>
                             <div class="komi-level-progress profile-xp-capsule" aria-label="Уровень ${calculatedLevel}, ${xpProgress} из 500 XP, множитель ${xpMultiplier}x">
                                 <span class="profile-xp-level">Уровень <strong>${calculatedLevel}</strong></span>
