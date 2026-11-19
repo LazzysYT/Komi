@@ -72,6 +72,8 @@ h1 span { color: var(--muted); }
 .audio-choice .audio-desc { font-size: 11px; color: var(--muted); }
 .audio-choice .audio-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
 .audio-choice .audio-wave { color: var(--muted); font-size: 16px; line-height: 1; }
+.audio-select { width: 100%; min-height: 30px; border: 1px solid var(--border); border-radius: 8px; background: #202024; color: #D9D9DE; padding: 6px 9px; text-align: center; font-size: 11px; font-weight: 600; }
+.audio-select:hover { background: white; color: #09090B; }
 .audio-test { border-radius: 8px; padding: 7px 9px; background: #242429; color: white; border: 1px solid var(--border-hover); font-size: 11px; font-weight: 700; text-align: center; }
 .audio-test:hover { background: #38383E; }
 .muted { color: var(--muted); }
@@ -96,8 +98,8 @@ h1 span { color: var(--muted); }
 .store-try { background: transparent; border-color: var(--border-hover); }
 .store-equipped { font-size: 10px; color: var(--soft); }
 .feedback { min-height: 18px; font-size: 12px; color: var(--muted); margin: 10px 0 0; }
-.preview-column { min-width: 0; }
-.live-preview { position: sticky; top: 24px; overflow: hidden; padding: 24px; }
+.preview-column { min-width: 0; position: sticky; top: 24px; align-self: start; }
+.live-preview { position: static; overflow: hidden; padding: 24px; }
 .preview-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
 .preview-heading h2 { font-size: 23px; }
 .live-dot { display: inline-flex; align-items: center; gap: 7px; color: white; border: 1px solid var(--border); border-radius: 99px; padding: 7px 9px; letter-spacing: .1em; font-size: 10px; font-weight: 800; }
@@ -154,7 +156,7 @@ footer { color: var(--muted); font-size: 11px; text-align: center; margin-top: 2
 }
 @media (max-width:1024px) {
   .studio-layout { grid-template-columns: 1fr; }
-  .preview-column { grid-row: 1; }
+  .preview-column { grid-row: 1; position: static; }
   .live-preview { position: static; }
   .preview-profile { max-width: 700px; }
   .badge-grid { grid-template-columns: repeat(5,minmax(0,1fr)); }
