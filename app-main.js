@@ -1314,7 +1314,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if(error) throw error;
                 if (!data || !Number.isSafeInteger(data.quest_xp_total) ||
                     data.quest_xp_total<0 || !Array.isArray(data.claims) ||
-                    !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(data.server_day||'')))
+                    !/^\d{4}-\d{2}-\d{2}$/.test(String(data.server_day||'')))
                     throw new Error('Invalid quest server response');
                 if(currentUser?.authUserId!==owner || komiQuestRewardState.request!==request)return;
                 const previous=komiQuestRewardState.data?.quest_xp_total ?? -1;
@@ -1322,7 +1322,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if(action==='claim' && data.awarded_now && typeof aniCoinRequest==='function')
                     void aniCoinRequest('read',{},owner).catch(()=>{});
                 if(previous!==data.quest_xp_total && currentView==='profile' &&
-                    profileTargetUser===currentUser.username) {
+                    (profileTargetUser||currentUser.username)===currentUser.username) {
                     const container=document.getElementById('mainContainer');
                     if(container) renderProfileView(container);
                 }
