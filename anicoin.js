@@ -72,7 +72,7 @@ function renderAniCoinShop(container) {
             <article class="anicoin-item" aria-labelledby="komi-premium-shop-title">
                 <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Ежемесячная подписка</p>
                 <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
-                <p>Поддержи развитие KomiAnime. Цена при оформлении по умолчанию показывается в USD; подписка продлевается каждый месяц. Premium-функции пока не включаются автоматически.</p>
+                <p>Анимированный профиль, разовые +2000 XP и +500 AniCoin, публичный значок Premium. Стоимость будет показана в USD. Бонусы начисляются после подтверждённой активации аккаунта.</p>
                 <a class="btn-secondary" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd?currency=USD" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:16px;padding:14px 22px;border-radius:14px;background:#f5f5f5;color:#090909;font-weight:750;">Оформить Premium ↗</a>
                 <div><a href="/premium.html" style="display:inline-block;margin-top:12px;font-size:13px;text-decoration:underline;text-underline-offset:3px;">Условия подписки</a></div>
             </article>
