@@ -18,6 +18,7 @@
         return komiOpenFullCatalogFilters();
       case 'click:notifications': return withSound(() => toggleNotifications());
       case 'click:notifications-read': return markNotificationsRead();
+      case 'click:daily-checkin': return komiDailyActivityCheckin();
       case 'click:random': return withSound(() => randomAnimeWithAnimation());
       case 'click:watch-party': return withSound(() => openWatchPartyHub());
       case 'click:admin-panel': return withSound(() => openAdminPanel());
