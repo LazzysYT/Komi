@@ -68,7 +68,7 @@ function renderAniCoinShop(container) {
         <section id="shop" class="anicoin-shop" aria-labelledby="anicoin-title">
             <p class="komi-spotlight-eyebrow">Komi Anime</p>
             <h1 id="anicoin-title">Магазин AniCoin</h1>
-            <p>За каждые 20 минут воспроизведения во встроенном видеоплеере начисляется 1 AniCoin. Паузы, перемотка и внешние плееры не учитываются.</p>
+            <p>1 AniCoin начисляется за каждые 20 минут реального воспроизведения во встроенном видеоплеере. Для внешних плееров доступен отдельный учёт активного времени при открытом окне.</p>
             <article class="anicoin-item" aria-labelledby="komi-premium-shop-title">
                 <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Ежемесячная подписка</p>
                 <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
@@ -222,3 +222,68 @@ function aniCoinStartEmbed() {
 
 // Initial shop deep-link: subsequent hash changes use the central vanilla-JS router.
 if (location.hash === '#shop') openAniCoinShop();
+
+
+/* External embeds cannot report their exact playback state across origins.
+ * Explicit user opt-in counts only foreground time while the video iframe is visible.
+ * Native HTML5 players continue to earn automatically from real playing/timeupdate events.
+ */
+function aniCoinMountEmbedControls() {
+    const modal = document.getElementById('watchModal');
+    if (!modal || !modal.classList.contains('active')) {
+        if (aniCoinEmbedSession) aniCoinStopEmbed();
+        return;
+    }
+    const box = modal.querySelector('#watchModalContent .player-box');
+    const iframe = box?.querySelector('iframe');
+    if (!iframe || !currentUser?.authUserId) return;
+    if (box.parentElement?.querySelector('[data-komi-embed-coins]')) return;
+    const controls = document.createElement('div');
+    controls.className = 'komi-embed-coin-controls';
+    controls.setAttribute('data-komi-embed-coins', '');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = '◈ Начать учёт AniCoin';
+    button.setAttribute('data-komi-coin-embed-start', '');
+    const stop = document.createElement('button');
+    stop.type = 'button';
+    stop.textContent = 'Остановить';
+    stop.hidden = true;
+    stop.setAttribute('data-komi-coin-embed-stop', '');
+    const description = document.createElement('p');
+    description.id = 'komi-embed-coin-status';
+    description.textContent = '1 AniCoin за 20 минут активного времени в открытом плеере. Внешний плеер не передаёт данные о паузах — останови учёт, если не смотришь.';
+    controls.append(button, stop, description);
+    box.insertAdjacentElement('afterend', controls);
+}
+function aniCoinInitEmbedControls() {
+    const modal = document.getElementById('watchModal');
+    if (!modal) return;
+    const refresh = () => aniCoinMountEmbedControls();
+    const observer = new MutationObserver(refresh);
+    observer.observe(modal, {childList: true, subtree: true, attributes: true, attributeFilter: ['class']});
+    aniCoinMountEmbedControls();
+    document.addEventListener('click', event => {
+        const begin = event.target.closest?.('[data-komi-coin-embed-start]');
+        const end = event.target.closest?.('[data-komi-coin-embed-stop]');
+        if (begin) {
+            aniCoinStartEmbed();
+            begin.hidden = true;
+            const stop = begin.parentElement.querySelector('[data-komi-coin-embed-stop]');
+            if (stop) stop.hidden = false;
+        }
+        if (end) {
+            aniCoinStopEmbed();
+            end.hidden = true;
+            const start = end.parentElement.querySelector('[data-komi-coin-embed-start]');
+            if (start) start.hidden = false;
+            const info = end.parentElement.querySelector('#komi-embed-coin-status');
+            if (info) info.textContent = 'Учёт активного времени остановлен.';
+        }
+    });
+}
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', aniCoinInitEmbedControls, {once:true});
+} else {
+    aniCoinInitEmbedControls();
+}
