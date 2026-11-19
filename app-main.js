@@ -1323,6 +1323,20 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
 
+        // Free, voluntary goals derived from saved account data; no client-granted XP or coins.
+        function komiProfileQuests(statuses, favorites) {
+            const values = Object.values(statuses || {});
+            const listed = values.filter(value => ['Просмотрено','В планах','Смотрю','Отложено','Брошено'].includes(value)).length;
+            const watched = values.filter(value => value === 'Просмотрено').length;
+            const favCount = Object.keys(favorites || {}).length;
+            return [
+                { label: 'Первое аниме в списке', value: Math.min(listed, 1), target: 1 },
+                { label: 'Коллекция из 5 аниме', value: Math.min(listed, 5), target: 5 },
+                { label: 'Первый просмотр', value: Math.min(watched, 1), target: 1 },
+                { label: 'Первое избранное', value: Math.min(favCount, 1), target: 1 }
+            ];
+        }
+
         function safeProfileText(value) { return String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
@@ -1429,6 +1443,7 @@ async function loadDataFromCloud(attempt = 0) {
                     : (statsCounts[profileActiveTab] || 0);
             const missingProfileCards = Math.max(0, profileSavedCount - listForTab.length);
             const wallMessages = profileWalls[username] || [];
+            const profileQuests = isMe && currentUser?.authUserId ? komiProfileQuests(userStatuses, userFavorites[username] || {}) : [];
 
             const searchedList = listForTab.filter(an => {
                 if (!profileCollectionSearchQuery) return true;
@@ -1535,6 +1550,16 @@ async function loadDataFromCloud(attempt = 0) {
                             <button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-click="daily-checkin" disabled>Отметить день</button>
                             <span data-komi-daily-status role="status" aria-live="polite">Загружаем активность…</span>
                         </div>
+                    </section>
+                    ` : ''}
+                    ${profileQuests.length ? `
+                    <section class="profile-summary-strip" data-komi-quests aria-label="Квесты Komi — цели без ограничения по времени">
+                      ${profileQuests.map(quest => `
+                        <div class="profile-summary-item" data-komi-quest-state="${quest.value >= quest.target ? 'complete' : 'in-progress'}">
+                          <strong>${quest.value} / ${quest.target}</strong>
+                          <span>${quest.value >= quest.target ? '✓ ' : ''}${safeProfileText(quest.label)}</span>
+                        </div>
+                      `).join('')}
                     </section>
                     ` : ''}
                     <div class="profile-summary-strip" aria-label="Краткая статистика профиля">
