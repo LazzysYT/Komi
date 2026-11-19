@@ -45,7 +45,7 @@ const assert=require('node:assert/strict');
       const overview=document.createElement('div');
       profilePageSection='overview';
       renderProfileView(overview);
-      const genreText=overview.querySelector('.komi-genre-row span')?.textContent||'';
+      const genreText=(overview.querySelector('.profile-genre') || overview.querySelector('.komi-genre-row span'))?.textContent||'';
       return {
         fakeImageNodes:container.querySelectorAll('img[src="x"]').length,
         invalidSvgNodes:container.querySelectorAll('img[src^="javascript:"]').length,

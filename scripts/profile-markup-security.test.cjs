@@ -20,11 +20,13 @@ test('profile buttons never splice a user nickname into executable handler sourc
 test('profile folders, genres, friends and avatars escape untrusted fields',()=>{
  for(const piece of [
   'safeProfileText(fname)',
-  'safeProfileText(genre)',
   'safeProfileText(friend)',
   'komiSafeUrl(senderAvatar)',
   'window.komiProfileFolderNames[\u0024{i}]'
  ])assert.ok(source.includes(piece),piece);
+ const premium=fs.readFileSync(path.join(__dirname,'../profile-premium.js'),'utf8');
+ assert.ok(premium.includes('escapeText(name)'), 'Genre names are escaped in the premium dashboard');
+ assert.ok(premium.includes('escapeText(anime.title)'), 'Anime titles are escaped in the premium dashboard');
  assert.doesNotMatch(source,/profileActiveTab='\$\{fname\}'/);
  assert.doesNotMatch(source,/<img src="\$\{senderAvatar\}"/);
 });
