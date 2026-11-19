@@ -1354,7 +1354,9 @@ async function loadDataFromCloud(attempt = 0) {
                                 ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти</button>' : ''}
                             </div>
 
-                            ${isMe ? `
+                        </div>
+                    </div>
+                    ${isMe ? `
                             <div class="profile-settings-box" id="profile-settings">
                                 <h4> Настройки профиля</h4>
                                 <label for="newDisplayName" style="font-size:11px; color:var(--text-muted);">Никнейм (отображаемое имя)</label>
@@ -1373,8 +1375,6 @@ async function loadDataFromCloud(attempt = 0) {
                                 <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
                             </div>
                             ` : ''}
-                        </div>
-                    </div>
 
                     <div class="profile-stats-grid" ${profilePageSection === 'anime' ? '' : 'hidden'}>
                         <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Просмотрено'}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
