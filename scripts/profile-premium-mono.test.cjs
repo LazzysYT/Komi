@@ -9,7 +9,7 @@ const read = name => fs.readFileSync(path.join(root, name), 'utf8');
 
 test('monochrome profile stylesheet loads last and only restyles profile UI', () => {
   const html = read('index.html');
-  const css = read('profile-premium-mono.css');
+  const css = read('komi-black-white.css').split('/* KomiAnime profile 2026-11-19')[1];
   assert.match(html, /komi-black-white\.css[^"]*"[^>]*>\s*<link rel="stylesheet" href="\/profile-premium-mono\.css/);
   assert.match(css, /\.komi-media-hub \.komi-profile-v2/);
   assert.doesNotMatch(css, /#(?:ff454f|e5344b|e53935|f00)\b/i);
