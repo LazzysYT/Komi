@@ -2716,6 +2716,33 @@ async function loadDataFromCloud(attempt = 0) {
             dd.classList.add('active');
         }
 
+        // The header is a suggestion popover, NOT a second live catalog page.
+        // Rebuilding the catalog on every keystroke created the duplicate search
+        // shown underneath the popup and reset card/image loading.
+        function submitKomiHeaderSearch() {
+            const raw = document.getElementById('searchInput')?.value.trim().slice(0,120) || '';
+            if (!raw || window.KomiHybridSearch?.isUsers(raw)) return;
+            catalogSearchQuery = raw;
+            catalogVisibleCount = 48;
+            catalogFilterGenre = 'Все';
+            catalogFilterYear = 'Все';
+            catalogFilterType = 'Все';
+            closeSearchDropdown();
+            if (currentView !== 'catalog') {
+                currentView = 'catalog';
+                render();
+            }
+            const field = document.getElementById('komiCatalogSearchInput');
+            if (field) field.value = catalogSearchQuery;
+            komiRefreshCatalogGrid();
+        }
+        document.getElementById('searchInput')?.addEventListener('keydown', event => {
+            if (event.key !== 'Enter' || event.isComposing) return;
+            if (window.KomiHybridSearch?.isUsers(event.target.value)) return;
+            event.preventDefault();
+            submitKomiHeaderSearch();
+        });
+
         function handleInstantSearch(q) {
             const dd = document.getElementById('searchDropdown');
             if (!dd) return;
@@ -2729,15 +2756,14 @@ async function loadDataFromCloud(attempt = 0) {
             }
             const query = input.trim().toLocaleLowerCase('ru-RU');
             if (!query) {
-                catalogSearchQuery = '';
                 dd.replaceChildren();
-                if (currentView === 'catalog') komiRefreshCatalogGrid();
                 dd.classList.remove('active');
                 return;
             }
-            const results = animeList.filter(a=>a && [
+            const matches = animeList.filter(a=>a && [
                 a.title,a.originalTitle,...(Array.isArray(a.genres) ? a.genres : [])
-            ].some(v=>String(v || '').toLocaleLowerCase('ru-RU').includes(query))).slice(0,8);
+            ].some(v=>String(v || '').toLocaleLowerCase('ru-RU').includes(query)));
+            const results = matches.slice(0,8);
             if (results.length) {
                 dd.replaceChildren(...results.map(a=>komiSearchSuggestion(a)));
             } else {
@@ -2746,19 +2772,14 @@ async function loadDataFromCloud(attempt = 0) {
                 empty.style.cssText = 'padding:16px;color:#a7a7a7;font-size:12px;text-align:center';
                 dd.replaceChildren(empty);
             }
+            const viewAll = document.createElement('button');
+            viewAll.type = 'button';
+            viewAll.className = 'komi-search-view-all';
+            viewAll.textContent = 'Все результаты · ' + matches.length;
+            viewAll.addEventListener('click', submitKomiHeaderSearch);
+            dd.append(viewAll);
             window.KomiHybridSearch?.decorate(dd);
             dd.classList.add('active');
-            catalogSearchQuery = input.slice(0,120);
-            if (currentView !== 'catalog') {
-                currentView = 'catalog';
-                catalogFilterGenre = 'Все';
-                catalogFilterYear = 'Все';
-                catalogFilterType = 'Все';
-                render();
-            }
-            const field = document.getElementById('komiCatalogSearchInput');
-            if (field && field.value !== catalogSearchQuery) field.value = catalogSearchQuery;
-            komiRefreshCatalogGrid();
         }
 
         function selectAnimeFromSearch(id) {
