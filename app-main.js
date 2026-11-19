@@ -1277,7 +1277,7 @@ async function loadDataFromCloud(attempt = 0) {
                     if (error) throw error;
                     if (!data || typeof data.checked_today !== 'boolean' ||
                         !Number.isInteger(data.streak_days) || !Number.isInteger(data.total_days) ||
-                        !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(data.server_day || '')))
+                        !/^\d{4}-\d{2}-\d{2}$/.test(String(data.server_day || '')))
                         throw new Error('Invalid activity response');
                     if (state.owner !== uid || currentUser?.authUserId !== uid) return;
                     state.data = data; state.error = '';
