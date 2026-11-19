@@ -3329,7 +3329,7 @@ async function loadDataFromCloud(attempt = 0) {
         let komiCalendarDayFilter = 'all';
         function setKomiCalendarDay(day) {
             const allowed = ['all','1','2','3','4','5','6','0'];
-            const value = String(day);
+            const value = String(day) === '7' ? 'all' : String(day);
             if (!allowed.includes(value)) return;
             komiCalendarDayFilter = value;
             const section = document.getElementById('komiCalendarSection');
@@ -3368,7 +3368,7 @@ async function loadDataFromCloud(attempt = 0) {
                 days.map(([value,label]) => '<button type="button" class="btn-secondary" aria-pressed="' +
                     (komiCalendarDayFilter === value ? 'true' : 'false') +
                     '" style="min-width:39px;padding:8px 10px;opacity:' + (komiCalendarDayFilter === value ? '1' : '.65') +
-                    '" data-komi-onclick="setKomiCalendarDay(\\'' + value + '\\')">' + label + '</button>').join('') + '</div>';
+                    '" data-komi-onclick="setKomiCalendarDay(' + (value === 'all' ? '7' : value) + ')'">' + label + '</button>').join('') + '</div>';
             if (upcoming.length) {
                 result += '<p class="komi-feature-muted">Ближайшие эфиры · время указано в твоём часовом поясе. Озвучка может появиться позже.</p>';
                 result += '<div class="komi-release-list">' + upcoming.map(entry => {
