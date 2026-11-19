@@ -259,6 +259,24 @@
   overscroll-behavior: contain;
   box-shadow: 0 22px 56px rgba(0,0,0,.85) !important;
 }
+.komi-media-hub .komi-hub-overlay .komi-search-view-all {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 10px;
+  background: #26262b;
+  color: #fff;
+  font: 650 12px Inter,system-ui,sans-serif;
+  cursor: pointer;
+}
+.komi-media-hub .komi-hub-overlay .komi-search-view-all:is(:hover,:focus-visible) {
+  background: #35353a;
+}
 
 .komi-media-hub .komi-hub-overlay .search-bar .komi-search-shortcut {
   position: static;
