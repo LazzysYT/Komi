@@ -110,6 +110,30 @@
         let userCustomFolders = {};
         let profileWalls = safeParse(localStorage.getItem('komi_profile_walls'), {}); 
         let currentUser = null;
+        // Remember only the publicly displayed avatar URL, keyed to the verified
+        // Supabase user ID. Never show a previous account's cached picture.
+        let komiSessionResolved = false;
+        const komiSidebarAvatarCachePrefix = 'komi.sidebar.avatar.v1:';
+        function komiSafeAvatarUrl(raw) {
+            try {
+                if (typeof raw !== 'string' || raw.length > 2048) return '';
+                const url = new URL(raw);
+                return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
+            } catch { return ''; }
+        }
+        function komiReadCachedAvatar(userId) {
+            if (!/^[a-f0-9-]{36}$/i.test(String(userId || ''))) return '';
+            try { return komiSafeAvatarUrl(localStorage.getItem(komiSidebarAvatarCachePrefix + userId)); }
+            catch { return ''; }
+        }
+        function komiCacheVerifiedAvatar(userId, raw) {
+            if (!/^[a-f0-9-]{36}$/i.test(String(userId || ''))) return;
+            const url = komiSafeAvatarUrl(raw);
+            try {
+                if (url) localStorage.setItem(komiSidebarAvatarCachePrefix + userId, url);
+                else localStorage.removeItem(komiSidebarAvatarCachePrefix + userId);
+            } catch {}
+        }
         let userProfiles = { 
             'Admin': { avatar: 'https://api.dicebear.com/7.x/bottts/svg?seed=Admin', status: 'Администратор ★', regDate: '05 ноября 2026 года' }
         };
@@ -829,14 +853,48 @@ async function loadDataFromCloud(attempt = 0) {
                     balanceLabel.textContent = '—';
             }
             if (sidebarAvatarIcon) {
-                const avatar = currentUser && (userProfiles[currentUser.username]?.avatar || (!currentUser.authUserId && localStorage.getItem('komi_avatar_' + currentUser.username)));
-                if (avatar) {
-                    const img = document.createElement('img');
-                    img.alt = 'Аватар профиля';
-                    img.src = avatar;
-                    img.onerror = () => { sidebarAvatarIcon.textContent = '◉'; };
-                    sidebarAvatarIcon.replaceChildren(img);
-                } else sidebarAvatarIcon.textContent = '◉';
+                const owner = currentUser?.authUserId || (currentUser?.username ? 'legacy:' + currentUser.username : '');
+                // Preserve the SSR icon until Supabase has resolved the session.
+                // Never reuse an image from a different account after sign-out/switch.
+                if (!owner) {
+                    if (komiSessionResolved || sidebarAvatarIcon.dataset.komiAvatarOwner) {
+                        sidebarAvatarIcon.textContent = '◉';
+                        delete sidebarAvatarIcon.dataset.komiAvatarOwner;
+                        delete sidebarAvatarIcon.dataset.komiPendingAvatar;
+                    }
+                } else {
+                    if (sidebarAvatarIcon.dataset.komiAvatarOwner !== owner) {
+                        sidebarAvatarIcon.replaceChildren();
+                        sidebarAvatarIcon.textContent = '◉';
+                        sidebarAvatarIcon.dataset.komiAvatarOwner = owner;
+                        delete sidebarAvatarIcon.dataset.komiPendingAvatar;
+                    }
+                    const profileAvatar = userProfiles[currentUser.username]?.avatar ||
+                        (!currentUser.authUserId && localStorage.getItem('komi_avatar_' + currentUser.username));
+                    const avatar = komiSafeAvatarUrl(profileAvatar) ||
+                        (currentUser.authUserId ? komiReadCachedAvatar(currentUser.authUserId) : '');
+                    const existing = sidebarAvatarIcon.querySelector('img');
+                    if (avatar && existing?.dataset.komiAvatarSrc !== avatar &&
+                        sidebarAvatarIcon.dataset.komiPendingAvatar !== avatar) {
+                        sidebarAvatarIcon.dataset.komiPendingAvatar = avatar;
+                        const image = new Image();
+                        image.alt = 'Аватар профиля';
+                        image.dataset.komiAvatarSrc = avatar;
+                        image.onload = () => {
+                            // Keep the old, already decoded avatar visible until the
+                            // replacement finishes loading. Ignore stale async results.
+                            if (sidebarAvatarIcon.dataset.komiAvatarOwner !== owner ||
+                                sidebarAvatarIcon.dataset.komiPendingAvatar !== avatar) return;
+                            sidebarAvatarIcon.replaceChildren(image);
+                            delete sidebarAvatarIcon.dataset.komiPendingAvatar;
+                        };
+                        image.onerror = () => {
+                            if (sidebarAvatarIcon.dataset.komiPendingAvatar === avatar)
+                                delete sidebarAvatarIcon.dataset.komiPendingAvatar;
+                        };
+                        image.src = avatar;
+                    }
+                }
             }
             const adminBtn = document.getElementById('adminPanelBtn');
             const addBtn = document.getElementById('addAnimeBtn');
@@ -968,6 +1026,13 @@ async function loadDataFromCloud(attempt = 0) {
                 // New home layout only consumes existing DB-loaded data and handlers.
                 // Keep the legacy branch below as a safe fallback.
                 if (window.KomiHomeDiscovery) {
+                    const previousHero = container.querySelector('.komi-home-hero');
+                    const previousOwner = previousHero?.dataset.komiOwner || '';
+                    const heroSignature = hero => [...hero.querySelectorAll('.hero-slide')].map(slide =>
+                        [slide.dataset.komiAnimeId, slide.classList.contains('active'),
+                         slide.querySelector('img')?.dataset.posterDirect || '',
+                         slide.querySelector('h1')?.textContent || ''].join('|')).join('::');
+                    const oldHeroSignature = previousHero ? heroSignature(previousHero) : '';
                     container.innerHTML = window.KomiHomeDiscovery.render({
                         animeList, currentUser, progress:komiEpisodeProgress,
                         currentSlideIndex, renderCard, year:komiAnimeYear,
@@ -977,6 +1042,14 @@ async function loadDataFromCloud(attempt = 0) {
                         calendar:komiReleaseCalendar, years:komiYearSections,
                         intro:komiIntroMarkup, quickFilters:komiHomeQuickFiltersMarkup
                     });
+                    const nextHero = container.querySelector('.komi-home-hero');
+                    const heroOwner = currentUser?.authUserId || '';
+                    if (nextHero && previousHero && previousOwner === heroOwner &&
+                        oldHeroSignature === heroSignature(nextHero)) {
+                        // A network/account refresh should not reset an already loaded
+                        // hero image, its fade animation or the current carousel slide.
+                        nextHero.replaceWith(previousHero);
+                    } else if (nextHero) nextHero.dataset.komiOwner = heroOwner;
                     window.KomiHomeDiscovery.afterRender(container);
                     startHeroAutoSlide();
                     return;
@@ -3057,6 +3130,9 @@ async function loadDataFromCloud(attempt = 0) {
             return 'google_' + String(authUserId || '').replace(/[^a-fA-F0-9]/g, '').slice(0, 32);
         }
         function applySavedKomiProfile(username, profile) {
+            if (currentUser?.authUserId && currentUser.username === username &&
+                Object.prototype.hasOwnProperty.call(profile, 'avatar_url'))
+                komiCacheVerifiedAvatar(currentUser.authUserId, profile.avatar_url);
             userProfiles[username] = {
                 ...userProfiles[username],
                 displayName: profile.display_name || '',
@@ -3071,6 +3147,7 @@ async function loadDataFromCloud(attempt = 0) {
             try {
                 const { data: { session }, error } = await _supabase.auth.getSession();
                 if (error) throw error;
+                komiSessionResolved = true;
                 if (!session?.user) {
                     if (currentUser?.authUserId) {
                         clearKomiAccountData(currentUser);
@@ -3102,8 +3179,8 @@ async function loadDataFromCloud(attempt = 0) {
                 // Verified Supabase sessions take precedence; legacy browser data is retained.
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
                 updateNotificationsUI();
-                // Show the restored account immediately. Profile/list network reads may be slow.
-                renderHeaderUser();
+                // Show the account immediately from the same UID's verified avatar cache.
+                // Do not render the Google placeholder before reading its saved profile.
                 requireServerAdmin(true).catch(e => console.warn('Admin role restore:',e.message));
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
@@ -3112,17 +3189,26 @@ async function loadDataFromCloud(attempt = 0) {
                 if (!userProfiles[username]) {
                     const meta = session.user.user_metadata || {};
                     userProfiles[username] = {
-                        avatar: typeof meta.avatar_url === 'string' && meta.avatar_url.startsWith('https://') ? meta.avatar_url : 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(username),
+                        avatar: komiReadCachedAvatar(session.user.id) ||
+                            komiSafeAvatarUrl(meta.avatar_url) ||
+                            'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(username),
                         status: 'Новичок ★',
                         regDate: new Date().toLocaleDateString('ru-RU')
                     };
                     // Google profile data must not be written to legacy shared JSON.
+                } else {
+                    const cached = komiReadCachedAvatar(session.user.id);
+                    if (cached) userProfiles[username].avatar = cached;
                 }
+                renderHeaderUser();
                 try {
                     const { data: savedProfile, error: profileError } = await _supabase.from('komi_profiles').select('display_name,avatar_url,bio,created_at').eq('user_id', session.user.id).maybeSingle();
                     if (profileError) console.warn('Profile load:', profileError.message);
                     else if (savedProfile) {
-                        if (currentUser?.authUserId === session.user.id) applySavedKomiProfile(username, savedProfile);
+                        if (currentUser?.authUserId === session.user.id) {
+                            applySavedKomiProfile(username, savedProfile);
+                            renderHeaderUser();
+                        }
                     } else {
                         const firstDisplayName = String(
                             session.user.user_metadata?.user_name ||
