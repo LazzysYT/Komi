@@ -68,6 +68,12 @@ function renderAniCoinShop(container) {
             <p class="komi-spotlight-eyebrow">Komi Anime</p>
             <h1 id="anicoin-title">Магазин AniCoin</h1>
             <p>За каждые 20 минут воспроизведения во встроенном видеоплеере начисляется 1 AniCoin. Паузы, перемотка и внешние плееры не учитываются.</p>
+            <article class="anicoin-item" aria-labelledby="komi-premium-shop-title">
+                <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Подписка · Lava.top</p>
+                <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
+                <p>Поддержи развитие сайта. Оформление подписки проходит на Lava.top с ежемесячным продлением. Привилегии на KomiAnime пока не активируются автоматически.</p>
+                <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px;padding:12px 20px;border-radius:14px;">Подробнее о Premium</a>
+            </article>
             ${!owner ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
             ${owner && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
             ${wallet ? `<div class="anicoin-wallet">
