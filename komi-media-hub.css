@@ -446,6 +446,14 @@
     linear-gradient(0deg, var(--hub-bg), transparent 55%);
 }
 .komi-media-hub .komi-home-hero .hero-slide::after { content: none !important; }
+
+/* Hydrated data must be readable immediately: repeated carousel reveal animations
+   made the first slide temporarily look empty during session restoration. */
+.komi-media-hub .komi-home-hero .hero-slide.active {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
 .komi-media-hub .komi-home-hero .komi-home-hero-content,
 .komi-media-hub .komi-seo-spotlight-copy {
   position: relative;
