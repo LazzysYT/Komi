@@ -6800,3 +6800,228 @@ background:radial-gradient(ellipse at 90% 0,#c3a46721,transparent 65%),#111114;c
 #sidePremiumBtn{display:none!important}
 @media(min-width:768px){#sidePremiumBtn{display:flex!important}}
 
+/* 2026-11-19 — precise monochrome Bento/profile activity refresh */
+#profile.komi-profile-premium-mono {
+  --pr-bg:#09090B;--pr-surface:#131316;--pr-surface-2:#131316;
+  --pr-panel:#09090B;--pr-accent:#FFFFFF;--pr-accent-soft:rgba(255,255,255,.08);
+  --pr-ink:#FFFFFF;--pr-muted:#8E8E93;--pr-border:rgba(255,255,255,.08);
+  background:#09090B;color:#FFFFFF;
+}
+#profile.komi-profile-premium-mono :is(.profile-widget,.profile-settings-box,.profile-stats-grid .profile-stat-card) {
+  background:#131316!important;border:1px solid rgba(255,255,255,.08)!important;
+  box-shadow:none!important;
+}
+#profile.komi-profile-premium-mono .profile-xp-capsule.komi-level-progress {
+  display:flex!important;flex-direction:row;align-items:center;gap:12px;
+  margin:5px 0 0!important;padding:8px 12px;border-radius:999px;
+  background:#131316!important;border:1px solid rgba(255,255,255,.08);
+  width:min(100%,430px);min-width:0!important;max-width:430px!important;
+  text-align:left!important;color:#fff;
+}
+#profile.komi-profile-premium-mono .profile-xp-level{flex:none;white-space:nowrap;font-size:12px;color:#C1C1C6}
+#profile.komi-profile-premium-mono .profile-xp-level strong{color:#FFFFFF;font-weight:750;font-size:13px}
+#profile.komi-profile-premium-mono .profile-xp-bar{flex:1;min-width:0;display:flex;flex-direction:column;gap:5px;align-items:stretch}
+#profile.komi-profile-premium-mono .profile-xp-bar>span{font-size:11px;color:#D4D4D8;font-variant-numeric:tabular-nums}
+#profile.komi-profile-premium-mono .profile-xp-bar progress {
+  width:100%;height:4px;display:block;background:#333337!important;accent-color:#FFFFFF!important;
+}
+#profile.komi-profile-premium-mono .profile-xp-multiplier {
+  flex:none;display:inline-flex;align-items:center;justify-content:center;
+  padding:5px 9px;min-height:26px;border:1px solid rgba(255,255,255,.16);
+  background:#222226;border-radius:999px;color:#fff;font-size:11px;font-weight:750;
+  font-variant-numeric:tabular-nums;
+}
+#profile.komi-profile-premium-mono .profile-settings-session-actions {
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  padding-top:12px;border-top:1px solid rgba(255,255,255,.08);
+}
+#profile.komi-profile-premium-mono .profile-settings-session-actions button {
+  border-radius:11px!important;background:#222226!important;color:#fff!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+}
+#profile.komi-profile-premium-mono :is(.profile-activity-card,.profile-daily-quests) {
+  margin:12px 0 0;min-width:0;padding:18px;border-radius:19px;
+  background:#131316;border:1px solid rgba(255,255,255,.08);
+  color:#fff;
+}
+#profile.komi-profile-premium-mono :is(.profile-activity-heading,.profile-daily-heading){
+  display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;
+}
+#profile.komi-profile-premium-mono .profile-activity-eyebrow {
+  display:block;margin-bottom:4px;font-size:11px;color:#8E8E93;letter-spacing:.035em;
+}
+#profile.komi-profile-premium-mono .profile-activity-heading h3,
+#profile.komi-profile-premium-mono .profile-daily-heading h3 {
+  margin:0;color:#fff;font-size:16px;font-weight:700;line-height:1.35;
+}
+#profile.komi-profile-premium-mono .profile-activity-heading h3 strong {
+  font-size:20px;font-variant-numeric:tabular-nums;
+}
+#profile.komi-profile-premium-mono .profile-activity-tools{display:flex;align-items:center;gap:10px}
+#profile.komi-profile-premium-mono .profile-activity-total{font-size:12px;color:#8E8E93}
+#profile.komi-profile-premium-mono .profile-activity-total strong{color:#fff;font-variant-numeric:tabular-nums}
+#profile.komi-profile-premium-mono .profile-refresh-icon{
+  display:grid;place-items:center;width:30px;height:30px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.12);background:#1D1D21;color:#fff;
+  font-size:20px;line-height:1;cursor:pointer;transition:background .2s,transform .2s;
+}
+#profile.komi-profile-premium-mono .profile-refresh-icon:hover:not(:disabled){background:#333338;transform:rotate(35deg)}
+#profile.komi-profile-premium-mono .profile-refresh-icon:disabled{opacity:.38;cursor:default}
+#profile.komi-profile-premium-mono .profile-week-tracker{
+  display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;
+  margin-top:14px;padding:12px;border-radius:15px;background:#09090B;
+  border:1px solid rgba(255,255,255,.08);
+}
+#profile.komi-profile-premium-mono .profile-week-day{
+  min-width:0;display:flex;flex-direction:column;align-items:center;gap:6px;
+}
+#profile.komi-profile-premium-mono .profile-week-circle{
+  width:clamp(28px,3.8vw,37px);height:clamp(28px,3.8vw,37px);
+  display:grid;place-items:center;border-radius:50%;
+  border:1px solid rgba(255,255,255,.10);background:#1D1D20;
+  color:#66666C;font-size:15px;font-weight:650;
+}
+#profile.komi-profile-premium-mono .profile-week-day[data-state="checked"] .profile-week-circle{
+  background:#fff;border-color:#fff;color:#09090B;
+}
+#profile.komi-profile-premium-mono .profile-week-day[data-state="today"] .profile-week-circle{
+  border-color:rgba(255,255,255,.85);color:#fff;
+}
+#profile.komi-profile-premium-mono .profile-week-label{font-size:11px;color:#8E8E93}
+#profile.komi-profile-premium-mono .profile-activity-footer{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:12px;
+}
+#profile.komi-profile-premium-mono [data-komi-daily-status]{
+  min-width:0;font-size:11px;line-height:1.4;color:#8E8E93;
+}
+#profile.komi-profile-premium-mono .profile-checkin-button {
+  flex:none;padding:7px 11px;min-height:30px;background:#fff;color:#09090B;
+  border:1px solid #fff;border-radius:999px;font-size:11px;font-weight:650;cursor:pointer;
+}
+#profile.komi-profile-premium-mono .profile-checkin-button:disabled{
+  background:#242427;color:#929298;border-color:rgba(255,255,255,.10);cursor:default;
+}
+#profile.komi-profile-premium-mono .profile-daily-heading{margin-bottom:12px}
+#profile.komi-profile-premium-mono .profile-server-xp-badge{
+  display:inline-flex;align-items:center;min-height:26px;padding:5px 10px;
+  border:1px solid rgba(255,255,255,.15);border-radius:999px;
+  background:#202024;font-size:11px;font-weight:650;color:#ECECEF;
+  font-variant-numeric:tabular-nums;
+}
+#profile.komi-profile-premium-mono .profile-daily-grid {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;
+}
+#profile.komi-profile-premium-mono .profile-daily-task {
+  display:flex;flex-direction:column;min-width:0;min-height:124px;padding:14px;
+  border-radius:15px;background:#09090B;border:1px solid rgba(255,255,255,.08);
+}
+#profile.komi-profile-premium-mono .profile-daily-task-title {
+  color:#fff;font:500 15px/1.35 Inter,system-ui,sans-serif;
+  overflow-wrap:anywhere;letter-spacing:-.012em;
+}
+#profile.komi-profile-premium-mono .profile-daily-reward {
+  display:block;margin-top:5px;font-size:12px;color:#8E8E93;
+}
+#profile.komi-profile-premium-mono .profile-daily-progress{
+  display:block;height:3px;margin:15px 0 12px;width:100%;
+  overflow:hidden;background:#303034;border-radius:999px;
+}
+#profile.komi-profile-premium-mono .profile-daily-progress i {
+  display:block;height:100%;width:0%;background:#fff;border-radius:inherit;
+  transition:width .25s ease-out;
+}
+#profile.komi-profile-premium-mono .profile-daily-task-footer{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:auto;
+}
+#profile.komi-profile-premium-mono .profile-daily-task-hint {
+  min-width:0;font-size:10px;line-height:1.2;color:#8E8E93;
+}
+#profile.komi-profile-premium-mono .profile-quest-status-pill{
+  flex:none;min-width:72px;padding:5px 9px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.18);background:#242428;color:#D6D6DB;
+  font-size:10px;font-weight:700;line-height:1.2;cursor:pointer;
+}
+#profile.komi-profile-premium-mono .profile-daily-task[data-quest-state="ready"] .profile-quest-status-pill{
+  background:#fff;border-color:#fff;color:#09090B;
+}
+#profile.komi-profile-premium-mono .profile-daily-task[data-quest-state="claimed"] .profile-quest-status-pill{
+  border-color:rgba(255,255,255,.28);background:#323237;color:#fff;
+}
+#profile.komi-profile-premium-mono .profile-quest-status-pill:disabled{cursor:default}
+#profile.komi-profile-premium-mono .profile-daily-message {
+  margin:10px 0 0;font-size:11px;color:#8E8E93;
+}
+#profile.komi-profile-premium-mono .profile-stats-heading-meta{
+  display:inline-flex;align-items:center;gap:9px;
+}
+#profile.komi-profile-premium-mono .profile-metric strong.is-missing{color:#77777F!important}
+#profile.komi-profile-premium-mono .profile-info-popover{
+  position:relative;display:inline-flex;align-items:center;
+}
+#profile.komi-profile-premium-mono .profile-info-trigger{
+  display:grid;place-items:center;width:22px;height:22px;border-radius:50%;
+  border:1px solid rgba(255,255,255,.25);background:#202024;color:#fff;
+  font:600 12px/1 Inter,system-ui,sans-serif;cursor:help;
+}
+#profile.komi-profile-premium-mono .profile-info-tooltip{
+  position:absolute;z-index:5;right:0;top:calc(100% + 7px);
+  width:min(265px,72vw);padding:10px 12px;border-radius:10px;
+  border:1px solid rgba(255,255,255,.18);background:#26262B;
+  color:#F2F2F4;font-size:11px;line-height:1.5;
+  opacity:0;visibility:hidden;transform:translateY(-4px);
+  transition:opacity .15s,transform .15s,visibility .15s;
+  pointer-events:none;box-shadow:0 8px 30px rgba(0,0,0,.4);
+}
+#profile.komi-profile-premium-mono .profile-info-popover:is(:hover,:focus-within) .profile-info-tooltip{
+  opacity:1;visibility:visible;transform:translateY(0);
+}
+#profile.komi-profile-premium-mono .profile-favorites:has(.profile-favorite-add){
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+#profile.komi-profile-premium-mono .profile-favorite-add{
+  width:100%;aspect-ratio:2/3;display:grid;place-items:center;min-width:0;
+  border:1px dashed rgba(255,255,255,.16)!important;background:#09090B!important;
+  border-radius:13px;color:#fff;font-size:31px;font-weight:300;
+  transition:border-color .2s,background .2s;cursor:pointer;
+}
+#profile.komi-profile-premium-mono .profile-favorite-add:hover:not(.is-disabled){
+  border-color:rgba(255,255,255,.6)!important;background:#202024!important;
+}
+#profile.komi-profile-premium-mono .profile-favorite-add.is-disabled{
+  cursor:default;color:#7D7D83;
+}
+#profile.komi-profile-premium-mono .profile-achievement{
+  background:#09090B!important;border:1px solid rgba(255,255,255,.08)!important;
+  min-height:112px;padding:12px 8px;gap:6px;
+}
+#profile.komi-profile-premium-mono .profile-achievement>.profile-achievement-icon{font-size:25px}
+#profile.komi-profile-premium-mono .profile-achievement>.profile-achievement-progress{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:3px 8px;min-width:35px;border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;color:#C5C5CC;font-size:11px!important;font-weight:750;
+  font-variant-numeric:tabular-nums;background:#1E1E23;
+}
+#profile.komi-profile-premium-mono .profile-achievement.is-earned>.profile-achievement-progress{
+  color:#09090B;background:#fff;border-color:#fff;
+}
+@media(max-width:760px){
+  #profile.komi-profile-premium-mono .profile-daily-grid{grid-template-columns:minmax(0,1fr)}
+  #profile.komi-profile-premium-mono .profile-daily-task{min-height:105px}
+}
+@media(max-width:520px){
+  #profile.komi-profile-premium-mono :is(.profile-activity-card,.profile-daily-quests){padding:14px;border-radius:16px}
+  #profile.komi-profile-premium-mono .profile-xp-capsule.komi-level-progress{
+    width:100%;padding:7px 9px;gap:8px;max-width:100%!important;
+  }
+  #profile.komi-profile-premium-mono .profile-week-tracker{padding:9px 5px;gap:1px}
+  #profile.komi-profile-premium-mono .profile-week-circle{width:29px;height:29px}
+  #profile.komi-profile-premium-mono .profile-activity-footer{align-items:flex-start}
+  #profile.komi-profile-premium-mono .profile-daily-task-footer{flex-wrap:wrap}
+  #profile.komi-profile-premium-mono .profile-favorites:has(.profile-favorite-add){
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  #profile.komi-profile-premium-mono :is(.profile-refresh-icon,.profile-daily-progress i,.profile-info-tooltip){transition:none}
+}
+
