@@ -1267,6 +1267,76 @@ async function loadDataFromCloud(attempt = 0) {
         // Optional activity is stored by verified Supabase UID, never by editable nickname.
         // This state only caches server responses; no dates or rewards are user-authored.
         const komiDailyActivityState = { owner: null, data: null, inflight: null, claiming: false, error: '' };
+        // Quest XP always comes from the authenticated server ledger, never from client counts.
+        const komiQuestRewardState = { owner:null, data:null, request:0, busy:false, error:'' };
+        function komiQuestRewardPaint() {
+            const owner = currentUser?.authUserId;
+            const panel = document.querySelector('[data-komi-quest-rewards]');
+            if (!owner || panel?.dataset.komiQuestRewards !== owner ||
+                komiQuestRewardState.owner !== owner) return;
+            const data = komiQuestRewardState.data;
+            const claims = new Set((Array.isArray(data?.claims) ? data.claims : [])
+                .filter(item=>item.day === data.server_day).map(item=>item.id));
+            const available = data?.available || {};
+            const messages = {
+                checkin:'Ежедневная отметка',watch:'20 минут настоящего просмотра',
+                comment:'Комментарий (не менее 10 символов)'
+            };
+            for (const button of panel.querySelectorAll('[data-quest-reward-id]')) {
+                const id = button.dataset.questRewardId;
+                const claimed = claims.has(id);
+                button.disabled = komiQuestRewardState.busy || !data || claimed || !available[id];
+                button.textContent = claimed ? 'Получено ✓' : available[id] ? 'Забрать награду' : 'Не выполнено';
+                const label = button.closest('[data-quest-reward-row]')?.querySelector('strong');
+                if (label) label.textContent = messages[id] || id;
+            }
+            const output=panel.querySelector('[data-quest-reward-status]');
+            if(output) output.textContent=komiQuestRewardState.error ||
+                (komiQuestRewardState.busy ? 'Проверяем награды…' : data
+                    ? 'Серверный XP за задания: '+data.quest_xp_total+
+                        ' · множитель '+data.premium_xp_multiplier+'×'
+                    : 'Проверка заданий недоступна');
+        }
+        async function komiDailyQuestRewardRead(action='read',quest=null) {
+            const owner = currentUser?.authUserId;
+            if (!owner || !_supabase) return;
+            if (komiQuestRewardState.busy) return;
+            if (komiQuestRewardState.owner !== owner) {
+                komiQuestRewardState.owner=owner;
+                komiQuestRewardState.data=null;
+            }
+            const request=++komiQuestRewardState.request;
+            komiQuestRewardState.busy=true;komiQuestRewardState.error='';
+            komiQuestRewardPaint();
+            try {
+                const {data,error} = await _supabase.rpc('komi_daily_quests',
+                    {p_action:action,p_quest:quest});
+                if(error) throw error;
+                if (!data || !Number.isSafeInteger(data.quest_xp_total) ||
+                    data.quest_xp_total<0 || !Array.isArray(data.claims) ||
+                    !/^\\d{4}-\\d{2}-\\d{2}$/.test(String(data.server_day||'')))
+                    throw new Error('Invalid quest server response');
+                if(currentUser?.authUserId!==owner || komiQuestRewardState.request!==request)return;
+                const previous=komiQuestRewardState.data?.quest_xp_total ?? -1;
+                komiQuestRewardState.data=data;
+                if(action==='claim' && data.awarded_now && typeof aniCoinRequest==='function')
+                    void aniCoinRequest('read',{},owner).catch(()=>{});
+                if(previous!==data.quest_xp_total && currentView==='profile' &&
+                    profileTargetUser===currentUser.username) {
+                    const container=document.getElementById('mainContainer');
+                    if(container) renderProfileView(container);
+                }
+            } catch(error) {
+                if(currentUser?.authUserId===owner && komiQuestRewardState.request===request) {
+                    komiQuestRewardState.error='Не удалось проверить награду. Повторите позже.';
+                    console.warn('Komi daily quests:',error?.message||String(error));
+                }
+            } finally {
+                if(komiQuestRewardState.request===request) {
+                    komiQuestRewardState.busy=false;komiQuestRewardPaint();
+                }
+            }
+        }
         function komiDailyActivityPaint() {
             const uid = currentUser?.authUserId;
             const panel = document.querySelector('[data-komi-daily-activity]');
@@ -1587,6 +1657,18 @@ async function loadDataFromCloud(attempt = 0) {
                         </div>
                     </section>
                     ` : ''}
+                    ${isMe && currentUser?.authUserId ? `
+                    <section class="profile-summary-strip" data-komi-quest-rewards="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневные квесты с серверными наградами">
+                      ${[['checkin','Ежедневная отметка','20 XP + 1 AniCoin'],
+                          ['watch','20 минут просмотра','30 XP + 1 AniCoin'],
+                          ['comment','Комментарий от 10 символов','10 XP']].map(([id,label,reward])=>`
+                        <div class="profile-summary-item" data-quest-reward-row>
+                          <strong>${label}</strong><span>${reward}</span>
+                          <button type="button" class="profile-hero-action" data-quest-reward-id="${id}" disabled>Проверяем…</button>
+                        </div>`).join('')}
+                      <p data-quest-reward-status role="status" aria-live="polite">Проверяем награды…</p>
+                    </section>
+                    ` : ''}
                     ${profileQuests.length ? `
                     <section class="profile-summary-strip" data-komi-quests aria-label="Квесты Komi — цели без ограничения по времени">
                       ${profileQuests.map(quest => `
@@ -1722,7 +1804,18 @@ async function loadDataFromCloud(attempt = 0) {
                     </div>
                 </section>
             `;
-            if (isMe && currentUser?.authUserId) void komiDailyActivityRead();
+            if (isMe && currentUser?.authUserId) {
+                void komiDailyActivityRead();
+                const questPanel=container.querySelector('[data-komi-quest-rewards]');
+                questPanel?.addEventListener('click',event=>{
+                    const button=event.target.closest('[data-quest-reward-id]');
+                    if(!button || button.disabled || !questPanel.contains(button))return;
+                    void komiDailyQuestRewardRead('claim',button.dataset.questRewardId);
+                });
+                if(komiQuestRewardState.owner===currentUser.authUserId &&
+                    komiQuestRewardState.data) komiQuestRewardPaint();
+                else void komiDailyQuestRewardRead();
+            }
         }
 
         let avatarDraft = null;
@@ -3420,7 +3513,10 @@ async function loadDataFromCloud(attempt = 0) {
             const watching=Object.values(statuses).filter(v=>v==='Смотрю').length;
             const friends=friendsFor(username).length;
             const premiumXp=window.KomiPremium?.xpForUsername(username) || 0;
-            const xp=watched*100+watching*20+friends*15+premiumXp;
+            const questXp = currentUser?.username === username &&
+                komiQuestRewardState.owner === currentUser?.authUserId
+                ? Number(komiQuestRewardState.data?.quest_xp_total)||0 : 0;
+            const xp=watched*100+watching*20+friends*15+premiumXp+questXp;
             return {watched,watching,friends,xp,premiumXp,level:Math.floor(xp/500)+1,badges:[watched>=1&&' Первый просмотр',watched>=10&&' 10 аниме',watched>=50&&' Знаток аниме',friends>=1&&' Первый друг',watching>=5&&' Марафон'].filter(Boolean)};
         }
         function komiRecommendations() {
