@@ -1616,11 +1616,17 @@ async function loadDataFromCloud(attempt = 0) {
                 }
             }
             const watchedCount = statsCounts['Просмотрено'] || 0;
-            const calculatedLevel = komiAchievements(username).level;
+            const profileExperience = komiAchievements(username);
+            const calculatedLevel = profileExperience.level;
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
             // Only real saved entries are shown: no fictional showcase data.
             const showcasePremium = window.KomiPremium?.isActiveName?.(username) === true;
+            const xpProgress = Math.max(0, profileExperience.xp % 500);
+            const confirmedMultiplier = isMe && komiQuestRewardState.owner === currentUser?.authUserId
+                ? Number(komiQuestRewardState.data?.premium_xp_multiplier) : NaN;
+            const xpMultiplier = Number.isFinite(confirmedMultiplier) && confirmedMultiplier >= 1
+                ? confirmedMultiplier : (showcasePremium ? 1.5 : 1);
             const showcaseLimit = showcasePremium ? 6 : 3;
             const profileShowcase = Object.keys(userFavorites[username] || {})
                 .filter(id => /^[1-9][0-9]{0,14}$/.test(String(id)))
@@ -1672,7 +1678,6 @@ async function loadDataFromCloud(attempt = 0) {
                             
                             <p class="profile-bio" data-profile-field="bio">${safeProfileText(p.bio || 'Твоя история в мире аниме.')}</p>
                             <div class="profile-badges-row">
-                                <span class="profile-badge-level">✦ Уровень ${calculatedLevel}</span>
                                 <span class="profile-badge-item" data-profile-presence>${safeProfileText(p.status || 'Люблю аниме')}</span>
                                 <span class="profile-badge-item">◉ Друзей: ${myFriends.length}</span>
                                 ${tasteCompatibility}
@@ -1691,7 +1696,11 @@ async function loadDataFromCloud(attempt = 0) {
                                 </div>
                                 ${showcaseMarkup ? `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px">${showcaseMarkup}</div>` : `<p class="komi-feature-muted">Пока нет добавленных в любимые аниме.</p>`}
                             </section>
-                            <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 500} из 500 XP <progress max="500" value="${komiAchievements(username).xp % 500}"></progress></label></div>
+                            <div class="komi-level-progress profile-xp-capsule" aria-label="Уровень ${calculatedLevel}, ${xpProgress} из 500 XP, множитель ${xpMultiplier}x">
+                                <span class="profile-xp-level">Уровень <strong>${calculatedLevel}</strong></span>
+                                <span class="profile-xp-bar"><span>${xpProgress} / 500 XP</span><progress max="500" value="${xpProgress}">${xpProgress} из 500</progress></span>
+                                <span class="profile-xp-multiplier">×${xpMultiplier.toLocaleString('ru-RU')}</span>
+                            </div>
                             <div class="komi-profile-actions profile-hero-actions">
                                 ${!isMe && currentUser ? `
                                     ${amIFriend
@@ -1699,7 +1708,6 @@ async function loadDataFromCloud(attempt = 0) {
                                       : `<button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
                                     <button type="button" class="profile-hero-action profile-hero-action-muted" data-profile-party="${safeProfileText(username)}">▷ Смотреть вместе</button>
                                 ` : ''}
-                                ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти</button>' : ''}
                             </div>
 
                         </div>
@@ -1748,7 +1756,10 @@ async function loadDataFromCloud(attempt = 0) {
                                     </div>
                                     <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" data-komi-onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
-                                <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
+                                <div class="profile-settings-session-actions">
+                                    <button type="button" class="btn-secondary profile-settings-logout" data-komi-onclick="logoutUser('local')">Выйти из аккаунта</button>
+                                    <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
+                                </div>
                             </div>
                             ` : ''}
 
