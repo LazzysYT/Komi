@@ -97,6 +97,56 @@ test('cache API blocks SSRF, redirects, unsupported MIME and over-size images',a
   } finally {global.fetch=previous;}
 });
 
+
+test('poster cache follows trusted CDN redirects but never leaves the URL allowlist',async()=>{
+  const previous=global.fetch;
+  const calls=[];
+  const cancel={async cancel(){}};
+  try {
+    global.fetch=async(url,options)=>{
+      calls.push(url);
+      assert.equal(options.redirect,'manual');
+      if (url===validShiki) return {status:302,headers:new Headers({'location':validAniList}),body:cancel};
+      assert.equal(url,validAniList);
+      return {status:200,headers:new Headers({'content-type':'image/jpeg','content-length':'4'}),
+        body:mockStream([255,216,255,217])};
+    };
+    const ok=mockRes();
+    await handler({method:'GET',query:{src:validShiki}},ok);
+    assert.equal(ok.statusCode,200);
+    assert.deepEqual(calls,[validShiki,validAniList]);
+    assert.deepEqual([...ok.body],[255,216,255,217]);
+
+    for(const destination of [
+      'http://127.0.0.1/internal',
+      'https://shikimori.io.evil.test/uploads/poster/animes/1/abc.jpg',
+      'https://shikimori.io/api/private',
+      'javascript:alert(1)'
+    ]){
+      calls.length=0;
+      global.fetch=async(url)=>{
+        calls.push(url);
+        return {status:302,headers:new Headers({'location':destination}),body:cancel};
+      };
+      const bad=mockRes();
+      await handler({method:'GET',query:{src:validShiki}},bad);
+      assert.equal(bad.statusCode,502);
+      assert.deepEqual(calls,[validShiki],'Untrusted redirect must never be fetched');
+    }
+
+    calls.length=0;
+    global.fetch=async(url)=>{
+      calls.push(url);
+      const next=url===validShiki?validAniList:validShiki;
+      return {status:301,headers:new Headers({'location':next}),body:cancel};
+    };
+    const loop=mockRes();
+    await handler({method:'GET',query:{src:validShiki}},loop);
+    assert.equal(loop.statusCode,502,'Repeated redirect must fail closed');
+    assert.ok(calls.length<=3,'Redirect chain must be bounded');
+  } finally { global.fetch=previous; }
+});
+
 test('mutable legacy poster URLs keep short CDN and browser freshness',async()=>{
   const prev=global.fetch;
   global.fetch=async()=>({
