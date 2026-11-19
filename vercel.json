@@ -62,6 +62,17 @@
   ],
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "^(komi-six|komi-ukiyo6|komi-git-main-ukiyo6)\\.vercel\\.app$"
+        }
+      ],
+      "destination": "https://komianime.online/",
+      "permanent": true
+    },
+    {
       "source": "/:path*",
       "has": [
         {

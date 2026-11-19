@@ -28,7 +28,7 @@ const assert=require('node:assert/strict');
   await page.waitForFunction(()=>window.__komiOAuthCalls.length===1);
   const oauth=await page.evaluate(()=>window.__komiOAuthCalls[0]);
   assert.equal(oauth.provider,'google');
-  assert.equal(oauth.options.redirectTo,'http://127.0.0.1:8765/');
+  assert.equal(oauth.options.redirectTo,'https://komianime.online/');
   await page.evaluate(()=>switchAuthTab('register'));
   await page.locator('#regUsername').fill('Admin');
   await page.locator('#regEmail').fill('example@example.test');

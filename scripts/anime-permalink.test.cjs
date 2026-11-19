@@ -77,6 +77,6 @@ test('broken SEO poster uses local SVG; no external executable error handler', (
 
 test('auth callbacks never point to the SEO-only /anime/:id route', () => {
   assert.doesNotMatch(main, /window\.location\.origin \+ window\.location\.pathname/);
-  assert.match(main, /redirectTo: window\.location\.origin \+ '\/'/);
-  assert.match(main, /emailRedirectTo: window\.location\.origin \+ '\/'/);
+  assert.ok(main.includes("redirectTo: 'https://komianime.online/'"));
+  assert.ok(main.includes("emailRedirectTo: 'https://komianime.online/'"));
 });
