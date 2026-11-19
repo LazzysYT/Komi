@@ -772,6 +772,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
                 await navigator.clipboard.writeText(link.href);
                 komiStatusFeedback('Ссылка на профиль скопирована.');
+                return true;
             } catch (error) {
                 const fallback = document.createElement('textarea');
                 fallback.value = link.href;
@@ -783,6 +784,7 @@ async function loadDataFromCloud(attempt = 0) {
                 const copied = typeof document.execCommand === 'function' && document.execCommand('copy');
                 fallback.remove();
                 komiStatusFeedback(copied ? 'Ссылка на профиль скопирована.' : 'Не удалось скопировать ссылку. Проверьте разрешения браузера.');
+                return Boolean(copied);
             }
         }
 
@@ -1313,38 +1315,43 @@ async function loadDataFromCloud(attempt = 0) {
             window.komiProfileFolderNames=customFolderNames.slice();
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
-                <section id="profile" class="profile-container komi-profile-v2" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
+                <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-red" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
                     <div class="profile-header-card" data-profile-hero>
-                        <div class="profile-cover" data-profile-cover aria-hidden="true"></div>
+                        <div class="profile-cover" data-profile-cover aria-hidden="true">${komiSafeUrl(p.banner || p.cover || p.coverUrl) ? `<img src="${safeProfileText(komiSafeUrl(p.banner || p.cover || p.coverUrl))}" alt="" loading="lazy">` : ''}</div>
                         <div class="profile-hero-tools">
-                            ${isMe ? '<button type="button" class="profile-glass" data-profile-edit aria-expanded="false" aria-controls="profile-settings">Редактировать профиль</button>' : ''}
-                            <button type="button" class="profile-glass" data-profile-share>Поделиться</button>
+                            ${isMe ? '<button type="button" class="profile-glass profile-glass-edit" data-profile-edit aria-expanded="false" aria-controls="profile-settings"><span aria-hidden="true">✎</span> Редактировать</button>' : ''}
+                            ${isMe ? '<button type="button" class="profile-glass" data-profile-settings aria-expanded="false" aria-controls="profile-settings"><span aria-hidden="true">⚙</span> Настройки</button>' : ''}
+                            <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">↗ Поделиться ссылкой</span><span class="profile-share-copied" aria-hidden="true">✓ Скопировано</span></button>
                         </div>
-                        <div class="profile-avatar-frame" data-profile-frame>
-                        <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                        <div class="profile-avatar-frame" data-profile-frame="${['red','neon','white'].includes(p.frame) ? safeProfileText(p.frame) : 'none'}">
+                            <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                            ${isMe ? '<span class="profile-presence is-online" title="Вы сейчас онлайн" aria-label="Сейчас онлайн"></span>' : ''}
                         </div>
                         <div class="profile-info-grid">
                             <div class="profile-name-row">
                                 <h2 data-profile-field="display-name">${safeProfileText(komiVisibleUsername(username, p, isMe))}</h2>
-                                ${!isMe && currentUser ? `
-                                    ${amIFriend ? `<button class="btn-danger" data-komi-onclick="playSound(); removeFriend(window.komiViewedProfileName)">Удалить из друзей</button>` : 
-                                     `<button class="btn-glow" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
-                                ` : ''}
+                                ${p.title ? `<span class="profile-title-badge" title="Титул пользователя">${safeProfileText(p.title)}</span>` : ''}
+                                ${isMe && typeof aniCoinBadge === 'function' && aniCoinBadge() ? `<span class="profile-title-badge profile-title-earned" data-anicoin-badge>${escapeFriendHtml(aniCoinBadge())}</span>` : ''}
                             </div>
                             
                             <p class="profile-bio" data-profile-field="bio">${safeProfileText(p.bio || 'Твоя история в мире аниме.')}</p>
                             <div class="profile-badges-row">
-                                ${isMe ? `<span class="profile-badge-item" data-anicoin-badge ${typeof aniCoinBadge === 'function' && aniCoinBadge() ? '' : 'hidden'}>${typeof aniCoinBadge === 'function' ? escapeFriendHtml(aniCoinBadge()) : ''}</span>` : ''}
-                                <div class="profile-badge-level">Уровень ${calculatedLevel} </div>
-                                <div class="profile-badge-item"> Статус: ${safeProfileText(p.status)}</div>
+                                <span class="profile-badge-level">✦ Уровень ${calculatedLevel}</span>
+                                <span class="profile-badge-item" data-profile-presence>${safeProfileText(p.status || 'Люблю аниме')}</span>
+                                <span class="profile-badge-item">◉ Друзей: ${myFriends.length}</span>
+                                <span class="profile-badge-item profile-reg-date">С нами с ${escapeFriendHtml(p.regDate || 'Не указана')}</span>
+                                ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
                             </div>
 
                             <div class="komi-level-progress"><label>До следующего уровня · ${komiAchievements(username).xp % 300} из 300 XP <progress max="300" value="${komiAchievements(username).xp % 300}"></progress></label></div>
-                            <div class="profile-reg-date">С нами с <b>${escapeFriendHtml(p.regDate || 'Не указана')}</b></div>
-                            <div class="komi-profile-actions">
-                                ${isMe ? '<button class="komi-profile-action" data-komi-onclick="document.querySelector(\'.profile-settings-box\')?.classList.toggle(\'is-open\')"> Настройки</button>' : ''}
-                                ${isMe ? '<button type="button" class="komi-profile-action" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
-                                ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти из аккаунта</button>' : ''}
+                            <div class="komi-profile-actions profile-hero-actions">
+                                ${!isMe && currentUser ? `
+                                    ${amIFriend
+                                      ? `<button type="button" class="profile-hero-action profile-hero-action-muted" data-komi-onclick="playSound(); removeFriend(window.komiViewedProfileName)">✓ В друзьях · Удалить</button>`
+                                      : `<button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
+                                    <button type="button" class="profile-hero-action profile-hero-action-muted" data-profile-party="${safeProfileText(username)}">▷ Смотреть вместе</button>
+                                ` : ''}
+                                ${isMe && currentUser?.authUserId ? '<button type="button" class="komi-profile-action komi-profile-logout" data-komi-onclick="logoutUser(\'local\')">Выйти</button>' : ''}
                             </div>
 
                             ${isMe ? `
@@ -1396,7 +1403,7 @@ async function loadDataFromCloud(attempt = 0) {
                         </button>
                     </div>
 
-                    ${KomiProfileUI.navigation(profilePageSection, myFriends.length)}
+                    ${KomiProfileUI.navigation(profilePageSection, myFriends.length, Object.keys(userStatuses).length, komiAchievements(username).badges.length)}
                     ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection}) : ''}
                     <div class="komi-profile-anime-section" style="display:${profilePageSection === 'anime' ? 'block' : 'none'}">
                     ${customFolderNames.length > 0 || isMe ? `
