@@ -110,6 +110,7 @@ function renderPage(container){
   '<a class="komi-premium-action-secondary" href="/premium.html">Условия подписки</a>'+
   '</div></section></section>';
   window.KomiPremiumThemes?.mount(container,owner,on);
+ window.KomiPremiumDecor?.mount(container,owner,on);
 }
 function stamp(){
  return JSON.stringify([[...activeIds].sort(),[...rewards.entries()].sort(),[...media.entries()].sort()]);
@@ -136,6 +137,7 @@ async function refresh(force){
      (currentView==='premium'||currentView==='profile')&&typeof render==='function')render();
    apply(document);
    window.KomiPremiumThemes?.refresh();
+   window.KomiPremiumDecor?.refresh();
   }catch(e){
    activeIds=new Set();rewards=new Map();media=new Map();last=0;loaded=false;
    apply(document);console.warn('Premium status unavailable',e?.message||String(e));
@@ -146,6 +148,7 @@ async function refresh(force){
 function setClient(c){
  client=c||null;last=0;loaded=false;activeIds=new Set();names=new Map();rewards=new Map();media=new Map();
  window.KomiPremiumThemes?.setClient(client);
+ window.KomiPremiumDecor?.setClient(client);
  if(client){refresh(true);client.auth.onAuthStateChange(()=>Promise.resolve().then(()=>refresh(true)));}
 }
 function start(){
