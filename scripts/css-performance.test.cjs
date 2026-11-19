@@ -15,7 +15,7 @@ test('one local stylesheet retains cascade order of all source layers',()=>{
   const all=builder.sources;
   assert.equal(all.at(-3),'komi-media-hub.css');
   assert.equal(all.at(-2),'komi-black-white.css');
-  assert.equal(all.at(-1),'profile-premium-red.css');
+  assert.equal(all.at(-1),'profile-premium-mono.css');
   assert.equal(fs.readFileSync(path.join(root,'komi.bundle.css'),'utf8'),builder.buildCSS());
 });
 test('mobile CSS profile rules and preconnections are included',()=>{

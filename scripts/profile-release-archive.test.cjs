@@ -58,7 +58,7 @@ test('overview exposes truthful statistics, favorite preview, friends and achiev
   assert.match(html,/data-profile-field="episodes">—/);
   assert.match(html,/data-profile-field="hours">—/);
   assert.match(html,/data-profile-field="meanScore">—/);
-  assert.match(html,/--profile-segment:#FF454F/);
+  assert.match(html,/--profile-segment:#F1F1F1/);
 });
 
 test('profile adapter escapes titles and rejects executable poster sources',()=>{

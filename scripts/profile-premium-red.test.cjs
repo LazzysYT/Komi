@@ -24,22 +24,24 @@ function adapter(){
   };
   return {ui:scope.window.KomiProfileUI,ctx};
 }
-test('Premium Dark + Red is scoped to existing profile and bundled last',()=>{
- const css=read('profile-premium-red.css'),bundle=read('komi.bundle.css'),html=read('index.html');
- assert.match(css,/#profile\.komi-profile-premium-red/);
- assert.match(css,/#FF454F/i);
+test('Premium monochrome reference is scoped to existing profile and bundled last',()=>{
+ const css=read('profile-premium-mono.css'),bundle=read('komi.bundle.css'),html=read('index.html');
+ assert.match(css,/#profile\.komi-profile-premium-mono/);
+ assert.doesNotMatch(css,/#[A-Fa-f0-9]*FF454F/i);
+ assert.match(css,/\.profile-summary-strip/);
+ assert.match(css,/#profile\.komi-profile-premium-mono \.profile-header-card/);
  assert.match(css,/grid-template-columns:minmax\(0,1\.85fr\) minmax\(280px,1fr\)/);
  assert.match(css,/@media\(max-width:860px\)/);
  assert.match(css,/prefers-reduced-motion:reduce/);
  assert.match(css,/profile-tabs-ready::before/);
- assert.ok(bundle.endsWith('/* --- profile-premium-red.css --- */\n'+css+'\n'));
- assert.ok(html.includes('komi.bundle.css?v=20261119c'));
+ assert.ok(bundle.endsWith('/* --- profile-premium-mono.css --- */\n'+css+'\n'));
+ assert.ok(html.includes('komi.bundle.css?v=20261119d'));
  assert.equal((html.match(/<link rel="stylesheet" href="\/komi\.bundle/g)||[]).length,1);
 });
 test('Profile hero preserves data bindings, avatar upload, friends and login',()=>{
  const app=read('app-main.js');
  for(const token of [
-  'id="profile"','komi-profile-premium-red','profile-cover',
+  'id="profile"','komi-profile-premium-mono','profile-cover',
   'komiSafeUrl(p.avatar)','komiSafeUrl(p.banner || p.cover || p.coverUrl)',
   'data-profile-balance','id="profile-settings"','id="avatarFileInput"',
   'updateUserProfile(this)','sendFriendRequest(window.komiViewedProfileName)',
@@ -57,7 +59,7 @@ test('Bento views use real saved data and server-backed metrics are never fabric
  assert.ok(html.includes('/api/poster?src='));
  for(const k of ['episodes','hours','meanScore'])assert.match(html,new RegExp('data-profile-field="'+k+'">—'));
  assert.match(html,/profile-distribution-part/);
- assert.match(html,/--profile-segment:#FF454F/);
+ assert.match(html,/--profile-segment:#F1F1F1/);
 });
 test('Privacy and escape protections remain active',()=>{
  const {ui,ctx}=adapter();
