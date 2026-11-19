@@ -6793,3 +6793,6 @@ background:radial-gradient(ellipse at 90% 0,#c3a46721,transparent 65%),#111114;c
 @media(prefers-reduced-motion:reduce){.komi-premium-feature{transition:none!important}
  .komi-premium-feature:hover{transform:none!important}}
 
+/* Keep the existing five-tab mobile navigation; Premium remains in menu/shop. */
+@media(max-width:767px){.komi-side-nav .komi-side-premium{display:none!important}}
+
