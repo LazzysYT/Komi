@@ -132,8 +132,8 @@ test('CSS encodes full-bleed soft fallback and native HD wide layouts', () => {
   assert.match(home, /hero-slide komi-hd-poster/);
   assert.match(home, /data-komi-anime-id/);
   assert.match(css, /hero-slide\.komi-hd-poster \.komi-hub-hero-art/);
-  assert.match(css, /hero-slide\\.komi-hd-softwide \\.komi-hub-hero-art/);
-  assert.match(css, /filter: blur\\(14px\\)/);
+  assert.match(css, /hero-slide\.komi-hd-softwide \.komi-hub-hero-art/);
+  assert.match(css, /filter: blur\(14px\)/);
   assert.doesNotMatch(css, /object-fit: scale-down !important/);
   assert.match(css, /hero-slide\.komi-hd-wide \.komi-hub-hero-art/);
   assert.match(css, /object-fit: cover !important/);
