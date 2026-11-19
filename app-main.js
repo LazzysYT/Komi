@@ -3963,6 +3963,74 @@ async function loadDataFromCloud(attempt = 0) {
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
             renderAnimeExtras(anime, seasonNumbers);
             window.KomiComments?.mount(anime.id);
+            void komiMountFollowButton(anime);
+        }
+
+        // Follows are stored per verified account in Supabase. Notifications are emitted
+        // only by the server when an episode is actually added to the catalog.
+        async function komiMountFollowButton(anime) {
+            const content = document.getElementById('watchModalContent');
+            const animeId = Number(anime?.shikimoriId || anime?.id);
+            if (!content || !Number.isSafeInteger(animeId) || animeId <= 0) return;
+            const host = document.createElement('div');
+            host.className = 'komi-episode-follow-control';
+            host.style.cssText = 'padding:8px 0;display:flex;gap:8px;align-items:center';
+            const button = document.createElement('button');
+            button.type = 'button'; button.className = 'btn-secondary';
+            host.append(button);
+            const heading = content.querySelector('h2,h3');
+            if (heading) heading.insertAdjacentElement('afterend',host);
+            else content.prepend(host);
+            const owner = currentUser?.authUserId;
+            if (!owner || !_supabase) {
+                button.textContent = '🔔 Войти для уведомлений о сериях';
+                button.addEventListener('click',()=>openAuthModal('login'));
+                return;
+            }
+            let following = false, busy = true;
+            function valid() {
+                return host.isConnected && currentUser?.authUserId === owner &&
+                    document.getElementById('watchModalContent')?.contains(host);
+            }
+            function paint() {
+                button.disabled = busy;
+                button.textContent = busy ? 'Проверяем подписку…' :
+                    following ? '🔔 Уведомления включены · выключить' :
+                    '🔕 Уведомлять о новых сериях';
+                button.setAttribute('aria-pressed',String(following));
+            }
+            paint();
+            try {
+                const {data,error} = await _supabase.from('komi_episode_follows')
+                    .select('anime_id').eq('user_id',owner).eq('anime_id',animeId).maybeSingle();
+                if (!valid()) return;
+                if (error) throw error;
+                following = !!data; busy = false; paint();
+            } catch (error) {
+                if (!valid()) return;
+                busy = false; button.disabled = true;
+                button.textContent = 'Не удалось загрузить подписку';
+                console.warn('Komi episode follow:',error?.message || String(error));
+                return;
+            }
+            button.addEventListener('click',async()=>{
+                if (!valid() || busy) return;
+                busy = true; paint();
+                const desired = !following;
+                try {
+                    const request = desired
+                        ? _supabase.from('komi_episode_follows').insert({user_id:owner,anime_id:animeId})
+                        : _supabase.from('komi_episode_follows').delete()
+                            .eq('user_id',owner).eq('anime_id',animeId);
+                    const {error} = await request;
+                    if (error) throw error;
+                    if (!valid()) return;
+                    following = desired;
+                } catch (error) {
+                    if (valid()) komiStatusFeedback('Подписка не сохранена. Попробуйте ещё раз.');
+                    console.warn('Komi episode follow:',error?.message || String(error));
+                } finally {if (valid()) {busy=false;paint();}}
+            });
         }
 
         function saveProgress(animeId, video, force = false) {
