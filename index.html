@@ -80,7 +80,7 @@
             <div class="komi-friend-rooms-heading"><strong>Смотрят вместе</strong><button type="button" id="komiFriendRoomsRefresh">Обновить</button></div>
             <div id="komiFriendRoomsList" aria-live="polite" aria-relevant="additions text"></div>
         </section>
-        <div id="komiFriendsDrawerList" class="komi-friends-results"></div>
+        <div id="komiFriendsDrawerList" class="komi-friends-results" aria-live="polite"><div class="komi-friends-empty"><strong>Сообщество KomiAnime</strong><p>Подключаем список пользователей…</p></div></div>
     </aside>
     <div class="app-layout" id="mainAppLayoutContainer">
         <header class="komi-hub-overlay" aria-label="Поиск и быстрый доступ">
@@ -108,7 +108,7 @@
                         <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true">◇</span><span id="komiHeaderAniCoinValue">—</span></button>
                         <button class="action-icon-btn" id="adminPanelBtn" data-komi-click="admin-panel" style="display: none;" title="Админка">Админка</button>
                         <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
-                        <div id="userHeaderArea"></div>
+                        <div id="userHeaderArea"><button type="button" class="nav-btn" data-komi-onclick="playSound(); openAuthModal('login')" aria-label="Войти или зарегистрироваться">Войти / Регистрация</button></div>
                     </div>
                 </details>
                 <button type="button" id="komiMobileMoreToggle" class="komi-mobile-more-toggle"
