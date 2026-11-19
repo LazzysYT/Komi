@@ -64,6 +64,7 @@ INSERT INTO public.komi_premium_rewards (user_id)
  WHERE active_until > now()
  ON CONFLICT (user_id) DO NOTHING;
 
+-- Active badge SELECT policy filters expired rows. No direct SELECT privilege for active_until is exposed.
 -- Animated GIFs are a paid entitlement; storage and metadata are separately secured.
 -- Existing JPEG avatar upload policy remains unchanged.
 UPDATE storage.buckets SET
@@ -78,7 +79,7 @@ CREATE POLICY "Komi premium own animated avatar" ON storage.objects
    AND (storage.foldername(name))[1] = (SELECT auth.uid())::text
    AND EXISTS (
      SELECT 1 FROM public.komi_premium_badges b
-     WHERE b.user_id = (SELECT auth.uid()) AND b.active_until > now()
+     WHERE b.user_id = (SELECT auth.uid())
    )
  );
 
@@ -95,7 +96,7 @@ CREATE POLICY "Komi premium own animated profile background" ON storage.objects
    AND (storage.foldername(name))[1] = (SELECT auth.uid())::text
    AND EXISTS (
      SELECT 1 FROM public.komi_premium_badges b
-     WHERE b.user_id = (SELECT auth.uid()) AND b.active_until > now()
+     WHERE b.user_id = (SELECT auth.uid())
    )
  );
 
@@ -128,14 +129,14 @@ DROP POLICY IF EXISTS "public read active premium media" ON public.komi_premium_
 CREATE POLICY "public read active premium media" ON public.komi_premium_media
  FOR SELECT TO anon,authenticated USING (
   EXISTS (SELECT 1 FROM public.komi_premium_badges b
-   WHERE b.user_id=komi_premium_media.user_id AND b.active_until>now())
+   WHERE b.user_id=komi_premium_media.user_id )
  );
 DROP POLICY IF EXISTS "premium user inserts own media" ON public.komi_premium_media;
 CREATE POLICY "premium user inserts own media" ON public.komi_premium_media
  FOR INSERT TO authenticated WITH CHECK (
   user_id=(SELECT auth.uid())
   AND EXISTS (SELECT 1 FROM public.komi_premium_badges b
-   WHERE b.user_id=(SELECT auth.uid()) AND b.active_until>now())
+   WHERE b.user_id=(SELECT auth.uid()) )
  );
 DROP POLICY IF EXISTS "premium user updates own media" ON public.komi_premium_media;
 CREATE POLICY "premium user updates own media" ON public.komi_premium_media
@@ -143,10 +144,10 @@ CREATE POLICY "premium user updates own media" ON public.komi_premium_media
  USING (
   user_id=(SELECT auth.uid())
   AND EXISTS (SELECT 1 FROM public.komi_premium_badges b
-   WHERE b.user_id=(SELECT auth.uid()) AND b.active_until>now())
+   WHERE b.user_id=(SELECT auth.uid()) )
  )
  WITH CHECK (
   user_id=(SELECT auth.uid())
   AND EXISTS (SELECT 1 FROM public.komi_premium_badges b
-   WHERE b.user_id=(SELECT auth.uid()) AND b.active_until>now())
+   WHERE b.user_id=(SELECT auth.uid()) )
  );

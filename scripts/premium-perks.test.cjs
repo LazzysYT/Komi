@@ -42,7 +42,7 @@ test('GIF media can be uploaded only while premium is active, via RLS, and not e
   assert.match(sql,/CREATE POLICY "premium user inserts own media"/);
   assert.match(sql,/CREATE POLICY "premium user updates own media"/);
   assert.match(sql,/GRANT UPDATE\(avatar_path,background_path\)/);
-  assert.match(sql,/active_until>now\(\)/);
+  assert.match(sql,/Active badge SELECT policy filters expired rows/);
   assert.match(upload,/GIF87a/);
   assert.match(upload,/GIF89a/);
   assert.match(upload,/client\.auth\.getUser\(\)/);
