@@ -11,6 +11,38 @@
         return node;
     }
 
+    // Timecodes are DOM nodes, never HTML; only native media elements can seek.
+    function appendTimecodes(target, body) {
+        const text = String(body || '');
+        const pattern = /\b(?:(\d{1,2}):)?([0-5]?\d):([0-5]\d)\b/g;
+        let cursor = 0;
+        for (const match of text.matchAll(pattern)) {
+            const index = match.index;
+            if (index > cursor) target.append(document.createTextNode(text.slice(cursor, index)));
+            const seconds = match[1] === undefined
+                ? Number(match[2]) * 60 + Number(match[3])
+                : Number(match[1]) * 3600 + Number(match[2]) * 60 + Number(match[3]);
+            const button = element('button', 'komi-comment-timecode', match[0]);
+            button.type = 'button';
+            button.title = 'Перейти к ' + match[0] + ' во встроенном плеере';
+            button.style.cssText = 'border:0;background:transparent;color:#ff626b;text-decoration:underline;cursor:pointer;font:inherit;padding:0 2px';
+            button.addEventListener('click', () => {
+                const modal = document.getElementById('watchModal');
+                const video = modal?.classList.contains('active') ? modal.querySelector('#watchModalContent video') : null;
+                if (!video || !Number.isFinite(video.duration) || seconds >= video.duration) {
+                    const status = document.querySelector('#komiAnimeComments .komi-comments-status');
+                    if (status) status.textContent = 'Таймкод доступен только во встроенном плеере с открытой серией.';
+                    return;
+                }
+                video.currentTime = seconds;
+                video.scrollIntoView({behavior:'smooth',block:'center'});
+            });
+            target.append(button);
+            cursor = index + match[0].length;
+        }
+        if (cursor < text.length) target.append(document.createTextNode(text.slice(cursor)));
+    }
+
     function legacyComments(animeId) {
         const entries = (typeof animeComments !== 'undefined' && animeComments)
             ? animeComments[String(animeId)] : null;
@@ -65,7 +97,8 @@
                 button.addEventListener('click', () => removeComment(animeId, item.id, button));
                 head.append(button);
             }
-            const body = element('p', 'komi-comment-body', item.body);
+            const body = element('p', 'komi-comment-body');
+            appendTimecodes(body, item.body);
             card.append(head, body);
             list.append(card);
         }
