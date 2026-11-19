@@ -20,7 +20,7 @@ const assert=require('node:assert/strict');
      genres:['Evil'],year:'2026',shikiRating:'9.0'};
    try{
     animeList=[anime];
-    currentView='catalog';
+    currentView='home';
     komiRefreshCatalogGrid=()=>{};
     openWatchModal=id=>{window.__selectedSearchId=id};
     const field=document.getElementById('searchInput');
@@ -37,6 +37,8 @@ const assert=require('node:assert/strict');
     const popularSelected=window.__selectedSearchId;
     window.__selectedSearchId=null;
     handleInstantSearch('Evil');
+    const viewAfterTyping=currentView;
+    const allResultsAction=dd.querySelector('.komi-search-view-all')?.textContent;
     const matched=dd.querySelector('.search-dropdown-item');
     const searchedResult={
       title:matched?.querySelector('b')?.textContent,
@@ -49,7 +51,7 @@ const assert=require('node:assert/strict');
     handleInstantSearch('');
     const emptyState={open:dd.classList.contains('active'),children:dd.children.length};
     return {popularResult,searchedResult,popularSelected,instantSelected,maliciousId,maliciousTitle,
-      emptyState,injected:window.__komiSearchInjected};
+      emptyState,injected:window.__komiSearchInjected,viewAfterTyping,allResultsAction};
    }finally{
     animeList=original.animeList;openWatchModal=original.openWatchModal;
     komiRefreshCatalogGrid=original.refresh;currentView=original.view;
@@ -69,6 +71,8 @@ const assert=require('node:assert/strict');
   assert.equal(result.instantSelected,result.maliciousId);
   assert.deepEqual(result.emptyState,{open:false,children:0});
   assert.equal(result.injected,0);
+  assert.equal(result.viewAfterTyping,'home','Typing in header must not replace the homepage');
+  assert.match(result.allResultsAction,/Все результаты/);
   console.log('PASS safe popular and instant search suggestions, click handling and clear state');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

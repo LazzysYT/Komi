@@ -4493,6 +4493,40 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
   text-overflow: ellipsis;
 }
 .komi-hub-overlay #searchInput::placeholder { color: var(--hub-muted) !important; }
+
+/* A single keyboard focus ring belongs to the enclosing search pill.
+   The global :focus-visible rule otherwise draws a second white oval over the input. */
+.komi-media-hub .komi-hub-overlay .search-bar #searchInput:focus-visible {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+.komi-media-hub .komi-hub-overlay #searchDropdown.active {
+  box-sizing: border-box !important;
+  margin-top: 0 !important;
+  padding: 8px !important;
+  z-index: 300 !important;
+  overscroll-behavior: contain;
+  box-shadow: 0 22px 56px rgba(0,0,0,.85) !important;
+}
+.komi-media-hub .komi-hub-overlay .komi-search-view-all {
+  display: flex;
+  width: 100%;
+  min-height: 40px;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+  padding: 9px 12px;
+  border: 1px solid rgba(255,255,255,.18);
+  border-radius: 10px;
+  background: #26262b;
+  color: #fff;
+  font: 650 12px Inter,system-ui,sans-serif;
+  cursor: pointer;
+}
+.komi-media-hub .komi-hub-overlay .komi-search-view-all:is(:hover,:focus-visible) {
+  background: #35353a;
+}
+
 .komi-media-hub .komi-hub-overlay .search-bar .komi-search-shortcut {
   position: static;
   transform: none;
@@ -4679,6 +4713,14 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
     linear-gradient(0deg, var(--hub-bg), transparent 55%);
 }
 .komi-media-hub .komi-home-hero .hero-slide::after { content: none !important; }
+
+/* Hydrated data must be readable immediately: repeated carousel reveal animations
+   made the first slide temporarily look empty during session restoration. */
+.komi-media-hub .komi-home-hero .hero-slide.active {
+  animation: none !important;
+  opacity: 1 !important;
+}
+
 .komi-media-hub .komi-home-hero .komi-home-hero-content,
 .komi-media-hub .komi-seo-spotlight-copy {
   position: relative;

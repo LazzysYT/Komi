@@ -563,7 +563,12 @@ async function checkNotifications(page) {
    assert.equal(await page.evaluate(()=>window.komiActiveEpisode),0);
    await page.evaluate(()=>delete window.komiFailedTestVideo);
    await page.evaluate(()=>closeWatchModal());
+   const viewBeforeQuickSearch=await page.evaluate(()=>currentView);
    await page.locator('#searchInput').fill('Проверка');
+   await page.locator('#searchDropdown.active .komi-search-view-all').waitFor();
+   assert.equal(await page.evaluate(()=>currentView),viewBeforeQuickSearch,
+     'Quick search must not remount catalog/hero while typing');
+   await page.locator('#searchInput').press('Enter');
    await page.waitForSelector('#komiCatalogGrid .anime-card');
    await page.evaluate(()=>openAuthModal('register'));
    await page.evaluate(()=>switchAuthTab('login'));
