@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070707">
+  <title>Komi Premium — оформление подписки | KomiAnime</title>
+  <meta name="description" content="Komi Premium — ежемесячная подписка для поддержки развития KomiAnime. Оплата через Lava.top.">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
+  <style>
+    :root{color-scheme:dark;--ink:#f4f4f5;--dim:#a1a1aa;--line:#2b2b2d;--pane:#111113}
+    *{box-sizing:border-box} html{min-height:100%;background:#080809}
+    body{margin:0;color:var(--ink);font-family:Inter,system-ui,-apple-system,sans-serif;background:radial-gradient(ellipse 65% 40% at 65% 5%,#262629 0%,#0a0a0b 65%,transparent 100%),#080809;min-height:100vh;line-height:1.55}
+    a{color:inherit} a:focus-visible{outline:3px solid #d4d4d8;outline-offset:4px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;margin:auto;max-width:1120px;padding:23px 24px}
+    .brand{display:inline-flex;align-items:center;gap:12px;font-weight:800;font-size:19px;text-decoration:none;letter-spacing:-.05em}
+    .brand-mark{display:grid;place-items:center;width:42px;height:42px;background:#f4f4f5;color:#090909;border-radius:14px;font-size:28px;font-family:"Plus Jakarta Sans",sans-serif}
+    .back{color:#bcbcc2;text-decoration:none;font-size:14px;padding:10px 13px;border:1px solid var(--line);border-radius:12px}
+    .back:hover{background:#222225;color:#fff}
+    main{max-width:1120px;margin:auto;padding:clamp(20px,5vw,75px) 24px 88px}
+    .intro{max-width:760px}.eyebrow{display:inline-flex;align-items:center;gap:9px;padding:8px 13px;border:1px solid #404044;border-radius:99px;background:#ffffff08;font-weight:750;letter-spacing:.16em;font-size:11px}
+    h1,h2{font-family:"Plus Jakarta Sans",Inter,sans-serif;letter-spacing:-.055em;line-height:1.08}
+    h1{font-size:clamp(46px,9vw,92px);margin:24px 0 20px}
+    h1 span{color:#9d9da3}
+    .lead{font-size:clamp(16px,2.2vw,20px);color:#c9c9cf;max-width:620px;margin:0 0 36px}
+    .layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(300px,.8fr);gap:24px}
+    .card{background:linear-gradient(145deg,#18181a,#0f0f11);border:1px solid #373739;border-radius:26px;padding:clamp(22px,4vw,38px);box-shadow:0 24px 75px #0005}
+    .card h2{font-size:clamp(25px,4vw,36px);margin:0 0 10px}.card p{color:var(--dim)}
+    .period{font-size:13px;text-transform:uppercase;letter-spacing:.11em;color:#c8c8ca;font-weight:700}
+    .button{display:flex;justify-content:center;align-items:center;text-align:center;gap:9px;background:#fff;color:#080809;text-decoration:none;font-weight:800;border-radius:16px;padding:17px 22px;min-height:58px;margin:24px 0 14px;transition:transform .18s,background .18s}
+    .button:hover{transform:translateY(-2px);background:#dfdfe2}
+    .small{font-size:12px;line-height:1.6;color:#a4a4ac}
+    .note{margin:20px 0 0;padding:18px;border:1px solid #4b4b50;border-radius:16px;background:#ffffff08;color:#dedee1;font-size:14px}
+    .note strong{display:block;color:#fff;margin-bottom:5px}
+    .steps{list-style:none;padding:0;margin:18px 0 0;display:grid;gap:18px}
+    .steps li{display:flex;gap:15px;align-items:flex-start;color:#c3c3c9}
+    .steps b{flex:none;display:grid;place-items:center;background:#252528;border:1px solid #49494f;border-radius:11px;width:34px;height:34px;color:white;font-size:13px}
+    .steps strong{display:block;color:white;margin-bottom:3px}
+    footer{margin-top:30px;font-size:13px;color:#8c8c92}
+    @media(max-width:760px){.layout{grid-template-columns:1fr}.topbar{padding:18px 18px}.back{font-size:12px}main{padding:35px 18px 55px}h1{font-size:clamp(42px,12vw,68px)}}
+    @media(prefers-reduced-motion:reduce){.button{transition:none}}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="Komi Anime — главная"><span class="brand-mark" aria-hidden="true">K</span><span>KomiAnime</span></a>
+    <a class="back" href="/#shop">Вернуться в магазин</a>
+  </header>
+  <main>
+    <div class="intro">
+      <span class="eyebrow">✧ KOMI PREMIUM</span>
+      <h1>Больше, чем <span>аниме.</span></h1>
+      <p class="lead">Поддержи развитие KomiAnime через официальную страницу ежемесячной подписки на Lava.top.</p>
+    </div>
+    <div class="layout">
+      <section class="card" aria-labelledby="plan-title">
+        <div class="period">Ежемесячная подписка</div>
+        <h2 id="plan-title">Komi Premium</h2>
+        <p>Стоимость и доступные способы оплаты будут показаны до подтверждения покупки на Lava.top. Подписка автоматически продлевается каждый месяц, пока ты её не отменишь.</p>
+        <a class="button" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd" target="_blank" rel="noopener noreferrer" aria-label="Открыть оформление ежемесячной подписки Komi Premium на Lava.top">Перейти к оплате <span aria-hidden="true">↗</span></a>
+        <div class="small">Оплата и данные банковской карты обрабатываются Lava.top, не KomiAnime. Отменить подписку можно через Lava.top.</div>
+        <div class="note" role="note">
+          <strong>Важная информация до покупки</strong>
+          Автоматическая активация Premium внутри KomiAnime пока не подключена. Покупка сейчас поддерживает проект, но сама по себе не открывает платные функции сайта. При оформлении укажи тот же e-mail, что и в аккаунте KomiAnime, чтобы упростить дальнейшую привязку.
+        </div>
+      </section>
+      <section class="card" aria-labelledby="how-title">
+        <h2 id="how-title">Как это работает</h2>
+        <ol class="steps">
+          <li><b>1</b><div><strong>Выбери Premium</strong>Открой официальную страницу Lava.top по кнопке слева.</div></li>
+          <li><b>2</b><div><strong>Проверь условия</strong>Посмотри цену, валюту, способ оплаты и условия ежемесячного продления перед подтверждением.</div></li>
+          <li><b>3</b><div><strong>Управляй подпиской</strong>Продление и отмена управляются на стороне Lava.top.</div></li>
+        </ol>
+      </section>
+    </div>
+    <footer>KomiAnime · Beta · Premium не влияет на доступность бесплатного каталога.</footer>
+  </main>
+</body>
+</html>
