@@ -282,9 +282,9 @@
                 if (Number.isFinite(video.duration) && video.duration > 60 &&
                     video.currentTime / video.duration >= 0.92) markCurrentWatched(context);
             }, {passive:true});
+            video.addEventListener('ended', () => markCurrentWatched(context));
             video.addEventListener('ended', () => {
                 if (active !== context || !video.isConnected) return;
-                markCurrentWatched(context);
                 if (context.autoNext && context.hasNext && context.modal.classList.contains('active') &&
                     typeof root.openWatchModal === 'function') {
                     root.openWatchModal(context.animeId, context.season, context.index + 1);
