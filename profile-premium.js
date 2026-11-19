@@ -19,23 +19,35 @@
     }catch{return ''}
   };
   var appearances=new Map(),metricOverrides=new Map();
-  var lastProfile=null,rootObserver=null;
+  var lastProfile=null,rootObserver=null,previousTab='overview';
   var prefersLessMotion=()=>Boolean(root.matchMedia&&root.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  function navigation(active,friendCount){
-    var pages=[['overview','Обзор'],['anime','Мои списки'],['history','История просмотра'],['achievements','Достижения и витрина'],['friends','Друзья ('+friendCount+')'],['comments','Стена']];
-    return '<nav class="komi-profile-tabs profile-premium-tabs" aria-label="Разделы профиля">'+pages.map(([id,name])=>
-      '<button type="button" class="komi-profile-tab'+(id===active?' active':'')+'" data-profile-tab="'+id+'" aria-pressed="'+(id===active)+'" data-komi-onclick="profilePageSection=\''+id+'\';render()">'+name+'</button>'
+  function navigation(active,friendCount,listCount=0,awardCount=0){
+    var pages=[
+      ['overview','Обзор',null],
+      ['anime','Списки',listCount],
+      ['history','История',null],
+      ['achievements','Достижения',awardCount],
+      ['friends','Друзья',friendCount],
+      ['comments','Стена',null]
+    ];
+    return '<nav class="komi-profile-tabs profile-premium-tabs" aria-label="Разделы профиля" data-profile-active="'+escapeText(active)+'">'+pages.map(([id,name,count])=>
+      '<button type="button" class="komi-profile-tab'+(id===active?' active':'')+'" data-profile-tab="'+id+'" aria-pressed="'+(id===active)+'" data-komi-onclick="profilePageSection=\''+id+'\';render()">'+
+      '<span>'+name+'</span>'+(count===null?'':'<small class="profile-tab-counter">'+format(count)+'</small>')+'</button>'
     ).join('')+'</nav>';
   }
   function achievementWidget(username,isMe){
     var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,badges:[]};
     var badges=Array.isArray(info.badges)?info.badges:[];
-    return '<section class="profile-widget profile-achievement-widget">'+header('Витрина достижений','<span class="profile-caption">'+format(info.xp)+' XP</span>')+
-      '<div class="profile-achievements">'+Array.from({length:6},(_,i)=>{
-        var label=badges[i]?String(badges[i]):'Достижение ещё не получено';
-        return '<div class="profile-achievement'+(badges[i]?' is-earned':' is-locked')+'" tabindex="0" data-profile-tilt title="'+escapeText(label)+'"><span aria-hidden="true">'+(badges[i]?'✦':'◇')+'</span><small>'+escapeText(badges[i]?label:'Впереди')+'</small></div>';
-      }).join('')+'</div>'+
-      (isMe?'<button type="button" class="profile-shop-link" data-komi-onclick="openAniCoinShop()">Оформление в магазине AniCoin</button>':'')+'</section>';
+    var tiles=Array.from({length:Math.max(3,Math.min(6,badges.length||3))},(_,i)=>{
+      var label=badges[i]?String(badges[i]).trim():'Достижение ещё не получено';
+      return '<div class="profile-achievement'+(badges[i]?' is-earned':' is-locked')+'" tabindex="0" data-profile-tilt title="'+escapeText(label)+'">'+
+        '<span aria-hidden="true">'+(badges[i]?'✦':'◇')+'</span><small>'+escapeText(badges[i]?label:'Впереди')+'</small></div>';
+    }).join('');
+    return '<section class="profile-widget profile-achievement-widget">'+
+      header('Витрина достижений','<span class="profile-caption">'+format(info.xp)+' XP</span>')+
+      '<div class="profile-achievements">'+tiles+'</div>'+
+      (!badges.length?'<p class="profile-achievements-empty">Первое достижение ещё впереди — начни просмотр или добавь друга.</p>':'')+
+      (isMe?'<button type="button" class="profile-shop-link" data-komi-onclick="openAniCoinShop()">✧ Открыть магазин AniCoin</button>':'')+'</section>';
   }
   function watchHistory(ctx){
     if(!ctx.isMe)return [];
@@ -46,70 +58,88 @@
       .filter(x=>/^[0-9]{1,15}$/.test(x.id))
       .sort((a,b)=>number(b.item.updated)-number(a.item.updated));
   }
+  function posterUrl(value){
+    var url=safeUrl(value);
+    if(!url)return '';
+    if(url.startsWith(location.origin+'/api/poster?'))return url;
+    return '/api/poster?src='+encodeURIComponent(url);
+  }
   function watchCards(ctx,limit){
     return watchHistory(ctx).slice(0,limit).map(({id,item,anime})=>{
-      var secs=number(item.time);
-      var duration=number(item.duration);
+      var secs=number(item.time),duration=number(item.duration);
       var ratio=duration?Math.min(1,secs/duration):0;
       var stamp=Math.floor(secs/60)+':'+String(Math.floor(secs%60)).padStart(2,'0');
-      var poster=safeUrl(anime&&anime.poster);
+      var poster=posterUrl(anime&&anime.poster);
       var title=escapeText(anime&&anime.title||'Аниме #'+id);
       var episode=number(item.index)+1;
-      var stampLabel=item.updated&&Number.isFinite(Number(item.updated))?' · '+new Date(Number(item.updated)).toLocaleDateString('ru-RU'):'';
-      return '<a class="profile-watch-card" href="/anime/'+encodeURIComponent(id)+'#player" data-profile-resume="'+escapeText(id)+'">'+
-        '<div class="profile-watch-image">'+(poster?'<img src="'+escapeText(poster)+'" alt="" loading="lazy">':'<span class="profile-watch-fallback" aria-hidden="true">K</span>')+
-        '<span class="profile-play" aria-hidden="true">▶</span><span class="profile-time">'+stamp+'</span><span class="profile-progress"><i style="--profile-watch-progress:'+ratio+'"></i></span></div>'+
-        '<strong>'+title+'</strong><small>Сезон '+Math.max(1,number(item.season))+' · Серия '+episode+stampLabel+'</small></a>';
+      var season=Math.max(1,number(item.season));
+      return '<a class="profile-watch-card" href="/anime/'+encodeURIComponent(id)+'#player" data-profile-resume="'+escapeText(id)+'" aria-label="Продолжить '+title+', серия '+episode+'">'+
+        '<span class="profile-watch-image">'+(poster?'<img src="'+escapeText(poster)+'" alt="" loading="lazy">':'<span class="profile-watch-fallback" aria-hidden="true">K</span>')+
+        '<span class="profile-play" aria-hidden="true">▶</span></span>'+
+        '<span class="profile-watch-info"><strong>'+title+'</strong><small>Сезон '+season+' · Серия '+episode+'</small>'+
+        '<span class="profile-watch-progress"><i style="--profile-watch-progress:'+ratio+'"></i></span>'+
+        '<small class="profile-watch-timestamp">Продолжить с '+stamp+'</small></span>'+
+        '<span class="profile-watch-action" aria-hidden="true">↗</span></a>';
     }).join('');
   }
   function content(ctx){
     var fullCounts=statusNames.reduce((total,key)=>total+number(ctx.statsCounts[key]),0);
     var history=watchHistory(ctx);
-    var info=typeof komiAchievements==='function'?komiAchievements(ctx.username):{xp:0,badges:[]};
-    if(ctx.section==='history')return '<section class="profile-widget profile-history-full">'+header('История просмотра')+
-      (ctx.isMe?'<div class="profile-watch-grid">'+(watchCards(ctx,30)||blank('Начни просмотр, чтобы увидеть здесь последний эпизод и таймкод каждого аниме.'))+'</div>'+
+    if(ctx.section==='history')return '<section class="profile-widget profile-history-full profile-enter">'+
+      header('История просмотра','<span class="profile-caption">Последние эпизоды</span>')+
+      (ctx.isMe?'<div class="profile-watch-grid">'+(watchCards(ctx,30)||blank('Здесь появятся последние серии и сохранённые таймкоды после просмотра.'))+'</div>'+
        (history.length>30?'<p class="profile-caption">Показаны 30 последних тайтлов.</p>':''):blank('История просмотра доступна только владельцу профиля.'))+'</section>';
-    if(ctx.section==='achievements')return achievementWidget(ctx.username,ctx.isMe);
+    if(ctx.section==='achievements')return '<div class="profile-enter">'+achievementWidget(ctx.username,ctx.isMe)+'</div>';
     if(ctx.section!=='overview')return '';
+
     var favoriteIds=Object.keys(userFavorites[ctx.username]||{});
-    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,3);
-    var genres=ctx.topGenres.map(([name,count])=>
-      '<button class="profile-genre" type="button" data-profile-genre="'+escapeText(name)+'">'+escapeText(name)+' <span>'+Math.round((count/Math.max(1,fullCounts))*100)+'%</span></button>'
+    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,4);
+    var statusColors=['#FF454F','#F08E95','#C74857','#962F40','#592935'];
+    var segmentNames=statusNames.map((name,i)=>[name,number(ctx.statsCounts[name]),statusColors[i]]);
+    var distribution=segmentNames.map(([name,count,color])=>
+      '<button type="button" class="profile-distribution-part" title="'+name+': '+count+'" aria-label="'+name+': '+count+
+      '" style="--profile-segment:'+color+';flex:'+count+'" data-komi-onclick="profileActiveTab=\''+name+'\';profilePageSection=\'anime\';render()"></button>'
     ).join('');
-    var legend=statusNames.map((name,i)=>'<button type="button" data-komi-onclick="profileActiveTab=\''+name+'\';profilePageSection=\'anime\';render()">'+
-      '<i style="--profile-segment:'+gray[i]+'"></i><span>'+name+'</span><b>'+number(ctx.statsCounts[name])+'</b></button>').join('');
-    var distribution=statusNames.map((name,i)=>'<span title="'+name+': '+number(ctx.statsCounts[name])+'" style="flex:'+number(ctx.statsCounts[name])+';--profile-segment:'+gray[i]+'"></span>').join('');
-    var ratings='<div class="profile-metrics">'+
-      '<div><strong data-profile-count="'+fullCounts+'">'+format(fullCounts)+'</strong><span>Всего тайтлов</span></div>'+
-      '<div><strong data-profile-field="episodes">—</strong><span>Серий просмотрено¹</span></div>'+
-      '<div><strong data-profile-field="hours">—</strong><span>Часов в аниме¹</span></div>'+
-      '<div><strong data-profile-field="meanScore">—</strong><span>Средняя оценка¹</span></div></div>';
-    var stats='<section class="profile-widget">'+header('Статистика просмотра','<span class="profile-caption">Аниме-история</span>')+ratings+
-      '<div class="profile-distribution" aria-label="Распределение по статусам">'+distribution+(fullCounts?'':'<span class="profile-distribution-empty"></span>')+'</div>'+
-      '<div class="profile-legend">'+legend+'</div>'+
-      '<p class="profile-data-note">¹ Полная статистика серий, времени и личных оценок пока недоступна.</p></section>';
-    var watching='<section class="profile-widget">'+header(ctx.isMe?'Продолжить просмотр':'Мои списки',
-      ctx.isMe?'<button type="button" class="profile-text-button" data-komi-onclick="profilePageSection=\'history\';render()">Вся история</button>':'')+
-      '<div class="profile-watch-grid">'+(ctx.isMe?watchCards(ctx,2)||blank('Пока нет просмотров. Начни смотреть аниме из каталога.'):blank('Загляни в списки профиля, чтобы увидеть аниме.'))+'</div></section>';
-    var favourite='<section class="profile-widget">'+header('Избранное','<span class="profile-caption">'+favoriteIds.length+' тайтлов</span>')+
+    var legend=segmentNames.map(([name,count,color])=>
+      '<button type="button" data-komi-onclick="profileActiveTab=\''+name+'\';profilePageSection=\'anime\';render()" title="Показать: '+name+'">'+
+      '<i style="--profile-segment:'+color+'"></i><span>'+name+'</span><b>'+count+'</b></button>'
+    ).join('');
+    var metrics='<div class="profile-metrics">'+
+      '<div class="profile-metric"><strong data-profile-count="'+fullCounts+'">'+format(fullCounts)+'</strong><span>Тайтлов в списке</span></div>'+
+      '<div class="profile-metric"><strong data-profile-field="episodes">—</strong><span>Серий посмотрено¹</span></div>'+
+      '<div class="profile-metric"><strong data-profile-field="hours">—</strong><span>Часов просмотра¹</span></div>'+
+      '<div class="profile-metric"><strong data-profile-field="meanScore">—</strong><span>Средняя оценка¹</span></div></div>';
+    var stats='<section class="profile-widget profile-stats-widget">'+header('Статистика просмотра','<span class="profile-caption">'+format(fullCounts)+' тайтлов</span>')+
+      '<div class="profile-distribution" role="group" aria-label="Распределение статусов аниме">'+
+      (fullCounts?distribution:'<span class="profile-distribution-empty"></span>')+'</div>'+
+      '<div class="profile-legend">'+legend+'</div>'+metrics+
+      '<p class="profile-data-note">¹ Показатели обновятся при наличии проверенных данных просмотра и оценок.</p></section>';
+    var watching='<section class="profile-widget profile-continue-widget">'+header(ctx.isMe?'Продолжить просмотр':'Коллекция',
+      ctx.isMe?'<button type="button" class="profile-text-button" data-komi-onclick="profilePageSection=\'history\';render()">История ↗</button>':'')+
+      '<div class="profile-watch-grid">'+(ctx.isMe?watchCards(ctx,2)||blank('Пока нет записей просмотра. Открой любое аниме из каталога.'):blank('Сохранённые аниме доступны на вкладке «Списки».'))+'</div></section>';
+    var favourite='<section class="profile-widget profile-favorites-widget">'+header('Топ избранного','<span class="profile-caption">'+favoriteIds.length+' в избранном</span>')+
       '<div class="profile-favorites">'+(favoriteAnime.map(anime=>{
-        var poster=safeUrl(anime.poster);
-        var id=escapeText(anime.id);
-        return '<a href="/anime/'+encodeURIComponent(anime.id)+'" data-profile-anime="'+id+'" title="'+escapeText(anime.title)+'">'+
+        var poster=posterUrl(anime.poster),id=escapeText(anime.id);
+        return '<a href="/anime/'+encodeURIComponent(anime.id)+'" data-profile-anime="'+id+'" title="'+escapeText(anime.title)+'" aria-label="Открыть '+escapeText(anime.title)+'">'+
         (poster?'<img loading="lazy" src="'+escapeText(poster)+'" alt="">':'<div class="profile-favorite-missing">K</div>')+
         '<strong>'+escapeText(anime.title)+'</strong></a>';
-      }).join('')||blank(favoriteIds.length?'Карточки избранного ещё загружаются.':'Добавь аниме в избранное, чтобы заполнить витрину.'))+'</div></section>';
-    var friends='<section class="profile-widget">'+header('Друзья','<span class="profile-caption">'+ctx.myFriends.length+'</span>')+
+      }).join('')||blank(favoriteIds.length?'Постеры избранного ещё подгружаются из каталога.':'Добавь аниме в избранное, чтобы заполнить витрину.'))+'</div></section>';
+    var friends='<section class="profile-widget profile-friends-widget">'+header('Друзья','<span class="profile-caption">'+ctx.myFriends.length+'</span>')+
       '<div class="profile-friends-mini">'+(ctx.myFriends.slice(0,3).map((name,i)=>{
         var p=userProfiles[name]||{},label=String(p.displayName||name);
         return '<button type="button" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])"><span class="profile-friend-avatar">'+escapeText(label.slice(0,1))+
           '</span><span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
-      }).join('')||blank('Пока нет друзей. Их можно найти в сообществе.'))+'</div>'+
-      (ctx.isMe?'<button type="button" class="profile-shop-link" data-profile-rooms>Комнаты и заявки в друзья</button>':'')+'</section>';
-    return '<div class="profile-bento"><div class="profile-bento-main">'+stats+watching+
-      '<section class="profile-widget">'+header('Любимые жанры','<span class="profile-caption">По тайтлам в списках</span>')+
-      '<div class="profile-genres">'+(genres||blank('Добавь аниме в списки, чтобы появились любимые жанры.'))+'</div></section></div>'+
-      '<aside class="profile-bento-side">'+achievementWidget(ctx.username,ctx.isMe)+favourite+friends+'</aside></div>';
+      }).join('')||blank('Список друзей пока пуст.'))+'</div>'+
+      (ctx.isMe?'<button type="button" class="profile-shop-link" data-profile-rooms>Комнаты и заявки в друзья ↗</button>':'')+'</section>';
+    var genres=ctx.topGenres.map(([name,count])=>
+      '<button class="profile-genre" type="button" data-profile-genre="'+escapeText(name)+'">'+escapeText(name)+' <span>'+count+'</span></button>'
+    ).join('');
+    var favoritesOrGenres='<section class="profile-widget profile-genres-widget">'+header('Любимые жанры')+
+      '<div class="profile-genres">'+(genres||blank('Жанры появятся после добавления тайтлов в списки.'))+'</div></section>';
+    return '<div class="profile-bento profile-enter">'+
+      '<div class="profile-bento-main">'+stats+watching+favourite+'</div>'+
+      '<aside class="profile-bento-side">'+achievementWidget(ctx.username,ctx.isMe)+friends+favoritesOrGenres+'</aside>'+
+      '</div>';
   }
   function syncWallet(){
     var profile=document.getElementById('profile');
@@ -161,6 +191,27 @@
     if(appearances.has(profile.dataset.profileUser))appearance(profile.dataset.profileUser,appearances.get(profile.dataset.profileUser));
     if(metricOverrides.has(profile.dataset.profileUser))metrics(profile.dataset.profileUser,metricOverrides.get(profile.dataset.profileUser));
     syncWallet();
+    var nav=profile.querySelector('.profile-premium-tabs');
+    if(nav&&root.requestAnimationFrame){
+      var current=nav.querySelector('.komi-profile-tab.active');
+      var from=nav.querySelector('[data-profile-tab="'+previousTab+'"]')||current;
+      if(current){
+        nav.style.setProperty('--profile-pill-left',from.offsetLeft+'px');
+        nav.style.setProperty('--profile-pill-width',from.offsetWidth+'px');
+        nav.classList.add('profile-tabs-ready');
+        if(from!==current){
+          root.requestAnimationFrame(()=>root.requestAnimationFrame(()=>{
+            if(!nav.isConnected)return;
+            nav.style.setProperty('--profile-pill-left',current.offsetLeft+'px');
+            nav.style.setProperty('--profile-pill-width',current.offsetWidth+'px');
+          }));
+        }else{
+          nav.style.setProperty('--profile-pill-left',current.offsetLeft+'px');
+          nav.style.setProperty('--profile-pill-width',current.offsetWidth+'px');
+        }
+        previousTab=current.dataset.profileTab;
+      }
+    }
     var targets=profile.querySelectorAll('[data-profile-count]');
     if(root.IntersectionObserver&&!prefersLessMotion()){
       var obs=new IntersectionObserver(entries=>{
@@ -185,11 +236,22 @@
   document.addEventListener('click',event=>{
     var button=event.target&&event.target.closest&&event.target.closest('#profile button,#profile a');
     if(!button)return;
-    if(button.matches('[data-profile-edit]')){
+    if(button.matches('[data-profile-edit], [data-profile-settings]')){
       var box=document.querySelector('#profile .profile-settings-box');
       if(box){var visible=box.classList.toggle('is-open');button.setAttribute('aria-expanded',String(visible));if(visible)box.querySelector('input')?.focus({preventScroll:true})}
     }
-    if(button.matches('[data-profile-share]'))komiCopyProfileLink();
+    if(button.matches('[data-profile-share]')){
+      Promise.resolve(komiCopyProfileLink()).then(ok=>{
+        if(!ok||!button.isConnected)return;
+        button.classList.add('is-copied');
+        button.setAttribute('aria-label','Ссылка скопирована');
+        window.setTimeout(()=>{if(button.isConnected){button.classList.remove('is-copied');button.setAttribute('aria-label','Поделиться ссылкой');}},1700);
+      });
+    }
+    if(button.matches('[data-profile-party]')){
+      window.komiWatchTogetherProfileTarget=button.dataset.profileParty;
+      if(typeof openWatchPartyHub==='function')openWatchPartyHub();
+    }
     if(button.matches('[data-profile-rooms]'))openFriendsDrawer();
     if(button.matches('[data-profile-resume]')&&!event.ctrlKey&&!event.metaKey&&!event.shiftKey&&!event.altKey){
       event.preventDefault();resumeKomiAnime(button.dataset.profileResume);
