@@ -432,6 +432,8 @@
     state.entitlementChecked=false;
     state.userId='';state.entitled=false;state.wallet=null;state.avatarUrl='';
     state.displayName='Пользователь Komi';
+    setImage('preview-avatar','preview-avatar-fallback','');
+    setImage('comment-avatar','comment-avatar-fallback','');
     state.saved=normalizedPrefs(null);state.draft={...state.saved};
     state.equipped={frame_id:null,title_id:null};
     state.trial={frame:null,title:null};
@@ -460,6 +462,8 @@
       const val=index=>results[index].status==='fulfilled'?results[index].value:null;
       const premiumStatus=results[1];
       if (premiumStatus.status==='rejected') throw premiumStatus.reason;
+      if (results[2].status==='rejected' || results[3].status==='rejected')
+        throw Error('Не удалось загрузить текущие настройки Premium. Сохранение отключено.');
       state.entitled=Boolean(val(1)?.user_id);
       state.entitlementChecked=true;
       const profile=val(0);
