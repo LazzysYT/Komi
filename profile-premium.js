@@ -94,7 +94,7 @@
 
     var favoriteIds=Object.keys(userFavorites[ctx.username]||{});
     var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,4);
-    var statusColors=['#FF454F','#F08E95','#C74857','#962F40','#592935'];
+    var statusColors=['#F1F1F1','#D0D0D0','#A8A8A8','#7F7F7F','#535353'];
     var segmentNames=statusNames.map((name,i)=>[name,number(ctx.statsCounts[name]),statusColors[i]]);
     var distribution=segmentNames.map(([name,count,color])=>
       '<button type="button" class="profile-distribution-part" title="'+name+': '+count+'" aria-label="'+name+': '+count+
@@ -126,7 +126,7 @@
       }).join('')||blank(favoriteIds.length?'Постеры избранного ещё подгружаются из каталога.':'Добавь аниме в избранное, чтобы заполнить витрину.'))+'</div></section>';
     var friends='<section class="profile-widget profile-friends-widget">'+header('Друзья','<span class="profile-caption">'+ctx.myFriends.length+'</span>')+
       '<div class="profile-friends-mini">'+(ctx.myFriends.slice(0,3).map((name,i)=>{
-        var p=userProfiles[name]||{},label=String(p.displayName||name);
+        var p=userProfiles[name]||{},label=typeof komiVisibleUsername==='function'?komiVisibleUsername(name,p,false):String(p.displayName||name);
         return '<button type="button" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])"><span class="profile-friend-avatar">'+escapeText(label.slice(0,1))+
           '</span><span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
       }).join('')||blank('Список друзей пока пуст.'))+'</div>'+
