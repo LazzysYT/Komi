@@ -53,12 +53,12 @@ test('owner gets real saved history, but public visitor never sees it',()=>{
 test('overview exposes truthful statistics, favorite preview, friends and achievements',()=>{
   const {ui,base}=renderAdapter();
   const html=ui.content({...base,section:'overview'});
-  for(const phrase of ['Статистика просмотра','Продолжить просмотр','Любимые жанры','Витрина достижений','Избранное','Друзья','Anime test'])
+  for(const phrase of ['Статистика просмотра','Продолжить просмотр','Любимые жанры','Витрина достижений','Топ избранного','Друзья','Anime test'])
     assert.ok(html.includes(phrase),phrase);
   assert.match(html,/data-profile-field="episodes">—/);
   assert.match(html,/data-profile-field="hours">—/);
   assert.match(html,/data-profile-field="meanScore">—/);
-  assert.match(html,/style="--profile-segment:#f0f0f0"/);
+  assert.match(html,/--profile-segment:#FF454F/);
 });
 
 test('profile adapter escapes titles and rejects executable poster sources',()=>{
