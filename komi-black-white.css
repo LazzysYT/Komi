@@ -385,3 +385,132 @@
   border-color: #fff !important;
 }
 .komi-media-hub .komi-hub-hero-art { image-rendering: auto; }
+
+/* KomiAnime profile 2026-11-19: UI-only monochrome enhancement.
+   Photos, posters, and video retain their source colors/resolution. */
+.komi-media-hub .komi-profile-v2{
+  --kp-surface:#151515;--kp-elevated:#202020;--kp-border:rgba(255,255,255,.15);
+  --kp-text:#f7f7f7;--kp-muted:#aaa;--kp-focus:#fff;
+  max-width:1180px!important;gap:20px!important;color:var(--kp-text);
+}
+.komi-media-hub .komi-profile-v2 .profile-header-card{
+  display:grid!important;grid-template-columns:150px minmax(0,1fr)!important;
+  align-items:center!important;gap:26px!important;padding:32px!important;
+  background:radial-gradient(ellipse at 15% 0%,#323232 0%,transparent 50%),linear-gradient(150deg,#191919,#101010)!important;
+  border:1px solid var(--kp-border)!important;border-radius:28px!important;
+  box-shadow:0 16px 38px #0007!important;isolation:isolate;
+}
+.komi-media-hub .komi-profile-v2 .profile-header-card::after{
+  background:radial-gradient(circle,rgba(255,255,255,.08),transparent 72%)!important;
+}
+.komi-media-hub .komi-profile-v2 .profile-avatar-box{
+  width:132px!important;height:132px!important;aspect-ratio:1;
+  border:3px solid #f0f0f0!important;border-radius:50%!important;
+  object-fit:cover!important;box-shadow:0 0 0 7px #252525,0 12px 35px #0008!important;
+  justify-self:center;
+}
+.komi-media-hub .komi-profile-v2 .profile-info-grid{min-width:0;position:relative;z-index:1;}
+.komi-media-hub .komi-profile-v2 .profile-name-row{gap:12px!important;flex-wrap:wrap;}
+.komi-media-hub .komi-profile-v2 .profile-name-row h2{
+  color:#fff!important;font-family:'Plus Jakarta Sans',Inter,sans-serif;
+  font-size:clamp(24px,3.1vw,36px)!important;letter-spacing:-.035em;
+  overflow-wrap:anywhere;
+}
+.komi-media-hub .komi-profile-v2 :is(.profile-badge-item,.profile-badge-level){
+  color:#eee!important;background:#252525!important;border:1px solid #404040!important;
+  border-radius:999px!important;padding:6px 12px!important;box-shadow:none!important;
+}
+.komi-media-hub .komi-profile-v2 .komi-level-progress progress{
+  accent-color:#fff;overflow:hidden;border-radius:999px;
+}
+.komi-media-hub .komi-profile-v2 .komi-level-progress progress::-webkit-progress-value{background:#ededed;}
+.komi-media-hub .komi-profile-v2 .komi-profile-actions{
+  display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;
+}
+.komi-media-hub .komi-profile-v2 :is(.komi-profile-action,.komi-profile-share){
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:10px 15px!important;min-height:42px;line-height:1.2;
+  background:#252525!important;border:1px solid #4b4b4b!important;
+  border-radius:13px!important;color:#f6f6f6!important;font-weight:700;
+  box-shadow:none!important;cursor:pointer;
+  transition:background .18s,border-color .18s,transform .18s;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-actions .komi-profile-share{
+  background:#f2f2f2!important;color:#101010!important;border-color:#f2f2f2!important;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-action:hover{
+  background:#343434!important;border-color:#c8c8c8!important;transform:translateY(-2px);
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-actions .komi-profile-share:hover{
+  color:#000!important;background:#d8d8d8!important;border-color:#d8d8d8!important;
+}
+.komi-media-hub .komi-profile-v2 .profile-settings-box{
+  background:#191919!important;border:1px solid #3b3b3b!important;border-radius:18px!important;
+  padding:16px!important;margin-top:14px!important;
+}
+.komi-media-hub .komi-profile-v2 .profile-stats-grid{
+  gap:10px!important;grid-template-columns:repeat(6,minmax(0,1fr))!important;
+}
+.komi-media-hub .komi-profile-v2 .profile-stat-card{
+  background:var(--kp-surface)!important;border:1px solid var(--kp-border)!important;
+  border-radius:19px!important;min-height:94px;box-shadow:none!important;
+}
+.komi-media-hub .komi-profile-v2 .profile-stat-card:hover{
+  border-color:#989898!important;background:#232323!important;transform:translateY(-2px);
+}
+.komi-media-hub .komi-profile-v2 .profile-stat-card.active{
+  border-color:#dedede!important;background:#272727!important;box-shadow:inset 0 0 0 1px #bbb4!important;
+}
+.komi-media-hub .komi-profile-v2 .profile-stat-card .stat-num{
+  color:#f8f8f8!important;font-variant-numeric:tabular-nums;font-size:clamp(19px,2vw,27px)!important;
+}
+.komi-media-hub .komi-profile-v2 .profile-stat-card .stat-label{color:#bebebe!important;}
+.komi-media-hub .komi-profile-v2 :is(.komi-achievement-panel,.komi-profile-overview,.komi-profile-ratings,.komi-profile-showcase,.komi-profile-friends-section,.komi-profile-comments-section){
+  background:#171717!important;border:1px solid #343434!important;
+  border-radius:22px!important;box-shadow:none!important;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-tabs{
+  margin:0 auto!important;padding:6px!important;background:#1d1d1d!important;
+  border:1px solid #303030!important;border-radius:18px!important;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-tab{
+  color:#c3c3c3!important;border-radius:13px!important;transition:background .18s,transform .18s;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-tab.active{
+  background:#f0f0f0!important;color:#0b0b0b!important;box-shadow:none!important;
+}
+.komi-media-hub .komi-profile-v2 .komi-profile-tab:not(.active):hover{background:#353535!important;color:#fff!important;}
+.komi-media-hub .komi-profile-v2 :is(.komi-profile-overview section,.komi-profile-showcase){padding:22px;}
+.komi-media-hub .komi-profile-v2 .komi-profile-showcase{margin-top:14px;}
+.komi-media-hub .komi-profile-v2 .komi-profile-showcase h3{margin:0;font-size:16px;font-weight:800;}
+.komi-media-hub .komi-profile-v2 .komi-profile-showcase p{color:#b9b9b9;margin:10px 0 0;font-size:13px;}
+.komi-media-hub .komi-profile-v2 .komi-profile-showcase .anime-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:16px;
+}
+.komi-media-hub .komi-profile-v2 :is(.komi-overview-list-row,.komi-genre-row,.profile-menu-item){
+  border-color:#3c3c3c!important;color:#e5e5e5!important;
+}
+.komi-media-hub .komi-profile-v2 :is(.komi-profile-tab,.profile-stat-card,.komi-profile-action):focus-visible{
+  outline:2px solid #fff!important;outline-offset:3px;
+}
+@media(max-width:1020px){
+  .komi-media-hub .komi-profile-v2 .profile-stats-grid{grid-template-columns:repeat(3,minmax(0,1fr))!important;}
+}
+@media(max-width:700px){
+  .komi-media-hub .komi-profile-v2 .profile-header-card{
+    grid-template-columns:minmax(0,1fr)!important;text-align:center!important;justify-items:center!important;
+    padding:24px 15px!important;gap:18px!important;border-radius:22px!important;
+  }
+  .komi-media-hub .komi-profile-v2 .profile-name-row,
+  .komi-media-hub .komi-profile-v2 .profile-badges-row,
+  .komi-media-hub .komi-profile-v2 .komi-profile-actions{justify-content:center;}
+  .komi-media-hub .komi-profile-v2 .profile-stats-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;}
+  .komi-media-hub .komi-profile-v2 .komi-profile-showcase .anime-grid{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .komi-media-hub .komi-profile-v2 .komi-profile-overview{grid-template-columns:1fr!important;}
+  .komi-media-hub .komi-profile-v2 .komi-profile-overview section+section{border-left:0!important;border-top:1px solid #333;}
+  .komi-media-hub .komi-profile-v2 .komi-profile-tabs{width:100%!important;justify-content:stretch;}
+  .komi-media-hub .komi-profile-v2 .komi-profile-tab{flex:1 1 42%;padding:11px 8px!important;}
+}
+@media(prefers-reduced-motion:reduce){
+  .komi-media-hub .komi-profile-v2 *{transition-duration:.01ms!important;animation-duration:.01ms!important;}
+}
