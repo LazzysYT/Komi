@@ -7,7 +7,7 @@ const migration = fs.readFileSync(
   path.join(__dirname, '../supabase/migrations/20261119230000_fix_premium_identity_rls_expiry_check.sql'),
   'utf8'
 );
-const statements = migration.replace(/^\\s*--.*$/gm, '');
+const statements = migration.replace(/^\s*--.*$/gm, '');
 const initial = fs.readFileSync(
   path.join(__dirname, '../supabase/migrations/20261119202000_premium_profile_identity.sql'),
   'utf8'
