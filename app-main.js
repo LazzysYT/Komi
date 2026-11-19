@@ -1616,7 +1616,7 @@ async function loadDataFromCloud(attempt = 0) {
                                 <section data-komi-privacy-panel="${safeProfileText(currentUser.authUserId)}"
                                     aria-label="Приватность аккаунта" style="margin:12px 0;padding:12px;border:1px solid #ffffff24;border-radius:12px">
                                   <h5>Приватность</h5>
-                                  <p>Невидимка исключает аккаунт из счётчика онлайн. Закрытый профиль не отображается в публичном поиске аккаунтов.</p>
+                                  <p>Невидимка исключает аккаунт из счётчика онлайн. Закрытый профиль скрывает его данные от других аккаунтов. Уже опубликованные комментарии остаются видимыми.</p>
                                   <div style="display:flex;gap:8px;align-items:center;justify-content:space-between;margin:8px 0">
                                     <span>Режим невидимки</span>
                                     <button type="button" class="btn-secondary" data-privacy-switch="invisible" disabled>Загружаем…</button>
