@@ -70,14 +70,11 @@ function renderAniCoinShop(container) {
             <h1 id="anicoin-title">Магазин AniCoin</h1>
             <p>За каждые 20 минут воспроизведения во встроенном видеоплеере начисляется 1 AniCoin. Паузы, перемотка и внешние плееры не учитываются.</p>
             <article class="anicoin-item" aria-labelledby="komi-premium-shop-title">
-                <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Подписка · Lava.top</p>
+                <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Ежемесячная подписка</p>
                 <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
-                <p>Поддержи развитие сайта. Оформление подписки проходит на Lava.top с ежемесячным продлением. Привилегии на KomiAnime пока не активируются автоматически.</p>
-                <div class="komi-lava-checkout" style="display:flex;align-items:center;min-height:60px;margin-top:16px" aria-label="Оформление подписки Komi Premium">
-                    <iframe title="Lava.top — оформить Komi Premium" src="https://widget.lava.top/e5879a10-267e-4d27-bff1-e9c3b1562c2e" style="border:none;width:350px;max-width:100%;height:60px;display:block" width="350" height="60" loading="lazy" allow="payment"></iframe>
-                </div>
-                <p style="font-size:12px;margin:9px 0 8px;">Оплата через Lava.top на этой странице. Доступность зависит от одобрения домена Lava.top.</p>
-                <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:10px;padding:12px 20px;border-radius:14px;">Подробности и запасной способ оплаты</a>
+                <p>Поддержи развитие KomiAnime. Подписка продлевается каждый месяц; автоматическое включение Premium-функций пока не подключено.</p>
+                <a class="btn-secondary" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:16px;padding:14px 22px;border-radius:14px;background:#f5f5f5;color:#090909;font-weight:750;">Оформить Premium ↗</a>
+                <div><a href="/premium.html" style="display:inline-block;margin-top:12px;font-size:13px;text-decoration:underline;text-underline-offset:3px;">Условия подписки</a></div>
             </article>
             ${!owner ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
             ${owner && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
