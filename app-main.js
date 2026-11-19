@@ -884,6 +884,7 @@ async function loadDataFromCloud(attempt = 0) {
                             // Keep the old, already decoded avatar visible until the
                             // replacement finishes loading. Ignore stale async results.
                             if (sidebarAvatarIcon.dataset.komiAvatarOwner !== owner ||
+                                (currentUser?.authUserId || (currentUser?.username ? 'legacy:' + currentUser.username : '')) !== owner ||
                                 sidebarAvatarIcon.dataset.komiPendingAvatar !== avatar) return;
                             sidebarAvatarIcon.replaceChildren(image);
                             delete sidebarAvatarIcon.dataset.komiPendingAvatar;
