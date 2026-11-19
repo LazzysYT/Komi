@@ -2591,7 +2591,7 @@ async function loadDataFromCloud(attempt = 0) {
             try {
                 const { error } = await _supabase.auth.signInWithOAuth({
                     provider: 'google',
-                    options: { redirectTo: window.location.origin + '/' }
+                    options: { redirectTo: 'https://komianime.online/' }
                 });
                 if (error) throw error;
             } catch (error) {
@@ -2790,7 +2790,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (passwordInput.length < 12) { alert('Используйте уникальный пароль минимум из 12 символов.'); return; }
             const { data: signupData, error: signupError } = await _supabase.auth.signUp({
                 email, password: passwordInput,
-                options: { data: { username }, emailRedirectTo: window.location.origin + '/' }
+                options: { data: { username }, emailRedirectTo: 'https://komianime.online/' }
             });
             if (signupError) { alert('Не удалось зарегистрироваться: ' + signupError.message); return; }
             if (!signupData.session) {
