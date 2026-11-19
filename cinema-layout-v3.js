@@ -22,10 +22,13 @@
     if (!currentContext(context)) return;
     const hidden = !expanded;
     context.modal.classList.toggle('komi-episodes-collapsed', hidden);
-    context.sidebar.inert = hidden;
-    context.sidebar.setAttribute('aria-hidden', String(hidden));
+    // Theater mode moves episodes below video instead of hiding them.
+    context.sidebar.inert = false;
+    context.sidebar.removeAttribute('aria-hidden');
     context.drawer.setAttribute('aria-expanded', String(expanded));
-    context.drawer.textContent = expanded ? 'Скрыть серии' : 'Серии';
+    context.drawer.setAttribute('aria-pressed', String(hidden));
+    context.drawer.setAttribute('aria-label', 'Режим театра');
+    context.drawer.textContent = hidden ? 'Вернуть серии' : 'Театр';
   }
   function episodePreview(raw) {
     try {
