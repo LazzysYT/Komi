@@ -114,7 +114,8 @@
           '<button type="button" class="komi-hub-save" aria-label="Добавить в список" title="Добавить в список" data-komi-onclick="' + listAction + '">' +
           '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4zM9 10h6m-3-3v6"/></svg></button></div>' +
           '<h1>' + escape(anime.title) + '</h1>' +
-          '<p>' + (description || 'Описание тайтла пока не добавлено.') + '</p>' +
+          '<p' + (description ? '' : ' class="komi-hub-placeholder"') + '>' +
+          (description || 'Описание тайтла пока не добавлено.') + '</p>' +
           '<div class="hero-meta"><span>★ ' + escape(rating(anime)) + ' Shikimori</span>' +
           (year ? '<span>' + escape(year) + '</span>' : '') +
           '<span>' + escape(context.type(anime)) + '</span></div>' +

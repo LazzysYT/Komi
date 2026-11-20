@@ -1,0 +1,198 @@
+/* KomiAnime mobile home refinement — 2026-11-21.
+ * Additive after the CSS bundle. Does not alter desktop or catalog handlers.
+ */
+@media (max-width: 767px) {
+  .komi-media-hub {
+    --hub-hero-height: clamp(382px, 100vw, 408px);
+    --hub-section-gap: 12px;
+  }
+
+  .komi-media-hub .komi-home-discovery {
+    gap: 12px !important;
+  }
+
+  .komi-media-hub .komi-home-hero #heroSlider,
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+    height: var(--hub-hero-height) !important;
+    border-radius: 20px !important;
+  }
+
+  /* Both slides remain composited so opacity can interpolate.
+   * visibility and pointer-events prevent inactive links from receiving focus/clicks.
+   * The existing JS still owns .active and aria-hidden state.
+   */
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide {
+    display: flex !important;
+    opacity: 0 !important;
+    visibility: hidden;
+    pointer-events: none;
+    animation: none !important;
+    transition: opacity 680ms cubic-bezier(.22, .61, .36, 1),
+                visibility 0s linear 680ms !important;
+    padding: 84px 17px 67px !important;
+  }
+
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide.active {
+    opacity: 1 !important;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 680ms cubic-bezier(.22, .61, .36, 1),
+                visibility 0s linear 0s !important;
+  }
+
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide::before,
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight::after {
+    background: linear-gradient(0deg,
+      rgba(9, 9, 11, .99) 0%,
+      rgba(9, 9, 11, .86) 31%,
+      rgba(9, 9, 11, .35) 65%,
+      rgba(9, 9, 11, .10) 100%) !important;
+  }
+
+  .komi-media-hub .komi-home-hero .komi-home-hero-content {
+    width: 100%;
+  }
+
+  /* A restrained recommendation label replaces the oversized pill chrome. */
+  .komi-media-hub .komi-home-hero .komi-hub-hero-kicker {
+    gap: 8px;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-hero-kicker > span {
+    padding: 4px 9px !important;
+    font-size: 10px !important;
+    font-weight: 700;
+    border-color: rgba(255, 255, 255, .18) !important;
+    background: rgba(13, 13, 15, .68) !important;
+    color: #fff !important;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-save {
+    width: 32px;
+    height: 32px;
+    flex-shrink: 0;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-save svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide h1,
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 {
+    margin: 7px 0 6px !important;
+    font-size: clamp(24px, 6.5vw, 32px) !important;
+    line-height: 1.08 !important;
+  }
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide p,
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight p {
+    margin-bottom: 8px !important;
+    font-size: 12px !important;
+    line-height: 1.38 !important;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-placeholder {
+    display: none !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-meta {
+    gap: 5px;
+  }
+  .komi-media-hub .komi-home-hero .hero-meta span {
+    padding: 4px 7px !important;
+    font-size: 10px !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-buttons {
+    gap: 7px;
+    margin-top: 10px !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-buttons a {
+    min-height: 40px;
+    padding: 0 13px;
+    font-size: 12px;
+  }
+
+  /* Simple and safe carousel footer: compact count plus large inset arrows.
+   * Keep the original dot controls in the DOM for desktop and existing JS.
+   */
+  .komi-media-hub .komi-home-hero #heroSlider .komi-hub-slide-count {
+    inset: auto auto 21px 18px !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px 9px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 999px;
+    background: rgba(12, 12, 12, .62);
+    color: #fff;
+    font-size: 11px;
+    letter-spacing: .02em;
+  }
+  .komi-media-hub .komi-home-hero #heroSlider .komi-hub-carousel-controls {
+    right: max(21px, env(safe-area-inset-right, 0px) + 16px) !important;
+    bottom: 15px !important;
+    gap: 9px;
+  }
+  .komi-media-hub .komi-home-hero #heroSlider .hero-dots {
+    display: none !important;
+  }
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slider-arrow {
+    width: 41px !important;
+    height: 41px !important;
+    min-width: 41px !important;
+    min-height: 41px !important;
+    background: rgba(13, 13, 15, .82) !important;
+    border-color: rgba(255, 255, 255, .22) !important;
+    touch-action: manipulation;
+  }
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slider-arrow svg {
+    width: 19px;
+    height: 19px;
+  }
+
+  /* Bring catalog immediately beneath the featured item; keep all four
+   * native selects and their data-komi-home-filter listeners intact.
+   */
+  .komi-media-hub #komiHomeQuickFilters {
+    gap: 8px !important;
+    margin-bottom: 9px !important;
+    padding: 11px !important;
+    border-radius: 18px !important;
+  }
+  .komi-media-hub #komiHomeQuickFiltersTitle {
+    font-size: 16px !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .section-see-all {
+    min-height: 33px !important;
+    padding: 7px 10px !important;
+    font-size: 11px !important;
+    font-weight: 600;
+    text-decoration: none !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .catalog-filters-box {
+    gap: 7px !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .catalog-filters-box select.form-control {
+    min-height: 35px !important;
+    padding: 6px 22px 6px 10px !important;
+    border-radius: 12px !important;
+    font-size: 11px !important;
+  }
+  .komi-media-hub .komi-hub-catalog-preview {
+    margin-top: 0 !important;
+  }
+}
+
+@media (max-width: 355px) {
+  .komi-media-hub { --hub-hero-height: 394px; }
+  .komi-media-hub .komi-home-hero .hero-buttons a {
+    padding: 0 10px;
+    font-size: 11px;
+  }
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide {
+    padding-bottom: 66px !important;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide,
+  .komi-media-hub .komi-home-hero #heroSlider .hero-slide.active {
+    transition: none !important;
+    animation: none !important;
+  }
+}
