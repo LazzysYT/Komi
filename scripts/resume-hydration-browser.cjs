@@ -16,8 +16,9 @@ const UID='00000000-0000-4000-8000-000000000001';
  try{
   await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
   await page.waitForFunction(()=>typeof window.KomiResumeCache?.write==='function' &&
-    typeof render==='function' && typeof window.KomiHomeDiscovery?.recentProgress==='function',
-    {timeout:15000});
+    typeof render==='function' && typeof window.KomiHomeDiscovery?.recentProgress==='function' &&
+    komiSessionResolved === true && komiHomeCatalogReady === true,
+    null,{timeout:20000});
   await page.evaluate(uid=>{
     const make=id=>({
       id:String(id),title:'Saved episode '+id,
@@ -40,7 +41,19 @@ const UID='00000000-0000-4000-8000-000000000001';
     render();
   },UID);
   const cards=page.locator('.komi-home-continue .komi-home-progress-card:not(.komi-resume-placeholder) strong');
-  await cards.first().waitFor({timeout:8000});
+  try {
+    await cards.first().waitFor({timeout:10000});
+  } catch(error) {
+    console.error('Resume fixture diagnostics',await page.evaluate(()=>({
+      view:currentView,sessionResolved:komiSessionResolved,
+      user:currentUser?.username, catalogReady:komiHomeCatalogReady,
+      resumeUid:komiResumeReadyUid,resumeCount:komiResumePreview.length,
+      progressCount:Object.keys(komiEpisodeProgress).length,
+      homeSections:document.querySelectorAll('.komi-home-discovery').length,
+      resumeHtml:document.querySelector('.komi-home-continue')?.outerHTML.slice(0,700)
+    })));
+    throw error;
+  }
   const baseline=await cards.allTextContents();
   assert.deepEqual(baseline,[
     'Saved episode 6','Saved episode 5','Saved episode 4',
