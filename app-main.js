@@ -739,6 +739,26 @@ async function loadDataFromCloud(attempt = 0) {
             komiHideWatched = Boolean(checked);
             komiCatalogStateChanged();
         }
+        function komiApplyMobileFilters(values) {
+            // Apply one consistent snapshot instead of re-rendering after each select.
+            if (currentView !== 'catalog' || !values || typeof values !== 'object') return false;
+            const genre = String(values.genre || 'Все');
+            const year = String(values.year || 'Все');
+            const type = String(values.type || 'Все');
+            const sort = String(values.sort || 'popular');
+            if (genre !== 'Все' && !availableGenresList.includes(genre)) return false;
+            if (year !== 'Все' && (!/^(?:19|20)[0-9]{2}$/.test(year) ||
+                !animeList.some(anime => komiAnimeYear(anime) === year))) return false;
+            if (!['Все','Сериал','Фильм','OVA','ONA','Special'].includes(type)) return false;
+            if (!['popular','updated','rating','year','alphabet'].includes(sort)) return false;
+            catalogFilterGenre = genre;
+            catalogFilterYear = year;
+            catalogFilterType = type;
+            catalogSort = sort;
+            komiHideWatched = values.hide === true;
+            komiCatalogStateChanged();
+            return true;
+        }
         function komiRestoreCatalogPosition() {
             if (!komiCatalogRestorePending) return;
             komiCatalogRestorePending = false;
@@ -1413,6 +1433,7 @@ async function loadDataFromCloud(attempt = 0) {
                 container.innerHTML = `
                     <section class="komi-hub-catalog-toolbar" aria-labelledby="komiFullCatalogTitle">
                         <h1 id="komiFullCatalogTitle">Каталог аниме</h1>
+                        <button type="button" class="komi-mobile-filter-trigger" aria-haspopup="dialog" aria-controls="komiMobileSheet" title="Настроить фильтры каталога">☷ Фильтры</button>
                         <div class="catalog-filters-box" role="group" aria-label="Фильтры каталога">
                             <div class="form-group" style="margin:0;">
                                 <label for="komiCatalogGenre">Жанр</label>
@@ -4256,6 +4277,7 @@ async function loadDataFromCloud(attempt = 0) {
             if(button) button.textContent=document.fullscreenElement === content?'Обычный размер':'На весь экран';
         }
         function closeWatchModal() {
+            window.KomiMobileSheets?.close?.(false);
             window.KomiPlayerUX?.cancelPendingNext?.();
             ++komiDetailOpenToken;
             if (document.fullscreenElement?.closest?.('#watchModal')) document.exitFullscreen?.().catch(() => {});
