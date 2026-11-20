@@ -30,7 +30,7 @@ test('Premium identity RLS uses only public badge user_id, never private expiry 
 
 test('Expiry remains enforced by badge SELECT RLS, not by browser grants', () => {
   assert.match(initial, /b\.active_until\s*>\s*now\(\)/i);
-  assert.doesNotMatch(migration, /\bgrant\s+(?:all|select|insert|update|delete)\b/i);
-  assert.doesNotMatch(migration, /\b(?:drop policy|disable row level security)\b/i);
-  assert.doesNotMatch(migration, /\b(?:komi_premium_events|komi_premium_contracts|lava|webhook|anicoin_wallets)\b/i);
+  assert.doesNotMatch(statements, /\bgrant\s+(?:all|select|insert|update|delete)\b/i);
+  assert.doesNotMatch(statements, /\b(?:drop policy|disable row level security)\b/i);
+  assert.doesNotMatch(statements, /\b(?:komi_premium_events|komi_premium_contracts|lava|webhook|anicoin_wallets)\b/i);
 });
