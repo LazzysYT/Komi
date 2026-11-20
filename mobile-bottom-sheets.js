@@ -335,4 +335,5 @@
     const main = document.getElementById('mainContainer');
     if (main) new MutationObserver(tryPendingFilters).observe(main,{childList:true});
     root.KomiMobileSheets = {openFilters,openSource,openEpisodes,close};
+    document.documentElement.classList.add('komi-mobile-sheets-ready');
 })(globalThis);
