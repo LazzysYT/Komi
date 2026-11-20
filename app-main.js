@@ -178,6 +178,9 @@ let catalogInitialLoadFailed = false;
 let komiHomeCatalogReady = false;
 let komiHomePreviewCatalog = null;
 let komiLastHomeMarkup = null;
+// Preserve the original SSR homepage if someone navigates away and back
+// while the full catalog is still loading.
+const komiSeoFirstPaintMarkup = document.getElementById('mainContainer')?.innerHTML || '';
 let komiSeoDeepLinkOpened = false;
 function komiMaybeOpenSeoAnime() {
     if (komiSeoDeepLinkOpened) return;
@@ -1056,7 +1059,11 @@ async function loadDataFromCloud(attempt = 0) {
             if (currentView === 'home') {
                 if (!komiHomeCatalogReady && !komiHomePreviewCatalog) {
                     // Keep crawlable, real card links visible until the live catalog is ready.
-                    if (!catalogInitialLoadFailed && container.querySelector('.komi-seo-card')) return;
+                    if (container.querySelector('.komi-seo-card')) return;
+                    if (komiSeoFirstPaintMarkup.includes('komi-seo-card')) {
+                        container.innerHTML = komiSeoFirstPaintMarkup;
+                        return;
+                    }
                     clearInterval(slideInterval);
                     container.innerHTML = catalogInitialLoadFailed
                         ? '<section class="komi-catalog-empty" role="status"><strong>Не удалось загрузить каталог</strong><button class="komi-catalog-clear" data-komi-onclick="loadDataFromCloud(); render()">Повторить загрузку</button></section>'

@@ -310,7 +310,7 @@ async function checkNotifications(page) {
        {id:'101',title:'Сериал 2026',poster:'',genres:['Экшен'],year:'2026',type:'Сериал',shikiRating:8.4,episodeCount:2},
        {id:'102',title:'Фильм 2025',poster:'',genres:['Драма'],year:'2025',type:'Фильм',shikiRating:8.8,episodeCount:1}
      ];
-     catalogInitialLoadComplete=true;
+     catalogInitialLoadComplete=true;komiHomeCatalogReady=true;
      render();
    });
    const quick=page.locator('#komiHomeQuickFilters select[data-komi-home-filter]');
@@ -350,7 +350,7 @@ async function checkNotifications(page) {
     animeList=[{id:'1',title:'Проверка аниме',originalTitle:'Test',poster:'https://media.test/poster.jpg',
       genres:[hostileMetadata],year:hostileMetadata,shikiRating:hostileMetadata,type:hostileMetadata,
       episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
-    catalogInitialLoadComplete=true;render();
+    catalogInitialLoadComplete=true;komiHomeCatalogReady=true;render();
    });
    assert.match(await page.locator('.hero-meta').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
