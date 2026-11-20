@@ -19,7 +19,9 @@ test('roulette mood picker remains connected to real playable catalog',()=>{
 test('comment timecodes are plain DOM nodes and do not access cross-origin players',()=>{
   assert.match(comments,/function appendTimecodes\(target, body\)/);
   assert.match(comments,/document\.createTextNode\(text\.slice\(/);
-  assert.match(comments,/appendTimecodes\(body, item\.body\)/);
+  assert.match(comments,/appendSpoilerAware\(body, item\.body\)/);
+  assert.match(comments,/appendTimecodes\(target, source\.slice\(/);
+  assert.match(comments,/button\.setAttribute\('aria-pressed', String\(revealed\)\)/);
   assert.match(comments,/modal\.querySelector\('#watchModalContent video'\)/);
   assert.match(comments,/Number\.isFinite\(video\.duration\)/);
   assert.match(comments,/video\.currentTime = seconds/);

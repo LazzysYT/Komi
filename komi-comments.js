@@ -43,6 +43,34 @@
         if (cursor < text.length) target.append(document.createTextNode(text.slice(cursor)));
     }
 
+    // Spoilers are plain text by default; reveal only the exact ||...|| range on demand.
+    // Never use innerHTML for text supplied by community members.
+    function appendSpoilerAware(target, body) {
+        const source = String(body || '');
+        const spoiler = /\|\|([\s\S]{1,800}?)\|\|/g;
+        let cursor = 0;
+        for (const match of source.matchAll(spoiler)) {
+            if (match.index > cursor) appendTimecodes(target, source.slice(cursor, match.index));
+            const button = element('button', 'komi-spoiler', 'Спойлер · показать');
+            button.type = 'button';
+            button.setAttribute('aria-pressed', 'false');
+            button.setAttribute('aria-label', 'Показать скрытый текст');
+            button.style.cssText = 'display:inline-block;border:1px solid #888;background:#222;color:#eee;border-radius:7px;cursor:pointer;padding:2px 7px;max-width:100%;overflow-wrap:anywhere;vertical-align:baseline';
+            let revealed = false;
+            button.addEventListener('click', () => {
+                revealed = !revealed;
+                button.textContent = revealed ? match[1] : 'Спойлер · показать';
+                button.setAttribute('aria-pressed', String(revealed));
+                button.setAttribute('aria-label', revealed ? 'Скрыть спойлер' : 'Показать скрытый текст');
+                button.style.filter = revealed ? 'none' : 'blur(0)';
+                button.style.background = revealed ? '#090909' : '#222';
+            });
+            target.append(button);
+            cursor = match.index + match[0].length;
+        }
+        if (cursor < source.length) appendTimecodes(target, source.slice(cursor));
+    }
+
     function legacyComments(animeId) {
         const entries = (typeof animeComments !== 'undefined' && animeComments)
             ? animeComments[String(animeId)] : null;
@@ -98,7 +126,7 @@
                 head.append(button);
             }
             const body = element('p', 'komi-comment-body');
-            appendTimecodes(body, item.body);
+            appendSpoilerAware(body, item.body);
             card.append(head, body);
             list.append(card);
         }
@@ -202,7 +230,7 @@
         input.maxLength = MAX_TEXT;
         input.rows = 3;
         input.required = true;
-        input.placeholder = 'Поделись впечатлениями об аниме…';
+        input.placeholder = 'Поделись впечатлениями… Спойлеры: ||скрытый текст||';
         input.setAttribute('aria-label', 'Текст комментария');
         const actions = element('div', 'komi-comments-actions');
         const note = element('small', '', currentUser?.authUserId ? 'Имя берётся из твоего профиля Komi.' : 'Для публикации нужен вход через Google или email.');

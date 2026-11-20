@@ -21,8 +21,12 @@ async function renderAnimeExtras(anime, seasons = []) {
     const section = document.getElementById('komiAnimeRelations');
     const banner = document.querySelector('#komiAnimeBanner img');
     const heading = document.createElement('h3');
-    heading.textContent = 'Сезоны, фильмы и другие части';
+    heading.textContent = 'Порядок просмотра · части франшизы';
     section.append(heading);
+    const sequenceHint = document.createElement('p');
+    sequenceHint.style.cssText = 'color:#b9b9bf;font-size:12px;margin:6px 0';
+    sequenceHint.textContent = 'Связанные аниме упорядочены по году выпуска. Это ориентир, не официальная сюжетная хронология.';
+    section.append(sequenceHint);
     for (const season of seasons) {
         const button = document.createElement('button');
         button.className = 'season-tab-btn';
@@ -68,25 +72,38 @@ async function renderAnimeExtras(anime, seasons = []) {
         const labels = { PREQUEL: 'Предыдущая часть', SEQUEL: 'Продолжение', SIDE_STORY: 'Ответвление',
             PARENT: 'Основная история', SUMMARY: 'Пересказ', ALTERNATIVE: 'Альтернативная версия',
             SPIN_OFF: 'Спин-офф', OTHER: 'Связанная часть' };
-        const related = (details?.relations?.edges || []).filter(edge => edge.node?.type === 'ANIME' && labels[edge.relationType]);
-        related.sort((a, b) => (a.node.seasonYear || Infinity) - (b.node.seasonYear || Infinity));
+        const related = (details?.relations?.edges || [])
+            .filter(edge => edge.node?.type === 'ANIME' && labels[edge.relationType]);
+        const base = {
+            node: { id: -id, idMal:id, title:{romaji:anime.title}, format:anime.type, seasonYear:Number(anime.year)||null },
+            relationType: 'CURRENT'
+        };
+        const arranged = [base,...related].sort((a,b) =>
+            (Number(a.node.seasonYear)||9999)-(Number(b.node.seasonYear)||9999)
+            || ({PREQUEL:0,CURRENT:1,SEQUEL:2}[a.relationType]??3)-({PREQUEL:0,CURRENT:1,SEQUEL:2}[b.relationType]??3));
         status.textContent = related.length || seasons.length ? '' : 'Связанные части не найдены.';
         const seen = new Set();
-        for (const { node, relationType } of related) {
-            if (seen.has(node.id)) continue;
-            seen.add(node.id);
-            const local = animeList.find(item => Number(item.shikimoriId || item.id) === node.idMal);
-            const link = document.createElement(local ? 'button' : 'a');
-            link.className = 'season-tab-btn';
-            link.textContent = [local?.title || node.title?.romaji || node.title?.native,
-                node.format === 'MOVIE' ? 'Фильм' : labels[relationType], node.seasonYear].filter(Boolean).join(' · ');
-            if (local) link.onclick = () => openWatchModal(local.id);
+        const statusMap = (typeof userAnimeStatuses !== 'undefined' && typeof currentUser !== 'undefined' && currentUser?.username)
+            ? userAnimeStatuses[currentUser.username] || {} : {};
+        for (const { node, relationType } of arranged) {
+            const malId = Number(node.idMal);
+            if (seen.has(malId) || !malId) continue;
+            seen.add(malId);
+            const local = animeList.find(item => Number(item.shikimoriId || item.id) === malId);
+            const control = document.createElement(local ? 'button' : 'a');
+            control.className = 'season-tab-btn';
+            const watched = statusMap[String(local?.id ?? malId)] || statusMap[String(malId)];
+            const partName = local?.title || node.title?.romaji || node.title?.native || ('Аниме #' + malId);
+            const fmt = node.format === 'MOVIE' || /фильм/i.test(node.format||'') ? 'Фильм' : relationType === 'CURRENT' ? 'Текущая часть' : labels[relationType];
+            control.textContent = (watched ? '✓ ' : '◇ ') + [partName,fmt,node.seasonYear,watched].filter(Boolean).join(' · ');
+            control.title = watched ? ('В твоём списке: '+watched) : 'Добавь эту часть в свой список на странице аниме.';
+            if (local) control.onclick = () => openWatchModal(local.id);
             else {
-                link.href = 'https://anilist.co/anime/' + encodeURIComponent(node.id);
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
+                control.href = 'https://anilist.co/anime/' + encodeURIComponent(node.id);
+                control.target = '_blank';
+                control.rel = 'noopener noreferrer';
             }
-            section.append(link);
+            section.append(control);
         }
     } catch {
         if (section.isConnected) status.textContent = 'Не удалось загрузить связанные части.';
