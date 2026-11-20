@@ -151,9 +151,12 @@
         });
         const standardPiP = document.pictureInPictureEnabled === true &&
             typeof video.requestPictureInPicture === 'function';
-        const safariPiP = typeof video.webkitSupportsPresentationMode === 'function' &&
-            typeof video.webkitSetPresentationMode === 'function' &&
-            video.webkitSupportsPresentationMode('picture-in-picture');
+        let safariPiP = false;
+        try {
+            safariPiP = typeof video.webkitSupportsPresentationMode === 'function' &&
+                typeof video.webkitSetPresentationMode === 'function' &&
+                video.webkitSupportsPresentationMode('picture-in-picture');
+        } catch { safariPiP = false; }
         pip.hidden = !standardPiP && !safariPiP;
         listen(pip, 'click', async () => {
             try {
