@@ -140,22 +140,28 @@ async function claimPendingReferral(){
  }catch(error){console.warn('Komi referral claim unavailable:',String(error?.message||error))}
  finally{referralClaimBusy=false}
 }
-let badgeOwner='';
+const badgeCache=new Map();
 async function refreshReferralBadge(){
  const profile=document.querySelector('.komi-profile-tabs');
  const user=owner();
- if(!profile||!user||badgeOwner===user)return;
- badgeOwner=user;
- try{
-  const {data,error}=await api().rpc('komi_referral',{p_action:'status'});
-  if(error||!data||owner()!==user||!profile.isConnected)return;
-  if(!data.rewarded&&!data.invite_count)return;
-  if(profile.querySelector('[data-komi-referral-badge]'))return;
-  const badge=node('span','✧ '+(data.rewarded?'Приглашённый друг':'Пригласил друзей'),'komi-lab-note');
-  badge.dataset.komiReferralBadge='1';
-  badge.style.cssText='display:inline-block;padding:8px;border:1px solid #ffffff2b;border-radius:9px';
-  profile.append(badge);
- }catch{}
+ if(!profile||!user||profile.querySelector('[data-komi-referral-badge]'))return;
+ // Never show a signed-in viewer's badge on another person's profile.
+ if(typeof profileTargetUser!=='undefined'&&profileTargetUser&&
+    (typeof currentUser==='undefined'||profileTargetUser!==currentUser?.username))return;
+ if(!badgeCache.has(user)){
+   badgeCache.set(user,null);
+   try{
+     const {data,error}=await api().rpc('komi_referral',{p_action:'status'});
+     if(error)throw error;
+     badgeCache.set(user,data?.rewarded?'Приглашённый друг':data?.invite_count?'Пригласил друзей':'');
+   }catch{badgeCache.delete(user);return}
+ }
+ const label=badgeCache.get(user);
+ if(!label||owner()!==user||!profile.isConnected)return;
+ const badge=node('span','✧ '+label,'komi-lab-note');
+ badge.dataset.komiReferralBadge='1';
+ badge.style.cssText='display:inline-block;padding:8px;border:1px solid #ffffff2b;border-radius:9px';
+ profile.append(badge);
 }
 try{const code=new URL(location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('komi_referral_pending',code)}catch{}
 function mount(){
@@ -179,7 +185,7 @@ const main=document.getElementById('mainContainer');if(main)new MutationObserver
 if(api()?.auth?.onAuthStateChange){
  api().auth.onAuthStateChange((event,session)=>{
   if(session?.user)setTimeout(()=>void claimPendingReferral(),0);
-  else {referralClaimTried='';badgeOwner=''}
+  else {referralClaimTried='';badgeCache.clear()}
  });
 }
 setTimeout(()=>void claimPendingReferral(),1000);
