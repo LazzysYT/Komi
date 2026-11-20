@@ -4,7 +4,7 @@ const fs=require('node:fs');
 const path=require('node:path');
 const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
 const html=read('index.html'), app=read('app-main.js');
-const css=read('mono-ui.css'), poster=read('api/poster.js');
+const css=read('mono-ui.css'), hubCss=read('komi-media-hub.css'), poster=read('api/poster.js');
 
 test('guest first paint includes indexable catalog and never ships admin editor UI',()=>{
   const cards=html.match(/class="anime-card komi-seo-card"/g)||[];
@@ -12,7 +12,7 @@ test('guest first paint includes indexable catalog and never ships admin editor 
   assert.doesNotMatch(html,/id="(?:addAnimeBtn|adminPanelBtn|addModal|adminModal)"/);
   assert.match(app,/const isAdmin = Boolean\(currentUser\?\.authUserId && komiAdminVerified\)/);
   assert.match(html,/id="komiHeaderAniCoin"[^>]*\bhidden\b/);
-  assert.match(css,/not\(\.komi-authenticated\) \.komi-side-nav #notifBellBtn/);
+  assert.match(hubCss,/not\(\.komi-authenticated\) \.komi-side-nav #notifBellBtn/);
   assert.doesNotMatch(html,/Email или старый никнейм Komi|Email для безопасной регистрации/);
   assert.match(poster,/s-maxage=\d+/);
 });
