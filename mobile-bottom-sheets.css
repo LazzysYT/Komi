@@ -57,10 +57,10 @@
   }
   /* Choose audio from the sheet instead of the tiny native select.
      Keep the underlying select and its existing change handler intact. */
-  #watchModal .komi-watch-source {display:none!important;}
-  #watchModal .komi-v4-source-menu {display:none!important;}
-  #watchModal .komi-watch-stage > .komi-watch-sidebar {display:none!important;}
-  #watchModal.komi-episodes-collapsed .komi-watch-stage > .komi-watch-sidebar {display:none!important;}
+  html.komi-mobile-sheets-ready #watchModal .komi-watch-source {display:none!important;}
+  html.komi-mobile-sheets-ready #watchModal .komi-v4-source-menu {display:none!important;}
+  html.komi-mobile-sheets-ready #watchModal .komi-watch-stage > .komi-watch-sidebar {display:none!important;}
+  html.komi-mobile-sheets-ready #watchModal.komi-episodes-collapsed .komi-watch-stage > .komi-watch-sidebar {display:none!important;}
 
   .komi-mobile-sheet-layer,
   #watchModal .komi-mobile-sheet-layer {
