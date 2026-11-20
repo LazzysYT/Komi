@@ -149,11 +149,22 @@
             video.muted = false;
             renderVolume();
         });
-        pip.hidden = !document.pictureInPictureEnabled || typeof video.requestPictureInPicture !== 'function';
+        const standardPiP = document.pictureInPictureEnabled === true &&
+            typeof video.requestPictureInPicture === 'function';
+        const safariPiP = typeof video.webkitSupportsPresentationMode === 'function' &&
+            typeof video.webkitSetPresentationMode === 'function' &&
+            video.webkitSupportsPresentationMode('picture-in-picture');
+        pip.hidden = !standardPiP && !safariPiP;
         listen(pip, 'click', async () => {
             try {
-                if (document.pictureInPictureElement === video) await document.exitPictureInPicture();
-                else await video.requestPictureInPicture();
+                if (standardPiP) {
+                    if (document.pictureInPictureElement === video) await document.exitPictureInPicture();
+                    else await video.requestPictureInPicture();
+                } else if (safariPiP) {
+                    video.webkitSetPresentationMode(
+                        video.webkitPresentationMode === 'picture-in-picture' ? 'inline' : 'picture-in-picture');
+                    pip.setAttribute('aria-pressed', String(video.webkitPresentationMode === 'picture-in-picture'));
+                }
             } catch {
                 if (signal.aborted || failed) return;
                 message.textContent = 'Режим «Картинка в картинке» сейчас недоступен.';
@@ -162,6 +173,8 @@
         });
         listen(video, 'enterpictureinpicture', () => pip.setAttribute('aria-pressed', 'true'));
         listen(video, 'leavepictureinpicture', () => pip.setAttribute('aria-pressed', 'false'));
+        listen(video, 'webkitpresentationmodechanged', () =>
+            pip.setAttribute('aria-pressed', String(video.webkitPresentationMode === 'picture-in-picture')));
         listen(document, 'pointerdown', event => {
             if (settings.open && !settings.contains(event.target)) settings.open = false;
         });
