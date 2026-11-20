@@ -61,6 +61,7 @@ jobs:
           node scripts/player-ux-browser.cjs
           node scripts/cloud-watched-browser.cjs
           node scripts/mobile-tab-bar-browser.cjs
+          node scripts/mobile-bottom-sheets-browser.cjs
           node scripts/browser-smoke.cjs
           node scripts/static-anchors-browser.cjs
           node scripts/static-ui-events-browser.cjs
