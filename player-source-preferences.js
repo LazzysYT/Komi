@@ -6,10 +6,22 @@
     const MAX_CHOICES = 80;
     function validName(value) {
         return typeof value === 'string' && value.trim().length > 0 &&
-            value.length <= 120 && !/[<>\u0000-\u001f]/.test(value);
+            value.length <= 120 && !/[<>\u0000-\u001f]/.test(value) &&
+            !['__proto__','constructor','prototype'].includes(value);
     }
     function validAnimeId(id) {
         return /^[1-9][0-9]{0,14}$/.test(String(id)) && Number.isSafeInteger(Number(id));
+    }
+    function voiceIdentity(value) {
+        return String(value || '').replace(/^Без рекламы\s*·\s*/i, '')
+            .replace(/\s+\([2-9][0-9]*\)$/,'').trim().toLocaleLowerCase('ru-RU');
+    }
+    function bestMatch(name, choices) {
+        if (!validName(name)) return '';
+        const options = Array.isArray(choices) ? choices.filter(validName) : [];
+        if (options.includes(name)) return name;
+        const normalized = voiceIdentity(name);
+        return options.find(option => voiceIdentity(option) === normalized) || '';
     }
     function readCounts() {
         let data;
@@ -20,19 +32,22 @@
             validName(name) && Number.isSafeInteger(count) && count > 0 && count <= 100000));
     }
     function globalFavorite(available) {
-        const choices = new Set(Array.isArray(available) ? available.filter(validName) : []);
-        const entries = Object.entries(readCounts()).filter(([name]) => choices.has(name));
-        entries.sort((a,b) => b[1] - a[1] || a[0].localeCompare(b[0],'ru'));
-        return entries[0]?.[0] || '';
+        const choices = Array.isArray(available) ? available.filter(validName) : [];
+        const entries = Object.entries(readCounts())
+            .map(([name,count]) => ({name:bestMatch(name,choices), count}))
+            .filter(item => item.name);
+        entries.sort((a,b) => b.count - a.count || a.name.localeCompare(b.name,'ru'));
+        return entries[0]?.name || '';
     }
     function preferredFor(animeId, available) {
         if (!validAnimeId(animeId)) return {name:'',kind:'none'};
-        const options = new Set(Array.isArray(available) ? available.filter(validName) : []);
+        const options = Array.isArray(available) ? available.filter(validName) : [];
         let stored = '';
         try { stored = root.localStorage?.getItem('komi_source_' + animeId) || ''; }
         catch {}
-        if (validName(stored) && options.has(stored)) return {name:stored,kind:'title'};
-        const global = globalFavorite([...options]);
+        const titleChoice = bestMatch(stored, options);
+        if (titleChoice) return {name:titleChoice,kind:'title'};
+        const global = globalFavorite(options);
         return global ? {name:global,kind:'global'} : {name:'',kind:'none'};
     }
     function recordChoice(animeId, name) {
