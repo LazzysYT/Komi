@@ -89,7 +89,9 @@ function bindKomiPlayer(animeId, season, index, raw, progressIndex = index) {
     });
     video.addEventListener('timeupdate', () => saveProgress(animeId, video));
     for (const event of ['pause', 'seeked']) video.addEventListener(event, () => saveProgress(animeId, video, true));
-    video.addEventListener('ended', () => { saveProgress(animeId, video, true); playNextEp(animeId, season, index); });
+    // The UX layer owns the opt-in 5-second next-episode countdown.
+    // Never jump immediately on ended: that bypasses the user's cancel action.
+    video.addEventListener('ended', () => saveProgress(animeId, video, true));
     video.komiControls = window.mountKomiPlaybackControls?.(video);
     const showError = () => {
         showKomiPlayerError(video);
