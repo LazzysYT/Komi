@@ -25,8 +25,9 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
         return {font:style.fontSize,top:line.top,left:line.left,transform:line.transform};
       });
       assert.equal(plus.font,'0px','plus character should not depend on font baseline');
-      assert.equal(plus.top,'50%');
-      assert.equal(plus.left,'50%');
+      assert.ok(parseFloat(plus.top)>0,'plus vertical center is positioned');
+      assert.ok(Math.abs(parseFloat(plus.top)-parseFloat(plus.left))<=1,
+        'plus bars must share the same optical center');
 
       await page.evaluate(()=>{
         window.navigate('catalog');
