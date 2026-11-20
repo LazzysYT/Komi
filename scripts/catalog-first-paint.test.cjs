@@ -31,9 +31,11 @@ function fixture(secondValue){
       }
    },
    animeList:[],catalogInitialLoadComplete:false,catalogInitialLoadFailed:false,
+   komiHomeCatalogReady:false,komiHomePreviewCatalog:null,currentView:'home',
+   window:{KomiHomeSnapshot:{write(){}}},komiAnimeYear:a=>a.year,komiCatalogType:a=>a.type,
    currentUser:null,animeComments:{},userProfiles:{},userAnimeStatuses:{},
    userFriends:{},userNotifications:{},localStorage:{getItem(){return null;}},
-   render(){renders.push({loaded:context.catalogInitialLoadComplete,count:context.animeList.length})},
+   render(){renders.push({loaded:context.catalogInitialLoadComplete,count:context.animeList.length,ready:context.komiHomeCatalogReady})},
    updateNotificationsUI(){},
    setTimeout(fn,ms){timers.push(ms);return 1;},
    console:{log(){},warn(){},error(e){errors.push(String(e));}},
@@ -43,11 +45,12 @@ function fixture(secondValue){
  return {context,renders,calls,timers,errors,resolveSecond,run:()=>vm.runInContext('loadDataFromCloud()',context)};
 }
 
-test('first 48 cards become visible before later API pages resolve',async()=>{
+test('the first 48 IDs load for catalog/search but never render a temporary home hero',async()=>{
  const x=fixture();
  const pending=x.run();
  await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(x.renders[0],{loaded:true,count:48});
+ assert.equal(x.renders.length,0,'Home hero must remain on SEO first paint during partial scan');
+ assert.equal(x.context.animeList.length,48);
  assert.equal(x.calls[0],48);
  assert.equal(x.calls[1],500);
  assert.equal(x.context.catalogInitialLoadComplete,true);
@@ -55,15 +58,15 @@ test('first 48 cards become visible before later API pages resolve',async()=>{
  x.resolveSecond({data:later,error:null});
  await pending;
  assert.equal(x.context.animeList.length,50);
- assert.deepEqual(x.renders.at(-1),{loaded:true,count:50});
+ assert.deepEqual(x.renders.at(-1),{loaded:true,count:50,ready:true});
  assert.equal(x.context.catalogInitialLoadFailed,false);
 });
 
-test('failed later page keeps first 48 rendered rather than reverting to skeleton',async()=>{
+test('failed later page preserves partial data while SEO first paint stays stable during retry',async()=>{
  const x=fixture({data:null,error:{message:'later page offline'}});
  await x.run();
  assert.equal(x.context.catalogInitialLoadComplete,true);
  assert.equal(x.context.animeList.length,48);
- assert.ok(x.renders.every(result=>result.loaded));
+ assert.ok(x.renders.every(result=>result.loaded && !result.ready));
  assert.deepEqual(x.timers,[2000]);
 });

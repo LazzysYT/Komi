@@ -20,7 +20,8 @@ const technical='google_307c6306cdcb490d908646046af07c61';
 test('header shows saved site nickname instead of a Google technical identity',()=>{
   assert.equal(visible(technical,{displayName:'KomiFan'},true),'KomiFan');
   assert.equal(visible(technical,{displayName:'  МойНик  '},true),'МойНик');
-  assert.match(app,/name\.textContent = komiVisibleUsername\(username, p, true\)/);
+  assert.match(app,/const visibleName = komiVisibleUsername\(username, p, true\)/);
+  assert.match(app,/name\.textContent = visibleName/);
   assert.match(app,/name\.className = 'komi-header-username'/);
 });
 
@@ -41,7 +42,8 @@ test('public name stays display-only, never becomes an ownership key or HTML mar
   assert.equal(visible(technical,{displayName:'<img src=x onerror=alert(1)>'},true),
                '<img src=x onerror=alert(1)>');
   // Header renders with textContent and profile markup escapes untrusted values.
-  assert.match(app,/name\.textContent = komiVisibleUsername/);
+  assert.match(app,/const visibleName = komiVisibleUsername/);
+  assert.match(app,/name\.textContent = visibleName/);
   assert.match(app,/\$\{safeProfileText\(komiVisibleUsername\(username, p, isMe\)\)\}/);
   assert.match(app,/currentUser = \{ username, authProvider:/);
   assert.match(app,/komiSafeAccountUsername\(username, session\.user\.id\)/);
