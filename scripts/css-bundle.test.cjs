@@ -5,12 +5,22 @@ const fs=require('node:fs');
 const path=require('node:path');
 const root=path.resolve(__dirname,'..');
 const {sources,buildCSS}=require('./build-css.cjs');
-test('media hub stylesheet follows the single generated bundle, with no inline head CSS',()=>{
+test('generated bundle leads the explicit, versioned mobile override cascade',()=>{
   const head=fs.readFileSync(path.join(root,'index.html'),'utf8').split('</head>')[0];
-  const local=[...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*>/g)]
-    .filter(m=>!m[0].includes('fonts.googleapis.com'));
-  assert.equal(local.length,1,'All local CSS layers are bundled into one request');
-  assert.match(local[0][0],/href="\/komi\.bundle\.css\?v=\d+[a-z]"/);
+  const local=[...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"]+)"/g)]
+    .map(match=>match[1].split('?')[0]);
+  const expected=[
+    '/komi.bundle.css',
+    '/mobile-home-polish.css',
+    '/mobile-catalog-dock.css',
+    '/catalog-comfort.css',
+    '/player-comfort.css',
+    '/mobile-bottom-sheets.css'
+  ];
+  assert.deepEqual(local,expected,'Last-loaded mobile layers must preserve deliberate cascade order');
+  assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
+  for(const filename of expected) assert.ok(fs.existsSync(path.join(root,filename.slice(1))),filename+' missing');
+  assert.match(head,/href="\/komi\.bundle\.css\?v=\d+[a-z]"/);
   assert.doesNotMatch(head,/<style(?:\s|>)/i);
   assert.match(head,/fonts\.googleapis\.com/);
 });
