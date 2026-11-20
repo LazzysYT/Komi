@@ -173,6 +173,11 @@ let catalogRefreshSince = new Date().toISOString();
 let catalogRefreshInProgress = false;
 let catalogInitialLoadComplete = false;
 let catalogInitialLoadFailed = false;
+// A page of 48 IDs is not a representative home catalog. Never paint its
+// temporary hero: keep SEO first paint or the last complete public preview.
+let komiHomeCatalogReady = false;
+let komiHomePreviewCatalog = null;
+let komiLastHomeMarkup = null;
 let komiSeoDeepLinkOpened = false;
 function komiMaybeOpenSeoAnime() {
     if (komiSeoDeepLinkOpened) return;
@@ -224,20 +229,23 @@ async function loadDataFromCloud(attempt = 0) {
                 });
             }
             lastId = rows[rows.length - 1].shikimori_id;
-            // Display the first 48 cards immediately; later pages load without blocking UI.
-            // Keep the in-memory search collection growing while the remaining pages arrive.
+            // Allow catalog/search to use the first batch, but never rebuild the
+            // home carousel from 48 low-ID records: the final selection differs.
             if (catalog.length) {
-                animeList = catalog.slice();
+                if (!komiHomePreviewCatalog || currentView !== 'home') animeList = catalog.slice();
                 if (typeof komiMaybeOpenSeoAnime === 'function') komiMaybeOpenSeoAnime();
                 if (!catalogInitialLoadComplete) {
                     catalogInitialLoadComplete = true;
-                    render();
+                    if (currentView !== 'home') render();
                 }
             }
             if (rows.length < pageSize) break;
         }
         animeList = catalog;
         catalogInitialLoadComplete = true;
+        komiHomeCatalogReady = true;
+        komiHomePreviewCatalog = null;
+        window.KomiHomeSnapshot?.write(animeList, komiAnimeYear, komiCatalogType);
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
         console.error('Ошибка загрузки каталога:', err);
@@ -246,6 +254,10 @@ async function loadDataFromCloud(attempt = 0) {
             setTimeout(() => loadDataFromCloud(attempt + 1), 2000 * 2 ** attempt);
         } else {
             catalogInitialLoadFailed = true;
+            // If the scan stopped after some real records, do not leave the
+            // crawlable first-paint homepage permanently waiting for the rest.
+            if (!komiHomePreviewCatalog && catalogInitialLoadComplete)
+                komiHomeCatalogReady = true;
         }
     }
     render();
@@ -929,20 +941,27 @@ async function loadDataFromCloud(attempt = 0) {
             if (currentUser) {
                 const username = String(currentUser.username || '');
                 const p = userProfiles[username] || {};
+                const visibleName = komiVisibleUsername(username, p, true);
+                const avatar = String(p.avatar || '');
+                const headerKey = [currentUser.authUserId || '', username, visibleName, avatar].join('|');
+                // Do not replace an existing avatar/button on unrelated renders.
+                if (area.dataset.komiHeaderKey === headerKey && area.querySelector('.user-pill')) {
+                    updateNotificationsUI();
+                    return;
+                }
                 const pill = document.createElement('div');
                 pill.className = 'user-pill';
                 pill.addEventListener('click', () => { playSound(); openProfile(username); });
                 const img = document.createElement('img');
                 img.className = 'user-avatar-small';
                 img.alt = 'Аватар пользователя';
-                const avatar = String(p.avatar || '');
                 img.src = /^https:\/\//i.test(avatar)
                     ? avatar : 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(username);
                 img.onerror = () => { img.onerror = null; img.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback'; };
                 const name = document.createElement('span');
                 name.className = 'komi-header-username';
-                name.textContent = komiVisibleUsername(username, p, true);
-                name.title = name.textContent;
+                name.textContent = visibleName;
+                name.title = visibleName;
                 const logout = document.createElement('button');
                 logout.type = 'button';
                 logout.textContent = 'Выйти';
@@ -952,9 +971,13 @@ async function loadDataFromCloud(attempt = 0) {
                 logout.addEventListener('click', event => { event.stopPropagation(); logoutUser(); });
                 pill.append(img, name, logout);
                 area.replaceChildren(pill);
+                area.dataset.komiHeaderKey = headerKey;
                 updateNotificationsUI();
             } else {
-                area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" data-komi-onclick="playSound(); openAuthModal('login')">Войти</button>`;
+                if (area.dataset.komiHeaderKey !== 'guest' || !area.querySelector('button.nav-btn')) {
+                    area.innerHTML = `<button class="nav-btn" style="border: 1px solid var(--border);" data-komi-onclick="playSound(); openAuthModal('login')">Войти</button>`;
+                    area.dataset.komiHeaderKey = 'guest';
+                }
             }
         }
 
@@ -1031,7 +1054,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (!container) return;
             
             if (currentView === 'home') {
-                if (!catalogInitialLoadComplete) {
+                if (!komiHomeCatalogReady && !komiHomePreviewCatalog) {
                     // Keep crawlable, real card links visible until the live catalog is ready.
                     if (!catalogInitialLoadFailed && container.querySelector('.komi-seo-card')) return;
                     clearInterval(slideInterval);
@@ -1050,8 +1073,9 @@ async function loadDataFromCloud(attempt = 0) {
                          slide.querySelector('img')?.dataset.posterDirect || '',
                          slide.querySelector('h1')?.textContent || ''].join('|')).join('::');
                     const oldHeroSignature = previousHero ? heroSignature(previousHero) : '';
-                    container.innerHTML = window.KomiHomeDiscovery.render({
-                        animeList, currentUser, progress:komiEpisodeProgress,
+                    const homeMarkup = window.KomiHomeDiscovery.render({
+                        animeList: komiHomeCatalogReady ? animeList : komiHomePreviewCatalog,
+                        currentUser, progress:komiEpisodeProgress,
                         currentSlideIndex, renderCard, year:komiAnimeYear,
                         type:komiCatalogType, artwork:animeArtwork,
                         describe:cleanAnimeDescription,
@@ -1059,6 +1083,12 @@ async function loadDataFromCloud(attempt = 0) {
                         calendar:komiReleaseCalendar, years:komiYearSections,
                         intro:komiIntroMarkup, quickFilters:komiHomeQuickFiltersMarkup
                     });
+                    // Repeated session/folder/notification refreshes must not destroy
+                    // loaded images, carousel focus or the user's scroll position.
+                    if (komiLastHomeMarkup === homeMarkup &&
+                        container.querySelector('.komi-home-discovery')) return;
+                    komiLastHomeMarkup = homeMarkup;
+                    container.innerHTML = homeMarkup;
                     const nextHero = container.querySelector('.komi-home-hero');
                     const heroOwner = currentUser?.authUserId || '';
                     if (nextHero && previousHero && previousOwner === heroOwner &&
@@ -4524,6 +4554,16 @@ async function loadDataFromCloud(attempt = 0) {
         }
         window.addEventListener('hashchange', applyKomiHashRoute);
 
+        // Return visits paint the last complete PUBLIC home selection immediately.
+        // Never read user progress/avatars from this cache; Supabase auth restores those.
+        if (currentView === 'home' && !new URLSearchParams(location.search).has('anime')) {
+            const cached = window.KomiHomeSnapshot?.read();
+            if (cached?.length) {
+                komiHomePreviewCatalog = cached;
+                animeList = cached;
+                catalogInitialLoadComplete = true;
+            }
+        }
         render();
         loadDataFromCloud();
         // Broadcast dates can load in parallel with the 6,000+ item catalog.
