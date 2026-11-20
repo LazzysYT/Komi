@@ -136,6 +136,11 @@
 
   function recentProgress(context, animeList) {
     if (!context.currentUser?.authUserId) return [];
+    // During initial hydration the 150-card public preview cannot resolve the
+    // owner's whole watch list. Show only the last COMPLETE verified snapshot,
+    // never a misleading partial row which reorders a moment later.
+    if (!context.resumeReady)
+      return Array.isArray(context.resumePreview) ? context.resumePreview.slice(0, 8) : [];
     const prefix = context.currentUser.username + '_';
     const lookup = new Map(animeList.map(anime => [String(anime.id), anime]));
     return Object.entries(context.progress || {})
@@ -174,7 +179,16 @@
   }
 
   function continueShelf(recent, context) {
-    if (!recent.length) return '';
+    if (!recent.length) {
+      if (!context.currentUser?.authUserId || context.resumeReady) return '';
+      // Same geometry as real cards; placeholders avoid an empty-to-full shift.
+      return '<section class="komi-home-shelf komi-home-continue komi-feature-section komi-resume-loading" aria-busy="true">' +
+        '<div class="komi-home-heading"><h2>Продолжить просмотр</h2></div>' +
+        '<div class="komi-home-progress-rail">' +
+        '<div class="komi-home-progress-card komi-resume-placeholder" aria-hidden="true">' +
+        '<span class="komi-home-progress-art"></span><span class="komi-home-progress-details"></span></div>'.repeat(6) +
+        '</div></section>';
+    }
     return '<section class="komi-home-shelf komi-home-continue komi-feature-section">' +
       '<div class="komi-home-heading"><h2>Продолжить просмотр</h2></div>' +
       '<div class="komi-home-progress-rail">' + recent.map(({anime, p}, index) => {
@@ -289,5 +303,5 @@
       community.dataset.metric=selected;
     });
   }
-  root.KomiHomeDiscovery = {render,afterRender};
+  root.KomiHomeDiscovery = {render,afterRender,recentProgress};
 })(globalThis);

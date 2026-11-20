@@ -5340,6 +5340,31 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
   background: #1b1b1e url("/anime-artwork.svg") center / cover no-repeat;
 }
 
+/* Verified watch history: maintain the rail's geometry while Supabase and
+ * the full public catalog finish hydrating. Never display partial histories. */
+.komi-media-hub .komi-home-continue .komi-resume-placeholder {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 204px;
+  pointer-events: none;
+  background: var(--hub-panel, #151518);
+}
+.komi-media-hub .komi-home-continue .komi-resume-placeholder .komi-home-progress-art {
+  display: block;
+  flex: 0 0 auto;
+  width: 100%;
+  background: #1b1c22;
+}
+.komi-media-hub .komi-home-continue .komi-resume-placeholder .komi-home-progress-details {
+  display: block;
+  width: 64%;
+  height: 11px;
+  margin: 7px 12px 3px;
+  border-radius: 8px;
+  background: rgba(255,255,255,.09);
+}
+
 
 /* --- komi-black-white.css --- */
 /* KomiAnime — black & white UI theme, 2026-11-18.

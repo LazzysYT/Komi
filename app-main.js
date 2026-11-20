@@ -140,6 +140,19 @@
         let userFavorites = {};
         let userWatchHistory = {};
         let komiEpisodeProgress = {};
+        // Owner-scoped resume UI state. Public catalog previews intentionally
+        // omit private watch history; account cache is read after verified auth.
+        let komiResumeReadyUid = null;
+        let komiResumePreview = [];
+        function komiStoreReadyResume() {
+            const uid = currentUser?.authUserId;
+            if (!uid || !komiHomeCatalogReady || komiResumeReadyUid !== uid) return;
+            const entries = window.KomiHomeDiscovery?.recentProgress({
+                currentUser, progress:komiEpisodeProgress, resumeReady:true
+            }, animeList) || [];
+            window.KomiResumeCache?.write(uid, entries);
+            komiResumePreview = entries;
+        }
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
@@ -285,6 +298,7 @@ async function loadDataFromCloud(attempt = 0) {
         komiHomeCatalogReady = true;
         komiHomePreviewCatalog = null;
         window.KomiHomeSnapshot?.write(animeList, komiAnimeYear, komiCatalogType);
+        komiStoreReadyResume();
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
         console.error('Ошибка загрузки каталога:', err);
@@ -1022,6 +1036,11 @@ async function loadDataFromCloud(attempt = 0) {
 
         function clearKomiAccountData(user) {
             if (!user?.authUserId) return;
+            // Never retain the previous owner's watch cards after signing out
+            // or switching authenticated accounts.
+            window.KomiResumeCache?.clear(user.authUserId);
+            komiResumeReadyUid = null;
+            komiResumePreview = [];
             notificationRequest++;
             accountNotifications = { owner: null, rows: [], count: 0 };
             document.getElementById("notifDropdown")?.classList.remove("active");
@@ -1093,6 +1112,15 @@ async function loadDataFromCloud(attempt = 0) {
             if (!container) return;
             
             if (currentView === 'home') {
+                // Before Supabase resolves the account, preserve the SEO first
+                // paint. Do not briefly render an anonymous home that is then
+                // replaced with the user's authenticated watch history.
+                if (_supabase && !komiSessionResolved) {
+                    if (!container.querySelector('.komi-seo-card') &&
+                        komiSeoFirstPaintMarkup.includes('komi-seo-card'))
+                        container.innerHTML = komiSeoFirstPaintMarkup;
+                    return;
+                }
                 if (!komiHomeCatalogReady && !komiHomePreviewCatalog) {
                     // Keep crawlable, real card links visible until the live catalog is ready.
                     if (container.querySelector('.komi-seo-card')) return;
@@ -1119,6 +1147,9 @@ async function loadDataFromCloud(attempt = 0) {
                     const homeMarkup = window.KomiHomeDiscovery.render({
                         animeList: komiHomeCatalogReady ? animeList : komiHomePreviewCatalog,
                         currentUser, progress:komiEpisodeProgress,
+                        resumeReady: Boolean(currentUser?.authUserId &&
+                            komiHomeCatalogReady && komiResumeReadyUid === currentUser.authUserId),
+                        resumePreview:komiResumePreview,
                         currentSlideIndex, renderCard, year:komiAnimeYear,
                         type:komiCatalogType, artwork:animeArtwork,
                         describe:cleanAnimeDescription,
@@ -3297,8 +3328,9 @@ async function loadDataFromCloud(attempt = 0) {
                         closeWatchModal();
                         await leaveWatchPartyRoom();
                         saveData();
-                        render();
                     }
+                    // Auth resolution is the signal to paint the anonymous home.
+                    render();
                     return;
                 }
                 const username = googleProfileName(session.user);
@@ -3319,6 +3351,8 @@ async function loadDataFromCloud(attempt = 0) {
                 }
                 // Verified Supabase sessions take precedence; legacy browser data is retained.
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
+                komiResumeReadyUid = null;
+                komiResumePreview = window.KomiResumeCache?.read(session.user.id) || [];
                 updateNotificationsUI();
                 // Show the account immediately from the same UID's verified avatar cache.
                 // Do not render the Google placeholder before reading its saved profile.
@@ -3342,6 +3376,9 @@ async function loadDataFromCloud(attempt = 0) {
                     if (cached) userProfiles[username].avatar = cached;
                 }
                 renderHeaderUser();
+                // Display the prior complete owned history immediately after UID
+                // verification; profile and database queries can continue in parallel.
+                if (currentView === 'home') render();
                 try {
                     const { data: savedProfile, error: profileError } = await _supabase.from('komi_profiles').select('display_name,avatar_url,bio,created_at').eq('user_id', session.user.id).maybeSingle();
                     if (profileError) console.warn('Profile load:', profileError.message);
@@ -3727,6 +3764,8 @@ async function loadDataFromCloud(attempt = 0) {
                     komiEpisodeProgress[key] = value;
                     userWatchHistory[key] = value.time;
                 }
+                komiResumeReadyUid = uid;
+                komiStoreReadyResume();
             }
             render();
             komiHydrateSavedAnimeCards(uid)
@@ -3834,6 +3873,7 @@ async function loadDataFromCloud(attempt = 0) {
             komiEpisodeProgress[key] = {season:Math.max(1,Math.floor(KomiPlayerCore.finite(season))),index:Math.floor(KomiPlayerCore.finite(index)),time:KomiPlayerCore.finite(time),duration:KomiPlayerCore.finite(duration),updated:Date.now()};
             userWatchHistory[key] = komiEpisodeProgress[key].time;
             saveData();
+            komiStoreReadyResume();
             if (currentUser?.authUserId) persistAuthenticatedProgress(animeId, komiEpisodeProgress[key]);
         }
         function komiPlayerKind(url) {

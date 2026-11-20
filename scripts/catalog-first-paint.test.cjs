@@ -32,6 +32,7 @@ function fixture(secondValue){
    },
    animeList:[],catalogInitialLoadComplete:false,catalogInitialLoadFailed:false,
    komiHomeCatalogReady:false,komiHomePreviewCatalog:null,currentView:'home',
+   komiStoreReadyResume(){},
    window:{KomiHomeSnapshot:{write(){}}},komiAnimeYear:a=>a.year,komiCatalogType:a=>a.type,
    currentUser:null,animeComments:{},userProfiles:{},userAnimeStatuses:{},
    userFriends:{},userNotifications:{},localStorage:{getItem(){return null;}},
