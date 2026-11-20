@@ -2596,6 +2596,12 @@ async function loadDataFromCloud(attempt = 0) {
             const episode = progress?.updated && Number.isSafeInteger(progressIndex) && progressIndex >= 0 ? progressIndex + 1 : null;
             const statusText = safeStatus + (safeStatus === 'Смотрю' && episode ? ' · ' + episode + ' серия' : '');
             const statusMarkup = safeStatus ? '<span class="komi-card-status" title="' + escapeFriendHtml(statusText) + '">' + escapeFriendHtml(statusText) + '</span>' : '';
+            const quickStatusMarkup = '<div class="komi-card-quick" data-komi-quick-id="' + escapeFriendHtml(id) + '">' +
+                '<button type="button" class="komi-card-quick-toggle" data-komi-quick-open aria-label="В список: '+name+'" aria-haspopup="true" aria-expanded="false" title="Добавить в список">+</button>' +
+                '<div class="komi-card-quick-menu" role="group" aria-label="Выбрать статус для '+name+'">' +
+                ['Смотрю','В планах','Просмотрено'].map(option =>
+                    '<button type="button" data-komi-quick-status="' + option + '" aria-pressed="' + (status===option) + '">' + option + '</button>'
+                ).join('') + '</div></div>';
             const posterSource=komiCardPosterSource(anime.poster || anime.banner);
             const poster=escapeFriendHtml(posterSource.preferred);
             const posterDirectAttr=posterSource.direct ? ' data-poster-direct="'+escapeFriendHtml(posterSource.direct)+'"' : '';
@@ -2606,7 +2612,7 @@ async function loadDataFromCloud(attempt = 0) {
             return '<div class="anime-card" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
                 'data-komi-onclick="playSound();openWatchModal(\''+id+'\')" data-komi-onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
-                '<div class="anime-poster-box">'+statusMarkup+
+                '<div class="anime-poster-box">'+statusMarkup+quickStatusMarkup+
                     '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterDirectAttr+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
