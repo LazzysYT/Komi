@@ -677,6 +677,83 @@ async function loadDataFromCloud(attempt = 0) {
         }
         let catalogCollection = 'all';
         const komiCollections = {all:'Все аниме', recent:'Свежие серии', short:'На один вечер', movies:'Фильмы', best:'Высокая оценка'};
+        // Catalog state belongs to the URL; only the return position belongs to this tab.
+        const komiCatalogStorageKey = 'komi.catalog.position.v1';
+        let komiHideWatched = false;
+        let komiCatalogRestorePending = location.hash === '#catalog';
+        let komiCatalogScrollTimer = 0;
+        function komiReadCatalogUrl() {
+            const query = new URLSearchParams(location.search);
+            const genre = query.get('genre');
+            const year = query.get('year');
+            const type = query.get('type');
+            const sort = query.get('sort');
+            const collection = query.get('collection');
+            catalogFilterGenre = genre && availableGenresList.includes(genre) ? genre : 'Все';
+            catalogFilterYear = year && /^(?:19|20)[0-9]{2}$/.test(year) ? year : 'Все';
+            catalogFilterType = ['Сериал','Фильм','OVA','ONA','Special'].includes(type) ? type : 'Все';
+            catalogSort = ['popular','updated','rating','year','alphabet'].includes(sort) ? sort : 'popular';
+            catalogCollection = Object.hasOwn(komiCollections, collection) ? collection : 'all';
+            catalogSearchQuery = String(query.get('q') || '').slice(0,120);
+            komiHideWatched = query.get('hide') === '1';
+        }
+        function komiCatalogRoute() {
+            const query = new URLSearchParams();
+            if (catalogFilterGenre !== 'Все') query.set('genre', catalogFilterGenre);
+            if (catalogFilterYear !== 'Все') query.set('year', catalogFilterYear);
+            if (catalogFilterType !== 'Все') query.set('type', catalogFilterType);
+            if (catalogSort !== 'popular') query.set('sort', catalogSort);
+            if (catalogCollection !== 'all') query.set('collection', catalogCollection);
+            if (catalogSearchQuery.trim()) query.set('q', catalogSearchQuery.trim());
+            if (komiHideWatched) query.set('hide', '1');
+            return '/' + (query.size ? '?' + query.toString() : '') + '#catalog';
+        }
+        function komiSyncCatalogUrl() {
+            if (currentView !== 'catalog') return;
+            const route = komiCatalogRoute();
+            if (location.pathname + location.search + location.hash !== route)
+                history.replaceState(history.state, '', route);
+        }
+        function komiCatalogSavedPosition() {
+            try {
+                const value = JSON.parse(sessionStorage.getItem(komiCatalogStorageKey) || '{}');
+                return value && value.url === location.search ? value : null;
+            } catch { return null; }
+        }
+        function komiStoreCatalogPosition() {
+            if (currentView !== 'catalog' || !catalogInitialLoadComplete) return;
+            try {
+                sessionStorage.setItem(komiCatalogStorageKey, JSON.stringify({
+                    url: location.search, y: Math.round(window.scrollY),
+                    visibleCount: catalogVisibleCount
+                }));
+            } catch {}
+        }
+        function komiCatalogStateChanged() {
+            catalogVisibleCount = 48;
+            komiCatalogRestorePending = false;
+            komiSyncCatalogUrl();
+            render();
+        }
+        function komiToggleHiddenWatched(checked) {
+            komiHideWatched = Boolean(checked);
+            komiCatalogStateChanged();
+        }
+        function komiRestoreCatalogPosition() {
+            if (!komiCatalogRestorePending) return;
+            komiCatalogRestorePending = false;
+            const saved = komiCatalogSavedPosition();
+            if (!saved || !Number.isFinite(saved.y)) return;
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+                if (currentView === 'catalog') window.scrollTo(0, Math.max(0, Math.min(saved.y, document.documentElement.scrollHeight)));
+            }));
+        }
+        window.addEventListener('scroll', () => {
+            if (currentView !== 'catalog') return;
+            clearTimeout(komiCatalogScrollTimer);
+            komiCatalogScrollTimer = setTimeout(komiStoreCatalogPosition, 160);
+        }, {passive:true});
+        window.addEventListener('pagehide', komiStoreCatalogPosition);
         function komiInCollection(anime, collection) {
             const episodes = Number(anime.episodeCount) || (Array.isArray(anime.episodes) ? anime.episodes.length : 0);
             if (collection === 'recent') return Number.isFinite(Date.parse(anime.lastEpisodeAddedAt));
@@ -790,15 +867,33 @@ async function loadDataFromCloud(attempt = 0) {
             document.getElementById('komiClearEpisodeSearch').hidden = !value;
             document.getElementById('komiEpisodeSearchStatus').textContent = count ? '' : 'Серия не найдена. Измените номер.';
         }
+        // Match the adjacent keyboard layout without rewriting what the user typed.
+        function komiSearchVariants(value) {
+            const query = String(value || '').trim().toLocaleLowerCase('ru-RU');
+            if (query.length < 3) return [query];
+            const en = "qwertyuiop[]asdfghjkl;'zxcvbnm,./";
+            const ru = 'йцукенгшщзхъфывапролджэячсмитьбю.';
+            const from = /[a-z]/.test(query) && !/[а-яё]/.test(query) ? en
+                : /[а-яё]/.test(query) && !/[a-z]/.test(query) ? ru : '';
+            if (!from) return [query];
+            const to = from === en ? ru : en;
+            const mapped = Array.from(query, char => {
+                const index = from.indexOf(char);
+                return index < 0 ? char : to[index];
+            }).join('');
+            return mapped !== query ? [query, mapped] : [query];
+        }
         function komiCatalogFiltered() {
-            const q=catalogSearchQuery.trim().toLocaleLowerCase('ru-RU');
+            const queries=komiSearchVariants(catalogSearchQuery).filter(Boolean);
             const filtered=animeList.filter(a=>{
                 if (!komiInCollection(a,catalogCollection)) return false;
+                if (komiHideWatched && currentUser?.authUserId &&
+                    ['Просмотрено','Брошено'].includes(userAnimeStatuses[currentUser.username]?.[String(a.id)])) return false;
                 const genres=Array.isArray(a.genres)?a.genres:[a.genre].filter(Boolean);
                 if(catalogFilterGenre!=='Все'&&!genres.includes(catalogFilterGenre))return false;
                 if(catalogFilterYear!=='Все'&&komiAnimeYear(a)!==String(catalogFilterYear))return false;
                 if(catalogFilterType!=='Все'&&komiCatalogType(a)!==catalogFilterType)return false;
-                if(q&&![a.title,a.originalTitle,a.english,a.japanese,...(Array.isArray(a.synonyms)?a.synonyms:[]),...genres].some(v=>String(v||'').toLocaleLowerCase('ru-RU').includes(q)))return false;
+                if(queries.length&&![a.title,a.originalTitle,a.english,a.japanese,...(Array.isArray(a.synonyms)?a.synonyms:[]),...genres].some(v=>queries.some(q=>String(v||'').toLocaleLowerCase('ru-RU').includes(q))))return false;
                 return true;
             });
             if(catalogSort==='popular')filtered.sort((a,b)=>
@@ -813,11 +908,11 @@ async function loadDataFromCloud(attempt = 0) {
         function komiCatalogChipsMarkup() {
             return ['Все', ...Array.from({length:3},(_,i)=>String(new Date().getFullYear()-i))].map(y=>'<button type="button" class="komi-catalog-chip'+(catalogFilterYear===y?' active':'')+'" data-komi-onclick="setKomiCatalogYear(\''+y+'\')">'+(y==='Все'?'Все годы':y)+'</button>').join('');
         }
-        function setKomiCatalogYear(year) {catalogFilterYear=String(year);catalogVisibleCount=48;render();}
+        function setKomiCatalogYear(year) {catalogFilterYear=String(year);komiCatalogStateChanged();}
         function komiResetCatalogFilters() {
             catalogCollection='all';
             catalogFilterGenre='Все';catalogFilterYear='Все';catalogFilterType='Все';
-            catalogSort='popular';catalogSearchQuery='';catalogVisibleCount=48;render();
+            catalogSort='popular';catalogSearchQuery='';komiHideWatched=false;komiCatalogStateChanged();
         }
         function komiRefreshCatalogGrid() {
             if(currentView!=='catalog')return;
@@ -837,6 +932,8 @@ async function loadDataFromCloud(attempt = 0) {
         function komiUpdateCatalogQuery(value){
             catalogSearchQuery=String(value||'').slice(0,120);
             catalogVisibleCount=48;
+            komiCatalogRestorePending=false;
+            komiSyncCatalogUrl();
             komiRefreshCatalogGrid();
         }
         function komiIntroMarkup(){
@@ -846,13 +943,26 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         let catalogVisibleCount = 48;
-        function showMoreCatalog() { catalogVisibleCount += 48; komiRefreshCatalogGrid(); }
+        if (currentView === 'catalog') {
+            komiReadCatalogUrl();
+            const saved = komiCatalogSavedPosition();
+            if (saved && Number.isFinite(saved.visibleCount))
+                catalogVisibleCount = Math.max(48, Math.min(2400, Math.ceil(saved.visibleCount / 48) * 48));
+        }
+        function showMoreCatalog() {
+            catalogVisibleCount += 48;
+            komiRefreshCatalogGrid();
+            komiStoreCatalogPosition();
+        }
 
         function navigate(view) {
+            if (currentView === 'catalog') komiStoreCatalogPosition();
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
             const route = view === 'premium' ? '#premium' : view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : view === 'partners' ? '#partners' : '';
-            if (location.pathname !== '/' || location.search || location.hash !== route) history.replaceState(null, '', '/' + route);
+            const target = view === 'catalog' ? komiCatalogRoute() : '/' + route;
+            if (location.pathname + location.search + location.hash !== target)
+                history.replaceState(history.state, '', target);
             render();
             renderHeaderUser();
         }
@@ -1333,6 +1443,10 @@ async function loadDataFromCloud(attempt = 0) {
                                 </select>
                             </div>
                         </div>
+                        <label class="komi-catalog-hide-switch" for="komiHideWatched">
+                            <input id="komiHideWatched" type="checkbox" ${komiHideWatched?'checked':''} data-komi-onchange="komiToggleHiddenWatched(this.checked)">
+                            <span>Скрыть просмотренное и брошенное</span>
+                        </label>
                         <button type="button" class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button>
                     </section>
                     <div class="komi-catalog-search">
@@ -1358,6 +1472,7 @@ async function loadDataFromCloud(attempt = 0) {
                         komiCatalogFocusPending = false;
                     }
                 }
+                komiRestoreCatalogPosition();
             } else if (currentView === 'partners') {
                 container.innerHTML = `
                     <section class="komi-partners-page" aria-labelledby="komiPartnersTitle">
@@ -2866,11 +2981,14 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterGenre = 'Все';
             catalogFilterYear = 'Все';
             catalogFilterType = 'Все';
+            catalogCollection = 'all';
+            komiCatalogRestorePending = false;
             closeSearchDropdown();
             if (currentView !== 'catalog') {
                 currentView = 'catalog';
                 render();
             }
+            komiSyncCatalogUrl();
             const field = document.getElementById('komiCatalogSearchInput');
             if (field) field.value = catalogSearchQuery;
             komiRefreshCatalogGrid();
@@ -2893,15 +3011,15 @@ async function loadDataFromCloud(attempt = 0) {
                 });
                 return;
             }
-            const query = input.trim().toLocaleLowerCase('ru-RU');
-            if (!query) {
+            const queries = komiSearchVariants(input).filter(Boolean);
+            if (!queries.length) {
                 dd.replaceChildren();
                 dd.classList.remove('active');
                 return;
             }
             const matches = animeList.filter(a=>a && [
                 a.title,a.originalTitle,...(Array.isArray(a.genres) ? a.genres : [])
-            ].some(v=>String(v || '').toLocaleLowerCase('ru-RU').includes(query)));
+            ].some(v=>queries.some(query=>String(v || '').toLocaleLowerCase('ru-RU').includes(query))));
             const results = matches.slice(0,8);
             if (results.length) {
                 dd.replaceChildren(...results.map(a=>komiSearchSuggestion(a)));
@@ -4634,7 +4752,11 @@ async function loadDataFromCloud(attempt = 0) {
                 if (typeof openAniCoinShop === 'function') openAniCoinShop();
                 else navigate('shop');
             } else if (hash === '#catalog') {
-                if (currentView !== 'catalog') { currentView='catalog'; render(); }
+                komiReadCatalogUrl();
+                komiCatalogRestorePending = true;
+                const saved = komiCatalogSavedPosition();
+                if (saved && Number.isFinite(saved.visibleCount)) catalogVisibleCount = Math.max(48, Math.min(2400, Math.ceil(saved.visibleCount / 48) * 48));
+                currentView='catalog'; render();
             } else if (hash === '#partners') {
                 if (currentView !== 'partners') { currentView='partners'; render(); }
             } else if (hash === '#profile') {
@@ -4655,6 +4777,7 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
         window.addEventListener('hashchange', applyKomiHashRoute);
+        window.addEventListener('popstate', applyKomiHashRoute);
 
         // Return visits paint the last complete PUBLIC home selection immediately.
         // Never read user progress/avatars from this cache; Supabase auth restores those.
