@@ -17,7 +17,7 @@
     <link rel="canonical" href="https://komianime.online/">
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
-    <link rel="stylesheet" href="/komi.bundle.css?v=20261120a">
+    <link rel="stylesheet" href="/komi.bundle.css?v=20261120b">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -421,7 +421,7 @@
 
     <div class="modal-overlay" id="randomRouletteModal">
         <div class="modal-content" style="max-width: 330px; text-align: center; padding: 24px;">
-            <h3 style="margin-bottom: 14px; font-size: 15px;">◇ Выбираем аниме...</h3>
+            <h3 style="margin-bottom: 14px; font-size: 15px;">Случайное аниме</h3>
             <div class="komi-roulette-filters" style="display:grid;gap:8px;margin:0 0 16px;text-align:left">
                 <label for="komiRouletteMood" style="font-size:12px;color:#ddd">Подобрать по настроению</label>
                 <select id="komiRouletteMood" style="width:100%;background:#171717;color:#fff;border:1px solid #555;border-radius:10px;padding:10px">
@@ -434,10 +434,10 @@
                     <option value="action">Экшен</option>
                 </select>
             </div>
-            <div id="rouletteContainer" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
-                <img id="rouletteImage" src="/anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover;">
+            <div id="rouletteContainer" class="is-loading" style="width: 140px; height: 195px; margin: 0 auto 14px auto; border-radius: 10px; overflow: hidden; border: 2px solid var(--primary); box-shadow: 0 0 20px var(--glow);">
+                <img id="rouletteImage" src="/anime-artwork.svg" alt="Обложка случайного аниме" style="width: 100%; height: 100%; object-fit: cover; opacity: 0;">
             </div>
-            <div id="rouletteTitle" role="status" aria-live="polite" style="font-weight: 700; font-size: 13px; color: white;">Загрузка...</div>
+            <div id="rouletteTitle" role="status" aria-live="polite" style="font-weight: 700; font-size: 13px; color: white;"></div>
             <div class="komi-roulette-actions">
                 <button type="button" id="rouletteRetry" class="btn-secondary" data-komi-click="random-try" hidden>Попробовать снова</button>
                 <button type="button" class="btn-secondary" data-komi-click="random-close">Закрыть</button>
