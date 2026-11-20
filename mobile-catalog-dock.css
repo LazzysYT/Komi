@@ -1,0 +1,288 @@
+/* KomiAnime — mobile catalog controls and four-tab dock.
+ * Separate last-in-cascade layer: desktop and existing event handlers unchanged.
+ * 2026-11-21
+ */
+@media (max-width: 767px) {
+  .komi-media-hub {
+    --hub-tab-height: 72px;
+  }
+
+  /* Catalog: no oversized black pill borders; clear hierarchy and tactile
+     flat, softly-rounded controls. Both SSR and hydrated layouts use this id. */
+  .komi-media-hub #komiHomeQuickFilters {
+    box-sizing: border-box !important;
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto !important;
+    column-gap: 10px !important;
+    row-gap: 10px !important;
+    align-items: center !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 0 10px !important;
+    padding: 13px !important;
+    border: 1px solid rgba(255, 255, 255, .075) !important;
+    border-radius: 18px !important;
+    background: #141414 !important;
+    box-shadow: none !important;
+  }
+  .komi-media-hub #komiHomeQuickFiltersTitle {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    display: flex !important;
+    align-items: center;
+    gap: 9px;
+    min-width: 0;
+    margin: 0 !important;
+    font: 750 clamp(16px, 4.3vw, 19px)/1.25 Inter, sans-serif !important;
+    letter-spacing: -.035em !important;
+    color: #f5f5f5 !important;
+    white-space: normal !important;
+  }
+  .komi-media-hub #komiHomeQuickFiltersTitle::before {
+    content: "";
+    display: block;
+    flex: 0 0 3px;
+    width: 3px;
+    height: 19px;
+    border-radius: 4px;
+    background: #f4f4f4;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .section-see-all {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: auto !important;
+    min-width: 0 !important;
+    min-height: 34px !important;
+    padding: 7px 11px !important;
+    margin: 0 !important;
+    border: 1px solid rgba(255, 255, 255, .14) !important;
+    border-radius: 11px !important;
+    background: #202020 !important;
+    color: #f6f6f6 !important;
+    font: 650 11px/1.2 Inter, sans-serif !important;
+    text-decoration: none !important;
+    white-space: nowrap !important;
+    box-shadow: none !important;
+    cursor: pointer;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .section-see-all:focus-visible {
+    outline: 2px solid #fff !important;
+    outline-offset: 2px;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .catalog-filters-box {
+    box-sizing: border-box !important;
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    min-width: 0;
+    gap: 7px !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .catalog-filters-box > .form-group {
+    min-width: 0 !important;
+    width: 100%;
+    margin: 0 !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .catalog-filters-box select.form-control {
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 43px !important;
+    min-height: 43px !important;
+    max-height: 43px !important;
+    margin: 0 !important;
+    padding: 0 31px 0 12px !important;
+    border: 1px solid rgba(255, 255, 255, .10) !important;
+    border-radius: 12px !important;
+    background-color: #202020 !important;
+    background-image:
+      linear-gradient(45deg, transparent 50%, #b4b4b4 50%),
+      linear-gradient(135deg, #b4b4b4 50%, transparent 50%) !important;
+    background-position:
+      calc(100% - 17px) 19px,
+      calc(100% - 12px) 19px !important;
+    background-size: 5px 5px !important;
+    background-repeat: no-repeat !important;
+    color: #f3f3f3 !important;
+    font: 600 12px/1.2 Inter, sans-serif !important;
+    letter-spacing: -.01em !important;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    box-shadow: none !important;
+    outline-offset: 1px;
+    cursor: pointer;
+    transition: background-color .15s ease, border-color .15s ease;
+  }
+  .komi-media-hub #komiHomeQuickFilters .catalog-filters-box select.form-control:focus-visible {
+    outline: 2px solid rgba(255,255,255,.75) !important;
+    border-color: #d1d1d1 !important;
+  }
+
+  /* A true centered four-item dock; old rail-specific 46px fixed widths and
+     5-tab flex geometry had made the mobile labels unreadably small. */
+  .komi-media-hub .komi-side-nav {
+    position: fixed !important;
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    grid-template-rows: minmax(0, 1fr) !important;
+    place-items: stretch !important;
+    align-items: stretch !important;
+    justify-content: center !important;
+    inset: auto auto calc(8px + env(safe-area-inset-bottom, 0px)) 50% !important;
+    left: 50% !important;
+    right: auto !important;
+    bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
+    transform: translateX(-50%) !important;
+    box-sizing: border-box !important;
+    width: min(420px, calc(100vw - 20px)) !important;
+    max-width: calc(100vw - 20px) !important;
+    height: 72px !important;
+    min-height: 72px !important;
+    gap: 3px !important;
+    padding: 6px !important;
+    background: rgba(17, 17, 18, .96) !important;
+    -webkit-backdrop-filter: blur(18px) !important;
+    backdrop-filter: blur(18px) !important;
+    border: 1px solid rgba(255, 255, 255, .16) !important;
+    border-radius: 22px !important;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, .48) !important;
+    overflow: visible !important;
+    z-index: 107 !important;
+  }
+  .komi-media-hub .komi-side-nav :is(.komi-side-links, .komi-side-bottom) {
+    display: contents !important;
+  }
+  .komi-media-hub .komi-side-nav .komi-side-logo,
+  .komi-media-hub .komi-side-nav :is(.komi-side-links, .komi-side-bottom) > .komi-side-button {
+    display: none !important;
+  }
+  .komi-media-hub .komi-side-nav .komi-side-links > #sideHomeBtn,
+  .komi-media-hub .komi-side-nav .komi-side-links > #sideCatalogBtn,
+  .komi-media-hub .komi-side-nav .komi-side-links > #sideListsBtn,
+  .komi-media-hub .komi-side-nav .komi-side-bottom > .komi-side-account {
+    box-sizing: border-box !important;
+    position: relative !important;
+    display: flex !important;
+    flex: unset !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    place-items: center !important;
+    gap: 4px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+    height: 58px !important;
+    min-height: 58px !important;
+    margin: 0 !important;
+    padding: 5px 2px !important;
+    border: 1px solid transparent !important;
+    border-radius: 16px !important;
+    background: transparent !important;
+    color: #a8a8ab !important;
+    box-shadow: none !important;
+    transform: none !important;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .komi-media-hub .komi-side-nav :is(.komi-side-links, .komi-side-bottom) > .komi-side-button :is(svg, #sidebarAvatarIcon svg) {
+    display: block !important;
+    width: 23px !important;
+    height: 23px !important;
+    min-width: 23px !important;
+    flex: 0 0 23px !important;
+    stroke-width: 1.8;
+  }
+  .komi-media-hub .komi-side-nav :is(.komi-side-links, .komi-side-bottom) > .komi-side-button > span:not(#sidebarAvatarIcon, #notifBadge) {
+    display: block !important;
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: inherit !important;
+    font: 650 11px/1.1 Inter, sans-serif !important;
+    letter-spacing: -.015em !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+  }
+  .komi-media-hub .komi-side-nav .komi-side-bottom .komi-side-account #sidebarAvatarIcon {
+    display: grid !important;
+    place-items: center !important;
+    width: 24px !important;
+    height: 24px !important;
+    min-width: 24px !important;
+    min-height: 24px !important;
+    border: 1px solid rgba(255,255,255,.25) !important;
+    border-radius: 50% !important;
+    overflow: hidden !important;
+    flex: 0 0 24px !important;
+  }
+  .komi-media-hub .komi-side-nav .komi-side-bottom .komi-side-account #sidebarAvatarIcon img {
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+  .komi-media-hub .komi-side-nav :is(.komi-side-links, .komi-side-bottom) > .komi-side-button:is(.active, [aria-current="page"], [aria-expanded="true"]) {
+    color: #fff !important;
+    background: #2a2a2c !important;
+    border-color: rgba(255,255,255,.13) !important;
+    box-shadow: none !important;
+  }
+  .komi-media-hub .komi-side-nav :is(.komi-side-links, .komi-side-bottom) > .komi-side-button:is(:focus-visible) {
+    outline: 2px solid #f5f5f5 !important;
+    outline-offset: -2px !important;
+  }
+  .komi-media-hub #mainAppLayoutContainer {
+    padding-bottom: calc(95px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  .komi-media-hub #sideFriendsBtn {
+    bottom: calc(100px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
+
+@media (max-width: 360px) {
+  .komi-media-hub #komiHomeQuickFilters {
+    padding: 10px !important;
+    column-gap: 5px !important;
+  }
+  .komi-media-hub #komiHomeQuickFiltersTitle {
+    gap: 6px;
+    font-size: 15px !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .section-see-all {
+    padding: 6px 8px !important;
+    font-size: 10px !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .catalog-filters-box select.form-control {
+    font-size: 11px !important;
+    padding-left: 9px !important;
+  }
+  .komi-media-hub .komi-side-nav {
+    gap: 2px !important;
+    width: calc(100vw - 12px) !important;
+    max-width: calc(100vw - 12px) !important;
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .komi-media-hub #komiHomeQuickFilters .catalog-filters-box select.form-control {
+    transition: none !important;
+  }
+}
