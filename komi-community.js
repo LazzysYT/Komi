@@ -122,13 +122,56 @@ async function referral(){
   notice(out,'Награждённых приглашений: '+data.invite_count+(data.rewarded?' · Твоя награда получена':''));
  }catch(e){notice(out,e.message)}
 }
+// Register the referral from a link after Google/email sign-in without requiring a menu visit.
+let referralClaimBusy=false,referralClaimTried='';
+async function claimPendingReferral(){
+ const code=sessionStorage.getItem('komi_referral_pending');
+ if(!/^[a-f0-9]{32}$/.test(code||'')||!api()||referralClaimBusy)return;
+ const account=owner();
+ if(!account||referralClaimTried===account+':'+code)return;
+ referralClaimBusy=true;referralClaimTried=account+':'+code;
+ try{
+  const checked=await api().auth.getUser();
+  if(!checked.data?.user||checked.data.user.id!==account)return;
+  const {error}=await api().rpc('komi_referral',{p_action:'claim',p_code:code});
+  if(!error||['22023','23505','42501'].includes(String(error.code||''))){
+   sessionStorage.removeItem('komi_referral_pending');
+  }
+ }catch(error){console.warn('Komi referral claim unavailable:',String(error?.message||error))}
+ finally{referralClaimBusy=false}
+}
+let badgeOwner='';
+async function refreshReferralBadge(){
+ const profile=document.querySelector('.komi-profile-tabs');
+ const user=owner();
+ if(!profile||!user||badgeOwner===user)return;
+ badgeOwner=user;
+ try{
+  const {data,error}=await api().rpc('komi_referral',{p_action:'status'});
+  if(error||!data||owner()!==user||!profile.isConnected)return;
+  if(!data.rewarded&&!data.invite_count)return;
+  if(profile.querySelector('[data-komi-referral-badge]'))return;
+  const badge=node('span','✧ '+(data.rewarded?'Приглашённый друг':'Пригласил друзей'),'komi-lab-note');
+  badge.dataset.komiReferralBadge='1';
+  badge.style.cssText='display:inline-block;padding:8px;border:1px solid #ffffff2b;border-radius:9px';
+  profile.append(badge);
+ }catch{}
+}
 try{const code=new URL(location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('komi_referral_pending',code)}catch{}
 function mount(){
  for(const [host,selector] of [[document.querySelector('.komi-hub-tools-panel'),'panel'],[document.getElementById('komiMobileMoreMenu'),'mobile'],[document.querySelector('.komi-profile-tabs'),'profile']]){
    if(!host||host.querySelector('[data-community-launch]'))continue;
    const b=btn('✧ Подборки и импорт',hub);b.dataset.communityLaunch=selector;host.append(b);
  }
+ if(owner())void refreshReferralBadge();
 }
 const main=document.getElementById('mainContainer');if(main)new MutationObserver(mount).observe(main,{childList:true,subtree:true});mount();
+if(api()?.auth?.onAuthStateChange){
+ api().auth.onAuthStateChange((event,session)=>{
+  if(session?.user)setTimeout(()=>void claimPendingReferral(),0);
+  else {referralClaimTried='';badgeOwner=''}
+ });
+}
+setTimeout(()=>void claimPendingReferral(),1000);
 window.KomiCommunity={api,owner,catalog,node,btn,notice,signed,dialog,card,addPlans,open:hub,collections,referral};
 })();
