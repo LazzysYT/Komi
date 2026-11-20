@@ -213,8 +213,10 @@ fs.mkdirSync(output,{recursive:true});
           const originalAlert=window.alert;
           window.alert=()=>{};
           try {return (await requireServerAdmin(true))===false
-            && !document.getElementById('adminModal').classList.contains('active')
-            && !document.getElementById('addModal');}
+            && !document.getElementById('adminModal')
+            && !document.getElementById('addModal')
+            && !document.getElementById('adminPanelBtn')
+            && !document.getElementById('addAnimeBtn');}
           finally {window.alert=originalAlert;}
         });
         assert.equal(adminDisabled,true,'Client admin actions must remain disabled for guests');
