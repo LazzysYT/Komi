@@ -70,6 +70,7 @@
     slide.classList.toggle('komi-hd-wide', wide);
     slide.classList.toggle('komi-hd-softwide', softWide);
     slide.classList.toggle('komi-hd-poster', !wide && !softWide);
+    slide.classList.add('komi-art-ready');
   }
 
   function bindImage(slide) {

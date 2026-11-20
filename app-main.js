@@ -178,6 +178,42 @@ let catalogInitialLoadFailed = false;
 let komiHomeCatalogReady = false;
 let komiHomePreviewCatalog = null;
 let komiLastHomeMarkup = null;
+let komiStartupHomeCommitted = false;
+const komiHeroReadyImages = new Set();
+const komiHeroPendingImages = new Set();
+// Keep the complete static/cached homepage visible until its next hero image
+// can render. A bounded timeout prevents a stalled poster endpoint hanging UI.
+function komiHomeHeroMayPaint(markup, container) {
+    if (komiStartupHomeCommitted) return true;
+    const match = markup.match(/<img class="komi-hub-hero-art" src="([^"]+)"/);
+    if (!match) return true;
+    const src = match[1].replace(/&amp;/g, '&');
+    if (komiHeroReadyImages.has(src)) return true;
+    if (!komiHeroPendingImages.has(src)) {
+        komiHeroPendingImages.add(src);
+        const image = new Image();
+        image.decoding = 'async';
+        image.referrerPolicy = 'no-referrer';
+        let complete = false;
+        const finish = () => {
+            if (complete) return;
+            complete = true;
+            clearTimeout(deadline);
+            komiHeroPendingImages.delete(src);
+            komiHeroReadyImages.add(src);
+            if (currentView === 'home') render();
+        };
+        const deadline = setTimeout(finish, 1400);
+        image.onload = () => {
+            // Decode in the browser cache before replacing the SEO first paint.
+            Promise.resolve(typeof image.decode === 'function' ? image.decode() : null)
+                .catch(() => {}).then(finish);
+        };
+        image.onerror = finish;
+        image.src = src;
+    }
+    return false;
+}
 // Preserve the original SSR homepage if someone navigates away and back
 // while the full catalog is still loading.
 const komiSeoFirstPaintMarkup = document.getElementById('mainContainer')?.innerHTML || '';
@@ -1094,6 +1130,8 @@ async function loadDataFromCloud(attempt = 0) {
                     // loaded images, carousel focus or the user's scroll position.
                     if (komiLastHomeMarkup === homeMarkup &&
                         container.querySelector('.komi-home-discovery')) return;
+                    if (!komiHomeHeroMayPaint(homeMarkup, container)) return;
+                    komiStartupHomeCommitted = true;
                     komiLastHomeMarkup = homeMarkup;
                     container.innerHTML = homeMarkup;
                     const nextHero = container.querySelector('.komi-home-hero');

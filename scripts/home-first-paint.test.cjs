@@ -33,6 +33,31 @@ test('complete preview selects latest featured titles, not the first 48 low-ID r
     assert.equal('privateProgress' in card,false);
   }
 });
+test('featured carousel excludes unrated future releases and missing episode titles',()=>{
+  const items=[
+    ...Array.from({length:7},(_,i)=>make(i+1,2026,8+i/10)),
+    make(88,2027,9.9),make(89,2026,0)
+  ];
+  items[7].episodeCount=0;
+  items[8].episodeCount=0;
+  const selected=snapshot.featured(items,year,new Date('2026-11-20').valueOf());
+  assert.equal(selected.length,5);
+  assert.ok(selected.every(a=>Number(a.year)<=2026 && Number(a.shikiRating)>0 && a.episodeCount>0));
+  const cached=snapshot.sample(items,year,type,new Date('2026-11-20').valueOf());
+  assert.deepEqual(snapshot.featured(cached,year,new Date('2026-11-20').valueOf()).map(a=>a.id),
+    selected.map(a=>a.id));
+});
+test('hero artwork keeps a visible fallback and preloads before first replacement',()=>{
+  const home=fs.readFileSync(path.join(__dirname,'../home-discovery.js'),'utf8');
+  const art=fs.readFileSync(path.join(__dirname,'../hero-hd-art.js'),'utf8');
+  const css=fs.readFileSync(path.join(__dirname,'../komi-media-hub.css'),'utf8');
+  assert.match(home,/KomiHomeSnapshot\.featured/);
+  assert.match(art,/slide\.classList\.add\('komi-art-ready'\)/);
+  assert.match(css,/\.hero-slide\.komi-art-ready \.komi-hub-hero-art/);
+  assert.match(css,/url\("\/anime-artwork\.svg"\)/);
+  assert.match(app,/komiHomeHeroMayPaint\(homeMarkup, container\)/);
+  assert.match(app,/image\.decode\(\)/);
+});
 test('public preview cache can be read immediately but expires and fails closed',()=>{
   const original=globalThis.localStorage;
   const map=new Map();

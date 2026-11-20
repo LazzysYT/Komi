@@ -4,7 +4,7 @@
  */
 (function (root) {
   'use strict';
-  const KEY = 'komi.public.home.preview.v1';
+  const KEY = 'komi.public.home.preview.v2';
   const TTL = 72 * 60 * 60 * 1000;
   const MAX_ITEMS = 150;
   const cleanText = (value, max = 400) => String(value == null ? '' : value).slice(0, max);
@@ -33,6 +33,23 @@
       episodes: []
     };
   }
+  // Keep the homepage and cached preview on the same featured selection.
+  // Upcoming, unrated titles without episodes were producing an empty hero.
+  function featured(catalog, yearFn, now = Date.now()) {
+    if (!Array.isArray(catalog) || typeof yearFn !== 'function') return [];
+    const currentYear = new Date(now).getFullYear();
+    const candidates = catalog.filter(a => validId(a) &&
+      (safeUrl(a.banner) || safeUrl(a.poster)) &&
+      year(a, yearFn) >= 2000 && year(a, yearFn) <= currentYear &&
+      score(a) > 0);
+    const available = candidates.filter(a => episodeCount(a) > 0 && score(a) >= 7);
+    const eligible = available.length >= 5 ? available :
+      candidates.filter(a => score(a) >= 7);
+    const sorted = (eligible.length ? eligible : candidates).sort((a,b) =>
+      year(b, yearFn) - year(a, yearFn) || score(b) - score(a) ||
+      Number(id(a)) - Number(id(b)));
+    return sorted.slice(0,5);
+  }
   function sample(catalog, yearFn, typeFn, now = Date.now()) {
     if (!Array.isArray(catalog) || typeof yearFn !== 'function' || typeof typeFn !== 'function') return [];
     const all = catalog.filter(validId);
@@ -45,6 +62,7 @@
       ((updated(a) > now - 30*86400000 ? 2 : 0) + score(a)/10);
     const thisYear = new Date(now).getFullYear();
     const groups = [
+      featured(all, yearFn, now),
       all.filter(a => safeUrl(a.poster)).sort(byYear).slice(0, 7),
       all.filter(a => score(a) > 0).sort(byScore).slice(0, 18),
       all.filter(a => year(a, yearFn) === thisYear).sort((a,b) => byUpdated(a,b) || byScore(a,b)).slice(0, 18),
@@ -72,7 +90,7 @@
       const raw = root.localStorage?.getItem(KEY);
       if (!raw || raw.length > 500000) return null;
       const value = JSON.parse(raw);
-      if (value?.version !== 1 || !Number.isFinite(value.savedAt) ||
+      if (value?.version !== 2 || !Number.isFinite(value.savedAt) ||
           value.savedAt > Date.now() || Date.now() - value.savedAt > TTL ||
           !Array.isArray(value.items) || value.items.length < 5 ||
           value.items.length > MAX_ITEMS) return null;
@@ -85,12 +103,12 @@
     try {
       const items = sample(catalog, yearFn, typeFn);
       if (items.length < 5) return;
-      root.localStorage?.setItem(KEY, JSON.stringify({version:1,savedAt:Date.now(),items}));
+      root.localStorage?.setItem(KEY, JSON.stringify({version:2,savedAt:Date.now(),items}));
     } catch {
       // Quota/private browsing must never interrupt the live catalog.
     }
   }
-  const api = {read, write, sample, KEY};
+  const api = {read, write, sample, featured, KEY};
   root.KomiHomeSnapshot = api;
   if (typeof module !== 'undefined' && module.exports) module.exports = api;
 })(globalThis);

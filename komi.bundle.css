@@ -5324,6 +5324,22 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
   display: none !important;
 }
 
+/* Never expose a featureless black canvas when network art is not decoded yet. */
+.komi-media-hub .komi-home-hero .hero-slide {
+  background: #151518 url("/anime-artwork.svg") center / cover no-repeat;
+}
+.komi-media-hub .komi-home-hero .hero-slide .komi-hub-hero-art {
+  opacity: 0 !important;
+  transition: opacity .22s ease !important;
+}
+.komi-media-hub .komi-home-hero .hero-slide.komi-art-ready .komi-hub-hero-art {
+  opacity: 1 !important;
+}
+.komi-media-hub .komi-home-progress-art,
+.komi-media-hub .komi-hub-resume > img {
+  background: #1b1b1e url("/anime-artwork.svg") center / cover no-repeat;
+}
+
 
 /* --- komi-black-white.css --- */
 /* KomiAnime — black & white UI theme, 2026-11-18.

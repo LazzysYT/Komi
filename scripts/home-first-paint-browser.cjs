@@ -15,7 +15,8 @@ const make=(id,year,score)=>({
   const errors=[];
   page.on('pageerror',error=>errors.push(error.message));
   const first=Array.from({length:48},(_,i)=>make(i+1,2007,7));
-  const second=Array.from({length:9},(_,i)=>make(i+49,2026,8+i/10));
+  const second=[...Array.from({length:9},(_,i)=>make(i+49,2026,8+i/10)),
+    {...make(58,2027,0),data:{...make(58,2027,0).data,episodeCount:0}}];
   let firstSeen;
   const firstFetched=new Promise(resolve=>firstSeen=resolve);
   let releaseSecond;

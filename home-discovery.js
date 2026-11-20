@@ -79,7 +79,8 @@
     const direct = typeof directSource === 'string' && /^https:\/\//i.test(directSource)
       ? ' data-poster-direct="' + escape(directSource) + '"' : '';
     return '<img class="' + className + '" src="' + context.artwork(anime) + '" alt="" loading="' +
-      loading + '" decoding="async" referrerpolicy="no-referrer"' + direct +
+      loading + '" decoding="async" referrerpolicy="no-referrer"' +
+      (className === 'komi-hub-hero-art' && loading === 'eager' ? ' fetchpriority="high"' : '') + direct +
       ' data-komi-onerror="komiCardPosterFallback(this)">';
   }
 
@@ -176,7 +177,7 @@
     if (!recent.length) return '';
     return '<section class="komi-home-shelf komi-home-continue komi-feature-section">' +
       '<div class="komi-home-heading"><h2>Продолжить просмотр</h2></div>' +
-      '<div class="komi-home-progress-rail">' + recent.map(({anime, p}) => {
+      '<div class="komi-home-progress-rail">' + recent.map(({anime, p}, index) => {
         const position = Number(p.time);
         const duration = Number(p.duration);
         const percent = Number.isFinite(position) && Number.isFinite(duration) && duration > 0
@@ -185,7 +186,7 @@
         const preview = [episode?.preview, episode?.thumbnail, episode?.screenshot, anime.screenshots?.[0]]
           .find(url => typeof url === 'string' && /^https:\/\//i.test(url));
         return '<button type="button" class="komi-home-progress-card" data-komi-onclick="resumeKomiAnime(\'' + id(anime) + '\')">' +
-          '<span class="komi-home-progress-art">' + artworkImage(preview ? {banner: preview} : anime, context, 'lazy') +
+          '<span class="komi-home-progress-art">' + artworkImage(preview ? {banner: preview} : anime, context, index < 3 ? 'eager' : 'lazy') +
           '<span class="komi-home-progress-track"><span style="width:' + percent.toFixed(2) + '%"></span></span></span>' +
           '<span class="komi-home-progress-details"><strong>' + escape(anime.title) + '</strong>' +
           '<small>Сезон ' + season + ' · Серия ' + number + ' · ' + elapsedTime(position) +
@@ -215,8 +216,11 @@
     const animeList = Array.isArray(context.animeList) ? context.animeList.filter(Boolean) : [];
     if (!animeList.length) return '<section class="komi-home-empty">Аниме в каталоге пока нет.</section>';
     const ranked = [...animeList].filter(a => score(a)>0).sort((a,b)=>score(b)-score(a));
-    const slider = [...animeList].filter(a => a.poster && /^https:\/\//i.test(a.poster))
-      .sort((a,b)=>Number(context.year(b))-Number(context.year(a))||score(b)-score(a)).slice(0,5);
+    const slider = typeof root.KomiHomeSnapshot?.featured === 'function'
+      ? root.KomiHomeSnapshot.featured(animeList, context.year)
+      : [...animeList].filter(a => /^https:\/\//i.test(a.poster || '') &&
+          score(a) >= 7 && count(a) > 0)
+          .sort((a,b)=>Number(context.year(b))-Number(context.year(a))||score(b)-score(a)).slice(0,5);
     const latestYear = String(new Date().getFullYear());
     const recent = [...animeList].filter(a=>updated(a)>0)
       .sort((a,b)=>updated(b)-updated(a)).slice(0,12);
