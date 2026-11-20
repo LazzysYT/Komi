@@ -1,5 +1,5 @@
 /* Static HTML actions: one strict allowlist, never eval/Function.
- * Event delegation works for the inert admin template when it is activated.
+ * Event delegation works for the lazy admin editor after role verification.
  * Can be kept unchanged when CSP script-src-attr is eventually 'none'.
  */
 (function () {

@@ -20,6 +20,7 @@ test('admin controls and editor are mounted only behind the checked Supabase rol
   assert.match(app, /button\?\.remove\(\)/);
 });
 test('anonymous users do not see notification UI or misleading registration copy', () => {
-  assert.match(html, /:not\(\.komi-authenticated\) #notifBellBtn/);
+  const css = fs.readFileSync(path.join(root, 'komi-media-hub.css'), 'utf8');
+  assert.match(css, /:not\(\.komi-authenticated\) \.komi-side-nav #notifBellBtn/);
   assert.doesNotMatch(html, /Email для безопасной регистрации/);
 });

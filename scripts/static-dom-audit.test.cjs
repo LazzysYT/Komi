@@ -39,15 +39,13 @@ test('all artwork placeholders are root absolute', () => {
   assert.match(html, /id="rouletteImage" src="\/anime-artwork\.svg"/);
 });
 
-test('admin form lives in an inert template until a verified admin action', () => {
-  const modalTemplate = html.match(/<template id="komiAdminAnimeModalTemplate">([\s\S]*?)<\/template>/)?.[1];
-  assert.ok(modalTemplate);
-  assert.match(modalTemplate, /id="addModal"/);
-  assert.match(modalTemplate, /id="animeForm"/);
-  const activeHtml = html.replace(/<template id="komiAdminAnimeModalTemplate">[\s\S]*?<\/template>/, '');
-  assert.doesNotMatch(activeHtml.slice(0, activeHtml.indexOf('<script src="./player-core.js">')), /id="addModal"/);
-  assert.match(html, /async function openAddModal\(editId = null\) \{\s*if \(!\(await requireServerAdmin\(\)\)\) return;/);
-  assert.match(html, /template\.content\.cloneNode\(true\)/);
+test('admin UI is absent from guest HTML and mounted after checked RPC', () => {
+  const rawHtml = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
+  const editor = fs.readFileSync(path.join(__dirname, '../komi-admin-ui.js'), 'utf8');
+  assert.doesNotMatch(rawHtml, /id="(?:adminModal|addModal|animeForm|addAnimeBtn|adminPanelBtn|komiAdminAnimeModalTemplate)"/);
+  assert.match(html, /async function openAddModal\(editId = null\) \{\s*if \(!\(await requireServerAdmin\(\)\) \|\| !\(await komiEnsureAdminUI\(\)\)\) return;/);
+  assert.match(html, /script\.src = '\/komi-admin-ui\.js'/);
+  assert.match(editor, /window\.komiMountAdminUI/);
 });
 
 

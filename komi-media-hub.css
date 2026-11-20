@@ -1067,3 +1067,10 @@
     padding: 14px 10px !important;
   }
 }
+
+/* Anonymous accounts have no personal unread notifications. */
+.komi-media-hub:not(.komi-authenticated) .komi-side-nav #notifBellBtn,
+.komi-media-hub:not(.komi-authenticated) .komi-side-nav #notifDropdown,
+.komi-media-hub:not(.komi-authenticated) #komiMobileMoreMenu [data-komi-mobile-extra="notifications"] {
+  display: none !important;
+}

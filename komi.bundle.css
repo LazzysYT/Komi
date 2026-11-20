@@ -5317,6 +5317,13 @@ body > header .header-inner .logo-area .online-counter[hidden] { display:none!im
   }
 }
 
+/* Anonymous accounts have no personal unread notifications. */
+.komi-media-hub:not(.komi-authenticated) .komi-side-nav #notifBellBtn,
+.komi-media-hub:not(.komi-authenticated) .komi-side-nav #notifDropdown,
+.komi-media-hub:not(.komi-authenticated) #komiMobileMoreMenu [data-komi-mobile-extra="notifications"] {
+  display: none !important;
+}
+
 
 /* --- komi-black-white.css --- */
 /* KomiAnime — black & white UI theme, 2026-11-18.
