@@ -1,0 +1,234 @@
+/* KomiAnime mobile thumb-zone sheets, monochrome and safe-area aware. */
+.komi-mobile-filter-trigger,.komi-mobile-watch-actions {display:none;}
+@media (max-width:767px) {
+  .komi-hub-catalog-toolbar {
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:10px!important;
+  }
+  .komi-hub-catalog-toolbar #komiFullCatalogTitle {
+    grid-column:1;min-width:0;margin:0!important;
+    font-size:clamp(20px,5vw,26px)!important;
+  }
+  .komi-hub-catalog-toolbar > .catalog-filters-box,
+  .komi-hub-catalog-toolbar > .komi-catalog-hide-switch,
+  .komi-hub-catalog-toolbar > .komi-catalog-clear {
+    display:none!important;
+  }
+  .komi-hub-catalog-toolbar .komi-mobile-filter-trigger {
+    display:inline-flex!important;
+    justify-content:center!important;align-items:center!important;
+    gap:8px;grid-column:2;
+    border-radius:12px!important;
+    border:1px solid rgba(255,255,255,.19)!important;
+    background:#222226!important;color:#fff!important;
+    font:650 13px/1.2 Inter,system-ui,sans-serif!important;
+    min-height:44px!important;padding:10px 15px!important;
+    cursor:pointer;
+  }
+  .komi-hub-catalog-toolbar .komi-mobile-filter-trigger:focus-visible {
+    outline:2px solid #fff;outline-offset:2px;
+  }
+  #watchModal .komi-mobile-watch-actions {
+    display:flex!important;
+    align-items:stretch!important;
+    flex:1 0 100%!important;
+    width:100%!important;
+    gap:8px!important;
+    order:-20!important;
+    margin:0!important;
+    padding:0!important;
+  }
+  #watchModal .komi-mobile-watch-actions > button {
+    display:flex!important;
+    flex:1 1 0!important;
+    align-items:center!important;justify-content:center!important;
+    min-width:0!important;min-height:46px!important;
+    border:1px solid rgba(255,255,255,.19)!important;
+    border-radius:12px!important;
+    background:#242428!important;color:#f4f4f5!important;
+    font:650 14px Inter,system-ui,sans-serif!important;
+    box-shadow:none!important;
+  }
+  #watchModal .komi-mobile-watch-actions > button:focus-visible,
+  #watchModal .komi-mobile-watch-actions > button:hover {
+    background:#333338!important;border-color:rgba(255,255,255,.42)!important;
+  }
+  /* Choose audio from the sheet instead of the tiny native select.
+     Keep the underlying select and its existing change handler intact. */
+  #watchModal .komi-watch-source {display:none!important;}
+  #watchModal .komi-v4-source-menu {display:none!important;}
+  #watchModal .komi-watch-stage > .komi-watch-sidebar {display:none!important;}
+  #watchModal.komi-episodes-collapsed .komi-watch-stage > .komi-watch-sidebar {display:none!important;}
+
+  .komi-mobile-sheet-layer,
+  #watchModal .komi-mobile-sheet-layer {
+    position:fixed!important;inset:0!important;
+    display:flex!important;align-items:flex-end!important;justify-content:center!important;
+    z-index:2147480000!important;isolation:isolate;
+    padding:0!important;margin:0!important;
+    font-family:Inter,system-ui,sans-serif!important;
+  }
+  .komi-mobile-sheet-layer[hidden],
+  #watchModal .komi-mobile-sheet-layer[hidden] {display:none!important;}
+  .komi-mobile-sheet-backdrop {
+    position:absolute!important;inset:0!important;
+    width:100%!important;height:100%!important;
+    border:0!important;border-radius:0!important;margin:0!important;padding:0!important;
+    background:rgba(0,0,0,.7)!important;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .komi-mobile-sheet-panel {
+    position:relative!important;display:flex!important;flex-direction:column!important;
+    box-sizing:border-box!important;
+    width:100%!important;max-width:560px!important;
+    max-height:min(87dvh,760px)!important;min-height:190px!important;
+    margin:0!important;
+    padding:0 0 env(safe-area-inset-bottom,0px)!important;
+    border:1px solid rgba(255,255,255,.14)!important;border-bottom:0!important;
+    border-radius:24px 24px 0 0!important;
+    background:#121215!important;color:#fff!important;
+    box-shadow:0 -12px 60px rgba(0,0,0,.65)!important;
+    overscroll-behavior:contain;overflow:hidden!important;
+    animation:komi-sheet-up .22s cubic-bezier(.2,.9,.2,1) both;
+  }
+  .komi-mobile-sheet-grab {
+    display:flex!important;align-items:center!important;justify-content:center!important;
+    width:100%!important;height:26px!important;flex:0 0 26px!important;
+    touch-action:pan-x;
+  }
+  .komi-mobile-sheet-grab::after {
+    content:"";display:block;
+    width:38px;height:4px;border-radius:100px;background:#65656b;
+  }
+  .komi-mobile-sheet-header {
+    display:flex!important;align-items:center!important;justify-content:space-between!important;
+    flex:0 0 auto!important;gap:16px!important;
+    width:100%!important;padding:0 18px 12px!important;
+    border-bottom:1px solid rgba(255,255,255,.09)!important;
+    touch-action:pan-x;
+  }
+  .komi-mobile-sheet-header h2 {
+    font:750 18px/1.3 Inter,system-ui,sans-serif!important;
+    color:#fff!important;letter-spacing:-.025em!important;
+    margin:0!important;padding:0!important;
+  }
+  .komi-mobile-sheet-close {
+    flex:0 0 40px!important;
+    width:40px!important;height:40px!important;
+    padding:0!important;margin:0!important;
+    border-radius:12px!important;border:1px solid rgba(255,255,255,.10)!important;
+    background:#242428!important;color:#fff!important;
+    font:450 27px/1 Inter,system-ui,sans-serif!important;
+    display:flex!important;align-items:center!important;justify-content:center!important;
+  }
+  .komi-mobile-sheet-body {
+    display:block!important;flex:1 1 auto!important;min-height:0!important;
+    overflow:auto!important;overscroll-behavior:contain;
+    padding:16px 18px!important;scrollbar-width:thin;
+    -webkit-overflow-scrolling:touch;
+  }
+  .komi-mobile-sheet-footer {
+    display:flex!important;flex:0 0 auto!important;gap:9px!important;
+    width:100%!important;padding:12px 18px!important;
+    border-top:1px solid rgba(255,255,255,.1)!important;
+    background:#121215!important;
+  }
+  .komi-mobile-sheet-footer:empty {display:none!important;}
+  .komi-mobile-sheet-options {display:grid!important;gap:7px!important;}
+  .komi-mobile-sheet-option,.komi-mobile-sheet-strict,
+  .komi-mobile-sheet-reset,.komi-mobile-sheet-apply {
+    box-sizing:border-box!important;
+    display:flex!important;align-items:center!important;justify-content:flex-start!important;
+    width:100%!important;min-height:48px!important;
+    padding:12px 14px!important;
+    color:#f1f1f3!important;
+    background:#1f1f23!important;
+    border:1px solid rgba(255,255,255,.12)!important;
+    border-radius:12px!important;
+    font:600 14px/1.35 Inter,system-ui,sans-serif!important;
+    white-space:normal!important;text-align:left!important;
+    overflow-wrap:anywhere;
+  }
+  .komi-mobile-sheet-option[aria-pressed="true"],
+  .komi-mobile-sheet-strict[aria-pressed="true"] {
+    background:#2e2e33!important;border-color:rgba(255,255,255,.65)!important;
+  }
+  .komi-mobile-sheet-option[aria-pressed="true"]::after {
+    content:"✓";margin-left:auto;padding-left:12px;font-size:16px;
+  }
+  .komi-mobile-sheet-footer .komi-mobile-sheet-strict {justify-content:center!important;}
+  .komi-mobile-sheet-footer .komi-mobile-sheet-apply {
+    justify-content:center!important;flex:1 1 auto!important;
+    background:#f5f5f5!important;color:#09090b!important;border-color:#f5f5f5!important;
+  }
+  .komi-mobile-sheet-footer .komi-mobile-sheet-reset {
+    justify-content:center!important;flex:0 1 120px!important;
+  }
+  .komi-mobile-sheet-filters {display:grid!important;gap:13px!important;}
+  .komi-mobile-sheet-field {display:grid!important;gap:7px!important;}
+  .komi-mobile-sheet-field > span {
+    color:#b4b4ba!important;font:600 12px Inter,system-ui,sans-serif!important;
+  }
+  .komi-mobile-sheet-select {
+    box-sizing:border-box!important;
+    display:block!important;width:100%!important;
+    min-height:48px!important;
+    border:1px solid rgba(255,255,255,.16)!important;
+    border-radius:11px!important;
+    background:#222226!important;color:#fff!important;
+    padding:10px 12px!important;
+    font:600 14px Inter,system-ui,sans-serif!important;
+  }
+  .komi-mobile-sheet-hide {
+    display:flex!important;align-items:center!important;gap:12px!important;
+    min-height:48px!important;padding:10px 0!important;
+    color:#efeff0!important;font:600 13px Inter,system-ui,sans-serif!important;
+  }
+  .komi-mobile-sheet-hide input {width:19px!important;height:19px!important;accent-color:#fff!important;}
+  .komi-mobile-sheet-layer :is(button,input,select):focus-visible {
+    outline:2px solid #fff!important;outline-offset:2px!important;
+  }
+  /* The original sidebar is MOVED, not cloned. It preserves its active progress
+     state, season tabs, search and all click handlers. */
+  .komi-mobile-sheet-body:has(> .komi-watch-sidebar) {
+    display:flex!important;flex-direction:column!important;
+    overflow:hidden!important;padding:10px 12px 12px!important;
+  }
+  #watchModal #komiMobileSheet .komi-watch-sidebar,
+  #watchModal.komi-episodes-collapsed #komiMobileSheet .komi-watch-sidebar {
+    position:static!important;display:flex!important;flex:1 1 auto!important;
+    flex-direction:column!important;
+    width:100%!important;height:100%!important;
+    max-height:none!important;min-height:0!important;max-width:none!important;
+    margin:0!important;padding:6px!important;
+    grid-column:auto!important;grid-row:auto!important;
+    contain:none!important;overflow:hidden!important;
+    opacity:1!important;visibility:visible!important;transform:none!important;
+    pointer-events:auto!important;
+    background:transparent!important;border:0!important;border-radius:0!important;
+  }
+  #watchModal #komiMobileSheet .komi-episode-number-grid {
+    display:grid!important;flex:1 1 auto!important;min-height:0!important;
+    overflow-y:auto!important;overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  #watchModal #komiMobileSheet .komi-episode-search {width:100%!important;}
+  #watchModal #komiMobileSheet .komi-episode-number {
+    min-height:44px!important;
+  }
+  #watchModal #komiMobileSheet .komi-episode-number-grid.komi-episode-list {
+    grid-template-columns:1fr!important;
+  }
+  #watchModal #komiMobileSheet .komi-episode-number-grid.komi-episode-list .komi-episode-number {
+    min-height:64px!important;
+  }
+  @keyframes komi-sheet-up {
+    from {opacity:.96;transform:translateY(18px)}
+    to {opacity:1;transform:translateY(0)}
+  }
+}
+@media (max-width:767px) and (prefers-reduced-motion: reduce) {
+    .komi-mobile-sheet-panel {animation:none!important;}
+}
