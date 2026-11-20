@@ -45,7 +45,7 @@ fs.mkdirSync(output,{recursive:true});
             // A live source check catches stale HTML / wrong alias even if
             // hydrated JavaScript happens to show the right filter controls.
             const homepageHtml=await response.text();
-            assert.match(homepageHtml,/name="komi-ui-revision" content="(?:20261118-media-hub(?:-mono)?|20261119-fullbleed-hero)"/,
+            assert.match(homepageHtml,/name="komi-ui-revision" content="20261120-admin-guest-gates"/,
               'Main domain must serve the Media Hub homepage while deployment aliases converge');
             assert.match(homepageHtml,/data-komi-click="home-quick-filters-all"/,
               'The first-paint all-filters link needs a real JavaScript navigation action');

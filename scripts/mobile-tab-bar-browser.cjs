@@ -28,14 +28,14 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
         };
       });
       if(mobile){
-        assert.equal(state.navCount,5,'Mobile should expose exactly five primary tabs at '+width+': '+JSON.stringify(state));
-        assert.deepEqual(state.labels,['Главная','Каталог','Мои списки','Уведомления','Профиль']);
+        assert.equal(state.navCount,4,'Guest navigation exposes four personal-safe tabs at '+width+': '+JSON.stringify(state));
+        assert.deepEqual(state.labels,['Главная','Каталог','Мои списки','Профиль']);
         assert.equal(state.moreVisible,true);
         assert.ok(state.railWidth<=width+2,'Mobile bar overflows the viewport');
         assert.ok(state.railTop>650,'Mobile navigation must stay at the bottom of the screen');
         await page.locator('#komiMobileMoreToggle').click();
         assert.equal(await page.locator('#komiMobileMoreToggle').getAttribute('aria-expanded'),'true');
-        assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),6);
+        assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),5);
         const soundToggle=page.locator('#komiMobileSoundToggle');
         assert.equal(await soundToggle.getAttribute('aria-pressed'),'true');
         await soundToggle.click();
