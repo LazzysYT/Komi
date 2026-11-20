@@ -710,13 +710,17 @@ async function loadDataFromCloud(attempt = 0) {
             catalogSearchQuery=''; catalogVisibleCount=48; catalogFilterGenre=button.dataset.komiGenre;
             navigate('catalog');
         });
+        let komiCatalogFocusPending = false;
         function komiOpenFullCatalogFilters() {
-            // Keep the first-paint link and hydrated button consistent:
-            // enter the DB-backed catalog and take the visitor to its real controls.
+            // A catalog fetch can finish AFTER the click. Preserve the focus
+            // request so delayed rendering never strands keyboard users in nav.
+            komiCatalogFocusPending = true;
             navigate('catalog');
             const search = document.getElementById('komiCatalogSearchInput');
-            if (search) search.focus({preventScroll:false});
-            else document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+            if (search) {
+                search.focus({preventScroll:false});
+                komiCatalogFocusPending = false;
+            } else document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
         }
         function komiHomeQuickFiltersMarkup() {
             const genreOptions = availableGenresList.filter(genre =>
@@ -1110,7 +1114,8 @@ async function loadDataFromCloud(attempt = 0) {
             renderHeaderUser();
             const container = document.getElementById('mainContainer');
             if (!container) return;
-            
+            if (currentView !== 'catalog') komiCatalogFocusPending = false;
+
             if (currentView === 'home') {
                 // Before Supabase resolves the account, preserve the SEO first
                 // paint. Do not briefly render an anonymous home that is then
@@ -1291,6 +1296,9 @@ async function loadDataFromCloud(attempt = 0) {
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA', 'ONA', 'Special'];
 
                 const filtered = komiCatalogFiltered();
+                const searchPreviouslyFocused = document.activeElement?.id === 'komiCatalogSearchInput';
+                const previousSearchCaret = searchPreviouslyFocused
+                    ? document.activeElement.selectionStart : null;
 
                 container.innerHTML = `
                     <section class="komi-hub-catalog-toolbar" aria-labelledby="komiFullCatalogTitle">
@@ -1341,6 +1349,15 @@ async function loadDataFromCloud(attempt = 0) {
                         ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
                     </div>
                 `;
+                if (komiCatalogFocusPending || searchPreviouslyFocused) {
+                    const nextSearch = document.getElementById('komiCatalogSearchInput');
+                    if (nextSearch) {
+                        nextSearch.focus({preventScroll: !komiCatalogFocusPending});
+                        if (Number.isInteger(previousSearchCaret))
+                            nextSearch.setSelectionRange(previousSearchCaret, previousSearchCaret);
+                        komiCatalogFocusPending = false;
+                    }
+                }
             } else if (currentView === 'partners') {
                 container.innerHTML = `
                     <section class="komi-partners-page" aria-labelledby="komiPartnersTitle">
