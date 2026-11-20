@@ -897,17 +897,33 @@ async function loadDataFromCloud(attempt = 0) {
                     }
                 }
             }
-            const adminBtn = document.getElementById('adminPanelBtn');
-            const addBtn = document.getElementById('addAnimeBtn');
-// Only a verified Supabase RPC can grant this session admin UI access.
+            // No admin controls are shipped in guest HTML. Add them only after
+            // the server has verified this Supabase account via komi_is_admin.
             const isAdmin = Boolean(currentUser?.authUserId && komiAdminVerified);
-
-            if (isAdmin) {
-                adminBtn.style.display = 'inline-flex';
-                addBtn.style.display = 'inline-flex';
-            } else {
-                adminBtn.style.display = 'none';
-                addBtn.style.display = 'none';
+            document.body.classList.toggle('komi-authenticated', Boolean(currentUser?.authUserId));
+            for (const [id, action, title] of [
+                ['adminPanelBtn', 'admin-panel', 'Админка'],
+                ['addAnimeBtn', 'anime-add', '+ Добавить']
+            ]) {
+                let button = document.getElementById(id);
+                if (isAdmin) {
+                    if (!button) {
+                        button = document.createElement('button');
+                        button.type = 'button';
+                        button.id = id;
+                        button.className = 'action-icon-btn';
+                        button.dataset.komiClick = action;
+                        button.textContent = title;
+                        area.before(button);
+                    }
+                    button.hidden = false;
+                } else {
+                    button?.remove();
+                }
+            }
+            if (!isAdmin) {
+                document.getElementById('adminModal')?.remove();
+                document.getElementById('addModal')?.remove();
             }
 
             if (currentUser) {
@@ -2875,6 +2891,7 @@ async function loadDataFromCloud(attempt = 0) {
             const uid = currentUser?.authUserId;
             if (!_supabase || !uid) {
                 komiAdminVerified = false;
+                renderHeaderUser();
                 if (!silent) alert('Войдите в подтверждённый аккаунт Supabase.');
                 return false;
             }
@@ -2887,13 +2904,44 @@ async function loadDataFromCloud(attempt = 0) {
                 return verified;
             } catch (error) {
                 komiAdminVerified = false;
+                renderHeaderUser();
                 if (!silent) alert('Проверка администратора недоступна.');
                 console.warn('Komi admin role check:',error.message);
                 return false;
             }
         }
+        let komiAdminUiLoader = null;
+        async function komiEnsureAdminUI() {
+            if (!komiAdminVerified || !currentUser?.authUserId) return false;
+            const verifiedUid = currentUser.authUserId;
+            if (typeof window.komiMountAdminUI !== 'function') {
+                if (!komiAdminUiLoader) {
+                    komiAdminUiLoader = new Promise((resolve, reject) => {
+                        const script = document.createElement('script');
+                        script.src = '/komi-admin-ui.js';
+                        script.async = true;
+                        script.onload = resolve;
+                        script.onerror = () => reject(new Error('Admin UI could not load'));
+                        document.head.appendChild(script);
+                    });
+                }
+                try {
+                    await komiAdminUiLoader;
+                } catch (error) {
+                    komiAdminUiLoader = null;
+                    console.warn('Komi admin UI load:', error.message);
+                    alert('Не удалось открыть редактор. Повторите попытку.');
+                    return false;
+                }
+            }
+            // Account switching or logout while loading must revoke access.
+            if (!komiAdminVerified || currentUser?.authUserId !== verifiedUid ||
+                typeof window.komiMountAdminUI !== 'function') return false;
+            return window.komiMountAdminUI();
+        }
+
         async function openAdminPanel() {
-            if (!(await requireServerAdmin())) return;
+            if (!(await requireServerAdmin()) || !(await komiEnsureAdminUI())) return;
             const modal = document.getElementById('adminModal');
             const content = document.getElementById('adminModalContent');
             content.replaceChildren();
@@ -2973,11 +3021,7 @@ async function loadDataFromCloud(attempt = 0) {
         }
 
         async function openAddModal(editId = null) {
-            if (!(await requireServerAdmin())) return;
-            if (!document.getElementById('addModal')) {
-                const template = document.getElementById('komiAdminAnimeModalTemplate');
-                if (template) document.body.appendChild(template.content.cloneNode(true));
-            }
+            if (!(await requireServerAdmin()) || !(await komiEnsureAdminUI())) return;
             const modal=document.getElementById('addModal');
             if (!modal) return;
             const form=document.getElementById('animeForm');

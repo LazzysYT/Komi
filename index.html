@@ -6,7 +6,7 @@
     <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
     <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
     <meta name="theme-color" content="#090909">
-    <meta name="komi-ui-revision" content="20261119-fullbleed-hero">
+    <meta name="komi-ui-revision" content="20261120-admin-guest-gates">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="Komi Anime Hub">
@@ -18,6 +18,11 @@
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
     <link rel="stylesheet" href="/komi.bundle.css?v=20261119h">
+    <style>
+      .komi-media-hub:not(.komi-authenticated) #notifBellBtn,
+      .komi-media-hub:not(.komi-authenticated) #notifDropdown,
+      .komi-media-hub:not(.komi-authenticated) [data-komi-mobile-extra="notifications"] { display: none !important; }
+    </style>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="dns-prefetch" href="//s4.anilist.co">
@@ -110,8 +115,6 @@
                         <button type="button" data-komi-click="partners">Партнёры</button>
                         <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:14px;min-height:39px;padding:9px 14px;">✧ Komi Premium</a>
                         <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true">◇</span><span id="komiHeaderAniCoinValue">—</span></button>
-                        <button class="action-icon-btn" id="adminPanelBtn" data-komi-click="admin-panel" style="display: none;" title="Админка">Админка</button>
-                        <button class="action-icon-btn" id="addAnimeBtn" data-komi-click="anime-add" style="display: none;" title="Добавить">+ Добавить</button>
                         <div id="userHeaderArea"><button type="button" class="nav-btn" data-komi-onclick="playSound(); openAuthModal('login')" aria-label="Войти или зарегистрироваться">Войти / Регистрация</button></div>
                     </div>
                 </details>
@@ -377,75 +380,8 @@
     </div>
 
     <!-- Модальные окна -->
-    <!-- The admin form is inert and not mounted for ordinary visitors. Server-side roles remain mandatory. -->
-    <template id="komiAdminAnimeModalTemplate">
-    <div class="modal-overlay" id="addModal">
-        <div class="modal-content" style="max-width: 650px;">
-            <button class="modal-close" data-komi-click="anime-close">&times;</button>
-            <h2 id="modalTitleText" style="margin-bottom: 12px; font-size: 18px;">Добавить / Редактировать аниме</h2>
-            
-            <div style="margin-bottom: 14px; display: flex; flex-direction: column; gap: 6px;">
-                <div style="display: flex; gap: 6px;">
-                    <input type="text" id="apiSearchTitle" class="form-control" placeholder="Название для авто-заполнения (Shikimori)...">
-                    <button type="button" class="btn-secondary" data-komi-click="anime-search"> Найти</button>
-                    <button type="button" class="btn-glow" data-komi-click="anime-import"> Топ</button>
-                </div>
-                <div id="apiSearchResultsList" style="display: none; background: var(--bg-input); border: 1px solid var(--border); border-radius: 8px; max-height: 150px; overflow-y: auto; padding: 4px;"></div>
-            </div>
-
-            <form id="animeForm" novalidate data-komi-submit="anime-submit">
-                <input type="hidden" id="editAnimeId">
-                <div class="form-group">
-                    <label for="animeShikimoriId">Shikimori ID (числовой)</label>
-                    <input type="number" class="form-control" id="animeShikimoriId" min="1" max="999999999999" step="1" required placeholder="Например: 52991">
-                </div>
-                <div class="form-group">
-                    <label>Название</label>
-                    <input type="text" class="form-control" id="animeTitle" required placeholder="Название аниме">
-                </div>
-                <div class="form-group">
-                    <label>Постер (URL)</label>
-                    <input type="url" class="form-control" id="animePoster" required placeholder="https://...">
-                </div>
-                <div class="form-group">
-                    <label>Рейтинг Shikimori</label>
-                    <input type="text" class="form-control" id="animeShikiRating" placeholder="9.0">
-                </div>
-                <div class="form-group">
-                    <label>Кадры (через запятую)</label>
-                    <input type="text" class="form-control" id="animeScreenshots" placeholder="https://img1.jpg, https://img2.jpg...">
-                </div>
-                <div class="form-group">
-                    <label>Трейлер (YouTube embed)</label>
-                    <input type="url" class="form-control" id="animeTrailer" placeholder="https://www.youtube.com/embed/...">
-                </div>
-                <div class="form-group">
-                    <label>Жанры</label>
-                    <div id="genresCheckboxList" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; background: var(--bg-input); padding: 8px; border-radius: 8px; border: 1px solid var(--border);"></div>
-                </div>
-                <div class="form-group">
-                    <label>Год / Тип</label>
-                    <div style="display: flex; gap: 6px;">
-                        <input type="text" class="form-control" id="animeYear" placeholder="2026" style="flex:1;">
-                        <input type="text" class="form-control" id="animeType" placeholder="Фильм или Сериал" style="flex:1;">
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label>Описание</label>
-                    <textarea class="form-control" id="animeDesc" style="resize: none; min-height: 120px" placeholder="Сюжет..."></textarea>
-                </div>
-                <div class="form-group">
-                    <label>Эпизоды</label>
-                    <div id="episodesList" style="display:flex; flex-direction:column; gap:6px; margin-bottom:6px;"></div>
-                    <button type="button" class="btn-secondary" data-komi-click="episode-add">+ Добавить эпизод</button>
-                </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" data-komi-click="sound">Сохранить</button>
-            </form>
-        </div>
-    </div>
-    </template>
-
-    <div class="modal-overlay" id="authModal">
+    <!-- Admin editor is loaded only after Supabase verifies the admin role. -->
+<div class="modal-overlay" id="authModal">
         <div class="modal-content" style="max-width: 360px;">
             <button class="modal-close" data-komi-click="auth-close">&times;</button>
             <div style="display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
@@ -475,7 +411,7 @@
                     <input type="text" autocomplete="nickname" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" class="form-control" id="regUsername" required placeholder="Латинские буквы, цифры и _">
                 </div>
                 <div class="form-group">
-                    <label for="regEmail">Email для безопасной регистрации</label>
+                    <label for="regEmail">Email</label>
                     <input type="email" autocomplete="email" class="form-control" id="regEmail" required placeholder="email@example.com">
                 </div>
                 <div class="form-group">
@@ -513,7 +449,6 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="adminModal"><div class="modal-content" style="max-width: 900px;" id="adminModalContent"></div></div>
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
     <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1000px;" id="watchPartyModalContent"></div></div>
 
