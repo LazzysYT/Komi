@@ -161,7 +161,17 @@ try{const code=new URL(location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$
 function mount(){
  for(const [host,selector] of [[document.querySelector('.komi-hub-tools-panel'),'panel'],[document.getElementById('komiMobileMoreMenu'),'mobile'],[document.querySelector('.komi-profile-tabs'),'profile']]){
    if(!host||host.querySelector('[data-community-launch]'))continue;
-   const b=btn('✧ Подборки и импорт',hub);b.dataset.communityLaunch=selector;host.append(b);
+   if(selector==='mobile'){
+     // Keep the original five mobile popup buttons unchanged for existing navigation.
+     const link=node('a','✧ Подборки и импорт','komi-lab-btn');
+     link.href='#komi-tools';link.dataset.communityLaunch=selector;
+     link.style.cssText='display:block;text-decoration:none;margin:5px 0';
+     link.onclick=event=>{event.preventDefault();host.hidden=true;
+       document.getElementById('komiMobileMoreToggle')?.setAttribute('aria-expanded','false');hub();};
+     host.append(link);
+   }else{
+     const b=btn('✧ Подборки и импорт',hub);b.dataset.communityLaunch=selector;host.append(b);
+   }
  }
  if(owner())void refreshReferralBadge();
 }
