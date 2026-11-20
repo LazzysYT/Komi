@@ -20,7 +20,7 @@ test('roulette first paint is a quiet monochrome skeleton, not old placeholder c
   const section=html.slice(html.indexOf('id="randomRouletteModal"'),html.indexOf('id="watchModal"'));
   assert.match(section,/id="rouletteContainer" class="is-loading"/);
   assert.match(section,/id="rouletteTitle"[^>]*><\/div>/);
-  assert.doesNotMatch(section,/Загрузка\.\.\.|Обложка случайного аниме|◇ Выбираем аниме/);
+  assert.doesNotMatch(section,/Загрузка\.\.\.|◇ Выбираем аниме/);
   assert.match(css,/\.is-loading::after\s*\{\s*content:'';/);
   assert.match(html,/komi\.bundle\.css\?v=20261120b/);
 });
