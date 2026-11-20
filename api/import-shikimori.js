@@ -13,7 +13,7 @@ module.exports=async function handler(req,res){
    if(content.length>3*1024*1024)throw Error('Слишком большой список');
    return JSON.parse(content);
   }
-  const user=await request('https://shikimori.one/api/users/'+encodeURIComponent(name));
+  const user=await request('https://shikimori.one/api/users/'+encodeURIComponent(name)+'?is_nickname=1');
   const id=Number(user?.id);
   if(!Number.isSafeInteger(id)||id<1)throw Error('Пользователь не найден');
   const rows=await request('https://shikimori.one/api/users/'+id+'/anime_rates?limit=5000');
