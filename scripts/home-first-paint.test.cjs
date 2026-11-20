@@ -52,7 +52,7 @@ test('hero artwork keeps a visible fallback and preloads before first replacemen
   const art=fs.readFileSync(path.join(__dirname,'../hero-hd-art.js'),'utf8');
   const css=fs.readFileSync(path.join(__dirname,'../komi-media-hub.css'),'utf8');
   assert.match(home,/KomiHomeSnapshot\.featured/);
-  assert.match(art,/slide\.classList\.add\('komi-art-ready'\)/);
+  assert.match(art,/slide\.classList\.toggle\('komi-art-ready', true\)/);
   assert.match(css,/\.hero-slide\.komi-art-ready \.komi-hub-hero-art/);
   assert.match(css,/url\("\/anime-artwork\.svg"\)/);
   assert.match(app,/komiHomeHeroMayPaint\(homeMarkup, container\)/);

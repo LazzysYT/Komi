@@ -20,7 +20,7 @@ test('discovery renders one visible slide and one selected indicator', () => {
   vm.runInNewContext(js, scope, {filename:'home-discovery.js'});
   const animeList = [1, 2, 3].map(id => ({
     id:String(id), title:'Аниме ' + id, poster:'https://example.com/' + id + '.jpg',
-    shikiRating:8, year:2026, genres:['Фэнтези'], desc:'Описание'
+    shikiRating:8, year:2026, genres:['Фэнтези'], desc:'Описание', episodeCount:2
   }));
   const result = scope.KomiHomeDiscovery.render({
     animeList, currentSlideIndex:1, currentUser:null, progress:{},
