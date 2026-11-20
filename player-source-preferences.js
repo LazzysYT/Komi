@@ -33,11 +33,14 @@
     }
     function globalFavorite(available) {
         const choices = Array.isArray(available) ? available.filter(validName) : [];
-        const entries = Object.entries(readCounts())
-            .map(([name,count]) => ({name:bestMatch(name,choices), count}))
-            .filter(item => item.name);
-        entries.sort((a,b) => b.count - a.count || a.name.localeCompare(b.name,'ru'));
-        return entries[0]?.name || '';
+        const totals = new Map();
+        for (const [stored, count] of Object.entries(readCounts())) {
+            const name = bestMatch(stored, choices);
+            if (name) totals.set(name, (totals.get(name) || 0) + count);
+        }
+        const entries = [...totals.entries()].sort((a,b) =>
+            b[1] - a[1] || a[0].localeCompare(b[0],'ru'));
+        return entries[0]?.[0] || '';
     }
     function preferredFor(animeId, available) {
         if (!validAnimeId(animeId)) return {name:'',kind:'none'};
