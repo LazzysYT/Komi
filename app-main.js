@@ -4256,6 +4256,7 @@ async function loadDataFromCloud(attempt = 0) {
             if(button) button.textContent=document.fullscreenElement === content?'Обычный размер':'На весь экран';
         }
         function closeWatchModal() {
+            window.KomiPlayerUX?.cancelPendingNext?.();
             ++komiDetailOpenToken;
             if (document.fullscreenElement?.closest?.('#watchModal')) document.exitFullscreen?.().catch(() => {});
             if (typeof aniCoinStopEmbed === 'function') aniCoinStopEmbed();
@@ -4328,7 +4329,9 @@ async function loadDataFromCloud(attempt = 0) {
             } catch { return ''; }
         }
         function changePlayerSource(animeId, season, epIdx, sourceName) {
-            try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
+            // Persist only an explicit selection, never silently learned fallbacks.
+            if (window.KomiSourcePrefs?.recordChoice) window.KomiSourcePrefs.recordChoice(animeId, sourceName);
+            else try { localStorage.setItem('komi_source_' + animeId, sourceName); } catch {}
             return openWatchModal(animeId, season, epIdx, sourceName);
         }
 
@@ -4402,7 +4405,10 @@ async function loadDataFromCloud(attempt = 0) {
             const adFreeOnly = komiAdFreeOnly();
             let preferredSource = requestedSource;
             if (preferredSource === null) {
-                try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+                preferredSource = window.KomiSourcePrefs?.preferredFor(anime.id, Object.keys(sources))?.name || null;
+                if (!preferredSource) {
+                    try { preferredSource = localStorage.getItem('komi_source_' + anime.id); } catch {}
+                }
             }
             // Respect an explicit source choice. For everyone else, prefer a
             // usable partner iframe where a token for this exact episode exists.
@@ -4423,9 +4429,17 @@ async function loadDataFromCloud(attempt = 0) {
                    !document.getElementById('watchModal').classList.contains('active')) return;
                 if(signedUrl) sources[KOMI_ANIVIBE_LABEL]=signedUrl;
             }
+            // A time-limited partner source may have become available above.
+            // Honor an explicitly remembered studio when it exists in this episode.
+            const availablePreference = requestedSource === null
+                ? window.KomiSourcePrefs?.preferredFor(anime.id, Object.keys(sources))?.name || null
+                : null;
+            const effectivePreference = availablePreference || preferredSource;
             const sourcePlan = KomiPlayerCore.selectPlaybackSource(sources, {
-                requestedSource,
-                preferredSource,
+                requestedSource: requestedSource !== null ? requestedSource :
+                    (!adFreeOnly && effectivePreference && Object.hasOwn(sources,effectivePreference)
+                        ? effectivePreference : null),
+                preferredSource: effectivePreference,
                 adFreeOnly,
                 partnerPreferred: sources[KOMI_ANIVIBE_LABEL] ? KOMI_ANIVIBE_LABEL : null
             });

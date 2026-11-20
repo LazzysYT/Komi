@@ -1,0 +1,57 @@
+/* Native player Quality of Life. Iframes are deliberately not intercepted. */
+#watchModal .player-wrapper {position:relative;}
+#watchModal .komi-next-countdown {
+    position:absolute;right:clamp(10px,3vw,28px);bottom:clamp(72px,11%,110px);
+    z-index:35;max-width:min(310px,calc(100% - 24px));
+    padding:13px 14px;background:rgba(12,12,14,.96);
+    border:1px solid rgba(255,255,255,.22);border-radius:15px;
+    box-shadow:0 12px 38px rgba(0,0,0,.5);
+    color:#fff;font:600 13px/1.45 Inter,system-ui,sans-serif;
+    backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+    pointer-events:auto;
+}
+#watchModal .komi-next-countdown-title {display:block;margin-bottom:11px;}
+#watchModal .komi-next-countdown-actions {display:flex;flex-wrap:wrap;gap:7px;}
+#watchModal .komi-next-countdown-actions button {
+    border:1px solid rgba(255,255,255,.22);border-radius:9px;
+    padding:9px 12px;min-height:38px;cursor:pointer;
+    background:#242426;color:#f4f4f4;font:600 12px Inter,system-ui,sans-serif;
+}
+#watchModal .komi-next-countdown-actions .komi-next-now {
+    background:#f3f3f3;color:#09090b;border-color:#f3f3f3;
+}
+#watchModal .komi-next-countdown-actions button:focus-visible {
+    outline:2px solid #fff;outline-offset:2px;
+}
+#watchModal .komi-tap-seek-feedback {
+    position:absolute;top:50%;left:25%;z-index:25;
+    transform:translate(-50%,-50%) scale(.92);
+    border-radius:999px;padding:15px 18px;background:rgba(19,19,21,.72);
+    color:#fff;font:750 17px Inter,system-ui,sans-serif;
+    border:1px solid rgba(255,255,255,.16);
+    opacity:0;transition:opacity .18s ease,transform .22s ease;
+    pointer-events:none;white-space:nowrap;
+}
+#watchModal .komi-tap-seek-feedback[data-side="right"] {left:75%;}
+#watchModal .komi-tap-seek-feedback.is-visible {
+    opacity:1;transform:translate(-50%,-50%) scale(1);
+}
+#watchModal #animeVideoPlayer {touch-action:manipulation;}
+#watchModal .komi-playback-row [data-control="pip"]:not([hidden]) {
+    display:inline-flex;align-items:center;justify-content:center;
+    flex:none;min-width:34px;min-height:34px;
+}
+#watchModal .komi-playback-row [data-control="pip"][aria-pressed="true"] {
+    background:#f3f3f3;color:#0d0d0e;
+}
+@media(max-width:600px) {
+    #watchModal .komi-next-countdown {
+        right:10px;left:10px;max-width:none;bottom:76px;
+        padding:10px 12px;font-size:12px;
+    }
+    #watchModal .komi-next-countdown-actions button {flex:1;}
+    #watchModal .komi-tap-seek-feedback {padding:12px 15px;font-size:14px;}
+}
+@media(prefers-reduced-motion:reduce) {
+    #watchModal .komi-tap-seek-feedback {transition:none;}
+}

@@ -166,8 +166,11 @@
         return a >= 0 && b > a && b <= duration && b - a <= 210 ? {start:a,end:b} : null;
     }
     function nativePreference(name) {
-        try { return root.localStorage?.getItem('komi_native_' + name) === '1'; }
-        catch { return false; }
+        try {
+            const saved = root.localStorage?.getItem('komi_native_' + name);
+            // Newly enabled by default; a user's explicit off switch is respected.
+            return name === 'autonext' ? saved !== '0' : saved === '1';
+        } catch { return name === 'autonext'; }
     }
     function saveNativePreference(name,value) {
         try { root.localStorage?.setItem('komi_native_' + name, value ? '1' : '0'); }
@@ -194,6 +197,68 @@
         }
     }
 
+    function clearNextCountdown(context) {
+        if (!context) return;
+        if (context.nextTimer != null) clearInterval(context.nextTimer);
+        context.nextTimer = null;
+        context.nextBanner?.remove();
+        context.nextBanner = null;
+    }
+    function cancelPendingNext() {
+        clearNextCountdown(active);
+        if (active?.tapIndicatorTimer != null) clearTimeout(active.tapIndicatorTimer);
+        if (active) active.tapIndicatorTimer = null;
+    }
+    function nextEpisodeCountdown(context) {
+        if (active !== context || !context.video?.isConnected || !context.hasNext ||
+            !context.modal.classList.contains('active') ||
+            typeof root.openWatchModal !== 'function') return;
+        clearNextCountdown(context);
+        const overlay = document.createElement('div');
+        overlay.className = 'komi-next-countdown';
+        overlay.setAttribute('role', 'group');
+        overlay.setAttribute('aria-label', 'Переход к следующей серии');
+        const title = document.createElement('span');
+        title.className = 'komi-next-countdown-title';
+        const watch = makeButton('Смотреть сейчас', 'komi-next-now', 'Смотреть следующую серию сейчас');
+        const cancel = makeButton('Отмена', 'komi-next-cancel', 'Отменить автоматический переход');
+        const actions = document.createElement('div');
+        actions.className = 'komi-next-countdown-actions';
+        actions.append(watch,cancel);
+        overlay.append(title,actions);
+        context.nextBanner = overlay;
+        context.wrapper.append(overlay);
+        let remaining = 5;
+        function stillCurrent() {
+            return active === context && context.video?.isConnected &&
+                context.modal.classList.contains('active');
+        }
+        function advance() {
+            if (!stillCurrent()) { clearNextCountdown(context); return; }
+            clearNextCountdown(context);
+            root.openWatchModal(context.animeId, context.season, context.index + 1);
+        }
+        watch.addEventListener('click', advance);
+        cancel.addEventListener('click', () => {
+            clearNextCountdown(context);
+            showPlaybackStatus(context, 'Автопереход на следующую серию отменён.');
+        });
+        if (!context.autoNext) {
+            title.textContent = 'Серия завершена. Перейти к следующей?';
+            return;
+        }
+        title.textContent = 'Следующая серия через ' + remaining + '…';
+        context.nextTimer = setInterval(() => {
+            if (!stillCurrent() || !context.autoNext) {
+                clearNextCountdown(context);
+                return;
+            }
+            remaining -= 1;
+            if (remaining <= 0) { advance(); return; }
+            title.textContent = 'Следующая серия через ' + remaining + '…';
+        }, 1000);
+    }
+
     function mount(settings = {}) {
         if (typeof document === 'undefined') return;
         const modal = document.getElementById('watchModal');
@@ -217,7 +282,9 @@
             skippedOpening:false, skippedEnding:false,
             skip: null, note: null
         };
+        cancelPendingNext();
         active = context;
+        context.wrapper = wrapper;
         const bar = document.createElement('div');
         bar.className = 'komi-cinema-toolbar';
         bar.setAttribute('role', 'group');
@@ -252,6 +319,7 @@
                 saveNativePreference('autonext',context.autoNext);
                 autoNext.setAttribute('aria-pressed',String(context.autoNext));
                 showPlaybackStatus(context,context.autoNext ? 'Автопереход включён' : 'Автопереход выключен');
+                if (video.ended) nextEpisodeCountdown(context);
             });
             bar.append(autoNext);
             if (settings.authId && root.KomiPremium?.isActiveId?.(settings.authId)) {
@@ -285,25 +353,51 @@
             video.addEventListener('ended', () => markCurrentWatched(context));
             video.addEventListener('ended', () => {
                 if (active !== context || !video.isConnected) return;
-                if (context.autoNext && context.hasNext && context.modal.classList.contains('active') &&
-                    typeof root.openWatchModal === 'function') {
-                    root.openWatchModal(context.animeId, context.season, context.index + 1);
-                }
+                if (context.autoNext && context.hasNext) nextEpisodeCountdown(context);
+                else if (context.hasNext) nextEpisodeCountdown(context); // Manual action, no timer.
             });
-            // A double tap on the video surface seeks 10 seconds.
+            video.addEventListener('playing', () => clearNextCountdown(context));
+            video.addEventListener('seeking', () => clearNextCountdown(context));
+            // Double-tap on native video only. Swipes and external embeds are never intercepted.
             let previousTap = {time:0,side:''};
-            video.addEventListener('pointerup', event => {
+            let down = null;
+            const indicator = document.createElement('div');
+            indicator.className = 'komi-tap-seek-feedback';
+            indicator.setAttribute('aria-hidden','true');
+            wrapper.append(indicator);
+            video.addEventListener('pointerdown', event => {
                 if (event.pointerType !== 'touch' || active !== context) return;
-                const bounds = video.getBoundingClientRect();
-                if (!bounds.width) return;
-                const side = event.clientX < bounds.left + bounds.width / 2 ? 'left' : 'right';
+                down = {id:event.pointerId, x:event.clientX, y:event.clientY, time:Date.now()};
+            }, {passive:true});
+            video.addEventListener('pointercancel', () => { down=null; previousTap={time:0,side:''}; }, {passive:true});
+            video.addEventListener('pointerup', event => {
+                if (event.pointerType !== 'touch' || active !== context || !down) return;
+                const start = down;
+                down = null;
                 const now = Date.now();
-                if (previousTap.side === side && now - previousTap.time <= 330) {
-                    video.currentTime = seekTarget(video.currentTime, side === 'left' ? -10 : 10, video.duration);
+                if (start.id !== event.pointerId || now - start.time > 450 ||
+                    Math.hypot(start.x - event.clientX, start.y - event.clientY) > 26) {
+                    previousTap = {time:0,side:''};
+                    return;
+                }
+                const bounds = video.getBoundingClientRect();
+                if (!bounds.width || video.komiMediaFailed || !Number.isFinite(video.duration) ||
+                    video.duration <= 1) return;
+                const side = event.clientX < bounds.left + bounds.width / 2 ? 'left' : 'right';
+                if (previousTap.side === side && now - previousTap.time <= 360) {
+                    video.currentTime = seekTarget(video.currentTime,
+                        side === 'left' ? -10 : 10, video.duration);
+                    indicator.dataset.side = side;
+                    indicator.textContent = side === 'left' ? '↶ 10 с' : '10 с ↷';
+                    indicator.classList.remove('is-visible');
+                    void indicator.offsetWidth;
+                    indicator.classList.add('is-visible');
+                    clearTimeout(context.tapIndicatorTimer);
+                    context.tapIndicatorTimer = setTimeout(() => indicator.classList.remove('is-visible'),650);
                     showPlaybackStatus(context, side === 'left' ? '−10 секунд' : '+10 секунд');
                     previousTap = {time:0,side:''};
                 } else previousTap = {time:now,side};
-            });
+            }, {passive:true});
             updateSkip(context);
         } else if (wrapper.querySelector('iframe')) {
             const notice = document.createElement('span');
@@ -367,7 +461,7 @@
         }
     }
     if (typeof document !== 'undefined') document.addEventListener('keydown', handleKeyboard);
-    const api = {mount,seekTarget,validSegment,watchedStorageKey,readWatched,addWatched,mergeWatched,validMarker,handleKeyboard,loadCloudWatched};
+    const api = {mount,cancelPendingNext,seekTarget,validSegment,watchedStorageKey,readWatched,addWatched,mergeWatched,validMarker,handleKeyboard,loadCloudWatched};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerUX = api;
 })(globalThis);
