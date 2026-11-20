@@ -52,3 +52,45 @@
 @media(prefers-reduced-motion:reduce) {
     .komi-card-quick-toggle {transition:none;}
 }
+/* Pixel-perfect + icon: do not rely on a font's optical baseline. */
+.anime-card .komi-card-quick-toggle {
+    position:relative!important;
+    display:grid!important;
+    place-items:center!important;
+    box-sizing:border-box!important;
+    flex:0 0 auto!important;
+    padding:0!important;
+    margin:0!important;
+    font-size:0!important;
+    line-height:0!important;
+    text-align:center!important;
+    -webkit-appearance:none;
+    appearance:none;
+}
+.anime-card .komi-card-quick-toggle::before,
+.anime-card .komi-card-quick-toggle::after {
+    content:""!important;
+    position:absolute!important;
+    top:50%!important;
+    left:50%!important;
+    width:16px!important;
+    height:2.5px!important;
+    border:0!important;
+    border-radius:3px!important;
+    background:currentColor!important;
+    transform:translate(-50%,-50%)!important;
+    pointer-events:none!important;
+}
+.anime-card .komi-card-quick-toggle::after {
+    transform:translate(-50%,-50%) rotate(90deg)!important;
+}
+@media(max-width:767px) {
+    .anime-card .komi-card-quick {top:8px;right:8px;}
+    .anime-card .komi-card-quick-toggle {
+        width:33px!important;
+        height:33px!important;
+        border-radius:11px!important;
+    }
+    .anime-card .komi-card-quick-toggle::before,
+    .anime-card .komi-card-quick-toggle::after {width:15px!important;}
+}

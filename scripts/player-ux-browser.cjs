@@ -68,9 +68,14 @@ const fixture=new URL('/__komi_player_ux_fixture__',origin).href;
    const video=document.getElementById('animeVideoPlayer');
    video.currentTime=150;
    const bounds=video.getBoundingClientRect();
-   const tap=()=>video.dispatchEvent(new PointerEvent('pointerup',{
-     bubbles:true,pointerType:'touch',clientX:bounds.left+bounds.width*.8,clientY:bounds.top+20
-   }));
+   // A real tap includes pointerdown before pointerup. The player ignores
+   // stray pointerup events so a swipe cannot accidentally seek video.
+   const tap=()=>{
+     const coords={bubbles:true,pointerId:1,pointerType:'touch',
+       clientX:bounds.left+bounds.width*.8,clientY:bounds.top+20};
+     video.dispatchEvent(new PointerEvent('pointerdown',coords));
+     video.dispatchEvent(new PointerEvent('pointerup',coords));
+   };
    tap();tap();
   });
   assert.equal(await page.locator('#animeVideoPlayer').evaluate(el=>el.currentTime),160);
