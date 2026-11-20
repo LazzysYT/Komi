@@ -139,8 +139,9 @@
           case 'catalogFilterYear':catalogFilterYear=el.value;break;
           case 'catalogFilterType':catalogFilterType=el.value;break;
           case 'catalogSort':catalogSort=el.value;break;
-        }render()};
-      if(text==='handleAvatarFileUpload(event)')fn=e=>handleAvatarFileUpload(e);
+        }komiCatalogStateChanged()};
+      if(text==='komiToggleHiddenWatched(this.checked)')fn=(_,el)=>komiToggleHiddenWatched(el.checked);
+       if(text==='handleAvatarFileUpload(event)')fn=e=>handleAvatarFileUpload(e);
       if((match=/^changePlayerSource\('([0-9]{1,15})',([0-9]{1,4}),([0-9]{1,5}),this\.value\)$/.exec(text)) && isId(match[1]))
         fn=(_,el)=>changePlayerSource(match[1],Number(match[2]),Number(match[3]),el.value);
     }
