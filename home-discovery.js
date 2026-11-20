@@ -185,8 +185,8 @@
       return '<section class="komi-home-shelf komi-home-continue komi-feature-section komi-resume-loading" aria-busy="true">' +
         '<div class="komi-home-heading"><h2>Продолжить просмотр</h2></div>' +
         '<div class="komi-home-progress-rail">' +
-        '<div class="komi-home-progress-card komi-resume-placeholder" aria-hidden="true">' +
-        '<span class="komi-home-progress-art"></span><span class="komi-home-progress-details"></span></div>'.repeat(6) +
+        ('<div class="komi-home-progress-card komi-resume-placeholder" aria-hidden="true">' +
+        '<span class="komi-home-progress-art"></span><span class="komi-home-progress-details"></span></div>').repeat(6) +
         '</div></section>';
     }
     return '<section class="komi-home-shelf komi-home-continue komi-feature-section">' +
