@@ -47,7 +47,7 @@
     // Never use innerHTML for text supplied by community members.
     function appendSpoilerAware(target, body) {
         const source = String(body || '');
-        const spoiler = /\\|\\|([\\s\\S]{1,800}?)\\|\\|/g;
+        const spoiler = /\|\|([\s\S]{1,800}?)\|\|/g;
         let cursor = 0;
         for (const match of source.matchAll(spoiler)) {
             if (match.index > cursor) appendTimecodes(target, source.slice(cursor, match.index));
