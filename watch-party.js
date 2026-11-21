@@ -252,7 +252,7 @@ async function enterParty(room) {
             </div>
             <div class="komi-party-room-layout">
                 <section class="komi-party-screen-panel" aria-label="Видеоплеер совместного просмотра">
-                    <div class="komi-party-video-frame" id="partyPlayerFrame"><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
+                    <div class="komi-party-video-frame" id="partyPlayerFrame"><div class="komi-party-reactions-overlay" id="partyReactionsOverlay" aria-hidden="true"></div><video id="partyVideoElement" style="width:100%;height:100%" playsinline preload="metadata" ${host ? 'controls' : ''}></video><iframe id="partyEmbedElement" title="Внешний видеоплеер" sandbox="allow-scripts allow-same-origin allow-forms allow-presentation" allow="autoplay;fullscreen;picture-in-picture" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" style="width:100%;height:100%;border:0;display:none"></iframe></div>
                     <p id="partyEmbedHint" style="display:none">Внешний плеер: серия и источник меняются для всех участников. Play, паузой и перемоткой стороннего плеера каждый управляет самостоятельно.</p>
                     <p id="partyStatus" role="status"></p>
                     <p id="partySyncMode" class="komi-party-sync-notice" role="status" aria-live="polite"></p>
@@ -272,6 +272,7 @@ async function enterParty(room) {
                     <div>
                         <p class="komi-party-reaction-title">Быстрые реакции</p>
                         <div id="partyReactions"></div>
+                        <div id="partyPaidReactions" aria-label="Приобретённые наборы реакций"></div>
                     </div>
                     ${host ? `<div class="komi-party-invites">
                         <h4>Пригласить друга</h4>
@@ -356,10 +357,30 @@ async function enterParty(room) {
     }
     void refreshQueue().catch(error=>{if(isActive())status.textContent='Очередь: '+error.message;});
     let lastMessages = '';
+    const seenReactionEvents=new Set((room.messages||[]).filter(m=>m?.kind==='reaction').map(m=>m.event_id).filter(Boolean));
+    const reactionsOverlay=document.getElementById('partyReactionsOverlay');
+    function animateReaction(message){
+        if(!isActive()||!reactionsOverlay||document.hidden)return;
+        const token=document.createElement('span');
+        token.className='komi-party-reaction-float';
+        token.textContent=String(message.text||'✨').slice(0,3);
+        token.style.left=(15+Math.random()*70)+'%';
+        reactionsOverlay.append(token);
+        setTimeout(()=>token.remove(),1800);
+    }
     function showMessages(messages = []) {
         const serialized = JSON.stringify(messages);
         if (serialized === lastMessages) return;
         lastMessages = serialized;
+        for(const message of messages){
+            if(message?.kind!=='reaction'||!message.event_id||seenReactionEvents.has(message.event_id))continue;
+            seenReactionEvents.add(message.event_id);
+            animateReaction(message);
+        }
+        if(seenReactionEvents.size>150){
+            const recent=messages.filter(m=>m?.kind==='reaction').map(m=>m.event_id).filter(Boolean);
+            seenReactionEvents.clear();for(const id of recent)seenReactionEvents.add(id);
+        }
         chatBox.replaceChildren(...messages.map(message => {
             const line = document.createElement('div');
             line.textContent = message.author + ': ' + message.text;
@@ -390,6 +411,46 @@ async function enterParty(room) {
         button.onclick = () => postMessage(reaction);
         document.getElementById('partyReactions').append(button);
     }
+    const paidContainer=document.getElementById('partyPaidReactions');
+    async function loadPaidReactions(){
+        if(!paidContainer||!_supabase)return;
+        const uid=currentUser?.authUserId;
+        const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
+        if(error||!isActive()||currentUser?.authUserId!==uid)return;
+        const owned=new Set(data?.owned||[]);
+        const packs=(window.KomiShopCatalog?.items||[]).filter(item=>item.type==='reaction');
+        paidContainer.replaceChildren();
+        const heading=document.createElement('p');
+        heading.className='komi-party-reaction-title';
+        heading.textContent='Наборы реакций AniCoin';
+        paidContainer.append(heading);
+        for(const pack of packs){
+            const row=document.createElement('div');row.className='komi-party-paid-pack';
+            const text=document.createElement('small');
+            text.textContent=pack.label+(owned.has(pack.id)?' · куплено':' · в магазине AniCoin');
+            row.append(text);
+            for(const reaction of pack.reactions){
+                const button=document.createElement('button');
+                button.type='button';button.className='party-react-btn komi-party-paid-reaction';
+                button.textContent=reaction.emoji+' '+reaction.label;
+                button.disabled=!owned.has(pack.id);
+                button.title=owned.has(pack.id)?'Отправить реакцию всем участникам':'Сначала приобрети набор в магазине AniCoin';
+                button.addEventListener('click',async()=>{
+                    if(!isActive()||button.disabled)return;
+                    button.disabled=true;
+                    try{
+                        const response=await _supabase.rpc('komi_shop_reaction',{p_room:room.id,p_reaction:reaction.id});
+                        if(response.error)throw response.error;
+                        if(isActive())showMessages(response.data?.messages||[]);
+                    }catch(error){if(isActive())status.textContent='Реакция: '+(error?.message||'Недоступна');}
+                    finally{if(isActive())button.disabled=false;}
+                });
+                row.append(button);
+            }
+            paidContainer.append(row);
+        }
+    }
+    void loadPaidReactions();
     showMessages(room.messages || []);
     let loadedOption;
     let sampleAt = performance.now();

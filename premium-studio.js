@@ -327,7 +327,7 @@
     const filters=$('store-filters');
     if (filters) {
       filters.replaceChildren();
-      for (const [key,label] of [['all','Все'],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['owned','Мои покупки']]) {
+      for (const [key,label] of [['all','Все'],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['reaction','Watch Party'],['owned','Мои покупки']]) {
         const tab=document.createElement('button');tab.type='button';tab.textContent=label;
         tab.setAttribute('aria-pressed',String(storeCategory===key));
         tab.addEventListener('click',()=>{storeCategory=key;paintStore();});
@@ -367,6 +367,11 @@
         top.className='komi-shop-mini-swatch komi-store-'+product.cosmeticClass;top.textContent='KOMI';
       } else if(product.type==='icon'){
         top.className='komi-shop-icon-swatch komi-store-'+product.cosmeticClass;top.textContent=product.symbol;
+      } else if(product.type==='reaction'){
+        top.className='komi-shop-reaction-swatch';
+        for(const reaction of product.reactions){
+            const emoji=document.createElement('span');emoji.textContent=reaction.emoji;top.append(emoji);
+        }
       } else {top.className='store-title-chip';top.textContent=product.title;}
       const heading=document.createElement('h3');heading.textContent=product.label;
       const subtitle=document.createElement('p');subtitle.className='store-subtitle';
@@ -379,16 +384,17 @@
       const preview=document.createElement('button');
       preview.className='store-action store-try';preview.type='button';preview.textContent=isTrial?'Снять примерку':'Примерить';
       preview.addEventListener('click',event=>{event.stopPropagation();tryOn(product);});
+      if(product.type==='reaction'){preview.disabled=true;preview.textContent='Состав набора';}
       const action=document.createElement('button');
       action.className='store-action';action.type='button';
       if (owned) {
-        action.textContent=currentlyEquipped?'Снять':'Надеть';
-        action.disabled=!active || !wallet || state.shopping;
+        action.textContent=product.type==='reaction'?'Набор куплен':currentlyEquipped?'Снять':'Надеть';
+        action.disabled=!active || !wallet || state.shopping||product.type==='reaction';
       } else {
-        action.textContent=wallet && Number(wallet.balance)<product.cost?'Не хватает AniCoin':'Купить и надеть · '+product.cost+' ◈';
+        action.textContent=wallet && Number(wallet.balance)<product.cost?'Не хватает AniCoin':(product.type==='reaction'?'Купить набор · ':'Купить и надеть · ')+product.cost+' ◈';
         action.disabled=!active || !wallet || Number(wallet.balance)<product.cost || state.shopping;
       }
-      action.addEventListener('click',event=>{event.stopPropagation();void storeAction(product,owned?(currentlyEquipped?'unequip':'equip'):'buy_equip');});
+      action.addEventListener('click',event=>{event.stopPropagation();void storeAction(product,owned?(currentlyEquipped?'unequip':'equip'):(product.type==='reaction'?'buy':'buy_equip'));});
       controls.append(preview,action);
       item.append(top,heading,subtitle,controls);
       item.addEventListener('click',event=>{if(!event.target.closest('button'))tryOn(product);});
@@ -415,10 +421,10 @@
     return data.user.id;
   }
   async function storeAction(product,action) {
-    if (state.shopping || !state.wallet || !['equip','buy_equip','unequip'].includes(action)) return;
-    if (action==='buy_equip' && !window.confirm('Купить «'+product.label+'» за '+product.cost+' AniCoin?')) return;
+    if (state.shopping || !state.wallet || !['buy','equip','buy_equip','unequip'].includes(action)) return;
+    if (['buy','buy_equip'].includes(action) && !window.confirm('Купить «'+product.label+'» за '+product.cost+' AniCoin?')) return;
     state.shopping=true;paintStore();
-    message('store-status',action==='buy_equip'?'Покупаем и надеваем…':action==='equip'?'Надеваем предмет…':'Снимаем предмет…');
+    message('store-status',action==='buy_equip'?'Покупаем и надеваем…':action==='buy'?'Покупаем набор…':action==='equip'?'Надеваем предмет…':'Снимаем предмет…');
     const snapshot=state.userId;
     try {
       await verifiedOwner();
@@ -428,7 +434,7 @@
       state.wallet=data;
       state.equipped={frame_id:data.frame_id||null,title_id:data.title_id||null,banner_id:data.banner_id||null,overlay_id:data.overlay_id||null,showcase_id:data.showcase_id||null,card_id:data.card_id||null,icon_id:data.icon_id||null};
       if (action!=='buy') state.trial[product.type]=null;
-      message('store-status',action==='buy_equip'?'Покупка подтверждена. Предмет надет.':action==='equip'?'Предмет надет.':'Предмет снят.');
+      message('store-status',action==='buy_equip'?'Покупка подтверждена. Предмет надет.':action==='buy'?'Набор реакций куплен и доступен в Watch Party.':action==='equip'?'Предмет надет.':'Предмет снят.');
     } catch (error) {
       message('store-status',error?.message||'Операция недоступна.');
     } finally {

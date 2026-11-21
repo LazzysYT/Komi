@@ -102,8 +102,14 @@
         const list = section.querySelector('.komi-comments-list');
         if (!list) return;
         list.replaceChildren();
-        const records = cache.get(String(animeId))?.rows || [];
-        const all = records.concat(legacyComments(animeId));
+        const cacheEntry=cache.get(String(animeId));
+        const records=cacheEntry?.rows||[];
+        const activeHighlights=cacheEntry?.highlights||new Map();
+        const all=records.slice().sort((a,b)=>{
+            const aActive=activeHighlights.has(Number(a.id)) && Date.parse(activeHighlights.get(Number(a.id)))>Date.now();
+            const bActive=activeHighlights.has(Number(b.id)) && Date.parse(activeHighlights.get(Number(b.id)))>Date.now();
+            return Number(bActive)-Number(aActive) || Date.parse(b.created_at||0)-Date.parse(a.created_at||0);
+        }).concat(legacyComments(animeId));
         section.querySelector('.komi-comments-count').textContent =
             all.length ? String(all.length) + (records.length >= 50 ? '+' : '') : '0';
         if (!all.length) {
@@ -113,6 +119,12 @@
         const viewerId = (typeof currentUser !== 'undefined' && currentUser?.authUserId) || '';
         for (const item of all) {
             const card = element('article', 'komi-comment');
+            const expiry=activeHighlights.get(Number(item.id));
+            const promoted=expiry && Date.parse(expiry)>Date.now();
+            if(promoted){
+                card.classList.add('komi-comment-promoted');
+                card.append(element('span','komi-comment-promo-label','✧ Выделено за AniCoin · до '+formatDate(expiry)));
+            }
             const head = element('div', 'komi-comment-header');
             const name = element('strong', 'komi-comment-name', String(item.author_name || 'Участник Komi').slice(0, 60));
             if (item.user_id) name.dataset.komiPremiumId = String(item.user_id);
@@ -124,6 +136,13 @@
                 button.type = 'button';
                 button.addEventListener('click', () => removeComment(animeId, item.id, button));
                 head.append(button);
+                if(!promoted && Number.isSafeInteger(Number(item.id)) && Number(item.id)>0){
+                    const promote=element('button','komi-comment-highlight-buy','Выделить · 12 ◈');
+                    promote.type='button';
+                    promote.title='Выделение своего комментария на 24 часа за 12 AniCoin';
+                    promote.addEventListener('click',()=>buyHighlight(animeId,Number(item.id),promote));
+                    head.append(promote);
+                }
             }
             const body = element('p', 'komi-comment-body');
             appendSpoilerAware(body, item.body);
@@ -153,10 +172,40 @@
             if (section?.dataset.animeId === key) statusMessage(section, 'Не удалось загрузить комментарии.');
             return;
         }
-        cache.set(key, { rows: Array.isArray(data) ? data : [], loadedAt: Date.now() });
+        const rows=Array.isArray(data)?data:[];
+        const highlights=new Map();
+        const ids=rows.map(row=>Number(row.id)).filter(Number.isSafeInteger);
+        if(ids.length){
+            const promotions=await _supabase.from('komi_comment_highlights')
+                .select('comment_id,expires_at').in('comment_id',ids)
+                .gt('expires_at',new Date().toISOString());
+            if(!promotions.error)
+                for(const promo of promotions.data||[])highlights.set(Number(promo.comment_id),promo.expires_at);
+        }
+        cache.set(key,{rows,highlights,loadedAt:Date.now()});
         if (section?.dataset.animeId === key) {
             statusMessage(section, '');
             redraw(key);
+        }
+    }
+
+    async function buyHighlight(animeId,id,button){
+        if(typeof currentUser==='undefined'||!currentUser?.authUserId||!_supabase)return;
+        if(!window.confirm('Выделить этот комментарий на 24 часа за 12 AniCoin? Появится пометка о платном выделении.'))return;
+        button.disabled=true;
+        const section=document.getElementById('komiAnimeComments');
+        statusMessage(section,'Подтверждаем выделение на сервере…');
+        try{
+            const {data:{user},error:authError}=await _supabase.auth.getUser();
+            if(authError||user?.id!==currentUser.authUserId)throw Error('Повторно войди в аккаунт.');
+            const {error}=await _supabase.rpc('komi_shop_highlight',{p_comment_id:id});
+            if(error)throw error;
+            await refresh(animeId,true);
+            if(typeof window.komiShopReloadStore==='function')void window.komiShopReloadStore();
+            statusMessage(section,'Комментарий выделен на 24 часа.');
+        }catch(error){
+            button.disabled=false;
+            statusMessage(section,error?.message||'Выделение не удалось.');
         }
     }
 
