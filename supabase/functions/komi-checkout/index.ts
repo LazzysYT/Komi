@@ -1,6 +1,14 @@
 // Server-only Lava.top invoice issuance. Fixed recurring price: no arbitrary discounts.
 // Environment: LAVA_API_KEY, KOMI_PREMIUM_MONTHLY_USD, standard Supabase secrets.
 const DB=Deno.env.get('SUPABASE_URL')||'';
+const configState={
+  lavaKeyPresent:Boolean(Deno.env.get('LAVA_API_KEY')?.trim()),
+  priceConfiguredCorrectly:Deno.env.get('KOMI_PREMIUM_MONTHLY_USD')==='2.01',
+  checkoutEnabled:Deno.env.get('KOMI_CHECKOUT_ENABLED')==='true'
+};
+// Log presence checks only; never reveal credential content.
+console.info('KOMI_CHECKOUT_CONFIG_STATE',JSON.stringify(configState));
+
 const PUBLISHABLE='sb_publishable_SzKz649coUbxHWXjQfdSXQ_GGzzbHrs';
 const OFFER='f1b11818-74d5-4e94-a013-15d89a545cdd';
 const allowed='https://komianime.online';
