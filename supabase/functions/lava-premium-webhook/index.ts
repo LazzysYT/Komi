@@ -105,7 +105,7 @@ Deno.serve(async(req:Request)=>{
    'refund.success':'refunded',
    'chargeback.initiated':'chargeback'
   };
-  if(Deno.env.get('KOMI_CHECKOUT_ENABLED')==='true' && invoice && paymentStatus[type] &&
+  if(Deno.env.get('KOMI_CHECKOUT_ENABLED')!=='false' && invoice && paymentStatus[type] &&
       ['activated','payment_failed','revoked','duplicate_event','stale_event'].includes(result)){
     const finalResponse=await fetch(dbUrl+'/rest/v1/rpc/komi_finalize_checkout_payment',{
       method:'POST',headers,
