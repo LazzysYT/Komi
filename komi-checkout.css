@@ -28,3 +28,7 @@
 .komi-checkout-direct:hover{color:#fff}
 @media(max-width:520px){.komi-checkout-overlay{padding:9px;align-items:flex-end}.komi-checkout-dialog{max-height:94dvh;border-radius:19px 19px 12px 12px;padding:20px 15px}.komi-checkout-fields{grid-template-columns:1fr;gap:2px}.komi-checkout-feedback{min-height:15px}.komi-checkout-buttons{grid-template-columns:1fr 1fr}.komi-checkout-dialog h2{font-size:22px}}
 @media(prefers-reduced-motion:reduce){.komi-checkout-dialog{scroll-behavior:auto}}
+
+.komi-checkout-continue{display:block;width:100%;min-height:43px;border:1px solid #6d6d75;border-radius:11px;background:#26262c;color:#fff;font:700 12px Inter,system-ui,sans-serif;cursor:pointer;margin:4px 0 12px;padding:10px}
+.komi-checkout-continue[hidden]{display:none!important}
+.komi-checkout-continue:hover{background:#34343c}

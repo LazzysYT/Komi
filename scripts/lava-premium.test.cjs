@@ -41,3 +41,16 @@ test('Shop links directly to checkout and also to Premium details',()=>{
  assert.doesNotMatch(shop,/widget\.lava\.top|komi-lava-checkout/);
  assert.doesNotMatch(shop,/service_role|isAdmin\s*=\s*true|raw_user_meta_data/);
 });
+
+test('Checkout click is not lost to input blur; discount fallback requires explicit action',()=>{
+ const js=read('komi-checkout.js');
+ assert.doesNotMatch(js,/addEventListener\('blur'/);
+ assert.match(js,/continueFull\.onclick/);
+ assert.match(js,/promo\.input\.value=''/);
+ assert.match(js,/if\(link\.matches\('\.komi-checkout-direct'\)\)return/);
+ assert.match(js,/window\.location\.assign\(CHECKOUT\)/);
+ assert.match(js,/checked\.discount_percent/);
+ const premium=read('premium.html'),home=read('index.html');
+ assert.match(premium,/komi-checkout\.js\?v=20261122a/);
+ assert.match(home,/komi-checkout\.js\?v=20261122a/);
+});
