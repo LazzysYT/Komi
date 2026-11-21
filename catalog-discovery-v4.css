@@ -1,0 +1,475 @@
+/* KOMI CATALOG / MONOCHROME DISCOVERY v4
+   Scoped to the full catalog. Retains every pre-existing select ID for mobile sheets. */
+#mainContainer .komi-hub-catalog-toolbar.komi-catalog-v4 {
+  display:flex !important;
+  flex-direction:row !important;
+  flex-wrap:wrap !important;
+  justify-content:flex-start !important;
+  align-items:center !important;
+  column-gap:10px !important;
+  row-gap:13px !important;
+  margin:0 0 15px !important;
+  padding:0 !important;
+  min-width:0 !important;
+  border:0 !important;
+  border-radius:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+  color:#fff;
+}
+#mainContainer .komi-catalog-v4 * {box-sizing:border-box}
+#mainContainer .komi-catalog-v4 .komi-catalog-hero {
+  display:flex;
+  position:relative;
+  flex:1 0 100%;
+  flex-direction:column;
+  justify-content:space-between;
+  gap:29px;
+  isolation:isolate;
+  min-width:0;
+  min-height:300px;
+  padding:38px clamp(22px,3.5vw,50px) 30px;
+  overflow:hidden;
+  border:1px solid rgba(255,255,255,.09);
+  border-radius:27px;
+  background:
+    radial-gradient(ellipse at 56% -20%,rgba(236,236,236,.16),transparent 52%),
+    linear-gradient(115deg,#202022 0%,#141414 44%,#0c0c0d 100%);
+  box-shadow:inset 0 1px rgba(255,255,255,.04),0 14px 48px rgba(0,0,0,.15);
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-hero-art {
+  position:absolute;
+  inset:-14% -3%;
+  z-index:-2;
+  display:block;
+  width:106%;
+  height:128%;
+  object-fit:cover;
+  object-position:center 37%;
+  filter:grayscale(1) blur(46px) brightness(.52);
+  opacity:.43;
+  transform:scale(1.08);
+  pointer-events:none;
+  user-select:none;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-hero-shade {
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(90deg,rgba(12,12,13,.56),rgba(8,8,9,.22) 64%,rgba(8,8,9,.65)),
+    linear-gradient(0deg,rgba(8,8,9,.68),transparent 58%);
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-hero-copy {position:relative;z-index:1;max-width:690px}
+#mainContainer .komi-catalog-v4 .komi-catalog-eyebrow {
+  display:inline-flex;
+  align-items:center;
+  gap:9px;
+  font:750 11px/1.3 Inter,system-ui,sans-serif;
+  letter-spacing:.09em;
+  color:#dfdfdf;
+  text-transform:uppercase;
+  margin:0 0 17px;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-eyebrow-dot {
+  display:inline-block;
+  width:7px;
+  height:7px;
+  border-radius:50%;
+  background:#f3f3f3;
+  box-shadow:0 0 10px #ffffff40;
+}
+#mainContainer .komi-catalog-v4 #komiFullCatalogTitle {
+  display:block !important;
+  position:static !important;
+  width:auto;
+  max-width:100%;
+  grid-column:auto !important;
+  grid-row:auto !important;
+  margin:0 0 10px !important;
+  color:#fff !important;
+  font-family:'Plus Jakarta Sans',Inter,system-ui,sans-serif !important;
+  font-size:clamp(31px,3.6vw,53px) !important;
+  font-weight:800 !important;
+  line-height:1.12 !important;
+  letter-spacing:-.045em !important;
+  white-space:normal !important;
+  text-wrap:balance;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-hero-copy p {
+  max-width:620px;
+  margin:0;
+  color:#bcbcbc;
+  font:500 14px/1.6 Inter,system-ui,sans-serif;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-hero-bottom {
+  z-index:1;
+  position:relative;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  flex-wrap:wrap;
+  width:100%;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-search {
+  flex:1 1 375px;
+  min-width:min(100%,270px);
+  max-width:615px;
+  margin:0 !important;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-search input {
+  height:56px;
+  min-height:56px;
+  width:100%;
+  padding:0 20px 0 49px !important;
+  border:1px solid rgba(255,255,255,.13) !important;
+  border-radius:999px !important;
+  background:rgba(8,8,9,.78) !important;
+  color:#fafafa !important;
+  box-shadow:none !important;
+  font:500 14px/1.2 Inter,system-ui,sans-serif;
+  outline:0;
+  backdrop-filter:blur(10px);
+  -webkit-backdrop-filter:blur(10px);
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-search input::placeholder {color:#aaa;opacity:1}
+#mainContainer .komi-catalog-v4 .komi-catalog-search input:focus {
+  background:#111 !important;
+  border-color:#d8d8d8 !important;
+  box-shadow:0 0 0 3px #ffffff1b !important;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-search svg {
+  left:19px;
+  width:20px;
+  height:20px;
+  stroke:#bebebe;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs {
+  display:flex;
+  gap:4px;
+  align-items:center;
+  max-width:100%;
+  padding:5px;
+  border-radius:16px;
+  background:rgba(12,12,13,.81);
+  border:1px solid rgba(255,255,255,.07);
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs button {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:1 0 auto;
+  min-height:40px;
+  padding:10px 16px;
+  margin:0;
+  border:0 !important;
+  border-radius:12px;
+  background:transparent !important;
+  color:#a5a5a5 !important;
+  font:750 12px/1.2 Inter,system-ui,sans-serif;
+  white-space:nowrap;
+  cursor:pointer;
+  transition:background .18s ease,color .18s ease,transform .18s ease;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs button:hover {
+  background:#2a2a2a !important;
+  color:#fff !important;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs button.is-active {
+  background:#ededed !important;
+  color:#121212 !important;
+  box-shadow:0 1px 5px #0003;
+}
+#mainContainer .komi-catalog-v4 > .catalog-filters-box {
+  order:1;
+  flex:1 1 560px;
+  display:grid !important;
+  grid-column:auto !important;
+  grid-row:auto !important;
+  grid-template-columns:repeat(4,minmax(0,1fr)) !important;
+  align-items:stretch;
+  gap:9px !important;
+  min-width:0;
+  margin:0 !important;
+  padding:0 !important;
+  border:0 !important;
+  background:transparent !important;
+  box-shadow:none !important;
+}
+#mainContainer .komi-catalog-v4 > .catalog-filters-box > .form-group {
+  min-width:0;
+  width:100%;
+  margin:0 !important;
+}
+#mainContainer .komi-catalog-v4 > .catalog-filters-box select.form-control {
+  display:block;
+  width:100%;
+  height:49px;
+  min-height:49px !important;
+  padding:9px 28px 9px 16px !important;
+  border:1px solid #333 !important;
+  border-radius:999px !important;
+  background-color:#222 !important;
+  color:#ededed !important;
+  box-shadow:none !important;
+  font:650 12px/1.25 Inter,system-ui,sans-serif !important;
+  cursor:pointer;
+  color-scheme:dark;
+  text-overflow:ellipsis;
+  transition:border-color .18s ease,background .18s ease;
+}
+#mainContainer .komi-catalog-v4 > .catalog-filters-box select.form-control:hover {
+  border-color:#666 !important;
+  background-color:#292929 !important;
+}
+#mainContainer .komi-catalog-v4 > .catalog-filters-box select.form-control:focus {
+  border-color:#eee !important;
+  box-shadow:0 0 0 3px #ffffff16 !important;
+}
+#mainContainer .komi-catalog-v4 > .komi-catalog-hide-switch {
+  order:2;
+  flex:0 1 auto;
+  min-width:0;
+  width:auto;
+  min-height:49px;
+  padding:8px 14px;
+  margin:0;
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  border:1px solid #303030;
+  border-radius:999px;
+  background:#191919;
+  color:#cfcfcf;
+  font-size:11px;
+  font-weight:650;
+  cursor:pointer;
+  white-space:nowrap;
+}
+#mainContainer .komi-catalog-v4 > .komi-catalog-hide-switch input {
+  width:17px;
+  height:17px;
+  flex:0 0 17px;
+  margin:0;
+  accent-color:#f8f8f8;
+  cursor:pointer;
+}
+#mainContainer .komi-catalog-v4 > .komi-catalog-clear {
+  order:3;
+  display:inline-flex;
+  grid-column:auto;
+  grid-row:auto;
+  min-width:auto;
+  min-height:49px;
+  align-items:center;
+  justify-content:center;
+  padding:9px 16px;
+  margin:0;
+  border:1px solid #343434;
+  border-radius:999px;
+  background:transparent;
+  color:#d4d4d4;
+  font:650 12px/1.2 Inter,system-ui,sans-serif;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .18s ease,border-color .18s ease;
+}
+#mainContainer .komi-catalog-v4 > .komi-catalog-clear:hover {
+  background:#282828;
+  border-color:#777;
+  color:#fff;
+}
+#mainContainer .komi-catalog-v4 > .komi-mobile-filter-trigger {display:none !important;}
+#mainContainer .komi-catalog-v4 > .komi-catalog-genre-row {
+  order:4;
+  display:flex;
+  flex:1 0 100%;
+  min-width:0;
+  align-items:center;
+  gap:16px;
+  padding:4px 0 1px;
+}
+#mainContainer .komi-catalog-row-caption {
+  display:inline-block;
+  flex:0 0 auto;
+  font:750 11px/1.2 Inter,system-ui,sans-serif;
+  letter-spacing:.035em;
+  color:#989898;
+  white-space:nowrap;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-genre-scroll {
+  display:flex;
+  gap:8px;
+  flex:1 1 auto;
+  min-width:0;
+  padding:2px 1px 5px;
+  overflow-x:auto;
+  overscroll-behavior-x:contain;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-genre-scroll::-webkit-scrollbar {display:none}
+#mainContainer .komi-catalog-v4 .komi-catalog-genre-tag {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  flex:0 0 auto;
+  padding:10px 17px;
+  min-height:39px;
+  margin:0;
+  border:1px solid #2d2d2d !important;
+  border-radius:999px;
+  background:#191919 !important;
+  color:#bdbdbd !important;
+  font:650 12px/1.2 Inter,system-ui,sans-serif;
+  cursor:pointer;
+  white-space:nowrap;
+  transition:background .16s ease,border-color .16s ease,color .16s ease;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-genre-tag:hover {
+  background:#282828 !important;
+  border-color:#777 !important;
+  color:#fff !important;
+}
+#mainContainer .komi-catalog-v4 .komi-catalog-genre-tag.is-active {
+  background:#fff !important;
+  border-color:#fff !important;
+  color:#121212 !important;
+}
+#mainContainer .komi-catalog-collection-row {
+  display:flex;
+  align-items:center;
+  gap:15px;
+  min-width:0;
+  margin:3px 0 16px;
+}
+#mainContainer .komi-catalog-collection-row .komi-catalog-chips {
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+  margin:0 !important;
+  min-width:0;
+}
+#mainContainer .komi-catalog-collection-row .komi-catalog-chip {
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:38px;
+  padding:8px 15px;
+  border:1px solid #292929 !important;
+  border-radius:999px !important;
+  background:#161616 !important;
+  color:#b7b7b7 !important;
+  font:650 12px/1.2 Inter,system-ui,sans-serif;
+  cursor:pointer;
+  transition:background .18s ease,color .18s ease,border-color .18s ease;
+}
+#mainContainer .komi-catalog-collection-row .komi-catalog-chip:hover {
+  background:#252525 !important;
+  color:#fff !important;
+  border-color:#777 !important;
+}
+#mainContainer .komi-catalog-collection-row .komi-catalog-chip[aria-pressed="true"] {
+  background:#f2f2f2 !important;
+  color:#0c0c0c !important;
+  border-color:#f2f2f2 !important;
+}
+#mainContainer .komi-catalog-status {
+  padding:4px 2px;
+  color:#929292;
+  font-size:12px;
+}
+#mainContainer .komi-catalog-status .komi-catalog-count {color:#e8e8e8;font-weight:750}
+#mainContainer .komi-catalog-v4 :is(button,input,select):focus-visible,
+#mainContainer .komi-catalog-collection-row button:focus-visible {
+  outline:2px solid #fff !important;
+  outline-offset:3px !important;
+}
+@media(max-width:1150px) {
+  #mainContainer .komi-catalog-v4 .komi-catalog-hero {gap:24px}
+  #mainContainer .komi-catalog-v4 .komi-catalog-hero-bottom {align-items:stretch}
+  #mainContainer .komi-catalog-v4 .komi-catalog-search {max-width:none}
+  #mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs {flex:0 0 auto}
+  #mainContainer .komi-catalog-v4 > .catalog-filters-box {flex-basis:100%}
+}
+@media(max-width:767px) {
+  #mainContainer .komi-hub-catalog-toolbar.komi-catalog-v4 {
+    display:flex !important;
+    flex-wrap:wrap !important;
+    align-items:center !important;
+    margin:0 0 8px !important;
+    gap:10px !important;
+  }
+  #mainContainer .komi-catalog-v4 .komi-catalog-hero {
+    min-height:306px;
+    padding:25px 20px 22px;
+    border-radius:21px;
+    gap:25px;
+  }
+  #mainContainer .komi-catalog-v4 #komiFullCatalogTitle {
+    font-size:clamp(28px,7.4vw,38px) !important;
+    line-height:1.13 !important;
+  }
+  #mainContainer .komi-catalog-v4 .komi-catalog-hero-copy p {font-size:12px;line-height:1.55}
+  #mainContainer .komi-catalog-v4 .komi-catalog-eyebrow {font-size:10px;margin-bottom:14px}
+  #mainContainer .komi-catalog-v4 .komi-catalog-hero-bottom {flex-direction:column;gap:11px}
+  #mainContainer .komi-catalog-v4 .komi-catalog-search {
+    flex:none;
+    width:100%;
+    min-width:0;
+    max-width:none;
+  }
+  #mainContainer .komi-catalog-v4 .komi-catalog-search input {
+    height:49px;min-height:49px;font-size:13px;
+  }
+  #mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs {width:100%;justify-content:space-between;flex:0 0 auto}
+  #mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs button {font-size:11px;padding:10px 9px;min-width:0;flex:1 1 0}
+  #mainContainer .komi-catalog-v4 > .catalog-filters-box,
+  #mainContainer .komi-catalog-v4 > .komi-catalog-hide-switch,
+  #mainContainer .komi-catalog-v4 > .komi-catalog-clear {display:none !important}
+  #mainContainer .komi-catalog-v4 > .komi-mobile-filter-trigger {
+    display:inline-flex !important;
+    order:1;
+    align-items:center !important;
+    justify-content:center !important;
+    align-self:auto !important;
+    min-height:42px !important;
+    margin:3px 0 !important;
+    padding:10px 18px !important;
+    border:1px solid #555 !important;
+    border-radius:999px !important;
+    background:#242424 !important;
+    color:#f6f6f6 !important;
+    font:700 12px/1.2 Inter,system-ui,sans-serif !important;
+    cursor:pointer;
+  }
+  #mainContainer .komi-catalog-v4 > .komi-catalog-genre-row {
+    flex:1 1 100%;
+    order:2;
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+  }
+  #mainContainer .komi-catalog-v4 .komi-catalog-genre-scroll {margin:0 -12px 0 0;padding-bottom:9px}
+  #mainContainer .komi-catalog-v4 .komi-catalog-genre-tag {min-height:37px;padding:8px 14px;font-size:11px}
+  #mainContainer .komi-catalog-collection-row {display:block;margin:0 0 11px}
+  #mainContainer .komi-catalog-collection-row .komi-catalog-chips {
+    display:flex;overflow-x:auto;flex-wrap:nowrap;padding:8px 1px 10px;
+    scrollbar-width:none;overscroll-behavior-x:contain;
+  }
+  #mainContainer .komi-catalog-collection-row .komi-catalog-chips::-webkit-scrollbar {display:none}
+  #mainContainer .komi-catalog-collection-row .komi-catalog-chip {flex:0 0 auto}
+}
+@media(max-width:390px) {
+  #mainContainer .komi-catalog-v4 .komi-catalog-hero {padding:22px 16px 18px;min-height:290px}
+  #mainContainer .komi-catalog-v4 #komiFullCatalogTitle {font-size:28px !important}
+  #mainContainer .komi-catalog-v4 .komi-catalog-sort-tabs button {font-size:10px;padding:9px 5px}
+  #mainContainer .komi-catalog-v4 .komi-catalog-hero-copy p {font-size:11px}
+}
+@media(prefers-reduced-motion:reduce) {
+  #mainContainer .komi-catalog-v4 :is(button,input,select),
+  #mainContainer .komi-catalog-collection-row button {transition:none !important}
+}
