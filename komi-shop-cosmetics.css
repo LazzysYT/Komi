@@ -105,3 +105,16 @@ html:not([data-komi-shop-route="true"]) #mainContainer:has(> .komi-static-shop) 
 @keyframes komi-shop-fall{from{transform:translateY(-25%) translateX(-3%)}to{transform:translateY(40%) translateX(3%)}}
 @media(prefers-reduced-motion:reduce){[data-profile-cover][class*="komi-store-overlay-"]::before,.komi-shop-overlay-layer::before{animation:none!important}.komi-coin-card:hover{transform:none}}
 @media(max-width:580px){.komi-shop-dialog-inner{padding:15px}.komi-coin-card .komi-coin-actions{grid-template-columns:1fr 36px}.komi-coin-card .komi-coin-actions .komi-shop-preview-btn{width:36px}}
+
+.komi-shop-favorite-showcase{margin:12px 0;border:1px solid #ffffff35;border-radius:15px;padding:13px;background:#141417}
+.komi-shop-favorite-showcase[hidden]{display:none!important}
+.komi-shop-favorite-showcase h3{font-size:13px;margin:0 0 10px;color:#fff}
+.komi-shop-favorite-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.komi-shop-favorite-list a{min-width:0;padding:8px;background:#222226;text-align:center;border-radius:8px;color:#f5f5f5;font-size:11px;text-decoration:none;overflow:hidden}
+.komi-shop-favorite-list img{display:block;object-fit:cover;width:100%;max-width:98px;aspect-ratio:2/3;border-radius:5px;margin:0 auto 7px}
+.komi-shop-favorite-list span{display:block;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.komi-shop-favorite-showcase.komi-store-showcase-film .komi-shop-favorite-list a{border:2px dashed #ffffff70}
+.komi-shop-favorite-showcase.komi-store-showcase-gloss .komi-shop-favorite-list a{box-shadow:inset 0 0 14px #ffffff25}
+.komi-shop-favorite-showcase.komi-store-showcase-neon .komi-shop-favorite-list a{border:1px solid white;box-shadow:0 0 8px #ffffff7c}
+.komi-shop-preview-icon{padding:2px 6px;border:1px solid #ffffff60;border-radius:7px;font-size:14px;color:#fff}
+.preview-profile #preview-shop-showcase{padding:10px;margin:10px 0 3px;border-radius:12px}
