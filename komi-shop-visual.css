@@ -1,0 +1,92 @@
+/* Komi Visual Collections: CSS-only cosmetics, no external assets. */
+:root{--komi-vc-white:#f4f4f7;--komi-vc-muted:#8d8d95}
+.komi-coin-card[data-rarity],.store-item[data-rarity],.komi-premium-store-item[data-rarity]{position:relative}
+[data-rarity="rare"]{--komi-vc-rarity:#d7d7df}
+[data-rarity="epic"]{--komi-vc-rarity:#f7f7f7}
+[data-rarity="legendary"]{--komi-vc-rarity:#ffffff}
+.komi-coin-card[data-rarity="rare"],.store-item[data-rarity="rare"]{border-color:#c2c2cb65}
+.komi-coin-card[data-rarity="epic"],.store-item[data-rarity="epic"]{border-color:#ffffff9a;box-shadow:inset 0 0 0 1px #ffffff11}
+.komi-coin-card[data-rarity="legendary"],.store-item[data-rarity="legendary"]{border-color:#ffffffc8;box-shadow:0 0 18px #ffffff24,inset 0 0 0 1px #ffffff33}
+.komi-shop-rarity{align-self:flex-start;border:1px solid #ffffff3d;border-radius:99px;padding:3px 7px;font-size:10px;color:#c5c5cb;text-transform:uppercase;letter-spacing:.07em;font-weight:750}
+[data-rarity="legendary"] .komi-shop-rarity{color:#fff;border-color:#ffffffa0}
+.komi-coin-card .komi-coin-sample{overflow:visible;position:relative}
+.komi-shop-visual-sample{position:relative;min-height:56px;min-width:56px;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff}
+.komi-shop-visual-sample img{width:56px;height:56px;object-fit:cover;border-radius:inherit}
+.komi-shop-visual-sample.komi-shop-avatar-shape{border:1px solid #ffffff55;width:63px;height:63px}
+.komi-shop-visual-sample.komi-shop-name-swatch{font-size:18px;white-space:normal;text-align:center;padding:10px}
+.komi-shop-visual-sample.komi-shop-plate-swatch{width:100%;max-width:180px;min-height:65px;border-radius:10px;border:1px solid #ffffff65;font-size:11px}
+.komi-shop-visual-sample.komi-shop-xp-swatch{width:85%;min-width:100px;height:28px;background:transparent!important}
+.komi-shop-visual-sample.komi-shop-xp-swatch::after{content:'';display:block;height:9px;width:100%;border-radius:9px;background:linear-gradient(90deg,#fff 0 64%,#4b4b51 64%)}
+.komi-shop-visual-sample.komi-shop-mascot-swatch{width:68px;height:55px}
+.komi-shop-mascot-swatch::before{position:absolute!important;transform:scale(1.4)}
+/* New frames, applied to both native avatar and studio previews. */
+:is(.komi-store-frame-sumi,.frame-sumi){box-shadow:0 0 0 2px #e0e0e4,4px -3px 0 2px #ffffff88,-3px 5px 0 1px #85858a!important;filter:contrast(1.08)}
+:is(.komi-store-frame-film35,.frame-film35){box-shadow:0 0 0 3px #f7f7f7,0 0 0 7px #141418,0 0 0 8px #c9c9cf!important;border:3px dashed #a4a4aa!important}
+:is(.komi-store-frame-glitch,.frame-glitch){box-shadow:-4px -1px 0 2px #eee,4px 2px 0 1px #74747a,0 0 13px #ffffff5c!important;animation:komi-frame-glitch 7s step-end infinite}
+:is(.komi-store-frame-glass,.frame-glass){box-shadow:0 0 0 3px #ffffffb6,0 0 22px #ffffff66,inset 0 0 16px #ffffff55!important;outline:1px solid #ffffff4a;outline-offset:5px}
+:is(.komi-store-frame-sakura,.frame-sakura){box-shadow:0 0 0 3px #e5d5df,0 0 15px 5px #e5d5df66!important}
+:is(.komi-store-frame-slash,.frame-slash){box-shadow:6px -6px 0 -3px white,-6px 6px 0 -3px #aaa,0 0 0 2px #fff!important}
+:is(.komi-store-frame-shogun,.frame-shogun){box-shadow:0 0 0 3px #f3f3f4,0 0 0 6px #242428,0 0 19px 6px #ffffff9c!important}
+:is(.komi-store-frame-shogun,.frame-shogun)::before{content:'♛';font-size:25px;color:#fff;position:absolute;top:-29px;left:50%;transform:translateX(-50%);line-height:1;z-index:7;pointer-events:none;text-shadow:0 0 7px #fff8}
+:is(.komi-store-frame-eclipse,.frame-eclipse){animation:komi-eclipse-halo 12s linear infinite}
+:is(.komi-store-frame-orbit,.frame-orbit){position:relative}
+:is(.komi-store-frame-orbit,.frame-orbit)::before{content:'';position:absolute;inset:-8px;border:3px dotted #fff8;border-radius:50%;animation:komi-orbit 11s linear infinite;pointer-events:none}
+:is(.komi-store-frame-neon,.frame-neon){animation:komi-neon-pulse 3s ease-in-out infinite}
+:is(.komi-store-frame-prism,.frame-prism):hover{filter:brightness(1.4)}
+@keyframes komi-frame-glitch{0%,96%,98%,100%{transform:translateX(0)}97%{transform:translateX(2px)}99%{transform:translateX(-2px)}}
+@keyframes komi-eclipse-halo{0%{filter:drop-shadow(0 0 3px #fff)}50%{filter:drop-shadow(0 0 9px #fff9)}100%{filter:drop-shadow(0 0 3px #fff)}}
+@keyframes komi-orbit{to{transform:rotate(360deg)}}
+@keyframes komi-neon-pulse{0%,100%{filter:drop-shadow(0 0 2px #fff6)}50%{filter:drop-shadow(0 0 9px #fffa)}}
+/* New shapes: mask the image, leave the decorative ring visible. */
+.komi-store-shape-cyber,.shape-cyber{clip-path:polygon(16% 0,100% 0,100% 84%,84% 100%,0 100%,0 16%)!important;border-radius:0!important}
+.komi-store-shape-octagon,.shape-octagon{clip-path:polygon(29% 0,71% 0,100% 29%,100% 71%,71% 100%,29% 100%,0 71%,0 29%)!important;border-radius:0!important}
+.komi-store-shape-diamond,.shape-diamond{clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)!important;border-radius:0!important}
+.komi-store-shape-drop,.shape-drop{clip-path:polygon(50% 0,81% 12%,98% 37%,91% 66%,73% 90%,50% 100%,27% 90%,9% 66%,2% 37%,19% 12%)!important;border-radius:0!important}
+/* Comment plates blend with standard and 24h promoted comments; content stays legible. */
+.komi-comment.komi-store-plate-manga,.komi-store-plate-manga{background-image:radial-gradient(#ffffff20 1px,transparent 1px)!important;background-size:9px 9px!important;background-color:#19191d!important}
+.komi-comment.komi-store-plate-seigaiha,.komi-store-plate-seigaiha{background-image:radial-gradient(circle at 50% 100%,transparent 16px,#ffffff22 17px 18px,transparent 19px),radial-gradient(circle at 0% 0%,transparent 16px,#ffffff16 17px 18px,transparent 19px)!important;background-size:44px 23px!important;background-color:#17171b!important}
+.komi-comment.komi-store-plate-rain,.komi-store-plate-rain{background:repeating-linear-gradient(106deg,transparent 0 20px,#ffffff15 21px 22px,transparent 23px 39px),#17171b!important}
+.komi-comment.komi-store-plate-gradient,.komi-store-plate-gradient{background:linear-gradient(140deg,#303036,#121215 65%)!important;border:1px solid #ffffff98!important;box-shadow:inset 0 0 16px #fff1}
+.komi-comment[class*="komi-store-plate-"].komi-comment-promoted{outline:2px solid #fffd;outline-offset:2px}
+/* Minicompanions: silhouettes rendered by CSS, not uploaded images. */
+.komi-profile-mascot{position:absolute;z-index:9;right:15px;top:-19px;width:43px;height:39px;pointer-events:none;filter:drop-shadow(0 4px 5px #000)}
+.komi-profile-mascot::before{content:'';position:absolute;inset:6px 8px 2px;background:var(--mascot-body);clip-path:var(--mascot-shape);border-radius:var(--mascot-radius,0)}
+.komi-profile-mascot::after{content:var(--mascot-symbol,'');position:absolute;inset:12px 0 0;text-align:center;color:#222;font-size:14px;font-weight:800}
+.komi-store-mascot-cat{--mascot-body:#e9e9ef;--mascot-shape:polygon(0 0,28% 18%,50% 0,70% 18%,100% 0,100% 100%,0 100%);--mascot-symbol:'••';}
+.komi-store-mascot-lantern{--mascot-body:#e6e6e9;--mascot-shape:polygon(38% 0,62% 0,70% 12%,90% 30%,90% 86%,10% 86%,10% 30%,30% 12%);--mascot-symbol:'◇'}
+.komi-store-mascot-spirit{--mascot-body:#f7f7f9;--mascot-shape:polygon(20% 0,80% 0,100% 30%,100% 90%,70% 76%,50% 100%,30% 76%,0 90%,0 30%);--mascot-symbol:'··'}
+.komi-profile-mascot:hover,.profile-header-card:hover .komi-profile-mascot{animation:komi-mascot-float 1.5s ease-in-out infinite}
+@keyframes komi-mascot-float{50%{transform:translateY(-4px)}}
+.profile-header-card:has(.komi-profile-mascot){position:relative;overflow:visible}
+/* XP bar visual skins: preserve progress semantics and accessible labels. */
+.komi-store-xp-silver progress,.xp-silver.komi-shop-xp-swatch::after{background:linear-gradient(90deg,#ddd,#747480,#fff,#85858b)!important;filter:drop-shadow(0 0 3px #fff8)}
+.komi-store-xp-hatch progress,.xp-hatch.komi-shop-xp-swatch::after{background:repeating-linear-gradient(120deg,#fff 0 3px,#777 3px 6px)!important}
+.komi-store-xp-beam progress,.xp-beam.komi-shop-xp-swatch::after{background:linear-gradient(90deg,#777,#fff,#777)!important;box-shadow:0 0 9px #ffffff99;animation:komi-xp-light 3s ease-in-out infinite}
+.komi-store-xp-dots progress,.xp-dots.komi-shop-xp-swatch::after{background:repeating-linear-gradient(90deg,#fafafa 0 7px,transparent 7px 11px)!important}
+.komi-store-xp-silver progress::-webkit-progress-value{background:linear-gradient(90deg,#a4a4aa,#f4f4f6,#777)!important}
+.komi-store-xp-hatch progress::-webkit-progress-value{background:repeating-linear-gradient(120deg,#fff 0 3px,#777 3px 6px)!important}
+.komi-store-xp-beam progress::-webkit-progress-value{background:linear-gradient(90deg,#888,#fff,#888)!important}
+.komi-store-xp-dots progress::-webkit-progress-value{background:repeating-linear-gradient(90deg,#fff 0 7px,#555 7px 11px)!important}
+.komi-store-xp-silver progress::-moz-progress-bar{background:linear-gradient(90deg,#aaa,#fff,#777)}
+.komi-store-xp-hatch progress::-moz-progress-bar{background:repeating-linear-gradient(120deg,#fff 0 3px,#777 3px 6px)}
+.komi-store-xp-beam progress::-moz-progress-bar{background:linear-gradient(90deg,#888,#fff,#888)}
+.komi-store-xp-dots progress::-moz-progress-bar{background:repeating-linear-gradient(90deg,#fff 0 7px,#555 7px 11px)}
+@keyframes komi-xp-light{50%{filter:brightness(1.4)}}
+/* Public, deterministic nickname gradients. */
+:is(.komi-store-name-silver,.name-silver){background-image:linear-gradient(100deg,#b8b8bf,#fff,#777780,#eee)!important;background-size:200% 100%;background-clip:text;-webkit-background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important;animation:komi-name-sheen 5s ease-in-out infinite}
+:is(.komi-store-name-ghost,.name-ghost){color:#f7f7f8!important;text-shadow:0 0 9px #ffffffbb,0 0 21px #ffffff44!important}
+:is(.komi-store-name-dawn,.name-dawn){background-image:linear-gradient(110deg,#fff,#f5f5f5,#e75963)!important;background-clip:text;-webkit-background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important}
+:is(.komi-store-name-chrome,.name-chrome){background-image:linear-gradient(125deg,#fff,#555,#e5e5e9,#777,#fff)!important;background-clip:text;-webkit-background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important;text-shadow:0 0 1px #ffffff66}
+@keyframes komi-name-sheen{50%{background-position:100% 50%}}
+/* Set bonus is cosmetic only, enabled when all three slot items match. */
+.komi-set-eclipse{outline:1px solid #ffffff98!important;box-shadow:0 0 32px #ffffff2b,inset 0 0 40px #ffffff0d!important}
+.komi-set-film{outline:2px dashed #eee9!important;box-shadow:0 0 17px #ffffff25!important}
+.komi-set-sakura{outline:1px solid #dcd9e6!important;box-shadow:0 0 28px #ddd6e65c!important}
+.komi-shop-set-status{display:inline-flex;align-items:center;gap:6px;border:1px solid #ffffff55;border-radius:999px;padding:5px 9px;margin:4px 0;font-size:11px;color:#fff;background:#222228}
+.komi-shop-sets-guide{padding:15px;margin:15px 0;border:1px solid #ffffff30;border-radius:15px;background:#141417}
+.komi-shop-sets-guide h2{font-size:17px;margin:0 0 8px}
+.komi-shop-sets-guide p{font-size:12px;color:#a7a7ae;margin:0}
+.komi-shop-set-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:9px;margin-top:12px}
+.komi-shop-set-card{display:grid;gap:4px;padding:12px;border:1px solid #ffffff30;border-radius:11px;background:#1d1d21;font-size:12px}
+.komi-shop-set-card strong{color:#fff}.komi-shop-set-card small{color:#aaaab4;line-height:1.45}
+@media(prefers-reduced-motion:reduce){:is(.komi-store-frame-glitch,.frame-glitch,.komi-store-frame-eclipse,.frame-eclipse,.komi-store-frame-orbit,.frame-orbit,.komi-store-frame-neon,.frame-neon,.komi-profile-mascot,.komi-store-xp-beam progress,.xp-beam.komi-shop-xp-swatch::after,.komi-store-name-silver,.name-silver){animation:none!important;transition:none!important}}
