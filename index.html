@@ -23,6 +23,7 @@
     <link rel="stylesheet" href="/catalog-comfort.css?v=20261121b">
     <link rel="stylesheet" href="/player-comfort.css?v=20261121a">
     <link rel="stylesheet" href="/mobile-bottom-sheets.css?v=20261121b">
+    <link rel="stylesheet" href="/auth-dialog.css?v=20261121a">
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -383,44 +384,54 @@
     <!-- Модальные окна -->
     <!-- Admin editor is loaded only after Supabase verifies the admin role. -->
 <div class="modal-overlay" id="authModal">
-        <div class="modal-content" style="max-width: 360px;">
-            <button class="modal-close" data-komi-click="auth-close">&times;</button>
-            <div style="display: flex; gap: 6px; margin-bottom: 14px; border-bottom: 1px solid var(--border); padding-bottom: 6px;">
-                <button type="button" class="season-tab-btn active" id="tabLoginBtn" data-komi-click="auth-login">Вход</button>
-                <button type="button" class="season-tab-btn" id="tabRegisterBtn" data-komi-click="auth-register">Регистрация</button>
+        <div class="modal-content komi-auth-dialog" aria-labelledby="komiAuthTitle">
+            <button type="button" class="modal-close komi-auth-close" data-komi-click="auth-close" aria-label="Закрыть окно входа">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
+            </button>
+            <div class="komi-auth-intro">
+                <img class="komi-auth-brand" src="./icon.svg" alt="" width="76" height="76" aria-hidden="true">
+                <h2 id="komiAuthTitle"><span class="komi-auth-login-title">Вход в Komi</span><span class="komi-auth-register-title">Регистрация в Komi</span></h2>
+                <p>Один аккаунт для истории просмотра, списков, AniCoin и достижений.</p>
             </div>
+            <button type="button" class="komi-google-btn" data-komi-click="auth-google">
+                <span class="komi-google-g" aria-hidden="true">G</span>
+                <span>Продолжить через Google</span>
+            </button>
+            <div class="komi-auth-separator"><span>ИЛИ ПО ПОЧТЕ</span></div>
 
-            <button type="button" class="komi-google-btn" data-komi-click="auth-google"> <span class="komi-google-g">G</span> Продолжить через Google</button>
-            <div class="komi-auth-separator">или через аккаунт Komi</div>
-            <form id="loginFormContainer" novalidate data-komi-submit="login-submit">
-                <h2 style="margin-bottom: 12px; font-size: 16px;">Вход в аккаунт</h2>
-                <div class="form-group">
-                    <label for="loginUsername">Email</label>
-                    <input type="email" autocomplete="username" class="form-control" id="loginUsername" required placeholder="email@example.com">
+            <form id="loginFormContainer" class="komi-auth-form" data-komi-submit="login-submit">
+                <div class="form-group komi-auth-field">
+                    <label class="komi-auth-visually-hidden" for="loginUsername">Электронная почта</label>
+                    <input type="email" autocomplete="username" autocapitalize="none" spellcheck="false" inputmode="email" class="form-control" id="loginUsername" required placeholder="Электронная почта">
                 </div>
-                <div class="form-group">
-                    <label>Пароль</label>
-                    <input type="password" class="form-control" id="loginPassword" required placeholder="••••••••">
+                <div class="form-group komi-auth-field">
+                    <label class="komi-auth-visually-hidden" for="loginPassword">Пароль</label>
+                    <input type="password" autocomplete="current-password" class="form-control" id="loginPassword" required placeholder="Пароль">
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" data-komi-click="sound">Войти</button>
+                <button type="submit" class="btn-glow komi-auth-submit" data-komi-click="sound">Войти</button>
             </form>
 
-            <form id="registerFormContainer" novalidate data-komi-submit="register-submit" style="display: none;">
-                <h2 style="margin-bottom: 12px; font-size: 16px;">Регистрация</h2>
-                <div class="form-group">
-                    <label for="regUsername">Никнейм</label>
-                    <input type="text" autocomplete="nickname" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" class="form-control" id="regUsername" required placeholder="Латинские буквы, цифры и _">
+            <form id="registerFormContainer" class="komi-auth-form" data-komi-submit="register-submit" style="display: none;">
+                <div class="form-group komi-auth-field">
+                    <label class="komi-auth-visually-hidden" for="regUsername">Никнейм</label>
+                    <input type="text" autocomplete="nickname" autocapitalize="none" spellcheck="false" minlength="3" maxlength="24" pattern="[A-Za-z0-9_]{3,24}" class="form-control" id="regUsername" required placeholder="Никнейм (латиница, цифры и _)">
                 </div>
-                <div class="form-group">
-                    <label for="regEmail">Email</label>
-                    <input type="email" autocomplete="email" class="form-control" id="regEmail" required placeholder="email@example.com">
+                <div class="form-group komi-auth-field">
+                    <label class="komi-auth-visually-hidden" for="regEmail">Электронная почта</label>
+                    <input type="email" autocomplete="email" autocapitalize="none" spellcheck="false" inputmode="email" class="form-control" id="regEmail" required placeholder="Электронная почта">
                 </div>
-                <div class="form-group">
-                    <label>Пароль</label>
-                    <input type="password" class="form-control" id="regPassword" required minlength="12" autocomplete="new-password" aria-describedby="komiPasswordHint" placeholder="Минимум 12 символов"><p id="komiPasswordHint" style="color:var(--text-muted);font-size:12px;margin-top:6px;">Используйте уникальную длинную парольную фразу. Пароли существующих аккаунтов не изменяются.</p>
+                <div class="form-group komi-auth-field">
+                    <label class="komi-auth-visually-hidden" for="regPassword">Пароль</label>
+                    <input type="password" class="form-control" id="regPassword" required minlength="12" autocomplete="new-password" aria-describedby="komiPasswordHint" placeholder="Пароль">
+                    <p id="komiPasswordHint" class="komi-auth-hint">Минимум 12 символов. Используйте уникальный пароль.</p>
                 </div>
-                <button type="submit" class="btn-glow" style="width: 100%; margin-top: 6px; justify-content: center;" data-komi-click="sound">Создать аккаунт</button>
+                <button type="submit" class="btn-glow komi-auth-submit" data-komi-click="sound">Создать аккаунт</button>
             </form>
+
+            <div class="komi-auth-footer">
+                <div class="komi-auth-footer-register">Нет аккаунта? <button type="button" class="season-tab-btn" id="tabRegisterBtn" data-komi-click="auth-register">Зарегистрироваться</button></div>
+                <div class="komi-auth-footer-login">Уже есть аккаунт? <button type="button" class="season-tab-btn active" id="tabLoginBtn" data-komi-click="auth-login">Войти</button></div>
+            </div>
         </div>
     </div>
 
