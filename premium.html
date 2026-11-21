@@ -11,9 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/premium-studio.css">
+  <link rel="stylesheet" href="/komi-shop-cosmetics.css?v=20261122a">
   <link rel="stylesheet" href="/komi-checkout.css?v=20261121">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
-  <script defer src="/premium-studio.js"></script>
+  <script defer src="/komi-shop-catalog.js?v=20261122a"></script>
+  <script defer src="/premium-studio.js?v=20261122a"></script>
   <script defer src="/komi-ref-capture.js?v=20261121"></script>
   <script defer src="/komi-checkout.js?v=20261121"></script>
 </head>
@@ -79,9 +81,10 @@
 
         <section class="surface" aria-labelledby="store-title">
           <div class="section-heading">
-            <div><div class="step-number">04 / МАГАЗИН</div><h2 id="store-title">Premium-магазин</h2><p>Примерка бесплатна. Покупка и надевание выполняются отдельными кнопками через защищённую серверную функцию.</p></div>
+            <div><div class="step-number">04 / МАГАЗИН</div><h2 id="store-title">Магазин AniCoin</h2><p>32 украшения профиля: рамки, титулы и обложки. Примерка бесплатна, покупка и надевание защищены сервером. Доступно всем зарегистрированным пользователям.</p></div>
             <div class="wallet-pill" id="store-balance" aria-live="polite">◈ — AniCoin</div>
           </div>
+          <div id="store-filters" class="store-filters" aria-label="Категории магазина"></div>
           <div class="store-grid" id="store-grid"></div>
           <p class="feedback" id="store-status" role="status" aria-live="polite"></p>
         </section>

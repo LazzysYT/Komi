@@ -1,12 +1,7 @@
 /* Server-backed Premium AniCoin store. Paid cosmetic ownership cannot be claimed by clients. */
 (function(root){
 'use strict';
-const products=[
- {id:'frame_moon',label:'Лунная рамка',cost:30,type:'frame'},
- {id:'frame_aurora',label:'Рамка Аврора',cost:45,type:'frame'},
- {id:'title_cinema',label:'Титул «Киноман»',cost:20,type:'title'},
- {id:'title_starlight',label:'Титул «Звёздный зритель»',cost:25,type:'title'}
-];
+const products=root.KomiShopCatalog?.items||[];
 let client=null,publicItems=new Map(),wallet=null,owner='',busy=false;
 function css(){
  if(document.getElementById('komi-premium-store-css'))return;
@@ -22,18 +17,23 @@ function apply(){
  if(!profile)return;
  const user=profile.getAttribute('data-profile-user');
  const id=root.KomiPremium?.idForUsername?.(user);
- const entitled=root.KomiPremium?.isActiveId?.(id);
- const item=entitled?publicItems.get(id):null;
+ const item=publicItems.get(id);
  const frame=profile.querySelector('.profile-avatar-frame');
  if(frame){
-  frame.classList.toggle('komi-store-frame-moon',item?.frame_id==='frame_moon');
-  frame.classList.toggle('komi-store-frame-aurora',item?.frame_id==='frame_aurora');
+  frame.classList.remove(...products.filter(x=>x.type==='frame').map(x=>'komi-store-'+x.frameClass));
+  const frameProduct=products.find(x=>x.id===item?.frame_id);
+  if(frameProduct?.frameClass)frame.classList.add('komi-store-'+frameProduct.frameClass);
+ }
+ const cover=profile.querySelector('[data-profile-cover]');
+ if(cover){
+  cover.classList.remove(...products.filter(x=>x.type==='banner').map(x=>'komi-store-'+x.bannerClass));
+  const bannerProduct=products.find(x=>x.id===item?.banner_id);
+  if(bannerProduct?.bannerClass)cover.classList.add('komi-store-'+bannerProduct.bannerClass);
  }
  const titleHolder=profile.querySelector('.profile-name-row');
  if(!titleHolder)return;
  let title=titleHolder.querySelector('[data-komi-earned-title]');
- const titles={title_cinema:'✧ Киноман',title_starlight:'✦ Звёздный зритель'};
- const content=entitled?titles[item?.title_id]:'';
+ const content=products.find(x=>x.id===item?.title_id)?.title||'';
  if(content){
   if(!title){title=document.createElement('span');title.className='komi-store-earned-title';title.dataset.komiEarnedTitle='';titleHolder.append(title);}
   title.textContent=content;
@@ -42,7 +42,7 @@ function apply(){
 async function refresh(){
  if(!client)return;
  const {data,error}=await client.from('komi_premium_cosmetic_equips')
-  .select('user_id,frame_id,title_id').limit(1000);
+  .select('user_id,frame_id,title_id,banner_id').limit(1000);
  if(error){console.warn('Premium store items unavailable:',error.message);return;}
  publicItems=new Map((data||[]).map(x=>[String(x.user_id),x]));
  apply();
@@ -66,10 +66,10 @@ function paint(panel){
   const product=products.find(x=>x.id===button.dataset.premiumItem);
   if(!product)continue;
   const owned=wallet.owned.includes(product.id);
-  const equipped=wallet[product.type==='frame'?'frame_id':'title_id']===product.id;
-  button.dataset.action=owned?'equip':'buy';
-  button.disabled=busy || equipped || (!owned&&Number(wallet.balance)<product.cost);
-  button.textContent=equipped?'Надето ✓':owned?'Надеть':Number(wallet.balance)<product.cost?'Недостаточно AniCoin':'Купить · '+product.cost+' ◈';
+  const equipped=wallet[product.type+'_id']===product.id;
+  button.dataset.action=equipped?'unequip':owned?'equip':'buy';
+  button.disabled=busy || (!owned&&Number(wallet.balance)<product.cost);
+  button.textContent=equipped?'Снять':owned?'Надеть':Number(wallet.balance)<product.cost?'Недостаточно AniCoin':'Купить · '+product.cost+' ◈';
  }
 }
 function mount(container,id,active){
@@ -78,9 +78,9 @@ function mount(container,id,active){
  css();
  const panel=document.createElement('section');
  panel.className='komi-premium-store';panel.dataset.premiumStorePanel=id;
- const title=document.createElement('h2');title.textContent='Premium-магазин';
+ const title=document.createElement('h2');title.textContent='Магазин AniCoin · 32 украшения';
  const description=document.createElement('p');
- description.textContent='Рамки и титулы за AniCoin. Покупки подтверждает сервер; доступно только при активной подписке.';
+ description.textContent='Рамки, титулы и обложки за AniCoin. Покупки подтверждает сервер. Доступно всем пользователям.';
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
  const grid=document.createElement('div');grid.className='komi-premium-store-grid';
  for(const product of products){
@@ -88,7 +88,15 @@ function mount(container,id,active){
   const label=document.createElement('h3');label.textContent=product.label;
   const button=document.createElement('button');button.type='button';button.dataset.premiumItem=product.id;
   button.disabled=true;button.textContent='Загрузка…';
-  item.append(label,button);grid.append(item);
+  const sample=document.createElement('div');sample.className='komi-coin-sample';
+  if(product.type==='frame'){
+   const avatar=document.createElement('span');avatar.className='komi-coin-frame komi-store-'+product.frameClass;avatar.textContent='K';sample.append(avatar);
+  }else if(product.type==='banner'){
+   const cover=document.createElement('span');cover.className='store-banner-swatch '+product.bannerClass;cover.textContent='KOMI';sample.append(cover);
+  }else{
+   const chip=document.createElement('span');chip.className='komi-coin-title';chip.textContent=product.title;sample.append(chip);
+  }
+  item.append(sample,label,button);grid.append(item);
  }
  const status=document.createElement('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
  panel.append(title,description,balance,grid,status);
@@ -96,19 +104,19 @@ function mount(container,id,active){
   const button=event.target.closest('[data-premium-item]');
   if(!button||button.disabled||busy||verifiedOwner()!==id||!client)return;
   const product=products.find(x=>x.id===button.dataset.premiumItem);
-  if(!product||!root.KomiPremium?.isActiveId?.(id))return;
+  if(!product)return;
   busy=true;paint(panel);status.textContent='Проверяем покупку…';
   try{
    const {data:{user},error:authError}=await client.auth.getUser();
    if(authError||user?.id!==id)throw Error('Требуется вход в аккаунт.');
    const action=button.dataset.action;
-   if(!['buy','equip'].includes(action))throw Error('Invalid action');
+   if(!['buy','equip','unequip'].includes(action))throw Error('Invalid action');
    const {data,error}=await client.rpc('komi_premium_store',{p_action:action,p_item:product.id});
    if(error)throw error;
    if(verifiedOwner()!==id)return;
    wallet=data;owner=id;
-   status.textContent=action==='buy'?'Куплено. Теперь можно надеть.':'Оформление обновлено.';
-   if(action==='equip')await refresh();
+   status.textContent=action==='buy'?'Куплено. Теперь можно надеть.':action==='equip'?'Предмет надет.':'Предмет снят.';
+   if(action!=='buy')await refresh();
    if(typeof aniCoinRequest==='function')void aniCoinRequest('read',{},id).catch(()=>{});
   }catch(error){status.textContent=error?.message||'Операция недоступна.';}
   finally{busy=false;if(verifiedOwner()===id)paint(panel);}

@@ -1,33 +1,57 @@
 const test=require('node:test'),assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
-const sql=fs.readFileSync(path.join(__dirname,'../supabase/migrations/20261119211500_premium_anicoin_cosmetics.sql'),'utf8');
-const js=fs.readFileSync(path.join(__dirname,'../komi-premium-store.js'),'utf8');
-const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
-const premium=fs.readFileSync(path.join(__dirname,'../komi-premium.js'),'utf8');
-test('Premium shop server validates active paid status and fixed prices',()=>{
- assert.match(sql,/b\.active_until>now\(\)/);
- assert.match(sql,/cost:=case p_item when 'frame_moon' then 30/);
- assert.match(sql,/when 'frame_aurora' then 45/);
- assert.match(sql,/when 'title_cinema' then 20/);
- assert.match(sql,/when 'title_starlight' then 25/);
- assert.match(sql,/wallet\.balance<cost/);
- assert.match(sql,/balance=balance-cost/);
- assert.match(sql,/for update/);
- assert.match(sql,/primary key\(user_id,item_id\)/);
- assert.match(sql,/exists\(select 1 from komi_private\.premium_store_purchases p/);
- assert.doesNotMatch(sql,/update\s+public\.komi_premium_rewards|komi_premium_contracts|lava|webhook/i);
+const root=path.join(__dirname,'..');
+const original=fs.readFileSync(path.join(root,'supabase/migrations/20261119211500_premium_anicoin_cosmetics.sql'),'utf8');
+const migration=fs.readFileSync(path.join(root,'supabase/migrations/20261122040000_expand_anicoin_cosmetics.sql'),'utf8');
+const catalog=fs.readFileSync(path.join(root,'komi-shop-catalog.js'),'utf8');
+const profile=fs.readFileSync(path.join(root,'komi-premium-store.js'),'utf8');
+const coin=fs.readFileSync(path.join(root,'anicoin.js'),'utf8');
+const studio=fs.readFileSync(path.join(root,'premium-studio.js'),'utf8');
+const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+const standalone=fs.readFileSync(path.join(root,'premium.html'),'utf8');
+const premium=fs.readFileSync(path.join(root,'komi-premium.js'),'utf8');
+const context={window:{}};
+vm.runInNewContext(catalog,context);
+const products=context.window.KomiShopCatalog.items;
+test('32 unique cosmetic items share fixed prices with backend allowlist',()=>{
+ assert.equal(products.length,32);
+ assert.equal(new Set(products.map(x=>x.id)).size,32);
+ assert.deepEqual([...new Set(products.map(x=>x.type))].sort(),['banner','frame','title']);
+ for(const item of products){
+   assert.ok(Number.isInteger(item.cost)&&item.cost>0);
+   assert.match(migration,new RegExp("when '"+item.id+"' then "+item.cost+"\\b"));
+   assert.match(migration,new RegExp("'"+item.id+"'"));
+ }
+ assert.match(original,/primary key\(user_id,item_id\)/);
+ assert.match(migration,/wallet\.balance<cost/);
+ assert.match(migration,/balance=balance-cost/);
+ assert.match(migration,/for update/);
+ assert.match(migration,/exists\(select 1 from komi_private\.premium_store_purchases p/);
+ assert.doesNotMatch(migration,/update\s+public\.komi_premium_rewards|komi_premium_contracts|lava|webhook/i);
 });
-test('public cosmetic equips can be seen only when Premium active, no browser writes',()=>{
- assert.match(sql,/enable row level security/);
- assert.match(sql,/revoke all on public\.komi_premium_cosmetic_equips from public,anon,authenticated/);
- assert.match(sql,/grant select\(user_id,frame_id,title_id\)/);
- assert.match(sql,/grant execute on function public\.komi_premium_store\(text,text\) to authenticated/);
- assert.match(sql,/revoke all on function public\.komi_premium_store\(text,text\) from public,anon,authenticated/);
+test('server authenticates buyers, prevents raw client writes, and exposes cosmetic equip via RLS',()=>{
+ assert.match(migration,/auth\.uid\(\)/);
+ assert.match(migration,/u\.is_anonymous is not true/);
+ assert.match(migration,/drop policy if exists "Active Premium cosmetics public display"/);
+ assert.match(migration,/create policy "Purchased cosmetics public display"/);
+ assert.match(migration,/grant select\(user_id,frame_id,title_id,banner_id\)/);
+ assert.match(migration,/revoke all on function public\.komi_premium_store\(text,text\) from public,anon,authenticated/);
+ assert.match(migration,/grant execute on function public\.komi_premium_store\(text,text\) to authenticated/);
+ assert.match(migration,/Purchase required before equipping/);
+ assert.match(migration,/where user_id=actor and banner_id=p_item/);
 });
-test('store is integrated and inventory only rendered from server response',()=>{
- assert.doesNotThrow(()=>new vm.Script(js));
- assert.match(html,/src="\.\/komi-premium-store\.js"/);
+test('shared cosmetics are integrated into both shops and public profile',()=>{
+ for(const script of [catalog,profile,coin,studio])assert.doesNotThrow(()=>new vm.Script(script));
+ assert.match(html,/src="\.\/komi-shop-catalog\.js\?/);
+ assert.match(html,/src="\.\/komi-premium-store\.js\?/);
+ assert.match(html,/src="\.\/anicoin\.js"/);
+ assert.match(standalone,/src="\/komi-shop-catalog\.js\?/);
+ assert.match(standalone,/id="store-filters"/);
+ assert.match(profile,/root\.KomiShopCatalog/);
+ assert.match(profile,/client\.rpc\('komi_premium_store'/);
+ assert.match(coin,/rpc\('komi_premium_store'/);
+ assert.match(studio,/rpc\('komi_premium_store'/);
  assert.match(premium,/KomiPremiumStore\?\.mount/);
- assert.match(js,/client\.rpc\('komi_premium_store'/);
- assert.match(js,/root\.KomiPremium\?\.isActiveId\?\.\(id\)/);
+ assert.match(studio,/banner_id/);
+ assert.match(profile,/banner_id/);
 });

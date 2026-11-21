@@ -3,6 +3,13 @@ const aniCoinItems = [
     { id: 'explorer', name: 'Исследователь', cost: 3 },
     { id: 'collector', name: 'Коллекционер', cost: 5 }
 ];
+let aniCoinShopWallet=null;
+let aniCoinShopOwner='';
+let aniCoinShopLoading=false;
+let aniCoinShopBusy=false;
+let aniCoinShopCategory='all';
+let aniCoinShopStatus='';
+let aniCoinShopFailedFor='';
 let aniCoinWallet;
 let aniCoinOwner;
 let aniCoinStatus = '';
@@ -60,15 +67,40 @@ async function openAniCoinShop() {
     }
 }
 
+async function aniCoinLoadStore(id) {
+    if (!id || !_supabase || currentUser?.authUserId!==id || aniCoinShopLoading) return;
+    aniCoinShopLoading=true;
+    aniCoinShopFailedFor='';
+    try {
+        const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
+        if (error) throw error;
+        if (!Array.isArray(data?.owned)) throw Error('Сервер вернул неверные данные магазина.');
+        if (currentUser?.authUserId!==id) return;
+        aniCoinShopWallet=data;aniCoinShopOwner=id;
+    } catch(error) {
+        if (currentUser?.authUserId===id) {
+            aniCoinShopStatus=error?.message||'Не удалось загрузить магазин.';
+            aniCoinShopFailedFor=id;
+        }
+    } finally {
+        aniCoinShopLoading=false;
+        if (currentView==='shop' && currentUser?.authUserId===id)
+            renderAniCoinShop(document.getElementById('mainContainer'));
+    }
+}
 function renderAniCoinShop(container) {
     if (!container) return;
-    const owner = currentUser?.authUserId;
-    const wallet = owner && owner === aniCoinOwner ? aniCoinWallet : null;
-    container.innerHTML = `
+    const id=currentUser?.authUserId;
+    const wallet=id && id===aniCoinOwner ? aniCoinWallet : null;
+    const store=id && id===aniCoinShopOwner ? aniCoinShopWallet : null;
+    const items=window.KomiShopCatalog?.items || [];
+    const categories=[['all','Все · '+items.length],['frame','Рамки'],['title','Титулы'],['banner','Обложки']];
+    const selected=items.filter(item=>aniCoinShopCategory==='all'||item.type===aniCoinShopCategory);
+    container.innerHTML=`
         <section id="shop" class="anicoin-shop" aria-labelledby="anicoin-title">
-            <p class="komi-spotlight-eyebrow">Komi Anime</p>
+            <p class="komi-spotlight-eyebrow">Komi Anime / коллекция</p>
             <h1 id="anicoin-title">Магазин AniCoin</h1>
-            <p>1 AniCoin начисляется за каждые 20 минут реального воспроизведения во встроенном видеоплеере. Для внешних плееров доступен отдельный учёт активного времени при открытом окне.</p>
+            <p>Укрась профиль за заработанные AniCoin. В магазине есть рамки аватара, титулы и обложки. Покупка остаётся в коллекции навсегда, надеть или снять предмет можно в любой момент.</p>
             <article class="anicoin-item" aria-labelledby="komi-premium-shop-title">
                 <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Ежемесячная подписка</p>
                 <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
@@ -76,18 +108,86 @@ function renderAniCoinShop(container) {
                 <a class="btn-secondary" href="https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd?currency=USD" target="_blank" rel="noopener noreferrer" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:16px;padding:14px 22px;border-radius:14px;background:#f5f5f5;color:#090909;font-weight:750;">Оформить Premium ↗</a>
                 <div><a href="/premium.html" style="display:inline-block;margin-top:12px;font-size:13px;text-decoration:underline;text-underline-offset:3px;">Условия подписки</a></div>
             </article>
-            ${!owner ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
-            ${owner && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
+            ${!id ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
+            ${id && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
             ${wallet ? `<div class="anicoin-wallet">
-                <div><span>Баланс</span><strong>${wallet.balance} AniCoin</strong></div>
+                <div><span>Баланс</span><strong>${Number(wallet.balance).toLocaleString('ru-RU')} AniCoin</strong></div>
                 <div><label for="anicoin-progress">До следующего коина · ${Math.floor(wallet.seconds / 60)} мин ${wallet.seconds % 60} сек из 20 мин</label>
                     <progress id="anicoin-progress" value="${wallet.seconds}" max="1200"></progress></div>
             </div>` : ''}
             <p role="status">${escapeFriendHtml(aniCoinStatus)}</p>
-            ${owner && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" data-komi-onclick="openAniCoinShop()">Повторить</button>' : ''}
-            <div class="anicoin-item"><h2>Товаров пока нет</h2><p>Заработанные AniCoin видны в кошельке.</p></div>
+            ${id && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" data-komi-onclick="openAniCoinShop()">Повторить</button>' : ''}
+            <div class="komi-shop-tabs" role="group" aria-label="Категории AniCoin">
+              ${categories.map(([key,label])=>`<button type="button" data-shop-category="${key}" aria-pressed="${key===aniCoinShopCategory}">${label}</button>`).join('')}
+            </div>
+            <div class="komi-coin-grid">
+              ${selected.map(product=>{
+                const owned=Boolean(store?.owned?.includes(product.id));
+                const equipped=store?.[product.type+'_id']===product.id;
+                const affordable=Number(store?.balance)>=product.cost;
+                const action=equipped?'unequip':owned?'equip':'buy';
+                const caption=equipped?'Надето ✓':owned?'В коллекции':product.cost+' AniCoin';
+                const symbol=product.type==='frame'
+                  ? `<div class="komi-coin-frame komi-store-${product.frameClass}">K</div>`
+                  :product.type==='banner'
+                    ?`<div class="store-banner-swatch ${product.bannerClass}">KOMI</div>`
+                    :`<span class="komi-coin-title">${product.title}</span>`;
+                return `<article class="komi-coin-card ${equipped?'is-equipped':''}">
+                    <div class="komi-coin-sample">${symbol}</div>
+                    <h3>${product.label}</h3><p>${caption}</p>
+                    <div class="komi-coin-actions"><button type="button" data-shop-item-action="${product.id}" data-shop-operation="${action}"
+                      ${!id||!store||aniCoinShopBusy||(!owned&&!affordable)?'disabled':''}>
+                      ${equipped?'Снять':owned?'Надеть':affordable?'Купить · '+product.cost+' ◈':'Недостаточно AniCoin'}</button></div>
+                  </article>`;
+              }).join('')}
+            </div>
+            <p role="status" aria-live="polite">${escapeFriendHtml(aniCoinShopStatus)}</p>
+            ${id && aniCoinShopFailedFor===id ? '<button type="button" class="btn-secondary" data-shop-retry>Повторить загрузку товаров</button>' : ''}
+            ${id && !store && aniCoinShopLoading ? '<p>Загружаем покупки и коллекцию…</p>' : ''}
         </section>`;
+    if (id && !store && !aniCoinShopLoading && aniCoinShopFailedFor!==id)
+        void aniCoinLoadStore(id);
 }
+document.addEventListener('click',async event=>{
+    const filter=event.target.closest?.('[data-shop-category]');
+    if(filter && currentView==='shop'){
+        aniCoinShopCategory=filter.dataset.shopCategory;
+        renderAniCoinShop(document.getElementById('mainContainer'));
+        return;
+    }
+    if(event.target.closest?.('[data-shop-retry]')&&currentView==='shop'){
+        aniCoinShopStatus='';aniCoinShopFailedFor='';
+        void aniCoinLoadStore(currentUser?.authUserId);
+        return;
+    }
+    const button=event.target.closest?.('[data-shop-item-action]');
+    if(!button||button.disabled||aniCoinShopBusy||currentView!=='shop'||!_supabase)return;
+    const id=currentUser?.authUserId;
+    const product=window.KomiShopCatalog?.find(button.dataset.shopItemAction);
+    const operation=button.dataset.shopOperation;
+    if(!id||!product||!['buy','equip','unequip'].includes(operation)||aniCoinShopOwner!==id)return;
+    if(operation==='buy'&&!window.confirm('Купить «'+product.label+'» за '+product.cost+' AniCoin?'))return;
+    aniCoinShopBusy=true;
+    aniCoinShopStatus=operation==='buy'?'Подтверждаем покупку…':'Обновляем оформление…';
+    renderAniCoinShop(document.getElementById('mainContainer'));
+    try {
+        const auth=await _supabase.auth.getUser();
+        if(auth.error||auth.data?.user?.id!==id)throw Error('Войди в аккаунт повторно.');
+        const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:operation,p_item:product.id});
+        if(error)throw error;
+        if(currentUser?.authUserId!==id)return;
+        if(!data||!Array.isArray(data.owned))throw Error('Неожиданный ответ сервера.');
+        aniCoinShopWallet=data;aniCoinShopOwner=id;
+        aniCoinShopStatus=operation==='buy'?'Куплено! Теперь можно надеть.':operation==='equip'?'Предмет надет.':'Предмет снят.';
+        if (typeof window.KomiPremiumStore?.refresh==='function')void window.KomiPremiumStore.refresh();
+        void aniCoinRequest('read',{},id).catch(()=>{});
+    }catch(error){
+        if(currentUser?.authUserId===id)aniCoinShopStatus=error?.message||'Не удалось выполнить операцию.';
+    }finally{
+        aniCoinShopBusy=false;
+        if(currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
+    }
+});
 
 // Count real playback time only for the site's HTML5 player. Third-party iframes
 // do not expose trustworthy playback events and cannot earn rewards.

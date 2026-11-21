@@ -42,18 +42,14 @@
     { id:1, name:'Тихий вечер', desc:'Мягкие светлые ноты', notes:[220,277.18,329.63,440,329.63,277.18] },
     { id:2, name:'Космический свет', desc:'Спокойная электроника', notes:[196,246.94,293.66,392,293.66,246.94] }
   ];
-  const products = [
-    {id:'frame_moon',label:'Лунная рамка',cost:30,type:'frame',frameClass:'frame-moon'},
-    {id:'frame_aurora',label:'Рамка Аврора',cost:45,type:'frame',frameClass:'frame-aurora'},
-    {id:'title_cinema',label:'Титул «Киноман»',cost:20,type:'title',title:'✧ Киноман'},
-    {id:'title_starlight',label:'Титул «Звёздный зритель»',cost:25,type:'title',title:'✦ Звёздный зритель'}
-  ];
+  const products = window.KomiShopCatalog?.items || [];
+  let storeCategory = 'all';
   const state = {
     client:null, userId:'', displayName:'Пользователь Komi', avatarUrl:'',
     entitled:false, entitlementChecked:false, saved:{style:0,nick_theme:0,status_emoji:'',music_theme:0},
     draft:{style:0,nick_theme:0,status_emoji:'',music_theme:0},
-    wallet:null, equipped:{frame_id:null,title_id:null},
-    trial:{frame:null,title:null}, saving:false, shopping:false, serial:0
+    wallet:null, equipped:{frame_id:null,title_id:null,banner_id:null},
+    trial:{frame:null,title:null,banner:null}, saving:false, shopping:false, serial:0
   };
   let player = null;
   const $ = id => document.getElementById(id);
@@ -86,7 +82,7 @@
   function activeItem(type) {
     const preview = state.trial[type];
     if (preview !== null) return preview;
-    const key = type === 'frame' ? 'frame_id' : 'title_id';
+    const key = type === 'frame' ? 'frame_id' : type === 'title' ? 'title_id' : 'banner_id';
     return state.wallet?.[key] || state.equipped[key] || null;
   }
   function setImage(imgId, fallbackId, url) {
@@ -122,16 +118,25 @@
     $('preview-emoji').hidden = !draft.status_emoji;
     const frame = activeItem('frame');
     const frameClass = products.find(p=>p.id===frame && p.type==='frame')?.frameClass || '';
+    const frameClasses=products.filter(p=>p.type==='frame').map(p=>p.frameClass);
     for (const id of ['preview-avatar-frame','comment-avatar-frame']) {
-      $(id).classList.remove('frame-moon','frame-aurora');
+      $(id).classList.remove(...frameClasses);
       if (frameClass) $(id).classList.add(frameClass);
+    }
+    const banner = activeItem('banner');
+    const bannerClass=products.find(p=>p.id===banner && p.type==='banner')?.bannerClass || '';
+    const cover=document.querySelector('.preview-cover');
+    if (cover) {
+      cover.classList.remove(...products.filter(p=>p.type==='banner').map(p=>p.bannerClass));
+      if (bannerClass) cover.classList.add(bannerClass);
     }
     const title = activeItem('title');
     const titleText = products.find(p=>p.id===title && p.type==='title')?.title || '';
     $('preview-title').textContent = titleText;
     $('preview-title').hidden = !titleText;
     $('try-on-note').hidden = !((state.trial.frame && !owns(state.trial.frame)) ||
-      (state.trial.title && !owns(state.trial.title)));
+      (state.trial.title && !owns(state.trial.title)) ||
+      (state.trial.banner && !owns(state.trial.banner)));
     const initial = nickname.trim().slice(0,1).toUpperCase() || 'K';
     $('preview-avatar-fallback').textContent = initial;
     $('comment-avatar-fallback').textContent = initial;
@@ -299,11 +304,21 @@
   function paintStore() {
     const grid=$('store-grid');
     grid.replaceChildren();
-    const wallet=state.wallet, active=state.userId && state.entitled && state.entitlementChecked;
+    const filters=$('store-filters');
+    if (filters) {
+      filters.replaceChildren();
+      for (const [key,label] of [['all','Все'],['frame','Рамки'],['title','Титулы'],['banner','Обложки']]) {
+        const tab=document.createElement('button');tab.type='button';tab.textContent=label;
+        tab.setAttribute('aria-pressed',String(storeCategory===key));
+        tab.addEventListener('click',()=>{storeCategory=key;paintStore();});
+        filters.append(tab);
+      }
+    }
+    const wallet=state.wallet, active=Boolean(state.userId);
     const balance=Number(wallet?.balance);
     message('store-balance',wallet && Number.isFinite(balance)
       ? '◈ '+balance.toLocaleString('ru-RU')+' AniCoin' : '◈ — AniCoin');
-    products.forEach(product => {
+    products.filter(p=>storeCategory==='all'||p.type===storeCategory).forEach(product => {
       const item=document.createElement('article');
       item.className='store-item';
       item.tabIndex=0;
@@ -319,11 +334,15 @@
           img.onerror=()=>{img.remove();top.textContent=state.displayName.slice(0,1)||'K';};
           top.append(img);
         } else top.textContent=state.displayName.slice(0,1)||'K';
+      } else if (product.type==='banner') {
+        top.className='store-banner-swatch '+product.bannerClass;
+        top.textContent='KOMI ANIME';
       } else {top.className='store-title-chip';top.textContent=product.title;}
       const heading=document.createElement('h3');heading.textContent=product.label;
       const subtitle=document.createElement('p');subtitle.className='store-subtitle';
       const owned=owns(product.id);
-      const equippedId=state.wallet?.[product.type==='frame'?'frame_id':'title_id'] || state.equipped[product.type==='frame'?'frame_id':'title_id'];
+      const equippedKey=product.type+'_id';
+      const equippedId=state.wallet?.[equippedKey] || state.equipped[equippedKey];
       const currentlyEquipped=equippedId===product.id;
       subtitle.textContent=owned ? currentlyEquipped?'Надето':'Уже куплено' : product.cost+' AniCoin';
       const controls=document.createElement('div');controls.className='store-controls';
@@ -333,13 +352,13 @@
       const action=document.createElement('button');
       action.className='store-action';action.type='button';
       if (owned) {
-        action.textContent=currentlyEquipped?'Надето ✓':'Надеть';
-        action.disabled=!active || !wallet || currentlyEquipped || state.shopping;
+        action.textContent=currentlyEquipped?'Снять':'Надеть';
+        action.disabled=!active || !wallet || state.shopping;
       } else {
         action.textContent=wallet && Number(wallet.balance)<product.cost?'Не хватает AniCoin':'Купить · '+product.cost+' ◈';
         action.disabled=!active || !wallet || Number(wallet.balance)<product.cost || state.shopping;
       }
-      action.addEventListener('click',event=>{event.stopPropagation();void storeAction(product,owned?'equip':'buy');});
+      action.addEventListener('click',event=>{event.stopPropagation();void storeAction(product,owned?(currentlyEquipped?'unequip':'equip'):'buy');});
       controls.append(preview,action);
       item.append(top,heading,subtitle,controls);
       item.addEventListener('click',event=>{if(!event.target.closest('button'))tryOn(product);});
@@ -360,19 +379,16 @@
     return result.data;
   }
   async function verifiedOwner() {
-    if (!state.client || !state.userId || !state.entitled) throw Error('Требуется активный Premium.');
+    if (!state.client || !state.userId) throw Error('Войди в аккаунт Komi.');
     const {data,error}=await state.client.auth.getUser();
     if (error || data?.user?.id !== state.userId) throw Error('Сессия изменена. Войди снова.');
-    const {data:verified,error:verificationError}=await state.client
-      .from('komi_premium_badges').select('user_id').eq('user_id',state.userId).maybeSingle();
-    if (verificationError || !verified) throw Error('Не удалось подтвердить Premium.');
     return data.user.id;
   }
   async function storeAction(product,action) {
-    if (state.shopping || !state.wallet || !['equip','buy'].includes(action)) return;
+    if (state.shopping || !state.wallet || !['equip','buy','unequip'].includes(action)) return;
     if (action==='buy' && !window.confirm('Купить «'+product.label+'» за '+product.cost+' AniCoin?')) return;
     state.shopping=true;paintStore();
-    message('store-status',action==='buy'?'Проверяем покупку…':'Надеваем предмет…');
+    message('store-status',action==='buy'?'Проверяем покупку…':action==='equip'?'Надеваем предмет…':'Снимаем предмет…');
     const snapshot=state.userId;
     try {
       await verifiedOwner();
@@ -380,9 +396,9 @@
       if (state.userId!==snapshot)return;
       if (!data || !Array.isArray(data.owned)) throw Error('Неожиданный ответ магазина.');
       state.wallet=data;
-      state.equipped={frame_id:data.frame_id||null,title_id:data.title_id||null};
-      if (action==='equip') state.trial[product.type]=null;
-      message('store-status',action==='buy'?'Покупка подтверждена. Теперь предмет можно надеть.':'Предмет надет.');
+      state.equipped={frame_id:data.frame_id||null,title_id:data.title_id||null,banner_id:data.banner_id||null};
+      if (action!=='buy') state.trial[product.type]=null;
+      message('store-status',action==='buy'?'Покупка подтверждена. Теперь предмет можно надеть.':action==='equip'?'Предмет надет.':'Предмет снят.');
     } catch (error) {
       message('store-status',error?.message||'Операция недоступна.');
     } finally {
@@ -390,7 +406,7 @@
     }
   }
   async function saveStyle() {
-    if (state.saving || !isDirty()) return;
+    if (state.saving || !isDirty() || !state.entitled) return;
     state.saving=true;updateAccess();
     message('save-status','Проверяем Premium и сохраняем…');
     const before={...state.saved},wanted={...state.draft},snapshot=state.userId;
@@ -440,8 +456,8 @@
     setImage('preview-avatar','preview-avatar-fallback','');
     setImage('comment-avatar','comment-avatar-fallback','');
     state.saved=normalizedPrefs(null);state.draft={...state.saved};
-    state.equipped={frame_id:null,title_id:null};
-    state.trial={frame:null,title:null};
+    state.equipped={frame_id:null,title_id:null,banner_id:null};
+    state.trial={frame:null,title:null,banner:null};
     message('store-status','');
     message('save-status','');
     refreshSelected();paintStore();
@@ -461,7 +477,7 @@
         fetchSingle('komi_premium_badge_styles','style',id),
         fetchSingle('komi_premium_profile_prefs','nick_theme,status_emoji,music_theme',id),
         fetchSingle('komi_premium_media','avatar_path',id),
-        fetchSingle('komi_premium_cosmetic_equips','frame_id,title_id',id)
+        fetchSingle('komi_premium_cosmetic_equips','frame_id,title_id,banner_id',id)
       ]);
       if (request!==state.serial)return;
       const val=index=>results[index].status==='fulfilled'?results[index].value:null;
@@ -477,21 +493,21 @@
         auth.data.user.user_metadata?.full_name || 'Пользователь Komi').slice(0,60);
       state.saved=normalizedPrefs({...val(2),...val(3)});
       state.draft={...state.saved};
-      state.equipped={frame_id:val(5)?.frame_id||null,title_id:val(5)?.title_id||null};
+      state.equipped={frame_id:val(5)?.frame_id||null,title_id:val(5)?.title_id||null,banner_id:val(5)?.banner_id||null};
       const path=val(4)?.avatar_path;
       const premiumAvatar=state.entitled && path
         ? state.client.storage.from('avatars').getPublicUrl(path).data?.publicUrl : '';
       state.avatarUrl=safeHttpsUrl(premiumAvatar)||safeHttpsUrl(profile?.avatar_url);
       setImage('preview-avatar','preview-avatar-fallback',state.avatarUrl);
       setImage('comment-avatar','comment-avatar-fallback',state.avatarUrl);
-      if (state.entitled) {
+      if (state.userId) {
         try {
           const wallet=assertResponse(await state.client.rpc('komi_premium_store',{p_action:'read',p_item:null}));
           if (request!==state.serial)return;
           if (!wallet || !Array.isArray(wallet.owned) ||
               !Number.isSafeInteger(Number(wallet.balance))) throw Error('Некорректный баланс.');
           state.wallet=wallet;
-          state.equipped={frame_id:wallet.frame_id||null,title_id:wallet.title_id||null};
+          state.equipped={frame_id:wallet.frame_id||null,title_id:wallet.title_id||null,banner_id:wallet.banner_id||null};
         } catch (error) {message('store-status',error?.message||'Не удалось загрузить баланс.');}
       }
       refreshSelected();paintStore();
@@ -510,7 +526,7 @@
     $('save-style').addEventListener('click',()=>{void saveStyle();});
     document.addEventListener('visibilitychange',()=>{
       if (document.hidden) stopAudio();
-      else if (state.client && !state.entitled && !state.saving) void loadAccount();
+      else if (state.client && !state.saving) void loadAccount();
     });
     window.addEventListener('pageshow',(event)=>{
       if (event.persisted && state.client && !state.saving) void loadAccount();
