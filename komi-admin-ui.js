@@ -28,7 +28,7 @@
             if (!referralDashboardLoader) {
                 referralDashboardLoader = new Promise((resolve, reject) => {
                     const script = document.createElement('script');
-                    script.src = '/komi-referral-admin.js?v=20261121a';
+                    script.src = '/komi-referral-admin.js?v=20261122-discounts';
                     script.async = true;
                     script.onload = resolve;
                     script.onerror = () => reject(new Error('Не удалось загрузить панель рефералов'));

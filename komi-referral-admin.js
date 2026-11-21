@@ -23,14 +23,17 @@ window.komiReferralAdminUI=async function(root,db,back){
     '<span class="ra-muted">Латиница, цифры, дефис и _</span></div>',
     '<div class="ra-mode" role="group" aria-label="Тип создаваемого кода">',
     '<button type="button" data-mode="referral" aria-pressed="true">Реферальный код</button>',
-    '<button type="button" data-mode="promo" aria-pressed="false">Промокод AniCoin</button></div>',
+    '<button type="button" data-mode="promo" aria-pressed="false">Промокод AniCoin</button>',
+    '<button type="button" data-mode="discount" aria-pressed="false">Скидка на Premium</button></div>',
     '<form id="ra-form" novalidate><div class="ra-fields">',
     '<label class="ra-field">Код<input id="ra-code" autocomplete="off" maxlength="40" required placeholder="Например, ANIME15" spellcheck="false"></label>',
     '<label class="ra-field" id="ra-owner-field">Имя партнёра<input id="ra-owner" maxlength="120" required placeholder="Блогер или автор"></label>',
     '<label class="ra-field" id="ra-rate-field">Вознаграждение, %<input id="ra-rate" type="number" min="0" max="50" step="1" value="15"></label>',
     '<label class="ra-field" id="ra-bonus-field" hidden>Бонус AniCoin<input id="ra-bonus" type="number" min="0" max="10000" step="1" value="100"></label>',
+    '<label class="ra-field" id="ra-discount-field" hidden>Скидка, % (1–99)<input id="ra-discount" type="number" min="1" max="99" step="1" value="15" inputmode="numeric"></label>',
     '<label class="ra-field" id="ra-max-field" hidden>Лимит оплат (необязательно)<input id="ra-max" type="number" min="1" max="100000" step="1"></label>',
-    '</div><div class="ra-form-actions"><button class="ra-button ra-primary" type="submit" id="ra-save">+ Сохранить код</button>',
+    '</div><p id="ra-discount-help" class="ra-muted ra-discount-help" hidden>Код создаётся в KomiAnime. Для реальной скидки на подписку такой же код нужно отдельно настроить в Lava.top. Сама оплата пока не уменьшает цену автоматически.</p>',
+    '<div class="ra-form-actions"><button class="ra-button ra-primary" type="submit" id="ra-save">+ Сохранить код</button>',
     '<button class="ra-button ra-quiet" type="button" id="ra-clear">Сбросить</button>',
     '<span id="ra-editor-msg" role="status" class="ra-message" aria-live="polite"></span></div></form></section>',
     '<div class="ra-tabs" role="tablist" aria-label="Управление рефералами">',
@@ -63,7 +66,7 @@ window.komiReferralAdminUI=async function(root,db,back){
   const money=(value,unit)=>Number(value||0).toLocaleString('ru-RU',{minimumFractionDigits:2,maximumFractionDigits:2})+' '+(unit||'');
   const msg=(s,error=false)=>{$('ra-status').textContent=s;$('ra-status').dataset.error=error?'true':'false';};
   const editorMsg=(s,error=false)=>{$('ra-editor-msg').textContent=s;$('ra-editor-msg').dataset.error=error?'true':'false';};
-  let report={codes:[],entries:[],orders:[]},tab='codes',mode='referral',edit=null,loading=false;
+  let report={codes:[],entries:[],orders:[]},discounts=[],tab='codes',mode='referral',edit=null,loading=false;
   function activateTab(name){
     tab=name;
     app.querySelectorAll('[data-tab]').forEach(b=>b.setAttribute('aria-selected',String(b.dataset.tab===tab)));
@@ -76,7 +79,9 @@ window.komiReferralAdminUI=async function(root,db,back){
     $('ra-owner-field').hidden=mode!=='referral';
     $('ra-rate-field').hidden=mode!=='referral';
     $('ra-bonus-field').hidden=mode!=='promo';
-    $('ra-max-field').hidden=mode!=='promo';
+    $('ra-max-field').hidden=mode!=='promo'&&mode!=='discount';
+    $('ra-discount-field').hidden=mode!=='discount';
+    $('ra-discount-help').hidden=mode!=='discount';
     $('ra-owner').required=mode==='referral';
   }
   function clearEditor(){
@@ -91,6 +96,16 @@ window.komiReferralAdminUI=async function(root,db,back){
     $('ra-save').textContent='Сохранить изменения';editorMsg('');
     app.querySelector('#ra-editor-title').scrollIntoView({behavior:'smooth',block:'center'});
     $('ra-owner').focus();
+  }
+  function startDiscountEdit(item){
+    edit={code:item.code,active:item.is_active,kind:'discount'};
+    setMode('discount');$('ra-code').value=item.code;
+    $('ra-discount').value=item.discount_percent;
+    $('ra-max').value=item.max_uses??'';
+    $('ra-editor-title').textContent='Редактировать скидку '+item.code;
+    $('ra-save').textContent='Сохранить изменения';editorMsg('');
+    $('ra-editor-title').scrollIntoView({behavior:'smooth',block:'center'});
+    $('ra-discount').focus();
   }
   async function copy(value){
     try{
@@ -108,16 +123,27 @@ window.komiReferralAdminUI=async function(root,db,back){
     });
     if(error)throw new Error(error.message);
   }
+  async function saveDiscount(item,active){
+    const {error}=await db.rpc('admin_save_checkout_code',{
+      p_kind:'discount',p_code:item.code,p_reward_percent:Number(item.discount_percent),
+      p_is_active:active,p_bonus_anicoin:0,p_max_uses:item.max_uses??null,
+      p_owner_name:null
+    });
+    if(error)throw new Error(error.message);
+  }
   async function refresh(){
     if(loading)return;
     loading=true;$('ra-reload').disabled=true;msg('Обновляем данные из Supabase…');
     try{
-      const {data,error}=await db.rpc('admin_referral_report');
-      if(error)throw new Error(error.message);
+      const [{data,error},{data:promoData,error:promoError}]=await Promise.all([
+        db.rpc('admin_referral_report'),db.rpc('admin_discount_promo_report')
+      ]);
+      if(error||promoError)throw new Error(error?.message||promoError?.message);
       if(!app.isConnected)return;
       report={codes:Array.isArray(data?.codes)?data.codes:[],
         entries:Array.isArray(data?.entries)?data.entries:[],
         orders:Array.isArray(data?.orders)?data.orders:[]};
+      discounts=Array.isArray(promoData)?promoData:[];
       syncCodeOptions();paint();
       msg('Обновлено. Подсчёт ведётся по зарегистрированным пользователям с успешной проверкой кода.');
     }catch(e){msg('Ошибка загрузки: '+(e?.message||'Неизвестная ошибка'),true);}
@@ -138,6 +164,7 @@ window.komiReferralAdminUI=async function(root,db,back){
     const missing=report.entries.filter(x=>!x.is_reviewed).length;
     const totals=[
       ['Реферальных кодов',report.codes.length,'Активны: '+report.codes.filter(c=>c.is_active).length],
+      ['Скидочных кодов',discounts.length,'Активны: '+discounts.filter(c=>c.is_active).length],
       ['Код проверили',totalChecked,'Уникальные люди на каждый код'],
       ['Оплаченных счетов',totalPaid,'Только подтверждённые платежи'],
       ['Ждут отметки',missing,'В последних '+report.entries.length+' записях']
@@ -153,7 +180,28 @@ window.komiReferralAdminUI=async function(root,db,back){
     const list=$('ra-codes');list.replaceChildren();
     const search=$('ra-code-search').value.trim().toLowerCase();
     const codes=report.codes.filter(c=>!search||(c.code+' '+c.owner_name).toLowerCase().includes(search));
-    if(!codes.length){list.append(make('div',report.codes.length?'Нет совпадений.':'Пока нет реферальных кодов. Создайте первый в форме выше.','ra-empty'));return;}
+    const discountMatches=discounts.filter(c=>!search||c.code.toLowerCase().includes(search));
+    if(!codes.length&&!discountMatches.length){list.append(make('div',report.codes.length||discounts.length?'Нет совпадений.':'Пока нет кодов. Создайте первый в форме выше.','ra-empty'));return;}
+    for(const c of discountMatches){
+      const card=make('article',undefined,'ra-code-card');
+      const top=make('div',undefined,'ra-code-top'),left=make('div');
+      left.append(make('div',c.code,'ra-code-name'),make('div','Скидка '+c.discount_percent+'% на Premium','ra-code-owner'));
+      const status=make('span',c.is_active?'● Активен':'○ Отключён','ra-pill');
+      status.dataset.active=String(Boolean(c.is_active));top.append(left,status);
+      const metrics=make('div',undefined,'ra-code-metrics');
+      for(const [label,val] of [['Скидка',c.discount_percent+'%'],['Использовано',c.uses_count],['Лимит',c.max_uses??'∞']]){
+        const block=make('div');block.append(make('b',val),make('span',label));metrics.append(block);
+      }
+      const actions=make('div',undefined,'ra-code-actions');
+      actions.append(button('Копировать','ra-small',()=>copy(c.code)),
+        button('Изменить','ra-small',()=>startDiscountEdit(c)));
+      const toggle=button(c.is_active?'Отключить':'Включить','ra-small '+(c.is_active?'ra-danger':''),async()=>{
+        toggle.disabled=true;
+        try{await saveDiscount(c,!c.is_active);await refresh();}
+        catch(e){msg('Не удалось обновить скидку: '+e.message,true);toggle.disabled=false;}
+      });
+      actions.append(toggle);card.append(top,metrics,actions);list.append(card);
+    }
     for(const c of codes){
       const card=make('article',undefined,'ra-code-card');
       const top=make('div',undefined,'ra-code-top'),left=make('div');
@@ -292,9 +340,9 @@ window.komiReferralAdminUI=async function(root,db,back){
     }
     const args={p_kind:mode,p_code:code,p_is_active:edit?edit.active:true,
       p_owner_name:mode==='referral'?$('ra-owner').value.trim():null,
-      p_reward_percent:mode==='referral'?Number($('ra-rate').value):15,
+      p_reward_percent:mode==='referral'?Number($('ra-rate').value):mode==='discount'?Number($('ra-discount').value):15,
       p_bonus_anicoin:mode==='promo'?Number($('ra-bonus').value):0,
-      p_max_uses:mode==='promo'&&$('ra-max').value?Number($('ra-max').value):null};
+      p_max_uses:(mode==='promo'||mode==='discount')&&$('ra-max').value?Number($('ra-max').value):null};
     if(mode==='referral'&&(!args.p_owner_name||args.p_owner_name.length>120||
       !Number.isInteger(args.p_reward_percent)||args.p_reward_percent<0||args.p_reward_percent>50)){
       editorMsg('Введите имя партнёра и процент от 0 до 50.',true);return;
@@ -303,6 +351,11 @@ window.komiReferralAdminUI=async function(root,db,back){
       args.p_bonus_anicoin>10000||(args.p_max_uses!==null&&(!Number.isInteger(args.p_max_uses)||
       args.p_max_uses<1||args.p_max_uses>100000)))){
       editorMsg('Укажите корректный бонус и лимит использований.',true);return;
+    }
+    if(mode==='discount'&&(!Number.isInteger(args.p_reward_percent)||args.p_reward_percent<1||
+       args.p_reward_percent>99||(args.p_max_uses!==null&&(!Number.isInteger(args.p_max_uses)||
+       args.p_max_uses<1||args.p_max_uses>100000)))){
+       editorMsg('Укажите скидку от 1% до 99% и корректный лимит.',true);return;
     }
     $('ra-save').disabled=true;editorMsg('Сохраняем код…');
     try{
