@@ -358,7 +358,8 @@ async function checkNotifications(page) {
      localStorage.setItem('komi_source_1','Embed');
      return openWatchModal('1');
    });
-   assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
+   // Per-title playback preference is intentionally restored when that source exists.
+   assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Embed');
    assert.match(await page.locator('.crunchy-hero-info').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    const mono = await page.evaluate(() => ({
