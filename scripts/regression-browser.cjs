@@ -339,8 +339,15 @@ async function checkNotifications(page) {
    await page.locator('#komiHomeQuickFilters .section-see-all').click();
    await page.waitForFunction(()=>currentView==='catalog');
    assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
-   assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
-     'All filters must focus the real full-catalog search rather than only changing the hash');
+   if (width <= 767) {
+     // Mobile opens the accessible filters sheet instead of focusing the desktop search.
+     await page.locator('#komiMobileSheet .komi-mobile-sheet-panel[role="dialog"]').waitFor({state:'visible'});
+     assert.equal(await page.locator('#komiMobileSheetTitle').textContent(),'Фильтры каталога');
+     await page.locator('#komiMobileSheet .komi-mobile-sheet-close').click();
+   } else {
+     assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
+       'Desktop All filters must focus the full-catalog search');
+   }
    assert.equal(new URL(page.url()).hash,'#catalog');
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
