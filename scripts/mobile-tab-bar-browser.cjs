@@ -33,6 +33,33 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
         assert.equal(state.moreVisible,true);
         assert.ok(state.railWidth<=width+2,'Mobile bar overflows the viewport');
         assert.ok(state.railTop>650,'Mobile navigation must stay at the bottom of the screen');
+        // Reproduce the screenshot's signed-in state: old rules used to reveal
+        // Notifications as a fifth item and push Profile into another row.
+        await page.evaluate(()=>document.body.classList.add('komi-authenticated'));
+        const geometry=await page.evaluate(()=>{
+          const rail=document.querySelector('.komi-side-nav');
+          const bounds=rail.getBoundingClientRect();
+          const selectors=['#sideHomeBtn','#sideCatalogBtn','#sideListsBtn','.komi-side-bottom > .komi-side-account'];
+          const tabs=selectors.map(selector=>{
+            const el=rail.querySelector(selector);
+            const r=el.getBoundingClientRect();
+            return {selector,display:getComputedStyle(el).display,left:r.left,right:r.right,top:r.top,bottom:r.bottom};
+          });
+          const extraSelectors=['#notifBellBtn','#sideShopBtn','#sidePremiumBtn','[data-komi-click="watch-party"]'];
+          const extras=extraSelectors.map(selector=>({selector,display:getComputedStyle(rail.querySelector(selector)).display}));
+          return {bounds:{left:bounds.left,right:bounds.right,top:bounds.top,bottom:bounds.bottom},tabs,extras};
+        });
+        for(const tab of geometry.tabs){
+          assert.notEqual(tab.display,'none',tab.selector+' should stay visible');
+          assert.ok(tab.left>=geometry.bounds.left-1&&tab.right<=geometry.bounds.right+1,tab.selector+' exceeds dock bounds');
+          assert.ok(tab.top>=geometry.bounds.top-1&&tab.bottom<=geometry.bounds.bottom+1,tab.selector+' exceeds dock height');
+        }
+        for(let i=1;i<geometry.tabs.length;i++)
+          assert.ok(geometry.tabs[i-1].right<=geometry.tabs[i].left+2,'Mobile tabs overlap: '+JSON.stringify(geometry.tabs));
+        for(const item of geometry.extras)
+          assert.equal(item.display,'none','Unexpected extra mobile tab: '+item.selector);
+        await page.evaluate(()=>document.body.classList.remove('komi-authenticated'));
+
         await page.locator('#komiMobileMoreToggle').click();
         assert.equal(await page.locator('#komiMobileMoreToggle').getAttribute('aria-expanded'),'true');
         assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),5);
