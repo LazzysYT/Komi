@@ -26,9 +26,10 @@ Edge Functions are deployed there:
 - `komi-checkout`, version 6
 - `lava-premium-webhook`, version 4
 
-**The checkout feature is intentionally OFF by default.** Both functions
-require the project-level Edge Function secret `KOMI_CHECKOUT_ENABLED=true`
-before code-attributed invoice creation/settlement is enabled.
+**Checkout activates automatically when the required secrets are present**
+and the exact monthly amount is `2.01` USD. A server-side emergency stop
+is available: `KOMI_CHECKOUT_ENABLED=false` disables both tracked invoice
+creation and checkout-ledger reconciliation without affecting hosted checkout.
 The checkout also requires these secrets:
 - `LAVA_API_KEY`: outbound Lava.top public API key (NOT the inbound webhook key)
 - `KOMI_PREMIUM_MONTHLY_USD`: exact current amount of the existing Lava.top
@@ -60,9 +61,10 @@ Edge Functions are deployed there:
 - `komi-checkout`, version 2
 - `lava-premium-webhook`, version 4
 
-**The checkout feature is intentionally OFF by default.** Both functions
-require the project-level Edge Function secret `KOMI_CHECKOUT_ENABLED=true`
-before code-attributed invoice creation/settlement is enabled.
+**Checkout activates automatically when the required secrets are present**
+and the exact monthly amount is `2.01` USD. A server-side emergency stop
+is available: `KOMI_CHECKOUT_ENABLED=false` disables both tracked invoice
+creation and checkout-ledger reconciliation without affecting hosted checkout.
 The checkout also requires these secrets:
 - `LAVA_API_KEY`: outbound Lava.top public API key (NOT the inbound webhook key)
 - `KOMI_PREMIUM_MONTHLY_USD`: exact current amount of the existing Lava.top
@@ -70,9 +72,9 @@ The checkout also requires these secrets:
 The original `LAVA_PREMIUM_WEBHOOK_KEY` must remain intact.
 
 Set secrets directly in Supabase Dashboard → Edge Functions → Secrets. Never
-paste keys into code, an issue, a PR, or a chat message. **Do not enable** until
-the configured monthly price is verified against the actual Lava.top offer and
-test charges/webhooks are safely completed.
+paste keys into code, an issue, a PR, or a chat message. The owner's screenshot identifies the monthly offer as $2.01 USD. No real purchase
+or webhook has yet been tested, so do not interpret deployment as proof of a
+successfully processed payment.
 
 The user reports configuring `LAVA_API_KEY` and `KOMI_PREMIUM_MONTHLY_USD` in Supabase;
 their actual values cannot be read through the available integration. The server
@@ -82,7 +84,7 @@ running Edge Function invocation, so configuration and Lava API authentication
 remain unverified.
 
 The checkout endpoint deliberately returns HTTP 503 instead of attempting an
-invoice when feature gate/API key/price are unavailable or misconfigured.
+invoice when the explicit emergency stop is set, or API key/price are missing or misconfigured.
 Standard direct hosted Lava checkout (without applying codes) remains usable.
 
 ## API caveats and financial behavior
@@ -110,13 +112,14 @@ separate reviewed entitlement/renewal policy.
 - SQL `BEGIN ... ROLLBACK` test asserted promo reservation and max uses,
   payment finalization twice, exactly-once bonus credit and wallet balance.
   Test rows/credits were rolled back; none remain.
-- Supabase deployed both functions successfully (valid Deno/TypeScript bundle); checkout version 6 is current.
+- Supabase deployed both functions successfully (valid Deno/TypeScript bundle); checkout version 8 is current.
 - Vercel builds a preview for the PR's branch; production is unchanged.
 - **Not yet tested**: a real authenticated invoice, payment, webhook, or
   on-site checkout completion. Do not claim a working code-attributed
   purchase without this.
-- Keep the PR draft until merchant settings, amount verification and E2E
-  payments have been reviewed.
+- API-authenticated invoice and live webhook remain untested. Release rollout
+  exposes the two-code interface, with descriptive errors if provider rejects
+  creation. Test with an authorized buyer before promoting it broadly.
 
 Provider docs: https://developers.lava.top/en
 Supabase docs: https://supabase.com/docs/guides/functions
