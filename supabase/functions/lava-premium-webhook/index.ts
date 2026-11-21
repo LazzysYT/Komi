@@ -109,7 +109,7 @@ Deno.serve(async(req:Request)=>{
       ['activated','payment_failed','revoked','duplicate_event','stale_event'].includes(result)){
     const finalResponse=await fetch(dbUrl+'/rest/v1/rpc/komi_finalize_checkout_payment',{
       method:'POST',headers,
-      body:JSON.stringify({p_invoice_id:invoice,p_status:paymentStatus[type]})
+      body:JSON.stringify({p_invoice_id:invoice,p_status:paymentStatus[type],p_buyer_email:email||null})
     });
     if(!finalResponse.ok){
       console.error('Checkout confirmation unavailable',finalResponse.status);
