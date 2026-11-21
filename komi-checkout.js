@@ -56,7 +56,7 @@ function openCheckout(){
  try{referral.input.value=clean(localStorage.getItem('komi_ref_code'))||'';}catch{}
  const summary=node('div',null,'komi-checkout-summary');
  const price=node('span','Стоимость тарифа','komi-checkout-muted');
- const amount=node('strong','Уточняется при оплате');
+ const amount=node('strong','$2.01 / мес');
  summary.append(price,amount);
  const info=node('p','На обычную продляемую подписку сейчас нельзя применить произвольную денежную скидку. Бонусные коды и рефералы учитываются только при создании счёта через KomiAnime.','komi-checkout-note');
  const actions=node('div',null,'komi-checkout-buttons');
