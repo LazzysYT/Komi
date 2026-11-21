@@ -17,6 +17,7 @@
     <link rel="canonical" href="https://komianime.online/">
     <!-- Redirect the old #premium route before the main SPA loads. -->
     <script src="/premium-entry.js?v=20261121"></script>
+    <script src="/shop-first-paint.js?v=20261122b"></script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
     <link rel="stylesheet" href="/komi.bundle.css?v=20261120b">
@@ -36,7 +37,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
   <link rel="stylesheet" href="/komi-checkout.css?v=20261121">
-    <link rel="stylesheet" href="./komi-shop-cosmetics.css?v=20261122a">
+    <link rel="stylesheet" href="./komi-shop-cosmetics.css?v=20261122b">
 </head>
 <body class="komi-media-hub">
     <!-- The fixed interactive sidebar cannot navigate without JavaScript.
@@ -380,9 +381,23 @@
                 </div>
             </section>
             <section id="shop" class="komi-static-shop" aria-labelledby="komi-static-shop-title">
-                <h2 id="komi-static-shop-title">Магазин AniCoin</h2>
-                <p>Магазин и баланс AniCoin доступны после загрузки сайта. Для покупок требуется вход в аккаунт.</p>
-                <p><a class="btn-secondary" href="/premium.html">✧ Оформить Komi Premium через Lava.top</a></p>
+                <p class="komi-spotlight-eyebrow">KOMI ANIME · КАТАЛОГ НАГРАД</p>
+                <h1 id="komi-static-shop-title">Магазин AniCoin</h1>
+                <p class="komi-shop-static-lead">51 украшение профиля за AniCoin: рамки, титулы, обложки, эффекты, иконки и многое другое. 1 AniCoin начисляется за каждые 20 минут подтверждённого просмотра во встроенном плеере. Гости могут изучать ассортимент без регистрации.</p>
+                <div class="komi-shop-static-grid" aria-label="Популярные товары"><article class="komi-shop-static-card"><span aria-hidden="true">◎</span><h3>Рамка Нуар</h3><p><strong class="komi-shop-static-price">35 AniCoin</strong> · Рамка</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">◎</span><h3>Неоновый пульс</h3><p><strong class="komi-shop-static-price">80 AniCoin</strong> · Рамка</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">✧</span><h3>Титул «Киноман»</h3><p><strong class="komi-shop-static-price">20 AniCoin</strong> · Титул</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">✧</span><h3>Титул «Легенда Komi»</h3><p><strong class="komi-shop-static-price">100 AniCoin</strong> · Титул</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">▰</span><h3>Обложка «Звёзды»</h3><p><strong class="komi-shop-static-price">50 AniCoin</strong> · Обложка</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">▰</span><h3>Обложка «Затмение»</h3><p><strong class="komi-shop-static-price">130 AniCoin</strong> · Обложка</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">❉</span><h3>Лепестки сакуры</h3><p><strong class="komi-shop-static-price">65 AniCoin</strong> · Эффект</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">❉</span><h3>Ночной дождь</h3><p><strong class="komi-shop-static-price">85 AniCoin</strong> · Эффект</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">▣</span><h3>Топ-3 «Киноплёнка»</h3><p><strong class="komi-shop-static-price">100 AniCoin</strong> · Топ-3</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">▣</span><h3>Карточка «Графит»</h3><p><strong class="komi-shop-static-price">80 AniCoin</strong> · Мини-карточка</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">♫</span><h3>Статус «Наушники»</h3><p><strong class="komi-shop-static-price">35 AniCoin</strong> · Статус</p></article>
+<article class="komi-shop-static-card"><span aria-hidden="true">♛</span><h3>Статус «Корона»</h3><p><strong class="komi-shop-static-price">125 AniCoin</strong> · Статус</p></article></div>
+                <p class="komi-shop-static-lead">После загрузки страницы появится весь ассортимент, примерка и кнопки покупки. Для покупок нужно войти в Komi.</p>
+                <p><a class="btn-secondary" href="/premium.html">Открыть студию оформления</a></p>
             </section>
         </main>
     </div>
@@ -483,8 +498,8 @@
     <script src="./komi-premium-media.js"></script>
     <script src="./komi-premium-themes.js"></script>
     <script src="./komi-premium-decor.js"></script>
-    <script src="./komi-shop-catalog.js?v=20261122a"></script>
-    <script src="./komi-premium-store.js?v=20261122a"></script>
+    <script src="./komi-shop-catalog.js?v=20261122b"></script>
+    <script src="./komi-premium-store.js?v=20261122b"></script>
     <script src="./app-main.js?v=20261122-premium"></script>
     <script src="./catalog-quick-actions.js?v=20261121a"></script>
     <script src="./hero-hd-art.js?v=20261119-fullbleed1"></script>
@@ -503,7 +518,7 @@
     <script src="./anime-details.js"></script>
     <script src="./watch-party.js"></script>
     <script src="./friend-party.js"></script>
-    <script src="./anicoin.js"></script>
+    <script src="./anicoin.js?v=20261122b"></script>
     <script src="./dynamic-ui-events.js"></script>
     <script src="./mobile-bottom-sheets.js?v=20261121b"></script>
     <script src="./komi-ui-sound.js"></script>
