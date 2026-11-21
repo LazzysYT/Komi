@@ -142,6 +142,10 @@
       d.status_emoji !== s.status_emoji || d.music_theme !== s.music_theme;
   }
   function updateAccess() {
+    // Keep the purchase banner hidden until entitlement has been verified.
+    // Guests see the offer; verified Premium members never see a purchase prompt.
+    const offer = $('premium-offer');
+    if (offer) offer.hidden = !state.entitlementChecked || state.entitled;
     const canSave = state.userId && state.entitled && state.entitlementChecked;
     $('save-style').disabled = !canSave || state.saving || !isDirty();
     if (!state.entitlementChecked) {
@@ -504,7 +508,13 @@
     buildAudioChoices();
     refreshSelected();paintStore();
     $('save-style').addEventListener('click',()=>{void saveStyle();});
-    document.addEventListener('visibilitychange',()=>{if(document.hidden)stopAudio();});
+    document.addEventListener('visibilitychange',()=>{
+      if (document.hidden) stopAudio();
+      else if (state.client && !state.entitled && !state.saving) void loadAccount();
+    });
+    window.addEventListener('pageshow',(event)=>{
+      if (event.persisted && state.client && !state.saving) void loadAccount();
+    });
     window.addEventListener('pagehide',stopAudio);
     if (!window.supabase?.createClient) {
       state.entitlementChecked=false;
