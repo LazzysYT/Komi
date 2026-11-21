@@ -47,7 +47,7 @@ Deno.serve(async req=>{
  if(!bearer.startsWith('Bearer '))return response({error:'Требуется вход'},401);
  const key=secretKey(),lava=Deno.env.get('LAVA_API_KEY')||'';
  const priceString=Deno.env.get('KOMI_PREMIUM_MONTHLY_USD')||'';
- if(!key||!lava||!/^\d+(\.\d{1,2})?$/.test(priceString))
+ if(Deno.env.get('KOMI_CHECKOUT_ENABLED')!=='true'||!key||!lava||!/^\d+(\.\d{1,2})?$/.test(priceString))
   return response({error:'Оплата с кодами ещё не подключена. Без кодов доступен стандартный способ.'},503);
  const price=Number(priceString);
  if(price<=0||price>1000||!DB)return response({error:'Неверная конфигурация тарифа'},503);
@@ -67,6 +67,7 @@ Deno.serve(async req=>{
  const id=asText(user.id),email=asText(user.email).toLowerCase();
  if(!/^[a-f0-9-]{36}$/i.test(id)||!email.includes('@')||!user.email_confirmed_at)
   return response({error:'Нужен аккаунт с подтверждённой почтой'},403);
+ let paymentId='';
  try{
   const verification=obj(await db('rpc/validate_checkout_codes',PUBLISHABLE,{
     method:'POST',headers:{authorization:bearer},
@@ -98,7 +99,7 @@ Deno.serve(async req=>{
       referral_code:ref||null,promo_code:promo||null,referrer_reward:reward,
       bonus_anicoin:promo?Number(p.bonus_anicoin):0})
   }) as Record<string,unknown>[];
-  const paymentId=asText(pending?.[0]?.id);
+  paymentId=asText(pending?.[0]?.id);
   if(!paymentId)throw Error('No pending record');
   const lavaResponse=await fetch('https://gate.lava.top/api/v3/invoice',{
    method:'POST',headers:{Accept:'application/json','Content-Type':'application/json','X-Api-Key':lava},
@@ -108,21 +109,26 @@ Deno.serve(async req=>{
      cancel_return_url:'https://komianime.online/premium.html?checkout=cancelled'})
   });
   if(!lavaResponse.ok){console.error('Lava returned',lavaResponse.status);
-    return response({error:'Не удалось создать счёт в Lava.top'},502);}
+    throw Error('Lava invoice creation failed');}
   const invoice=obj(await lavaResponse.json());
   const data=obj(invoice.data);
   const invoiceId=asText(invoice.invoiceId||invoice.id||data.invoiceId||data.id);
   const url=asText(invoice.paymentUrl||data.paymentUrl||invoice.url||data.url);
   let parsed:URL;
-  try{parsed=new URL(url);}catch{return response({error:'Lava вернула некорректную ссылку'},502);}
+  try{parsed=new URL(url);}catch{throw Error('Invalid Lava URL');}
   if(!invoiceId||parsed.protocol!=='https:'||!(parsed.hostname==='lava.top'||parsed.hostname.endsWith('.lava.top')))
-    return response({error:'Lava вернула некорректный счёт'},502);
+    throw Error('Invalid Lava invoice response');
   await db('payments?id=eq.'+encodeURIComponent(paymentId),key,{
     method:'PATCH',headers:{Prefer:'return=minimal'},
     body:JSON.stringify({provider_invoice_id:invoiceId})
   });
   return response({payment_url:parsed.href});
  }catch(e){
+  if(paymentId){
+   try{await db('payments?id=eq.'+encodeURIComponent(paymentId),key,{method:'PATCH',
+       headers:{Prefer:'return=minimal'},body:JSON.stringify({status:'failed'})});}
+   catch(cleanupError){console.error('Checkout reservation cleanup failed',String(cleanupError).slice(0,100));}
+  }
   console.error('Komi checkout failed',String(e).slice(0,150));
   return response({error:'Не удалось подготовить счёт с кодами'},503);
  }
