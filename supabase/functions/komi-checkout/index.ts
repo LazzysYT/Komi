@@ -47,7 +47,7 @@ Deno.serve(async req=>{
  if(!bearer.startsWith('Bearer '))return response({error:'Требуется вход'},401);
  const key=secretKey(),lava=Deno.env.get('LAVA_API_KEY')||'';
  const priceString=Deno.env.get('KOMI_PREMIUM_MONTHLY_USD')||'';
- if(!key||!lava||!/^\\d+(\\.\\d{1,2})?$/.test(priceString))
+ if(!key||!lava||!/^\d+(\.\d{1,2})?$/.test(priceString))
   return response({error:'Оплата с кодами ещё не подключена. Без кодов доступен стандартный способ.'},503);
  const price=Number(priceString);
  if(price<=0||price>1000||!DB)return response({error:'Неверная конфигурация тарифа'},503);
