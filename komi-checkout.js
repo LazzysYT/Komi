@@ -24,8 +24,9 @@ function clientForCheckout(){
  return client;
 }
 function external(){
- const w=window.open(CHECKOUT,'_blank','noopener,noreferrer');
- if(!w)window.location.assign(CHECKOUT);
+ // Same-tab navigation is reliably initiated by the purchase click and cannot
+ // be blocked as an async popup or intercepted by the Lava-link listener.
+ window.location.assign(CHECKOUT);
 }
 function openCheckout(){
  if(modal){modal.hidden=false;modal.querySelector('#komi-promo-input')?.focus();return;}
@@ -63,11 +64,13 @@ function openCheckout(){
  const apply=node('button','Проверить коды','komi-checkout-secondary');apply.type='button';
  const pay=node('button','Перейти к оплате','komi-checkout-primary');pay.type='button';
  const msg=node('p','','komi-checkout-message');msg.setAttribute('role','status');
+ const continueFull=node('button','Продолжить за $2.01/мес без скидки','komi-checkout-continue');
+ continueFull.type='button';continueFull.hidden=true;
  const noCodes=node('a','Оформить напрямую в Lava.top (без кодов)','komi-checkout-direct');
  noCodes.href=CHECKOUT;noCodes.target='_blank';noCodes.rel='noopener noreferrer';
  actions.append(apply,pay);
  const footer=node('p','После оплаты доступ активирует подтверждённый webhook Lava.top, не экран возврата.','komi-checkout-footnote');
- box.append(top,subtitle,fields,summary,info,actions,msg,noCodes,footer);modal.append(box);
+ box.append(top,subtitle,fields,summary,info,actions,msg,continueFull,noCodes,footer);modal.append(box);
  document.body.append(modal);
  modal.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true;});
  function codes(){return {promo:clean(promo.input.value),ref:clean(referral.input.value)};}
@@ -75,6 +78,7 @@ function openCheckout(){
  async function check(){
    const c=codes();checked=null;
    promo.feedback.textContent='';referral.feedback.textContent='';msg.textContent='';
+   continueFull.hidden=true;
    if(c.promo&&!valid(c.promo)){promo.feedback.textContent='Код: 3–40 латинских букв или цифр';return false;}
    if(c.ref&&!valid(c.ref)){referral.feedback.textContent='Код: 3–40 латинских букв или цифр';return false;}
    if(!c.promo&&!c.ref){checked={promo_valid:false,ref_valid:false};return true;}
@@ -94,7 +98,8 @@ function openCheckout(){
      (data.ref_error||'Реферальный код недействителен');
    if(c.promo&&!data.promo_valid||c.ref&&!data.ref_valid)return false;
    if(c.promo&&Number(data.discount_percent)>0){
-      msg.textContent='Этот Premium-тариф продлевается автоматически. Денежные скидки для него пока недоступны.';
+      msg.textContent='Скидка '+Number(data.discount_percent)+'% не применяется к ежемесячной подписке. Можно перейти к оплате за $2.01/мес без скидки, сохранив реферальный код.';
+      continueFull.hidden=false;
       return false;
    }
    if(c.ref)try{localStorage.setItem('komi_ref_code',c.ref);}catch{}
@@ -102,9 +107,20 @@ function openCheckout(){
  }
  apply.onclick=async()=>{if(busy)return;busy=true;apply.disabled=true;try{await check();}finally{busy=false;apply.disabled=false;}};
  for(const field of [promo,referral]){
-   field.input.addEventListener('input',()=>{checked=null;field.feedback.textContent='';});
-   field.input.addEventListener('blur',()=>{if(field.input.value)apply.click();});
+   field.input.addEventListener('input',()=>{
+     checked=null;field.feedback.textContent='';msg.textContent='';
+     continueFull.hidden=true;
+   });
  }
+ // Validation on blur raced with the primary click and silently swallowed it.
+ // A separate explicit confirmation is required before omitting a discount.
+ continueFull.onclick=()=>{
+   if(busy)return;
+   promo.input.value='';
+   promo.feedback.textContent='Скидочный промокод исключён из заказа';
+   checked=null;continueFull.hidden=true;
+   pay.click();
+ };
  pay.onclick=async()=>{
    if(busy)return;
    busy=true;pay.disabled=true;pay.textContent='Проверяем…';
@@ -136,6 +152,8 @@ function openCheckout(){
 }
 document.addEventListener('click',event=>{
  const link=event.target.closest?.('a[href]');if(!link)return;
+ // The explicit no-code fallback must not reopen this dialog.
+ if(link.matches('.komi-checkout-direct'))return;
  try{
    const url=new URL(link.href,location.href);
    if(url.hostname!=='app.lava.top'||!url.pathname.startsWith('/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/'))return;
