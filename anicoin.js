@@ -107,7 +107,7 @@ function renderAniCoinShop(container) {
                 <p>Анимированный профиль, разовые +2000 XP и +500 AniCoin, публичный значок Premium. Бонусы начисляются после подтверждённой активации. Стоимость показывается перед оплатой.</p>
                 <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;margin-top:16px;padding:14px 22px;border-radius:14px;background:#f5f5f5;color:#090909;font-weight:750;">Студия оформления ↗</a>
             </article>
-            ${!id ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\\'login\\')">Войти в Komi</button>' : ''}
+            ${!id ? '<button type="button" class="btn-glow" data-komi-onclick="openAuthModal(\'login\')">Войти в Komi</button>' : ''}
             ${id && !wallet && !aniCoinStatus ? '<p role="status" aria-live="polite">Загружаем кошелёк…</p>' : ''}
             ${wallet ? `<div class="anicoin-wallet">
                 <div><span>Баланс</span><strong>${Number(wallet.balance).toLocaleString('ru-RU')} AniCoin</strong></div>
