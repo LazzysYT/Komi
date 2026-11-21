@@ -152,7 +152,7 @@ function renderAniCoinShop(container) {
                     <div class="komi-coin-sample">${symbol}</div>
                     <h3>${product.label}</h3><p>${caption}</p>
                     <div class="komi-coin-actions"><button type="button" data-shop-item-action="${product.id}" data-shop-operation="${action}"
-                      ${!id||!store||aniCoinShopBusy||(!owned&&!affordable)?'disabled':''}>
+                      ${id&&(!store||aniCoinShopBusy||(!owned&&!affordable))?'disabled':''}>
                       ${!id?'Войти, чтобы купить':equipped?'Снять':owned?'Надеть':affordable?'Купить и надеть · '+product.cost+' ◈':'Недостаточно AniCoin'}</button>
                       <button type="button" class="komi-shop-preview-btn" data-shop-preview="${product.id}" aria-label="Примерить ${product.label}">◉</button></div>
                   </article>`;
@@ -231,7 +231,12 @@ document.addEventListener('click',async event=>{
         return;
     }
     const button=event.target.closest?.('[data-shop-item-action]');
-    if(!button||button.disabled||aniCoinShopBusy||currentView!=='shop'||!_supabase)return;
+    if(!button||button.disabled||aniCoinShopBusy||currentView!=='shop')return;
+    if(!currentUser?.authUserId){
+        if(typeof openAuthModal==='function')openAuthModal('login');
+        return;
+    }
+    if(!_supabase)return;
     const id=currentUser?.authUserId;
     const product=window.KomiShopCatalog?.find(button.dataset.shopItemAction);
     const operation=button.dataset.shopOperation;
