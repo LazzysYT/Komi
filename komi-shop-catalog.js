@@ -225,6 +225,145 @@ const items=Object.freeze([
     "cost": 130,
     "type": "banner",
     "bannerClass": "banner-eclipse"
+  },
+  {
+    "id": "overlay_sakura",
+    "label": "Лепестки сакуры",
+    "cost": 65,
+    "type": "overlay",
+    "cosmeticClass": "overlay-sakura"
+  },
+  {
+    "id": "overlay_rain",
+    "label": "Ночной дождь",
+    "cost": 85,
+    "type": "overlay",
+    "cosmeticClass": "overlay-rain"
+  },
+  {
+    "id": "overlay_film",
+    "label": "Плёночный шум",
+    "cost": 45,
+    "type": "overlay",
+    "cosmeticClass": "overlay-film"
+  },
+  {
+    "id": "overlay_sparks",
+    "label": "Искры",
+    "cost": 95,
+    "type": "overlay",
+    "cosmeticClass": "overlay-sparks"
+  },
+  {
+    "id": "overlay_snow",
+    "label": "Лёгкий снег",
+    "cost": 70,
+    "type": "overlay",
+    "cosmeticClass": "overlay-snow"
+  },
+  {
+    "id": "overlay_dust",
+    "label": "Звёздная пыль",
+    "cost": 120,
+    "type": "overlay",
+    "cosmeticClass": "overlay-dust"
+  },
+  {
+    "id": "showcase_film",
+    "label": "Топ-3 «Киноплёнка»",
+    "cost": 100,
+    "type": "showcase",
+    "cosmeticClass": "showcase-film"
+  },
+  {
+    "id": "showcase_gloss",
+    "label": "Топ-3 «Глянец»",
+    "cost": 115,
+    "type": "showcase",
+    "cosmeticClass": "showcase-gloss"
+  },
+  {
+    "id": "showcase_neon",
+    "label": "Топ-3 «Неон»",
+    "cost": 150,
+    "type": "showcase",
+    "cosmeticClass": "showcase-neon"
+  },
+  {
+    "id": "card_graphite",
+    "label": "Карточка «Графит»",
+    "cost": 80,
+    "type": "card",
+    "cosmeticClass": "card-graphite"
+  },
+  {
+    "id": "card_frost",
+    "label": "Карточка «Матовый лёд»",
+    "cost": 110,
+    "type": "card",
+    "cosmeticClass": "card-frost"
+  },
+  {
+    "id": "card_aurora",
+    "label": "Карточка «Аврора»",
+    "cost": 130,
+    "type": "card",
+    "cosmeticClass": "card-aurora"
+  },
+  {
+    "id": "card_glass",
+    "label": "Карточка «Стекло»",
+    "cost": 140,
+    "type": "card",
+    "cosmeticClass": "card-glass"
+  },
+  {
+    "id": "icon_headphones",
+    "label": "Статус «Наушники»",
+    "cost": 35,
+    "type": "icon",
+    "cosmeticClass": "icon-headphones",
+    "symbol": "♫"
+  },
+  {
+    "id": "icon_ramen",
+    "label": "Статус «Рамен»",
+    "cost": 40,
+    "type": "icon",
+    "cosmeticClass": "icon-ramen",
+    "symbol": "♨"
+  },
+  {
+    "id": "icon_cassette",
+    "label": "Статус «Кассета»",
+    "cost": 50,
+    "type": "icon",
+    "cosmeticClass": "icon-cassette",
+    "symbol": "▣"
+  },
+  {
+    "id": "icon_crown",
+    "label": "Статус «Корона»",
+    "cost": 125,
+    "type": "icon",
+    "cosmeticClass": "icon-crown",
+    "symbol": "♛"
+  },
+  {
+    "id": "icon_katana",
+    "label": "Статус «Катана»",
+    "cost": 95,
+    "type": "icon",
+    "cosmeticClass": "icon-katana",
+    "symbol": "⚔"
+  },
+  {
+    "id": "icon_comet",
+    "label": "Статус «Комета»",
+    "cost": 75,
+    "type": "icon",
+    "cosmeticClass": "icon-comet",
+    "symbol": "✶"
   }
 ].map(Object.freeze));
 root.KomiShopCatalog=Object.freeze({items,find(id){return items.find(item=>item.id===id)||null;}});
