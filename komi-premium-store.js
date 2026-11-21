@@ -40,11 +40,23 @@ function apply(){
   favoriteShowcase.hidden=!favoriteStyle || !favoriteShowcase.querySelector('[data-komi-shop-favorite]');
   if(favoriteStyle?.cosmeticClass)favoriteShowcase.classList.add('komi-store-'+favoriteStyle.cosmeticClass);
  }
- const nameCard=profile.querySelector('.profile-header-card');
- if(nameCard){
-  nameCard.classList.remove(...products.filter(x=>x.type==='card').map(x=>'komi-store-'+x.cosmeticClass));
-  const cardStyle=products.find(x=>x.id===item?.card_id);
-  if(cardStyle?.cosmeticClass)nameCard.classList.add('komi-store-'+cardStyle.cosmeticClass);
+ const cardStyle=products.find(x=>x.id===item?.card_id);
+ const avatar=profile.querySelector('.profile-avatar-frame');
+ if(avatar){
+  let hover=avatar.querySelector('[data-komi-shop-hover-card]');
+  if(cardStyle?.cosmeticClass){
+   if(!hover){
+    hover=document.createElement('div');
+    hover.dataset.komiShopHoverCard='';
+    const label=document.createElement('strong');
+    const sub=document.createElement('span');sub.textContent='Профиль Komi';
+    hover.append(label,sub);
+    avatar.append(hover);
+   }
+   hover.className='komi-shop-hover-card komi-store-'+cardStyle.cosmeticClass;
+   hover.querySelector('strong').textContent=profile.querySelector('[data-profile-field="display-name"]')?.textContent||user;
+   avatar.tabIndex=0;
+  }else hover?.remove();
  }
  const titleHolder=profile.querySelector('.profile-name-row');
  if(!titleHolder)return;
