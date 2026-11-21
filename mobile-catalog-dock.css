@@ -286,3 +286,54 @@
     transition: none !important;
   }
 }
+
+/* Four explicit mobile slots. Legacy bundled styles force #notifBellBtn and
+ * older actions back to display:flex!important (more specific than the general
+ * dock hide rule). That created an implicit second grid row over Home/Profile
+ * for signed-in users. Notifications stay available via header “Ещё”. */
+@media (max-width: 767px) {
+  .komi-media-hub .komi-side-nav #notifBellBtn,
+  .komi-media-hub .komi-side-nav #sideShopBtn,
+  .komi-media-hub .komi-side-nav #sidePremiumBtn,
+  .komi-media-hub .komi-side-nav .komi-side-links > [data-komi-click="watch-party"] {
+    display: none !important;
+  }
+
+  .komi-media-hub .komi-side-nav #sideHomeBtn {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    order: 0 !important;
+  }
+  .komi-media-hub .komi-side-nav #sideCatalogBtn {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+    order: 0 !important;
+  }
+  .komi-media-hub .komi-side-nav #sideListsBtn {
+    grid-column: 3 !important;
+    grid-row: 1 !important;
+    order: 0 !important;
+  }
+  .komi-media-hub .komi-side-nav .komi-side-bottom > .komi-side-account {
+    grid-column: 4 !important;
+    grid-row: 1 !important;
+    order: 0 !important;
+  }
+
+  /* Keep the floating community action from covering catalog filter fields. */
+  .komi-media-hub #sideFriendsBtn {
+    box-sizing: border-box !important;
+    width: 46px !important;
+    min-width: 46px !important;
+    height: 46px !important;
+    min-height: 46px !important;
+    padding: 0 !important;
+    justify-content: center !important;
+    right: max(12px, env(safe-area-inset-right, 0px)) !important;
+    bottom: calc(91px + env(safe-area-inset-bottom, 0px)) !important;
+    border-radius: 14px !important;
+  }
+  .komi-media-hub #sideFriendsBtn .online-counter {
+    display: none !important;
+  }
+}
