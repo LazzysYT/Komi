@@ -11,11 +11,11 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/premium-studio.css">
-  <link rel="stylesheet" href="/komi-shop-cosmetics.css?v=20261122a">
+  <link rel="stylesheet" href="/komi-shop-cosmetics.css?v=20261122b">
   <link rel="stylesheet" href="/komi-checkout.css?v=20261121">
   <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
-  <script defer src="/komi-shop-catalog.js?v=20261122a"></script>
-  <script defer src="/premium-studio.js?v=20261122a"></script>
+  <script defer src="/komi-shop-catalog.js?v=20261122b"></script>
+  <script defer src="/premium-studio.js?v=20261122b"></script>
   <script defer src="/komi-ref-capture.js?v=20261121"></script>
   <script defer src="/komi-checkout.js?v=20261121"></script>
 </head>
@@ -81,7 +81,7 @@
 
         <section class="surface" aria-labelledby="store-title">
           <div class="section-heading">
-            <div><div class="step-number">04 / МАГАЗИН</div><h2 id="store-title">Магазин AniCoin</h2><p>32 украшения профиля: рамки, титулы и обложки. Примерка бесплатна, покупка и надевание защищены сервером. Доступно всем зарегистрированным пользователям.</p></div>
+            <div><div class="step-number">04 / МАГАЗИН</div><h2 id="store-title">Магазин AniCoin</h2><p>51 украшение профиля: рамки, титулы, обложки, оверлеи, мини-карточки, стили топа и иконки. Примерка бесплатна, покупка и надевание защищены сервером. Доступно всем зарегистрированным пользователям.</p></div>
             <div class="wallet-pill" id="store-balance" aria-live="polite">◈ — AniCoin</div>
           </div>
           <div id="store-filters" class="store-filters" aria-label="Категории магазина"></div>
@@ -97,16 +97,16 @@
             <span class="live-dot"><i aria-hidden="true"></i> LIVE</span>
           </div>
           <p class="preview-hint">Так другие пользователи будут видеть твой профиль.</p>
-          <div class="preview-profile">
+          <div class="preview-profile" id="preview-shop-card">
             <div class="preview-cover" aria-hidden="true"><span>KOMI<span class="cover-soft">ANIME</span></span></div>
             <div class="preview-profile-body">
               <div class="preview-avatar-holder">
                 <div class="preview-avatar-frame" id="preview-avatar-frame"><img id="preview-avatar" alt="Аватар пользователя" hidden><span id="preview-avatar-fallback" aria-hidden="true">K</span></div>
               </div>
-              <div class="preview-user-row"><strong id="preview-name">Пользователь Komi</strong><span id="preview-emoji" class="preview-emoji" hidden></span></div>
+              <div class="preview-user-row"><strong id="preview-name">Пользователь Komi</strong><span id="preview-shop-icon" class="komi-shop-preview-icon" hidden></span><span id="preview-emoji" class="preview-emoji" hidden></span></div>
               <div class="preview-badge" id="preview-badge">✦ PREMIUM</div>
               <div class="preview-title-line"><span id="preview-title" class="earned-title" hidden></span><span id="try-on-note" class="try-on-note" hidden>Предпросмотр · не куплено</span></div>
-              <p class="preview-caption">Твой стиль. Твоя коллекция.</p>
+              <p class="preview-caption">Твой стиль. Твоя коллекция.</p><div id="preview-shop-showcase" class="komi-shop-showcase-demo" hidden><i></i><i></i><i></i></div>
             </div>
           </div>
 
@@ -115,7 +115,7 @@
             <div class="comment-row">
               <div class="comment-avatar" id="comment-avatar-frame"><img id="comment-avatar" alt="" hidden><span id="comment-avatar-fallback" aria-hidden="true">K</span></div>
               <div class="comment-content">
-                <div class="comment-byline"><strong id="comment-name">Пользователь Komi</strong><span id="comment-badge" class="comment-badge">✦ PREMIUM</span></div>
+                <div class="comment-byline"><strong id="comment-name">Пользователь Komi</strong><span id="comment-shop-icon" class="komi-shop-preview-icon" hidden></span><span id="comment-badge" class="comment-badge">✦ PREMIUM</span></div>
                 <p>Эта серия — просто невероятная! ✨</p>
                 <span class="comment-time">Пример сообщения · только предпросмотр</span>
               </div>

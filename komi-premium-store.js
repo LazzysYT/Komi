@@ -29,10 +29,45 @@ function apply(){
   cover.classList.remove(...products.filter(x=>x.type==='banner').map(x=>'komi-store-'+x.bannerClass));
   const bannerProduct=products.find(x=>x.id===item?.banner_id);
   if(bannerProduct?.bannerClass)cover.classList.add('komi-store-'+bannerProduct.bannerClass);
+  cover.classList.remove(...products.filter(x=>x.type==='overlay').map(x=>'komi-store-'+x.cosmeticClass));
+  const overlay=products.find(x=>x.id===item?.overlay_id);
+  if(overlay?.cosmeticClass)cover.classList.add('komi-store-'+overlay.cosmeticClass);
+ }
+ const favoriteShowcase=profile.querySelector('[data-komi-shop-showcase]');
+ if(favoriteShowcase){
+  favoriteShowcase.classList.remove(...products.filter(x=>x.type==='showcase').map(x=>'komi-store-'+x.cosmeticClass));
+  const favoriteStyle=products.find(x=>x.id===item?.showcase_id);
+  favoriteShowcase.hidden=!favoriteStyle || !favoriteShowcase.querySelector('[data-komi-shop-favorite]');
+  if(favoriteStyle?.cosmeticClass)favoriteShowcase.classList.add('komi-store-'+favoriteStyle.cosmeticClass);
+ }
+ const cardStyle=products.find(x=>x.id===item?.card_id);
+ const avatar=profile.querySelector('.profile-avatar-frame');
+ if(avatar){
+  let hover=avatar.querySelector('[data-komi-shop-hover-card]');
+  if(cardStyle?.cosmeticClass){
+   if(!hover){
+    hover=document.createElement('div');
+    hover.dataset.komiShopHoverCard='';
+    const label=document.createElement('strong');
+    const sub=document.createElement('span');sub.textContent='Профиль Komi';
+    hover.append(label,sub);
+    avatar.append(hover);
+   }
+   hover.className='komi-shop-hover-card komi-store-'+cardStyle.cosmeticClass;
+   hover.querySelector('strong').textContent=profile.querySelector('[data-profile-field="display-name"]')?.textContent||user;
+   avatar.tabIndex=0;
+  }else hover?.remove();
  }
  const titleHolder=profile.querySelector('.profile-name-row');
  if(!titleHolder)return;
  let title=titleHolder.querySelector('[data-komi-earned-title]');
+ const icon=products.find(x=>x.id===item?.icon_id);
+ let iconNode=titleHolder.querySelector('[data-komi-shop-icon]');
+ if(icon){
+  if(!iconNode){iconNode=document.createElement('span');iconNode.dataset.komiShopIcon='';iconNode.setAttribute('aria-label','Иконка-статус');titleHolder.append(iconNode);}
+  iconNode.textContent=icon.symbol||'';
+  iconNode.className='komi-store-'+icon.cosmeticClass;
+ }else iconNode?.remove();
  const content=products.find(x=>x.id===item?.title_id)?.title||'';
  if(content){
   if(!title){title=document.createElement('span');title.className='komi-store-earned-title';title.dataset.komiEarnedTitle='';titleHolder.append(title);}
@@ -42,7 +77,7 @@ function apply(){
 async function refresh(){
  if(!client)return;
  const {data,error}=await client.from('komi_premium_cosmetic_equips')
-  .select('user_id,frame_id,title_id,banner_id').limit(1000);
+  .select('user_id,frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id').limit(1000);
  if(error){console.warn('Premium store items unavailable:',error.message);return;}
  publicItems=new Map((data||[]).map(x=>[String(x.user_id),x]));
  apply();
@@ -78,9 +113,9 @@ function mount(container,id,active){
  css();
  const panel=document.createElement('section');
  panel.className='komi-premium-store';panel.dataset.premiumStorePanel=id;
- const title=document.createElement('h2');title.textContent='Магазин AniCoin · 32 украшения';
+ const title=document.createElement('h2');title.textContent='Магазин AniCoin · 51 украшение';
  const description=document.createElement('p');
- description.textContent='Рамки, титулы и обложки за AniCoin. Покупки подтверждает сервер. Доступно всем пользователям.';
+ description.textContent='Рамки, титулы, обложки, эффекты и статусы. Покупки защищены сервером. Вся коллекция также доступна в #shop.';
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
  const grid=document.createElement('div');grid.className='komi-premium-store-grid';
  for(const product of products){
@@ -93,8 +128,17 @@ function mount(container,id,active){
    const avatar=document.createElement('span');avatar.className='komi-coin-frame komi-store-'+product.frameClass;avatar.textContent='K';sample.append(avatar);
   }else if(product.type==='banner'){
    const cover=document.createElement('span');cover.className='store-banner-swatch '+product.bannerClass;cover.textContent='KOMI';sample.append(cover);
-  }else{
+  }else if(product.type==='title'){
    const chip=document.createElement('span');chip.className='komi-coin-title';chip.textContent=product.title;sample.append(chip);
+  }else if(product.type==='overlay'){
+   const cover=document.createElement('div');cover.className='komi-preview-cover';const layer=document.createElement('span');layer.className='komi-shop-overlay-layer '+product.cosmeticClass;cover.append(layer);sample.append(cover);
+  }else if(product.type==='showcase'){
+   const row=document.createElement('div');row.className='komi-shop-showcase-demo komi-store-'+product.cosmeticClass;
+   for(let i=0;i<3;i++)row.append(document.createElement('i'));sample.append(row);
+  }else if(product.type==='card'){
+   const mini=document.createElement('div');mini.className='komi-shop-mini-swatch komi-store-'+product.cosmeticClass;mini.textContent='Komi';sample.append(mini);
+  }else if(product.type==='icon'){
+   const badge=document.createElement('span');badge.className='komi-shop-icon-swatch komi-store-'+product.cosmeticClass;badge.textContent=product.symbol;sample.append(badge);
   }
   item.append(sample,label,button);grid.append(item);
  }
