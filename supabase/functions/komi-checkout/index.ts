@@ -124,8 +124,10 @@ Deno.serve(async req=>{
     throw Error('Lava invoice creation failed');}
   const invoice=obj(await lavaResponse.json());
   const data=obj(invoice.data);
-  const invoiceId=asText(invoice.invoiceId||invoice.id||data.invoiceId||data.id);
-  const url=asText(invoice.paymentUrl||data.paymentUrl||invoice.url||data.url);
+  const invoiceId=asText(invoice.invoiceId||invoice.id||invoice.contractId||
+      data.invoiceId||data.id||data.contractId);
+  const url=asText(invoice.paymentUrl||data.paymentUrl||invoice.payment_url||
+      data.payment_url||invoice.url||data.url);
   let parsed:URL;
   try{parsed=new URL(url);}catch{throw Error('Invalid Lava URL');}
   if(!invoiceId||parsed.protocol!=='https:'||!(parsed.hostname==='lava.top'||parsed.hostname.endsWith('.lava.top')))
