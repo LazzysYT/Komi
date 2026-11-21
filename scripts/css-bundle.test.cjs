@@ -15,7 +15,9 @@ test('generated bundle leads the explicit, versioned mobile override cascade',()
     '/mobile-catalog-dock.css',
     '/catalog-comfort.css',
     '/player-comfort.css',
-    '/mobile-bottom-sheets.css'
+    '/mobile-bottom-sheets.css',
+    '/auth-dialog.css',
+    '/catalog-discovery-v4.css'
   ];
   assert.deepEqual(local,expected,'Last-loaded mobile layers must preserve deliberate cascade order');
   assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
