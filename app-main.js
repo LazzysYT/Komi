@@ -2025,6 +2025,7 @@ async function loadDataFromCloud(attempt = 0) {
             const calculatedLevel = profileExperience.level;
 
             const favoritesCount = Object.keys(userFavorites[username] || {}).length;
+            const komiTopActualFavorites=Object.keys(userFavorites[username]||{}).map(id=>profileAnimeById.get(String(id))).filter(Boolean).slice(0,3);
             // Only real saved entries are shown: no fictional showcase data.
             const showcasePremium = window.KomiPremium?.isActiveName?.(username) === true;
             const xpProgress = Math.max(0, profileExperience.xp % 500);
@@ -2079,6 +2080,13 @@ async function loadDataFromCloud(attempt = 0) {
                                 ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
                             </div>
 
+                            <section class="komi-shop-favorite-showcase" data-komi-shop-showcase hidden aria-label="Топ избранного">
+                                <h3>Топ избранного</h3>
+                                <div class="komi-shop-favorite-list">
+                                ${komiTopActualFavorites.map(anime=>`<a data-komi-shop-favorite href="/anime/${encodeURIComponent(String(anime.id))}" title="${safeProfileText(anime.title)}">
+                                  <img src="${safeProfileText(komiSafeUrl(anime.poster)||'/anime-artwork.svg')}" alt="" loading="lazy" decoding="async"><span>${safeProfileText(anime.title)}</span></a>`).join('')}
+                                </div>
+                            </section>
                             <section class="komi-premium-showcase" data-komi-premium-panel data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Подписка Komi Premium">
                               <span class="komi-premium-eyebrow">✦ KOMI PREMIUM · ACTIVE</span>
                               <h3>Особый статус в сообществе</h3>
