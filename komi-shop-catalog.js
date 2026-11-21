@@ -364,6 +364,75 @@ const items=Object.freeze([
     "type": "icon",
     "cosmeticClass": "icon-comet",
     "symbol": "✶"
+  },
+  {
+    "id": "reaction_hype",
+    "label": "Реакции «Хайп»",
+    "cost": 70,
+    "type": "reaction",
+    "reactions": [
+      {
+        "id": "hype",
+        "emoji": "🔥",
+        "label": "Хайп"
+      },
+      {
+        "id": "wow",
+        "emoji": "😮",
+        "label": "Шок"
+      },
+      {
+        "id": "clap",
+        "emoji": "👏",
+        "label": "Аплодисменты"
+      }
+    ]
+  },
+  {
+    "id": "reaction_soft",
+    "label": "Реакции «Эмоции»",
+    "cost": 60,
+    "type": "reaction",
+    "reactions": [
+      {
+        "id": "tear",
+        "emoji": "🥲",
+        "label": "Трогательно"
+      },
+      {
+        "id": "heart",
+        "emoji": "🤍",
+        "label": "Нравится"
+      },
+      {
+        "id": "laugh",
+        "emoji": "😂",
+        "label": "Смешно"
+      }
+    ]
+  },
+  {
+    "id": "reaction_cinema",
+    "label": "Реакции «Кино»",
+    "cost": 85,
+    "type": "reaction",
+    "reactions": [
+      {
+        "id": "star",
+        "emoji": "⭐",
+        "label": "Пять звёзд"
+      },
+      {
+        "id": "suspense",
+        "emoji": "👀",
+        "label": "Интрига"
+      },
+      {
+        "id": "popcorn",
+        "emoji": "🍿",
+        "label": "Попкорн"
+      }
+    ]
   }
 ].map(Object.freeze));
 root.KomiShopCatalog=Object.freeze({items,find(id){return items.find(item=>item.id===id)||null;}});

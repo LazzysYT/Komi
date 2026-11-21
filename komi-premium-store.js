@@ -102,9 +102,9 @@ function paint(panel){
   if(!product)continue;
   const owned=wallet.owned.includes(product.id);
   const equipped=wallet[product.type+'_id']===product.id;
-  button.dataset.action=equipped?'unequip':owned?'equip':'buy';
-  button.disabled=busy || (!owned&&Number(wallet.balance)<product.cost);
-  button.textContent=equipped?'Снять':owned?'Надеть':Number(wallet.balance)<product.cost?'Недостаточно AniCoin':'Купить · '+product.cost+' ◈';
+  button.dataset.action=product.type==='reaction'?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy';
+  button.disabled=busy || (product.type==='reaction'&&owned)||(!owned&&Number(wallet.balance)<product.cost);
+  button.textContent=product.type==='reaction'&&owned?'Набор куплен':equipped?'Снять':owned?'Надеть':Number(wallet.balance)<product.cost?'Недостаточно AniCoin':'Купить · '+product.cost+' ◈';
  }
 }
 function mount(container,id,active){
@@ -113,7 +113,7 @@ function mount(container,id,active){
  css();
  const panel=document.createElement('section');
  panel.className='komi-premium-store';panel.dataset.premiumStorePanel=id;
- const title=document.createElement('h2');title.textContent='Магазин AniCoin · 51 украшение';
+ const title=document.createElement('h2');title.textContent='Магазин AniCoin · 54 товара';
  const description=document.createElement('p');
  description.textContent='Рамки, титулы, обложки, эффекты и статусы. Покупки защищены сервером. Вся коллекция также доступна в #shop.';
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
@@ -139,6 +139,10 @@ function mount(container,id,active){
    const mini=document.createElement('div');mini.className='komi-shop-mini-swatch komi-store-'+product.cosmeticClass;mini.textContent='Komi';sample.append(mini);
   }else if(product.type==='icon'){
    const badge=document.createElement('span');badge.className='komi-shop-icon-swatch komi-store-'+product.cosmeticClass;badge.textContent=product.symbol;sample.append(badge);
+  }else if(product.type==='reaction'){
+   const row=document.createElement('span');row.className='komi-shop-reaction-swatch';
+   for(const reaction of product.reactions){const emoji=document.createElement('span');emoji.textContent=reaction.emoji;row.append(emoji);}
+   sample.append(row);
   }
   item.append(sample,label,button);grid.append(item);
  }
@@ -159,7 +163,7 @@ function mount(container,id,active){
    if(error)throw error;
    if(verifiedOwner()!==id)return;
    wallet=data;owner=id;
-   status.textContent=action==='buy'?'Куплено. Теперь можно надеть.':action==='equip'?'Предмет надет.':'Предмет снят.';
+   status.textContent=action==='buy'?(product.type==='reaction'?'Набор реакций куплен.':'Куплено. Теперь можно надеть.'):action==='equip'?'Предмет надет.':'Предмет снят.';
    if(action!=='buy')await refresh();
    if(typeof aniCoinRequest==='function')void aniCoinRequest('read',{},id).catch(()=>{});
   }catch(error){status.textContent=error?.message||'Операция недоступна.';}
