@@ -1561,7 +1561,7 @@ async function loadDataFromCloud(attempt = 0) {
                     </section>`;
             } else if (currentView === 'shop') {
                 if (typeof renderAniCoinShop === 'function') renderAniCoinShop(container);
-                else container.innerHTML = '<section id="shop" class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
+                else if (!container.querySelector('.komi-static-shop')) container.innerHTML = '<section id="shop" class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
             } else if (currentView === 'premium') {
                 if (window.KomiPremium?.renderPage) window.KomiPremium.renderPage(container);
                 else container.innerHTML = '<section class="komi-premium-page"><h1>Komi Premium</h1><p>Загрузка раздела Premium…</p></section>';
