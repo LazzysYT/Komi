@@ -3271,7 +3271,10 @@ async function loadDataFromCloud(attempt = 0) {
             const referrals = document.createElement('button');
             referrals.className='btn-secondary';referrals.textContent='Реферальные покупки';
             referrals.onclick=()=>window.komiMountReferralAdmin?.(content,_supabase,openAdminPanel);
-            actions.append(add,backup,referrals);
+            const premium = document.createElement('button');
+            premium.className='btn-secondary';premium.textContent='✦ Выдать Premium';
+            premium.onclick=()=>window.komiMountPremiumAdmin?.(content,_supabase,openAdminPanel);
+            actions.append(add,backup,referrals,premium);
             const input = document.createElement('input');
             input.type='search';input.className='form-control';
             input.placeholder='Поиск по названию или Shikimori ID';

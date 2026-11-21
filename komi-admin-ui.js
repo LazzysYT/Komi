@@ -48,4 +48,18 @@
         }
         return window.komiReferralAdminUI(root, supabase, back);
     };
+    let premiumLoader=null;
+    window.komiMountPremiumAdmin=async function(root,db,back){
+        if(typeof window.komiPremiumAdminUI!=='function'){
+            if(!premiumLoader) premiumLoader=new Promise((resolve,reject)=>{
+                const s=document.createElement('script');
+                s.src='/komi-premium-admin.js?v=20261122a';
+                s.async=true;s.onload=resolve;s.onerror=()=>reject(new Error('Не удалось загрузить Premium-админку'));
+                document.head.append(s);
+            });
+            try{await premiumLoader;}
+            catch(e){premiumLoader=null;root.textContent=e.message;return;}
+        }
+        if(typeof window.komiPremiumAdminUI==='function')return window.komiPremiumAdminUI(root,db,back);
+    };
 })();
