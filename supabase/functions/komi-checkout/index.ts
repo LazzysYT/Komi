@@ -88,10 +88,14 @@ Deno.serve(async req=>{
    return response({error:'Промокод недействителен для этого тарифа'},422);
   if(ref&&(!r||r.owner_user_id===id))
    return response({error:'Реферальный код не подходит'},422);
+  // A currently billed monthly subscriber should not start a duplicate recurring contract.
+  const active=await db('komi_premium_contracts?select=contract_id&user_id=eq.'+encodeURIComponent(id)+
+    '&paid_until=gt.'+encodeURIComponent(new Date().toISOString())+'&revoked_at=is.null&limit=1',key);
+  if((active as unknown[]).length)return response({error:'Уже есть активная подписка Premium. Повторная покупка не нужна.'},409);
   const recent=await db('payments?select=id&user_id=eq.'+encodeURIComponent(id)+
     '&created_at=gte.'+encodeURIComponent(new Date(Date.now()-3600000).toISOString())+'&limit=10',key);
   if((recent as unknown[]).length>=10)return response({error:'Слишком много попыток за час'},429);
-  const reward=ref?Math.round(price*Number(r.reward_percent)*100)/10000:0;
+  const reward=ref?Math.round(Math.round(price*100)*Number(r.reward_percent)/100)/100:0;
   const pending=await db('payments',key,{method:'POST',
     headers:{Prefer:'return=representation'},
     body:JSON.stringify({user_id:id,buyer_email:email,tariff_id:'premium_monthly',currency:'USD',
