@@ -1438,6 +1438,13 @@ async function loadDataFromCloud(attempt = 0) {
                 const types = ['Все', 'Сериал', 'Фильм', 'OVA', 'ONA', 'Special'];
 
                 const filtered = komiCatalogFiltered();
+                const quickGenreNames = Array.from(new Set([
+                    ...['Драма','Комедия','Приключения','Фэнтези','Романтика','Повседневность','Экшен','Детектив']
+                        .filter(g => availableGenresList.includes(g)),
+                    ...availableGenresList
+                ])).slice(0,11);
+                if (catalogFilterGenre !== 'Все' && !quickGenreNames.includes(catalogFilterGenre))
+                    quickGenreNames.push(catalogFilterGenre);
                 const searchPreviouslyFocused = document.activeElement?.id === 'komiCatalogSearchInput';
                 const previousSearchCaret = searchPreviouslyFocused
                     ? document.activeElement.selectionStart : null;
@@ -1494,14 +1501,14 @@ async function loadDataFromCloud(attempt = 0) {
                         </div>
                         <label class="komi-catalog-hide-switch" for="komiHideWatched">
                             <input id="komiHideWatched" type="checkbox" ${komiHideWatched?'checked':''} data-komi-onchange="komiToggleHiddenWatched(this.checked)">
-                            <span>Скрыть просмотренное</span>
+                            <span>Скрыть просмотренное и брошенное</span>
                         </label>
                         <button type="button" class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()" title="Сбросить все фильтры">Сбросить</button>
                         <button type="button" class="komi-mobile-filter-trigger" aria-haspopup="dialog" aria-controls="komiMobileSheet" title="Настроить фильтры каталога">☷ Фильтры</button>
                         <div class="komi-catalog-genre-row" aria-label="Быстрый выбор жанров">
                             <span class="komi-catalog-row-caption">Жанры и темы</span>
                             <div class="komi-catalog-genre-scroll">
-                                ${['Все', ...Array.from(new Set([...(['Драма','Комедия','Приключения','Фэнтези','Романтика','Повседневность','Экшен','Сверхъестественное','Детектив'].filter(g=>availableGenresList.includes(g))),...(catalogFilterGenre!=='Все'?[catalogFilterGenre]:[])]))].map(g => `<button type="button" class="komi-catalog-genre-tag${catalogFilterGenre===g?' is-active':''}" data-komi-genre="${escapeFriendHtml(g)}" data-komi-onclick="komiChooseCatalogGenre(this.dataset.komiGenre)" aria-pressed="${catalogFilterGenre===g}">${g==='Все'?'Все жанры':escapeFriendHtml(g)}</button>`).join('')}
+                                ${['Все', ...quickGenreNames].map(g => `<button type="button" class="komi-catalog-genre-tag${catalogFilterGenre===g?' is-active':''}" data-komi-genre="${escapeFriendHtml(g)}" data-komi-onclick="komiChooseCatalogGenre(this.dataset.komiGenre)" aria-pressed="${catalogFilterGenre===g}">${g==='Все'?'Все жанры':escapeFriendHtml(g)}</button>`).join('')}
                             </div>
                         </div>
                     </section>
