@@ -19,9 +19,11 @@ test('generated bundle leads the explicit, versioned mobile override cascade',()
     '/auth-dialog.css',
     '/catalog-discovery-v4.css'
   ];
-  assert.deepEqual(local,expected,'Last-loaded mobile layers must preserve deliberate cascade order');
+  // Checkout CSS is an optional feature sheet added by a separate, concurrent release.
+  const checkout=local.includes('/komi-checkout.css') ? ['/komi-checkout.css'] : [];
+  assert.deepEqual(local,[...expected,...checkout],'Last-loaded mobile layers must preserve deliberate cascade order');
   assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
-  for(const filename of expected) assert.ok(fs.existsSync(path.join(root,filename.slice(1))),filename+' missing');
+  for(const filename of [...expected,...checkout]) assert.ok(fs.existsSync(path.join(root,filename.slice(1))),filename+' missing');
   assert.match(head,/href="\/komi\.bundle\.css\?v=\d+[a-z]"/);
   assert.doesNotMatch(head,/<style(?:\s|>)/i);
   assert.match(head,/fonts\.googleapis\.com/);
