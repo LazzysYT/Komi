@@ -29,3 +29,15 @@ test('More popup uses explicit action handlers and restores keyboard focus',()=>
   assert.match(script,/navigate\('partners'\)/);
   assert.doesNotMatch(script,/innerHTML\s*=/);
 });
+
+test('mobile dock keeps exactly four anchored slots even for logged-in visitors',()=>{
+  const dock=fs.readFileSync(path.join(__dirname,'../mobile-catalog-dock.css'),'utf8');
+  assert.match(html,/mobile-catalog-dock\.css\?v=20261121c/);
+  for(const selector of ['#notifBellBtn','#sideShopBtn','#sidePremiumBtn']){
+    assert.ok(dock.includes('.komi-side-nav '+selector),'Explicitly hide legacy tab '+selector);
+  }
+  for(const selector of ['#sideHomeBtn','#sideCatalogBtn','#sideListsBtn','.komi-side-bottom > .komi-side-account'])
+    assert.ok(dock.includes(selector),'Missing dock grid anchor for '+selector);
+  assert.match(dock,/grid-column:\s*4\s*!important/);
+  assert.match(dock,/#sideFriendsBtn \.online-counter\s*\{\s*display:\s*none\s*!important/);
+});
