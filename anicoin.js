@@ -118,7 +118,7 @@ function renderAniCoinShop(container) {
     const wallet=id && id===aniCoinOwner ? aniCoinWallet : null;
     const store=id && id===aniCoinShopOwner ? aniCoinShopWallet : null;
     const items=window.KomiShopCatalog?.items || [];
-    const categories=[['all','Все · '+items.length],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты профиля'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['reaction','Watch Party'],['owned','Мои покупки']];
+    const categories=[['all','Все · '+items.length],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты профиля'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['shape','Формы'],['plate','Комментарии'],['mascot','Маскоты'],['xp','XP-полоски'],['name','Ники'],['reaction','Watch Party'],['owned','Мои покупки']];
     const selected=items.filter(item=>aniCoinShopCategory==='all'||(aniCoinShopCategory==='owned'&&store?.owned?.includes(item.id))||item.type===aniCoinShopCategory);
     const name=typeof escapeFriendHtml==='function'?escapeFriendHtml(aniCoinShopDisplayName):'Пользователь Komi';
     const symbolFor=product=>{
@@ -130,13 +130,22 @@ function renderAniCoinShop(container) {
         if(product.type==='card')return '<div class="komi-shop-mini-swatch komi-store-'+product.cosmeticClass+'">KOMI</div>';
         if(product.type==='icon')return '<span class="komi-shop-icon-swatch komi-store-'+product.cosmeticClass+'">'+product.symbol+'</span> <strong>'+name+'</strong>';
         if(product.type==='reaction')return '<div class="komi-shop-reaction-swatch">'+product.reactions.map(r=>'<span>'+r.emoji+'</span>').join('')+'</div>';
+        if(['shape','plate','mascot','xp','name'].includes(product.type)){
+          const sampleType={shape:'avatar-shape',plate:'plate-swatch',mascot:'mascot-swatch',xp:'xp-swatch',name:'name-swatch'}[product.type];
+          const inner=product.type==='shape'?'<img data-komi-shop-avatar alt="" hidden><span aria-hidden="true">K</span>':
+            product.type==='mascot'?'<i class="komi-profile-mascot komi-store-'+product.cosmeticClass+'"></i>':
+            product.type==='xp'?'':product.type==='name'?name:product.type==='plate'?'Комментарий':'K';
+          return '<span class="komi-shop-visual-sample komi-shop-'+sampleType+' komi-store-'+product.cosmeticClass+'">'+inner+'</span>';
+        }
         return 'K';
     };
+    const sets=window.KomiShopCatalog?.sets||[];
+    const names={common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'};
     container.innerHTML=`
         <section id="shop" class="anicoin-shop" aria-labelledby="anicoin-title">
             <p class="komi-spotlight-eyebrow">Komi Anime / коллекция</p>
             <h1 id="anicoin-title">Магазин AniCoin</h1>
-            <p>54 товара за AniCoin: оформление профиля и три набора реакций для Watch Party. Наборы содержат заранее известные реакции, без случайных наград. Все цены фиксированы. Покупка остаётся в коллекции; примерка бесплатная.</p>
+            <p>85 товаров за AniCoin: новые рамки, формы аватара, стили комментариев, маскоты, XP-полоски, градиенты ника и реакции Watch Party. Наборы содержат заранее известные реакции, без случайных наград. Все цены фиксированы. Покупка остаётся в коллекции; примерка бесплатная.</p>
             <article class="anicoin-item" aria-labelledby="komi-premium-shop-title">
                 <p style="margin:0 0 8px;font-size:12px;letter-spacing:.12em;text-transform:uppercase;">Ежемесячная подписка</p>
                 <h2 id="komi-premium-shop-title" style="margin:0 0 8px;">✧ Komi Premium</h2>
@@ -153,6 +162,17 @@ function renderAniCoinShop(container) {
             </div>` : ''}
             <p role="status">${escapeFriendHtml(aniCoinStatus)}</p>
             ${id && !wallet && aniCoinStatus ? '<button type="button" class="btn-secondary" data-komi-onclick="openAniCoinShop()">Повторить</button>' : ''}
+            <section class="komi-shop-sets-guide" aria-label="Тематические коллекции">
+                <h2>Тематические сеты</h2>
+                <p>Надень одновременно 3 указанных предмета и получи бесплатный визуальный эффект для шапки профиля. Никаких случайных наград.</p>
+                <div class="komi-shop-set-list">
+                ${sets.map(set=>{
+                    const progress=set.items.filter(i=>store?.[i.split('_',1)[0]+'_id']===i).length;
+                    const requirements=set.items.map(i=>window.KomiShopCatalog.find(i)?.label||i).join(' + ');
+                    return `<div class="komi-shop-set-card"><strong>${set.label}</strong><small>${requirements}</small><span>${progress} / 3 надето ${progress===3?'· Сет активен ✦':''}</span></div>`;
+                }).join('')}
+                </div>
+            </section>
             <div class="komi-shop-tabs" role="group" aria-label="Категории AniCoin">
               ${categories.map(([key,label])=>`<button type="button" data-shop-category="${key}" aria-pressed="${key===aniCoinShopCategory}">${label}</button>`).join('')}
             </div>
@@ -164,7 +184,8 @@ function renderAniCoinShop(container) {
                 const action=product.type==='reaction'?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy_equip';
                 const caption=equipped?'Надето ✓':owned?'В коллекции':product.cost+' AniCoin';
                 const symbol=symbolFor(product);
-                return `<article class="komi-coin-card ${equipped?'is-equipped':''}">
+                return `<article class="komi-coin-card ${equipped?'is-equipped':''}" data-rarity="${product.rarity||'common'}">
+                    <span class="komi-shop-rarity">${names[product.rarity]||names.common}</span>
                     <div class="komi-coin-sample">${symbol}</div>
                     <h3>${product.label}</h3><p>${caption}</p>
                     <div class="komi-coin-actions"><button type="button" data-shop-item-action="${product.id}" data-shop-operation="${action}"

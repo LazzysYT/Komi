@@ -105,6 +105,8 @@
         const cacheEntry=cache.get(String(animeId));
         const records=cacheEntry?.rows||[];
         const activeHighlights=cacheEntry?.highlights||new Map();
+        const decorations=cacheEntry?.decorations||new Map();
+        const cosmetics=window.KomiShopCatalog?.items||[];
         const all=records.slice().sort((a,b)=>{
             const aActive=activeHighlights.has(Number(a.id)) && Date.parse(activeHighlights.get(Number(a.id)))>Date.now();
             const bActive=activeHighlights.has(Number(b.id)) && Date.parse(activeHighlights.get(Number(b.id)))>Date.now();
@@ -119,6 +121,9 @@
         const viewerId = (typeof currentUser !== 'undefined' && currentUser?.authUserId) || '';
         for (const item of all) {
             const card = element('article', 'komi-comment');
+            const authorStyle=decorations.get(String(item.user_id))||{};
+            const plate=cosmetics.find(p=>p.type==='plate'&&p.id===authorStyle.plate_id);
+            if(plate?.cosmeticClass)card.classList.add('komi-store-'+plate.cosmeticClass);
             const expiry=activeHighlights.get(Number(item.id));
             const promoted=expiry && Date.parse(expiry)>Date.now();
             if(promoted){
@@ -128,6 +133,8 @@
             const head = element('div', 'komi-comment-header');
             const name = element('strong', 'komi-comment-name', String(item.author_name || 'Участник Komi').slice(0, 60));
             if (item.user_id) name.dataset.komiPremiumId = String(item.user_id);
+            const nickStyle=cosmetics.find(p=>p.type==='name'&&p.id===authorStyle.name_id);
+            if(nickStyle?.cosmeticClass)name.classList.add('komi-store-'+nickStyle.cosmeticClass);
             const date = element('time', 'komi-comment-date', formatDate(item.created_at));
             if (item.created_at) date.dateTime = item.created_at;
             head.append(name, date);
@@ -182,7 +189,15 @@
             if(!promotions.error)
                 for(const promo of promotions.data||[])highlights.set(Number(promo.comment_id),promo.expires_at);
         }
-        cache.set(key,{rows,highlights,loadedAt:Date.now()});
+        const decorations=new Map();
+        const authorIds=[...new Set(rows.map(row=>row.user_id).filter(Boolean))];
+        if(authorIds.length){
+          const publicCosmetics=await _supabase.from('komi_premium_cosmetic_equips')
+            .select('user_id,plate_id,name_id').in('user_id',authorIds);
+          if(!publicCosmetics.error)
+            for(const cosmetic of publicCosmetics.data||[])decorations.set(String(cosmetic.user_id),cosmetic);
+        }
+        cache.set(key,{rows,highlights,decorations,loadedAt:Date.now()});
         if (section?.dataset.animeId === key) {
             statusMessage(section, '');
             redraw(key);

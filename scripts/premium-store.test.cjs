@@ -4,6 +4,7 @@ const root=path.join(__dirname,'..');
 const original=fs.readFileSync(path.join(root,'supabase/migrations/20261119211500_premium_anicoin_cosmetics.sql'),'utf8');
 const migration=fs.readFileSync(path.join(root,'supabase/migrations/20261122050000_anicoin_shop_2_cosmetics.sql'),'utf8');
 const socialMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261122060000_anicoin_social_gifts_highlights_reactions_boosters.sql'),'utf8');
+const visualMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261122070000_anicoin_visual_collections.sql'),'utf8');
 const catalog=fs.readFileSync(path.join(root,'komi-shop-catalog.js'),'utf8');
 const profile=fs.readFileSync(path.join(root,'komi-premium-store.js'),'utf8');
 const coin=fs.readFileSync(path.join(root,'anicoin.js'),'utf8');
@@ -14,14 +15,14 @@ const premium=fs.readFileSync(path.join(root,'komi-premium.js'),'utf8');
 const context={window:{}};
 vm.runInNewContext(catalog,context);
 const products=context.window.KomiShopCatalog.items;
-test('54 permanent items and reaction packs share fixed server prices',()=>{
- assert.equal(products.length,54);
- assert.equal(new Set(products.map(x=>x.id)).size,54);
- assert.deepEqual([...new Set(products.map(x=>x.type))].sort(),['banner','card','frame','icon','overlay','reaction','showcase','title']);
+test('85 fixed-price cosmetic items stay consistent between client catalog and protected server',()=>{
+ assert.equal(products.length,85);
+ assert.equal(new Set(products.map(x=>x.id)).size,85);
+ assert.deepEqual([...new Set(products.map(x=>x.type))].sort(),['banner','card','frame','icon','mascot','name','overlay','plate','reaction','shape','showcase','title','xp']);
  for(const item of products){
    assert.ok(Number.isInteger(item.cost)&&item.cost>0);
-   assert.match(socialMigration,new RegExp("when '"+item.id+"' then "+item.cost+"\\b"));
-   assert.match(socialMigration,new RegExp("'"+item.id+"'"));
+   assert.match(visualMigration,new RegExp("\\('"+item.id+"',"+item.cost+",true\\)"));
+   assert.match(visualMigration,new RegExp("'"+item.id+"'"));
  }
  assert.match(original,/primary key\(user_id,item_id\)/);
  assert.match(socialMigration,/wallet\.balance<cost/);
@@ -110,4 +111,45 @@ test('all social UI modules parse and show the correct checkout contract',()=>{
   assert.match(profile,/product\.type==='reaction'/);
   assert.equal(products.filter(x=>x.type==='reaction').length,3);
   assert.ok(products.filter(x=>x.type==='reaction').every(x=>x.reactions.length===3));
+});
+
+test('visual collections preserve ownership, equip slots, free sets and accessible previews',()=>{
+ const css=fs.readFileSync(path.join(root,'komi-shop-visual.css'),'utf8');
+ const comments=fs.readFileSync(path.join(root,'komi-comments.js'),'utf8');
+ const main=fs.readFileSync(path.join(root,'app-main.js'),'utf8');
+ assert.equal(context.window.KomiShopCatalog.sets.length,3);
+ for(const set of context.window.KomiShopCatalog.sets){
+  assert.equal(set.items.length,3);
+  assert.ok(set.items.every(id=>products.some(p=>p.id===id)));
+ }
+ const testSet=context.window.KomiShopCatalog.sets[0];
+ assert.equal(context.window.KomiShopCatalog.activeSets({frame_id:testSet.items[0],shape_id:testSet.items[1],title_id:testSet.items[2]}).length,1);
+ assert.equal(context.window.KomiShopCatalog.activeSets({frame_id:testSet.items[0]}).length,0);
+ for(const type of ['shape','plate','mascot','xp','name']){
+  assert.match(visualMigration,new RegExp("add column if not exists "+type+"_id text"));
+  assert.match(visualMigration,new RegExp("kind='"+type+"'"));
+  assert.match(profile,new RegExp(type+"_id"));
+  assert.match(studio,new RegExp("activeItem\\('"+type+"'\\)"));
+ }
+ assert.match(visualMigration,/select p\.cost into cost from komi_private\.shop_item_prices p/);
+ assert.match(visualMigration,/auth\.uid\(\)/);
+ assert.match(visualMigration,/u\.is_anonymous is not true/);
+ assert.match(visualMigration,/for update/);
+ assert.match(visualMigration,/Purchase required before equipping/);
+ assert.match(visualMigration,/grant execute on function public\.komi_premium_store\(text,text\) to authenticated/);
+ assert.match(html,/komi-shop-visual\.css\?v=/);
+ assert.match(standalone,/komi-shop-visual\.css\?v=/);
+ assert.match(coin,/komi-shop-rarity/);
+ assert.match(coin,/komi-shop-set-card/);
+ assert.match(studio,/preview-shop-xp/);
+ assert.match(profile,/KomiShopCatalog\?\.activeSets/);
+ assert.match(comments,/komi_premium_cosmetic_equips/);
+ assert.match(comments,/plate_id,name_id/);
+ assert.match(css,/@media\(prefers-reduced-motion:reduce\)/);
+ assert.match(css,/komi-store-frame-sumi/);
+ assert.match(css,/komi-store-shape-octagon/);
+ assert.match(css,/komi-store-xp-silver/);
+ assert.match(main,/profile-xp-capsule/);
+ assert.doesNotMatch(visualMigration,/random\s*\(|lootbox|roulette|casino/i);
+ assert.ok(products.every(p=>['common','rare','epic','legendary'].includes(p.rarity)));
 });

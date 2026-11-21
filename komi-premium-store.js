@@ -58,6 +58,43 @@ function apply(){
    avatar.tabIndex=0;
   }else hover?.remove();
  }
+ // Each owned visual category changes only its own public profile surface.
+ const avatarImage=profile.querySelector('.profile-avatar-box');
+ if(avatarImage){
+  avatarImage.classList.remove(...products.filter(x=>x.type==='shape').map(x=>'komi-store-'+x.cosmeticClass));
+  const shape=products.find(x=>x.id===item?.shape_id);
+  if(shape?.cosmeticClass)avatarImage.classList.add('komi-store-'+shape.cosmeticClass);
+ }
+ const level=profile.querySelector('.profile-xp-capsule');
+ if(level){
+  level.classList.remove(...products.filter(x=>x.type==='xp').map(x=>'komi-store-'+x.cosmeticClass));
+  const xp=products.find(x=>x.id===item?.xp_id);
+  if(xp?.cosmeticClass)level.classList.add('komi-store-'+xp.cosmeticClass);
+ }
+ const nickname=profile.querySelector('[data-profile-field="display-name"]');
+ if(nickname){
+  nickname.classList.remove(...products.filter(x=>x.type==='name').map(x=>'komi-store-'+x.cosmeticClass));
+  const name=products.find(x=>x.id===item?.name_id);
+  if(name?.cosmeticClass)nickname.classList.add('komi-store-'+name.cosmeticClass);
+ }
+ const header=profile.querySelector('.profile-header-card');
+ if(header){
+  let mascotNode=header.querySelector('[data-komi-shop-mascot]');
+  const mascot=products.find(x=>x.id===item?.mascot_id);
+  if(mascot){
+   if(!mascotNode){mascotNode=document.createElement('span');mascotNode.dataset.komiShopMascot='';mascotNode.setAttribute('aria-hidden','true');header.append(mascotNode);}
+   mascotNode.className='komi-profile-mascot komi-store-'+mascot.cosmeticClass;
+  }else mascotNode?.remove();
+  const allSets=root.KomiShopCatalog?.sets||[];
+  header.classList.remove(...allSets.map(set=>set.className));
+  const active=root.KomiShopCatalog?.activeSets?.(item)||[];
+  for(const set of active)header.classList.add(set.className);
+  let setLabel=header.querySelector('[data-komi-shop-set-label]');
+  if(active.length){
+   if(!setLabel){setLabel=document.createElement('span');setLabel.dataset.komiShopSetLabel='';setLabel.className='komi-shop-set-status';header.querySelector('.profile-info-grid')?.append(setLabel);}
+   if(setLabel)setLabel.textContent='✦ Сет: '+active.map(set=>set.label).join(', ');
+  }else setLabel?.remove();
+ }
  const titleHolder=profile.querySelector('.profile-name-row');
  if(!titleHolder)return;
  let title=titleHolder.querySelector('[data-komi-earned-title]');
@@ -77,7 +114,7 @@ function apply(){
 async function refresh(){
  if(!client)return;
  const {data,error}=await client.from('komi_premium_cosmetic_equips')
-  .select('user_id,frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id').limit(1000);
+  .select('user_id,frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id,shape_id,plate_id,mascot_id,xp_id,name_id').limit(1000);
  if(error){console.warn('Premium store items unavailable:',error.message);return;}
  publicItems=new Map((data||[]).map(x=>[String(x.user_id),x]));
  apply();
@@ -102,7 +139,7 @@ function paint(panel){
   if(!product)continue;
   const owned=wallet.owned.includes(product.id);
   const equipped=wallet[product.type+'_id']===product.id;
-  button.dataset.action=product.type==='reaction'?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy';
+  button.dataset.action=product.type==='reaction'?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy_equip';
   button.disabled=busy || (product.type==='reaction'&&owned)||(!owned&&Number(wallet.balance)<product.cost);
   button.textContent=product.type==='reaction'&&owned?'Набор куплен':equipped?'Снять':owned?'Надеть':Number(wallet.balance)<product.cost?'Недостаточно AniCoin':'Купить · '+product.cost+' ◈';
  }
@@ -113,7 +150,7 @@ function mount(container,id,active){
  css();
  const panel=document.createElement('section');
  panel.className='komi-premium-store';panel.dataset.premiumStorePanel=id;
- const title=document.createElement('h2');title.textContent='Магазин AniCoin · 54 товара';
+ const title=document.createElement('h2');title.textContent='Магазин AniCoin · 85 товаров';
  const description=document.createElement('p');
  description.textContent='Рамки, титулы, обложки, эффекты и статусы. Покупки защищены сервером. Вся коллекция также доступна в #shop.';
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
@@ -143,7 +180,15 @@ function mount(container,id,active){
    const row=document.createElement('span');row.className='komi-shop-reaction-swatch';
    for(const reaction of product.reactions){const emoji=document.createElement('span');emoji.textContent=reaction.emoji;row.append(emoji);}
    sample.append(row);
+  }else if(['shape','plate','mascot','xp','name'].includes(product.type)){
+   const preview=document.createElement('span');preview.className='komi-shop-visual-sample komi-store-'+product.cosmeticClass;
+   preview.textContent=product.type==='mascot'?'':product.type==='xp'?'━━━━':product.type==='name'?'Komi':product.type==='plate'?'Текст комментария':'K';
+   preview.classList.add('komi-shop-'+(product.type==='shape'?'avatar-shape':product.type==='plate'?'plate-swatch':product.type==='mascot'?'mascot-swatch':product.type==='xp'?'xp-swatch':'name-swatch'));
+   if(product.type==='mascot'){const mini=document.createElement('i');mini.className='komi-profile-mascot komi-store-'+product.cosmeticClass;preview.append(mini);}
+   sample.append(preview);
   }
+  const rarity=document.createElement('span');rarity.className='komi-shop-rarity';
+  rarity.textContent={common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'}[product.rarity]||'Обычный';item.dataset.rarity=product.rarity;item.prepend(rarity);
   item.append(sample,label,button);grid.append(item);
  }
  const status=document.createElement('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');
@@ -158,12 +203,12 @@ function mount(container,id,active){
    const {data:{user},error:authError}=await client.auth.getUser();
    if(authError||user?.id!==id)throw Error('Требуется вход в аккаунт.');
    const action=button.dataset.action;
-   if(!['buy','equip','unequip'].includes(action))throw Error('Invalid action');
+   if(!['buy','buy_equip','equip','unequip'].includes(action))throw Error('Invalid action');
    const {data,error}=await client.rpc('komi_premium_store',{p_action:action,p_item:product.id});
    if(error)throw error;
    if(verifiedOwner()!==id)return;
    wallet=data;owner=id;
-   status.textContent=action==='buy'?(product.type==='reaction'?'Набор реакций куплен.':'Куплено. Теперь можно надеть.'):action==='equip'?'Предмет надет.':'Предмет снят.';
+   status.textContent=action==='buy'?'Набор реакций куплен.':action==='buy_equip'?'Предмет куплен и надет.':action==='equip'?'Предмет надет.':'Предмет снят.';
    if(action!=='buy')await refresh();
    if(typeof aniCoinRequest==='function')void aniCoinRequest('read',{},id).catch(()=>{});
   }catch(error){status.textContent=error?.message||'Операция недоступна.';}
