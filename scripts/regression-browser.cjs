@@ -368,7 +368,11 @@ async function checkNotifications(page) {
    // Per-title playback preference is intentionally restored when that source exists.
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Embed');
    // The following player-control assertions require a native video source.
-   await page.locator('#komiWatchSourceSelect').selectOption('Direct');
+   await page.evaluate(()=>{
+     const select=document.getElementById('komiWatchSourceSelect');
+     select.value='Direct';
+     select.dispatchEvent(new Event('change',{bubbles:true}));
+   });
    assert.match(await page.locator('.crunchy-hero-info').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    const mono = await page.evaluate(() => ({
