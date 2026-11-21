@@ -44,7 +44,7 @@ test('admin UI is absent from guest HTML and mounted after checked RPC', () => {
   const editor = fs.readFileSync(path.join(__dirname, '../komi-admin-ui.js'), 'utf8');
   assert.doesNotMatch(rawHtml, /id="(?:adminModal|addModal|animeForm|addAnimeBtn|adminPanelBtn|komiAdminAnimeModalTemplate)"/);
   assert.match(html, /async function openAddModal\(editId = null\) \{\s*if \(!\(await requireServerAdmin\(\)\) \|\| !\(await komiEnsureAdminUI\(\)\)\) return;/);
-  assert.match(html, /script\.src = '\/komi-admin-ui\.js'/);
+  assert.match(html, /script\.src = '\/komi-admin-ui\.js\?v=\d{8}[-\w]+'/);
   assert.match(editor, /window\.komiMountAdminUI/);
 });
 

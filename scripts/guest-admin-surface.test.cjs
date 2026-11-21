@@ -15,7 +15,7 @@ test('guest HTML contains no admin editor or admin action buttons', () => {
 test('admin controls and editor are mounted only behind the checked Supabase role', () => {
   assert.match(app, /_supabase\.rpc\('komi_is_admin'\)/);
   assert.match(app, /requireServerAdmin\(\)\) \|\| !\(await komiEnsureAdminUI\(\)/);
-  assert.match(app, /script\.src = '\/komi-admin-ui\.js'/);
+  assert.match(app, /script\.src = '\/komi-admin-ui\.js\?v=\d{8}[-\w]+'/);
   assert.match(editor, /id=\\"animeForm\\"/);
   assert.match(app, /button\?\.remove\(\)/);
 });
