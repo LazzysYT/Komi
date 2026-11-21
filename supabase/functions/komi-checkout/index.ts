@@ -4,7 +4,7 @@ const DB=Deno.env.get('SUPABASE_URL')||'';
 const configState={
   lavaKeyPresent:Boolean(Deno.env.get('LAVA_API_KEY')?.trim()),
   priceConfiguredCorrectly:Deno.env.get('KOMI_PREMIUM_MONTHLY_USD')==='2.01',
-  checkoutEnabled:Deno.env.get('KOMI_CHECKOUT_ENABLED')==='true'
+  checkoutEnabled:Deno.env.get('KOMI_CHECKOUT_ENABLED')!=='false'
 };
 // Log presence checks only; never reveal credential content.
 console.info('KOMI_CHECKOUT_CONFIG_STATE',JSON.stringify(configState));
@@ -55,7 +55,7 @@ Deno.serve(async req=>{
  if(!bearer.startsWith('Bearer '))return response({error:'Требуется вход'},401);
  const key=secretKey(),lava=Deno.env.get('LAVA_API_KEY')||'';
  const priceString=Deno.env.get('KOMI_PREMIUM_MONTHLY_USD')||'';
- if(Deno.env.get('KOMI_CHECKOUT_ENABLED')!=='true'||!key||!lava||!/^\d+(\.\d{1,2})?$/.test(priceString))
+ if(Deno.env.get('KOMI_CHECKOUT_ENABLED')==='false'||!key||!lava||!/^\d+(\.\d{1,2})?$/.test(priceString))
   return response({error:'Оплата с кодами ещё не подключена. Без кодов доступен стандартный способ.'},503);
  const price=Number(priceString);
  if(priceString!=='2.01'||!DB)return response({error:'Сумма подписки не совпадает с тарифом Lava.top (2.01 USD)'},503);
