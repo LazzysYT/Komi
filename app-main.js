@@ -3226,7 +3226,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (!komiAdminUiLoader) {
                     komiAdminUiLoader = new Promise((resolve, reject) => {
                         const script = document.createElement('script');
-                        script.src = '/komi-admin-ui.js?v=20261121-referrals';
+                        script.src = '/komi-admin-ui.js?v=20261122-premium';
                         script.async = true;
                         script.onload = resolve;
                         script.onerror = () => reject(new Error('Admin UI could not load'));
