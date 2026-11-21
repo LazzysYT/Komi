@@ -118,3 +118,11 @@ html:not([data-komi-shop-route="true"]) #mainContainer:has(> .komi-static-shop) 
 .komi-shop-favorite-showcase.komi-store-showcase-neon .komi-shop-favorite-list a{border:1px solid white;box-shadow:0 0 8px #ffffff7c}
 .komi-shop-preview-icon{padding:2px 6px;border:1px solid #ffffff60;border-radius:7px;font-size:14px;color:#fff}
 .preview-profile #preview-shop-showcase{padding:10px;margin:10px 0 3px;border-radius:12px}
+
+/* Compact purchased mini-card on avatar hover and keyboard focus. */
+.profile-avatar-frame:has(.komi-shop-hover-card){overflow:visible!important;outline-offset:5px}
+.komi-shop-hover-card{position:absolute;z-index:30;top:calc(100% + 12px);left:0;width:210px;min-height:82px;padding:15px;border-radius:13px;border:1px solid #ffffff6b;box-shadow:0 15px 45px #000a;background:#17171a;color:#fff;display:flex;flex-direction:column;justify-content:center;gap:5px;opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .15s,transform .15s;pointer-events:none}
+.komi-shop-hover-card strong{font-size:15px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.komi-shop-hover-card span{font-size:11px;color:#b9b9c0}
+.profile-avatar-frame:hover>.komi-shop-hover-card,.profile-avatar-frame:focus-visible>.komi-shop-hover-card,.profile-avatar-frame:focus-within>.komi-shop-hover-card{opacity:1;visibility:visible;transform:none}
+@media(prefers-reduced-motion:reduce){.komi-shop-hover-card{transition:none!important}}
