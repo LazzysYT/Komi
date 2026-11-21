@@ -18,7 +18,7 @@
    state.loading=true;
    try{
      const [friendResult,gifts,boost]=await Promise.all([
-       api().from('komi_friendships').select('user_a,user_b').limit(300),
+       api().from('komi_friendships').select('user_a,user_b').or('user_a.eq.'+owner+',user_b.eq.'+owner).limit(1000),
        api().rpc('komi_shop_gifts',{p_action:'read'}),
        api().rpc('komi_shop_booster',{p_action:'read'})
      ]);
@@ -118,7 +118,7 @@
    const cancel=create('button','','Отмена');cancel.type='button';cancel.dataset.komiShopGiftClose='';
    const confirm=create('button','komi-shop-primary','Отправить подарок');confirm.type='submit';confirm.disabled=!state.friends.length;
    controls.append(cancel,confirm);form.append(controls);
-   dialog.append(form);section.append(dialog);
+   dialog.append(form);area.append(dialog);
  }
  function refreshGiftButtons(){
    const section=currentSection();if(!section)return;
