@@ -15,7 +15,7 @@ vm.runInNewContext(catalog,context);
 const products=context.window.KomiShopCatalog.items;
 test('51 unique cosmetic items share fixed prices with backend allowlist',()=>{
  assert.equal(products.length,51);
- assert.equal(new Set(products.map(x=>x.id)).size,32);
+ assert.equal(new Set(products.map(x=>x.id)).size,51);
  assert.deepEqual([...new Set(products.map(x=>x.type))].sort(),['banner','card','frame','icon','overlay','showcase','title']);
  for(const item of products){
    assert.ok(Number.isInteger(item.cost)&&item.cost>0);
