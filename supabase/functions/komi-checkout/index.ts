@@ -58,7 +58,7 @@ Deno.serve(async req=>{
  if(Deno.env.get('KOMI_CHECKOUT_ENABLED')!=='true'||!key||!lava||!/^\d+(\.\d{1,2})?$/.test(priceString))
   return response({error:'Оплата с кодами ещё не подключена. Без кодов доступен стандартный способ.'},503);
  const price=Number(priceString);
- if(price<=0||price>1000||!DB)return response({error:'Неверная конфигурация тарифа'},503);
+ if(priceString!=='2.01'||!DB)return response({error:'Сумма подписки не совпадает с тарифом Lava.top (2.01 USD)'},503);
  let body:Record<string,unknown>;
  try{
   const raw=await req.text();
