@@ -48,8 +48,8 @@
     client:null, userId:'', displayName:'Пользователь Komi', avatarUrl:'',
     entitled:false, entitlementChecked:false, saved:{style:0,nick_theme:0,status_emoji:'',music_theme:0},
     draft:{style:0,nick_theme:0,status_emoji:'',music_theme:0},
-    wallet:null, equipped:{frame_id:null,title_id:null,banner_id:null,overlay_id:null,showcase_id:null,card_id:null,icon_id:null},
-    trial:{frame:null,title:null,banner:null,overlay:null,showcase:null,card:null,icon:null}, saving:false, shopping:false, serial:0
+    wallet:null, equipped:{frame_id:null,title_id:null,banner_id:null,overlay_id:null,showcase_id:null,card_id:null,icon_id:null,shape_id:null,plate_id:null,mascot_id:null,xp_id:null,name_id:null},
+    trial:{frame:null,title:null,banner:null,overlay:null,showcase:null,card:null,icon:null,shape:null,plate:null,mascot:null,xp:null,name:null}, saving:false, shopping:false, serial:0
   };
   let player = null;
   const $ = id => document.getElementById(id);
@@ -82,7 +82,7 @@
   function activeItem(type) {
     const preview = state.trial[type];
     if (preview !== null) return preview;
-    const key = type === 'frame' ? 'frame_id' : type === 'title' ? 'title_id' : 'banner_id';
+    const key=type+'_id';
     return state.wallet?.[key] || state.equipped[key] || null;
   }
   function setImage(imgId, fallbackId, url) {
@@ -151,6 +151,48 @@
       const node=$(id);if(!node)continue;
       node.textContent=iconItem?.symbol||'';
       node.hidden=!iconItem;
+    }
+    const shape=products.find(p=>p.id===activeItem('shape'));
+    for(const id of ['preview-avatar','comment-avatar','preview-avatar-fallback','comment-avatar-fallback']){
+      const el=$(id);
+      if(!el)continue;
+      el.classList.remove(...products.filter(p=>p.type==='shape').map(p=>'komi-store-'+p.cosmeticClass));
+      if(shape?.cosmeticClass)el.classList.add('komi-store-'+shape.cosmeticClass);
+    }
+    const nameStyle=products.find(p=>p.id===activeItem('name'));
+    for(const id of ['preview-name','comment-name']){
+      const el=$(id);if(!el)continue;
+      el.classList.remove(...products.filter(p=>p.type==='name').map(p=>'komi-store-'+p.cosmeticClass));
+      if(nameStyle?.cosmeticClass)el.classList.add('komi-store-'+nameStyle.cosmeticClass);
+    }
+    const plate=products.find(p=>p.id===activeItem('plate'));
+    const commentPanel=document.querySelector('.comment-preview');
+    if(commentPanel){
+      commentPanel.classList.remove(...products.filter(p=>p.type==='plate').map(p=>'komi-store-'+p.cosmeticClass));
+      if(plate?.cosmeticClass)commentPanel.classList.add('komi-store-'+plate.cosmeticClass);
+    }
+    const mascot=products.find(p=>p.id===activeItem('mascot'));
+    const previewCard=$('preview-shop-card');
+    if(previewCard){
+      let node=previewCard.querySelector('[data-komi-preview-mascot]');
+      if(mascot){
+        if(!node){node=document.createElement('i');node.dataset.komiPreviewMascot='';previewCard.append(node);}
+        node.className='komi-profile-mascot komi-store-'+mascot.cosmeticClass;
+      }else node?.remove();
+    }
+    const xp=products.find(p=>p.id===activeItem('xp'));
+    const xpBar=$('preview-shop-xp');
+    if(xpBar){
+      xpBar.classList.remove(...products.filter(p=>p.type==='xp').map(p=>'komi-store-'+p.cosmeticClass));
+      if(xp?.cosmeticClass)xpBar.classList.add('komi-store-'+xp.cosmeticClass);
+    }
+    const activeEquip=Object.fromEntries(['frame','title','shape','plate','mascot'].map(type=>[type+'_id',activeItem(type)]));
+    const activeSets=window.KomiShopCatalog?.activeSets?.(activeEquip)||[];
+    const previewLabel=$('preview-shop-set');
+    if(previewLabel){previewLabel.hidden=!activeSets.length;previewLabel.textContent=activeSets.length?'✦ '+activeSets.map(x=>x.label).join(', '):'';}
+    if(previewCard){
+      previewCard.classList.remove(...(window.KomiShopCatalog?.sets||[]).map(x=>x.className));
+      for(const set of activeSets)previewCard.classList.add(set.className);
     }
     const title = activeItem('title');
     const titleText = products.find(p=>p.id===title && p.type==='title')?.title || '';
@@ -327,7 +369,7 @@
     const filters=$('store-filters');
     if (filters) {
       filters.replaceChildren();
-      for (const [key,label] of [['all','Все'],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['reaction','Watch Party'],['owned','Мои покупки']]) {
+      for (const [key,label] of [['all','Все'],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['shape','Формы аватара'],['plate','Комментарии'],['mascot','Маскоты'],['xp','XP-полоски'],['name','Стили ника'],['reaction','Watch Party'],['owned','Мои покупки']]) {
         const tab=document.createElement('button');tab.type='button';tab.textContent=label;
         tab.setAttribute('aria-pressed',String(storeCategory===key));
         tab.addEventListener('click',()=>{storeCategory=key;paintStore();});
@@ -341,6 +383,7 @@
     products.filter(p=>storeCategory==='all'||p.type===storeCategory||(storeCategory==='owned'&&owns(p.id))).forEach(product => {
       const item=document.createElement('article');
       item.className='store-item';
+      item.dataset.rarity=product.rarity||'common';
       item.tabIndex=0;
       item.setAttribute('aria-label',product.label+' — примерить');
       const isTrial=state.trial[product.type]===product.id;
@@ -372,6 +415,17 @@
         for(const reaction of product.reactions){
             const emoji=document.createElement('span');emoji.textContent=reaction.emoji;top.append(emoji);
         }
+      } else if(['shape','plate','mascot','xp','name'].includes(product.type)){
+        top.className='komi-shop-visual-sample komi-store-'+product.cosmeticClass;
+        top.classList.add('komi-shop-'+({shape:'avatar-shape',plate:'plate-swatch',mascot:'mascot-swatch',xp:'xp-swatch',name:'name-swatch'}[product.type]));
+        if(product.type==='mascot'){
+          const mascot=document.createElement('i');mascot.className='komi-profile-mascot komi-store-'+product.cosmeticClass;top.append(mascot);
+        }else if(product.type==='xp')top.textContent='';
+        else if(product.type==='name')top.textContent=state.displayName||'Komi';
+        else if(product.type==='plate')top.textContent='Пример комментария';
+        else if(product.type==='shape'){
+          if(state.avatarUrl){const img=document.createElement('img');img.alt='';img.src=state.avatarUrl;top.append(img);}else top.textContent='K';
+        }
       } else {top.className='store-title-chip';top.textContent=product.title;}
       const heading=document.createElement('h3');heading.textContent=product.label;
       const subtitle=document.createElement('p');subtitle.className='store-subtitle';
@@ -396,7 +450,9 @@
       }
       action.addEventListener('click',event=>{event.stopPropagation();void storeAction(product,owned?(currentlyEquipped?'unequip':'equip'):(product.type==='reaction'?'buy':'buy_equip'));});
       controls.append(preview,action);
-      item.append(top,heading,subtitle,controls);
+      const rarity=document.createElement('span');rarity.className='komi-shop-rarity';
+      rarity.textContent=({common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'})[product.rarity]||'Обычный';
+      item.append(rarity,top,heading,subtitle,controls);
       item.addEventListener('click',event=>{if(!event.target.closest('button'))tryOn(product);});
       item.addEventListener('keydown',event=>{
         if ((event.key==='Enter'||event.key===' ') && event.target===item) {event.preventDefault();tryOn(product);}
@@ -432,7 +488,7 @@
       if (state.userId!==snapshot)return;
       if (!data || !Array.isArray(data.owned)) throw Error('Неожиданный ответ магазина.');
       state.wallet=data;
-      state.equipped={frame_id:data.frame_id||null,title_id:data.title_id||null,banner_id:data.banner_id||null,overlay_id:data.overlay_id||null,showcase_id:data.showcase_id||null,card_id:data.card_id||null,icon_id:data.icon_id||null};
+      state.equipped={frame_id:data.frame_id||null,title_id:data.title_id||null,banner_id:data.banner_id||null,overlay_id:data.overlay_id||null,showcase_id:data.showcase_id||null,card_id:data.card_id||null,icon_id:data.icon_id||null,shape_id:data.shape_id||null,plate_id:data.plate_id||null,mascot_id:data.mascot_id||null,xp_id:data.xp_id||null,name_id:data.name_id||null};
       if (action!=='buy') state.trial[product.type]=null;
       message('store-status',action==='buy_equip'?'Покупка подтверждена. Предмет надет.':action==='buy'?'Набор реакций куплен и доступен в Watch Party.':action==='equip'?'Предмет надет.':'Предмет снят.');
     } catch (error) {
@@ -492,8 +548,8 @@
     setImage('preview-avatar','preview-avatar-fallback','');
     setImage('comment-avatar','comment-avatar-fallback','');
     state.saved=normalizedPrefs(null);state.draft={...state.saved};
-    state.equipped={frame_id:null,title_id:null,banner_id:null,overlay_id:null,showcase_id:null,card_id:null,icon_id:null};
-    state.trial={frame:null,title:null,banner:null,overlay:null,showcase:null,card:null,icon:null};
+    state.equipped={frame_id:null,title_id:null,banner_id:null,overlay_id:null,showcase_id:null,card_id:null,icon_id:null,shape_id:null,plate_id:null,mascot_id:null,xp_id:null,name_id:null};
+    state.trial={frame:null,title:null,banner:null,overlay:null,showcase:null,card:null,icon:null,shape:null,plate:null,mascot:null,xp:null,name:null};
     message('store-status','');
     message('save-status','');
     refreshSelected();paintStore();
@@ -513,7 +569,7 @@
         fetchSingle('komi_premium_badge_styles','style',id),
         fetchSingle('komi_premium_profile_prefs','nick_theme,status_emoji,music_theme',id),
         fetchSingle('komi_premium_media','avatar_path',id),
-        fetchSingle('komi_premium_cosmetic_equips','frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id',id)
+        fetchSingle('komi_premium_cosmetic_equips','frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id,shape_id,plate_id,mascot_id,xp_id,name_id',id)
       ]);
       if (request!==state.serial)return;
       const val=index=>results[index].status==='fulfilled'?results[index].value:null;
@@ -529,7 +585,7 @@
         auth.data.user.user_metadata?.full_name || 'Пользователь Komi').slice(0,60);
       state.saved=normalizedPrefs({...val(2),...val(3)});
       state.draft={...state.saved};
-      state.equipped={frame_id:val(5)?.frame_id||null,title_id:val(5)?.title_id||null,banner_id:val(5)?.banner_id||null,overlay_id:val(5)?.overlay_id||null,showcase_id:val(5)?.showcase_id||null,card_id:val(5)?.card_id||null,icon_id:val(5)?.icon_id||null};
+      state.equipped={frame_id:val(5)?.frame_id||null,title_id:val(5)?.title_id||null,banner_id:val(5)?.banner_id||null,overlay_id:val(5)?.overlay_id||null,showcase_id:val(5)?.showcase_id||null,card_id:val(5)?.card_id||null,icon_id:val(5)?.icon_id||null,shape_id:val(5)?.shape_id||null,plate_id:val(5)?.plate_id||null,mascot_id:val(5)?.mascot_id||null,xp_id:val(5)?.xp_id||null,name_id:val(5)?.name_id||null};
       const path=val(4)?.avatar_path;
       const premiumAvatar=state.entitled && path
         ? state.client.storage.from('avatars').getPublicUrl(path).data?.publicUrl : '';
@@ -543,7 +599,7 @@
           if (!wallet || !Array.isArray(wallet.owned) ||
               !Number.isSafeInteger(Number(wallet.balance))) throw Error('Некорректный баланс.');
           state.wallet=wallet;
-          state.equipped={frame_id:wallet.frame_id||null,title_id:wallet.title_id||null,banner_id:wallet.banner_id||null,overlay_id:wallet.overlay_id||null,showcase_id:wallet.showcase_id||null,card_id:wallet.card_id||null,icon_id:wallet.icon_id||null};
+          state.equipped={frame_id:wallet.frame_id||null,title_id:wallet.title_id||null,banner_id:wallet.banner_id||null,overlay_id:wallet.overlay_id||null,showcase_id:wallet.showcase_id||null,card_id:wallet.card_id||null,icon_id:wallet.icon_id||null,shape_id:wallet.shape_id||null,plate_id:wallet.plate_id||null,mascot_id:wallet.mascot_id||null,xp_id:wallet.xp_id||null,name_id:wallet.name_id||null};
         } catch (error) {message('store-status',error?.message||'Не удалось загрузить баланс.');}
       }
       refreshSelected();paintStore();
