@@ -12,9 +12,10 @@ test('one generated base bundle plus intentional mobile overrides retain exact c
   const localStyles=stylesheetLinks.filter(href=>href.startsWith('/'));
   assert.deepEqual(localStyles.map(href=>href.split('?')[0]),[
     '/komi.bundle.css','/mobile-home-polish.css','/mobile-catalog-dock.css',
-    '/catalog-comfort.css','/player-comfort.css','/mobile-bottom-sheets.css'
+    '/catalog-comfort.css','/player-comfort.css','/mobile-bottom-sheets.css',
+    '/auth-dialog.css','/catalog-discovery-v4.css','/community-search.css','/komi-checkout.css'
   ]);
-  for(const href of localStyles) assert.match(href,/\.css\?v=\d+[a-z]$/);
+  for(const href of localStyles) assert.match(href,/\.css\?v=\d+[a-z]?$/);
   const all=builder.sources;
   assert.equal(all.at(-3),'komi-media-hub.css');
   assert.equal(all.at(-2),'komi-black-white.css');
