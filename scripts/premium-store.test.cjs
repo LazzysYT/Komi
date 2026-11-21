@@ -21,7 +21,7 @@ test('54 permanent items and reaction packs share fixed server prices',()=>{
  for(const item of products){
    assert.ok(Number.isInteger(item.cost)&&item.cost>0);
    assert.match(socialMigration,new RegExp("when '"+item.id+"' then "+item.cost+"\\b"));
-   assert.match(migration,new RegExp("'"+item.id+"'"));
+   assert.match(socialMigration,new RegExp("'"+item.id+"'"));
  }
  assert.match(original,/primary key\(user_id,item_id\)/);
  assert.match(socialMigration,/wallet\.balance<cost/);
