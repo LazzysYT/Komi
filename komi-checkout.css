@@ -1,0 +1,30 @@
+/* Premium checkout: monochrome, responsive, isolated from app styles. */
+.komi-checkout-overlay{position:fixed;inset:0;z-index:100050;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:18px;background:rgba(0,0,0,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+.komi-checkout-overlay[hidden]{display:none!important}
+.komi-checkout-dialog{box-sizing:border-box;width:min(590px,100%);max-height:min(93dvh,880px);overflow-y:auto;background:#131316;border:1px solid rgba(255,255,255,.13);border-radius:22px;box-shadow:0 20px 75px #000b;padding:26px;color:#fff;font:400 14px/1.5 Inter,system-ui,sans-serif}
+.komi-checkout-dialog *{box-sizing:border-box}
+.komi-checkout-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.komi-checkout-top small{display:block;color:#92929a;font-size:10px;font-weight:700;letter-spacing:.14em}
+.komi-checkout-dialog h2{margin:5px 0 0;font-size:25px;line-height:1.15;color:#fff;font-weight:800}
+.komi-checkout-close{border:1px solid #343439;background:#1b1b21;color:#fff;border-radius:50%;font-size:23px;display:grid;place-items:center;cursor:pointer;width:34px;height:34px;line-height:1}
+.komi-checkout-caption{margin:16px 0 20px;color:#babac1;font-size:13px}
+.komi-checkout-fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.komi-checkout-field{display:flex;flex-direction:column;gap:7px;min-width:0;font-size:12px;font-weight:700;color:#f1f1f3}
+.komi-checkout-field input{width:100%;height:46px;padding:0 12px;background:#09090b;border:1px solid #343439;border-radius:11px;color:#fff;font:600 12px Inter,system-ui,sans-serif;outline:none}
+.komi-checkout-field input:focus{border-color:#eee;box-shadow:0 0 0 2px rgba(255,255,255,.09)}
+.komi-checkout-field input::placeholder{color:#85858c;text-transform:none}
+.komi-checkout-feedback{font-size:11px;line-height:1.3;color:#ddd;min-height:29px;font-weight:500}
+.komi-checkout-summary{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:15px 0;border-bottom:1px solid #2e2e34;margin-top:12px}
+.komi-checkout-summary strong{font-size:15px;text-align:right}
+.komi-checkout-muted{font-size:12px;color:#92929a}
+.komi-checkout-note,.komi-checkout-footnote{font-size:11px;line-height:1.65;color:#a5a5ae;margin:13px 0}
+.komi-checkout-buttons{display:grid;grid-template-columns:1fr 1.3fr;gap:9px;margin:18px 0 5px}
+.komi-checkout-buttons button{min-height:46px;border-radius:11px;font:800 12px Inter,system-ui,sans-serif;cursor:pointer;padding:10px}
+.komi-checkout-secondary{background:#242429;color:#fff;border:1px solid #46464e}
+.komi-checkout-primary{background:#fff;color:#09090b;border:1px solid #fff}
+.komi-checkout-buttons button:disabled{opacity:.55;cursor:progress}
+.komi-checkout-message{min-height:12px;font-size:12px;color:#dedee0}
+.komi-checkout-direct{display:inline-block;color:#a7a7b0;font-size:11px;text-decoration:underline;text-underline-offset:3px}
+.komi-checkout-direct:hover{color:#fff}
+@media(max-width:520px){.komi-checkout-overlay{padding:9px;align-items:flex-end}.komi-checkout-dialog{max-height:94dvh;border-radius:19px 19px 12px 12px;padding:20px 15px}.komi-checkout-fields{grid-template-columns:1fr;gap:2px}.komi-checkout-feedback{min-height:15px}.komi-checkout-buttons{grid-template-columns:1fr 1fr}.komi-checkout-dialog h2{font-size:22px}}
+@media(prefers-reduced-motion:reduce){.komi-checkout-dialog{scroll-behavior:auto}}

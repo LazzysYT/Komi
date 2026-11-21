@@ -97,6 +97,25 @@ Deno.serve(async(req:Request)=>{
   if(['invalid_event','missing_offer','email_conflict','unknown_contract',
       'missing_email','unmatched_verified_email'].includes(result))
    return Response.json({error:result},{status:422});
+  // Only an authenticated Lava webhook may confirm an invoice.
+  // Direct hosted purchases have no local invoice and remain unchanged.
+  const paymentStatus:Record<string,string>={
+   'payment.success':'paid',
+   'payment.failed':'failed',
+   'refund.success':'refunded',
+   'chargeback.initiated':'chargeback'
+  };
+  if(Deno.env.get('KOMI_CHECKOUT_ENABLED')!=='false' && invoice && paymentStatus[type] &&
+      ['activated','payment_failed','revoked','duplicate_event','stale_event'].includes(result)){
+    const finalResponse=await fetch(dbUrl+'/rest/v1/rpc/komi_finalize_checkout_payment',{
+      method:'POST',headers,
+      body:JSON.stringify({p_invoice_id:invoice,p_status:paymentStatus[type],p_buyer_email:email||null})
+    });
+    if(!finalResponse.ok){
+      console.error('Checkout confirmation unavailable',finalResponse.status);
+      return Response.json({error:'Retry'}, {status:503});
+    }
+  }
   return Response.json({ok:true,result});
  }catch(e){console.error('Premium webhook failed',String(e).slice(0,100));
   return Response.json({error:'Unavailable'},{status:503});
