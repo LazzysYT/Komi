@@ -104,7 +104,7 @@
 
     var favoriteIds=Object.keys(userFavorites[ctx.username]||{});
     var premiumShowcase=window.KomiPremium?.isActiveName?.(ctx.username)===true;
-    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,premiumShowcase?6:4);
+    var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,premiumShowcase?6:3);
     var statusColors=['#F1F1F1','#D0D0D0','#A8A8A8','#7F7F7F','#535353'];
     var segmentNames=statusNames.map((name,i)=>[name,number(ctx.statsCounts[name]),statusColors[i]]);
     var distribution=segmentNames.map(([name,count,color])=>
@@ -129,17 +129,20 @@
     var watching='<section class="profile-widget profile-continue-widget">'+header(ctx.isMe?'Продолжить просмотр':'Коллекция',
       ctx.isMe?'<button type="button" class="profile-text-button" data-komi-onclick="profilePageSection=\'history\';render()">История ↗</button>':'')+
       '<div class="profile-watch-grid">'+(ctx.isMe?watchCards(ctx,2)||blank('Пока нет записей просмотра. Открой любое аниме из каталога.'):blank('Сохранённые аниме доступны на вкладке «Списки».'))+'</div></section>';
-    var favourite='<section class="profile-widget profile-favorites-widget">'+header('Топ избранного','<span class="profile-caption">'+favoriteIds.length+' в избранном</span>')+
-      '<div class="profile-favorites">'+(favoriteAnime.map(anime=>{
-        var poster=posterUrl(anime.poster),id=escapeText(anime.id);
-        return '<a href="/anime/'+encodeURIComponent(anime.id)+'" data-profile-anime="'+id+'" title="'+escapeText(anime.title)+'" aria-label="Открыть '+escapeText(anime.title)+'">'+
+    var favoriteLimit=premiumShowcase?6:3;
+    var favoriteTiles=favoriteAnime.map(anime=>{
+      var poster=posterUrl(anime.poster),id=escapeText(anime.id);
+      return '<a href="/anime/'+encodeURIComponent(anime.id)+'" data-profile-anime="'+id+'" title="'+escapeText(anime.title)+'" aria-label="Открыть '+escapeText(anime.title)+'">'+
         (poster?'<img loading="lazy" src="'+escapeText(poster)+'" alt="">':'<div class="profile-favorite-missing">K</div>')+
         '<strong>'+escapeText(anime.title)+'</strong></a>';
-      }).join('')||(favoriteIds.length
-        ? blank('Постеры избранного ещё загружаются из каталога.')
-        : Array.from({length:3},()=>ctx.isMe
-            ? '<button type="button" class="profile-favorite-add" data-profile-add-favorite title="Выбрать аниме в каталоге" aria-label="Добавить аниме в избранное"><span aria-hidden="true">+</span></button>'
-            : '<div class="profile-favorite-add is-disabled" aria-label="Пустой слот избранного"><span aria-hidden="true">+</span></div>').join('')))+'</div></section>';
+    }).join('');
+    var favoriteBlanks=Array.from({length:Math.max(0,favoriteLimit-favoriteAnime.length)},()=>ctx.isMe
+      ? '<button type="button" class="profile-favorite-add" data-profile-add-favorite title="Выбрать аниме в каталоге" aria-label="Добавить аниме в избранное"><span aria-hidden="true">+</span></button>'
+      : '<div class="profile-favorite-add is-disabled" aria-label="Пустой слот избранного"><span aria-hidden="true">+</span></div>').join('');
+    var favourite='<section class="profile-widget profile-favorites-widget"'+(premiumShowcase?' data-premium-slots="6"':'')+'>'+
+      header('Топ избранного',(premiumShowcase?'<span class="profile-premium-slots-badge">✦ 6 слотов</span>':'')+
+        '<span class="profile-caption">'+favoriteIds.length+' в избранном</span>')+
+      '<div class="profile-favorites">'+favoriteTiles+favoriteBlanks+'</div></section>';
     var friends='<section class="profile-widget profile-friends-widget">'+header('Друзья','<span class="profile-caption">'+ctx.myFriends.length+'</span>')+
       '<div class="profile-friends-mini">'+(ctx.myFriends.slice(0,3).map((name,i)=>{
         var p=userProfiles[name]||{},label=typeof komiVisibleUsername==='function'?komiVisibleUsername(name,p,false):String(p.displayName||name);

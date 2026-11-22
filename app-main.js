@@ -2061,7 +2061,8 @@ async function loadDataFromCloud(attempt = 0) {
                             <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">↗ Поделиться ссылкой</span><span class="profile-share-copied" aria-hidden="true">✓ Скопировано</span></button>
                         </div>
                         <div class="profile-avatar-frame" data-profile-frame="${['red','neon','white'].includes(p.frame) ? safeProfileText(p.frame) : 'none'}">
-                            <img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                            <span class="profile-avatar-inner"><img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'"></span>
+                            <span class="profile-avatar-effects" aria-hidden="true"></span>
                             ${isMe ? '<span class="profile-presence is-online" title="Вы сейчас онлайн" aria-label="Сейчас онлайн"></span>' : ''}
                         </div>
                         <div class="profile-info-grid">
@@ -2079,7 +2080,11 @@ async function loadDataFromCloud(attempt = 0) {
                                 <span class="profile-badge-item profile-reg-date">С нами с ${escapeFriendHtml(p.regDate || 'Не указана')}</span>
                                 ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
                             </div>
-
+                            <div class="komi-profile-music" data-komi-profile-music-capsule hidden role="group" aria-label="Музыкальная тема профиля">
+                                <button type="button" class="komi-profile-music-btn" data-komi-profile-music aria-label="Воспроизвести музыкальную тему" aria-pressed="false"><span data-komi-profile-music-icon aria-hidden="true">▶</span></button>
+                                <span class="komi-profile-music-copy"><span class="komi-profile-music-label">Музыкальная тема профиля</span><span class="komi-profile-music-title" data-komi-profile-music-title></span></span>
+                                <span class="komi-profile-music-equalizer" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
+                            </div>
                             <section class="komi-shop-favorite-showcase" data-komi-shop-showcase hidden aria-label="Топ избранного">
                                 <h3>Топ избранного</h3>
                                 <div class="komi-shop-favorite-list">
@@ -2087,15 +2092,10 @@ async function loadDataFromCloud(attempt = 0) {
                                   <img src="${safeProfileText(komiSafeUrl(anime.poster)||'/anime-artwork.svg')}" alt="" loading="lazy" decoding="async"><span>${safeProfileText(anime.title)}</span></a>`).join('')}
                                 </div>
                             </section>
-                            <section class="komi-premium-showcase" data-komi-premium-panel data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Подписка Komi Premium">
-                              <span class="komi-premium-eyebrow">✦ KOMI PREMIUM · ACTIVE</span>
-                              <h3>Особый статус в сообществе</h3>
-                              <p>Подтверждённая подписка. Значок Premium виден другим пользователям рядом с никнеймом.</p>
-                            </section>
                             <div class="komi-level-progress profile-xp-capsule" aria-label="Уровень ${calculatedLevel}, ${xpProgress} из 500 XP, множитель ${xpMultiplier}x">
                                 <span class="profile-xp-level">Уровень <strong>${calculatedLevel}</strong></span>
-                                <span class="profile-xp-bar"><span>${xpProgress} / 500 XP</span><progress max="500" value="${xpProgress}">${xpProgress} из 500</progress></span>
-                                <span class="profile-xp-multiplier">×${xpMultiplier.toLocaleString('ru-RU')}</span>
+                                <span class="profile-xp-bar"><span>${xpProgress} / 500 XP</span><span class="profile-xp-progress-track" style="--komi-xp-percent:${(xpProgress / 500 * 100).toFixed(2)}%"><progress max="500" value="${xpProgress}">${xpProgress} из 500</progress></span></span>
+                                <span class="profile-xp-multiplier${xpMultiplier > 1 ? ' is-premium' : ''}">×${xpMultiplier.toLocaleString('ru-RU')}</span>
                             </div>
                             <div class="komi-profile-actions profile-hero-actions">
                                 ${!isMe && currentUser ? `
