@@ -2061,7 +2061,7 @@ async function loadDataFromCloud(attempt = 0) {
                             <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">↗ Поделиться ссылкой</span><span class="profile-share-copied" aria-hidden="true">✓ Скопировано</span></button>
                         </div>
                         <div class="profile-avatar-frame" data-profile-frame="${['red','neon','white'].includes(p.frame) ? safeProfileText(p.frame) : 'none'}">
-                            <span class="profile-avatar-inner">src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'"></span>
+                            <span class="profile-avatar-inner"><img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'"></span>
                             <span class="profile-avatar-effects" aria-hidden="true"></span>
                             ${isMe ? '<span class="profile-presence is-online" title="Вы сейчас онлайн" aria-label="Сейчас онлайн"></span>' : ''}
                         </div>
