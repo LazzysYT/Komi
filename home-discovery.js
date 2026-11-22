@@ -210,22 +210,19 @@
   }
 
   function leaderboard() {
-    // No public opt-in aggregate source currently exists. Never expose other
-    // users' owner-only watch progress or wallet rows to manufacture rankings.
     return '<section class="komi-home-leaderboard komi-feature-section" id="komiLeaderboard">' +
       '<div class="komi-home-heading"><div><h2>Топ зрителей Komi</h2>' +
-      '<p class="komi-home-subtitle">Сообщество и достижения зрителей</p></div>' +
-      '<a class="komi-home-all" href="#komiLeaderboardDetails">Весь рейтинг ↗</a></div>' +
+      '<p class="komi-home-subtitle">Подтверждённая активность участников, которые согласились войти в рейтинг</p></div></div>' +
       '<div class="komi-home-community-panel">' +
       '<div class="komi-home-leaderboard-tabs" role="group" aria-label="Показатель рейтинга">' +
-      '<button type="button" data-komi-rank="episodes" aria-pressed="true">По сериям</button>' +
-      '<button type="button" data-komi-rank="hours" aria-pressed="false">По часам</button>' +
-      '<button type="button" data-komi-rank="coins" aria-pressed="false">По AniCoin</button>' +
-      '</div><div id="komiLeaderboardDetails" class="komi-home-community-empty" role="status" aria-live="polite">' +
-      '<span class="komi-home-community-mark" aria-hidden="true">◇</span>' +
-      '<div><strong>Публичный рейтинг пока не доступен</strong>' +
-      '<p>Показатели просмотра и балансы пользователей защищены. Здесь появятся только разрешённые к публикации результаты.</p></div>' +
-      '</div></div></section>';
+      '<button type="button" data-komi-rank="hours" aria-pressed="true">Часы</button>' +
+      '<button type="button" data-komi-rank="episodes" aria-pressed="false">Серии</button>' +
+      '<button type="button" data-komi-rank="level" aria-pressed="false">Уровень</button>' +
+      '</div><div id="komiLeaderboardDetails" class="komi-leaderboard-list" role="status" aria-live="polite">' +
+      '<p class="komi-leaderboard-status">Загружаем рейтинг…</p></div>' +
+      '<div class="komi-leaderboard-optin"><span>Часы — подтверждённые 20-минутные интервалы просмотра. Участие добровольное.</span>' +
+      '<button type="button" data-komi-rank-consent hidden>Участвовать</button></div>' +
+      '</div></section>';
   }
   function render(context) {
     const animeList = Array.isArray(context.animeList) ? context.animeList.filter(Boolean) : [];
@@ -294,15 +291,7 @@
       heading.insertAdjacentElement('afterend',p);
     }
     const community = container.querySelector('#komiLeaderboard');
-    if (!community) return;
-    community.addEventListener('click', event=>{
-      const button=event.target.closest('[data-komi-rank]');
-      if (!button || !community.contains(button)) return;
-      const selected=button.getAttribute('data-komi-rank');
-      for (const tab of community.querySelectorAll('[data-komi-rank]'))
-        tab.setAttribute('aria-pressed',String(tab===button));
-      community.dataset.metric=selected;
-    });
+    if (community) root.KomiPublicLeaderboard?.mount(community);
   }
   root.KomiHomeDiscovery = {render,afterRender,recentProgress};
 })(globalThis);
