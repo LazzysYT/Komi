@@ -919,7 +919,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (!komiInCollection(a,catalogCollection)) return false;
                 if (catalogCategory === 'series' && komiCatalogType(a)!=='Сериал') return false;
                 if (catalogCategory === 'movies' && komiCatalogType(a)!=='Фильм') return false;
-                if (catalogCategory === 'ongoing' && !/ongoing|releasing|онгоинг|выходит|выпускается/i.test(String(a.status || a.releaseStatus || a.animeStatus || ''))) return false;
+                if (catalogCategory === 'ongoing' && !(Date.parse(a.nextEpisodeAt)>Date.now() || /ongoing|releasing|онгоинг|выходит|выпускается/i.test(String(a.status || a.releaseStatus || a.animeStatus || '')))) return false;
                 if (top100 && !top100.has(String(a.id))) return false;
                 if (komiHideWatched && currentUser?.authUserId &&
                     ['Просмотрено','Брошено'].includes(userAnimeStatuses[currentUser.username]?.[String(a.id)])) return false;
