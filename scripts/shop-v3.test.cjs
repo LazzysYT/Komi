@@ -193,7 +193,7 @@ test('shop V4 follows monochrome sticker reference while preserving all purchase
  assert.match(prodCSS,/sv4-feature-grid/);
  assert.match(prodCSS,/sv4-perk-badge/);
  assert.match(hero,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
- assert.doesNotMatch(hero,/<script|https?:\/\//i);
+ assert.doesNotMatch(hero,/<script|href="https?:/i);
  assert.doesNotMatch(container.innerHTML,/случайн(?:ые|ая) наград|рулетк[ау]|шанс выпадения/i);
 });
 test('svg sticker icons are predictable, non-interactive and have a fallback',()=>{
