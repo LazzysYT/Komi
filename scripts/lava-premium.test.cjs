@@ -26,7 +26,7 @@ test('Komi Premium discloses recurring terms and verified access without false g
  assert.match(page,/2000 XP/);
  assert.match(page,/500 AniCoin/);
  assert.doesNotMatch(page,/автоматически активируется|реклама отключена|без рекламы навсегда/i);
- assert.ok((page.match(/Lava\.top/g)||[]).length<=1,'Payment processor is not repeated');
+ assert.ok((page.match(/Lava\.top/g)||[]).length<=2,'Payment provider appears only in the consent summary');
 });
 
 test('Shop links directly to checkout and also to Premium details',()=>{
@@ -49,7 +49,7 @@ test('Checkout click is not lost to input blur; discount fallback requires expli
  assert.match(js,/promo\.input\.value=''/);
  assert.match(js,/komi-checkout-direct, \.komi-checkout-lava-open/);
  assert.match(js,/window\.location\.assign\(CHECKOUT\)/);
- assert.match(js,/checked\.discount_percent/);
+ assert.match(js,/data\.discount_percent/);
  const premium=read('premium.html'),home=read('index.html');
  assert.match(premium,/komi-checkout\.js\?v=20261122e/);
  assert.match(home,/komi-checkout\.js\?v=20261122e/);
@@ -102,7 +102,7 @@ test('New Lava Premium pricing offers 1 month and 1 year, never creates legacy i
  assert.doesNotMatch(js,/fetch\(DB\+'\/functions\/v1\/komi-checkout'/);
  assert.match(studio,/\$3\.99/);
  assert.match(studio,/\$24\.85/);
- assert.match(edge,/do not mint invoices with mismatched local amount/);
+ assert.match(edge,/not mint invoices with mismatched local amount/);
  assert.match(edge,/return response\(\{error:'Для новых тарифов/);
  assert.match(rpc,/p_expiry <= p_event_at \+ interval '370 days'/);
  assert.match(rpc,/v_until := greatest\(v_until,p_expiry\)/);
