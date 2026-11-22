@@ -3,7 +3,7 @@
 const DB=Deno.env.get('SUPABASE_URL')||'';
 const configState={
   lavaKeyPresent:Boolean(Deno.env.get('LAVA_API_KEY')?.trim()),
-  priceConfiguredCorrectly:Deno.env.get('KOMI_PREMIUM_MONTHLY_USD')==='2.01',
+  priceConfiguredCorrectly:Deno.env.get('KOMI_PREMIUM_MONTHLY_USD')==='3.99',
   checkoutEnabled:Deno.env.get('KOMI_CHECKOUT_ENABLED')!=='false'
 };
 // Log presence checks only; never reveal credential content.
@@ -51,6 +51,13 @@ Deno.serve(async req=>{
  if(origin&&origin!==allowed)return response({error:'Origin not allowed'},403);
  if(!req.headers.get('content-type')?.startsWith('application/json'))
   return response({error:'JSON required'},415);
+ // Legacy code-attributed invoices were tied to a fixed $2.01/month offer.
+ // Lava.top now publishes month/year billing under the same offer. Until
+ // period-specific invoice prices can be verified against the provider, do
+ // not mint invoices with mismatched local amount / referral accounting.
+ // The new UI uses the official hosted subscription checkout instead.
+ return response({error:'Для новых тарифов $3.99/мес и $24.85/год оформление счёта с кодами через API временно недоступно. Открой актуальную страницу Premium и выбери период на Lava.top.'},503);
+
  const bearer=req.headers.get('authorization')||'';
  if(!bearer.startsWith('Bearer '))return response({error:'Требуется вход'},401);
  const key=secretKey(),lava=Deno.env.get('LAVA_API_KEY')||'';
