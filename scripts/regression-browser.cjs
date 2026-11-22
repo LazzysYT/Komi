@@ -342,7 +342,7 @@ async function checkNotifications(page) {
    // Catalog rendering can finish after the navigation state flips. Wait for
    // the real input to receive focus, but still fail if focus is never restored.
    await page.waitForFunction(() => document.activeElement?.id === 'komiCatalogSearchInput',
-     {timeout:3000});
+     null, {timeout:3000});
    assert.equal(new URL(page.url()).hash,'#catalog');
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
