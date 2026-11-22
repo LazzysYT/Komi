@@ -92,6 +92,18 @@
         '<span class="profile-watch-action" aria-hidden="true">↗</span></a>';
     }).join('');
   }
+  function friendRows(names) {
+    return names.slice(0,3).map((name,i)=>{
+      var p=userProfiles[name]||{};
+      var label=typeof komiVisibleUsername==='function'
+        ? komiVisibleUsername(name,p,false) : String(p.displayName||name);
+      var avatar=safeUrl(p.avatar);
+      return '<button type="button" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
+        '<span class="profile-friend-avatar" style="position:relative;overflow:hidden">'+escapeText(label.slice(0,1))+
+        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
+        '</span><span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
+    }).join('');
+  }
   function content(ctx){
     var fullCounts=statusNames.reduce((total,key)=>total+number(ctx.statsCounts[key]),0);
     var history=watchHistory(ctx);
@@ -144,11 +156,7 @@
         '<span class="profile-caption">'+favoriteIds.length+' в избранном</span>')+
       '<div class="profile-favorites">'+favoriteTiles+favoriteBlanks+'</div></section>';
     var friends='<section class="profile-widget profile-friends-widget">'+header('Друзья','<span class="profile-caption">'+ctx.myFriends.length+'</span>')+
-      '<div class="profile-friends-mini">'+(ctx.myFriends.slice(0,3).map((name,i)=>{
-        var p=userProfiles[name]||{},label=typeof komiVisibleUsername==='function'?komiVisibleUsername(name,p,false):String(p.displayName||name);
-        return '<button type="button" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])"><span class="profile-friend-avatar">'+escapeText(label.slice(0,1))+
-          '</span><span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
-      }).join('')||blank('Список друзей пока пуст.'))+'</div>'+
+      '<div class="profile-friends-mini">'+(friendRows(ctx.myFriends)||blank('Список друзей пока пуст.'))+'</div>'+
       (ctx.isMe?'<button type="button" class="profile-shop-link" data-profile-rooms>Комнаты и заявки в друзья ↗</button>':'')+'</section>';
     var genres=ctx.topGenres.map(([name,count])=>
       '<button class="profile-genre" type="button" data-profile-genre="'+escapeText(name)+'">'+escapeText(name)+' <span>'+count+'</span></button>'
@@ -200,6 +208,23 @@
       element.textContent=format(value);
       element.dataset.profileCount=String(value);
     }
+  }
+  function refreshFriends(names) {
+    var profile=document.getElementById('profile');
+    if(!profile||!Array.isArray(names)||typeof currentUser==='undefined'||
+       profile.dataset.profileUser!==currentUser?.username)return;
+    root.komiProfileFriendNames=names.slice();
+    var widget=profile.querySelector('.profile-friends-widget');
+    if(widget){
+      var caption=widget.querySelector('.profile-caption');
+      if(caption)caption.textContent=String(names.length);
+      var list=widget.querySelector('.profile-friends-mini');
+      if(list)list.innerHTML=friendRows(names)||blank('Список друзей пока пуст.');
+    }
+    var badge=profile.querySelector('[data-profile-friends-count]');
+    if(badge)badge.textContent='◉ Друзей: '+names.length;
+    var tabCount=profile.querySelector('[data-profile-tab="friends"] .profile-tab-counter');
+    if(tabCount)tabCount.textContent=format(names.length);
   }
   function mount(){
     var profile=document.getElementById('profile');
@@ -299,5 +324,5 @@
   document.addEventListener('pointerout',event=>{
     var tile=event.target?.closest?.('[data-profile-tilt]');if(tile&&!tile.contains(event.relatedTarget))tile.style.transform='';
   });
-  root.KomiProfileUI={navigation,content,appearance,metrics,syncWallet};
+  root.KomiProfileUI={navigation,content,appearance,metrics,syncWallet,refreshFriends};
 })(window);
