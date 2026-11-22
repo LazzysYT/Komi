@@ -1,0 +1,175 @@
+<!-- Reference markup for Komi Shop V3.
+     Runtime equivalents are rendered by komi-shop-v3.js using catalog data,
+     Supabase wallet/owned items and the current user's avatar. -->
+<section id="shop" class="anicoin-shop komi-shop-v3" aria-labelledby="anicoin-title">
+  <header class="sv3-topbar">
+    <div class="sv3-heading">
+      <p class="sv3-overline">KOMI ANIME / ANI COIN</p>
+      <h1 id="anicoin-title">Магазин Komi</h1>
+      <p>Оформление профиля, реакции и коллекции. Примерка бесплатная.</p>
+    </div>
+    <div class="sv3-top-actions">
+      <span class="sv3-balance" aria-label="Баланс AniCoin">♧ <strong>—</strong> AniCoin</span>
+      <details class="sv3-earn">
+        <summary>+ Как получить</summary>
+        <div class="sv3-earn-pop">
+          <strong>Как заработать AniCoin</strong>
+          <p>1 AniCoin за 20 минут подтверждённого просмотра, ежедневные квесты и +500 при первой активации Premium.</p>
+          <a href="/premium.html">Возможности Premium</a>
+        </div>
+      </details>
+      <button type="button" class="sv3-outline-btn" data-v3-promo>Промокод</button>
+    </div>
+  </header>
+
+  <div class="sv3-bento">
+    <article class="sv3-featured">
+      <div>
+        <span class="sv3-mini-kicker">ПОДБОРКА НЕДЕЛИ</span>
+        <span class="sv3-countdown">Обновится через <b id="sv3-week-time">—</b></span>
+      </div>
+      <h2>Рамка недели</h2>
+      <p>Оформление доступно и после смены подборки.</p>
+      <div class="sv3-featured-preview" aria-label="Предпросмотр оформления"></div>
+      <button type="button" class="sv3-featured-try" data-v3-try="frame_eclipse">◉ Быстрая примерка</button>
+    </article>
+    <article class="sv3-capsule">
+      <span class="sv3-mini-kicker">КАПСУЛА KOMI · БЕЗ СЛУЧАЙНЫХ НАГРАД</span>
+      <div class="sv3-capsule-icon" aria-hidden="true">✧</div>
+      <h2>Готовый комплект</h2>
+      <p>Лунная рамка + титул «Киноман». Состав и цена известны заранее.</p>
+      <div class="sv3-capsule-foot">
+        <strong>50 ♧</strong>
+        <button type="button" data-v3-bundle>Примерить комплект</button>
+      </div>
+    </article>
+  </div>
+
+  <div class="sv3-filters" aria-label="Категории и фильтры магазина">
+    <div class="sv3-category-tabs" role="group" aria-label="Категории">
+      <button type="button" data-v3-category="all" aria-pressed="true">Все</button>
+      <button type="button" data-v3-category="frame" aria-pressed="false">Рамки</button>
+      <button type="button" data-v3-category="shape" aria-pressed="false">Формы аватара</button>
+      <button type="button" data-v3-category="title" aria-pressed="false">Титулы</button>
+      <button type="button" data-v3-category="overlay" aria-pressed="false">Эффекты профиля</button>
+      <button type="button" data-v3-category="reaction" aria-pressed="false">Watch Party</button>
+      <button type="button" data-v3-category="owned" aria-pressed="false">Мои покупки</button>
+      <select data-v3-extra aria-label="Другие категории">
+        <option value="">Ещё категории</option>
+        <option value="banner">Обложки</option>
+        <option value="plate">Комментарии</option>
+        <option value="mascot">Маскоты</option>
+        <option value="xp">Шкала XP</option>
+        <option value="name">Градиенты ника</option>
+        <option value="card">Карточки</option>
+        <option value="showcase">Топ-3</option>
+        <option value="icon">Иконки</option>
+      </select>
+    </div>
+    <div class="sv3-filter-actions">
+      <select data-v3-sort aria-label="Сортировать товары">
+        <option value="default">По умолчанию</option>
+        <option value="rarity">По редкости</option>
+        <option value="price-up">Сначала дешевле</option>
+        <option value="price-down">Сначала дороже</option>
+      </select>
+      <label class="sv3-hide-toggle">
+        <input type="checkbox" data-v3-hide-owned>
+        Скрыть купленные
+      </label>
+    </div>
+  </div>
+
+  <div class="sv3-layout">
+    <div class="sv3-market">
+      <div class="sv3-market-caption">85 товаров</div>
+      <div class="komi-coin-grid sv3-product-grid">
+        <!-- Повторяется для каждого товара; атрибуты генерируются из каталога. -->
+        <article class="komi-coin-card sv3-item" data-rarity="rare">
+          <div class="sv3-item-badges">
+            <span class="komi-shop-rarity">Редкий</span>
+          </div>
+          <div class="komi-coin-sample sv3-item-scene">
+            <span class="komi-coin-frame komi-store-frame-moon">
+              <span aria-hidden="true">K</span>
+            </span>
+          </div>
+          <div class="sv3-item-copy">
+            <h3>Лунная рамка</h3>
+            <p>Рамка для твоего аватара в профиле.</p>
+            <strong class="sv3-unit-price">30 ♧</strong>
+          </div>
+          <div class="komi-coin-actions sv3-item-actions">
+            <button type="button" class="sv3-primary-buy"
+              data-shop-item-action="frame_moon" data-shop-operation="buy_equip">
+              Войти, чтобы купить
+            </button>
+            <button type="button" class="sv3-try-btn"
+              data-v3-try="frame_moon" aria-pressed="false">◉ Примерка</button>
+          </div>
+        </article>
+      </div>
+    </div>
+
+    <aside class="sv3-fitting" aria-label="Живая примерочная">
+      <button type="button" class="sv3-sheet-toggle" aria-expanded="false" data-v3-sheet>
+        <span>◉ Живая примерочная <small>0 выбрано · 0 ♧</small></span>
+        <span class="sv3-sheet-chevron" aria-hidden="true">⌃</span>
+      </button>
+      <div class="sv3-fitting-body">
+        <div class="sv3-fitting-head">
+          <div>
+            <span class="sv3-mini-kicker">КОМБИНИРУЙ ДО ПОКУПКИ</span>
+            <h2>Живая примерочная</h2>
+          </div>
+          <button type="button" class="sv3-reset" data-v3-reset>Сбросить</button>
+        </div>
+        <div class="sv3-profile">
+          <div class="sv3-profile-cover"><span class="sv3-cover-word">KOMI ANIME</span></div>
+          <div class="sv3-profile-details">
+            <span class="sv3-profile-avatar"><span class="sv3-avatar-cut">K</span></span>
+            <div class="sv3-profile-name"><strong>Пользователь Komi</strong></div>
+            <div class="sv3-profile-title">Участник сообщества Komi</div>
+            <div class="sv3-profile-level">
+              <span>УРОВЕНЬ 5</span><progress value="64" max="100">64%</progress>
+            </div>
+          </div>
+        </div>
+        <div class="sv3-comment">
+          <span class="sv3-comment-label">ПРЕДПРОСМОТР КОММЕНТАРИЯ</span>
+          <div class="sv3-comment-row">
+            <span class="sv3-comment-avatar">K</span>
+            <span><strong>Пользователь Komi</strong>
+              <small>Эта серия просто невероятная!</small>
+            </span>
+          </div>
+        </div>
+        <div class="sv3-selection">
+          <strong>Выбрано для примерки</strong>
+          <p class="sv3-empty-selection">Выбери товар с помощью кнопки «Примерка».</p>
+        </div>
+        <div class="sv3-checkout-info">
+          <span>К оплате <small>Купленные предметы — 0 ♧</small></span>
+          <strong>0 ♧</strong>
+        </div>
+        <button type="button" class="sv3-checkout" data-v3-checkout>Выбери товары</button>
+        <p class="sv3-checkout-note">Оплата подтверждается на сервере Supabase.</p>
+      </div>
+    </aside>
+  </div>
+
+  <div class="sv3-shop-extras">
+    <div id="komiShopSocialArea" class="komi-shop-social">
+      <!-- Существующая социальная интеграция: подарки, бустеры, выделение комментариев. -->
+    </div>
+  </div>
+  <p class="sv3-status" role="status" aria-live="polite"></p>
+  <dialog id="sv3PromoDialog" class="sv3-promo-dialog">
+    <div class="sv3-promo-content">
+      <h2>Промокоды Komi</h2>
+      <p>Скидки действуют для Premium, а не для AniCoin.</p>
+      <a href="/premium.html">Перейти к Premium</a>
+      <button type="button" data-v3-promo-close>Закрыть</button>
+    </div>
+  </dialog>
+</section>

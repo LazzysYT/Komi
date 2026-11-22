@@ -112,12 +112,52 @@ window.komiShopReloadStore=async function(){
         if(currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
     }
 };
+// The fitting-room checkout uses a single database transaction; legacy card handlers remain intact.
+window.komiShopCheckoutCart=async function(itemIds,expectedOwner){
+    const id=currentUser?.authUserId;
+    if(!id||id!==expectedOwner||!_supabase)throw Error('Войди в Komi, чтобы покупать.');
+    if(!Array.isArray(itemIds)||!itemIds.length||itemIds.length>12||aniCoinShopBusy)
+        throw Error('Выбери от 1 до 12 предметов.');
+    const unique=new Set(itemIds);
+    if(unique.size!==itemIds.length||!itemIds.every(item=>window.KomiShopCatalog?.find(item)))
+        throw Error('Некорректный состав корзины.');
+    aniCoinShopBusy=true;
+    try{
+        const {data:authentication,error:authenticationError}=await _supabase.auth.getUser();
+        if(authenticationError||authentication?.user?.id!==id)throw Error('Повтори вход в аккаунт.');
+        const {data,error}=await _supabase.rpc('komi_shop_cart_buy_equip',{p_items:itemIds});
+        if(error)throw error;
+        if(currentUser?.authUserId!==id)return null;
+        if(!data||!Array.isArray(data.owned)||!Number.isSafeInteger(Number(data.balance)))
+            throw Error('Некорректный ответ сервера покупок.');
+        aniCoinShopOwner=id;aniCoinShopWallet=data;
+        if(typeof window.KomiPremiumStore?.refresh==='function')void window.KomiPremiumStore.refresh();
+        void aniCoinRequest('read',{},id).catch(()=>{});
+        return data;
+    }finally{aniCoinShopBusy=false;}
+};
+
 function renderAniCoinShop(container) {
     if (!container) return;
     const id=currentUser?.authUserId;
     const wallet=id && id===aniCoinOwner ? aniCoinWallet : null;
     const store=id && id===aniCoinShopOwner ? aniCoinShopWallet : null;
     const items=window.KomiShopCatalog?.items || [];
+    if(window.KomiShopV3?.render){
+        window.KomiShopV3.render(container,{
+            owner:id||'',wallet,store,
+            avatar:id===aniCoinShopOwner?aniCoinShopAvatar:'',
+            displayName:id===aniCoinShopOwner?aniCoinShopDisplayName:'Пользователь Komi',
+            shopStatus:aniCoinShopStatus||aniCoinStatus||'',
+            loading:aniCoinShopLoading,busy:aniCoinShopBusy,
+            failedFor:aniCoinShopFailedFor===id&&id
+        });
+        if(window.KomiShopSocial?.mount)
+            window.KomiShopSocial.mount(container,{userId:id,store,wallet,products:items});
+        if(id&&!store&&!aniCoinShopLoading&&aniCoinShopFailedFor!==id)
+            void aniCoinLoadStore(id);
+        return;
+    }
     const categories=[['all','Все · '+items.length],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты профиля'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['shape','Формы'],['plate','Комментарии'],['mascot','Маскоты'],['xp','XP-полоски'],['name','Ники'],['reaction','Watch Party'],['owned','Мои покупки']];
     const selected=items.filter(item=>aniCoinShopCategory==='all'||(aniCoinShopCategory==='owned'&&store?.owned?.includes(item.id))||item.type===aniCoinShopCategory);
     const name=typeof escapeFriendHtml==='function'?escapeFriendHtml(aniCoinShopDisplayName):'Пользователь Komi';
