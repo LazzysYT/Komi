@@ -800,3 +800,16 @@
  #shop.komi-shop-v4 :is(button,summary,a,.sv3-item,.sv4-feature-card){transition:none!important;animation:none!important}
  #shop.komi-shop-v4 :is(.sv3-item,.sv4-feature-card):hover{transform:none!important}
 }
+/* Keep the shop-local header in normal document flow despite the site-wide sticky header rule. */
+#shop.komi-shop-v4 .sv4-hero > header.sv3-topbar{
+ position:relative!important;top:auto!important;inset:auto!important;
+ z-index:3!important;transform:none!important;height:auto!important;max-height:none!important;
+ overflow:visible!important;box-shadow:none!important;
+}
+#shop.komi-static-shop.komi-shop-v4 .sv4-hero{margin-bottom:14px}
+#shop.komi-static-shop.komi-shop-v4 .sv4-feature-grid{display:grid}
+#shop.komi-static-shop.komi-shop-v4 .sv4-feature-card .sv4-sticker{font-weight:800;font-size:13px;letter-spacing:-.04em}
+#shop.komi-static-shop.komi-shop-v4 .sv3-topbar{padding:0!important;margin-bottom:16px!important}
+#shop.komi-static-shop.komi-shop-v4 .sv3-topbar h1{font-size:clamp(29px,3vw,40px)}
+#shop.komi-static-shop.komi-shop-v4 .sv4-hero{background:linear-gradient(90deg,#0b0b0bcd,#0e0e12b0),url('/komi-shop-hero.svg') right top/auto 100% no-repeat,#121216}
+

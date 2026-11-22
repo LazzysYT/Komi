@@ -79,7 +79,9 @@ function apply(root){
  for(const image of document.querySelectorAll('#sidebarAvatarIcon img,.user-avatar-small'))swapImage(image,url);
 }
 function perk(symbol,title,description){
- return '<article class="komi-premium-feature"><span aria-hidden="true">'+symbol+'</span>'+
+ const iconName=({'◉':'movie','▣':'palette','✶':'medal','◈':'coins','◇':'sparkles','♧':'gift'})[symbol]||'sparkles';
+ const svg=window.KomiShopIcons?.svg(iconName,24)||symbol;
+ return '<article class="komi-premium-feature"><span class="sv4-perk-badge" aria-hidden="true">'+svg+'</span>'+
   '<h2>'+title+'</h2><p>'+description+'</p></article>';
 }
 function renderPage(container){
