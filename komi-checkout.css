@@ -37,3 +37,12 @@
 .komi-checkout-invoice{display:block;width:100%;text-align:center;padding:12px 14px;margin:8px 0 14px;background:#fff;color:#09090b;border-radius:11px;text-decoration:none;font:750 12px Inter,system-ui,sans-serif}
 .komi-checkout-invoice[hidden]{display:none!important}
 .komi-checkout-invoice:focus-visible{outline:2px solid #fff;outline-offset:3px}
+
+/* Provider-issued promotion codes are entered at Lava.top checkout. */
+.komi-checkout-lava-promo{margin:10px 0 14px;padding:13px;background:#18181d;border:1px solid #42424a;border-radius:12px}
+.komi-checkout-lava-promo[hidden]{display:none!important}
+.komi-checkout-lava-hint{margin:0 0 7px;color:#d8d8dd;font-size:12px}
+.komi-checkout-lava-code{display:block;padding:11px 12px;margin-bottom:8px;border:1px solid #42424a;border-radius:8px;background:#09090b;font-size:15px;letter-spacing:.08em;user-select:all}
+.komi-checkout-lava-copy,.komi-checkout-lava-open{box-sizing:border-box;width:100%;min-height:40px;display:flex;align-items:center;justify-content:center;padding:9px 12px;margin:7px 0;border:1px solid #777780;border-radius:9px;background:#26262c;color:#fff;text-decoration:none;font:700 12px Inter,system-ui,sans-serif;cursor:pointer}
+.komi-checkout-lava-open{background:#fff;color:#09090b;border-color:#fff}
+.komi-checkout-lava-warning{color:#a9a9b0;font-size:11px;line-height:1.5;margin:9px 0 0}
