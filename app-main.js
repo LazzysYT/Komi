@@ -818,6 +818,17 @@ async function loadDataFromCloud(attempt = 0) {
                 search.focus({preventScroll:false});
                 komiCatalogFocusPending = false;
             } else document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+            // The click's native focus handling can run after delegated navigation
+            // replaces the button. Restore focus on the next frame, not during
+            // the click dispatch, and never steal focus after leaving catalog.
+            requestAnimationFrame(() => {
+                if (currentView !== 'catalog') return;
+                const input = document.getElementById('komiCatalogSearchInput');
+                if (input && (komiCatalogFocusPending || document.activeElement === document.body)) {
+                    input.focus({preventScroll:false});
+                    komiCatalogFocusPending = false;
+                }
+            });
         }
         function komiHomeQuickFiltersMarkup() {
             const genreOptions = availableGenresList.filter(genre =>
