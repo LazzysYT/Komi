@@ -58,14 +58,14 @@ test('Checkout click is not lost to input blur; discount fallback requires expli
 test('Monthly promo discount never silently continues or charges a different total',()=>{
  const js=read('komi-checkout.js'),css=read('komi-checkout.css');
  assert.match(js,/function unsupportedDiscount\(percent\)/);
- assert.match(js,/Промокоды Lava.top вводятся и проверяются на странице оплаты Lava.top/);
- assert.match(js,/unsupportedDiscount\(Number\(checked\.discount_percent\)\)/);
+ assert.match(js,/Промокод вводится в Lava.top/);
+ assert.match(js,/unsupportedDiscount\(Number\(data\.discount_percent\)\)/);
  assert.match(js,/const PLANS=Object\.freeze\(/);
  assert.match(js,/promo\.input\.value=''/);
  assert.match(js,/if\(!codes\(\)\.ref\)\{external\(\);modal\.hidden=true;return;\}/);
  assert.match(js,/choosePlan\(requestedPlan==='yearly'\?'yearly':'monthly'\)/);
  assert.match(js,/selectedPlan=id/);
- assert.match(js,/parsed\.hostname|uri\.hostname/);
+ assert.match(js,/window\.location\.assign\(CHECKOUT\)/);
  assert.match(css,/\.komi-checkout-invoice\[hidden\]/);
  assert.match(read('index.html'),/komi-checkout\.css\?v=20261122e/);
  assert.match(read('premium.html'),/komi-checkout\.css\?v=20261122e/);
