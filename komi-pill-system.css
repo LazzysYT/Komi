@@ -144,3 +144,23 @@ body:has(#store-filters) :is(.topbar a.btn,.studio-button,.studio-action,.store-
  }
  .komi-media-hub .komi-hub-catalog-toolbar.komi-catalog-v4>.catalog-filters-box::-webkit-scrollbar{display:none}
 }
+
+/* Profile navigation uses its own stable markup and must share tier-one treatment. */
+.komi-media-hub .komi-profile-tabs.profile-premium-tabs{
+  display:flex!important;gap:8px!important;flex-wrap:nowrap!important;overflow-x:auto!important;
+  scrollbar-width:none!important;overscroll-behavior-inline:contain;padding:6px 0!important
+}
+.komi-media-hub .komi-profile-tabs.profile-premium-tabs::-webkit-scrollbar{display:none}
+.komi-media-hub .komi-profile-tabs.profile-premium-tabs .komi-profile-tab{
+  flex:0 0 auto!important;min-height:44px!important;padding:13px 24px!important;
+  border-radius:999px!important;border:1px solid rgba(255,255,255,.07)!important;
+  background:#16161A!important;color:#8E8E93!important;box-shadow:none!important;
+  font:800 13px/1.2 Manrope,Inter,sans-serif!important;white-space:nowrap!important;
+  transition:background .18s,color .18s,transform .12s,box-shadow .18s!important
+}
+.komi-media-hub .komi-profile-tabs.profile-premium-tabs .komi-profile-tab:is(.active,[aria-pressed="true"]){
+  border-color:#FFFFFF!important;background:#FFFFFF!important;color:#09090B!important;
+  box-shadow:0 4px 20px rgba(255,255,255,.16)!important
+}
+.komi-media-hub .komi-profile-tabs.profile-premium-tabs .komi-profile-tab:active{transform:scale(.95)}
+.komi-media-hub .komi-home-quick-categories{margin:7px 0 13px!important}
