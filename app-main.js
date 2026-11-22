@@ -676,6 +676,7 @@ async function loadDataFromCloud(attempt = 0) {
             return 'Сериал';
         }
         let catalogCollection = 'all';
+        let catalogCategory = 'all'; // all | ongoing | series | movies | top100
         const komiCollections = {all:'Все аниме', recent:'Свежие серии', short:'На один вечер', movies:'Фильмы', best:'Высокая оценка'};
         // Catalog state belongs to the URL; only the return position belongs to this tab.
         const komiCatalogStorageKey = 'komi.catalog.position.v1';
@@ -689,11 +690,13 @@ async function loadDataFromCloud(attempt = 0) {
             const type = query.get('type');
             const sort = query.get('sort');
             const collection = query.get('collection');
+            const category = query.get('category');
             catalogFilterGenre = genre && availableGenresList.includes(genre) ? genre : 'Все';
             catalogFilterYear = year && /^(?:19|20)[0-9]{2}$/.test(year) ? year : 'Все';
             catalogFilterType = ['Сериал','Фильм','OVA','ONA','Special'].includes(type) ? type : 'Все';
             catalogSort = ['popular','updated','rating','year','alphabet'].includes(sort) ? sort : 'popular';
             catalogCollection = Object.hasOwn(komiCollections, collection) ? collection : 'all';
+            catalogCategory = ['all','ongoing','series','movies','top100'].includes(category) ? category : 'all';
             catalogSearchQuery = String(query.get('q') || '').slice(0,120);
             komiHideWatched = query.get('hide') === '1';
         }
@@ -704,6 +707,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (catalogFilterType !== 'Все') query.set('type', catalogFilterType);
             if (catalogSort !== 'popular') query.set('sort', catalogSort);
             if (catalogCollection !== 'all') query.set('collection', catalogCollection);
+            if (catalogCategory !== 'all') query.set('category', catalogCategory);
             if (catalogSearchQuery.trim()) query.set('q', catalogSearchQuery.trim());
             if (komiHideWatched) query.set('hide', '1');
             return '/' + (query.size ? '?' + query.toString() : '') + '#catalog';
@@ -756,6 +760,7 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterType = type;
             catalogSort = sort;
             komiHideWatched = values.hide === true;
+            catalogCategory = 'all';
             komiCatalogStateChanged();
             return true;
         }
@@ -786,6 +791,7 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterGenre='Все'; catalogFilterYear='Все'; catalogFilterType='Все';
             catalogSearchQuery=''; catalogVisibleCount=48;
             catalogCollection=Object.hasOwn(komiCollections, collection) ? collection : 'all';
+            catalogCategory='all';
             catalogSort=collection === 'recent' ? 'updated' : 'rating';
             navigate('catalog');
         }
@@ -803,7 +809,7 @@ async function loadDataFromCloud(attempt = 0) {
         document.addEventListener('click', event => {
             const button = event.target.closest('[data-komi-genre]');
             if (!button) return;
-            catalogCollection='all'; catalogFilterYear='Все'; catalogFilterType='Все';
+            catalogCollection='all'; catalogFilterYear='Все'; catalogFilterType='Все'; catalogCategory='all';
             catalogSearchQuery=''; catalogVisibleCount=48; catalogFilterGenre=button.dataset.komiGenre;
             navigate('catalog');
         });
@@ -863,6 +869,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (kind === 'sort' && !['popular','updated','rating','year','alphabet'].includes(value)) return;
             if (!['genre','year','type','sort'].includes(kind)) return;
             catalogCollection = 'all';
+            catalogCategory = 'all';
             catalogFilterGenre = 'Все';
             catalogFilterYear = 'Все';
             catalogFilterType = 'Все';
@@ -905,8 +912,15 @@ async function loadDataFromCloud(attempt = 0) {
         }
         function komiCatalogFiltered() {
             const queries=komiSearchVariants(catalogSearchQuery).filter(Boolean);
+            const top100 = catalogCategory === 'top100' ? new Set([...animeList].filter(a=>Number(a.shikiRating)>0)
+                .sort((a,b)=>Number(b.shikiRating)-Number(a.shikiRating)||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id))
+                .slice(0,100).map(a=>String(a.id))) : null;
             const filtered=animeList.filter(a=>{
                 if (!komiInCollection(a,catalogCollection)) return false;
+                if (catalogCategory === 'series' && komiCatalogType(a)!=='Сериал') return false;
+                if (catalogCategory === 'movies' && komiCatalogType(a)!=='Фильм') return false;
+                if (catalogCategory === 'ongoing' && !/ongoing|releasing|онгоинг|выходит|выпускается/i.test(String(a.status || a.releaseStatus || a.animeStatus || ''))) return false;
+                if (top100 && !top100.has(String(a.id))) return false;
                 if (komiHideWatched && currentUser?.authUserId &&
                     ['Просмотрено','Брошено'].includes(userAnimeStatuses[currentUser.username]?.[String(a.id)])) return false;
                 const genres=Array.isArray(a.genres)?a.genres:[a.genre].filter(Boolean);
@@ -935,6 +949,15 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterGenre = value;
             komiCatalogStateChanged();
         }
+        function komiChooseCatalogCategory(category) {
+            const next=String(category || 'all');
+            if (!['all','ongoing','series','movies','top100'].includes(next)) return;
+            catalogCategory=next;
+            catalogCollection='all';
+            catalogFilterType='Все';
+            if(next==='top100')catalogSort='rating';
+            komiCatalogStateChanged();
+        }
         function komiChooseCatalogSort(sort) {
             const value = String(sort || 'popular');
             if (!['popular','updated','rating','year','alphabet'].includes(value)) return;
@@ -942,7 +965,7 @@ async function loadDataFromCloud(attempt = 0) {
             komiCatalogStateChanged();
         }
         function komiResetCatalogFilters() {
-            catalogCollection='all';
+            catalogCollection='all';catalogCategory='all';
             catalogFilterGenre='Все';catalogFilterYear='Все';catalogFilterType='Все';
             catalogSort='popular';catalogSearchQuery='';komiHideWatched=false;komiCatalogStateChanged();
         }
@@ -1464,10 +1487,14 @@ async function loadDataFromCloud(attempt = 0) {
                                     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
                                     <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название, например «Фрирен»" aria-label="Поиск аниме в каталоге" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false">
                                 </div>
-                                <div class="komi-catalog-sort-tabs" role="group" aria-label="Быстрая сортировка">
-                                    ${[['popular','Актуальные'],['rating','По оценке'],['year','Новые']].map(([key,label]) => `<button type="button" data-komi-sort="${key}" data-komi-onclick="komiChooseCatalogSort(this.dataset.komiSort)" aria-pressed="${catalogSort===key}" class="${catalogSort===key?'is-active':''}">${label}</button>`).join('')}
-                                </div>
+                                
                             </div>
+                        </div>
+                        <div class="komi-catalog-category-pills" role="group" aria-label="Категории каталога">
+                            ${[['all','Всё'],['ongoing','Онгоинги'],['series','Сериалы'],['movies','Фильмы'],['top100','Топ 100']].map(([key,label]) => `<button type="button" data-komi-category="${key}" data-komi-onclick="komiChooseCatalogCategory(this.dataset.komiCategory)" aria-pressed="${catalogCategory===key}">${label}</button>`).join('')}
+                        </div>
+                        <div class="komi-catalog-sort-tabs" role="group" aria-label="Сортировка каталога">
+                            ${[['popular','Актуальные'],['rating','По рейтингу'],['updated','Новые серии'],['alphabet','По алфавиту']].map(([key,label]) => `<button type="button" data-komi-sort="${key}" data-komi-onclick="komiChooseCatalogSort(this.dataset.komiSort)" aria-pressed="${catalogSort===key}">${label}</button>`).join('')}
                         </div>
                         <div class="catalog-filters-box" role="group" aria-label="Фильтры каталога">
                             <div class="form-group">
