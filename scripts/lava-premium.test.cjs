@@ -58,7 +58,7 @@ test('Checkout click is not lost to input blur; discount fallback requires expli
 test('Monthly promo discount never silently continues or charges a different total',()=>{
  const js=read('komi-checkout.js'),css=read('komi-checkout.css');
  assert.match(js,/function unsupportedDiscount\(percent\)/);
- assert.match(js,/Lava.top обрабатывает промокоды на своей странице/);
+ assert.match(js,/Промокоды Lava.top вводятся и проверяются на странице оплаты Lava.top/);
  assert.match(js,/unsupportedDiscount\(Number\(checked\.discount_percent\)\)/);
  assert.match(js,/continueFull\.focus\(\)/);
  assert.match(js,/promo\.input\.value=''/);
