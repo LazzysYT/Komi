@@ -9,6 +9,7 @@ const gradients=[
  'linear-gradient(110deg,#f2d783,#ef9fbb)'
 ];
 const allowedEmoji=['','✨','🌙','🎬','⭐','🔥','💫'];
+const soundNames={1:'Тихий вечер',2:'Космический свет'};
 const soundNotes={
   1:[220,277.18,329.63,440,329.63,277.18],
   2:[196,246.94,293.66,392,293.66,246.94]
@@ -25,11 +26,26 @@ function getId(host){
  const direct=host.getAttribute('data-komi-premium-id');
  return direct || root.KomiPremium?.idForUsername?.(host.getAttribute('data-komi-premium-username')) || '';
 }
+function syncMusicUI(){
+ const capsule=document.querySelector('#profile [data-komi-profile-music-capsule]');
+ const button=capsule?.querySelector('[data-komi-profile-music]');
+ if(!button)return;
+ const playing=!!audio&&audio.id===button.dataset.userId&&audio.mode===Number(button.dataset.musicMode);
+ const value=String(playing);
+ if(capsule.dataset.playing!==value)capsule.dataset.playing=value;
+ if(button.getAttribute('aria-pressed')!==value)button.setAttribute('aria-pressed',value);
+ const label=playing?'Остановить музыкальную тему':'Воспроизвести музыкальную тему';
+ if(button.getAttribute('aria-label')!==label)button.setAttribute('aria-label',label);
+ const icon=button.querySelector('[data-komi-profile-music-icon]');
+ const symbol=playing?'Ⅱ':'▶';
+ if(icon&&icon.textContent!==symbol)icon.textContent=symbol;
+}
 function stopAudio(){
  if(!audio)return;
  const old=audio;audio=null;
  if(old.timer)clearTimeout(old.timer);
  try{old.ctx.close();}catch{}
+ syncMusicUI();
 }
 function playAudio(id,mode){
  stopAudio();
@@ -90,30 +106,31 @@ function apply(){
  const id=premium?.idForUsername?.(username);
  const record=premium?.isActiveId?.(id)?settings.get(id):null;
  const mode=Number(record?.music_theme)||0;
- const controls=profile.querySelector('.profile-name-row');
- if(!controls){if(audio)stopAudio();return;}
- let button=controls.querySelector('[data-komi-profile-music]');
- if(!mode||!soundNotes[mode]){
-  button?.remove();
+ const capsule=profile.querySelector('[data-komi-profile-music-capsule]');
+ if(!capsule){if(audio)stopAudio();return;}
+ const button=capsule.querySelector('[data-komi-profile-music]');
+ if(!button)return;
+ if(!mode||!soundNotes[mode]||!id){
+  if(!capsule.hidden)capsule.hidden=true;
   if(audio)stopAudio();
   return;
  }
- if(!button){
-  button=document.createElement('button');
-  button.type='button';button.className='komi-profile-music-btn';
-  button.dataset.komiProfileMusic='';
+ if(audio&&(audio.id!==id||audio.mode!==mode))stopAudio();
+ if(capsule.hidden)capsule.hidden=false;
+ button.dataset.userId=id;
+ button.dataset.musicMode=String(mode);
+ const title=capsule.querySelector('[data-komi-profile-music-title]');
+ if(title&&title.textContent!==soundNames[mode])title.textContent=soundNames[mode];
+ if(!button.dataset.komiMusicBound){
+  button.dataset.komiMusicBound='true';
   button.addEventListener('click',()=>{
    const playing=audio?.id===button.dataset.userId&&audio?.mode===Number(button.dataset.musicMode);
    if(playing)stopAudio();
    else playAudio(button.dataset.userId,Number(button.dataset.musicMode));
-   button.textContent=audio?.id===button.dataset.userId?'■ Остановить тему':'♫ Послушать тему';
+   syncMusicUI();
   });
-  controls.append(button);
  }
- button.dataset.userId=id;
- button.dataset.musicMode=String(mode);
- button.textContent=audio?.id===id?'■ Остановить тему':'♫ Послушать тему';
- if(audio&&(audio.id!==id||audio.mode!==mode))stopAudio();
+ syncMusicUI();
 }
 async function refresh(){
  if(!client)return;
