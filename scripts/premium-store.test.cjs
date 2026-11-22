@@ -137,7 +137,7 @@ test('visual collections preserve ownership, equip slots, free sets and accessib
  assert.match(visualMigration,/for update/);
  assert.match(visualMigration,/Purchase required before equipping/);
  assert.match(visualMigration,/grant execute on function public\.komi_premium_store\(text,text\) to authenticated/);
- assert.match(html,/komi-shop-visual\.css\?v=/);
+ assert.match(html,/komi\.production\.css\?v=/);
  assert.match(standalone,/komi-shop-visual\.css\?v=/);
  assert.match(coin,/komi-shop-rarity/);
  assert.match(coin,/komi-shop-set-card/);

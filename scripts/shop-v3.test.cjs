@@ -47,7 +47,7 @@ test('shop v3 JavaScript parses without frameworks and is initialized from the c
  assert.doesNotThrow(()=>new vm.Script(js));
  assert.equal(products.length,85);
  assert.match(html,/src="\.\/komi-shop-v3\.js\?v=/);
- assert.match(html,/komi-shop-v3\.css\?v=/);
+ assert.match(html,/komi\.production\.css\?v=/);
  assert.match(core,/window\.KomiShopV3\?\.render/);
  assert.match(core,/window\.komiShopCheckoutCart/);
  assert.match(social,/section\.classList\.contains\('komi-shop-v3'\)/);
@@ -125,7 +125,7 @@ test('shop layout overrides the site-wide sticky header and keeps categories in 
  assert.match(css,/position:relative!important/);
  assert.match(css,/\.sv3-category-tabs\{[\s\S]*?flex-wrap:nowrap/);
  assert.match(css,/\.sv3-product-grid\{[\s\S]*?grid-template-columns:repeat\(auto-fit/);
- assert.match(html,/komi-shop-v3\.css\?v=20261122f/);
+ assert.match(html,/komi\.production\.css\?v=20261122g/);
 });
 test('shop avatars match verified Premium GIF rather than stale normal photo',()=>{
  const start=core.indexOf('function aniCoinCurrentProfileAvatar(');

@@ -9,22 +9,11 @@ test('generated bundle leads the explicit, versioned mobile override cascade',()
   const head=fs.readFileSync(path.join(root,'index.html'),'utf8').split('</head>')[0];
   const local=[...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"]+)"/g)]
     .map(match=>match[1].split('?')[0]);
-  const expected=[
-    '/komi.bundle.css',
-    '/mobile-home-polish.css',
-    '/mobile-catalog-dock.css',
-    '/catalog-comfort.css',
-    '/player-comfort.css',
-    '/mobile-bottom-sheets.css',
-    '/auth-dialog.css',
-    '/catalog-discovery-v4.css',
-    '/community-search.css',
-    '/komi-checkout.css'
-  ];
+  const expected=['/komi.production.css'];
   assert.deepEqual(local,expected,'Last-loaded mobile layers must preserve deliberate cascade order');
   assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
   for(const filename of expected) assert.ok(fs.existsSync(path.join(root,filename.slice(1))),filename+' missing');
-  assert.match(head,/href="\/komi\.bundle\.css\?v=\d+[a-z]"/);
+  assert.match(head,/href="\/komi\.production\.css\?v=\d+[a-z]"/);
   assert.doesNotMatch(head,/<style(?:\s|>)/i);
   assert.match(head,/fonts\.googleapis\.com/);
 });
@@ -47,4 +36,20 @@ test('generated CSS maintains source order and matches committed artifact',()=>{
   for(const key of ['.komi-side-nav','.komi-seo-fallback','#watchModal','.komi-card-status','.komi-header-left']){
     assert.ok(saved.includes(key),'Missing important selector '+key);
   }
+});
+
+test('single production CSS keeps original cascading order and matches all source files',()=>{
+ const builder=require('./build-production-css.cjs');
+ const result=fs.readFileSync(path.join(root,'komi.production.css'),'utf8');
+ assert.equal(builder.sources.length,13);
+ assert.equal(result,builder.buildCSS());
+ let last=-1;
+ for(const name of builder.sources){
+   const at=result.indexOf('/* --- '+name+' --- */');
+   assert.ok(at>last,'CSS cascade order changed at '+name);
+   last=at;
+ }
+ for(const mark of ['#shop.komi-shop-v3','.sv3-product-grid','.komi-shop-gift-button']){
+   assert.ok(result.includes(mark),'CSS selector missing: '+mark);
+ }
 });
