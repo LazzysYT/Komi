@@ -88,6 +88,6 @@ test('native-only seek and PiP paths keep provider iframe untouched',()=>{
     assert.match(controls,/pip\.hidden = !standardPiP && !safariPiP/);
     assert.match(app,/KomiPlayerUX\?\.cancelPendingNext\?\.\(\)/);
     assert.match(html,/player-source-preferences\.js/);
-    assert.match(html,/player-comfort\.css/);
+    assert.match(html,/komi\.production\.css/);
     assert.match(ux,/else if \(wrapper\.querySelector\('iframe'\)\)/);
 });
