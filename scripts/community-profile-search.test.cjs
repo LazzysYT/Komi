@@ -113,7 +113,7 @@ test('anonymous users cannot browse and UI loads a separate monochrome styleshee
   await t.settle();
   assert.equal(t.calls.length,0);
   assert.match(t.dropdown.children[1].textContent,/Войди/);
-  assert.match(html,/komi\.production\.css\?v=20261122g/);
+  assert.match(html,/komi\.production\.css\?v=20261122h/);
   assert.match(html,/hybrid-search\.js\?v=20261122a/);
   assert.match(css,/komi-search-user-result/);
   assert.match(css,/aria-pressed="true"/);

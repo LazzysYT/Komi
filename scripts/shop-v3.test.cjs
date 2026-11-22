@@ -25,6 +25,7 @@ const context={document:{getElementById:()=>container},currentView:'shop'};
 context.window={setInterval:()=>1,confirm:()=>true};
 vm.createContext(context);
 vm.runInContext(read('komi-shop-catalog.js'),context);
+vm.runInContext(read('komi-shop-icons.js'),context);
 vm.runInContext(js,context);
 const products=context.window.KomiShopCatalog.items;
 const guest={owner:'',store:null,wallet:null,displayName:'Гость',avatar:''};
@@ -125,7 +126,7 @@ test('shop layout overrides the site-wide sticky header and keeps categories in 
  assert.match(css,/position:relative!important/);
  assert.match(css,/\.sv3-category-tabs\{[\s\S]*?flex-wrap:nowrap/);
  assert.match(css,/\.sv3-product-grid\{[\s\S]*?grid-template-columns:repeat\(auto-fit/);
- assert.match(html,/komi\.production\.css\?v=20261122g/);
+ assert.match(html,/komi\.production\.css\?v=20261122h/);
 });
 test('shop avatars match verified Premium GIF rather than stale normal photo',()=>{
  const start=core.indexOf('function aniCoinCurrentProfileAvatar(');
@@ -156,5 +157,54 @@ test('shop avatars match verified Premium GIF rather than stale normal photo',()
  const p=read('komi-premium.js');
  assert.match(p,/komi:premium-refreshed/);
  assert.match(core,/window\.addEventListener\('komi:premium-refreshed'/);
- assert.match(html,/komi-premium\.js\?v=20261122f/);
+ assert.match(html,/komi-premium\.js\?v=20261122h/);
+});
+
+test('shop V4 follows monochrome sticker reference while preserving all purchase handlers',()=>{
+ const icons=read('komi-shop-icons.js');
+ const premium=read('komi-premium.js');
+ const hero=read('komi-shop-hero.svg');
+ const prodCSS=read('komi.production.css');
+ context.window.KomiShopV3.render(container,guest);
+ assert.match(container.innerHTML,/class="anicoin-shop komi-shop-v3 komi-shop-v4"/);
+ assert.match(container.innerHTML,/Магазин KomiAnime/);
+ assert.equal((container.innerHTML.match(/class="sv4-feature-card"/g)||[]).length,6);
+ assert.match(container.innerHTML,/4K качество/);
+ assert.match(container.innerHTML,/при наличии|доступно у источника/i);
+ assert.match(container.innerHTML,/\+500 AniCoin/);
+ assert.match(container.innerHTML,/Подарки друзьям/);
+ assert.match(container.innerHTML,/Готовые наборы/);
+ assert.match(container.innerHTML,/sv4-hero/);
+ assert.match(container.innerHTML,/sv4-sticker/);
+ const vectorCount=(container.innerHTML.match(/class="komi-sticker-icon"/g)||[]).length;
+ const tryCount=(container.innerHTML.match(/data-v3-try="/g)||[]).length;
+ assert.ok(vectorCount>=tryCount+6,
+   'Icon kit should cover all visible try-on buttons and six feature badges');
+ assert.match(html,/komi-shop-icons\.js\?v=20261122h/);
+ assert.match(html,/komi-shop-v3\.js\?v=20261122h/);
+ assert.match(html,/komi-shop-social\.js\?v=20261122h/);
+ assert.match(icons,/Object\.freeze/);
+ assert.match(social,/KomiShopIcons\?\.svg\('gift'/);
+ assert.doesNotMatch(social,/komi-shop-gift-button','🎁'/);
+ assert.match(premium,/sv4-perk-badge/);
+ assert.match(css,/\.sv4-feature-grid/);
+ assert.match(css,/\.sv3-primary-buy/);
+ assert.match(css,/border-radius:999px/);
+ assert.match(css,/prefers-reduced-motion:reduce/);
+ assert.match(css,/shop\.komi-shop-v4 \.sv4-hero > header\.sv3-topbar/);
+ assert.match(prodCSS,/sv4-feature-grid/);
+ assert.match(prodCSS,/sv4-perk-badge/);
+ assert.match(hero,/<svg xmlns="http:\/\/www\.w3\.org\/2000\/svg"/);
+ assert.doesNotMatch(hero,/<script|href="https?:/i);
+ assert.doesNotMatch(container.innerHTML,/случайн(?:ые|ая) наград|рулетк[ау]|шанс выпадения/i);
+});
+test('svg sticker icons are predictable, non-interactive and have a fallback',()=>{
+ const icons=context.window.KomiShopIcons;
+ for(const name of ['quality','movie','medal','coins','gift','layers','eye','reset','chevron','bag']){
+   const markup=icons.svg(name);
+   assert.match(markup,/viewBox="0 0 24 24"/);
+   assert.match(markup,/aria-hidden="true"/);
+   assert.match(markup,/stroke="currentColor"/);
+ }
+ assert.match(icons.svg('invalid'),/komi-sticker-icon/);
 });

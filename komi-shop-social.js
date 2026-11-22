@@ -128,7 +128,7 @@
      const actions=card.querySelector('.komi-coin-actions');
      const original=actions?.querySelector('[data-shop-item-action]');
      if(!actions||!original||actions.querySelector('[data-komi-shop-gift]'))continue;
-     const button=create('button','komi-shop-gift-button','🎁');button.type='button';
+     const button=create('button','komi-shop-gift-button','');button.type='button';button.innerHTML=root.KomiShopIcons?.svg('gift',19)||'✧';
      button.dataset.komiShopGift=original.dataset.shopItemAction;
      button.setAttribute('aria-label','Подарить '+productLabel(button.dataset.komiShopGift));
      actions.append(button);

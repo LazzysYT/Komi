@@ -6,6 +6,16 @@ const catalog=()=>root.KomiShopCatalog?.items||[];
 const find=id=>root.KomiShopCatalog?.find(id)||null;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=x=>Number(x||0).toLocaleString('ru-RU');
+const icon=(name,size=18)=>root.KomiShopIcons?.svg(name,size)||'✧';
+const sticker=name=>root.KomiShopIcons?.badge(name)||'<span class="sv4-sticker">✧</span>';
+const featureItems=Object.freeze([
+ ['quality','4K качество','До 2160p, если разрешение доступно у источника.'],
+ ['movie','Анимированный профиль','GIF-аватарка и живой фон с активным Premium.'],
+ ['medal','Редкие награды','Рамки, титулы и уникальные коллекции AniCoin.'],
+ ['coins','+500 AniCoin','Разовый бонус при первой активации Premium.'],
+ ['gift','Подарки друзьям','Дарите оформления через систему друзей Komi.'],
+ ['layers','Готовые наборы','Полный состав и цена известны до покупки.']
+]);
 const rarityLabels={common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'};
 const rarityOrder={legendary:0,epic:1,rare:2,common:3};
 const categories=[['all','Все'],['frame','Рамки'],['shape','Формы аватара'],['title','Титулы'],
@@ -76,7 +86,7 @@ function preview(store,avatar,name){
  const current=type=>find(state.trial[type]||store?.[type+'_id'])||null;
  const frame=current('frame'),shape=current('shape'),title=current('title'),
  banner=current('banner'),overlay=current('overlay'),plate=current('plate'),nameStyle=current('name');
- const icon=current('icon'),xp=current('xp'),mascot=current('mascot');
+ const selectedIcon=current('icon'),xp=current('xp'),mascot=current('mascot');
  const sets=root.KomiShopCatalog?.activeSets?.(Object.fromEntries(
    ['frame','shape','title','plate','mascot'].map(t=>[t+'_id',current(t)?.id||null])
  ))||[];
@@ -89,13 +99,13 @@ function preview(store,avatar,name){
  '<span class="sv3-avatar-cut '+(shape?'komi-store-'+esc(shape.cosmeticClass):'')+'">'+initialAvatar(avatar,name)+'</span></span>'+
  (mascot?'<span class="sv3-profile-mascot komi-profile-mascot komi-store-'+esc(mascot.cosmeticClass)+'"></span>':'')+
  '<div class="sv3-profile-name"><strong class="'+(nameStyle?'komi-store-'+esc(nameStyle.cosmeticClass):'')+'">'+esc(name)+'</strong>'+
- (icon?' <span>'+esc(icon.symbol||'✧')+'</span>':'')+'</div>'+
+ (selectedIcon?' <span>'+esc(selectedIcon.symbol||'✧')+'</span>':'')+'</div>'+
  '<div class="sv3-profile-title">'+(title?esc(title.title||title.label):'Участник сообщества Komi')+'</div>'+
  '<div class="sv3-profile-level '+(xp?'komi-store-'+esc(xp.cosmeticClass):'')+'"><span>УРОВЕНЬ 5</span><progress value="64" max="100">64%</progress></div>'+
  (sets.length?'<p class="sv3-set-active">✦ Сет: '+sets.map(x=>esc(x.label)).join(', ')+'</p>':'')+
  '</div></div>'+
  '<div class="sv3-comment '+(plate?'komi-store-'+esc(plate.cosmeticClass):'')+'">'+
- '<span class="sv3-comment-label">ПРЕДПРОСМОТР КОММЕНТАРИЯ</span>'+
+ '<span class="sv3-comment-label">'+icon('movie',13)+' ПРЕДПРОСМОТР КОММЕНТАРИЯ</span>'+
  '<div class="sv3-comment-row"><span class="sv3-comment-avatar '+(shape?'komi-store-'+esc(shape.cosmeticClass):'')+'">'+initialAvatar(avatar,name)+'</span>'+
  '<span><strong class="'+(nameStyle?'komi-store-'+esc(nameStyle.cosmeticClass):'')+'">'+esc(name)+'</strong>'+
  '<small>Эта серия просто невероятная!</small></span></div></div>';
@@ -113,11 +123,11 @@ function card(p,ctx,avatar,name){
  return '<article class="komi-coin-card sv3-item '+(equipped?'is-equipped ':'')+(chosen?'is-trying':'')+'" data-rarity="'+esc(p.rarity||'common')+'">'+
  '<div class="sv3-item-badges"><span class="komi-shop-rarity">'+esc(rarityLabels[p.rarity]||rarityLabels.common)+'</span>'+
  (equipped?'<span class="sv3-owned">Надето</span>':owned?'<span class="sv3-owned">Куплено</span>':'')+'</div>'+
- '<div class="komi-coin-sample sv3-item-scene">'+visual(p,avatar,name)+'</div>'+
+ '<div class="komi-coin-sample sv3-item-scene"><span class="sv4-scene-halo" aria-hidden="true"></span>'+visual(p,avatar,name)+'</div>'+
  '<div class="sv3-item-copy"><h3>'+esc(p.label)+'</h3><p>'+esc(copy[p.type]||'Персональное оформление Komi')+'</p>'+
  '<strong class="sv3-unit-price">'+fmt(p.cost)+' ♧</strong></div>'+
  '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'"'+(disabled?' disabled':'')+'>'+label+'</button>'+
- (!isReaction?'<button type="button" class="sv3-try-btn" data-v3-try="'+esc(p.id)+'" aria-pressed="'+String(chosen)+'" aria-label="Примерить '+esc(p.label)+'">'+(chosen?'✓ Выбрано':'◉ Примерка')+'</button>':'')+
+ (!isReaction?'<button type="button" class="sv3-try-btn" data-v3-try="'+esc(p.id)+'" aria-pressed="'+String(chosen)+'" aria-label="Примерить '+esc(p.label)+'">'+(chosen?icon('check',15)+' Выбрано':icon('eye',15)+' Примерка')+'</button>':'')+
  '</div></article>';
 }
 function currentItems(ctx){
@@ -150,25 +160,31 @@ function layout(ctx){
  items.length===0?'Выбери товары':total>Number(store.balance)?'Недостаточно AniCoin':
  total===0?'Надеть выбранное':'Купить и надеть · '+fmt(total)+' AniCoin';
  const cartDisabled=!!owner&&(!store||!items.length||state.busy||ctx.busy||total>Number(store.balance));
- return '<section id="shop" class="anicoin-shop komi-shop-v3" aria-labelledby="anicoin-title">'+
- '<header class="sv3-topbar"><div class="sv3-heading"><p class="sv3-overline">KOMI ANIME / ANI COIN</p><h1 id="anicoin-title">Магазин Komi</h1>'+
- '<p>Оформление твоего профиля, реакции и коллекции. Примерка бесплатная.</p></div>'+
- '<div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin">♧ <strong class="sv3-tabular">'+balanceText+'</strong> AniCoin</span>'+
- '<details class="sv3-earn"><summary>+ Как получить</summary><div class="sv3-earn-pop"><strong>Как заработать AniCoin</strong>'+
+ return '<section id="shop" class="anicoin-shop komi-shop-v3 komi-shop-v4" aria-labelledby="anicoin-title">'+
+ '<div class="sv4-hero">'+
+ '<header class="sv3-topbar"><div class="sv3-heading"><p class="sv3-overline">KOMI ANIME / ANI COIN</p><h1 id="anicoin-title">Магазин KomiAnime</h1>'+
+ '<p>Рамки, эффекты, титулы и украшения для твоего профиля. Примерка бесплатная.</p>'+
+ '<span class="sv4-hero-caption">'+icon('sparkles',14)+' Оформляй свой профиль по-своему</span></div>'+
+ '<div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin">'+icon('coins',17)+' <strong class="sv3-tabular">'+balanceText+'</strong> AniCoin</span>'+
+ '<details class="sv3-earn"><summary>'+icon('plus',16)+' Как получить</summary><div class="sv3-earn-pop"><strong>Как заработать AniCoin</strong>'+
  '<p>1 AniCoin за каждые 20 минут подтверждённого просмотра, награды ежедневных квестов и разовые +500 при активации Premium.</p>'+
  '<a href="/premium.html">Возможности Premium</a></div></details>'+
- '<button type="button" class="sv3-outline-btn" data-v3-promo>Промокод</button></div></header>'+
+ '<button type="button" class="sv3-outline-btn" data-v3-promo>'+icon('tag',16)+' Промокод</button></div></header>'+
+ '<div class="sv4-feature-grid" aria-label="Возможности KomiAnime">'+
+ featureItems.map(([i,title,detail])=>'<article class="sv4-feature-card">'+sticker(i)+
+ '<span class="sv4-feature-content"><strong>'+esc(title)+'</strong><small>'+esc(detail)+'</small></span></article>').join('')+
+ '</div></div>'+
  '<div class="sv3-bento"><article class="sv3-featured"><div><span class="sv3-mini-kicker">ПОДБОРКА НЕДЕЛИ</span>'+
  '<span class="sv3-countdown" aria-label="До смены подборки">Обновится через <b id="sv3-week-time">'+remaining()+'</b></span></div>'+
  '<h2>'+(featured?esc(featured.label):'Дроп недели')+'</h2>'+
  '<p>Выбор недели, доступен и после обновления подборки. Без искусственных ограничений.</p>'+
  '<div class="sv3-featured-preview">'+(featured?visual(featured,avatar,name):'✧')+'</div>'+
- (featured?'<button type="button" class="sv3-featured-try" data-v3-try="'+esc(featured.id)+'">◉ Быстрая примерка</button>':'')+
+ (featured?'<button type="button" class="sv3-featured-try" data-v3-try="'+esc(featured.id)+'">'+icon('eye',17)+' Быстрая примерка</button>':'')+
  '</article><article class="sv3-capsule"><span class="sv3-mini-kicker">КАПСУЛА KOMI · БЕЗ СЛУЧАЙНЫХ НАГРАД</span>'+
- '<div class="sv3-capsule-icon" aria-hidden="true">✧</div><h2>Готовый комплект</h2>'+
+ '<div class="sv3-capsule-icon" aria-hidden="true">'+icon('layers',32)+'</div><h2>Готовый комплект</h2>'+
  '<p>Внутри точно: '+bundle.map(p=>esc(p.label)).join(' + ')+'. Стоимость зависит от уже купленных предметов.</p>'+
  '<div class="sv3-capsule-foot"><strong class="sv3-tabular">'+fmt(bundleTotal)+' ♧</strong>'+
- '<button type="button" data-v3-bundle>Примерить комплект</button></div></article></div>'+
+ '<button type="button" data-v3-bundle>'+icon('eye',17)+' Примерить комплект</button></div></article></div>'+
  '<div class="sv3-filters" aria-label="Категории и фильтры магазина"><div class="sv3-category-tabs" role="group" aria-label="Категории">'+tabs+extra+'</div>'+
  '<div class="sv3-filter-actions"><label class="sv3-sort-label"><span class="sv3-sr-only">Сортировать товары</span>'+
  '<select data-v3-sort><option value="default"'+(state.sort==='default'?' selected':'')+'>По умолчанию</option>'+
@@ -181,13 +197,13 @@ function layout(ctx){
  '<div class="sv3-no-results">По выбранным фильтрам ничего не найдено. <button type="button" data-v3-reset-filters>Сбросить фильтры</button></div>')+'</div></div>'+
  '<aside class="sv3-fitting'+(state.sheetOpen?' is-open':'')+'" aria-label="Живая примерочная">'+
  '<button type="button" class="sv3-sheet-toggle" aria-expanded="'+String(state.sheetOpen)+'" data-v3-sheet>'+
- '<span>◉ Живая примерочная <small>'+items.length+' выбрано · '+fmt(total)+' ♧</small></span><span class="sv3-sheet-chevron">⌃</span></button>'+
+ '<span>'+icon('palette',18)+' Живая примерочная <small>'+items.length+' выбрано · '+fmt(total)+' ♧</small></span><span class="sv3-sheet-chevron">'+icon('chevron',18)+'</span></button>'+
  '<div class="sv3-fitting-body"><div class="sv3-fitting-head"><div><span class="sv3-mini-kicker">КОМБИНИРУЙ ДО ПОКУПКИ</span><h2>Живая примерочная</h2></div>'+
- '<button type="button" class="sv3-reset" data-v3-reset>Сбросить</button></div>'+
+ '<button type="button" class="sv3-reset" data-v3-reset>'+icon('reset',15)+' Сбросить</button></div>'+
  preview(store,avatar,name)+
  '<div class="sv3-selection"><strong>Выбрано для примерки</strong>'+selectedList(store)+'</div>'+
  '<div class="sv3-checkout-info"><span>К оплате <small>Купленные предметы — 0 ♧</small></span><strong class="sv3-tabular">'+fmt(total)+' ♧</strong></div>'+
- '<button class="sv3-checkout" type="button" data-v3-checkout'+(cartDisabled?' disabled':'')+'>'+selectionAction+'</button>'+
+ '<button class="sv3-checkout" type="button" data-v3-checkout'+(cartDisabled?' disabled':'')+'>'+icon('bag',18)+' '+selectionAction+'</button>'+
  '<p class="sv3-checkout-note">Оплата и надевание выполняются атомарно через Supabase. '+esc(info)+'.</p>'+
  '</div></aside></div>'+
  '<div class="sv3-shop-extras"><div id="komiShopSocialArea" class="komi-shop-social"></div></div>'+

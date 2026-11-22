@@ -22,5 +22,5 @@ test('roulette first paint is a quiet monochrome skeleton, not old placeholder c
   assert.match(section,/id="rouletteTitle"[^>]*><\/div>/);
   assert.doesNotMatch(section,/Загрузка\.\.\.|◇ Выбираем аниме/);
   assert.match(css,/\.is-loading::after\s*\{\s*content:'';/);
-  assert.match(html,/komi\.production\.css\?v=20261122g/);
+  assert.match(html,/komi\.production\.css\?v=20261122h/);
 });

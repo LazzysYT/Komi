@@ -18,6 +18,19 @@ fs.mkdirSync(output,{recursive:true});
    assert.ok((await page.locator('#shop .sv3-primary-buy').first().innerText()).includes('Войти'),
      'Guest buy action must request login');
    assert.equal(await page.locator('#shop .sv3-bento>article').count(),2);
+   assert.equal(await page.locator('#shop .sv4-feature-card').count(),6,
+     'All six premium-sticker feature cards must render');
+   assert.ok(await page.locator('#shop .sv4-feature-card .komi-sticker-icon').count()>=6,
+     'Use the same monochrome vector icon style throughout the feature row');
+   assert.equal(await page.locator('#shop .sv4-hero').isVisible(),true);
+   assert.ok(await page.locator('#shop .sv3-item-actions .komi-sticker-icon').count()>=70,
+     'Modern action icons must be present on each purchasable item');
+   const bundleCSS=await page.evaluate(()=>{
+     const links=[...document.querySelectorAll('head link[rel="stylesheet"]')];
+     return links.filter(x=>new URL(x.href).origin===location.origin).map(x=>new URL(x.href).pathname);
+   });
+   assert.deepEqual(bundleCSS,['/komi.production.css'],
+     'Production HTML must use the single bundled stylesheet');
    const geometry=await page.evaluate(()=>{
      const section=document.querySelector('#shop.komi-shop-v3');
      const top=section.querySelector('.sv3-topbar');

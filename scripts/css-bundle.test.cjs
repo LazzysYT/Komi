@@ -53,3 +53,15 @@ test('single production CSS keeps original cascading order and matches all sourc
    assert.ok(result.includes(mark),'CSS selector missing: '+mark);
  }
 });
+
+test('V4 sticker styles are retained in the same one-file production cascade',()=>{
+ const css=fs.readFileSync(path.join(root,'komi.production.css'),'utf8');
+ const shop=fs.readFileSync(path.join(root,'komi-shop-v3.css'),'utf8');
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ assert.ok(css.includes(shop.trimEnd()));
+ assert.match(css,/\.sv4-feature-grid/);
+ assert.match(css,/\.sv4-perk-badge/);
+ assert.match(html,/komi\.production\.css\?v=20261122h/);
+ assert.doesNotMatch(html,/komi-shop-v3\.css\?v=/);
+ assert.match(html,/komi-shop-hero\.svg|sv4-hero/);
+});
