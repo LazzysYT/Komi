@@ -32,3 +32,8 @@
 .komi-checkout-continue{display:block;width:100%;min-height:43px;border:1px solid #6d6d75;border-radius:11px;background:#26262c;color:#fff;font:700 12px Inter,system-ui,sans-serif;cursor:pointer;margin:4px 0 12px;padding:10px}
 .komi-checkout-continue[hidden]{display:none!important}
 .komi-checkout-continue:hover{background:#34343c}
+
+/* The server-issued invoice remains clickable if programmatic navigation is blocked. */
+.komi-checkout-invoice{display:block;width:100%;text-align:center;padding:12px 14px;margin:8px 0 14px;background:#fff;color:#09090b;border-radius:11px;text-decoration:none;font:750 12px Inter,system-ui,sans-serif}
+.komi-checkout-invoice[hidden]{display:none!important}
+.komi-checkout-invoice:focus-visible{outline:2px solid #fff;outline-offset:3px}
