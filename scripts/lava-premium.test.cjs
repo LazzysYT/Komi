@@ -47,18 +47,18 @@ test('Checkout click is not lost to input blur; discount fallback requires expli
  assert.doesNotMatch(js,/addEventListener\('blur'/);
  assert.match(js,/continueFull\.onclick/);
  assert.match(js,/promo\.input\.value=''/);
- assert.match(js,/if\(link\.matches\('\.komi-checkout-direct'\)\)return/);
+ assert.match(js,/komi-checkout-direct, \.komi-checkout-lava-open/);
  assert.match(js,/window\.location\.assign\(CHECKOUT\)/);
  assert.match(js,/checked\.discount_percent/);
  const premium=read('premium.html'),home=read('index.html');
- assert.match(premium,/komi-checkout\.js\?v=20261122b/);
- assert.match(home,/komi-checkout\.js\?v=20261122b/);
+ assert.match(premium,/komi-checkout\.js\?v=20261122c/);
+ assert.match(home,/komi-checkout\.js\?v=20261122c/);
 });
 
 test('Monthly promo discount never silently continues or charges a different total',()=>{
  const js=read('komi-checkout.js'),css=read('komi-checkout.css');
  assert.match(js,/function unsupportedDiscount\(percent\)/);
- assert.match(js,/Скидка НЕ будет списана или зачтена/);
+ assert.match(js,/Lava.top обрабатывает промокоды на своей странице/);
  assert.match(js,/unsupportedDiscount\(Number\(checked\.discount_percent\)\)/);
  assert.match(js,/continueFull\.focus\(\)/);
  assert.match(js,/promo\.input\.value=''/);
@@ -67,6 +67,22 @@ test('Monthly promo discount never silently continues or charges a different tot
  assert.match(js,/invoiceLink\.hidden=false/);
  assert.match(js,/parsed\.hostname|uri\.hostname/);
  assert.match(css,/\.komi-checkout-invoice\[hidden\]/);
- assert.match(read('index.html'),/komi-checkout\.css\?v=20261122b/);
- assert.match(read('premium.html'),/komi-checkout\.css\?v=20261122b/);
+ assert.match(read('index.html'),/komi-checkout\.css\?v=20261122c/);
+ assert.match(read('premium.html'),/komi-checkout\.css\?v=20261122c/);
+});
+
+test('Lava promo uses hosted provider checkout; local discount never fakes payment amount',()=>{
+ const js=read('komi-checkout.js'),css=read('komi-checkout.css');
+ assert.match(js,/const lavaPromo=node\('div'/);
+ assert.match(js,/lavaPromoOpen\.href=CHECKOUT/);
+ assert.match(js,/navigator\.clipboard\.writeText\(code\)/);
+ assert.match(js,/Код .* найден в KomiAnime/);
+ assert.match(js,/Реальную сумму покажет только Lava.top/);
+ assert.match(js,/if\(!lavaPromo\.hidden\)\{/);
+ assert.match(js,/external\(\);modal\.hidden=true;return;/);
+ assert.match(js,/link\.matches\('\.komi-checkout-direct, \.komi-checkout-lava-open'\)/);
+ assert.match(js,/реферальный код KomiAnime не передаётся/);
+ assert.match(css,/\.komi-checkout-lava-promo\[hidden\]/);
+ assert.doesNotMatch(js,/promoCode\s*:/);
+ assert.doesNotMatch(js,/payment_amount\s*:/);
 });
