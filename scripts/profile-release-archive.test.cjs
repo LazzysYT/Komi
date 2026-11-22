@@ -31,7 +31,7 @@ function renderAdapter() {
 test('premium release adapter loaded ahead of app-main without replacing auth and database',()=>{
   const html=src('index.html');
   assert.ok(html.indexOf('profile-premium.js')<html.indexOf('app-main.js'));
-  assert.equal((html.match(/<script src="\.\/profile-premium\.js"><\/script>/g)||[]).length,1);
+  assert.equal((html.match(/<script src="\.\/profile-premium\.js(?:\?v=[A-Za-z0-9._-]+)?"><\/script>/g)||[]).length,1);
   const app=src('app-main.js');
   for(const feature of ['id="profile"','data-profile-cover','data-profile-balance','profile-settings',
     'KomiProfileUI.navigation','KomiProfileUI.content','handleAvatarFileUpload(event)','updateUserProfile(this)'])
