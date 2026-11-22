@@ -341,8 +341,22 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
    // Catalog rendering can finish after the navigation state flips. Wait for
    // the real input to receive focus, but still fail if focus is never restored.
-   await page.waitForFunction(() => document.activeElement?.id === 'komiCatalogSearchInput',
-     null, {timeout:3000});
+   try {
+     await page.waitForFunction(() => document.activeElement?.id === 'komiCatalogSearchInput',
+       null, {timeout:3000});
+   } catch (error) {
+     const focusState = await page.evaluate(() => ({
+       currentView,
+       activeTag: document.activeElement?.tagName,
+       activeId: document.activeElement?.id,
+       activeClass: document.activeElement?.className,
+       searchCount: document.querySelectorAll('#komiCatalogSearchInput').length,
+       searchConnected: Boolean(document.getElementById('komiCatalogSearchInput')?.isConnected),
+       focusPending: typeof komiCatalogFocusPending === 'undefined' ? null : komiCatalogFocusPending,
+       hash: location.hash
+     }));
+     throw new Error('Catalog search focus not restored: '+JSON.stringify(focusState), {cause:error});
+   }
    assert.equal(new URL(page.url()).hash,'#catalog');
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
