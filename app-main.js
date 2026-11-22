@@ -4512,9 +4512,10 @@ async function loadDataFromCloud(attempt = 0) {
                 : null;
             const effectivePreference = availablePreference || preferredSource;
             const sourcePlan = KomiPlayerCore.selectPlaybackSource(sources, {
-                requestedSource: requestedSource !== null ? requestedSource :
-                    (!adFreeOnly && effectivePreference && Object.hasOwn(sources,effectivePreference)
-                        ? effectivePreference : null),
+                // Only an explicit current click is a requested source. A saved
+                // iframe preference must not override an available direct stream.
+                requestedSource,
+
                 preferredSource: effectivePreference,
                 adFreeOnly,
                 partnerPreferred: sources[KOMI_ANIVIBE_LABEL] ? KOMI_ANIVIBE_LABEL : null
