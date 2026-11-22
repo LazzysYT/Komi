@@ -11,6 +11,7 @@ const html=read('index.html');
 const core=read('anicoin.js');
 const social=read('komi-shop-social.js');
 const sql=read('supabase/migrations/20261122080000_anicoin_shop_v3_cart.sql');
+const racePatch=read('supabase/migrations/20261122081500_shop_cart_charge_only_inserted.sql');
 const scripts={};
 const container={
  innerHTML:'',
@@ -109,4 +110,12 @@ test('atomic server-side cart is authenticated, row-locked and rejects dupes',()
  assert.match(sql,/frame_id=v_id/);
  assert.match(sql,/shape_id=v_id/);
  assert.doesNotMatch(sql,/random\s*\(|roulette|lootbox|gambl/i);
+});
+
+test('cart only charges purchases successfully inserted, even when a gift arrives concurrently',()=>{
+ assert.match(racePatch,/get diagnostics v_inserted = row_count/);
+ assert.match(racePatch,/if v_inserted=1 then v_spent:=v_spent\+v_price/);
+ assert.match(racePatch,/balance=balance-v_spent/);
+ assert.match(racePatch,/'spent',v_spent/);
+ assert.match(racePatch,/v_wallet\.balance<v_total/);
 });
