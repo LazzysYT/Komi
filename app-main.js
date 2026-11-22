@@ -1597,7 +1597,7 @@ async function loadDataFromCloud(attempt = 0) {
                                         <a class="komi-partner-card" href="https://www.tiktok.com/@vidciten" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр vidci10, @vidciten — открыть профиль в новой вкладке">
                                             <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
                                             <span class="komi-partner-card-body">
-                                                <img class="komi-partner-avatar-photo" src="/assets/partners/vidci10-v3.jpg" alt="Аватар vidci10 — серый кот" width="76" height="76" loading="lazy" decoding="async">
+                                                <img class="komi-partner-avatar-photo" src="/assets/partners/vidci10-verified.jpg" alt="Аватар vidci10 — серый кот" width="76" height="76" loading="lazy" decoding="async">
                                                 <span class="komi-partner-card-name"><strong>vidci10</strong><small>@vidciten</small></span>
                                             </span>
                                             <span class="komi-partner-card-cta">Открыть TikTok <span aria-hidden="true">↗</span></span>
