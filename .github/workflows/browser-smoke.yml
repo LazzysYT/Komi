@@ -45,6 +45,7 @@ jobs:
           node --check scripts/party-real-auth-e2e.cjs
           node --test scripts/*.test.cjs
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-preview.log 2>&1 &
+          node scripts/shop-v3-browser.cjs
           node scripts/regression-browser.cjs
           node scripts/home-first-paint-browser.cjs
           node scripts/resume-hydration-browser.cjs

@@ -55,14 +55,16 @@
      if(grid)grid.before(area);else section.append(area);
    }
    area.replaceChildren();
-   const title=create('h2','','Подборка недели');
-   area.append(title,create('p','komi-shop-muted','Три выбранных оформления. Ассортимент не исчезает после обновления подборки.'));
-   const picks=create('div','komi-shop-featured-list');
-   for(const product of featured()){
-     const button=create('button','komi-shop-featured',product.label+' · '+product.cost+' ◈');
-     button.type='button';button.dataset.komiShopFeatured=product.id;picks.append(button);
+   if(!section.classList.contains('komi-shop-v3')){
+     const title=create('h2','','Подборка недели');
+     area.append(title,create('p','komi-shop-muted','Три выбранных оформления. Ассортимент не исчезает после обновления подборки.'));
+     const picks=create('div','komi-shop-featured-list');
+     for(const product of featured()){
+       const button=create('button','komi-shop-featured',product.label+' · '+product.cost+' ◈');
+       button.type='button';button.dataset.komiShopFeatured=product.id;picks.append(button);
+     }
+     area.append(picks);
    }
-   area.append(picks);
    const user=safeUser();
    const extra=create('div','komi-shop-extra-grid');
    const boosters=create('section','komi-shop-extra-card');
