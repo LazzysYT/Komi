@@ -36,7 +36,7 @@ test('Premium monochrome reference is scoped to existing profile and bundled las
  assert.match(css,/profile-tabs-ready::before/);
  assert.ok(bundle.endsWith('/* --- profile-premium-mono.css --- */\n'+css+'\n'));
  assert.ok(/href="\/komi\.production\.css\?v=[A-Za-z0-9._-]+"/.test(html));
- assert.equal((html.match(/<link rel="stylesheet" href="\/komi\.bundle/g)||[]).length,1);
+ assert.equal((html.match(/<link rel="stylesheet" href="\/komi\.production\.css\?v=/g)||[]).length,1);
 });
 test('Profile hero preserves data bindings, avatar upload, friends and login',()=>{
  const app=read('app-main.js');
