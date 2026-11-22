@@ -20,7 +20,7 @@ test('Premium checkout has a working native clickable checkout link, not a broke
 
 test('Komi Premium discloses recurring terms and verified access without false guarantees',()=>{
  const page=read('premium.html');
- assert.match(page,/Ежемесячная подписка с автоматическим продлением/);
+ assert.match(page,/Два периода подписки с автоматическим продлением/);
  assert.match(page,/Автоматическая активация находится в бета-тестировании/);
  assert.match(page,/при задержке проверь статус покупки/);
  assert.match(page,/2000 XP/);
@@ -51,8 +51,8 @@ test('Checkout click is not lost to input blur; discount fallback requires expli
  assert.match(js,/window\.location\.assign\(CHECKOUT\)/);
  assert.match(js,/checked\.discount_percent/);
  const premium=read('premium.html'),home=read('index.html');
- assert.match(premium,/komi-checkout\.js\?v=20261122c/);
- assert.match(home,/komi-checkout\.js\?v=20261122c/);
+ assert.match(premium,/komi-checkout\.js\?v=20261122e/);
+ assert.match(home,/komi-checkout\.js\?v=20261122e/);
 });
 
 test('Monthly promo discount never silently continues or charges a different total',()=>{
@@ -60,15 +60,15 @@ test('Monthly promo discount never silently continues or charges a different tot
  assert.match(js,/function unsupportedDiscount\(percent\)/);
  assert.match(js,/Промокоды Lava.top вводятся и проверяются на странице оплаты Lava.top/);
  assert.match(js,/unsupportedDiscount\(Number\(checked\.discount_percent\)\)/);
- assert.match(js,/continueFull\.focus\(\)/);
+ assert.match(js,/const PLANS=Object\.freeze\(/);
  assert.match(js,/promo\.input\.value=''/);
  assert.match(js,/if\(!codes\(\)\.ref\)\{external\(\);modal\.hidden=true;return;\}/);
- assert.match(js,/invoiceLink\.href=uri\.href/);
- assert.match(js,/invoiceLink\.hidden=false/);
+ assert.match(js,/choosePlan\(requestedPlan==='yearly'\?'yearly':'monthly'\)/);
+ assert.match(js,/selectedPlan=id/);
  assert.match(js,/parsed\.hostname|uri\.hostname/);
  assert.match(css,/\.komi-checkout-invoice\[hidden\]/);
- assert.match(read('index.html'),/komi-checkout\.css\?v=20261122c/);
- assert.match(read('premium.html'),/komi-checkout\.css\?v=20261122c/);
+ assert.match(read('index.html'),/komi-checkout\.css\?v=20261122e/);
+ assert.match(read('premium.html'),/komi-checkout\.css\?v=20261122e/);
 });
 
 test('Lava promo uses hosted provider checkout; local discount never fakes payment amount',()=>{
@@ -78,11 +78,34 @@ test('Lava promo uses hosted provider checkout; local discount never fakes payme
  assert.match(js,/navigator\.clipboard\.writeText\(code\)/);
  assert.match(js,/Код .* найден в KomiAnime/);
  assert.match(js,/Реальную сумму покажет только Lava.top/);
- assert.match(js,/if\(!lavaPromo\.hidden\)\{/);
+ assert.match(js,/if\(c\.promo\)\{/);
  assert.match(js,/external\(\);modal\.hidden=true;return;/);
  assert.match(js,/link\.matches\('\.komi-checkout-direct, \.komi-checkout-lava-open'\)/);
- assert.match(js,/реферальный код KomiAnime не передаётся/);
+ assert.match(js,/Прямой платёж через Lava.top не передаёт реферальный код KomiAnime/);
  assert.match(css,/\.komi-checkout-lava-promo\[hidden\]/);
  assert.doesNotMatch(js,/promoCode\s*:/);
  assert.doesNotMatch(js,/payment_amount\s*:/);
+});
+
+test('New Lava Premium pricing offers 1 month and 1 year, never creates legacy invoices',()=>{
+ const js=read('komi-checkout.js');
+ const studio=read('premium.html');
+ const edge=read('supabase/functions/komi-checkout/index.ts');
+ const rpc=read('supabase/migrations/20261122133000_lava_premium_yearly_expiry.sql');
+ const webhook=read('supabase/functions/lava-premium-webhook/index.ts');
+ assert.match(js,/monthly:\{price:'\$3\.99'/);
+ assert.match(js,/yearly:\{price:'\$24\.85'/);
+ assert.match(js,/data-komi-plan/);
+ assert.match(js,/aria-pressed/);
+ assert.match(js,/choosePlan\(requestedPlan==='yearly'\?'yearly':'monthly'\)/);
+ assert.match(js,/На странице Lava.top обязательно выбери тот же период/);
+ assert.doesNotMatch(js,/fetch\(DB\+'\/functions\/v1\/komi-checkout'/);
+ assert.match(studio,/\$3\.99/);
+ assert.match(studio,/\$24\.85/);
+ assert.match(edge,/do not mint invoices with mismatched local amount/);
+ assert.match(edge,/return response\(\{error:'Для новых тарифов/);
+ assert.match(rpc,/p_expiry <= p_event_at \+ interval '370 days'/);
+ assert.match(rpc,/v_until := greatest\(v_until,p_expiry\)/);
+ assert.match(rpc,/REVOKE ALL ON FUNCTION public\.komi_apply_lava_premium_event/);
+ assert.match(webhook,/data\.willExpireAt/);
 });
