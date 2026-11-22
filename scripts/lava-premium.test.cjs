@@ -51,6 +51,22 @@ test('Checkout click is not lost to input blur; discount fallback requires expli
  assert.match(js,/window\.location\.assign\(CHECKOUT\)/);
  assert.match(js,/checked\.discount_percent/);
  const premium=read('premium.html'),home=read('index.html');
- assert.match(premium,/komi-checkout\.js\?v=20261122a/);
- assert.match(home,/komi-checkout\.js\?v=20261122a/);
+ assert.match(premium,/komi-checkout\.js\?v=20261122b/);
+ assert.match(home,/komi-checkout\.js\?v=20261122b/);
+});
+
+test('Monthly promo discount never silently continues or charges a different total',()=>{
+ const js=read('komi-checkout.js'),css=read('komi-checkout.css');
+ assert.match(js,/function unsupportedDiscount\(percent\)/);
+ assert.match(js,/Скидка НЕ будет списана или зачтена/);
+ assert.match(js,/unsupportedDiscount\(Number\(checked\.discount_percent\)\)/);
+ assert.match(js,/continueFull\.focus\(\)/);
+ assert.match(js,/promo\.input\.value=''/);
+ assert.match(js,/if\(!codes\(\)\.ref\)\{external\(\);modal\.hidden=true;return;\}/);
+ assert.match(js,/invoiceLink\.href=uri\.href/);
+ assert.match(js,/invoiceLink\.hidden=false/);
+ assert.match(js,/parsed\.hostname|uri\.hostname/);
+ assert.match(css,/\.komi-checkout-invoice\[hidden\]/);
+ assert.match(read('index.html'),/komi-checkout\.css\?v=20261122b/);
+ assert.match(read('premium.html'),/komi-checkout\.css\?v=20261122b/);
 });
