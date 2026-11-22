@@ -9,11 +9,11 @@ test('generated bundle leads the explicit, versioned mobile override cascade',()
   const head=fs.readFileSync(path.join(root,'index.html'),'utf8').split('</head>')[0];
   const local=[...head.matchAll(/<link\b[^>]*rel="stylesheet"[^>]*href="(\/[^"]+)"/g)]
     .map(match=>match[1].split('?')[0]);
-  const expected=['/komi.production.css'];
+  const expected=['/komi.production.css','/komi-pill-system.css'];
   assert.deepEqual(local,expected,'Last-loaded mobile layers must preserve deliberate cascade order');
   assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
   for(const filename of expected) assert.ok(fs.existsSync(path.join(root,filename.slice(1))),filename+' missing');
-  assert.match(head,/href="\/komi\.production\.css\?v=\d+[a-z]"/);
+  assert.match(head,/href="\/komi\.production\.css\?v=\d+[a-z](?:-[a-z0-9-]+)?"/);
   assert.doesNotMatch(head,/<style(?:\s|>)/i);
   assert.match(head,/fonts\.googleapis\.com/);
 });

@@ -29,8 +29,8 @@ fs.mkdirSync(output,{recursive:true});
      const links=[...document.querySelectorAll('head link[rel="stylesheet"]')];
      return links.filter(x=>new URL(x.href).origin===location.origin).map(x=>new URL(x.href).pathname);
    });
-   assert.deepEqual(bundleCSS,['/komi.production.css'],
-     'Production HTML must use the single bundled stylesheet');
+   assert.deepEqual(bundleCSS,['/komi.production.css','/komi-pill-system.css'],
+     'Production HTML must load the bundled CSS first, followed by the pill design layer');
    const geometry=await page.evaluate(()=>{
      const section=document.querySelector('#shop.komi-shop-v3');
      const top=section.querySelector('.sv3-topbar');
