@@ -59,11 +59,21 @@ function openCheckout(){
  const price=node('span','Стоимость тарифа','komi-checkout-muted');
  const amount=node('strong','$2.01 / мес');
  summary.append(price,amount);
- const info=node('p','На обычную продляемую подписку сейчас нельзя применить произвольную денежную скидку. Бонусные коды и рефералы учитываются только при создании счёта через KomiAnime.','komi-checkout-note');
+ const info=node('p','Промокоды Lava.top вводятся и проверяются на странице оплаты Lava.top. Промокоды KomiAnime для бонусов и рефералов учитываются при создании счёта через KomiAnime. Итоговую сумму и действие скидки подтверждает платёжный сервис.','komi-checkout-note');
  const actions=node('div',null,'komi-checkout-buttons');
  const apply=node('button','Проверить коды','komi-checkout-secondary');apply.type='button';
  const pay=node('button','Перейти к оплате','komi-checkout-primary');pay.type='button';
  const msg=node('p','','komi-checkout-message');msg.setAttribute('role','status');
+ const lavaPromo=node('div',null,'komi-checkout-lava-promo');
+ lavaPromo.hidden=true;
+ const lavaPromoText=node('p','','komi-checkout-lava-hint');
+ const lavaPromoCode=node('strong','','komi-checkout-lava-code');
+ const copyLavaPromo=node('button','Скопировать промокод','komi-checkout-lava-copy');
+ copyLavaPromo.type='button';
+ const lavaPromoOpen=node('a','Открыть Lava.top и проверить скидку','komi-checkout-lava-open');
+ lavaPromoOpen.href=CHECKOUT;lavaPromoOpen.rel='noopener noreferrer';
+ const lavaPromoWarning=node('p','Внимание: для скидок в USD Lava.top устанавливает минимальную цену $5. При тарифе $2.01/мес скидка 30% может не примениться. В режиме перехода напрямую реферальный код KomiAnime не передаётся; проверь итоговую сумму до оплаты.','komi-checkout-lava-warning');
+ lavaPromo.append(lavaPromoText,lavaPromoCode,copyLavaPromo,lavaPromoOpen,lavaPromoWarning);
  const continueFull=node('button','Продолжить за $2.01/мес без скидки','komi-checkout-continue');
  continueFull.type='button';continueFull.hidden=true;
  const noCodes=node('a','Оформить напрямую в Lava.top (без кодов)','komi-checkout-direct');
@@ -72,20 +82,37 @@ function openCheckout(){
  noCodes.href=CHECKOUT;noCodes.target='_blank';noCodes.rel='noopener noreferrer';
  actions.append(apply,pay);
  const footer=node('p','После оплаты доступ активирует подтверждённый webhook Lava.top, не экран возврата.','komi-checkout-footnote');
- box.append(top,subtitle,fields,summary,info,actions,msg,continueFull,invoiceLink,noCodes,footer);modal.append(box);
+ box.append(top,subtitle,fields,summary,info,actions,msg,lavaPromo,continueFull,invoiceLink,noCodes,footer);modal.append(box);
  document.body.append(modal);
  modal.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true;});
  function codes(){return {promo:clean(promo.input.value),ref:clean(referral.input.value)};}
  let checked=null;
  function unsupportedDiscount(percent){
-   // The fixed $2.01 recurring offer cannot use the local percentage discount.
-   // Show the actual total and require consent before removing the discount.
-   msg.textContent='Промокод на скидку '+percent+'% нельзя применить к подписке за $2.01/мес: Lava.top не разрешает снижать оплату ниже минимальной суммы для скидочных покупок. Скидка НЕ будет списана или зачтена. Можно оплатить $2.01/мес без скидки, сохранив реферальный код.';
+   const promoCode=codes().promo;
+   // Local Supabase validation is NOT proof of a provider-side discount.
+   // Lava.top applies its own codes on the hosted checkout page.
+   msg.textContent='Код '+promoCode+' найден в KomiAnime ('+percent+'%). Чтобы проверить скидку, открой Lava.top и введи код там. Реальную сумму покажет только Lava.top.';
+   lavaPromoText.textContent='Промокод Lava.top — введи его на странице оплаты:';
+   lavaPromoCode.textContent=promoCode;
+   lavaPromo.hidden=false;
    continueFull.hidden=false;
  }
+ copyLavaPromo.onclick=async()=>{
+   const code=codes().promo;
+   if(!valid(code))return;
+   try{
+     if(!navigator.clipboard?.writeText)throw Error('clipboard unavailable');
+     await navigator.clipboard.writeText(code);
+     copyLavaPromo.textContent='Скопировано ✓';
+   }catch{
+     promo.input.focus();promo.input.select();
+     msg.textContent='Скопируй выделенный код и вставь его на странице Lava.top.';
+   }
+ };
  async function check(){
    const c=codes();checked=null;
    promo.feedback.textContent='';referral.feedback.textContent='';msg.textContent='';
+   lavaPromo.hidden=true;copyLavaPromo.textContent='Скопировать промокод';
    continueFull.hidden=true;
    if(c.promo&&!valid(c.promo)){promo.feedback.textContent='Код: 3–40 латинских букв или цифр';return false;}
    if(c.ref&&!valid(c.ref)){referral.feedback.textContent='Код: 3–40 латинских букв или цифр';return false;}
@@ -117,6 +144,7 @@ function openCheckout(){
    field.input.addEventListener('input',()=>{
      checked=null;field.feedback.textContent='';msg.textContent='';
      invoiceLink.hidden=true;invoiceLink.removeAttribute('href');
+     lavaPromo.hidden=true;copyLavaPromo.textContent='Скопировать промокод';
      continueFull.hidden=true;
    });
  }
@@ -138,12 +166,20 @@ function openCheckout(){
    try{
      const c=codes();
      if(!c.promo&&!c.ref){external();modal.hidden=true;return;}
-     if(!checked&&!(await check())){if(!continueFull.hidden)continueFull.focus();return;}
+     if(!checked&&!(await check())){
+       if(!lavaPromo.hidden){
+         // First purchase click should not be swallowed by local promo validation.
+         // No discount is claimed; the provider displays the payable price.
+         external();modal.hidden=true;return;
+       }
+       if(!continueFull.hidden)continueFull.focus();
+       return;
+     }
      if(!checked)return;
      if(c.promo&&!checked.promo_valid||c.ref&&!checked.ref_valid)return;
      if(c.promo&&Number(checked.discount_percent)>0){
        unsupportedDiscount(Number(checked.discount_percent));
-       continueFull.focus();return;
+       external();modal.hidden=true;return;
      }
      const db=clientForCheckout();
      const {data:{session}={}}=await db.auth.getSession();
@@ -169,7 +205,7 @@ function openCheckout(){
 document.addEventListener('click',event=>{
  const link=event.target.closest?.('a[href]');if(!link)return;
  // The explicit no-code fallback must not reopen this dialog.
- if(link.matches('.komi-checkout-direct'))return;
+ if(link.matches('.komi-checkout-direct, .komi-checkout-lava-open'))return;
  try{
    const url=new URL(link.href,location.href);
    if(url.hostname!=='app.lava.top'||!url.pathname.startsWith('/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/'))return;
