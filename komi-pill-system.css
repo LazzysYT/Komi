@@ -1,0 +1,100 @@
+/* KomiAnime · Monochrome pill & recessed-segment design system (2026-11-22)
+ * Additive visual layer. Do not replace existing actions, ids or form state.
+ */
+:root{--komi-pill-base:#09090B;--komi-pill-matte:#16161A;--komi-pill-graphite:#242429;--komi-pill-rail:#101013;--komi-pill-muted:#8E8E93;--komi-pill-white:#FFFFFF}
+:where(.komi-media-hub,.komi-studio-page,body:has(#store-filters)){--komi-control-radius:999px}
+.komi-media-hub :is(.komi-catalog-category-pills,.komi-catalog-sort-tabs,.komi-catalog-chips,.komi-catalog-genre-scroll,.sv3-category-tabs,.komi-friends-tabs,.komi-home-leaderboard-tabs,.profile-section-tabs,.profile-nav-tabs,.profile-tabs,.premium-tabs),
+:where(body:has(#store-filters)) :is(#store-filters,.store-filters,.studio-tabs){
+  display:flex;align-items:center;gap:7px;min-width:0;overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-width:none;-ms-overflow-style:none;
+}
+.komi-media-hub :is(.komi-catalog-category-pills,.komi-catalog-sort-tabs,.komi-catalog-chips,.komi-catalog-genre-scroll,.sv3-category-tabs,.komi-friends-tabs,.komi-home-leaderboard-tabs,.profile-section-tabs,.profile-nav-tabs,.profile-tabs,.premium-tabs)::-webkit-scrollbar,
+:where(body:has(#store-filters)) :is(#store-filters,.store-filters,.studio-tabs)::-webkit-scrollbar{display:none}
+.komi-media-hub :is(.komi-catalog-category-pills button,.sv3-category-tabs button,.komi-catalog-chips button,.komi-friends-tabs button,.profile-section-tabs button,.profile-nav-tabs button,.profile-tabs button,.premium-tabs button,.komi-catalog-genre-tag),
+:where(body:has(#store-filters)) :is(#store-filters button,.store-filters button,.studio-tabs button){
+  appearance:none;flex:0 0 auto;white-space:nowrap;border-radius:999px!important;min-height:44px;padding:13px 26px!important;
+  border:1px solid rgba(255,255,255,.07)!important;background:#16161A!important;color:#8E8E93!important;
+  box-shadow:none!important;font-family:Manrope,Inter,sans-serif!important;font-size:13px!important;font-weight:800!important;
+  line-height:1.2!important;letter-spacing:-.01em;cursor:pointer;transition:background .18s,color .18s,transform .12s,box-shadow .18s;
+}
+.komi-media-hub :is(.komi-catalog-category-pills button,.sv3-category-tabs button,.komi-catalog-chips button,.komi-friends-tabs button,.profile-section-tabs button,.profile-nav-tabs button,.profile-tabs button,.premium-tabs button,.komi-catalog-genre-tag):is(.active,.is-active,[aria-pressed="true"],[aria-selected="true"]),
+:where(body:has(#store-filters)) :is(#store-filters button,.store-filters button,.studio-tabs button):is(.active,.is-active,[aria-pressed="true"],[aria-selected="true"]){
+  background:#FFFFFF!important;color:#09090B!important;border-color:#FFFFFF!important;
+  box-shadow:0 4px 20px rgba(255,255,255,.16)!important
+}
+.komi-media-hub :is(.komi-catalog-category-pills button,.sv3-category-tabs button,.komi-catalog-chips button,.komi-friends-tabs button,.profile-section-tabs button,.profile-nav-tabs button,.profile-tabs button,.premium-tabs button,.komi-catalog-genre-tag):active,
+:where(body:has(#store-filters)) :is(#store-filters button,.store-filters button,.studio-tabs button):active{transform:scale(.95)}
+.komi-media-hub :is(.komi-catalog-sort-tabs,.komi-home-leaderboard-tabs,.komi-catalog-mini-segment,.komi-profile-subtabs,.season-tabs,.player-source-tabs),
+:where(body:has(#store-filters)) :is(.sv3-filter-actions .studio-segments,.store-subtabs){
+  display:flex;align-items:center;gap:4px;flex-wrap:nowrap;min-width:0;width:max-content;max-width:100%;
+  padding:5px!important;border-radius:999px!important;border:1px solid #242429!important;background:#101013!important;
+  box-shadow:inset 0 2px 6px rgba(0,0,0,.32)!important;overflow-x:auto;scrollbar-width:none
+}
+.komi-media-hub :is(.komi-catalog-sort-tabs,.komi-home-leaderboard-tabs,.komi-catalog-mini-segment,.komi-profile-subtabs,.season-tabs,.player-source-tabs)::-webkit-scrollbar{display:none}
+.komi-media-hub :is(.komi-catalog-sort-tabs,.komi-home-leaderboard-tabs,.komi-catalog-mini-segment,.komi-profile-subtabs,.season-tabs,.player-source-tabs) button{
+  appearance:none;flex:0 0 auto;min-height:34px;white-space:nowrap;padding:9px 16px!important;
+  border:1px solid transparent!important;border-radius:999px!important;background:transparent!important;color:#8E8E93!important;
+  box-shadow:none!important;font:800 12px/1.2 Manrope,Inter,sans-serif!important;
+  cursor:pointer;transition:background .18s,color .18s,transform .12s;
+}
+.komi-media-hub :is(.komi-catalog-sort-tabs,.komi-home-leaderboard-tabs,.komi-catalog-mini-segment,.komi-profile-subtabs,.season-tabs,.player-source-tabs) button:is(.active,.is-active,[aria-pressed="true"],[aria-selected="true"]){
+  color:#FFFFFF!important;background:#242429!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 3px 9px #0006!important
+}
+.komi-media-hub :is(.komi-catalog-sort-tabs,.komi-home-leaderboard-tabs,.komi-catalog-mini-segment,.komi-profile-subtabs,.season-tabs,.player-source-tabs) button:active{transform:scale(.95)}
+.komi-media-hub :is(.btn-secondary,.btn-glow,.btn-glow-secondary,.komi-catalog-clear,.komi-mobile-filter-trigger,.section-see-all,.komi-home-all,.sv3-outline-btn,.sv3-filter-actions button,.komi-friend-rooms-heading button,.komi-friend-room-join,.komi-roulette-actions button,.komi-lab-btn){
+  border-radius:999px!important;font-family:Manrope,Inter,sans-serif!important;font-weight:800!important;
+  transition:transform .12s,background .18s,border-color .18s,box-shadow .18s;
+}
+.komi-media-hub :is(.btn-secondary,.btn-glow,.btn-glow-secondary,.komi-catalog-clear,.komi-mobile-filter-trigger,.section-see-all,.komi-home-all,.sv3-outline-btn,.sv3-filter-actions button,.komi-friend-rooms-heading button,.komi-friend-room-join,.komi-roulette-actions button,.komi-lab-btn):active:not(:disabled){transform:scale(.95)}
+.komi-media-hub :is(select.form-control,.komi-catalog-filter-chip select,.sv3-filter-actions select,.komi-home-quick-dropdown select),
+:where(body:has(#store-filters)) :is(.store-filters select,.store-sort select,.studio-select){
+  appearance:none;-webkit-appearance:none;box-sizing:border-box;border-radius:999px!important;
+  min-height:43px;padding:10px 32px 10px 16px!important;color:#FFFFFF!important;background:#242429!important;
+  border:1px solid rgba(255,255,255,.1)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+  font:800 12px/1.2 Manrope,Inter,sans-serif!important;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23FFFFFF' stroke-width='2.4' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E")!important;
+  background-repeat:no-repeat!important;background-position:right 12px center!important;max-width:100%;
+}
+.komi-media-hub :is(button,select,input,[role="switch"]):focus-visible,
+:where(body:has(#store-filters)) :is(button,select,input,[role="switch"]):focus-visible{outline:2px solid #FFFFFF!important;outline-offset:3px!important}
+.komi-media-hub :is(button,select):disabled{opacity:.52;cursor:not-allowed}
+.komi-media-hub .komi-hub-catalog-toolbar.komi-catalog-v4{background:#09090B;color:#FFFFFF}
+.komi-media-hub .komi-catalog-category-pills{padding:5px 0 10px;gap:9px;margin:14px 0 5px}
+.komi-media-hub .komi-catalog-filter-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 0 15px}
+.komi-media-hub .komi-catalog-filter-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.komi-media-hub .komi-catalog-filter-chip{display:flex;align-items:center;position:relative}
+.komi-media-hub .komi-catalog-filter-chip select{width:auto;min-width:105px;max-width:min(40vw,180px);cursor:pointer}
+.komi-media-hub .komi-catalog-filter-chip :is(label,.komi-sr-only){position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.komi-media-hub .komi-catalog-hide-switch{display:inline-flex!important;align-items:center;flex:0 0 auto;gap:9px;
+  min-height:43px;margin:0!important;border:1px solid rgba(255,255,255,.1)!important;
+  border-radius:999px!important;background:#16161A!important;color:#E4E4E7!important;
+  padding:6px 15px!important;font:800 12px Manrope,Inter,sans-serif!important;cursor:pointer}
+.komi-media-hub .komi-catalog-hide-switch input{accent-color:#FFFFFF;min-width:17px;width:17px;height:17px}
+.komi-media-hub .komi-catalog-hide-switch:has(input:checked){background:#242429!important;color:#fff!important;border-color:#606067!important}
+.komi-media-hub .komi-home-community-panel{background:#16161A!important;border:1px solid #2A2A30!important;border-radius:22px!important}
+.komi-media-hub .komi-home-leaderboard-tabs{margin:0 0 13px;width:max-content}
+.komi-media-hub .komi-leaderboard-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.komi-media-hub .komi-leaderboard-person{display:flex;align-items:center;gap:10px;min-width:0;min-height:75px;
+  padding:12px;background:#242429;border:1px solid rgba(255,255,255,.08);border-radius:17px;color:#fff;text-decoration:none}
+.komi-media-hub .komi-leaderboard-index{font:800 14px Manrope,Inter,sans-serif;color:#8E8E93}
+.komi-media-hub .komi-leaderboard-avatar{width:42px;height:42px;flex:0 0 42px;object-fit:cover;border-radius:50%;background:#101013}
+.komi-media-hub .komi-leaderboard-person-data{min-width:0;display:flex;flex:1;flex-direction:column;gap:4px}
+.komi-media-hub .komi-leaderboard-person-data strong{font:800 12px Manrope,Inter,sans-serif;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+.komi-media-hub .komi-leaderboard-person-data small{color:#B6B6BD;font:700 11px Inter,sans-serif}
+.komi-media-hub .komi-leaderboard-value{font:800 16px Manrope,Inter,sans-serif;white-space:nowrap}
+.komi-media-hub .komi-leaderboard-status{padding:15px;border-radius:16px;background:#101013;color:#A6A6AE;font:600 12px/1.5 Inter,sans-serif}
+.komi-media-hub .komi-leaderboard-optin{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:9px;margin-top:12px;color:#A0A0A8;font:600 11px/1.4 Inter,sans-serif}
+.komi-media-hub .komi-leaderboard-optin button{border-radius:999px;min-height:36px;padding:9px 16px;border:1px solid #44444A;background:#242429;color:#fff;font:800 12px Manrope,Inter,sans-serif;cursor:pointer}
+.komi-media-hub .komi-leaderboard-optin button:active{transform:scale(.95)}
+@media(max-width:850px){.komi-media-hub .komi-leaderboard-list{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ .komi-media-hub :is(.komi-catalog-category-pills,.komi-catalog-chips,.komi-catalog-genre-scroll,.sv3-category-tabs,.komi-home-leaderboard-tabs,.profile-section-tabs,.profile-nav-tabs){flex-wrap:nowrap;max-width:100%;overflow-x:auto;scrollbar-width:none}
+ .komi-media-hub .komi-catalog-category-pills{margin:10px -3px 5px;padding:4px 3px 9px}
+ .komi-media-hub .komi-catalog-category-pills button{padding:12px 19px!important;min-height:42px}
+ .komi-media-hub .komi-catalog-filter-controls{flex-direction:column;align-items:stretch;gap:9px}
+ .komi-media-hub .komi-catalog-filter-controls>.komi-catalog-sort-tabs{width:100%;max-width:100%;overflow-x:auto}
+ .komi-media-hub .komi-catalog-filter-chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;max-width:100%}
+ .komi-media-hub .komi-catalog-filter-chips::-webkit-scrollbar{display:none}
+ .komi-media-hub .komi-leaderboard-list{grid-template-columns:1fr}
+ .komi-media-hub .komi-leaderboard-person{min-height:65px}
+}
+@media(prefers-reduced-motion:reduce){.komi-media-hub :is(.komi-catalog-category-pills button,.komi-catalog-sort-tabs button,.komi-home-leaderboard-tabs button){transition:none!important}}
