@@ -1580,19 +1580,25 @@ body > header {
 .komi-partners-actions a{text-decoration:none;padding:12px 17px;border:1px solid #444;border-radius:13px;background:#252525;color:#f4f4f4;font-weight:700;font-size:12px}
 .komi-partners-actions a:hover{background:#353535;border-color:#bbb}
 
-/* Partner profile cards */
-.komi-partner-list{display:grid;gap:11px;list-style:none;margin:20px 0 0;padding:0}
+/* Partner profile cards — TikTok creator showcase */
+.komi-partner-list{display:grid;gap:14px;list-style:none;margin:20px 0 0;padding:0}
 .komi-partner-list li{min-width:0}
-.komi-partner-link{display:flex;align-items:center;gap:13px;min-width:0;min-height:78px;padding:12px 15px;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:#1e1e1e;color:#fff;text-decoration:none;transition:background .2s,border-color .2s,transform .2s}
-.komi-partner-link:hover{background:#292929;border-color:rgba(255,255,255,.42);transform:translateY(-2px)}
-.komi-partner-link:focus-visible{outline:2px solid #fff;outline-offset:3px}
-.komi-partner-avatar{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border-radius:15px;background:#0b0b0b;border:1px solid #414141;color:#fff;font-size:21px;font-weight:800}
-.komi-partner-copy{display:grid;min-width:0;gap:5px}
-.komi-partner-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:800;letter-spacing:-.02em}
-.komi-partner-copy small{font-size:12px;line-height:1.4;color:#a8a8a8}
-.komi-partner-arrow{margin-left:auto;flex:0 0 auto;color:#d5d5d5;font-size:23px;line-height:1}
-@media(max-width:400px){.komi-partner-link{gap:10px;padding:11px}.komi-partner-avatar{flex-basis:42px;width:42px;height:42px}.komi-partner-copy strong{font-size:14px}.komi-partner-copy small{font-size:11px}}
-@media(prefers-reduced-motion:reduce){.komi-partner-link{transition:none}.komi-partner-link:hover{transform:none}}
+.komi-partner-card{position:relative;display:grid;gap:17px;min-width:0;padding:18px;border:1px solid #343438;border-radius:22px;background:linear-gradient(135deg,#242427 0%,#171719 58%,#141416 100%);color:#fff;text-decoration:none;transition:transform .2s,border-color .2s,background .2s,box-shadow .2s}
+.komi-partner-card:hover{border-color:#777;transform:translateY(-2px);box-shadow:0 13px 34px rgba(0,0,0,.27)}
+.komi-partner-card:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.komi-partner-card-top{display:flex;align-items:center;justify-content:space-between;gap:10px;min-width:0}
+.komi-partner-platform{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#bdbdc2}
+.komi-partner-status{flex-shrink:0;padding:6px 11px;border:1px solid #515158;border-radius:999px;background:#303034;font-size:11px;line-height:1;color:#f6f6f6;font-weight:700}
+.komi-partner-card-body{display:flex;align-items:center;gap:16px;min-width:0}
+.komi-partner-avatar-photo{display:block;flex:0 0 76px;width:76px;height:76px;object-fit:cover;object-position:center;border-radius:50%;border:2px solid #68686e;background:#080808;box-shadow:0 0 0 4px rgba(255,255,255,.045)}
+.komi-partner-card-name{display:grid;gap:6px;min-width:0}
+.komi-partner-card-name strong{font-size:clamp(19px,2vw,24px);font-weight:800;letter-spacing:-.04em;color:#fff;overflow-wrap:anywhere;line-height:1.15}
+.komi-partner-card-name small{font-size:13px;color:#a7a7ad;overflow-wrap:anywhere}
+.komi-partner-card-cta{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:42px;padding:11px 17px;border-radius:999px;background:#fff;color:#111;font-size:13px;font-weight:800;line-height:1.15;transition:background .2s}
+.komi-partner-card:hover .komi-partner-card-cta{background:#e4e4e7}
+.komi-partner-card-cta span{font-size:20px;line-height:1}
+@media(max-width:400px){.komi-partner-card{padding:15px;gap:15px}.komi-partner-card-body{gap:12px}.komi-partner-avatar-photo{flex-basis:64px;width:64px;height:64px}.komi-partner-card-name strong{font-size:20px}.komi-partner-card-name small{font-size:12px}}
+@media(prefers-reduced-motion:reduce){.komi-partner-card,.komi-partner-card-cta{transition:none}.komi-partner-card:hover{transform:none}}
 @media(max-width:680px){
 .komi-partners-grid{grid-template-columns:1fr}
 .komi-partners-panel{padding:21px}

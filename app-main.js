@@ -1549,17 +1549,23 @@ async function loadDataFromCloud(attempt = 0) {
                                 <p>Наши TikTok-партнёры. Поддержите их и познакомьтесь с их страницами.</p>
                                 <ul class="komi-partner-list">
                                     <li>
-                                        <a class="komi-partner-link" href="https://www.tiktok.com/@vidciten" target="_blank" rel="noopener noreferrer" aria-label="TikTok партнёра @vidciten (открыть в новой вкладке)">
-                                            <span class="komi-partner-avatar" aria-hidden="true">V</span>
-                                            <span class="komi-partner-copy"><strong>@vidciten</strong><small>TikTok · Партнёр Komi Anime</small></span>
-                                            <span class="komi-partner-arrow" aria-hidden="true">↗</span>
+                                        <a class="komi-partner-card" href="https://www.tiktok.com/@vidciten" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр vidci10, @vidciten — открыть профиль в новой вкладке">
+                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
+                                            <span class="komi-partner-card-body">
+                                                <img class="komi-partner-avatar-photo" src="/assets/partners/vidci10.jpg" alt="Аватар vidci10 — серый кот" width="76" height="76" loading="lazy" decoding="async">
+                                                <span class="komi-partner-card-name"><strong>vidci10</strong><small>@vidciten</small></span>
+                                            </span>
+                                            <span class="komi-partner-card-cta">Открыть TikTok <span aria-hidden="true">↗</span></span>
                                         </a>
                                     </li>
                                     <li>
-                                        <a class="komi-partner-link" href="https://www.tiktok.com/@plimbka.ppka" target="_blank" rel="noopener noreferrer" aria-label="TikTok партнёра @plimbka.ppka (открыть в новой вкладке)">
-                                            <span class="komi-partner-avatar" aria-hidden="true">P</span>
-                                            <span class="komi-partner-copy"><strong>@plimbka.ppka</strong><small>TikTok · Партнёр Komi Anime</small></span>
-                                            <span class="komi-partner-arrow" aria-hidden="true">↗</span>
+                                        <a class="komi-partner-card" href="https://www.tiktok.com/@plimbka.ppka" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр Plimbka, @plimbka.ppka — открыть профиль в новой вкладке">
+                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
+                                            <span class="komi-partner-card-body">
+                                                <img class="komi-partner-avatar-photo" src="/assets/partners/plimbka.jpg" alt="Аватар Plimbka — нарисованный персонаж в капюшоне" width="76" height="76" loading="lazy" decoding="async">
+                                                <span class="komi-partner-card-name"><strong>Plimbka</strong><small>@plimbka.ppka</small></span>
+                                            </span>
+                                            <span class="komi-partner-card-cta">Открыть TikTok <span aria-hidden="true">↗</span></span>
                                         </a>
                                     </li>
                                 </ul>
