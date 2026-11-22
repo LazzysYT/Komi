@@ -5,7 +5,7 @@ test('Premium markers only reflect trusted membership reads',()=>{
  const ui=read('komi-premium.js'),app=read('app-main.js');
  assert.match(ui,/komi_premium_badges/);assert.match(ui,/select\('user_id'\)/);
  assert.doesNotMatch(ui,/\.insert\(|\.upsert\(|\.update\(|service_role|localStorage/);
- assert.match(app,/data-komi-premium-panel/);assert.match(app,/data-komi-premium-username/);
+ assert.doesNotMatch(app,/data-komi-premium-panel|KOMI PREMIUM · ACTIVE/);assert.match(app,/data-komi-premium-username/);
  assert.match(read('komi-comments.js'),/name\.dataset\.komiPremiumId/);
  assert.match(read('index.html'),/komi-premium\.js/);
 });
