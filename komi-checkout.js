@@ -67,14 +67,22 @@ function openCheckout(){
  const continueFull=node('button','Продолжить за $2.01/мес без скидки','komi-checkout-continue');
  continueFull.type='button';continueFull.hidden=true;
  const noCodes=node('a','Оформить напрямую в Lava.top (без кодов)','komi-checkout-direct');
+ const invoiceLink=node('a','Открыть подготовленный счёт Lava.top','komi-checkout-invoice');
+ invoiceLink.hidden=true;invoiceLink.rel='noopener noreferrer';
  noCodes.href=CHECKOUT;noCodes.target='_blank';noCodes.rel='noopener noreferrer';
  actions.append(apply,pay);
  const footer=node('p','После оплаты доступ активирует подтверждённый webhook Lava.top, не экран возврата.','komi-checkout-footnote');
- box.append(top,subtitle,fields,summary,info,actions,msg,continueFull,noCodes,footer);modal.append(box);
+ box.append(top,subtitle,fields,summary,info,actions,msg,continueFull,invoiceLink,noCodes,footer);modal.append(box);
  document.body.append(modal);
  modal.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true;});
  function codes(){return {promo:clean(promo.input.value),ref:clean(referral.input.value)};}
  let checked=null;
+ function unsupportedDiscount(percent){
+   // The fixed $2.01 recurring offer cannot use the local percentage discount.
+   // Show the actual total and require consent before removing the discount.
+   msg.textContent='Промокод на скидку '+percent+'% нельзя применить к подписке за $2.01/мес: Lava.top не разрешает снижать оплату ниже минимальной суммы для скидочных покупок. Скидка НЕ будет списана или зачтена. Можно оплатить $2.01/мес без скидки, сохранив реферальный код.';
+   continueFull.hidden=false;
+ }
  async function check(){
    const c=codes();checked=null;
    promo.feedback.textContent='';referral.feedback.textContent='';msg.textContent='';
@@ -92,14 +100,13 @@ function openCheckout(){
    if(error){msg.textContent='Не удалось проверить коды: '+error.message;return false;}
    checked=data;
    if(c.promo)promo.feedback.textContent=data.promo_valid?
-     (Number(data.discount_percent)>0?'✓ Скидка '+data.discount_percent+'% · доступна только для поддерживаемых разовых тарифов':'✓ +'+data.bonus_anicoin+' AniCoin после оплаты'):
+     (Number(data.discount_percent)>0?'✓ Код найден · скидка '+data.discount_percent+'% недоступна для этого тарифа':'✓ +'+data.bonus_anicoin+' AniCoin после оплаты'):
      (data.promo_error||'Промокод не найден');
    if(c.ref)referral.feedback.textContent=data.ref_valid?'✓ Партнёр: '+data.owner_name:
      (data.ref_error||'Реферальный код недействителен');
    if(c.promo&&!data.promo_valid||c.ref&&!data.ref_valid)return false;
    if(c.promo&&Number(data.discount_percent)>0){
-      msg.textContent='Скидка '+Number(data.discount_percent)+'% не применяется к ежемесячной подписке. Можно перейти к оплате за $2.01/мес без скидки, сохранив реферальный код.';
-      continueFull.hidden=false;
+      unsupportedDiscount(Number(data.discount_percent));
       return false;
    }
    if(c.ref)try{localStorage.setItem('komi_ref_code',c.ref);}catch{}
@@ -109,6 +116,7 @@ function openCheckout(){
  for(const field of [promo,referral]){
    field.input.addEventListener('input',()=>{
      checked=null;field.feedback.textContent='';msg.textContent='';
+     invoiceLink.hidden=true;invoiceLink.removeAttribute('href');
      continueFull.hidden=true;
    });
  }
@@ -117,8 +125,11 @@ function openCheckout(){
  continueFull.onclick=()=>{
    if(busy)return;
    promo.input.value='';
-   promo.feedback.textContent='Скидочный промокод исключён из заказа';
+   promo.feedback.textContent='Скидка исключена: к оплате $2.01/мес';
    checked=null;continueFull.hidden=true;
+   // Avoid needing the invoice API when neither code is to be applied.
+   // Referral attribution still goes through the authenticated server flow.
+   if(!codes().ref){external();modal.hidden=true;return;}
    pay.click();
  };
  pay.onclick=async()=>{
@@ -127,10 +138,13 @@ function openCheckout(){
    try{
      const c=codes();
      if(!c.promo&&!c.ref){external();modal.hidden=true;return;}
-     if(!checked&&!(await check()))return;
+     if(!checked&&!(await check())){if(!continueFull.hidden)continueFull.focus();return;}
      if(!checked)return;
      if(c.promo&&!checked.promo_valid||c.ref&&!checked.ref_valid)return;
-     if(c.promo&&Number(checked.discount_percent)>0)return;
+     if(c.promo&&Number(checked.discount_percent)>0){
+       unsupportedDiscount(Number(checked.discount_percent));
+       continueFull.focus();return;
+     }
      const db=clientForCheckout();
      const {data:{session}={}}=await db.auth.getSession();
      if(!session?.access_token){msg.textContent='Войди в аккаунт для применения кодов.';return;}
@@ -144,6 +158,8 @@ function openCheckout(){
      const uri=new URL(String(data.payment_url||''));
      if(uri.protocol!=='https:'||!(uri.hostname==='lava.top'||uri.hostname.endsWith('.lava.top')))
        throw Error('Платёжный адрес не подтверждён');
+     invoiceLink.href=uri.href;invoiceLink.hidden=false;
+     msg.textContent='Счёт создан. Если автоматический переход не произошёл, нажми «Открыть подготовленный счёт Lava.top».';
      window.location.assign(uri.href);
    }catch(e){msg.textContent=e?.message||'Не удалось создать счёт';}
    finally{busy=false;pay.disabled=false;pay.textContent='Перейти к оплате';}
