@@ -176,8 +176,10 @@ test('shop V4 follows monochrome sticker reference while preserving all purchase
  assert.match(container.innerHTML,/Готовые наборы/);
  assert.match(container.innerHTML,/sv4-hero/);
  assert.match(container.innerHTML,/sv4-sticker/);
- assert.ok((container.innerHTML.match(/class="komi-sticker-icon"/g)||[]).length>=80,
-   'Icon kit should be present on product actions and feature badges');
+ const vectorCount=(container.innerHTML.match(/class="komi-sticker-icon"/g)||[]).length;
+ const tryCount=(container.innerHTML.match(/data-v3-try="/g)||[]).length;
+ assert.ok(vectorCount>=tryCount+6,
+   'Icon kit should cover all visible try-on buttons and six feature badges');
  assert.match(html,/komi-shop-icons\.js\?v=20261122h/);
  assert.match(html,/komi-shop-v3\.js\?v=20261122h/);
  assert.match(html,/komi-shop-social\.js\?v=20261122h/);
