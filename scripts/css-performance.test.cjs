@@ -10,17 +10,15 @@ test('one generated base bundle plus intentional mobile overrides retain exact c
   const stylesheetLinks=[...html.matchAll(/<link\s+[^>]*rel="stylesheet"[^>]*href="([^"]+)"/g)]
     .map(match=>match[1]);
   const localStyles=stylesheetLinks.filter(href=>href.startsWith('/'));
-  assert.deepEqual(localStyles.map(href=>href.split('?')[0]),[
-    '/komi.bundle.css','/mobile-home-polish.css','/mobile-catalog-dock.css',
-    '/catalog-comfort.css','/player-comfort.css','/mobile-bottom-sheets.css',
-    '/auth-dialog.css','/catalog-discovery-v4.css','/community-search.css','/komi-checkout.css'
-  ]);
+  assert.deepEqual(localStyles.map(href=>href.split('?')[0]),['/komi.production.css']);
   for(const href of localStyles) assert.match(href,/\.css\?v=\d+[a-z]?$/);
   const all=builder.sources;
   assert.equal(all.at(-3),'komi-media-hub.css');
   assert.equal(all.at(-2),'komi-black-white.css');
   assert.equal(all.at(-1),'profile-premium-mono.css');
   assert.equal(fs.readFileSync(path.join(root,'komi.bundle.css'),'utf8'),builder.buildCSS());
+  const production=require('./build-production-css.cjs');
+  assert.equal(fs.readFileSync(path.join(root,'komi.production.css'),'utf8'),production.buildCSS());
 });
 test('mobile CSS profile rules and preconnections are included',()=>{
   const css=builder.buildCSS();
