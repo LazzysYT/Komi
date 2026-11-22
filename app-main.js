@@ -844,6 +844,9 @@ async function loadDataFromCloud(attempt = 0) {
             };
             return '<section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">' +
                 '<h2 class="section-title" id="komiHomeQuickFiltersTitle">Каталог аниме</h2>' +
+                '<div class="komi-catalog-category-pills komi-home-quick-categories" role="group" aria-label="Категории каталога">' +
+                [['all','Всё'],['ongoing','Онгоинги'],['series','Сериалы'],['movies','Фильмы'],['top100','Топ 100']].map(([key,label]) =>
+                    '<button type="button" data-komi-home-category="'+key+'" aria-pressed="'+(key==='all')+'">'+label+'</button>').join('') + '</div>' +
                 '<div class="catalog-filters-box" role="group" aria-label="Быстрые фильтры">' +
                 field('genre','Жанр',genreOptions.map(g => option(g,g))) +
                 field('year','Год',years.map(y => option(y,y))) +
@@ -857,6 +860,21 @@ async function loadDataFromCloud(attempt = 0) {
                 ]) + '</div>' +
                 '<button type="button" class="section-see-all" title="Открыть полную панель фильтрации каталога" aria-label="Все фильтры в каталоге аниме" data-komi-onclick="komiOpenFullCatalogFilters()">Все фильтры</button></section>';
         }
+        document.addEventListener('click', event => {
+            const button=event.target.closest?.('#komiHomeQuickFilters [data-komi-home-category]');
+            if(!button)return;
+            const value=button.dataset.komiHomeCategory;
+            if(!['all','ongoing','series','movies','top100'].includes(value))return;
+            catalogCategory=value;
+            catalogCollection='all';
+            catalogFilterType='Все';
+            catalogFilterGenre='Все';
+            catalogFilterYear='Все';
+            catalogSort=value==='top100'?'rating':'popular';
+            catalogSearchQuery='';
+            catalogVisibleCount=48;
+            navigate('catalog');
+        });
         document.addEventListener('change', event => {
             const select = event.target.closest?.('#komiHomeQuickFilters select[data-komi-home-filter]');
             if (!select || !select.value) return;
