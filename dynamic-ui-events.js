@@ -35,6 +35,7 @@
     "komiOpenFullCatalogFilters()":()=>komiOpenFullCatalogFilters(),
     "komiChooseCatalogGenre(this.dataset.komiGenre)":(_,el)=>komiChooseCatalogGenre(el.dataset.komiGenre),
     "komiChooseCatalogSort(this.dataset.komiSort)":(_,el)=>komiChooseCatalogSort(el.dataset.komiSort),
+    "komiChooseCatalogCategory(this.dataset.komiCategory)":(_,el)=>komiChooseCatalogCategory(el.dataset.komiCategory),
     "showMoreCatalog()":()=>showMoreCatalog(),
     "randomAnimeWithAnimation()":()=>randomAnimeWithAnimation(),
     "loadKomiEpisodeSchedule(true)":()=>loadKomiEpisodeSchedule(true),
