@@ -2075,7 +2075,7 @@ async function loadDataFromCloud(attempt = 0) {
                             <p class="profile-bio" data-profile-field="bio">${safeProfileText(p.bio || 'Твоя история в мире аниме.')}</p>
                             <div class="profile-badges-row">
                                 <span class="profile-badge-item" data-profile-presence>${safeProfileText(p.status || 'Люблю аниме')}</span>
-                                <span class="profile-badge-item">◉ Друзей: ${myFriends.length}</span>
+                                <span class="profile-badge-item" data-profile-friends-count>◉ Друзей: ${myFriends.length}</span>
                                 ${tasteCompatibility}
                                 <span class="profile-badge-item profile-reg-date">С нами с ${escapeFriendHtml(p.regDate || 'Не указана')}</span>
                                 ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
@@ -2911,11 +2911,21 @@ async function loadDataFromCloud(attempt = 0) {
             const friendIds = friendships.data.map(row => row.user_a === uid ? row.user_b : row.user_a);
             const ids = [...new Set([...friendIds, ...requests.data.map(row => row.sender_id), ...outgoing.data.map(row => row.receiver_id)])];
             const profiles = ids.length
-                ? await _supabase.from('komi_profiles').select('user_id,username').in('user_id', ids)
+                ? await _supabase.from('komi_profiles').select('user_id,username,display_name,avatar_url').in('user_id', ids)
                 : { data: [] };
             if (profiles.error) throw profiles.error;
             if (currentUser?.authUserId !== uid) return;
-            const names = new Map(profiles.data.map(row => [row.user_id, row.username]));
+            const profileRows = profiles.data || [];
+            const names = new Map(profileRows.filter(row => row.username).map(row => [row.user_id, row.username]));
+            // Google usernames are internal ownership keys, not display labels.
+            for (const row of profileRows) {
+                if (!row.username) continue;
+                const profile = userProfiles[row.username] || (userProfiles[row.username] = {});
+                const displayName = typeof row.display_name === 'string' ? row.display_name.trim() : '';
+                profile.displayName = displayName.slice(0, 40);
+                profile.avatar = komiSafeAvatarUrl(row.avatar_url) ||
+                    'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(row.username);
+            }
             protectedFriendList = {
                 owner: uid,
                 idsByName: new Map(friendIds.filter(id => names.has(id)).map(id => [names.get(id), id]))
@@ -2929,6 +2939,8 @@ async function loadDataFromCloud(attempt = 0) {
             }));
             updateNotificationsUI();
             renderFriendsDrawer();
+            // Update only the friend widget; avoid resetting profile forms and scroll.
+            window.KomiProfileUI?.refreshFriends?.(friendsFor(currentUser.username));
             window.KomiFriendRooms?.refresh();
         }
 
