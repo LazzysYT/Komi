@@ -119,3 +119,42 @@ test('cart only charges purchases successfully inserted, even when a gift arrive
  assert.match(racePatch,/'spent',v_spent/);
  assert.match(racePatch,/v_wallet\.balance<v_total/);
 });
+
+test('shop layout overrides the site-wide sticky header and keeps categories in one row',()=>{
+ assert.match(css,/#mainContainer > #shop\.komi-shop-v3 > header\.sv3-topbar/);
+ assert.match(css,/position:relative!important/);
+ assert.match(css,/\.sv3-category-tabs\{[\s\S]*?flex-wrap:nowrap/);
+ assert.match(css,/\.sv3-product-grid\{[\s\S]*?grid-template-columns:repeat\(auto-fit/);
+ assert.match(html,/komi-shop-v3\.css\?v=20261122f/);
+});
+test('shop avatars match verified Premium GIF rather than stale normal photo',()=>{
+ const start=core.indexOf('function aniCoinCurrentProfileAvatar(');
+ const end=core.indexOf("window.addEventListener('komi:premium-refreshed'",start);
+ assert.ok(start>=0&&end>start);
+ const snippet=core.slice(start,end);
+ const premium={
+   isActiveId:id=>id==='owner-1',
+   getMediaForId:id=>id==='owner-1'?{avatar_path:'owner-1/current.gif'}:null
+ };
+ const mock={
+  URL,
+  currentUser:{authUserId:'owner-1'},
+  window:{KomiPremium:premium},
+  _supabase:{storage:{from:bucket=>({
+    getPublicUrl:path=>({data:{publicUrl:'https://cdn.komi.test/'+bucket+'/'+path}})
+  })}}
+ };
+ vm.createContext(mock);
+ vm.runInContext(snippet,mock);
+ assert.equal(mock.aniCoinCurrentProfileAvatar('owner-1','https://cdn.komi.test/old.jpg'),
+   'https://cdn.komi.test/avatars/owner-1/current.gif');
+ assert.equal(mock.aniCoinCurrentProfileAvatar('owner-2','https://cdn.komi.test/other.jpg'),'',
+   'Never reuse a different owner avatar');
+ mock.window.KomiPremium.isActiveId=()=>false;
+ assert.equal(mock.aniCoinCurrentProfileAvatar('owner-1','https://cdn.komi.test/static.jpg'),
+   'https://cdn.komi.test/static.jpg');
+ const p=read('komi-premium.js');
+ assert.match(p,/komi:premium-refreshed/);
+ assert.match(core,/window\.addEventListener\('komi:premium-refreshed'/);
+ assert.match(html,/komi-premium\.js\?v=20261122f/);
+});

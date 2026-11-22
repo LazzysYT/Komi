@@ -11,6 +11,7 @@ let aniCoinShopCategory='all';
 let aniCoinShopStatus='';
 let aniCoinShopFailedFor='';
 let aniCoinShopAvatar='';
+let aniCoinShopRegularAvatar='';
 let aniCoinShopDisplayName='Пользователь Komi';
 let aniCoinWallet;
 let aniCoinOwner;
@@ -69,11 +70,35 @@ async function openAniCoinShop() {
     }
 }
 
+// Match the main profile avatar: active Premium GIF takes precedence over the
+// regular Supabase profile photo. Never reuse an avatar from a previous account.
+function aniCoinCurrentProfileAvatar(id,base='') {
+    const regular=typeof base==='string'&&/^https:\/\//i.test(base)?base:'';
+    if(!id||currentUser?.authUserId!==id)return '';
+    const premium=window.KomiPremium;
+    if(!premium?.isActiveId?.(id))return regular;
+    const path=premium.getMediaForId?.(id)?.avatar_path;
+    if(typeof path!=='string'||!path||!_supabase?.storage)return regular;
+    try{
+        const url=_supabase.storage.from('avatars').getPublicUrl(path).data?.publicUrl||'';
+        const parsed=new URL(url);
+        return parsed.protocol==='https:'&&!parsed.username&&!parsed.password?parsed.href:regular;
+    }catch{return regular;}
+}
+window.addEventListener('komi:premium-refreshed',()=>{
+    const id=currentUser?.authUserId;
+    if(!id||id!==aniCoinShopOwner||currentView!=='shop')return;
+    const preferred=aniCoinCurrentProfileAvatar(id,aniCoinShopRegularAvatar);
+    if(preferred===aniCoinShopAvatar)return;
+    aniCoinShopAvatar=preferred;
+    renderAniCoinShop(document.getElementById('mainContainer'));
+});
+
 async function aniCoinLoadStore(id) {
     if (!id || !_supabase || currentUser?.authUserId!==id || aniCoinShopLoading) return;
     aniCoinShopLoading=true;
     aniCoinShopFailedFor='';
-    aniCoinShopAvatar='';aniCoinShopDisplayName='Пользователь Komi';
+    aniCoinShopAvatar='';aniCoinShopRegularAvatar='';aniCoinShopDisplayName='Пользователь Komi';
     try {
         const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
         if (error) throw error;
@@ -83,9 +108,14 @@ async function aniCoinLoadStore(id) {
         const profile=await _supabase.from('komi_profiles').select('username,display_name,avatar_url').eq('user_id',id).maybeSingle();
         if(currentUser?.authUserId===id && !profile.error && profile.data){
             const url=profile.data.avatar_url;
-            aniCoinShopAvatar=typeof url==='string' && /^https:\/\//i.test(url) ? url : '';
+            aniCoinShopRegularAvatar=typeof url==='string' && /^https:\/\//i.test(url) ? url : '';
             aniCoinShopDisplayName=String(profile.data.display_name||profile.data.username||'Пользователь Komi').slice(0,50);
         }
+        // Premium profile media may load after the wallet; read its verified
+        // public avatar before painting the fitting room to avoid stale GIFs.
+        try{await window.KomiPremium?.refresh?.(false);}catch{}
+        if(currentUser?.authUserId!==id)return;
+        aniCoinShopAvatar=aniCoinCurrentProfileAvatar(id,aniCoinShopRegularAvatar);
     } catch(error) {
         if (currentUser?.authUserId===id) {
             aniCoinShopStatus=error?.message||'Не удалось загрузить магазин.';

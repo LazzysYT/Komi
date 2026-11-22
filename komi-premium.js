@@ -137,6 +137,8 @@ async function refresh(force){
    if(old!==stamp()&&typeof currentView!=='undefined'&&
      (currentView==='premium'||currentView==='profile')&&typeof render==='function')render();
    apply(document);
+   // Inform in-page previews that the verified Premium avatar may have changed.
+   window.dispatchEvent(new CustomEvent('komi:premium-refreshed'));
    window.KomiPremiumThemes?.refresh();
    window.KomiPremiumDecor?.refresh();
    window.KomiPremiumStore?.refresh();

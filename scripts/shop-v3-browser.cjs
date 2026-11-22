@@ -8,7 +8,7 @@ const output=path.resolve('browser-test-results');
 fs.mkdirSync(output,{recursive:true});
 (async()=>{
  const browser=await chromium.launch({headless:true});
- const page=await browser.newPage({viewport:{width:1360,height:900}});
+ const page=await browser.newPage({viewport:{width:1600,height:900}});
  const shop=page.locator('#shop.komi-shop-v3');
  try{
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
@@ -18,6 +18,28 @@ fs.mkdirSync(output,{recursive:true});
    assert.ok((await page.locator('#shop .sv3-primary-buy').first().innerText()).includes('Войти'),
      'Guest buy action must request login');
    assert.equal(await page.locator('#shop .sv3-bento>article').count(),2);
+   const geometry=await page.evaluate(()=>{
+     const section=document.querySelector('#shop.komi-shop-v3');
+     const top=section.querySelector('.sv3-topbar');
+     const featured=section.querySelector('.sv3-bento');
+     const tabs=section.querySelector('.sv3-filters');
+     const grid=section.querySelector('.sv3-product-grid');
+     const box=e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height,width:r.width};};
+     return {headerPosition:getComputedStyle(top).position,
+       header:box(top),bento:box(featured),filters:box(tabs),
+       columns:getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
+       horizontalOverflow:document.documentElement.scrollWidth>window.innerWidth+2};
+   });
+   assert.equal(geometry.headerPosition,'relative',
+     'Legacy site header must not make the inner shop topbar sticky');
+   assert.ok(geometry.header.bottom+8<=geometry.bento.top,
+     'Shop topbar must never overlap weekly Bento cards: '+JSON.stringify(geometry));
+   assert.ok(geometry.filters.height<=90,
+     'Desktop filter tabs should stay on one row: '+JSON.stringify(geometry));
+   assert.ok(geometry.columns>=3,
+     'Desktop shelf should use the available width: '+JSON.stringify(geometry));
+   assert.equal(geometry.horizontalOverflow,false,'Desktop storefront should not overflow horizontally');
+
    await page.locator('#shop [data-v3-try="frame_moon"]').click();
    assert.ok((await page.locator('#shop .sv3-selection-list').innerText()).includes('Лунная рамка'),
      'Try-on must retain selected frame without purchase');
@@ -44,6 +66,14 @@ fs.mkdirSync(output,{recursive:true});
    assert.ok(await fitting.evaluate(el=>el.classList.contains('is-open')),
      'Mobile fitting room should expand');
    assert.equal(await page.locator('#shop .sv3-fitting-body').isVisible(),true);
+   const mobileGeometry=await page.evaluate(()=>({
+     headerPosition:getComputedStyle(document.querySelector('#shop .sv3-topbar')).position,
+     horizontalOverflow:document.documentElement.scrollWidth>window.innerWidth+2,
+     filtersHeight:document.querySelector('#shop .sv3-filters').getBoundingClientRect().height
+   }));
+   assert.equal(mobileGeometry.headerPosition,'relative');
+   assert.equal(mobileGeometry.horizontalOverflow,false,
+     'Mobile storefront must fit viewport width: '+JSON.stringify(mobileGeometry));
    await page.screenshot({path:path.join(output,'shop-v3-mobile.png'),fullPage:false});
    console.log('PASS Komi Shop V3 guest desktop + mobile: catalog, prices, filters, combo try-on, bottom sheet');
  }finally{await page.close();await browser.close();}
