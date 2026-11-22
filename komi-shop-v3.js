@@ -86,7 +86,7 @@ function preview(store,avatar,name){
  const current=type=>find(state.trial[type]||store?.[type+'_id'])||null;
  const frame=current('frame'),shape=current('shape'),title=current('title'),
  banner=current('banner'),overlay=current('overlay'),plate=current('plate'),nameStyle=current('name');
- const icon=current('icon'),xp=current('xp'),mascot=current('mascot');
+ const selectedIcon=current('icon'),xp=current('xp'),mascot=current('mascot');
  const sets=root.KomiShopCatalog?.activeSets?.(Object.fromEntries(
    ['frame','shape','title','plate','mascot'].map(t=>[t+'_id',current(t)?.id||null])
  ))||[];
@@ -99,7 +99,7 @@ function preview(store,avatar,name){
  '<span class="sv3-avatar-cut '+(shape?'komi-store-'+esc(shape.cosmeticClass):'')+'">'+initialAvatar(avatar,name)+'</span></span>'+
  (mascot?'<span class="sv3-profile-mascot komi-profile-mascot komi-store-'+esc(mascot.cosmeticClass)+'"></span>':'')+
  '<div class="sv3-profile-name"><strong class="'+(nameStyle?'komi-store-'+esc(nameStyle.cosmeticClass):'')+'">'+esc(name)+'</strong>'+
- (icon?' <span>'+esc(icon.symbol||'✧')+'</span>':'')+'</div>'+
+ (selectedIcon?' <span>'+esc(selectedIcon.symbol||'✧')+'</span>':'')+'</div>'+
  '<div class="sv3-profile-title">'+(title?esc(title.title||title.label):'Участник сообщества Komi')+'</div>'+
  '<div class="sv3-profile-level '+(xp?'komi-store-'+esc(xp.cosmeticClass):'')+'"><span>УРОВЕНЬ 5</span><progress value="64" max="100">64%</progress></div>'+
  (sets.length?'<p class="sv3-set-active">✦ Сет: '+sets.map(x=>esc(x.label)).join(', ')+'</p>':'')+
