@@ -73,7 +73,9 @@ Deno.serve(async(req:Request)=>{
   return Response.json({error:'Missing contract or invoice ID'},{status:422});
  const created=asTime(b.createdAt||b.eventCreatedAt||b.created_at||data.created_at)
    ||new Date().toISOString();
- const expiry=asTime(b.willExpireAt||b.expiresAt||data.will_expire_at);
+ // Paid-until is supplied by Lava.top and supports 1-month or 12-month subscriptions.
+ const expiry=asTime(b.willExpireAt||b.expiresAt||data.willExpireAt||
+   data.expiresAt||data.will_expire_at||data.expires_at);
  const eventKey=type+':'+(eventId||invoice||contract);
  const params={
    p_event_key:eventKey,p_event_type:type,p_contract_id:contract,

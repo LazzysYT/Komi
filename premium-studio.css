@@ -216,3 +216,9 @@ footer { color: var(--muted); font-size: 11px; text-align: center; margin-top: 2
   .premium-offer-action { flex-basis: auto; width: 100%; }
   .subscription-grid .perks-list { grid-template-columns: 1fr; }
 }
+
+/* Two Lava.top billing intervals (both amounts refer to the selected USD period). */
+.premium-pricing{display:flex;align-items:stretch;flex-wrap:wrap;gap:10px;margin-top:14px}
+.premium-pricing>span{display:flex;flex-direction:column;gap:2px;padding:13px 15px;min-width:134px;border:1px solid rgba(255,255,255,.14);border-radius:13px;background:#17171b}
+.premium-pricing strong{font-size:21px;font-weight:800;letter-spacing:-.035em;color:#fff}
+.premium-pricing small{font-size:11px;font-weight:500;color:#b8b8be}
