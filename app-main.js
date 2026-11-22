@@ -1540,13 +1540,29 @@ async function loadDataFromCloud(attempt = 0) {
                         <div class="komi-partners-hero">
                             <span class="komi-partners-eyebrow">KOMI ANIME HUB · COMMUNITY</span>
                             <h1 id="komiPartnersTitle">Партнёры Komi Anime</h1>
-                            <p>Здесь будут представлены проекты и сообщества, с которыми мы сотрудничаем. Мы открыты к интересным предложениям для развития аниме-сообщества.</p>
+                            <p>Знакомьтесь с партнёрами Komi Anime — авторами, которые поддерживают наше сообщество. Мы открыты к интересным предложениям и новым совместным проектам.</p>
                         </div>
                         <div class="komi-partners-grid">
                             <article class="komi-partners-panel">
                                 <span class="komi-partners-symbol" aria-hidden="true">◇</span>
                                 <h2>Наши партнёры</h2>
-                                <p>Пока опубликованных партнёров нет. Когда сотрудничество будет подтверждено, здесь появятся названия и ссылки.</p>
+                                <p>Наши TikTok-партнёры. Поддержите их и познакомьтесь с их страницами.</p>
+                                <ul class="komi-partner-list">
+                                    <li>
+                                        <a class="komi-partner-link" href="https://www.tiktok.com/@vidciten" target="_blank" rel="noopener noreferrer" aria-label="TikTok партнёра @vidciten (открыть в новой вкладке)">
+                                            <span class="komi-partner-avatar" aria-hidden="true">V</span>
+                                            <span class="komi-partner-copy"><strong>@vidciten</strong><small>TikTok · Партнёр Komi Anime</small></span>
+                                            <span class="komi-partner-arrow" aria-hidden="true">↗</span>
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a class="komi-partner-link" href="https://www.tiktok.com/@plimbka.ppka" target="_blank" rel="noopener noreferrer" aria-label="TikTok партнёра @plimbka.ppka (открыть в новой вкладке)">
+                                            <span class="komi-partner-avatar" aria-hidden="true">P</span>
+                                            <span class="komi-partner-copy"><strong>@plimbka.ppka</strong><small>TikTok · Партнёр Komi Anime</small></span>
+                                            <span class="komi-partner-arrow" aria-hidden="true">↗</span>
+                                        </a>
+                                    </li>
+                                </ul>
                             </article>
                             <article class="komi-partners-panel">
                                 <span class="komi-partners-symbol" aria-hidden="true">✧</span>

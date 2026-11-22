@@ -1612,6 +1612,20 @@ body > header {
 .komi-partners-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:21px}
 .komi-partners-actions a{text-decoration:none;padding:12px 17px;border:1px solid #444;border-radius:13px;background:#252525;color:#f4f4f4;font-weight:700;font-size:12px}
 .komi-partners-actions a:hover{background:#353535;border-color:#bbb}
+
+/* Partner profile cards */
+.komi-partner-list{display:grid;gap:11px;list-style:none;margin:20px 0 0;padding:0}
+.komi-partner-list li{min-width:0}
+.komi-partner-link{display:flex;align-items:center;gap:13px;min-width:0;min-height:78px;padding:12px 15px;border:1px solid rgba(255,255,255,.13);border-radius:18px;background:#1e1e1e;color:#fff;text-decoration:none;transition:background .2s,border-color .2s,transform .2s}
+.komi-partner-link:hover{background:#292929;border-color:rgba(255,255,255,.42);transform:translateY(-2px)}
+.komi-partner-link:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.komi-partner-avatar{display:grid;place-items:center;flex:0 0 48px;width:48px;height:48px;border-radius:15px;background:#0b0b0b;border:1px solid #414141;color:#fff;font-size:21px;font-weight:800}
+.komi-partner-copy{display:grid;min-width:0;gap:5px}
+.komi-partner-copy strong{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:15px;font-weight:800;letter-spacing:-.02em}
+.komi-partner-copy small{font-size:12px;line-height:1.4;color:#a8a8a8}
+.komi-partner-arrow{margin-left:auto;flex:0 0 auto;color:#d5d5d5;font-size:23px;line-height:1}
+@media(max-width:400px){.komi-partner-link{gap:10px;padding:11px}.komi-partner-avatar{flex-basis:42px;width:42px;height:42px}.komi-partner-copy strong{font-size:14px}.komi-partner-copy small{font-size:11px}}
+@media(prefers-reduced-motion:reduce){.komi-partner-link{transition:none}.komi-partner-link:hover{transform:none}}
 @media(max-width:680px){
 .komi-partners-grid{grid-template-columns:1fr}
 .komi-partners-panel{padding:21px}
