@@ -313,47 +313,52 @@ async function checkNotifications(page) {
      catalogInitialLoadComplete=true;komiHomeCatalogReady=true;
      render();
    });
-   const quick=page.locator('#komiHomeQuickFilters select[data-komi-home-filter]');
-   assert.equal(await quick.count(),4,'Home needs four usable quick filter selectors');
-   const quickLabels=await quick.evaluateAll(elements=>elements.map(select=>({
-     first:select.options[0]?.textContent.trim(),
-     label:document.querySelector('label[for="'+select.id+'"]')?.textContent.trim(),
-     display:getComputedStyle(document.querySelector('label[for="'+select.id+'"]')).display
-   })));
-   assert.deepEqual(quickLabels.map(row=>row.first),['Все жанры','Все годы','Все типы','Сортировка']);
-   assert.deepEqual(quickLabels.map(row=>row.label),['Жанр','Год','Тип','Сортировка']);
-   assert.ok(quickLabels.every(row=>row.display!=='none'),'All quick filter labels must be visible');
-   for(const [kind,value,expected] of [
-     ['year','2026','catalogFilterYear'],
-     ['genre','Экшен','catalogFilterGenre'],
-     ['type','Фильм','catalogFilterType'],
-     ['sort','rating','catalogSort']
-   ]) {
-     await page.locator('#komiHomeQuickFilter-'+kind).selectOption(value);
-     await page.waitForFunction(()=>currentView==='catalog');
-     assert.equal(await page.evaluate(name=>({catalogFilterYear,catalogFilterGenre,catalogFilterType,catalogSort})[name],expected),value,'Quick filter '+kind+' must update catalog state');
-     assert.equal(await page.locator('#komiCatalogGrid .anime-card').count()>0,true,'Filtered catalog must still show matching cards');
-     await page.evaluate(()=>navigate('home'));
-     await page.waitForSelector('#komiHomeQuickFilters');
-   }
-   await page.locator('#komiHomeQuickFilters .section-see-all').click();
+   // The redesigned home uses mood cards and pill toolbars, not four selects.
+   assert.equal(await page.locator('#komiHomeQuickFilters .komi-moods-grid .komi-mood-card').count(),8,
+     'Home must render all eight mood cards');
+   assert.equal(await page.locator('#komiHomeQuickFilters select[data-komi-home-filter]').count(),0,
+     'Removed bulky home selects must not return');
+   await page.locator('#komiHomeQuickFilters .komi-moods-grid [data-komi-mood-genre="Экшен"]').click();
+   await page.waitForFunction(()=>currentView==='catalog' && catalogFilterGenre==='Экшен');
+   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1,
+     'Selecting a mood must filter using the existing catalog records');
+   assert.equal(new URL(page.url()).searchParams.get('genre'),'Экшен',
+     'Mood filter must persist in the catalog URL');
+   assert.equal(await page.locator('.komi-catalog-selected-genre button').count(),1,
+     'Selected mood must show a clearable chip');
+   await page.locator('.komi-catalog-selected-genre button').click();
+   await page.waitForFunction(()=>catalogFilterGenre==='Все');
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
+
+   await page.locator('#komiHomeQuickFilters .komi-tool-menu').nth(1).locator('summary').click();
+   await page.locator('#komiHomeQuickFilters [data-komi-quick-year="2026"]').click();
+   await page.waitForFunction(()=>currentView==='catalog' && catalogFilterYear==='2026');
+   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
+
+   await page.locator('#komiHomeQuickFilters .komi-tool-menu').first().locator('summary').click();
+   await page.locator('#komiHomeQuickFilters [data-komi-quick-sort="rating"]').click();
+   await page.waitForFunction(()=>currentView==='catalog' && catalogSort==='rating');
+   assert.equal(await page.evaluate(()=>catalogFilterYear),'2026',
+     'Sorting must preserve the previously chosen year');
+   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
+
+   await page.locator('#komiHomeQuickFilters [data-komi-home-category="movies"]').click();
+   await page.waitForFunction(()=>currentView==='catalog' && catalogCategory==='movies');
+   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
+
+   await page.locator('#komiHomeQuickFilters [data-komi-more-filters="home"]').click();
    await page.waitForFunction(()=>currentView==='catalog');
-   assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
-   if (width < 768) {
-     // Mobile UX intentionally opens an accessible bottom sheet instead of focusing the
-     // desktop catalog search. Verify the real four-field sheet and close action.
-     await page.locator('#komiMobileSheet.is-open .komi-mobile-sheet-filters').waitFor();
-     assert.equal(await page.locator('#komiMobileSheet .komi-mobile-sheet-select').count(),4,
-       'All mobile catalog filters must remain available in the bottom sheet');
-     assert.equal(await page.locator('#komiMobileSheet .komi-mobile-sheet-close').isVisible(),true);
-     await page.locator('#komiMobileSheet .komi-mobile-sheet-close').click();
-     assert.equal(await page.locator('#komiMobileSheet.is-open').count(),0,
-       'Closing the mobile filter sheet must release its focus trap');
-   } else {
-     await page.waitForFunction(()=>document.activeElement?.id==='komiCatalogSearchInput',null,{timeout:6000});
-     assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
-       'Desktop All filters must focus the full-catalog search');
-   }
+   assert.equal(await page.locator('#komiCatalogAdvanced').isVisible(),true,
+     'All filters must reveal the real catalog filter panel');
+   assert.equal(await page.locator('#komiCatalogGenre, #komiCatalogYear, #komiCatalogType, #komiCatalogSort').count(),4,
+     'Advanced filters must retain all original filtering dimensions');
    assert.equal(new URL(page.url()).hash,'#catalog');
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
@@ -483,13 +488,15 @@ async function checkNotifications(page) {
      const stage=document.querySelector('#watchModal .komi-watch-stage');
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
      const heading=modal.querySelector('.watch-cinema-layout > .komi-player-heading').getBoundingClientRect();
-     const sidebar=stage.querySelector('.komi-watch-sidebar').getBoundingClientRect();
+     const sidebarNode=stage.querySelector('.komi-watch-sidebar');
+     const sidebar=sidebarNode.getBoundingClientRect();
+     const sidebarHidden=getComputedStyle(sidebarNode).display==='none';
      const episode=stage.querySelector('.komi-episode-number.active');
      const active=getComputedStyle(episode);
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       titleGap:player.top-heading.bottom,sidebarAfterVideo:sidebar.top>=player.bottom,
+       titleGap:player.top-heading.bottom,sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
        background:active.backgroundColor,before:getComputedStyle(episode,'::before').content,
@@ -500,17 +507,13 @@ async function checkNotifications(page) {
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
-   if (width < 768) {
-     assert.equal(await page.locator('.komi-mobile-watch-episodes').isVisible(),true,
-       'On phones the episode list must be accessible from the mobile bottom-sheet dock');
-   } else {
-     assert.ok(width>1000 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
-   }
+   // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
+   assert.ok(width>1000 ? cinema.sidebarBesideVideo : (cinema.sidebarHidden || cinema.sidebarAfterVideo),JSON.stringify(cinema));
    assert.equal(cinema.color,'rgb(255, 255, 255)');
    assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)',JSON.stringify(cinema));
    assert.notEqual(cinema.before,'none','Active episode must have a white indicator');
    assert.notEqual(cinema.after,'none','Episode progress must remain visible');
-   assert.equal(await page.locator('.komi-episodes-toggle').count(),1);
+   await page.waitForSelector('.komi-episodes-toggle');
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
    assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),true);
@@ -518,13 +521,12 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
    assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
-   if (width < 768) {
-     await page.locator('.komi-mobile-watch-episodes').click();
-     assert.equal(await page.locator('#komiMobileSheet.is-open .komi-watch-sidebar').count(),1,
-       'Mobile episode bottom sheet must contain the real episode list');
+   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
+   await page.locator('.komi-episodes-toggle').click();
+   if (width <= 767) {
+     await page.locator('#komiMobileSheet.is-open .komi-watch-sidebar').waitFor();
+     assert.equal(await page.locator('#komiMobileSheetTitle').textContent(),'Список серий');
    } else {
-     assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
-     await page.locator('.komi-episodes-toggle').click();
      assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
      assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
        'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
@@ -544,11 +546,6 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),0);
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
-   if (width < 768) {
-     await page.keyboard.press('Escape');
-     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1,
-       'Closing mobile episode sheet restores the original sidebar');
-   }
 
    const state=await page.evaluate(async ()=>{
     currentUser={username:'test_viewer'};

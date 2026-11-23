@@ -27,6 +27,7 @@
     <link rel="stylesheet" href="/komi-icon-rail.css?v=20261123-railboot-v1">
     <link rel="stylesheet" href="/komi-shop-v5.css?v=20261123-shopmono-v5">
     <link rel="stylesheet" href="/button-animations.css?v=20261123a">
+    <link rel="stylesheet" href="/komi-genre-moods.css?v=20261123a">
     
     
     
@@ -279,66 +280,34 @@
             </section>
             <section id="catalog" class="komi-static-catalog" aria-label="Каталог аниме">
                 <section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">
-                    <h2 class="section-title" id="komiHomeQuickFiltersTitle">Каталог аниме</h2>
+                    <section class="komi-moods" aria-labelledby="komiMoodTitle">
+                      <div class="komi-moods-heading"><div><h2 id="komiMoodTitle">Жанры</h2><p>Выбери настроение на вечер</p></div>
+                        <details class="komi-moods-all"><summary>Все жанры</summary>
+                          <div class="komi-moods-dropdown"><button type="button" data-komi-mood-genre="Все">Сбросить жанр</button></div>
+                        </details></div>
+                      <div class="komi-moods-grid">
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Экшен" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Экшен</strong><small>Драки и погони</small></span></button>
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Романтика" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Романтика</strong><small>Про любовь</small></span></button>
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Фэнтези" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Фэнтези</strong><small>Магия и миры</small></span></button>
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Комедия" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Комедия</strong><small>Посмеяться</small></span></button>
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Ужасы" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Ужасы</strong><small>Для смелых</small></span></button>
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Спорт" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Спорт</strong><small>Командный дух</small></span></button>
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Исэкай" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Исэкай</strong><small>Попал в другой мир</small></span></button>
+<button type="button" class="komi-mood-card" data-komi-mood-genre="Психологическое" aria-pressed="false"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Психологическое</strong><small>Игры разума</small></span></button>
+                      </div>
+                    </section>
+                    <div class="komi-catalog-head-row">
+                      <div class="komi-catalog-heading"><h2 id="komiHomeQuickFiltersTitle">Каталог аниме</h2></div>
+                      <div class="komi-catalog-tools"><button class="komi-tool-filters" type="button" data-komi-more-filters="home">Все фильтры</button></div>
+                    </div>
                     <div class="komi-catalog-category-pills komi-home-quick-categories" role="group" aria-label="Категории каталога">
-                        <button type="button" data-komi-home-category="all" aria-pressed="true">Всё</button>
-                        <button type="button" data-komi-home-category="ongoing" aria-pressed="false">Онгоинги</button>
-                        <button type="button" data-komi-home-category="series" aria-pressed="false">Сериалы</button>
-                        <button type="button" data-komi-home-category="movies" aria-pressed="false">Фильмы</button>
-                        <button type="button" data-komi-home-category="top100" aria-pressed="false">Топ 100</button>
+                      <button type="button" data-komi-home-category="all" aria-pressed="true">Всё</button>
+                      <button type="button" data-komi-home-category="ongoing" aria-pressed="false">Онгоинги</button>
+                      <button type="button" data-komi-home-category="series" aria-pressed="false">Сериалы</button>
+                      <button type="button" data-komi-home-category="movies" aria-pressed="false">Фильмы</button>
+                      <button type="button" data-komi-home-category="top100" aria-pressed="false">Топ 100</button>
                     </div>
-                    <div class="catalog-filters-box" role="group" aria-label="Быстрые фильтры">
-                        <div class="form-group" style="margin:0">
-                            <label for="komiHomeQuickFilter-genre">Жанр</label>
-                            <select id="komiHomeQuickFilter-genre" class="form-control" data-komi-home-filter="genre">
-                                <option value="">Все жанры</option>
-                                <option value="Экшен">Экшен</option>
-                                <option value="Фэнтези">Фэнтези</option>
-                                <option value="Романтика">Романтика</option>
-                                <option value="Комедия">Комедия</option>
-                                <option value="Драма">Драма</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label for="komiHomeQuickFilter-year">Год</label>
-                            <select id="komiHomeQuickFilter-year" class="form-control" data-komi-home-filter="year">
-                                <option value="">Все годы</option>
-                                <option value="2026">2026</option>
-                                <option value="2025">2025</option>
-                                <option value="2024">2024</option>
-                                <option value="2023">2023</option>
-                                <option value="2022">2022</option>
-                                <option value="2021">2021</option>
-                                <option value="2020">2020</option>
-                                <option value="2019">2019</option>
-                                <option value="2018">2018</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label for="komiHomeQuickFilter-type">Тип</label>
-                            <select id="komiHomeQuickFilter-type" class="form-control" data-komi-home-filter="type">
-                                <option value="">Все типы</option>
-                                <option value="Сериал">Сериал</option>
-                                <option value="Фильм">Фильм</option>
-                                <option value="OVA">OVA</option>
-                                <option value="ONA">ONA</option>
-                                <option value="Special">Special</option>
-                            </select>
-                        </div>
-                        <div class="form-group" style="margin:0">
-                            <label for="komiHomeQuickFilter-sort">Сортировка</label>
-                            <select id="komiHomeQuickFilter-sort" class="form-control" data-komi-home-filter="sort">
-                                <option value="">Сортировка</option>
-                                <option value="popular">Актуальные</option>
-                                <option value="updated">По обновлению серий</option>
-                                <option value="rating">По рейтингу</option>
-                                <option value="year">Сначала новые</option>
-                                <option value="alphabet">По алфавиту</option>
-                            </select>
-                        </div>
-                    </div>
-                    <a href="/#catalog" class="section-see-all" data-komi-click="home-quick-filters-all" title="Открыть каталог и перейти к поиску и фильтрам" aria-label="Все фильтры в каталоге аниме">Все фильтры</a>
-                    <noscript><p>Для применения фильтров включите JavaScript. Каталог и ссылки на аниме доступны ниже.</p></noscript>
+                    <noscript><p>Для фильтрации жанров требуется JavaScript.</p><a class="komi-home-nojs-catalog-link" href="/#catalog">Открыть каталог аниме</a></noscript>
                 </section>
                 <div id="anime-grid" class="anime-grid" aria-busy="false" aria-label="Каталог аниме">
                 <a class="anime-card komi-seo-card" href="/anime/52991" aria-label="Открыть аниме Провожающая в последний путь Фрирен">
@@ -639,12 +608,13 @@
     <script src="./poster-cache-client.js"></script>
     <script src="./player-core.js"></script>
     <script src="./player-source-preferences.js?v=20261121a"></script>
+    <script src="./komi-genre-moods.js?v=20261123a"></script>
     <script src="./home-discovery.js"></script>
     <script src="./komi-public-leaderboard.js?v=20261122a"></script>
     <script src="./komi-home-snapshot.js"></script>
     <script src="./komi-resume-cache.js"></script>
     <script src="./profile-premium.js?v=20261123-milestones"></script>
-    <script src="./komi-shop-icons.js?v=20261122h"></script>
+    <script src="./komi-shop-icons.js?v=20261123-shopv5"></script>
     <script src="./komi-premium.js?v=20261122h"></script>
     <script src="./komi-ref-capture.js?v=20261121"></script>
     <script src="./komi-checkout.js?v=20261122e"></script>
@@ -671,9 +641,9 @@
     <script src="./anime-details.js"></script>
     <script src="./watch-party.js?v=20261122c"></script>
     <script src="./friend-party.js"></script>
-    <script src="./komi-shop-v3.js?v=20261122h"></script>
+    <script src="./komi-shop-v3.js?v=20261123-shopv5"></script>
     <script src="./anicoin.js?v=20261123-watch-rewards"></script>
-    <script src="./komi-shop-social.js?v=20261122h"></script>
+    <script src="./komi-shop-social.js?v=20261123-shopv5"></script>
     <script src="./dynamic-ui-events.js"></script>
     <script src="./mobile-bottom-sheets.js?v=20261121b"></script>
     <script src="./komi-ui-sound.js"></script>

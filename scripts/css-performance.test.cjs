@@ -13,7 +13,7 @@ test('one generated base bundle plus intentional mobile overrides retain exact c
   const expected=['/komi.production.css','/komi-pill-system.css'];
   if (localStyles.some(href=>href.startsWith('/komi-icon-rail.css?'))) expected.push('/komi-icon-rail.css');
    expected.push('/komi-shop-v5.css');
-  expected.push('/button-animations.css');
+  expected.push('/button-animations.css','/komi-genre-moods.css');
   assert.deepEqual(localStyles.map(href=>href.split('?')[0]),expected);
   for(const href of localStyles) assert.match(href,/\.css\?v=\d+(?:[a-z]|-[a-z0-9-]+)(?:-[a-z0-9-]+)?$/);
   const all=builder.sources;
