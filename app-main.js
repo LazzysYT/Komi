@@ -3166,6 +3166,7 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterYear = 'Все';
             catalogFilterType = 'Все';
             catalogCollection = 'all';
+            catalogCategory = 'all';
             komiCatalogRestorePending = false;
             closeSearchDropdown();
             if (currentView !== 'catalog') {
