@@ -6,7 +6,7 @@ const catalog=()=>root.KomiShopCatalog?.items||[];
 const find=id=>root.KomiShopCatalog?.find(id)||null;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=x=>Number(x||0).toLocaleString('ru-RU');
-const icon=(name,size=18)=>root.KomiShopIcons?.svg(name,size)||'✧';
+const icon=(name,size=18)=>root.KomiShopIcons?.solid?.(name,size)||root.KomiShopIcons?.svg(name,size)||'✧';
 const sticker=name=>root.KomiShopIcons?.badge(name)||'<span class="sv4-sticker">✧</span>';
 const featureItems=Object.freeze([
  ['quality','4K качество','До 2160p, если разрешение доступно у источника.'],
