@@ -8,6 +8,7 @@
   // Real per-episode metadata first; cache frames only from already playing,
   // accessible native video. No extra episode downloads or iframe scraping.
   const capturedFrames = new Map();
+  const measuredDurations = new Map();
   function frameKey(ctx,index) {return String(ctx.animeId)+':'+ctx.season+':'+index;}
   function uniquePreview(ctx,index) {
     const url=episodePreview(ctx.episodeMeta?.[index]?.preview);
@@ -66,7 +67,8 @@
   }
   function episodePreview(raw) {
     try {
-      const url = new URL(raw);
+      if (typeof raw !== 'string' || !raw.trim()) return '';
+      const url = new URL(raw, location.origin);
       if (url.protocol === 'https:' && !url.username && !url.password) return url.href;
     } catch {}
     return '';
@@ -80,8 +82,7 @@
   function paintEpisodeCaption(button) {
     const caption = button.querySelector('.komi-list-label small');
     if (!caption) return;
-    caption.textContent = button.classList.contains('active') ? 'Сейчас смотришь' :
-      [button.dataset.episodeDuration, button.classList.contains('komi-episode-watched') ? 'Просмотрена' : '']
+    caption.textContent = [button.dataset.episodeDuration, button.classList.contains('active') ? 'Сейчас смотришь' : button.classList.contains('komi-episode-watched') ? 'Просмотрена' : '']
         .filter(Boolean).join(' · ');
     caption.hidden = !caption.textContent;
   }
@@ -125,7 +126,7 @@
         caption.className = 'komi-list-label';
         caption.textContent = 'Серия ' + label;
         const explanation = document.createElement('small');
-        episodeButton.dataset.episodeDuration = durationLabel(meta?.duration);
+        episodeButton.dataset.episodeDuration = durationLabel(measuredDurations.get(frameKey(context,index))) || durationLabel(meta?.duration);
         caption.append(explanation);
         episodeButton.append(caption);
         paintEpisodeCaption(episodeButton);
@@ -142,9 +143,8 @@
     if (currentContext(context) && context.note) context.note.textContent = message;
   }
   function shareUrl(context) {
-    const url = new URL(location.origin + location.pathname);
-    url.searchParams.set('anime', context.animeId);
-    return url.href;
+    const id = String(context.animeId);
+    return /^[1-9][0-9]{0,11}$/.test(id) ? new URL('/anime/' + id, location.origin).href : location.origin + '/';
   }
   async function shareAnime(context) {
     const url = shareUrl(context);
@@ -209,8 +209,16 @@
       content.querySelector('.crunchy-hero-poster')?.src;
     const durationNode = heading.querySelector('.komi-current-duration');
     const paintDuration = () => {
-      const duration = durationLabel(context.video?.duration) || durationLabel(currentEpisode?.duration);
+      const measured = context.video?.duration;
+      const actual = durationLabel(measured);
+      const duration = actual || durationLabel(currentEpisode?.duration);
+      if (actual) {
+        measuredDurations.set(frameKey(context,context.index), measured);
+        while (measuredDurations.size > 160) measuredDurations.delete(measuredDurations.keys().next().value);
+      }
       if (durationNode) durationNode.textContent = duration ? ' · ' + duration : '';
+      const active = context.grid.querySelectorAll('.komi-episode-number')[context.index];
+      if (active && duration) { active.dataset.episodeDuration = duration; paintEpisodeCaption(active); }
     };
     if (context.video) {
       if (poster) context.video.poster = poster;
