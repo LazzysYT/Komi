@@ -42,25 +42,34 @@
     const items = Array.isArray(animeList) ? animeList : [];
     const genres = [...new Set([...availableGenres, ...MOODS.map(item => item[0])])];
     const cards = MOODS.map(([name, description], index) => {
-      const candidates = items.filter(anime => matches(anime, name) &&
-        (anime.banner || anime.poster || (typeof anime.screenshots?.[0] === 'string')));
-      // Prefer artwork that can be served as a compact cached thumbnail.
-      // The selection is retained across catalog hydration/re-renders to avoid refetches.
-      const quality = anime =>
-        (compactArtwork(anime) ? 12 : 0) +
-        (typeof anime.screenshots?.[0] === 'string' ? 1 : 0) +
-        (Number(anime.shikiRating) || 0) / 2;
-      const sourceAnime = candidates.reduce((best, anime) =>
-        !best || quality(anime) > quality(best) ? anime : best, null);
+      // Once a genre thumbnail is chosen, never rescan 8,000+ anime on
+      // every view switch, notification update or text filter redraw.
       let art = moodArtworkCache.get(name);
-      if (!art && sourceAnime && typeof artwork === 'function') {
-        art = compactArtwork(sourceAnime);
-        if (!art) {
-          const screenshot = typeof sourceAnime.screenshots?.[0] === 'string'
-            ? sourceAnime.screenshots[0] : '';
-          art = {src: artwork({...sourceAnime, banner: screenshot || sourceAnime.banner || sourceAnime.poster}), direct: ''};
+      if (!art && typeof artwork === 'function') {
+        let sourceAnime = null;
+        let selectedCompact = null;
+        let bestQuality = -Infinity;
+        for (const anime of items) {
+          if (!matches(anime, name) ||
+              !(anime.banner || anime.poster || typeof anime.screenshots?.[0] === 'string')) continue;
+          const compact = compactArtwork(anime);
+          const quality = (compact ? 12 : 0) +
+            (typeof anime.screenshots?.[0] === 'string' ? 1 : 0) +
+            (Number(anime.shikiRating) || 0) / 2;
+          if (quality <= bestQuality) continue;
+          sourceAnime = anime;
+          selectedCompact = compact;
+          bestQuality = quality;
         }
-        if (art?.src) moodArtworkCache.set(name, art);
+        if (sourceAnime) {
+          art = selectedCompact;
+          if (!art) {
+            const screenshot = typeof sourceAnime.screenshots?.[0] === 'string'
+              ? sourceAnime.screenshots[0] : '';
+            art = {src: artwork({...sourceAnime, banner: screenshot || sourceAnime.banner || sourceAnime.poster}), direct: ''};
+          }
+          if (art?.src) moodArtworkCache.set(name, art);
+        }
       }
       const selected = norm(genre) === norm(name) ||
         (name === 'Исэкай' && norm(genre) === 'исекай') ||

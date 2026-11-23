@@ -224,30 +224,45 @@
       '<button type="button" data-komi-rank-consent hidden>Участвовать</button></div>' +
       '</div></section>';
   }
+  // Only public, catalog-derived selections are memoized. Account-owned
+  // recommendations, watch progress and UI state are always read fresh.
+  let cachedPublicHome = null;
   function render(context) {
-    const animeList = Array.isArray(context.animeList) ? context.animeList.filter(Boolean) : [];
+    const source = Array.isArray(context.animeList) ? context.animeList : [];
+    const animeList = source.filter(Boolean);
     if (!animeList.length) return '<section class="komi-home-empty">Аниме в каталоге пока нет.</section>';
-    const ranked = [...animeList].filter(a => score(a)>0).sort((a,b)=>score(b)-score(a));
-    const slider = typeof root.KomiHomeSnapshot?.featured === 'function'
-      ? root.KomiHomeSnapshot.featured(animeList, context.year)
-      : [...animeList].filter(a => /^https:\/\//i.test(a.poster || '') &&
-          score(a) >= 7 && count(a) > 0)
-          .sort((a,b)=>Number(context.year(b))-Number(context.year(a))||score(b)-score(a)).slice(0,5);
-    const latestYear = String(new Date().getFullYear());
-    const recent = [...animeList].filter(a=>updated(a)>0)
-      .sort((a,b)=>updated(b)-updated(a)).slice(0,12);
-    const season = [...animeList].filter(a=>context.year(a)===latestYear)
-      .sort((a,b)=>updated(b)-updated(a)||score(b)-score(a)).slice(0,12);
-    const short = [...animeList].filter(a=>context.type(a)==='Сериал' &&
-      count(a)>0 && count(a)<=13 && score(a)>=7).sort((a,b)=>score(b)-score(a)).slice(0,12);
-    const popular = [...animeList].filter(a=>score(a)>0)
-      .sort((a,b)=>((updated(b)>Date.now()-30*86400000?2:0)+score(b)/10)-
-                    ((updated(a)>Date.now()-30*86400000?2:0)+score(a)/10)).slice(0,12);
+    const revision = Number(context.catalogRevision) || 0;
+    if (!cachedPublicHome || cachedPublicHome.source !== source ||
+        cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
+      const ranked = [...animeList].filter(a => score(a)>0).sort((a,b)=>score(b)-score(a));
+      const slider = typeof root.KomiHomeSnapshot?.featured === 'function'
+        ? root.KomiHomeSnapshot.featured(animeList, context.year)
+        : [...animeList].filter(a => /^https:\/\//i.test(a.poster || '') &&
+            score(a) >= 7 && count(a) > 0)
+            .sort((a,b)=>Number(context.year(b))-Number(context.year(a))||score(b)-score(a)).slice(0,5);
+      const latestYear = String(new Date().getFullYear());
+      const recent = [...animeList].filter(a=>updated(a)>0)
+        .sort((a,b)=>updated(b)-updated(a)).slice(0,12);
+      const season = [...animeList].filter(a=>context.year(a)===latestYear)
+        .sort((a,b)=>updated(b)-updated(a)||score(b)-score(a)).slice(0,12);
+      const short = [...animeList].filter(a=>context.type(a)==='Сериал' &&
+        count(a)>0 && count(a)<=13 && score(a)>=7).sort((a,b)=>score(b)-score(a)).slice(0,12);
+      const now = Date.now(), recentThreshold = now - 30*86400000;
+      const popular = [...animeList].filter(a=>score(a)>0)
+        .sort((a,b)=>((updated(b)>recentThreshold?2:0)+score(b)/10)-
+                      ((updated(a)>recentThreshold?2:0)+score(a)/10)).slice(0,12);
+      const catalogPreview = [...new Set([...popular, ...animeList])].slice(0, 12);
+      const films = animeList.filter(a=>context.type(a)==='Фильм')
+        .sort((a,b)=>score(b)-score(a)).slice(0,10);
+      cachedPublicHome = {
+        source, revision, length:source.length, ranked, slider, latestYear,
+        recent, season, short, popular, catalogPreview, films
+      };
+    }
+    const {ranked, slider, latestYear, recent, season, short, popular,
+      catalogPreview, films} = cachedPublicHome;
     const recommended = context.recommendations();
     const history = recentProgress(context, animeList);
-    const catalogPreview = [...new Set([...popular, ...animeList])].slice(0, 12);
-    const films = animeList.filter(a=>context.type(a)==='Фильм')
-      .sort((a,b)=>score(b)-score(a)).slice(0,10);
     return '<div class="komi-home-discovery">' +
       hero(slider,context) +
       (slider.length ? resumeCapsule(history[0], context) : '') +
