@@ -339,11 +339,19 @@ async function checkNotifications(page) {
    await page.locator('#komiHomeQuickFilters .section-see-all').click();
    await page.waitForFunction(()=>currentView==='catalog');
    assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
-   // Catalog rendering can finish after the navigation state flips. Wait for
-   // the real input to receive focus, but still fail if focus is never restored.
+   // Mobile quick filters intentionally open an accessible bottom sheet, whose
+   // close button receives focus. Desktop navigation focuses catalog search.
+   // Verify the correct destination for each interaction rather than treating
+   // the mobile focus trap as a lost catalog-search focus.
    try {
-     await page.waitForFunction(() => document.activeElement?.id === 'komiCatalogSearchInput',
-       null, {timeout:3000});
+     await page.waitForFunction(() => {
+       const sheet = document.querySelector('.komi-mobile-sheet.is-open');
+       if (sheet && !sheet.hidden) {
+         return sheet.contains(document.activeElement)
+           && Boolean(sheet.querySelector('.komi-mobile-sheet-close'));
+       }
+       return document.activeElement?.id === 'komiCatalogSearchInput';
+     }, null, {timeout:3000});
    } catch (error) {
      const focusState = await page.evaluate(() => ({
        currentView,
