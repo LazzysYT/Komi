@@ -319,3 +319,39 @@ body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:
     transition: none !important;
   }
 }
+
+/* High-specificity adapters for legacy !important backgrounds and gradients.
+   These rules are intentionally last: monochrome hover must win the cascade. */
+@media (hover: hover) and (pointer: fine) {
+  body.komi-media-hub .komi-home-hero .hero-buttons
+    :is(.btn-glow,.komi-hub-play):not(:disabled):hover,
+  body.komi-media-hub .komi-seo-fallback.komi-seo-spotlight
+    .komi-seo-spotlight-actions .komi-seo-primary-link:hover,
+  body.komi-media-hub #shop.komi-shop-v3
+    .sv3-item-actions .sv3-primary-buy:not(:disabled):hover {
+    background: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+    color: #09090B !important;
+    box-shadow: 0 6px 24px rgba(255,255,255,.22) !important;
+  }
+  body.komi-media-hub .komi-home-hero .hero-buttons
+    .btn-glow-secondary:not(:disabled):hover,
+  body.komi-media-hub .komi-home-hero .komi-hub-carousel-controls
+    .hero-slider-arrow:not(:disabled):hover,
+  body.komi-media-hub #shop.komi-shop-v3
+    .sv3-item-actions .sv3-try-btn:not(:disabled):hover {
+    background: rgba(255,255,255,.14) !important;
+    border-color: rgba(255,255,255,.24) !important;
+    color: #FFFFFF !important;
+  }
+  body.komi-media-hub .komi-home-hero .komi-hub-carousel-controls
+    .hero-slider-arrow:not(:disabled):hover {
+    scale: 1.08;
+    box-shadow: 0 6px 18px rgba(0,0,0,.24) !important;
+  }
+  body.komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu)
+    > :is(button,a):not(:disabled):not([aria-disabled="true"]):hover {
+    background: rgba(255,255,255,.07) !important;
+    color: #FFFFFF !important;
+  }
+}
