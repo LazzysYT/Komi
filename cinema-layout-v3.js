@@ -34,12 +34,8 @@
       capturedFrames.set(key,canvas.toDataURL('image/jpeg',.72));
       while(capturedFrames.size>160)capturedFrames.delete(capturedFrames.keys().next().value);
       const btn=ctx.grid.querySelectorAll('.komi-episode-number')[ctx.index];
-      const placeholder=btn?.querySelector('.komi-episode-placeholder');
-      if(placeholder){
-        const image=document.createElement('img');
-        image.className='komi-episode-preview';image.alt='';image.src=capturedFrames.get(key);
-        placeholder.replaceWith(image);
-      }
+      const thumbnail=btn?.querySelector('.komi-episode-thumb');
+      if(thumbnail) paintEpisodeImage(thumbnail,[capturedFrames.get(key),...ctx.episodeFallbacks]);
       return true;
     } catch {return false;} // CORS/DRM restrictions are respected.
   }
@@ -89,6 +85,33 @@
         .filter(Boolean).join(' · ');
     caption.hidden = !caption.textContent;
   }
+  function paintEpisodeImage(frame, sources) {
+    frame.querySelector('img')?.remove();
+    const candidates=[...new Set(sources.filter(Boolean))];
+    if(!candidates.length)return;
+    const image=document.createElement('img');
+    image.className='komi-episode-thumb-image';
+    image.alt='';image.loading='lazy';image.decoding='async';
+    let next=0;
+    const tryNext=()=>{
+      if(next>=candidates.length){image.remove();return;}
+      image.src=candidates[next++];
+    };
+    image.addEventListener('error',tryNext);
+    frame.prepend(image);
+    tryNext();
+  }
+  function makeEpisodeThumb(context,index,label) {
+    const frame=document.createElement('span');
+    frame.className='komi-episode-preview komi-episode-thumb';
+    frame.setAttribute('aria-hidden','true');
+    const number=document.createElement('span');
+    number.className='komi-episode-thumb-badge';
+    number.textContent=label;
+    frame.append(number);
+    paintEpisodeImage(frame,[actualPreview(context,index),...context.episodeFallbacks]);
+    return frame;
+  }
   function setListMode(context, list) {
     context.grid.classList.toggle('komi-episode-list', list);
     context.grid.querySelectorAll('.komi-episode-number').forEach((episodeButton, index) => {
@@ -97,20 +120,7 @@
       episodeButton.replaceChildren();
       if (list) {
         const meta = context.episodeMeta?.[index];
-        const placeholder = document.createElement('span');
-        placeholder.className = 'komi-episode-preview komi-episode-placeholder';
-        placeholder.setAttribute('aria-hidden','true');
-        placeholder.textContent = label;
-        const previewUrl = actualPreview(context,index);
-        if (previewUrl) {
-          const preview = document.createElement('img');
-          preview.className = 'komi-episode-preview';
-          preview.src = previewUrl;
-          preview.alt = '';
-          preview.loading = 'lazy';
-          preview.addEventListener('error', () => preview.replaceWith(placeholder), {once:true});
-          episodeButton.append(preview);
-        } else episodeButton.append(placeholder);
+        episodeButton.append(makeEpisodeThumb(context,index,label));
         const caption = document.createElement('span');
         caption.className = 'komi-list-label';
         caption.textContent = 'Серия ' + label;
@@ -187,6 +197,13 @@
     context.grid = grid;
     context.title = heading.querySelector('h1')?.textContent || 'KomiAnime';
     context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
+    // Prefer a real episode frame, then the title's own landscape artwork,
+    // then its poster. Keep the badge even if every image request fails.
+    context.episodeFallbacks = [...new Set([
+      episodePreview(settings.watchStill),
+      episodePreview(settings.watchBanner),
+      episodePreview(content.querySelector('.crunchy-hero-poster')?.src)
+    ].filter(Boolean))];
     const currentEpisode = context.episodeMeta[context.index];
     const poster = episodePreview(currentEpisode?.preview) || episodePreview(settings.watchStill) ||
       content.querySelector('.crunchy-hero-poster')?.src;
