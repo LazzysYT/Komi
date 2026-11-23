@@ -7,30 +7,10 @@ const find=id=>root.KomiShopCatalog?.find(id)||null;
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const fmt=x=>Number(x||0).toLocaleString('ru-RU');
 const icon=(name,size=18)=>root.KomiShopIcons?.solid?.(name,size)||root.KomiShopIcons?.svg(name,size)||'✧';
-const sticker=name=>root.KomiShopIcons?.badge(name)||'<span class="sv4-sticker">✧</span>';
-const featureItems=Object.freeze([
- ['quality','4K качество','До 2160p, если разрешение доступно у источника.'],
- ['movie','Анимированный профиль','GIF-аватарка и живой фон с активным Premium.'],
- ['medal','Редкие награды','Рамки, титулы и уникальные коллекции AniCoin.'],
- ['coins','+500 AniCoin','Разовый бонус при первой активации Premium.'],
- ['gift','Подарки друзьям','Дарите оформления через систему друзей Komi.'],
- ['layers','Готовые наборы','Полный состав и цена известны до покупки.']
-]);
 const rarityLabels={common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'};
 const rarityOrder={legendary:0,epic:1,rare:2,common:3};
 const categories=[['all','Все'],['frame','Рамки'],['shape','Формы аватара'],['title','Титулы'],
  ['overlay','Эффекты профиля'],['reaction','Watch Party'],['owned','Мои покупки']];
-const extraCategories=[['banner','Обложки'],['plate','Комментарии'],['mascot','Маскоты'],
- ['xp','Шкала XP'],['name','Градиенты ника'],['card','Карточки'],['showcase','Топ-3'],['icon','Иконки']];
-const copy={
-frame:'Рамка для твоего аватара в профиле.',shape:'Меняет форму аватара без изменения фотографии.',
-title:'Статусный титул рядом с никнеймом.',overlay:'Атмосферный эффект для обложки профиля.',
-banner:'Тематическое оформление шапки профиля.',plate:'Фон для твоих комментариев под аниме.',
-mascot:'Мини-компаньон на шапке профиля.',xp:'Новая визуальная шкала уровня XP.',
-name:'Градиентное оформление ника.',card:'Стиль всплывающей мини-карточки.',
-showcase:'Обрамление твоего топа любимых аниме.',icon:'Коллекционная иконка статуса.',
-reaction:'Постоянный набор реакций для Watch Party.'
-};
 function safeAvatar(url){
  try{const parsed=new URL(url);return parsed.protocol==='https:'?esc(parsed.href):'';}catch{return '';}
 }
@@ -54,11 +34,6 @@ function visual(product,avatar,name){
  if(product.type==='mascot')return '<span class="sv3-mascot-sample"><i class="komi-profile-mascot komi-store-'+cls+'"></i></span>';
  if(product.type==='xp')return '<span class="sv3-xp-sample komi-store-'+cls+'"><progress max="100" value="65">65%</progress></span>';
  return '<span>KOMI</span>';
-}
-function weekly(){
- const list=catalog().filter(x=>['frame','title','banner','overlay'].includes(x.type));
- const week=Math.floor((Date.now()/86400000+3)/7);
- return list.length?list[(week*7+5)%list.length]:null;
 }
 function weekEnd(){
  const d=new Date(),weekday=(d.getUTCDay()+6)%7;
@@ -158,14 +133,11 @@ function layout(ctx){
  const sortTabs=[['default','Все'],['rarity','По редкости'],['price-up','Дешевле'],['price-down','Дороже']].map(([id,label])=>'<button type="button" data-v3-sort="'+id+'" aria-pressed="'+String(state.sort===id)+'">'+label+'</button>').join('');
  const reaction=state.reactionPreview?find(state.reactionPreview):null;
  const reactionVisual=reaction&&reaction.type==='reaction'?'<div class="sv5-reaction-preview"><strong>Примерка реакций Watch Party</strong>'+visual(reaction,avatar,name)+'</div>':'';
- const extra='<select aria-label="Другие категории" data-v3-extra><option value="">Ещё категории</option>'+
- extraCategories.map(([id,label])=>'<option value="'+id+'"'+(state.category===id?' selected':'')+'>'+esc(label)+'</option>').join('')+'</select>';
  const selectionAction=!owner?'Войти, чтобы купить':!store?'Загружаем баланс…':
  items.length===0?'Выбери товары':total>Number(store.balance)?'Недостаточно AniCoin':
  total===0?'Надеть выбранное':'Купить и надеть · '+fmt(total)+' AniCoin';
  const cartDisabled=!!owner&&(!store||!items.length||state.busy||ctx.busy||total>Number(store.balance));
  return '<section id="shop" class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5" aria-labelledby="anicoin-title">'+
- '<div class="sv4-hero">'+
  '<header class="sv3-topbar"><div class="sv3-heading"><p class="sv3-overline">KOMI ANIME / ANI COIN</p><h1 id="anicoin-title">Магазин KomiAnime</h1>'+
  '<p>Укрась профиль, собери свой стиль и примерь предметы до покупки.</p>'+
  '</div>'+ 
@@ -174,7 +146,6 @@ function layout(ctx){
  '<p>1 AniCoin за каждые 20 минут подтверждённого просмотра, награды ежедневных квестов и разовые +500 при активации Premium.</p>'+
  '<a href="/premium.html">Возможности Premium</a></div></details>'+
  '<button type="button" class="sv3-outline-btn" data-v3-promo>'+icon('tag',16)+' Промокод</button></div></header>'+
- '</div>'+ 
  '<section class="sv5-weekly" aria-label="Подборка недели"><div class="sv5-weekly-copy">'+
  '<div class="sv5-weekly-overline"><span class="sv3-mini-kicker">ПОДБОРКА НЕДЕЛИ</span>'+
  '<span class="sv3-countdown">'+icon('clock',13)+' <b id="sv3-week-time">'+remaining()+'</b></span></div>'+
@@ -283,7 +254,6 @@ function mount(section,ctx){
   const t=e.target;
   if(t.matches('[data-v3-sort]')){state.sort=t.value;refresh();}
   else if(t.matches('[data-v3-hide-owned]')){state.hideOwned=t.checked;refresh();}
-  else if(t.matches('[data-v3-extra]')&&t.value){state.category=t.value;refresh();}
  });
 }
 function render(container,ctx){
