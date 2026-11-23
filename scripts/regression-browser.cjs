@@ -512,14 +512,21 @@ async function checkNotifications(page) {
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
-   assert.ok(width>1000 ? cinema.sidebarBesideVideo : width>=768 ? cinema.sidebarAfterVideo : await page.evaluate(() => {
-      // On phones, the episodes sidebar is intentionally hosted by the mobile
-      // bottom sheet rather than occupying space below the video.
-      const sheet=document.querySelector('#watchModal #komiMobileSheet');
-      const sidebar=sheet?.querySelector('.komi-watch-sidebar');
-      return Boolean(document.documentElement.classList.contains('komi-mobile-sheets-ready')
-        && sheet && sidebar && sidebar.isConnected);
-    }),JSON.stringify(cinema));
+   if (width > 1000) {
+     assert.ok(cinema.sidebarBesideVideo,JSON.stringify(cinema));
+   } else if (width >= 768) {
+     assert.ok(cinema.sidebarAfterVideo,JSON.stringify(cinema));
+   } else {
+     // The sidebar remains in the stage until the user opens the episodes sheet.
+     // Verify the actual interaction and restoration instead of expecting it
+     // to be moved into an initially closed sheet.
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1);
+     await page.locator('.komi-mobile-watch-episodes').click();
+     await page.waitForSelector('#watchModal #komiMobileSheet.is-open .komi-watch-sidebar');
+     assert.equal(await page.locator('#watchModal #komiMobileSheet .komi-watch-sidebar').count(),1);
+     await page.locator('#watchModal #komiMobileSheet .komi-mobile-sheet-close').click();
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1);
+   }
    assert.equal(cinema.color,'rgb(255, 255, 255)');
    assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)',JSON.stringify(cinema));
    assert.notEqual(cinema.before,'none','Active episode must have a white indicator');
