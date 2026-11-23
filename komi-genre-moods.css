@@ -76,3 +76,118 @@
 }
 
 .komi-home-nojs-catalog-link{display:inline-flex;align-items:center;min-height:42px;margin-top:10px;padding:10px 18px;border-radius:999px;background:#fff;color:#09090B;font-weight:800;text-decoration:none}
+
+/* Layout regression: full-width genre cards above catalog, in both SSR and hydrated home. */
+/* The shared media-hub stylesheet and older pill system force this container
+   into a three-column toolbar grid. It is now a *section* containing three
+   stacked rows, not a toolbar. Override those legacy !important declarations
+   only on the home quick-filters section; the full catalog toolbar stays as-is. */
+.komi-media-hub #komiHomeQuickFilters.komi-feature-section {
+  display: block !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 0 0 24px !important;
+  padding: 0 clamp(12px, 1.5vw, 26px) 22px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.komi-media-hub #komiHomeQuickFilters > .komi-moods,
+.komi-media-hub #komiHomeQuickFilters > .komi-catalog-head-row,
+.komi-media-hub #komiHomeQuickFilters > .komi-home-quick-categories {
+  box-sizing: border-box;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+}
+.komi-media-hub #komiHomeQuickFilters > .komi-moods {
+  display: block !important;
+  margin: 0 0 34px !important;
+}
+.komi-media-hub #komiHomeQuickFilters .komi-moods-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+.komi-media-hub #komiHomeQuickFilters .komi-moods-heading > div {
+  min-width: 0;
+}
+.komi-media-hub #komiHomeQuickFilters .komi-moods-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-width: 0;
+}
+.komi-media-hub #komiHomeQuickFilters .komi-mood-card {
+  width: 100% !important;
+  min-width: 0 !important;
+  height: clamp(128px, 9vw, 150px);
+  border-radius: 22px;
+}
+.komi-media-hub #komiHomeQuickFilters .komi-mood-copy {
+  inset: auto 18px 18px 22px;
+}
+.komi-media-hub #komiHomeQuickFilters .komi-mood-copy strong {
+  font-size: clamp(17px, 1.2vw, 21px);
+}
+.komi-media-hub #komiHomeQuickFilters > .komi-catalog-head-row {
+  display: flex !important;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px 20px;
+  margin: 0 0 16px !important;
+}
+.komi-media-hub #komiHomeQuickFilters > .komi-home-quick-categories {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  margin: 0 !important;
+  padding: 2px 0 6px !important;
+  overflow-x: auto;
+}
+@media (max-width: 1023px) {
+  .komi-media-hub #komiHomeQuickFilters .komi-moods-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .komi-mood-card {
+    height: 130px;
+  }
+}
+@media (max-width: 519px) {
+  .komi-media-hub #komiHomeQuickFilters.komi-feature-section {
+    padding: 0 10px 18px !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .komi-moods {
+    margin-bottom: 27px !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .komi-moods-grid {
+    gap: 10px !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters .komi-mood-card {
+    height: 112px;
+    border-radius: 15px;
+  }
+  .komi-media-hub #komiHomeQuickFilters .komi-mood-copy {
+    inset: auto 11px 12px 13px;
+  }
+  .komi-media-hub #komiHomeQuickFilters .komi-mood-copy strong {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+  .komi-media-hub #komiHomeQuickFilters .komi-mood-copy small {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  .komi-media-hub #komiHomeQuickFilters .komi-catalog-tools {
+    justify-content: flex-start;
+  }
+}
