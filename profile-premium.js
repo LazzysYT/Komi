@@ -37,11 +37,20 @@
   }
   function achievementWidget(username,isMe,full=false){
     var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,achievements:[],badges:[]};
-    var definitions=Array.isArray(info.achievements)?info.achievements:[];
+    // Backward-compatible preview for public profiles with older achievement data.
+    var definitions=Array.isArray(info.achievements)?info.achievements:[
+      ['first-watch','Просмотр','Первый просмотр',info.watched,1],
+      ['watch-ten','Просмотр','10 аниме',info.watched,10],
+      ['watch-50','Просмотр','Знаток аниме',info.watched,50],
+      ['friend-one','Сообщество','Первый друг',info.friends,1],
+      ['watching-five','Просмотр','Марафон',info.watching,5]
+    ].map(([id,category,label,value,target])=>({
+      id,category,label,value:Math.min(target,number(value)),target,earned:number(value)>=target
+    }));
     var earned=definitions.filter(item=>item.earned).length;
     var previewIds=['first-watch','watch-ten','favorite-one','list-five','friend-one','xp-500'];
     var chosen=full?definitions:previewIds.map(id=>definitions.find(item=>item.id===id)).filter(Boolean);
-    var renderTiles=items=>'<div class="profile-achievements">'+items.map(item=>{
+    var renderTiles=items=>'<div class="profile-achievements"'+(isMe?' data-komi-quests':'')+'>'+items.map(item=>{
       var progress=Math.min(number(item.target),number(item.value));
       var unlocked=Boolean(item.earned);
       return '<div class="profile-achievement'+(unlocked?' is-earned':' is-locked')+'" tabindex="0" data-profile-tilt title="'+escapeText(item.label)+': '+progress+'/'+item.target+'">'+
