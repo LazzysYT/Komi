@@ -562,3 +562,436 @@ html.komi-home-booting body.komi-media-hub #mainContainer > .komi-boot-shell {
 @media (prefers-reduced-motion: reduce) {
   .komi-boot-line, .komi-boot-pill, .komi-boot-cards span { animation: none; }
 }
+
+/* Tactile button motion: preserved from button-animations.css */
+/*
+ * KomiAnime / button-animations.css
+ * Motion layer only. Load AFTER the site's other styles.
+ * Uses CSS individual transforms (scale / translate / rotate) to preserve
+ * existing transform-based positioning, carousels, tooltips, and JS handlers.
+ */
+:root {
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-press: cubic-bezier(0.4, 0, 0.2, 1);
+  --komi-motion-dark: #09090B;
+  --komi-motion-surface: #16161A;
+  --komi-motion-hover: #1C1C21;
+  --komi-motion-white: #FFFFFF;
+}
+
+/* Every button, tab, interactive pill, clickable card and link-button.
+   Do not transform wrappers that position a modal, menu or player overlay. */
+:where(
+  button,
+  [role="button"],
+  summary,
+  a.btn,
+  a.btn-secondary,
+  a[class*="-btn"],
+  a[class*="button"],
+  a.pill,
+  a[class*="tab"],
+  a[href][class*="card"],
+  [role="link"][class*="card"],
+  .komi-hub-resume,
+  .komi-catalog-chip,
+  .komi-catalog-genre-tag
+):not(:disabled):not([aria-disabled="true"]):not([inert]) {
+  transition:
+    scale 0.18s var(--ease-spring),
+    transform 0.18s var(--ease-spring),
+    translate 0.18s var(--ease-spring),
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.22s ease,
+    color 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease !important;
+  transform-origin: center center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(
+    button,
+    [role="button"],
+    summary,
+    a.btn,
+    a.btn-secondary,
+    a[class*="-btn"],
+    a[class*="button"],
+    a.pill,
+    a[class*="tab"],
+    a[href][class*="card"],
+    [role="link"][class*="card"],
+    .komi-hub-resume,
+    .komi-catalog-chip,
+    .komi-catalog-genre-tag
+  ):not(:disabled):not([aria-disabled="true"]):not([inert]):hover {
+    scale: 1.04;
+  }
+
+  /* Clickable cards are less aggressive than small control buttons. */
+  :where(a[href][class*="card"], [role="link"][class*="card"]):not([aria-disabled="true"]):hover {
+    scale: 1.018;
+    translate: 0 -2px;
+    border-color: rgba(255,255,255,0.22);
+  }
+
+  /* Main white actions: hero, shop, forms and Premium. */
+  :where(
+    .btn-primary, .btn-glow, .komi-hub-play, .komi-seo-primary-link,
+    .sv3-primary-buy, .sv3-featured-try, .sv3-capsule-foot button,
+    .store-buy-btn, .studio-action-primary, .komi-primary-btn
+  ):not(:disabled):not([aria-disabled="true"]):hover {
+    scale: 1.04;
+    background-color: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+    color: #09090B !important;
+    box-shadow: 0 6px 24px rgba(255,255,255,0.22) !important;
+  }
+
+  /* Secondary glass / graphite actions. */
+  :where(
+    .btn-secondary, .btn-glow-secondary, .sv3-outline-btn,
+    .sv3-reset, .sv3-try-btn, .komi-catalog-clear,
+    .komi-mobile-filter-trigger, .studio-action,
+    .studio-button, .store-button, .section-see-all
+  ):not(:disabled):not([aria-disabled="true"]):hover {
+    scale: 1.035;
+    background-color: rgba(255,255,255,0.14) !important;
+    border-color: rgba(255,255,255,0.24) !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Keep the play glyph independent of the primary pill's movement. */
+  :where(.btn-glow, .komi-hub-play, .komi-seo-primary-link, .btn-primary):hover
+    :is(svg, .play-icon, .icon-play, .hero-play-icon) {
+    translate: 2.5px 0;
+    scale: 1.08;
+  }
+
+  /* Icon buttons and carousel controls. */
+  :where(
+    .hero-slider-arrow, .komi-hub-carousel-controls button,
+    .slider-arrow, .carousel-arrow, .icon-button, .btn-icon,
+    .sv3-gift-btn, .komi-hub-resume-play
+  ):not(:disabled):not([aria-disabled="true"]):hover {
+    scale: 1.08;
+    background-color: rgba(255,255,255,0.18) !important;
+    border-color: rgba(255,255,255,0.24) !important;
+  }
+
+  /* Resume capsule and search input: move the wrapper, never the typed text. */
+  .komi-media-hub .komi-hub-resume:hover {
+    scale: 1.015;
+    translate: 0 -1px;
+    border-color: rgba(255,255,255,0.22) !important;
+  }
+  .komi-media-hub .komi-hub-resume:hover .komi-hub-resume-play {
+    scale: 1.1;
+    background: #FFFFFF !important;
+    color: #09090B !important;
+  }
+  .komi-media-hub .komi-hub-overlay .search-bar:hover {
+    scale: 1.015;
+    translate: 0 -1px;
+    border-color: rgba(255,255,255,0.22) !important;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.19) !important;
+  }
+}
+
+/* Both main and Premium search wrappers retain their own focus behavior. */
+.komi-media-hub .komi-hub-overlay .search-bar {
+  transition: scale .18s var(--ease-spring), translate .18s var(--ease-spring),
+              border-color .18s ease, box-shadow .22s ease !important;
+}
+.komi-media-hub .komi-hub-overlay .search-bar:focus-within {
+  border-color: rgba(255,255,255,0.35) !important;
+}
+.komi-hub-resume-play,
+:where(.btn-glow,.komi-hub-play,.komi-seo-primary-link,.btn-primary)
+  :is(svg,.play-icon,.icon-play,.hero-play-icon) {
+  transition: scale .18s var(--ease-spring), translate .18s var(--ease-spring),
+              background-color .18s ease, color .18s ease;
+}
+
+/* The 72px rail: keep active-page markers and pop-out tooltips untouched. */
+body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo) {
+  transform: none !important; /* prior CSS used transform: scale(), now use scale */
+  scale: 1;
+  transition: scale .18s var(--ease-spring),
+              background-color .18s ease, color .18s ease,
+              border-color .18s ease, box-shadow .22s ease !important;
+  will-change: scale;
+}
+body.komi-media-hub .komi-icon-rail .komi-rail-svg {
+  transform-origin: 50% 50%;
+  transition: scale .18s var(--ease-spring), rotate .18s var(--ease-spring) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:disabled):hover {
+    transform: none !important;
+    scale: 1.06;
+    background: #1C1C21 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255,255,255,0.10) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.27) !important;
+  }
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:disabled):hover > .komi-rail-svg {
+    scale: 1.12;
+    rotate: -4deg;
+  }
+  /* Existing bell swing in komi-icon-rail.css remains available. */
+  body.komi-media-hub .komi-icon-rail .komi-rail-bell:hover > .komi-rail-svg {
+    rotate: 0deg;
+  }
+}
+
+/* Burger and textual navigation in the header/mobile drawer. */
+:where(.komi-hub-tools-menu > summary, .komi-mobile-more-toggle) {
+  transition: scale .18s var(--ease-spring),
+              background-color .18s ease, color .18s ease !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  :where(.komi-hub-tools-menu > summary, .komi-mobile-more-toggle):hover {
+    scale: 1.06;
+    background-color: #1C1C21 !important;
+    color: #FFFFFF !important;
+  }
+}
+:where(
+  .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+  .komi-mobile-more-menu > button, .komi-mobile-more-menu > a,
+  .komi-nav-drawer [role="menuitem"]
+) {
+  position: relative;
+}
+:where(
+  .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+  .komi-mobile-more-menu > button, .komi-mobile-more-menu > a,
+  .komi-nav-drawer [role="menuitem"]
+)::before {
+  content: "";
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  left: 5px;
+  width: 3px;
+  border-radius: 99px;
+  background: #FFFFFF;
+  opacity: 0;
+  scale: 1 .4;
+  pointer-events: none;
+  transition: opacity .18s ease, scale .18s var(--ease-spring);
+}
+@media (hover: hover) and (pointer: fine) {
+  .komi-media-hub :is(
+    .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+    .komi-mobile-more-menu > button, .komi-mobile-more-menu > a
+  ):not(:disabled):not([aria-disabled="true"]):hover,
+  .komi-nav-drawer [role="menuitem"]:not([aria-disabled="true"]):hover {
+    translate: 3px 0;
+    background-color: rgba(255,255,255,0.07) !important;
+    color: #FFFFFF !important;
+  }
+  :where(
+    .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+    .komi-mobile-more-menu > button, .komi-mobile-more-menu > a,
+    .komi-nav-drawer [role="menuitem"]
+  ):hover::before {
+    opacity: 1;
+    scale: 1 1;
+  }
+  :where(
+    .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+    .komi-mobile-more-menu > button, .komi-mobile-more-menu > a
+  ):hover > svg {
+    translate: 3px 0;
+  }
+}
+:where(.komi-hub-tools-panel, .komi-mobile-more-menu) :is(button,a) > svg {
+  transition: translate .18s var(--ease-spring);
+}
+
+/* Tactile press — faster than hover. No routing/handler changes. */
+:where(
+  button, [role="button"], summary, a.btn, a.btn-secondary,
+  a[class*="-btn"], a[class*="button"], a.pill,
+  a[href][class*="card"], [role="link"][class*="card"],
+  .komi-hub-resume, .komi-catalog-chip, .komi-catalog-genre-tag
+):not(:disabled):not([aria-disabled="true"]):not([inert]):active {
+  scale: .94 !important;
+  transition: scale .09s var(--ease-press),
+              transform .18s var(--ease-spring),
+              translate .18s var(--ease-spring),
+              background-color .18s ease, border-color .18s ease,
+              box-shadow .22s ease, color .18s ease !important;
+}
+body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:disabled):active {
+  transform: none !important;
+  scale: .91 !important;
+  transition: scale .09s var(--ease-press), background-color .18s ease !important;
+}
+:where(.hero-slider-arrow,.slider-arrow,.carousel-arrow,.icon-button,.btn-icon,
+       .komi-hub-carousel-controls button,.sv3-gift-btn):not(:disabled):active {
+  scale: .92 !important;
+}
+:where(button,[role="button"],summary,a.btn,.pill,.komi-hub-resume)
+  :is(svg,.play-icon,.icon-play,.hero-play-icon) {
+  /* Don't accidentally animate positioned icons or avatars via the parent. */
+  backface-visibility: hidden;
+}
+
+/* Explicitly inactive, locked or processing controls never bounce. */
+:where(button,[role="button"],.btn,.pill,summary,a[class*="-btn"],
+       .komi-hub-resume):is(:disabled,[aria-disabled="true"],[inert],[aria-busy="true"]),
+:where(fieldset:disabled) :is(button,.btn) {
+  scale: 1 !important;
+  translate: none !important;
+  rotate: none !important;
+  cursor: not-allowed;
+}
+/* Extra breathing room without changing overflow-x:auto to visible. */
+:where(.komi-catalog-category-pills,.komi-catalog-chips,.sv3-category-tabs,
+       .komi-home-leaderboard-tabs,.komi-friends-tabs,.profile-section-tabs,
+       .profile-nav-tabs,.premium-tabs) {
+  scroll-padding-inline: 10px;
+}
+
+/* Avoid hover-stuck visuals on touch devices, while keeping press feedback. */
+@media (hover: none) {
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):hover {
+    transform: none !important;
+    background-color: transparent;
+  }
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo).is-active:hover,
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo)[aria-current="page"]:hover {
+    background-color: #1C1C21 !important;
+  }
+}
+
+/* Reduced motion keeps focus, colors and click actions usable. */
+@media (prefers-reduced-motion: reduce) {
+  :where(button,[role="button"],summary,a.btn,a.btn-secondary,a[class*="-btn"],
+         a[class*="button"],a.pill,a[href][class*="card"],
+         .komi-hub-resume,.komi-catalog-chip,.komi-catalog-genre-tag,
+         .komi-hub-overlay .search-bar,.komi-hub-resume-play),
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo,.komi-rail-svg),
+  :where(.komi-hub-tools-panel,.komi-mobile-more-menu) :is(button,a)::before {
+    scale: 1 !important;
+    translate: none !important;
+    rotate: none !important;
+    transition: none !important;
+  }
+}
+
+/* High-specificity adapters for legacy !important backgrounds and gradients.
+   These rules are intentionally last: monochrome hover must win the cascade. */
+@media (hover: hover) and (pointer: fine) {
+  body.komi-media-hub .komi-home-hero .hero-buttons
+    :is(.btn-glow,.komi-hub-play):not(:disabled):hover,
+  body.komi-media-hub .komi-seo-fallback.komi-seo-spotlight
+    .komi-seo-spotlight-actions .komi-seo-primary-link:hover,
+  body.komi-media-hub #shop.komi-shop-v3
+    .sv3-item-actions .sv3-primary-buy:not(:disabled):hover {
+    background: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+    color: #09090B !important;
+    box-shadow: 0 6px 24px rgba(255,255,255,.22) !important;
+  }
+  body.komi-media-hub .komi-home-hero .hero-buttons
+    .btn-glow-secondary:not(:disabled):hover,
+  body.komi-media-hub .komi-home-hero .komi-hub-carousel-controls
+    .hero-slider-arrow:not(:disabled):hover,
+  body.komi-media-hub #shop.komi-shop-v3
+    .sv3-item-actions .sv3-try-btn:not(:disabled):hover {
+    background: rgba(255,255,255,.14) !important;
+    border-color: rgba(255,255,255,.24) !important;
+    color: #FFFFFF !important;
+  }
+  body.komi-media-hub .komi-home-hero .komi-hub-carousel-controls
+    .hero-slider-arrow:not(:disabled):hover {
+    scale: 1.08;
+    box-shadow: 0 6px 18px rgba(0,0,0,.24) !important;
+  }
+  body.komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu)
+    > :is(button,a):not(:disabled):not([aria-disabled="true"]):hover {
+    background: rgba(255,255,255,.07) !important;
+    color: #FFFFFF !important;
+  }
+}
+
+/* Genre mood tiles: merged into final mobile override layer */
+/* KomiAnime · genre moods + compact catalog header, monochrome, 2026-11-23 */
+:root {
+  --komi-mood-bg: #09090B;
+  --komi-mood-surface: #141417;
+  --komi-mood-surface-hover: #1A1A1F;
+  --komi-mood-border: rgba(255,255,255,.08);
+  --ease-spring: cubic-bezier(.22,1,.36,1);
+  --ease-press: cubic-bezier(.4,0,.2,1);
+}
+.komi-media-hub .komi-moods {margin: 0 0 32px; color:#fff;}
+.komi-media-hub .komi-moods-heading {display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;}
+.komi-media-hub .komi-moods-heading h2 {font:800 24px/1.2 Manrope,Inter,sans-serif;letter-spacing:-.035em;margin:0;color:#fff;}
+.komi-media-hub .komi-moods-heading p {margin:3px 0 0;font:500 13.5px/1.45 Inter,sans-serif;color:#8E8E93;}
+.komi-media-hub .komi-moods-all,.komi-media-hub .komi-tool-menu {position:relative;flex:none;z-index:10;}
+.komi-media-hub .komi-moods-all[open],.komi-media-hub .komi-tool-menu[open]{z-index:30;}
+.komi-media-hub .komi-moods-all summary,.komi-media-hub .komi-tool-menu summary,
+.komi-media-hub .komi-tool-filters {list-style:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;box-sizing:border-box;min-height:39px;padding:10px 20px;border-radius:999px;border:1px solid var(--komi-mood-border);background:#16161A;color:#E4E4E7;font:700 13px/1.2 Manrope,Inter,sans-serif;white-space:nowrap;cursor:pointer;transition:transform .18s var(--ease-spring),background .18s,border-color .18s;}
+.komi-media-hub .komi-moods-all summary::-webkit-details-marker,.komi-media-hub .komi-tool-menu summary::-webkit-details-marker {display:none;}
+.komi-media-hub .komi-moods-all summary:hover,.komi-media-hub .komi-tool-menu summary:hover,
+.komi-media-hub .komi-tool-filters:hover {background:#242429;border-color:rgba(255,255,255,.28);transform:translateY(-1px);}
+.komi-media-hub .komi-moods-all summary:active,.komi-media-hub .komi-tool-menu summary:active,
+.komi-media-hub .komi-tool-filters:active {transform:scale(.97);}
+.komi-media-hub .komi-moods-grid {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;}
+.komi-media-hub .komi-mood-card {appearance:none;box-sizing:border-box;position:relative;isolation:isolate;width:100%;height:112px;min-width:0;padding:0;display:block;text-align:left;overflow:hidden;border-radius:16px;border:1px solid var(--komi-mood-border);background:linear-gradient(135deg,#242429,#141417 62%,#09090B);color:#fff;cursor:pointer;transform:translateY(0);transition:transform .18s var(--ease-spring),border-color .2s ease,box-shadow .2s ease;}
+.komi-media-hub .komi-mood-card::after {content:"";position:absolute;z-index:3;inset:0;border-radius:inherit;box-shadow:inset 0 0 0 1px rgba(255,255,255,.035);pointer-events:none;}
+.komi-media-hub .komi-mood-art {position:absolute;z-index:0;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(100%) contrast(1.15) brightness(.75);transition:transform .35s var(--ease-spring),filter .3s ease;}
+.komi-media-hub .komi-mood-gradient {position:absolute;inset:0;z-index:1;background:linear-gradient(90deg,rgba(12,12,15,.94) 0%,rgba(16,16,20,.76) 52%,rgba(22,22,27,.42) 100%);}
+.komi-media-hub .komi-mood-copy {position:absolute;z-index:2;inset:auto 16px 16px 20px;display:flex;flex-direction:column;gap:3px;min-width:0;}
+.komi-media-hub .komi-mood-copy strong {font:800 17px/1.16 Manrope,Inter,sans-serif;letter-spacing:-.025em;color:#fff;}
+.komi-media-hub .komi-mood-copy small {font:500 12.5px/1.25 Inter,sans-serif;color:rgba(255,255,255,.65);}
+.komi-media-hub .komi-mood-card:hover {transform:translateY(-2px);border-color:rgba(255,255,255,.28);box-shadow:0 10px 28px rgba(0,0,0,.25);}
+.komi-media-hub .komi-mood-card:hover .komi-mood-art {transform:scale(1.07);filter:grayscale(100%) contrast(1.15) brightness(.9);}
+.komi-media-hub .komi-mood-card:active {transform:scale(.97);}
+.komi-media-hub .komi-mood-card.is-selected,.komi-media-hub .komi-mood-card[aria-pressed="true"] {border:1.5px solid #fff;box-shadow:inset 0 0 0 .5px #fff;}
+.komi-media-hub .komi-moods-dropdown,.komi-media-hub .komi-tool-dropdown {position:absolute;right:0;top:calc(100% + 8px);width:min(360px,calc(100vw - 32px));max-height:50vh;overflow-y:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:10px;background:#1A1A1F;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 20px 50px #000a;}
+.komi-media-hub .komi-tool-dropdown{width:220px;grid-template-columns:1fr;}
+.komi-media-hub :is(.komi-moods-dropdown,.komi-tool-dropdown) button {appearance:none;background:#141417;color:#E4E4E7;border:1px solid transparent;border-radius:12px;padding:11px 12px;text-align:left;font:700 12px/1.25 Inter,sans-serif;cursor:pointer;min-width:0;transition:background .18s,border-color .18s,transform .18s var(--ease-spring);}
+.komi-media-hub :is(.komi-moods-dropdown,.komi-tool-dropdown) button:hover {background:#242429;border-color:rgba(255,255,255,.2);}
+.komi-media-hub :is(.komi-moods-dropdown,.komi-tool-dropdown) button:active {transform:scale(.97);}
+.komi-media-hub :is(.komi-moods-dropdown,.komi-tool-dropdown) button[aria-pressed="true"] {background:#fff;color:#09090B;}
+.komi-media-hub .komi-catalog-head-row {display:flex;justify-content:space-between;align-items:center;gap:20px;margin:0 0 12px;}
+.komi-media-hub .komi-catalog-heading {display:flex;align-items:baseline;flex-wrap:wrap;column-gap:12px;row-gap:4px;min-width:0;}
+.komi-media-hub .komi-catalog-heading :is(h1,h2) {margin:0;font:800 24px/1.25 Manrope,Inter,sans-serif;letter-spacing:-.03em;color:#fff;}
+.komi-media-hub .komi-catalog-heading .komi-catalog-number {color:#8E8E93;font:600 12px/1.2 Inter,sans-serif;white-space:nowrap;}
+.komi-media-hub .komi-catalog-tools {display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:8px;}
+.komi-media-hub .komi-tool-menu summary {min-height:38px;padding:9px 14px;font-size:12px;}
+.komi-media-hub .komi-tool-filters {min-height:38px;padding:9px 16px;font-size:12px;}
+.komi-media-hub .komi-moods + .komi-catalog-head-row {margin-top:4px;}
+.komi-media-hub .komi-catalog-v5 {background:var(--komi-mood-bg);color:#fff;scroll-margin-top:24px;}
+.komi-media-hub .komi-catalog-v5 .komi-catalog-category-pills,
+.komi-media-hub .komi-home-quick-categories {display:flex;align-items:center;gap:8px;margin:12px 0 18px;padding:0 0 3px;overflow-x:auto;scrollbar-width:none;}
+.komi-media-hub .komi-catalog-v5 .komi-catalog-category-pills button,
+.komi-media-hub .komi-home-quick-categories button {min-height:40px;padding:11px 20px!important;}
+.komi-media-hub .komi-catalog-v5 .komi-catalog-search {max-width:600px;margin:0 0 16px;}
+.komi-media-hub .komi-catalog-advanced {margin:12px 0;border-radius:18px;border:1px solid var(--komi-mood-border);padding:16px;background:#141417;}
+.komi-media-hub .komi-catalog-advanced[hidden] {display:none!important;}
+.komi-media-hub .komi-catalog-advanced .catalog-filters-box {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.komi-media-hub .komi-catalog-advanced .form-group {min-width:0;}
+.komi-media-hub .komi-catalog-selected-genre {display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:14px 0;}
+.komi-media-hub .komi-catalog-selected-genre span {color:#8E8E93;font:600 12px Inter,sans-serif;}
+.komi-media-hub .komi-catalog-selected-genre button {background:#fff;border:1px solid #fff;border-radius:999px;padding:9px 14px;color:#09090B;font:800 12px Inter,sans-serif;cursor:pointer;transition:transform .18s var(--ease-spring);}
+.komi-media-hub .komi-catalog-selected-genre button:hover {transform:translateY(-1px);}
+.komi-media-hub .komi-catalog-selected-genre button:active {transform:scale(.97);}
+.komi-media-hub .komi-catalog-v5 :is(.komi-catalog-hide-switch,.komi-catalog-clear) {margin:9px 8px 8px 0;}
+.komi-media-hub :is(.komi-mood-card,.komi-tool-filters,.komi-moods-all summary,.komi-tool-menu summary,.komi-catalog-selected-genre button):focus-visible {outline:2px solid #fff;outline-offset:3px;}
+@media (max-width:1023px) {.komi-media-hub .komi-moods-grid {grid-template-columns:repeat(2,minmax(0,1fr));}.komi-media-hub .komi-catalog-advanced .catalog-filters-box {grid-template-columns:repeat(2,minmax(0,1fr));}.komi-media-hub .komi-catalog-head-row {align-items:flex-start;flex-wrap:wrap;}}
+@media (max-width:519px) {.komi-media-hub .komi-moods-grid {gap:10px;}.komi-media-hub .komi-mood-card {height:96px;border-radius:14px;}.komi-media-hub .komi-mood-copy {inset:auto 11px 12px 13px;gap:4px;}.komi-media-hub .komi-mood-copy strong {font-size:15px;}.komi-media-hub .komi-mood-copy small {font-size:11px;}.komi-media-hub .komi-moods-heading h2,.komi-media-hub .komi-catalog-heading :is(h1,h2) {font-size:22px;}.komi-media-hub .komi-moods-all summary {padding:9px 13px;font-size:12px;}.komi-media-hub .komi-catalog-tools {justify-content:flex-start;gap:6px;}.komi-media-hub .komi-tool-menu summary,.komi-media-hub .komi-tool-filters {font-size:11px;padding:9px 12px;}.komi-media-hub .komi-catalog-advanced .catalog-filters-box {grid-template-columns:1fr;}.komi-media-hub .komi-moods {margin-bottom:26px;}}
+@media (prefers-reduced-motion:reduce) {.komi-media-hub :is(.komi-mood-card,.komi-mood-art,.komi-tool-filters,.komi-moods-all summary,.komi-tool-menu summary,.komi-catalog-selected-genre button) {transition:none!important;animation:none!important;}.komi-media-hub .komi-mood-card:hover,.komi-media-hub .komi-mood-card:active,.komi-media-hub .komi-mood-card:hover .komi-mood-art {transform:none!important;}}
+.komi-media-hub .komi-catalog-v5 .komi-catalog-search {position:relative;display:flex;align-items:center;min-height:48px;padding:0 14px;gap:10px;background:#141417;border:1px solid var(--komi-mood-border);border-radius:999px;}
+.komi-media-hub .komi-catalog-v5 .komi-catalog-search svg {flex:0 0 19px;width:19px;height:19px;fill:none;stroke:#8E8E93;stroke-width:2;}
+.komi-media-hub .komi-catalog-v5 .komi-catalog-search input {flex:1;min-width:0;border:0;outline:0;box-shadow:none;background:transparent;color:#fff;font:500 14px Inter,sans-serif;}
+.komi-media-hub .komi-catalog-v5 .komi-catalog-search:focus-within {border-color:rgba(255,255,255,.35);}
