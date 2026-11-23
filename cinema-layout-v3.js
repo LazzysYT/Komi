@@ -144,7 +144,15 @@
   }
   function shareUrl(context) {
     const id = String(context.animeId);
-    return /^[1-9][0-9]{0,11}$/.test(id) ? new URL('/anime/' + id, location.origin).href : location.origin + '/';
+    if (!/^[1-9][0-9]{0,11}$/.test(id)) return location.origin + '/';
+    const url = new URL('/anime/' + id, location.origin);
+    const number = context.grid?.querySelectorAll('.komi-episode-number')[context.index]?.dataset.episodeNumber;
+    if (/^[1-9][0-9]{0,5}$/.test(String(context.season)) && /^[1-9][0-9]{0,5}$/.test(String(number || ''))) {
+      url.searchParams.set('season',String(context.season));
+      url.searchParams.set('episode',number);
+      url.hash = 'player';
+    }
+    return url.href;
   }
   async function shareAnime(context) {
     const url = shareUrl(context);
