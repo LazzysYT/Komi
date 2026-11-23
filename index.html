@@ -6,7 +6,7 @@
     <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
     <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
     <meta name="theme-color" content="#090909">
-    <meta name="komi-ui-revision" content="20261123-icon-rail-fix-v2">
+    <meta name="komi-ui-revision" content="20261123-stable-reload-v1">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="Komi Anime Hub">
@@ -18,11 +18,14 @@
     <!-- Redirect the old #premium route before the main SPA loads. -->
     <script src="/premium-entry.js?v=20261121"></script>
     <script src="/shop-first-paint.js?v=20261122b"></script>
+    <!-- Runs before body parsing: JS visitors never see the SEO fallback flash. -->
+    <script src="/komi-home-boot.js?v=20261123-v1"></script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
     <link rel="stylesheet" href="/komi.production.css?v=20261122h-partners-v2">
     <link rel="stylesheet" href="/komi-pill-system.css?v=20261123-layoutfix1">
     <link rel="stylesheet" href="/komi-icon-rail.css?v=20261123-tooltip-v5">
+    <link rel="stylesheet" href="/komi-home-boot.css?v=20261123-v1">
     
     
     
@@ -232,6 +235,26 @@
             </div>
         </header>
         <main id="mainContainer">
+            <!-- JS-only loading shell, same footprint as the hydrated homepage.
+                 Static content below remains indexable and works with JS disabled. -->
+            <div class="komi-boot-shell" role="status" aria-live="polite" aria-label="Загружаем главную KomiAnime">
+                <div class="komi-boot-hero">
+                    <div class="komi-boot-copy" aria-hidden="true">
+                        <span class="komi-boot-line komi-boot-tag"></span>
+                        <span class="komi-boot-line komi-boot-title"></span>
+                        <span class="komi-boot-line komi-boot-title short"></span>
+                        <span class="komi-boot-line komi-boot-desc"></span>
+                        <span class="komi-boot-line komi-boot-desc short"></span>
+                        <span class="komi-boot-pill"></span>
+                    </div>
+                </div>
+                <div class="komi-boot-resume" aria-hidden="true">
+                    <span class="komi-boot-line komi-boot-heading"></span>
+                    <div class="komi-boot-cards">
+                        <span></span><span></span><span></span><span></span><span></span><span></span>
+                    </div>
+                </div>
+            </div>
             <section class="komi-seo-fallback komi-seo-spotlight" aria-label="О Komi Anime Hub">
                 <div class="komi-seo-spotlight-copy">
                     <span class="komi-seo-spotlight-eyebrow">Выбор Komi Anime</span>
