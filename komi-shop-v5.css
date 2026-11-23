@@ -340,7 +340,8 @@
 @media(max-width:1150px){
  #shop.komi-shop-v5 .sv3-layout{grid-template-columns:minmax(0,1fr) minmax(285px,310px);gap:13px}
  #shop.komi-shop-v5 .sv5-weekly{grid-template-columns:minmax(0,1fr) auto;gap:15px}
- #shop.komi-shop-v5 .sv5-weekly-items{display:none}
+ #shop.komi-shop-v5 .sv5-weekly-items{display:flex;grid-column:1;grid-row:2;justify-content:flex-start}
+ #shop.komi-shop-v5 .sv5-bundle-btn{grid-column:2;grid-row:1 / 3}
 }
 @media(max-width:960px){
  #shop.komi-shop-v5{padding-bottom:205px}
@@ -368,6 +369,8 @@
  #shop.komi-shop-v5 .sv3-top-actions{justify-content:flex-start;gap:7px}
  #shop.komi-shop-v5 .sv3-top-actions :is(.sv3-balance,.sv3-outline-btn,.sv3-earn summary){min-height:40px;padding:9px 13px;font-size:11px}
  #shop.komi-shop-v5 .sv5-weekly{grid-template-columns:1fr;padding:17px;border-radius:22px;min-height:0}
+ #shop.komi-shop-v5 .sv5-weekly-items{grid-column:auto;grid-row:auto}
+ #shop.komi-shop-v5 .sv5-bundle-btn{grid-column:auto;grid-row:auto}
  #shop.komi-shop-v5 .sv5-bundle-btn{justify-self:start;min-height:43px}
  #shop.komi-shop-v5 .sv3-filter-actions{gap:9px}
  #shop.komi-shop-v5 .sv5-sort-segments{width:100%;justify-content:space-between}
