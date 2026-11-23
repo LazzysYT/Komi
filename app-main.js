@@ -2860,13 +2860,13 @@ async function loadDataFromCloud(attempt = 0) {
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
             const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
             const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
-            return '<div class="anime-card" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
+            return '<div class="anime-card" data-komi-anime-id="'+escapeFriendHtml(id)+'" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
                 'data-komi-onclick="playSound();openWatchModal(\''+id+'\')" data-komi-onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+statusMarkup+quickStatusMarkup+
                     '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterDirectAttr+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
-                    '<div class="anime-quick-view"><span class="btn-glow" style="padding:7px 12px;font-size:11px">▷ Смотреть</span></div>'+
+                    '<div class="komi-card-hover-ui" aria-hidden="false">'+'<span class="komi-card-hover-play" aria-hidden="true">▶</span>'+'<div class="komi-card-hover-actions">'+'<button type="button" class="komi-card-details-now" data-komi-card-detail aria-label="Подробнее: '+name+'">Подробнее</button>'+'<button type="button" class="komi-card-watch-now" data-komi-onclick="playSound();openWatchModal(\''+id+'\')" aria-label="Смотреть: '+name+'">▶ Смотреть</button>'+'</div></div>'+
                 '</div>'+
                 '<div class="anime-info"><div class="anime-title" title="'+name+'">'+name+'</div>'+
                   '<div class="komi-card-meta">'+(year?'<span>'+year+'</span>':'')+'<span>'+type+'</span>'+(fresh?'<span class="komi-new-ep">● Новая серия</span>':'')+'</div>'+
@@ -3944,6 +3944,12 @@ async function loadDataFromCloud(attempt = 0) {
             const key = (user.authUserId || user.username) + ':' + id;
             if (komiFavoritePending.has(key)) return;
             const next = userFavorites[user.username]?.[id] === category ? null : category;
+            const favoriteButtons = [...document.querySelectorAll('#watchModalContent .komi-compact-favorite')];
+            const paintFavorite = enabled => favoriteButtons.forEach(button => {
+                button.textContent = enabled ? '♥ В избранном' : '♡ В избранное';
+                button.setAttribute('aria-pressed', String(Boolean(enabled)));
+            });
+            paintFavorite(Boolean(next));
             komiFavoritePending.add(key);
             try {
                 if (!user.authUserId || !_supabase)
@@ -3959,9 +3965,11 @@ async function loadDataFromCloud(attempt = 0) {
                 if (next) komiHydrateSavedAnimeCards(user.authUserId)
                     .catch(error=>console.warn('Карточки избранного:',error.message));
                 komiStatusFeedback(next ? 'Добавлено в избранное' : 'Удалено из избранного');
-                if (document.getElementById('watchModal')?.classList.contains('active') && String(window.komiActiveAnimeId) === String(id))
-                    openWatchModal(id,window.komiActiveSeason,window.komiActiveEpisode);
-            } catch (error) { komiStatusFeedback('Не удалось сохранить избранное. '+error.message); }
+                // Do not remount the player after a favorite toggle: it resets playback.
+            } catch (error) {
+                paintFavorite(!next);
+                komiStatusFeedback('Не удалось сохранить избранное. '+error.message);
+            }
             finally { komiFavoritePending.delete(key); }
         }
 
@@ -4241,7 +4249,14 @@ async function loadDataFromCloud(attempt = 0) {
             const previous = userAnimeStatuses[user.username]?.[animeId];
             const next = previous === status ? null : status;
             pendingAnimeStatuses.add(requestKey);
-            komiStatusFeedback('Сохраняем статус…');
+            // Optimistic paint keeps the existing Supabase mutation as source of truth.
+            const statusButtons = [...document.querySelectorAll('#watchModalContent [data-watch-status]')];
+            const paintWatchStatus = value => statusButtons.forEach(button => {
+                const selected = button.dataset.watchStatus === value;
+                button.classList.toggle('active',selected);
+                button.setAttribute('aria-pressed', String(selected));
+            });
+            paintWatchStatus(next);
             try {
                 if (user.authUserId) {
                     await persistAuthenticatedStatus(animeId, next);
@@ -4267,6 +4282,7 @@ async function loadDataFromCloud(attempt = 0) {
                     }
                 }
             } catch (error) {
+                paintWatchStatus(previous);
                 if (currentUser?.authUserId === user.authUserId) komiStatusFeedback('Не удалось сохранить статус. ' + error.message);
             } finally {
                 pendingAnimeStatuses.delete(requestKey);
