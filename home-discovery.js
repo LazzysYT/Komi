@@ -255,7 +255,6 @@
       '<section class="komi-hub-catalog-preview" aria-label="Каталог аниме">' +
       (typeof context.quickFilters === 'function' ? context.quickFilters() : '') +
       '<div class="anime-grid">' + catalogPreview.map(context.renderCard).join('') + '</div></section>' +
-      genreShelf(animeList) +
       shelf('Популярное прямо сейчас','Высокие оценки Shikimori и недавно обновлённые серии',popular,'all',context.renderCard,'komi-home-popular') +
       shelf('Новинки сезона','Релизы '+latestYear+' года из каталога',season,'all',context.renderCard,'komi-home-season') +
       shelf('На один вечер','Сериалы продолжительностью до 13 серий',short,'short',context.renderCard,'komi-home-evening') +
