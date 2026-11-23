@@ -313,35 +313,45 @@ async function checkNotifications(page) {
      catalogInitialLoadComplete=true;komiHomeCatalogReady=true;
      render();
    });
-   const quick=page.locator('#komiHomeQuickFilters select[data-komi-home-filter]');
-   assert.equal(await quick.count(),4,'Home needs four usable quick filter selectors');
-   const quickLabels=await quick.evaluateAll(elements=>elements.map(select=>({
-     first:select.options[0]?.textContent.trim(),
-     label:document.querySelector('label[for="'+select.id+'"]')?.textContent.trim(),
-     display:getComputedStyle(document.querySelector('label[for="'+select.id+'"]')).display
-   })));
-   assert.deepEqual(quickLabels.map(row=>row.first),['Все жанры','Все годы','Все типы','Сортировка']);
-   assert.deepEqual(quickLabels.map(row=>row.label),['Жанр','Год','Тип','Сортировка']);
-   assert.ok(quickLabels.every(row=>row.display!=='none'),'All quick filter labels must be visible');
-   for(const [kind,value,expected] of [
-     ['year','2026','catalogFilterYear'],
-     ['genre','Экшен','catalogFilterGenre'],
-     ['type','Фильм','catalogFilterType'],
-     ['sort','rating','catalogSort']
-   ]) {
-     await page.locator('#komiHomeQuickFilter-'+kind).selectOption(value);
-     await page.waitForFunction(()=>currentView==='catalog');
-     assert.equal(await page.evaluate(name=>({catalogFilterYear,catalogFilterGenre,catalogFilterType,catalogSort})[name],expected),value,'Quick filter '+kind+' must update catalog state');
-     assert.equal(await page.locator('#komiCatalogGrid .anime-card').count()>0,true,'Filtered catalog must still show matching cards');
-     await page.evaluate(()=>navigate('home'));
-     await page.waitForSelector('#komiHomeQuickFilters');
-   }
-   await page.locator('#komiHomeQuickFilters .section-see-all').click();
+   // New monochrome mood cards replace the four crowded home selectors.
+   const moods=page.locator('#komiHomeQuickFilters .komi-mood-card');
+   assert.equal(await moods.count(),8,'Home must show eight mood genre cards');
+   assert.equal(await page.locator('#komiHomeQuickFilters .komi-catalog-category-pills button').count(),5,
+     'Home must retain five quick catalog categories');
+   await page.locator('#komiHomeQuickFilters .komi-mood-card[data-komi-mood-genre="Экшен"]').click();
    await page.waitForFunction(()=>currentView==='catalog');
-   assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
-   await page.waitForFunction(()=>document.activeElement?.id==='komiCatalogSearchInput',{timeout:5000});
-   assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
-     'All filters must focus the real full-catalog search rather than only changing the hash');
+   assert.equal(await page.evaluate(()=>catalogFilterGenre),'Экшен');
+   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
+   assert.equal(await page.locator('#komiCatalogHeadingCount').count(),1);
+   await page.locator('.komi-catalog-selected-genre [data-komi-mood-genre="Все"]').click();
+   await page.waitForFunction(()=>catalogFilterGenre==='Все');
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
+
+   await page.locator('#komiHomeQuickFilters .komi-tool-menu').nth(1).locator('summary').click();
+   await page.locator('#komiHomeQuickFilters [data-komi-quick-year="2026"]').click();
+   await page.waitForFunction(()=>currentView==='catalog');
+   assert.equal(await page.evaluate(()=>catalogFilterYear),'2026');
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
+
+   await page.locator('#komiHomeQuickFilters .komi-tool-menu').first().locator('summary').click();
+   await page.locator('#komiHomeQuickFilters [data-komi-quick-sort="rating"]').click();
+   await page.waitForFunction(()=>currentView==='catalog');
+   assert.equal(await page.evaluate(()=>catalogSort),'rating');
+   await page.evaluate(()=>navigate('home'));
+   await page.waitForSelector('#komiHomeQuickFilters');
+
+   await page.locator('#komiHomeQuickFilters [data-komi-more-filters="home"]').click();
+   await page.waitForFunction(()=>currentView==='catalog');
+   await page.waitForSelector('#komiCatalogAdvanced:not([hidden])');
+   assert.equal(await page.locator('#komiCatalogAdvanced select').count(),4,
+     'Advanced catalog panel must retain genre, year, type and sort controls');
+   await page.locator('#komiCatalogYear').selectOption('Все');
+   await page.waitForFunction(()=>catalogFilterYear==='Все');
+   await page.locator('#komiCatalogType').selectOption('Фильм');
+   await page.waitForFunction(()=>catalogFilterType==='Фильм');
+   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
    assert.equal(new URL(page.url()).hash,'#catalog');
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
