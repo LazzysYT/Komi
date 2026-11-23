@@ -523,10 +523,15 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
    await page.locator('.komi-episodes-toggle').click();
-   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
-   assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
-     'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
-   await page.locator('.komi-episodes-toggle').click();
+   if (width <= 767) {
+     await page.locator('#komiMobileSheet.is-open .komi-watch-sidebar').waitFor();
+     assert.equal(await page.locator('#komiMobileSheetTitle').textContent(),'Список серий');
+   } else {
+     assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
+     assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
+       'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
+     await page.locator('.komi-episodes-toggle').click();
+   }
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-placeholder').count(),2);
