@@ -45,20 +45,26 @@ fs.mkdirSync(output,{recursive:true});
             // A live source check catches stale HTML / wrong alias even if
             // hydrated JavaScript happens to show the right filter controls.
             const homepageHtml=await response.text();
-            assert.match(homepageHtml,/name="komi-ui-revision" content="20261120-admin-guest-gates"/,
-              'Main domain must serve the Media Hub homepage while deployment aliases converge');
-            assert.match(homepageHtml,/data-komi-click="home-quick-filters-all"/,
-              'The first-paint all-filters link needs a real JavaScript navigation action');
-            for(const label of ['Все жанры','Все годы','Все типы','Сортировка'])
-              assert.ok(homepageHtml.includes('<option value="">'+label+'</option>'),
-                'Main domain HTML must contain filter caption '+label);
-            console.log('PASS production first-paint quick filter captions, version and all-filters action');
-            const cssHref=homepageHtml.match(/href="(\/komi\.bundle\.css\?v=[^"]+)"/)?.[1]
-               || '/komi.bundle.css';
-             const css=await page.request.get(new URL(cssHref,base).href,{timeout:20000});
-            assert.equal(css.status(),200,'Bundled CSS must be available on production');
-            assert.match(css.headers()['content-type']||'',/text\/css/,'Bundle must be served as CSS');
-            assert.ok((await css.body()).length>200000,'Bundled CSS is missing some source styles');
+            // Production now uses the standalone monochrome genre section.
+            // Check its actual first-paint structure, not a removed 2026-11-20
+            // filter toolbar or obsolete build revision string.
+            assert.match(homepageHtml,/name="komi-ui-revision" content="20261123-stable-reload-v1"/,
+              'Main domain must serve the current Media Hub homepage');
+            assert.match(homepageHtml,/id="komiHomeQuickFilters"/,
+              'First-paint catalog controls must be present');
+            assert.match(homepageHtml,/id="komiMoodTitle">Жанры</,
+              'First-paint genre selection must be present');
+            assert.match(homepageHtml,/data-komi-more-filters="home"/,
+              'All-filters must stay reachable through the current home action');
+            assert.match(homepageHtml,/data-komi-home-category="all"/,
+              'All-category button must be available in first paint');
+            console.log('PASS production first-paint genres, catalog categories and navigation');
+            const cssHref=homepageHtml.match(/href="(\/komi\.production\.css\?v=[^"]+)"/)?.[1]
+              || '/komi.production.css';
+            const css=await page.request.get(new URL(cssHref,base).href,{timeout:20000});
+            assert.equal(css.status(),200,'Current production CSS must be available');
+            assert.match(css.headers()['content-type']||'',/text\/css/,'Stylesheet must be served as CSS');
+            assert.ok((await css.body()).length>200000,'Production CSS is missing core styles');
             const denied=await page.request.get(
               base+'api/poster?src='+encodeURIComponent('https://127.0.0.1/private'),
               {timeout:20000});
