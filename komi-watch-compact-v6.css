@@ -680,7 +680,7 @@
 /* Watch v6.3 — artwork fallback, single-line status and two brand accents. */
 #watchModal .komi-episode-list .komi-episode-preview.komi-episode-thumb {
   position:relative!important;display:block!important;overflow:hidden!important;
-  flex:0 0 82px!important;width:82px!important;max-width:82px!important;height:48px!important;
+  flex:0 0 88px!important;width:88px!important;max-width:88px!important;height:auto!important;aspect-ratio:16/9!important;
   border-radius:8px!important;background:linear-gradient(135deg,#343434,#181818)!important;
   filter:none!important;isolation:isolate;
 }
@@ -747,3 +747,9 @@
   #watchModal #komiAnimeComments .komi-comments-actions button[type="submit"] {padding-inline:10px!important;font-size:12px!important}
   #watchModal #komiAnimeComments .komi-comments-form:has(.komi-comments-actions small) {grid-template-columns:32px minmax(0,1fr)!important}
 }
+
+/* Preserve readable captions and keyboard focus across compact controls. */
+#watchModal .komi-episode-list .komi-list-label {min-width:0!important;overflow-wrap:anywhere;}
+#watchModal .komi-episode-list .komi-list-label small {white-space:normal!important;line-height:1.35!important;}
+#watchModal :is(.komi-watch-quick-actions button,.komi-watch-quick-actions summary,.komi-episode-number):focus-visible {outline:2px solid #ddd!important;outline-offset:2px!important;}
+@media(max-width:600px){#watchModal .player-wrapper .komi-next-countdown{right:10px!important;bottom:60px!important;}}
