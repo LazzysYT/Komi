@@ -251,6 +251,20 @@ function komiMaybeOpenSeoAnime() {
 
 async function loadDataFromCloud(attempt = 0) {
     catalogInitialLoadFailed = false;
+    // Public-only IndexedDB snapshot may paint the complete catalog immediately
+    // while current Supabase data is fetched and verified in the background.
+    if (attempt === 0 && window.KomiPublicCatalogCache) {
+        void window.KomiPublicCatalogCache.read().then(cached => {
+            if (!cached?.length || komiHomeCatalogReady) return;
+            animeList = cached;
+            ++komiCatalogRevision;
+            catalogInitialLoadComplete = true;
+            komiHomeCatalogReady = true;
+            komiHomePreviewCatalog = null;
+            komiStoreReadyResume();
+            render();
+        }).catch(() => {});
+    }
     try {
         if (!_supabase) throw new Error('Supabase не подключён');
 
@@ -286,7 +300,10 @@ async function loadDataFromCloud(attempt = 0) {
             // Allow catalog/search to use the first batch, but never rebuild the
             // home carousel from 48 low-ID records: the final selection differs.
             if (catalog.length) {
-                if (!komiHomePreviewCatalog || currentView !== 'home') animeList = catalog.slice();
+                // Never replace a complete cached view with the first 48 records.
+                if (!komiHomeCatalogReady &&
+                    (!komiHomePreviewCatalog || currentView !== 'home'))
+                    animeList = catalog.slice();
                 if (typeof komiMaybeOpenSeoAnime === 'function') komiMaybeOpenSeoAnime();
                 if (!catalogInitialLoadComplete) {
                     catalogInitialLoadComplete = true;
@@ -301,6 +318,8 @@ async function loadDataFromCloud(attempt = 0) {
         komiHomeCatalogReady = true;
         komiHomePreviewCatalog = null;
         window.KomiHomeSnapshot?.write(animeList, komiAnimeYear, komiCatalogType);
+        // Persist only the public, view-projected fields. Account data is never cached.
+        void window.KomiPublicCatalogCache?.write(catalog);
         komiStoreReadyResume();
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
@@ -2070,6 +2089,18 @@ async function loadDataFromCloud(attempt = 0) {
             return task;
         }
 
+        let komiProfileAnimeIndexCache = {source:null,revision:-1,index:null};
+        function komiProfileAnimeIndex() {
+            if (komiProfileAnimeIndexCache.source !== animeList ||
+                komiProfileAnimeIndexCache.revision !== komiCatalogRevision ||
+                !komiProfileAnimeIndexCache.index) {
+                komiProfileAnimeIndexCache = {
+                    source:animeList,revision:komiCatalogRevision,
+                    index:new Map(animeList.map(anime=>[String(anime.id),anime]))
+                };
+            }
+            return komiProfileAnimeIndexCache.index;
+        }
         function renderProfileView(container) {
             const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
             const p = userProfiles[username] || { 
@@ -2089,7 +2120,10 @@ async function loadDataFromCloud(attempt = 0) {
 
             const userStatuses = userAnimeStatuses[username] || {};
             // Rendering a saved collection should not repeatedly scan all 7k+ cards.
-            const profileAnimeById = new Map(animeList.map(anime => [String(anime.id), anime]));
+            // Reuse the public index. Never add private saved-card data to it.
+            const sharedAnimeIndex = komiProfileAnimeIndex();
+            const profileAnimeById = isMe && currentUser?.authUserId === komiSavedCardsOwner
+                ? new Map(sharedAnimeIndex) : sharedAnimeIndex;
             // The full catalog is loaded in pages. User-owned cards can be resolved
             // directly while their catalog page has not arrived yet.
             if (isMe && currentUser?.authUserId === komiSavedCardsOwner) {
