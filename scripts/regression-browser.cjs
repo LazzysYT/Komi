@@ -353,7 +353,7 @@ async function checkNotifications(page) {
       episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
     catalogInitialLoadComplete=true;komiHomeCatalogReady=true;render();
    });
-   assert.match(await page.locator('.komi-hub-hero-kicker').textContent(), /<img data-komi-injected/);
+   assert.match(await page.locator('.komi-hub-genres').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    await page.evaluate(()=>{
      localStorage.setItem('komi_source_1','Embed');

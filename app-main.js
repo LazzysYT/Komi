@@ -1335,13 +1335,14 @@ async function loadDataFromCloud(attempt = 0) {
                     const previousHero = container.querySelector('.komi-home-hero');
                     const previousOwner = previousHero?.dataset.komiOwner || '';
                     const heroSignature = hero => [...hero.querySelectorAll('.hero-slide')].map(slide =>
-                        [slide.dataset.komiAnimeId, slide.classList.contains('active'),
+                        [slide.dataset.komiAnimeId, slide.dataset.komiHeroSaved, slide.classList.contains('active'),
                          slide.querySelector('img')?.dataset.posterDirect || '',
                          slide.querySelector('h1')?.textContent || ''].join('|')).join('::');
                     const oldHeroSignature = previousHero ? heroSignature(previousHero) : '';
                     const homeMarkup = window.KomiHomeDiscovery.render({
                         animeList: komiHomeCatalogReady ? animeList : komiHomePreviewCatalog,
                         currentUser, progress:komiEpisodeProgress,
+                        statuses: currentUser?.authUserId ? (userAnimeStatuses[currentUser.username] || {}) : {},
                         resumeReady: Boolean(currentUser?.authUserId &&
                             komiHomeCatalogReady && komiResumeReadyUid === currentUser.authUserId),
                         resumePreview:komiResumePreview,
@@ -1699,7 +1700,10 @@ async function loadDataFromCloud(attempt = 0) {
                 const active = idx === currentSlideIndex;
                 slide.classList.toggle('active', active);
                 slide.setAttribute('aria-hidden', String(!active));
+                slide.inert = !active;
             });
+            const counter = slider.querySelector('[data-komi-slide-current]');
+            if (counter) counter.textContent = String(currentSlideIndex + 1).padStart(2, '0');
             dots.forEach((dot, idx) => {
                 const active = idx === currentSlideIndex;
                 dot.classList.toggle('active', active);
@@ -4133,6 +4137,15 @@ async function loadDataFromCloud(attempt = 0) {
             clearTimeout(komiStatusFeedback.timer);
             komiStatusFeedback.timer = setTimeout(() => notice.remove(), 5000);
         }
+        // Keep the hero list button synchronized with every Supabase-backed list
+        // status. Removing an existing status must not silently replace it.
+        function toggleHeroAnimeList(animeId) {
+            if (!currentUser?.authUserId) { openAuthModal('login'); return; }
+            const id = String(animeId);
+            const current = userAnimeStatuses[currentUser.username]?.[id];
+            setAnimeStatus(id, current || 'В планах');
+        }
+
         async function setAnimeStatus(animeId, status) {
             if (!currentUser) { openAuthModal('login'); return; }
             const user = currentUser;

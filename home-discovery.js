@@ -84,55 +84,88 @@
       ' data-komi-onerror="komiCardPosterFallback(this)">';
   }
 
+  function heroReleaseStatus(anime) {
+    const raw = anime && (anime.releaseStatus || anime.status || anime.animeStatus);
+    if (typeof raw !== 'string' || !raw.trim()) return '';
+    const value = raw.trim();
+    const aliases = {
+      ongoing: 'Онгоинг', releasing: 'Онгоинг', anons: 'Анонс',
+      announced: 'Анонс', released: 'Завершено', finished: 'Завершено'
+    };
+    return aliases[value.toLowerCase()] || value.slice(0, 40);
+  }
+  function heroLogo(anime) {
+    const url = anime && (anime.logo_url || anime.logoUrl);
+    return typeof url === 'string' && /^https:\/\/[^\s"'<>]+$/i.test(url) ? url : '';
+  }
   function hero(slides, context) {
     if (!slides.length) return '';
     const index = ((Number(context.currentSlideIndex) || 0) % slides.length + slides.length) % slides.length;
     const total = String(slides.length).padStart(2, '0');
+    const playSvg = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8a1 1 0 0 1 1.5-.86l11 7.2a1 1 0 0 1 0 1.72l-11 7.2A1 1 0 0 1 7 19.2V4.8Z"/></svg>';
+    const bookmarkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z"/></svg>';
+    const infoSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg>';
+
     return '<section class="komi-home-hero" aria-label="Рекомендуем посмотреть">' +
       '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка аниме">' +
       '<div class="hero-slides-wrapper">' + slides.map((anime, i) => {
         const animeId = id(anime);
-        // Shikimori IDs match MAL IDs; keep the site's own ID for navigation.
+        // Shikimori IDs match MAL IDs; internal routes always use Komi's own ID.
         const malId = String(anime.shikimoriId || anime.idMal || anime.malId || animeId);
         const still = Array.isArray(anime.screenshots)
           ? anime.screenshots.find(url => typeof url === 'string' && /^https:\/\//i.test(url)) : '';
         const year = context.year(anime);
         const description = context.describe(anime.desc);
-        const listAction = context.currentUser?.authUserId
-          ? "setAnimeStatus('" + animeId + "', 'В планах')" : "openAuthModal('login')";
+        const animeType = context.type(anime);
+        const releaseStatus = heroReleaseStatus(anime);
+        const episodes = count(anime);
+        const genres = (Array.isArray(anime.genres) ? anime.genres : [anime.genre])
+          .filter(value => typeof value === 'string' && value.trim()).slice(0, 4);
+        const logo = heroLogo(anime);
+        const saved = Boolean(animeId && context.currentUser?.authUserId && context.statuses?.[animeId]);
         const route = '/anime/' + animeId;
-        const category = (Array.isArray(anime.genres) && anime.genres[0]) || 'Выбор Komi Anime';
-
-        return '<article class="hero-slide komi-hd-poster' + (i === index ? ' active' : '') + '"' +
+        const active = i === index;
+        return '<article class="hero-slide komi-hd-poster' + (active ? ' active' : '') + '"' +
           ' data-komi-anime-id="' + escape(malId) + '"' +
+          ' data-komi-hero-saved="' + (saved ? 'true' : 'false') + '"' +
           (still ? ' data-komi-hero-still="' + escape(still) + '"' : '') +
-          ' aria-hidden="' + (i === index ? 'false' : 'true') + '"' +
+          ' aria-hidden="' + (active ? 'false' : 'true') + '"' +
+          (active ? '' : ' inert') +
           ' aria-label="' + escape(anime.title) + '">' +
-          artworkImage(anime, context, i === index ? 'eager' : 'lazy', 'komi-hub-hero-art') +
+          artworkImage(anime, context, active ? 'eager' : 'lazy', 'komi-hub-hero-art') +
           '<div class="komi-home-hero-content">' +
-          '<div class="komi-hub-hero-kicker"><span>' + escape(category) + '</span>' +
-          '<button type="button" class="komi-hub-save" aria-label="Добавить в список" title="Добавить в список" data-komi-onclick="' + listAction + '">' +
-          '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4zM9 10h6m-3-3v6"/></svg></button></div>' +
-          '<h1>' + escape(anime.title) + '</h1>' +
-          '<p' + (description ? '' : ' class="komi-hub-placeholder"') + '>' +
-          (description || 'Описание тайтла пока не добавлено.') + '</p>' +
-          '<div class="hero-meta"><span>★ ' + escape(rating(anime)) + ' Shikimori</span>' +
+          '<div class="komi-hub-title-wrap' + (logo ? ' has-logo' : '') + '">' +
+          (logo ? '<img class="komi-hub-title-logo" src="' + escape(logo) +
+            '" alt="" decoding="async" referrerpolicy="no-referrer">' : '') +
+          '<h1 class="komi-hub-title-text">' + escape(anime.title) + '</h1></div>' +
+          '<div class="hero-meta"><span>★ ' + escape(rating(anime)) + '</span>' +
+          (animeType ? '<span>' + escape(animeType) + '</span>' : '') +
           (year ? '<span>' + escape(year) + '</span>' : '') +
-          '<span>' + escape(context.type(anime)) + '</span></div>' +
-          '<div class="hero-buttons"><a class="komi-hub-play" href="' + route + '#player">▷ Смотреть аниме</a>' +
-          '<a class="komi-hub-glass" href="' + route + '">Подробнее</a></div></div>' +
-          (slides.length > 1 ? '<span class="komi-hub-slide-count" aria-hidden="true">' +
-            String(i + 1).padStart(2, '0') + ' <span>/ ' + total + '</span></span>' : '') + '</article>';
+          (episodes ? '<span>' + episodes + ' эп.</span>' : '') +
+          (releaseStatus ? '<span>' + escape(releaseStatus) + '</span>' : '') + '</div>' +
+          (genres.length ? '<div class="komi-hub-genres">' + genres.map(escape).join(' · ') + '</div>' : '') +
+          (description ? '<p class="komi-hub-description">' + escape(description) + '</p>' : '') +
+          '<div class="hero-buttons">' +
+          '<a class="komi-hub-play" href="' + route + '#player">' + playSvg + '<span>Смотреть</span></a>' +
+          '<button type="button" class="komi-hub-list" aria-pressed="' + (saved ? 'true' : 'false') + '"' +
+          ' data-komi-onclick="toggleHeroAnimeList(\'' + animeId + '\')">' +
+          bookmarkSvg + '<span class="komi-hub-list-label">' + (saved ? '✓ В списке' : 'В список') + '</span></button>' +
+          '<a class="komi-hub-info" href="' + route + '" aria-label="Подробнее: ' + escape(anime.title) + '" title="Подробнее">' +
+          infoSvg + '</a></div></div></article>';
       }).join('') + '</div>' +
-      (slides.length > 1 ? '<div class="komi-hub-carousel-controls">' +
-        '<div class="hero-dots" role="group" aria-label="Слайды">' + slides.map((_, i) =>
+      '<div class="komi-hub-carousel-controls" aria-label="Управление слайдером">' +
+      '<span class="komi-hub-slide-count"><strong data-komi-slide-current>' +
+      String(index + 1).padStart(2, '0') + '</strong><span>/ ' + total + '</span></span>' +
+      (slides.length > 1 ? '<div class="hero-dots" role="group" aria-label="Выбор слайда">' +
+        slides.map((_, i) =>
           '<button type="button" class="hero-dot' + (i === index ? ' active' : '') +
           '" aria-label="Показать тайтл ' + (i + 1) + '" aria-pressed="' +
           (i === index ? 'true' : 'false') + '" data-komi-onclick="setSlide(' + i + ')"></button>'
         ).join('') + '</div>' +
+        '<div class="komi-hub-arrows">' +
         '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
-        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button></div>'
-        : '') + '</div></section>';
+        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button></div>' : '') +
+      '</div></div></section>';
   }
 
   function recentProgress(context, animeList) {
