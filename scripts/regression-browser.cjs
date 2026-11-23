@@ -348,6 +348,8 @@ async function checkNotifications(page) {
        return {
          activeId:document.activeElement?.id,
          activeTag:document.activeElement?.tagName,
+         activeOuter:document.activeElement?.outerHTML?.slice(0,300),
+         activeConnected:document.activeElement?.isConnected,
          searchExists:!!el,
          searchConnected:el?.isConnected,
          disabled:el?.disabled,
@@ -359,7 +361,8 @@ async function checkNotifications(page) {
          currentView,
          focusPending:typeof komiCatalogFocusPending==='undefined'?null:komiCatalogFocusPending,
          searchRect:el?.getBoundingClientRect().toJSON(),
-         focusedWindow:document.hasFocus()
+         focusedWindow:document.hasFocus(),
+         afterManualFocus:(()=>{el?.focus({preventScroll:true}); return {id:document.activeElement?.id,tag:document.activeElement?.tagName};})()
        };
      });
      console.error('Catalog search focus diagnostic:',JSON.stringify(focusDiagnosis));
