@@ -66,9 +66,26 @@
           "value": "no-cache, max-age=0, must-revalidate"
         }
       ]
+    },
+    {
+      "source": "/catalog",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/catalog",
+      "destination": "/index.html"
+    },
     {
       "source": "/anime/:id",
       "destination": "/api/anime?id=:id"
