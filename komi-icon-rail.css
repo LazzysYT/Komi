@@ -487,3 +487,78 @@ body.komi-media-hub .komi-icon-rail #notifDropdown {
     animation-duration: .01ms !important;
   }
 }
+
+/* Home reload anti-flash shell. In the existing final override, no fourth CSS request. */
+/* JS-only first-paint shell. SEO HTML stays visible without JavaScript. */
+.komi-boot-shell { display: none; }
+html.komi-home-booting body.komi-media-hub #mainContainer > .komi-seo-fallback,
+html.komi-home-booting body.komi-media-hub #mainContainer > .komi-static-catalog {
+  display: none !important;
+}
+html.komi-home-booting body.komi-media-hub #mainContainer > .komi-boot-shell {
+  display: block !important;
+}
+.komi-boot-shell {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0 0 24px;
+  pointer-events: none;
+}
+.komi-boot-hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  width: 100%;
+  height: clamp(420px, 62vh, 570px);
+  padding: clamp(26px, 4vw, 74px);
+  border: 1px solid rgba(255,255,255,.13);
+  border-radius: 27px;
+  overflow: hidden;
+  background: radial-gradient(ellipse at 76% 35%, #273139 0%, #171d22 35%, transparent 76%),
+              linear-gradient(110deg, #09090b 15%, #14171b 70%, #101216 100%);
+}
+.komi-boot-copy { width: min(590px, 72%); display: flex; flex-direction: column; gap: 15px; }
+.komi-boot-line, .komi-boot-pill {
+  display: block;
+  flex: none;
+  border-radius: 999px;
+  background: linear-gradient(105deg,#22242a,#33363d,#22242a);
+  background-size: 220% 100%;
+  animation: komi-boot-pulse 1.8s ease-in-out infinite;
+}
+.komi-boot-tag { width: 160px; height: 30px; margin-bottom: 10px; }
+.komi-boot-title { width: 94%; height: clamp(27px,4vw,51px); }
+.komi-boot-title.short { width: 67%; }
+.komi-boot-desc { width: 82%; height: 14px; margin-top: 6px; }
+.komi-boot-desc.short { width: 61%; margin-top: -5px; }
+.komi-boot-pill { width: 188px; height: 49px; margin-top: 12px; }
+.komi-boot-resume { margin-top: 30px; }
+.komi-boot-heading { width: 245px; height: 31px; margin-bottom: 19px; }
+.komi-boot-cards {
+  display: grid;
+  grid-template-columns: repeat(6,minmax(0,1fr));
+  gap: 16px;
+  overflow: hidden;
+}
+.komi-boot-cards span {
+  display: block;
+  min-width: 0;
+  aspect-ratio: 1.35 / 1;
+  border-radius: 17px;
+  background: linear-gradient(110deg, #151519, #292b31, #151519);
+  background-size: 220% 100%;
+  animation: komi-boot-pulse 1.8s ease-in-out infinite;
+}
+@keyframes komi-boot-pulse { 0%,100% {background-position:100% 0} 50% {background-position:0 0} }
+@media (max-width: 767px) {
+  .komi-boot-hero { height: clamp(390px, 64vh, 540px); padding: 22px; border-radius: 19px; }
+  .komi-boot-copy { width: 90%; }
+  .komi-boot-title { height: 34px; }
+  .komi-boot-cards { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 11px; }
+  .komi-boot-cards span:nth-child(n+4) { display: none; }
+  .komi-boot-heading { width: 185px; height: 25px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .komi-boot-line, .komi-boot-pill, .komi-boot-cards span { animation: none; }
+}
