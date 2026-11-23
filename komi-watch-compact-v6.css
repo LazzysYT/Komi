@@ -675,3 +675,75 @@
   #watchModal .komi-comments-actions {grid-column:2}
   #watchModal .komi-comment-compose-avatar {width:34px!important;height:34px!important}
 }
+
+
+/* Watch v6.3 — artwork fallback, single-line status and two brand accents. */
+#watchModal .komi-episode-list .komi-episode-preview.komi-episode-thumb {
+  position:relative!important;display:block!important;overflow:hidden!important;
+  flex:0 0 82px!important;width:82px!important;max-width:82px!important;height:48px!important;
+  border-radius:8px!important;background:linear-gradient(135deg,#343434,#181818)!important;
+  filter:none!important;isolation:isolate;
+}
+#watchModal .komi-episode-thumb .komi-episode-thumb-image {
+  position:absolute!important;inset:0!important;display:block!important;
+  width:100%!important;height:100%!important;max-width:none!important;
+  object-fit:cover!important;filter:brightness(.75)!important;
+  border:0!important;border-radius:0!important;
+}
+#watchModal .komi-episode-thumb .komi-episode-thumb-badge {
+  position:absolute;top:4px;left:4px;z-index:1;display:grid;place-items:center;
+  min-width:19px;height:19px;padding:0 4px;border-radius:5px;
+  background:rgba(0,0,0,.78);color:#fff;font:800 11px/1 Manrope,Inter,sans-serif;
+  box-sizing:border-box;
+}
+#watchModal .komi-watch-quick-actions .komi-compact-list > summary {
+  display:inline-flex!important;flex-direction:row!important;align-items:center!important;
+  justify-content:center!important;flex-wrap:nowrap!important;gap:6px!important;
+  white-space:nowrap!important;line-height:1.35!important;width:max-content!important;
+}
+#watchModal .komi-watch-quick-actions .komi-compact-list > summary::after {
+  display:inline-block!important;position:static!important;flex:0 0 auto!important;
+  margin:0!important;line-height:1!important;transform:none!important;
+}
+#watchModal .player-wrapper .komi-next-countdown {
+  bottom:56px!important;right:16px!important;left:auto!important;transform:none!important;
+}
+#watchModal .komi-watch-quick-actions .komi-cinema-party {
+  background:#9147FF!important;color:#FFFFFF!important;border-color:#9147FF!important;
+}
+#watchModal .komi-watch-quick-actions .komi-cinema-party:hover {
+  background:#7D36EA!important;color:#FFFFFF!important;border-color:#7D36EA!important;
+}
+#watchModal #komiAnimeComments .komi-comments-form {
+  display:grid!important;grid-template-columns:38px minmax(0,1fr) auto!important;
+  align-items:center!important;gap:10px!important;
+}
+#watchModal #komiAnimeComments .komi-comments-input {
+  box-sizing:border-box!important;height:44px!important;min-height:44px!important;padding-block:10px!important;
+}
+#watchModal #komiAnimeComments .komi-comments-actions {
+  display:flex!important;align-items:center!important;justify-content:flex-end!important;
+  flex-wrap:nowrap!important;grid-column:3!important;padding:0!important;gap:6px!important;
+}
+#watchModal #komiAnimeComments .komi-comments-actions button[type="submit"] {
+  box-sizing:border-box!important;height:44px!important;min-height:44px!important;
+  padding:0 18px!important;white-space:nowrap!important;
+  background:#FF454F!important;color:#FFFFFF!important;border-color:#FF454F!important;
+}
+#watchModal #komiAnimeComments .komi-comments-actions button[type="submit"]:not(:disabled):hover {
+  background:#E83D48!important;border-color:#E83D48!important;
+}
+#watchModal #komiAnimeComments .komi-comments-form:has(.komi-comments-actions small) {
+  grid-template-columns:38px minmax(0,1fr)!important;
+}
+#watchModal #komiAnimeComments .komi-comments-form:has(.komi-comments-actions small) .komi-comments-actions {
+  grid-column:2!important;flex-wrap:wrap!important;
+}
+@media(max-width:480px) {
+  #watchModal #komiAnimeComments .komi-comments-form {
+    grid-template-columns:32px minmax(0,1fr) auto!important;gap:7px!important;
+  }
+  #watchModal #komiAnimeComments .komi-comment-compose-avatar {width:32px!important;height:32px!important}
+  #watchModal #komiAnimeComments .komi-comments-actions button[type="submit"] {padding-inline:10px!important;font-size:12px!important}
+  #watchModal #komiAnimeComments .komi-comments-form:has(.komi-comments-actions small) {grid-template-columns:32px minmax(0,1fr)!important}
+}
