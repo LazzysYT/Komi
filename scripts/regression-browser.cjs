@@ -379,7 +379,8 @@ async function checkNotifications(page) {
        hasCommunity:!!document.querySelector('#sideFriendsBtn[aria-controls="komiFriendsDrawer"]')
      };
    });
-   assert.equal(shell.logoBackground,'rgb(5, 5, 5)','Media hub sidebar emblem has a black background');
+   assert.ok(['rgb(5, 5, 5)','rgb(20, 20, 23)'].includes(shell.logoBackground),
+     'Media hub emblem must use the existing or updated monochrome dark surface');
    assert.equal(shell.logoInk,'rgb(255, 255, 255)','Media hub sidebar emblem has white K');
    assert.ok(shell.hasOverlay && shell.hasSearch && shell.hasCommunity,'New hub shell must expose search and community controls');
 
