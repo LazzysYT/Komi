@@ -264,13 +264,16 @@ body.komi-media-hub .komi-icon-rail #sidebarAvatarIcon > svg {
   stroke: none !important;
 }
 
-/* Desktop: partner link takes the bottom avatar slot. Keep the original
-   profile mount intact for its existing Supabase avatar logic and mobile tab. */
+/* Desktop: replace the star/list shortcut with Partners in the central
+   rail, but keep the live avatar/profile button at the bottom. */
 @media (min-width: 768px) {
-  body.komi-media-hub .komi-icon-rail .komi-side-bottom > .komi-side-account {
+  body.komi-media-hub .komi-icon-rail .komi-side-links > #sideListsBtn {
     display: none !important;
   }
-  body.komi-media-hub .komi-icon-rail .komi-side-bottom > #sidePartnersBtn {
+  body.komi-media-hub .komi-icon-rail .komi-side-links > #sidePartnersBtn {
+    display: flex !important;
+  }
+  body.komi-media-hub .komi-icon-rail .komi-side-bottom > .komi-side-account {
     display: flex !important;
   }
 }
@@ -349,7 +352,7 @@ body.komi-media-hub .komi-icon-rail #notifDropdown {
     display: none !important;
   }
   /* Never let the new desktop-only shortcut enter the 5-column mobile grid. */
-  body.komi-media-hub .komi-icon-rail .komi-side-bottom > #sidePartnersBtn {
+  body.komi-media-hub .komi-icon-rail .komi-side-links > #sidePartnersBtn {
     display: none !important;
   }
   body.komi-media-hub .komi-icon-rail #sideHomeBtn,
