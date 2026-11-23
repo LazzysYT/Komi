@@ -156,7 +156,8 @@
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
-        let currentView = location.hash === '#premium' ? 'premium' : location.hash === '#catalog' ? 'catalog' : location.hash === '#shop' ? 'shop' : location.hash === '#partners' ? 'partners' : 'home';
+        function komiIsCatalogRoute() { return location.pathname === '/catalog' || location.hash.toLowerCase() === '#catalog'; }
+        let currentView = location.hash === '#premium' ? 'premium' : komiIsCatalogRoute() ? 'catalog' : location.hash === '#shop' ? 'shop' : location.hash === '#partners' ? 'partners' : 'home';
         const komiSharedProfileQuery = new URLSearchParams(location.search).get('profile');
         let profileTargetUser = location.hash === '#profile' && /^[A-Za-z0-9_.-]{1,80}$/.test(komiSharedProfileQuery || '') ? komiSharedProfileQuery : null;
         if (profileTargetUser) currentView = 'profile';
@@ -262,6 +263,7 @@ async function loadDataFromCloud(attempt = 0) {
             komiHomeCatalogReady = true;
             komiHomePreviewCatalog = null;
             komiStoreReadyResume();
+            komiMaybeOpenSeoAnime();
             render();
         }).catch(() => {});
     }
@@ -703,7 +705,7 @@ async function loadDataFromCloud(attempt = 0) {
         // Catalog state belongs to the URL; only the return position belongs to this tab.
         const komiCatalogStorageKey = 'komi.catalog.position.v1';
         let komiHideWatched = false;
-        let komiCatalogRestorePending = location.hash === '#catalog';
+        let komiCatalogRestorePending = komiIsCatalogRoute();
         let komiCatalogScrollTimer = 0;
         function komiReadCatalogUrl() {
             const query = new URLSearchParams(location.search);
@@ -732,7 +734,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (catalogCategory !== 'all') query.set('category', catalogCategory);
             if (catalogSearchQuery.trim()) query.set('q', catalogSearchQuery.trim());
             if (komiHideWatched) query.set('hide', '1');
-            return '/' + (query.size ? '?' + query.toString() : '') + '#catalog';
+            return '/catalog' + (query.size ? '?' + query.toString() : '');
         }
         function komiSyncCatalogUrl() {
             if (currentView !== 'catalog') return;
@@ -1147,7 +1149,7 @@ async function loadDataFromCloud(attempt = 0) {
             const route = view === 'premium' ? '#premium' : view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : view === 'partners' ? '#partners' : '';
             const target = view === 'catalog' ? komiCatalogRoute() : '/' + route;
             if (location.pathname + location.search + location.hash !== target)
-                history.replaceState(history.state, '', target);
+                history.pushState(null, '', target);
             render(); // render() already refreshes the header.
         }
 
@@ -1158,7 +1160,7 @@ async function loadDataFromCloud(attempt = 0) {
             currentView = 'profile';
             const isOwn = currentUser?.username === handle;
             const route = isOwn ? '/#profile' : '/?profile=' + encodeURIComponent(handle) + '#profile';
-            if (location.pathname + location.search + location.hash !== route) history.replaceState(null, '', route);
+            if (location.pathname + location.search + location.hash !== route) history.pushState(null, '', route);
             profileTargetUser = handle;
             render(); // header updates inside render()
         }
@@ -3255,8 +3257,7 @@ async function loadDataFromCloud(attempt = 0) {
             komiCatalogRestorePending = false;
             closeSearchDropdown();
             if (currentView !== 'catalog') {
-                currentView = 'catalog';
-                render();
+                navigate('catalog');
             }
             komiSyncCatalogUrl();
             const field = document.getElementById('komiCatalogSearchInput');
@@ -4684,12 +4685,40 @@ async function loadDataFromCloud(attempt = 0) {
 
         // Cache only active title details; card payloads never include playback URLs.
         const komiDetailsPending = new Map();
+        let komiPrefetchTimer = 0;
+        let komiPrefetchBusy = false;
+        let komiPrefetchTimes = [];
+        function komiScheduleDetailPrefetch(event) {
+            if (!_supabase || !komiHomeCatalogReady || document.hidden || komiPrefetchBusy ||
+                (event.type === 'pointerover' && event.pointerType === 'touch') ||
+                navigator.connection?.saveData || /(^|-)2g$/.test(navigator.connection?.effectiveType || '')) return;
+            const card = event.target.closest?.('[data-komi-anime-id]');
+            if (!card || card.contains(event.relatedTarget)) return;
+            const id = card.dataset.komiAnimeId;
+            if (!/^[1-9][0-9]{0,11}$/.test(id || '')) return;
+            clearTimeout(komiPrefetchTimer);
+            komiPrefetchTimer = setTimeout(async () => {
+                if (document.hidden || !card.isConnected || komiPrefetchBusy ||
+                    document.getElementById('watchModal')?.classList.contains('active')) return;
+                if (!card.matches(':hover') && !card.contains(document.activeElement)) return;
+                const anime = animeList.find(item => String(item.id) === id);
+                if (!anime || (anime.komiDetailsLoaded && anime.komiDetailsLoadedAt === anime.komiCardUpdatedAt)) return;
+                komiPrefetchTimes = komiPrefetchTimes.filter(time => Date.now() - time < 60000);
+                if (komiPrefetchTimes.length >= 6) return;
+                komiPrefetchTimes.push(Date.now());
+                komiPrefetchBusy = true;
+                try { await ensureKomiAnimeDetails(anime); } catch {} finally { komiPrefetchBusy = false; }
+            }, 250);
+        }
+        document.addEventListener('pointerover', komiScheduleDetailPrefetch, {passive:true});
+        document.addEventListener('focusin', komiScheduleDetailPrefetch);
         let komiDetailOpenToken = 0;
         async function ensureKomiAnimeDetails(anime) {
             const id = String(anime.shikimoriId || anime.id);
             if (anime.komiDetailsLoaded && anime.komiDetailsLoadedAt === anime.komiCardUpdatedAt) return anime;
-            if (komiDetailsPending.has(id)) {
-                const loaded = await komiDetailsPending.get(id);
+            const pendingKey = id + ':' + String(anime.komiCardUpdatedAt || '');
+            if (komiDetailsPending.has(pendingKey)) {
+                const loaded = await komiDetailsPending.get(pendingKey);
                 if (loaded !== anime) Object.assign(anime, loaded, {komiCardUpdatedAt:anime.komiCardUpdatedAt});
                 return anime;
             }
@@ -4707,8 +4736,8 @@ async function loadDataFromCloud(attempt = 0) {
                     komiDetailsLoadedAt: version
                 });
                 return anime;
-            })().finally(() => komiDetailsPending.delete(id));
-            komiDetailsPending.set(id, request);
+            })().finally(() => komiDetailsPending.delete(pendingKey));
+            komiDetailsPending.set(pendingKey, request);
             return request;
         }
 
@@ -5117,10 +5146,11 @@ async function loadDataFromCloud(attempt = 0) {
 
         function applyKomiHashRoute() {
             const hash = location.hash.toLowerCase();
+            if ((komiIsCatalogRoute() || ['#shop','#profile','#partners','#home'].includes(hash) || (!hash && location.pathname === '/')) && document.getElementById('watchModal')?.classList.contains('active')) closeWatchModal();
             if (hash === '#shop') {
                 if (typeof openAniCoinShop === 'function') openAniCoinShop();
                 else navigate('shop');
-            } else if (hash === '#catalog') {
+            } else if (komiIsCatalogRoute()) {
                 komiReadCatalogUrl();
                 komiCatalogRestorePending = true;
                 const saved = komiCatalogSavedPosition();
@@ -5140,7 +5170,7 @@ async function loadDataFromCloud(attempt = 0) {
                     profileTargetUser=currentUser.username;
                     if (currentView !== 'profile') { currentView='profile'; render(); }
                 } else openAuthModal('login');
-            } else if (!hash && ['shop','catalog','profile','partners'].includes(currentView)) {
+            } else if ((!hash || hash === '#home') && ['shop','catalog','profile','partners'].includes(currentView)) {
                 komiStartupHomeCommitted = true;
                 currentView='home';
                 render();
