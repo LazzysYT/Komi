@@ -339,7 +339,32 @@ async function checkNotifications(page) {
    await page.locator('#komiHomeQuickFilters .section-see-all').click();
    await page.waitForFunction(()=>currentView==='catalog');
    assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
-   await page.waitForFunction(()=>document.activeElement?.id==='komiCatalogSearchInput',{timeout:5000});
+   try {
+     await page.waitForFunction(()=>document.activeElement?.id==='komiCatalogSearchInput',null,{timeout:6000});
+   } catch (error) {
+     const focusDiagnosis=await page.evaluate(()=>{
+       const el=document.getElementById('komiCatalogSearchInput');
+       const modal=document.getElementById('authModal');
+       return {
+         activeId:document.activeElement?.id,
+         activeTag:document.activeElement?.tagName,
+         searchExists:!!el,
+         searchConnected:el?.isConnected,
+         disabled:el?.disabled,
+         searchDisplay:el?getComputedStyle(el).display:'',
+         searchVisibility:el?getComputedStyle(el).visibility:'',
+         inertAncestor:!!el?.closest('[inert]'),
+         bodyInert:document.body.inert,
+         modalInert:modal?.inert,
+         currentView,
+         focusPending:typeof komiCatalogFocusPending==='undefined'?null:komiCatalogFocusPending,
+         searchRect:el?.getBoundingClientRect().toJSON(),
+         focusedWindow:document.hasFocus()
+       };
+     });
+     console.error('Catalog search focus diagnostic:',JSON.stringify(focusDiagnosis));
+     throw error;
+   }
    assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
      'All filters must focus the real full-catalog search rather than only changing the hash');
    assert.equal(new URL(page.url()).hash,'#catalog');
