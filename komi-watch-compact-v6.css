@@ -421,3 +421,196 @@
   .anime-card .komi-card-hover-ui {display:none!important;}
   .anime-card:focus-within .komi-card-hover-ui {display:none!important;}
 }
+
+
+/* Final watch-page polish: fix all six exposed details without replacing handlers. */
+
+/* 1 — Search icon must never overlap the episode number placeholder. */
+#watchModal .komi-watch-side-heading .komi-episode-search {
+  position:relative!important;
+}
+#watchModal .komi-watch-side-heading .komi-episode-search::before {
+  left:12px!important;
+  pointer-events:none!important;
+}
+#watchModal .komi-watch-side-heading .komi-episode-search input {
+  padding-left:36px!important;
+  padding-right:24px!important;
+  box-sizing:border-box!important;
+  min-width:0!important;
+}
+
+/* 2 — Status and favorite are adjacent, not nested in each other. */
+#watchModal .komi-watch-quick-actions .komi-status-picker > summary {
+  background:#1C1F2A!important;
+  border-color:rgba(255,255,255,.13)!important;
+  color:#fff!important;
+}
+#watchModal .komi-watch-quick-actions .komi-status-picker:has([data-watch-status][aria-pressed="true"]) > summary {
+  background:rgba(255,69,79,.12)!important;
+  border-color:rgba(255,69,79,.55)!important;
+}
+#watchModal .komi-watch-quick-actions > .komi-compact-favorite {
+  display:inline-flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  min-width:44px!important;
+  min-height:42px!important;
+  max-width:180px;
+  padding:9px 14px!important;
+  margin:0!important;
+  background:#1C1F2A!important;
+  color:#ECEEF2!important;
+  border:1px solid rgba(255,255,255,.13)!important;
+  border-radius:999px!important;
+  font-size:13px!important;
+}
+#watchModal .komi-watch-quick-actions > .komi-compact-favorite[aria-pressed="true"] {
+  background:rgba(255,69,79,.18)!important;
+  border-color:rgba(255,69,79,.55)!important;
+  color:#FF858D!important;
+}
+#watchModal .komi-watch-quick-actions > .komi-deck-more > summary {
+  width:44px!important;
+  height:42px!important;
+  border-radius:50%!important;
+}
+#watchModal .komi-title-actions:empty {display:none!important;}
+
+/* 3 — Site-owned next-episode prompt: lower right, above video controls.
+   External cross-origin iframe overlays are not controlled by site CSS. */
+#watchModal .player-wrapper .komi-next-countdown {
+  left:auto!important;
+  right:16px!important;
+  bottom:56px!important;
+  width:max-content!important;
+  max-width:min(265px,calc(100% - 32px))!important;
+  padding:10px 12px!important;
+  background:rgba(15,17,23,.85)!important;
+  border:1px solid rgba(255,255,255,.14)!important;
+  border-radius:13px!important;
+  box-shadow:0 12px 32px rgba(0,0,0,.55)!important;
+  backdrop-filter:blur(12px)!important;
+  -webkit-backdrop-filter:blur(12px)!important;
+}
+#watchModal .komi-next-countdown-title {margin-bottom:7px!important;font-size:12px!important;}
+#watchModal .komi-next-countdown-actions {gap:6px!important;}
+#watchModal .komi-next-countdown-actions button {min-height:32px!important;padding:6px 9px!important;}
+#watchModal .komi-next-countdown-actions .komi-next-now {
+  color:#fff!important;background:#FF454F!important;border-color:#FF454F!important;
+}
+
+/* 4 — Keep the existing review and studio-subscription features in Details. */
+#watchModal .komi-clean-extras-body .komi-social-disclosure,
+#watchModal .komi-social-disclosure {
+  display:block!important;
+  width:100%!important;
+  min-width:0!important;
+  margin:12px 0!important;
+  padding:0!important;
+  background:#151823!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  border-radius:13px!important;
+  box-shadow:none!important;
+  overflow:hidden;
+}
+#watchModal .komi-social-disclosure > summary {
+  display:list-item;
+  padding:12px 16px!important;
+  font:700 13px/1.5 Manrope,Inter,sans-serif!important;
+  color:#E2E4EC!important;
+  background:transparent!important;
+  cursor:pointer;
+}
+#watchModal .komi-social-disclosure[open] > summary {
+  border-bottom:1px solid rgba(255,255,255,.08);
+}
+#watchModal .komi-social-disclosure > .komi-lab-row {
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:8px!important;
+  padding:12px 14px!important;
+}
+#watchModal .komi-social-disclosure .komi-lab-row button {
+  flex:0 0 auto!important;
+  width:auto!important;
+  max-width:100%!important;
+  min-height:36px!important;
+  margin:0!important;
+  padding:8px 12px!important;
+  background:#202432!important;
+  border:1px solid rgba(255,255,255,.12)!important;
+  border-radius:999px!important;
+  color:#F2F2F5!important;
+  font:700 12px Manrope,Inter,sans-serif!important;
+}
+#watchModal .komi-social-disclosure > div:last-child {
+  min-width:0!important;
+  padding:0 14px 14px!important;
+}
+
+/* 5 — Always landscape per-episode screenshots, banner, or gradient+number.
+   No poster as a fallback for horizontal episode previews. */
+#watchModal .komi-episode-list .komi-episode-fallback-frame {
+  position:relative;
+  display:block;
+  flex:0 0 82px!important;
+  width:82px!important;
+  height:48px!important;
+  min-width:82px!important;
+  border-radius:8px!important;
+  overflow:hidden;
+  background:linear-gradient(135deg,#323544 0%,#171B29 54%,#10121C 100%);
+}
+#watchModal .komi-episode-list .komi-episode-fallback-image {
+  position:absolute;
+  inset:0;
+  width:100%!important;
+  height:100%!important;
+  object-fit:cover!important;
+  filter:brightness(.65);
+}
+#watchModal .komi-episode-list .komi-episode-fallback-frame::after {
+  content:'';
+  position:absolute;
+  inset:0;
+  background:linear-gradient(180deg,rgba(8,10,18,.08),rgba(8,10,18,.5));
+  pointer-events:none;
+}
+#watchModal .komi-episode-list .komi-episode-fallback-number {
+  position:absolute;
+  z-index:1;
+  inset:0;
+  display:grid;
+  place-items:center;
+  color:#fff;
+  text-shadow:0 1px 8px #000c;
+  font:800 21px/1 Manrope,Inter,sans-serif;
+}
+
+/* 6 — Red send action replaces the bright white legacy button. */
+#watchModal .komi-comments-actions button[type="submit"] {
+  min-height:40px!important;
+  padding:9px 18px!important;
+  background:#FF454F!important;
+  color:#FFFFFF!important;
+  border:1px solid #FF454F!important;
+  border-radius:12px!important;
+  box-shadow:none!important;
+  font:700 13px Manrope,Inter,sans-serif!important;
+}
+#watchModal .komi-comments-actions button[type="submit"]:not(:disabled):hover {
+  background:#E83D48!important;
+  border-color:#E83D48!important;
+}
+@media(max-width:600px) {
+  #watchModal .player-wrapper .komi-next-countdown {
+    left:auto!important;
+    right:10px!important;
+    bottom:60px!important;
+    width:max-content!important;
+    max-width:min(220px,calc(100% - 20px))!important;
+    padding:8px 10px!important;
+  }
+  #watchModal .komi-watch-quick-actions > .komi-compact-favorite {padding-inline:10px!important;}
+}
