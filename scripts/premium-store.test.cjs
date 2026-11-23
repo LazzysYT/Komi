@@ -60,8 +60,9 @@ test('shared cosmetics are integrated into both shops and public profile',()=>{
 
 test('guest shop first paint and real preview have no auth dependency',()=>{
  const initial=fs.readFileSync(path.join(root,'shop-first-paint.js'),'utf8');
- assert.match(html,/class="komi-static-shop komi-shop-v4"/);
- assert.match(html,/class="komi-shop-static-card"/);
+ assert.match(html,/class="komi-static-shop komi-shop-v3 komi-shop-v4 komi-shop-v5"/);
+ assert.match(html,/class="sv5-static-card"/);
+  assert.match(html,/class="sv5-weekly"/);
  assert.match(html,/src="\/shop-first-paint\.js\?/);
  assert.match(initial,/location\.hash==='\#shop'/);
  assert.match(coin,/data-shop-preview/);

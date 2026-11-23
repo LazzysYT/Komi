@@ -11,6 +11,7 @@ test('generated bundle leads the explicit, versioned mobile override cascade',()
     .map(match=>match[1].split('?')[0]);
   const expected=['/komi.production.css','/komi-pill-system.css'];
   if (head.includes('href="/komi-icon-rail.css')) expected.push('/komi-icon-rail.css');
+   expected.push('/komi-shop-v5.css');
   expected.push('/button-animations.css','/komi-genre-moods.css');
   assert.deepEqual(local,expected,'Last-loaded mobile layers must preserve deliberate cascade order');
   assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
@@ -65,5 +66,8 @@ test('V4 sticker styles are retained in the same one-file production cascade',()
  assert.match(css,/\.sv4-perk-badge/);
  assert.match(html,/komi\.production\.css\?v=20261122h/);
  assert.doesNotMatch(html,/komi-shop-v3\.css\?v=/);
- assert.match(html,/komi-shop-hero\.svg|sv4-hero/);
+ assert.match(html,/class="komi-static-shop komi-shop-v3 komi-shop-v4 komi-shop-v5"/);
+  assert.match(html,/komi-shop-v5\.css\?v=/);
+  assert.match(html,/class="sv5-weekly"/);
+  assert.doesNotMatch(html,/sv4-feature-grid/);
 });
