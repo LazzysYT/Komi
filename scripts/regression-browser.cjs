@@ -556,6 +556,12 @@ async function checkNotifications(page) {
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-placeholder').count(),2);
+   if (width < 768) {
+     // Episode controls are intentionally inaccessible while the mobile sheet is closed.
+     // Open it before checking accessible episode search and view toggles.
+     await page.locator('.komi-mobile-watch-episodes').click();
+     await page.waitForSelector('#watchModal #komiMobileSheet.is-open .komi-watch-sidebar');
+   }
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
    await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
@@ -567,6 +573,10 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),0);
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
+   if (width < 768) {
+     await page.locator('#watchModal #komiMobileSheet .komi-mobile-sheet-close').click();
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1);
+   }
 
    const state=await page.evaluate(async ()=>{
     currentUser={username:'test_viewer'};
