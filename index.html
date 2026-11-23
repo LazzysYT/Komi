@@ -22,7 +22,7 @@
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
     <link rel="stylesheet" href="/komi.production.css?v=20261122h-partners-v2">
     <link rel="stylesheet" href="/komi-pill-system.css?v=20261123b">
-    <link rel="stylesheet" href="/komi-icon-rail.css?v=20261123-rail-fix-v2">
+    <link rel="stylesheet" href="/komi-icon-rail.css?v=20261123-partners-v3">
     
     
     
@@ -124,6 +124,16 @@
       <span class="komi-rail-tooltip komi-hub-notif-label" aria-hidden="true">Уведомления</span>
     </button>
 
+    <button type="button" id="sidePartnersBtn" class="komi-side-button komi-side-partners"
+            data-komi-click="partners" aria-label="Партнёры">
+      <svg class="komi-rail-svg" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+        <path d="M9.04 3.58a5.2 5.2 0 0 1 7.35 0l3.03 3.03a5.2 5.2 0 0 1-7.35 7.35l-.86-.86 2.17-2.17.86.86a2.13 2.13 0 0 0 3.02-3.02l-3.03-3.03a2.13 2.13 0 0 0-3.02 0l-1.52 1.52-2.17-2.17 1.52-1.51Z"/>
+        <path d="M14.96 20.42a5.2 5.2 0 0 1-7.35 0l-3.03-3.03a5.2 5.2 0 0 1 7.35-7.35l.86.86-2.17 2.17-.86-.86a2.13 2.13 0 0 0-3.02 3.02l3.03 3.03a2.13 2.13 0 0 0 3.02 0l1.52-1.52 2.17 2.17-1.52 1.51Z"/>
+      </svg>
+      <span class="komi-rail-tooltip" aria-hidden="true">Партнёры</span>
+    </button>
+
+    <!-- Profile remains available in the mobile dock and header menu. -->
     <button type="button" class="komi-side-button komi-side-account" data-komi-click="profile"
             aria-label="Профиль">
       <span id="sidebarAvatarIcon" class="komi-rail-avatar">
@@ -621,6 +631,6 @@
     <script src="./komi-wrapped.js"></script>
     <script src="./komi-anime-social.js"></script>
     <script src="./komi-party-quiz.js"></script>
-    <script src="./komi-icon-rail.js?v=20261123-rail-v1"></script>
+    <script src="./komi-icon-rail.js?v=20261123-partners-v2"></script>
 </body>
 </html>
