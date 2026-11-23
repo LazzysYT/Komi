@@ -272,7 +272,7 @@ fs.mkdirSync(output,{recursive:true});
         console.log('PASS live production visitor',JSON.stringify(result));
       }catch(e){
         results.push({width,failed:e.message,errors});
-        console.error('FAIL live production visitor',width,e.message,'pageerrors',errors);
+        console.error('FAIL live production visitor',width,e.stack||e.message,'pageerrors',errors);
         process.exitCode=1;
       }finally{await page.close()}
     }
