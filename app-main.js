@@ -244,10 +244,16 @@ function komiHomeHeroMayPaint(markup, container) {
 // while the full catalog is still loading.
 const komiSeoFirstPaintMarkup = document.getElementById('mainContainer')?.innerHTML || '';
 let komiSeoDeepLinkOpened = false;
+function komiPositiveRouteNumber(value) {
+    return /^[1-9][0-9]{0,5}$/.test(String(value || '')) ? Number(value) : null;
+}
 function komiMaybeOpenSeoAnime() {
     if (komiSeoDeepLinkOpened) return;
     // Support existing shared /?anime= links while normalizing to a single permalink.
-    const legacyId = new URLSearchParams(location.search).get('anime');
+    const params = new URLSearchParams(location.search);
+    const legacyId = params.get('anime');
+    const season = komiPositiveRouteNumber(params.get('season'));
+    const episode = komiPositiveRouteNumber(params.get('episode'));
     let pendingId = '';
     try { pendingId = sessionStorage.getItem('komi_watch_deeplink_v1') || ''; } catch {}
     const requested = legacyId || pendingId;
@@ -256,8 +262,10 @@ function komiMaybeOpenSeoAnime() {
     komiSeoDeepLinkOpened = true;
     try { sessionStorage.removeItem('komi_watch_deeplink_v1'); } catch {}
     // SEO detail, incoming legacy links and the active player share this URL.
-    history.replaceState(null, '', '/anime/' + requested + '#player');
-    setTimeout(() => openWatchModal(requested), 0);
+    const query = new URLSearchParams();
+    if (season && episode) { query.set('season',String(season)); query.set('episode',String(episode)); }
+    history.replaceState(null, '', '/anime/' + requested + (query.size ? '?' + query.toString() : '') + '#player');
+    setTimeout(() => openWatchModal(requested, season && episode ? season : null, 0, null, season && episode ? episode : null), 0);
 }
 
 async function loadDataFromCloud(attempt = 0) {
@@ -4614,7 +4622,10 @@ async function loadDataFromCloud(attempt = 0) {
             const button=modal?.querySelector('.komi-watch-expand span');
             if(button) button.textContent=document.fullscreenElement === content?'Обычный размер':'На весь экран';
         }
-        function closeWatchModal() {
+        function closeWatchModal(keepWatchRoute = false) {
+            if (keepWatchRoute !== true && /^\/anime\/[1-9][0-9]{0,11}$/.test(location.pathname) && location.hash === '#player') {
+                history.replaceState(null, '', '/');
+            }
             window.KomiMobileSheets?.close?.(false);
             window.KomiPlayerUX?.cancelPendingNext?.();
             ++komiDetailOpenToken;
@@ -4753,14 +4764,14 @@ async function loadDataFromCloud(attempt = 0) {
             return request;
         }
 
-        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null) {
+        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null, requestedEpisodeNumber = null) {
             siteStats.views++;
             saveData();
             
             // Avoid fetching these tables on each episode switch.
             const anime = animeList.find(a => String(a.id) === String(id));
             if (!anime) return;
-            closeWatchModal();
+            closeWatchModal(true);
             const requestToken = komiDetailOpenToken;
             if (!anime.komiDetailsLoaded || anime.komiDetailsLoadedAt !== anime.komiCardUpdatedAt) {
                 const modal = document.getElementById('watchModal');
@@ -4783,9 +4794,11 @@ async function loadDataFromCloud(attempt = 0) {
             const seasonWanted = selectedSeason === null ? Number(progressForResume?.season) : Number(selectedSeason);
             const activeSeason = seasonNumbers.includes(seasonWanted) ? seasonWanted : seasonNumbers[0];
             const currentSeasonEpisodes = KomiPlayerCore.seasonEpisodes(anime.episodes, activeSeason);
-            const targetIndex = progressForResume?.season === activeSeason
-                ? currentSeasonEpisodes.findIndex(episode => episode.slots.includes(Number(progressForResume.index)))
-                : Number(selectedEpIdx);
+            const targetIndex = requestedEpisodeNumber !== null
+                ? currentSeasonEpisodes.findIndex((episode,index) => (Number(episode.number) || index + 1) === requestedEpisodeNumber)
+                : progressForResume?.season === activeSeason
+                    ? currentSeasonEpisodes.findIndex(episode => episode.slots.includes(Number(progressForResume.index)))
+                    : Number(selectedEpIdx);
             const activeIndex = Number.isInteger(targetIndex) && targetIndex >= 0 && targetIndex < currentSeasonEpisodes.length ? targetIndex : 0;
             const currentEp = currentSeasonEpisodes[activeIndex];
             if (!currentEp) return;
@@ -4856,6 +4869,10 @@ async function loadDataFromCloud(attempt = 0) {
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
             const displayNumber = Number(currentEp.number) || activeIndex + 1;
+            if (/^\/anime\/[1-9][0-9]{0,11}$/.test(location.pathname) && location.hash === '#player') {
+                const query = new URLSearchParams({season:String(activeSeason),episode:String(displayNumber)});
+                history.replaceState(null,'','/anime/' + anime.id + '?' + query.toString() + '#player');
+            }
 
             const userHistoryKey = currentUser ? `${currentUser.username}_${anime.id}` : null;
             const savedTime = userHistoryKey ? (userWatchHistory[userHistoryKey] || 0) : 0;
@@ -5158,7 +5175,14 @@ async function loadDataFromCloud(attempt = 0) {
 
         function applyKomiHashRoute() {
             const view = komiRouteView();
-            if (/^\/anime\/[1-9][0-9]{0,11}$/.test(location.pathname)) return;
+            const watchPath = /^\/anime\/([1-9][0-9]{0,11})$/.exec(location.pathname);
+            if (watchPath && location.hash === '#player') {
+                const query = new URLSearchParams(location.search);
+                const season = komiPositiveRouteNumber(query.get('season'));
+                const episode = komiPositiveRouteNumber(query.get('episode'));
+                if (animeList.some(item => String(item.id) === watchPath[1])) void openWatchModal(watchPath[1], season && episode ? season : null, 0, null, season && episode ? episode : null);
+                return;
+            }
             if (document.getElementById('watchModal')?.classList.contains('active')) closeWatchModal();
             document.documentElement.dataset.komiShopRoute = String(view === 'shop');
             if (view === 'shop') {
