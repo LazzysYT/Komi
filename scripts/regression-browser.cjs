@@ -500,12 +500,17 @@ async function checkNotifications(page) {
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
-   assert.ok(width>1000 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
+   if (width < 768) {
+     assert.equal(await page.locator('.komi-mobile-watch-episodes').isVisible(),true,
+       'On phones the episode list must be accessible from the mobile bottom-sheet dock');
+   } else {
+     assert.ok(width>1000 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
+   }
    assert.equal(cinema.color,'rgb(255, 255, 255)');
    assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)',JSON.stringify(cinema));
    assert.notEqual(cinema.before,'none','Active episode must have a white indicator');
    assert.notEqual(cinema.after,'none','Episode progress must remain visible');
-   await page.waitForSelector('.komi-episodes-toggle');
+   assert.equal(await page.locator('.komi-episodes-toggle').count(),1);
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
    assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),true);
@@ -513,12 +518,18 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
    assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
-   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
-   await page.locator('.komi-episodes-toggle').click();
-   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
-   assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
-     'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
-   await page.locator('.komi-episodes-toggle').click();
+   if (width < 768) {
+     await page.locator('.komi-mobile-watch-episodes').click();
+     assert.equal(await page.locator('#komiMobileSheet.is-open .komi-watch-sidebar').count(),1,
+       'Mobile episode bottom sheet must contain the real episode list');
+   } else {
+     assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
+     await page.locator('.komi-episodes-toggle').click();
+     assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
+     assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
+       'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
+     await page.locator('.komi-episodes-toggle').click();
+   }
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-placeholder').count(),2);
@@ -533,6 +544,11 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),0);
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
+   if (width < 768) {
+     await page.keyboard.press('Escape');
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1,
+       'Closing mobile episode sheet restores the original sidebar');
+   }
 
    const state=await page.evaluate(async ()=>{
     currentUser={username:'test_viewer'};
