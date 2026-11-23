@@ -341,7 +341,9 @@ async function checkNotifications(page) {
    await page.locator('#komiHomeQuickFilters .komi-tool-menu').first().locator('summary').click();
    await page.locator('#komiHomeQuickFilters [data-komi-quick-sort="rating"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogSort==='rating');
-   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),2);
+   assert.equal(await page.evaluate(()=>catalogFilterYear),'2026',
+     'Sorting must preserve the previously chosen year');
+   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
 
