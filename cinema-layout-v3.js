@@ -5,6 +5,44 @@
   const baseMount = root.KomiPlayerUX.mount;
   let drawerPreference = null;
   let current = null;
+  // Real per-episode metadata first; cache frames only from already playing,
+  // accessible native video. No extra episode downloads or iframe scraping.
+  const capturedFrames = new Map();
+  function frameKey(ctx,index) {return String(ctx.animeId)+':'+ctx.season+':'+index;}
+  function uniquePreview(ctx,index) {
+    const url=episodePreview(ctx.episodeMeta?.[index]?.preview);
+    if (!url) return '';
+    return ctx.episodeMeta.filter(ep=>episodePreview(ep?.preview)===url).length===1 ? url : '';
+  }
+  function actualPreview(ctx,index) {return uniquePreview(ctx,index)||capturedFrames.get(frameKey(ctx,index))||'';}
+  function captureCurrentFrame(ctx) {
+    const video=ctx.video;
+    if(!video || !currentContext(ctx) || video.readyState<2 || video.currentTime<12 ||
+       !video.videoWidth || !video.videoHeight || actualPreview(ctx,ctx.index)) return false;
+    try {
+      const canvas=document.createElement('canvas');
+      canvas.width=240;canvas.height=135;
+      const g=canvas.getContext('2d');
+      if (!g) return false;
+      const ratio=Math.max(240/video.videoWidth,135/video.videoHeight);
+      const w=video.videoWidth*ratio,h=video.videoHeight*ratio;
+      g.drawImage(video,(240-w)/2,(135-h)/2,w,h);
+      const pixels=g.getImageData(0,0,240,135).data;
+      let light=0;for(let i=0;i<pixels.length;i+=64)light+=pixels[i]+pixels[i+1]+pixels[i+2];
+      if(light/(Math.ceil(pixels.length/64)*3)<12)return false;
+      const key=frameKey(ctx,ctx.index);
+      capturedFrames.set(key,canvas.toDataURL('image/jpeg',.72));
+      while(capturedFrames.size>160)capturedFrames.delete(capturedFrames.keys().next().value);
+      const btn=ctx.grid.querySelectorAll('.komi-episode-number')[ctx.index];
+      const placeholder=btn?.querySelector('.komi-episode-placeholder');
+      if(placeholder){
+        const image=document.createElement('img');
+        image.className='komi-episode-preview';image.alt='';image.src=capturedFrames.get(key);
+        placeholder.replaceWith(image);
+      }
+      return true;
+    } catch {return false;} // CORS/DRM restrictions are respected.
+  }
 
   function button(text, cls, label) {
     const element = document.createElement('button');
@@ -63,7 +101,7 @@
         placeholder.className = 'komi-episode-preview komi-episode-placeholder';
         placeholder.setAttribute('aria-hidden','true');
         placeholder.textContent = label;
-        const previewUrl = episodePreview(meta?.preview);
+        const previewUrl = actualPreview(context,index);
         if (previewUrl) {
           const preview = document.createElement('img');
           preview.className = 'komi-episode-preview';
@@ -218,6 +256,15 @@
     gridButton.addEventListener('click', () => setListMode(context,false));
     listButton.addEventListener('click', () => setListMode(context,true));
     setListMode(context,true);
+    if (context.video && !actualPreview(context,context.index)) {
+      let attempts=0,lastAttempt=-30;
+      const takeFrame=()=>{
+        if (context.video.currentTime<12 || context.video.currentTime-lastAttempt<8) return;
+        lastAttempt=context.video.currentTime;
+        if (++attempts>5 || captureCurrentFrame(context)) context.video.removeEventListener('timeupdate',takeFrame);
+      };
+      context.video.addEventListener('timeupdate',takeFrame,{signal:context.abort.signal});
+    }
     // Cloud watched markers may arrive asynchronously; refresh captions when painted.
     if (root.MutationObserver) {
       const observer = new MutationObserver(() => {
