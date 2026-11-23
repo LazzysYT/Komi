@@ -58,7 +58,7 @@
       '<p class="profile-caption" style="margin:0 0 12px">Открыто '+earned+' из '+definitions.length+' достижений</p>'+
       tiles+
       (!definitions.length?'<p class="profile-achievements-empty">Загружаем достижения…</p>':'')+
-      (!full?'<button type="button" class="profile-shop-link" data-komi-onclick="profilePageSection=\\'achievements\\';render()">Все достижения ('+definitions.length+')</button>':'')+
+      (!full?'<button type="button" class="profile-shop-link" data-komi-onclick="profilePageSection=\'achievements\';render()">Все достижения ('+definitions.length+')</button>':'')+
       (isMe?'<button type="button" class="profile-shop-link" data-komi-onclick="openAniCoinShop()">✧ Открыть магазин AniCoin</button>':'')+'</section>';
   }
   function watchHistory(ctx){
