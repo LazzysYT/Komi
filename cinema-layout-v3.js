@@ -67,7 +67,7 @@
   }
   function episodePreview(raw) {
     try {
-      if (typeof raw !== 'string' || !raw.trim()) return '';
+      if (typeof raw !== 'string' || !/^(?:https:\/\/|\/(?!\/))/i.test(raw)) return '';
       const url = new URL(raw, location.origin);
       if (url.protocol === 'https:' && !url.username && !url.password) return url.href;
     } catch {}
