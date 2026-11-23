@@ -339,6 +339,7 @@ async function checkNotifications(page) {
    await page.locator('#komiHomeQuickFilters .section-see-all').click();
    await page.waitForFunction(()=>currentView==='catalog');
    assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
+   await page.waitForFunction(()=>document.activeElement?.id==='komiCatalogSearchInput',{timeout:5000});
    assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
      'All filters must focus the real full-catalog search rather than only changing the hash');
    assert.equal(new URL(page.url()).hash,'#catalog');
