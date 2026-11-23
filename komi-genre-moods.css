@@ -586,3 +586,15 @@ body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-advanc
 @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
   body.komi-media-hub aside.komi-side-nav.komi-icon-rail { backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
 }
+
+/* The playback modal owns its own fixed mobile sheets. Keep the complete
+   modal stacking context above the mobile dock (not just its sheet child);
+   otherwise the dock intercepts source/episode selection taps on phones. */
+@media (max-width: 767px) {
+  body.komi-media-hub #watchModal.active {
+    z-index: 2147480100 !important;
+  }
+  body.komi-media-hub #watchModal.active #komiMobileSheet.komi-mobile-sheet-layer:not([hidden]) {
+    z-index: 2147480200 !important;
+  }
+}
