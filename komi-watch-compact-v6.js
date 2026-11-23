@@ -63,7 +63,7 @@
 
     const party = controls.querySelector('.komi-cinema-party');
     if (party) {
-      party.textContent = '♧ Смотреть вместе';
+      party.textContent = 'Смотреть вместе';
       actions.append(party);
     }
 
@@ -79,6 +79,13 @@
     if (source) {
       source.classList.add('komi-player-source-floating');
       wrapper.append(source);
+      // The HUD already owns the source chooser. Keep the original select in
+      // the DOM for existing source handlers, but do not render it twice.
+      if (wrapper.querySelector('.komi-v4-source-trigger')) {
+        source.classList.add('komi-source-duplicate');
+        source.inert = true;
+        source.setAttribute('aria-hidden','true');
+      }
     }
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
@@ -111,33 +118,48 @@
     const search = sidebar.querySelector('.komi-episode-search');
     if (sideHead && search) sideHead.append(search);
 
-    // Keep real episode stills provided by cinema-layout-v3. A fallback must be
-    // a landscape screenshot/banner, NEVER the cropped vertical cover poster.
-    const safeStill = raw => {
-      try {
-        const url = new URL(String(raw || ''));
-        return url.protocol === 'https:' && !url.username && !url.password ? url.href : '';
-      } catch { return ''; }
-    };
-    const wideStill = safeStill(settings.watchStill) || safeStill(settings.watchBanner);
-    sidebar.querySelectorAll('.komi-episode-list .komi-episode-number').forEach(button => {
-      const placeholder = button.querySelector('.komi-episode-placeholder');
-      if (!placeholder) return; // An actual per-episode preview is already present.
-      const frame = create('span', 'komi-episode-fallback-frame');
-      const number = create('span', 'komi-episode-fallback-number',
-        button.dataset.episodeNumber || placeholder.textContent.trim());
-      frame.append(number);
-      if (wideStill) {
-        const image = create('img', 'komi-episode-fallback-image');
-        image.src = wideStill;
-        image.alt = '';
-        image.loading = 'lazy';
-        image.decoding = 'async';
-        image.addEventListener('error', () => image.remove(), {once:true});
-        frame.prepend(image);
+    // Mirror the verified, account-scoped sidebar avatar as it loads or changes.
+    const account = content.querySelector('.komi-watch-rail-avatar');
+    const sourceAvatar = document.getElementById('sidebarAvatarIcon');
+    function syncAvatar() {
+      if (!account?.isConnected || !sourceAvatar) return;
+      const sourceImage = sourceAvatar.querySelector('img');
+      const destination = account.querySelector('img');
+      if (!sourceImage?.src) {
+        destination?.remove();
+        account.classList.remove('komi-has-avatar');
+        return;
       }
-      placeholder.replaceWith(frame);
-    });
+      if (destination?.src === sourceImage.src) return;
+      const image = sourceImage.cloneNode(false);
+      image.removeAttribute('id');
+      image.alt = '';
+      image.loading = 'eager';
+      image.addEventListener('error', () => {
+        image.remove();
+        account.classList.remove('komi-has-avatar');
+      }, {once:true});
+      account.replaceChildren(image);
+      account.classList.add('komi-has-avatar');
+    }
+    syncAvatar();
+    if (sourceAvatar && account) {
+      const avatarObserver = new MutationObserver(syncAvatar);
+      avatarObserver.observe(sourceAvatar, {childList:true,subtree:true,attributes:true,attributeFilter:['src']});
+      const closeObserver = new MutationObserver(() => {
+        if (!context.modal.classList.contains('active')) {
+          avatarObserver.disconnect();
+          closeObserver.disconnect();
+        }
+      });
+      closeObserver.observe(context.modal,{attributes:true,attributeFilter:['class']});
+      context.abort?.signal.addEventListener('abort', () => {
+        avatarObserver.disconnect();closeObserver.disconnect();
+      }, {once:true});
+    }
+
+    const extrasSummary = content.querySelector('.komi-clean-extras > summary');
+    if (extrasSummary) extrasSummary.textContent = 'Подробнее об аниме';
 
     // The follow control is mounted asynchronously by app-main.js; moving the
     // existing button preserves its Supabase subscriptions and click handler.
@@ -185,7 +207,7 @@
       const field = section.querySelector('.komi-comments-input');
       if (field) {
         field.rows = 1;
-        field.placeholder = 'Что думаешь об этой серии? Спойлеры: ||текст||';
+        field.placeholder = 'Поделись впечатлениями о серии…';
       }
       const form = section.querySelector('.komi-comments-form');
       if (form) {
