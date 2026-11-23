@@ -240,8 +240,8 @@
   background:#1E222E!important;border:1px solid var(--watch-border)!important;
   font-size:0!important;color:transparent!important;
 }
-#watchModal .komi-episode-follow-control button::before {content:'♧';font:700 20px/1 Inter,sans-serif;color:#D5D7E1;}
-#watchModal .komi-episode-follow-control button[aria-pressed="true"]::before {content:'♧';color:#FF454F;}
+#watchModal .komi-episode-follow-control button::before {content:'🔔';font:700 19px/1 'Segoe UI Emoji',sans-serif;color:#D5D7E1;}
+#watchModal .komi-episode-follow-control button[aria-pressed="true"]::before {content:'🔔';color:#FF454F;}
 #watchModal .komi-episode-follow-control button:disabled {opacity:.5;}
 #watchModal .komi-watch-sidebar .komi-episode-number-grid.komi-episode-list {
   display:flex!important;
