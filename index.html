@@ -21,8 +21,8 @@
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
     <link rel="stylesheet" href="/komi.production.css?v=20261122h-partners-v2">
-    <link rel="stylesheet" href="/komi-pill-system.css?v=20261123b">
-    <link rel="stylesheet" href="/komi-icon-rail.css?v=20261123-partners-v3">
+    <link rel="stylesheet" href="/komi-pill-system.css?v=20261123-layoutfix1">
+    <link rel="stylesheet" href="/komi-icon-rail.css?v=20261123-rail-layout-v4">
     
     
     
@@ -72,6 +72,15 @@
         <path fill-rule="evenodd" d="M4.2 4A3.2 3.2 0 0 0 1 7.2v10.6A4.2 4.2 0 0 0 5.2 22h13.6a4.2 4.2 0 0 0 4.2-4.2V9.3A3.3 3.3 0 0 0 19.7 6h-8.2L9.7 4.7A3.5 3.5 0 0 0 7.7 4H4.2Zm2.3 10.4a1.15 1.15 0 0 0 0 2.3h11a1.15 1.15 0 0 0 0-2.3h-11Z" clip-rule="evenodd"/>
       </svg>
       <span class="komi-rail-tooltip" aria-hidden="true">Каталог</span>
+    </button>
+
+    <button type="button" id="sidePartnersBtn" class="komi-side-button komi-side-partners"
+            data-komi-click="partners" aria-label="Партнёры">
+      <svg class="komi-rail-svg" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
+        <path d="M9.04 3.58a5.2 5.2 0 0 1 7.35 0l3.03 3.03a5.2 5.2 0 0 1-7.35 7.35l-.86-.86 2.17-2.17.86.86a2.13 2.13 0 0 0 3.02-3.02l-3.03-3.03a2.13 2.13 0 0 0-3.02 0l-1.52 1.52-2.17-2.17 1.52-1.51Z"/>
+        <path d="M14.96 20.42a5.2 5.2 0 0 1-7.35 0l-3.03-3.03a5.2 5.2 0 0 1 7.35-7.35l.86.86-2.17 2.17-.86-.86a2.13 2.13 0 0 0-3.02 3.02l3.03 3.03a2.13 2.13 0 0 0 3.02 0l1.52-1.52 2.17 2.17-1.52 1.51Z"/>
+      </svg>
+      <span class="komi-rail-tooltip" aria-hidden="true">Партнёры</span>
     </button>
 
     <button type="button" id="sideListsBtn" class="komi-side-button"
@@ -124,16 +133,9 @@
       <span class="komi-rail-tooltip komi-hub-notif-label" aria-hidden="true">Уведомления</span>
     </button>
 
-    <button type="button" id="sidePartnersBtn" class="komi-side-button komi-side-partners"
-            data-komi-click="partners" aria-label="Партнёры">
-      <svg class="komi-rail-svg" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
-        <path d="M9.04 3.58a5.2 5.2 0 0 1 7.35 0l3.03 3.03a5.2 5.2 0 0 1-7.35 7.35l-.86-.86 2.17-2.17.86.86a2.13 2.13 0 0 0 3.02-3.02l-3.03-3.03a2.13 2.13 0 0 0-3.02 0l-1.52 1.52-2.17-2.17 1.52-1.51Z"/>
-        <path d="M14.96 20.42a5.2 5.2 0 0 1-7.35 0l-3.03-3.03a5.2 5.2 0 0 1 7.35-7.35l.86.86-2.17 2.17-.86-.86a2.13 2.13 0 0 0-3.02 3.02l3.03 3.03a2.13 2.13 0 0 0 3.02 0l1.52-1.52 2.17 2.17-1.52 1.51Z"/>
-      </svg>
-      <span class="komi-rail-tooltip" aria-hidden="true">Партнёры</span>
-    </button>
 
-    <!-- Profile remains available in the mobile dock and header menu. -->
+
+    <!-- Profile stays visible at the bottom of desktop and mobile navigation. -->
     <button type="button" class="komi-side-button komi-side-account" data-komi-click="profile"
             aria-label="Профиль">
       <span id="sidebarAvatarIcon" class="komi-rail-avatar">
@@ -254,6 +256,13 @@
             <section id="catalog" class="komi-static-catalog" aria-label="Каталог аниме">
                 <section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">
                     <h2 class="section-title" id="komiHomeQuickFiltersTitle">Каталог аниме</h2>
+                    <div class="komi-catalog-category-pills komi-home-quick-categories" role="group" aria-label="Категории каталога">
+                        <button type="button" data-komi-home-category="all" aria-pressed="true">Всё</button>
+                        <button type="button" data-komi-home-category="ongoing" aria-pressed="false">Онгоинги</button>
+                        <button type="button" data-komi-home-category="series" aria-pressed="false">Сериалы</button>
+                        <button type="button" data-komi-home-category="movies" aria-pressed="false">Фильмы</button>
+                        <button type="button" data-komi-home-category="top100" aria-pressed="false">Топ 100</button>
+                    </div>
                     <div class="catalog-filters-box" role="group" aria-label="Быстрые фильтры">
                         <div class="form-group" style="margin:0">
                             <label for="komiHomeQuickFilter-genre">Жанр</label>
@@ -631,6 +640,6 @@
     <script src="./komi-wrapped.js"></script>
     <script src="./komi-anime-social.js"></script>
     <script src="./komi-party-quiz.js"></script>
-    <script src="./komi-icon-rail.js?v=20261123-partners-v2"></script>
+    <script src="./komi-icon-rail.js?v=20261123-rail-layout-v3"></script>
 </body>
 </html>
