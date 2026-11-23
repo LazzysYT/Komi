@@ -755,8 +755,11 @@ async function loadDataFromCloud(attempt = 0) {
                 }));
             } catch {}
         }
+        function komiCatalogPageSize() {
+            return window.matchMedia?.('(max-width: 767px)').matches ? 24 : 48;
+        }
         function komiCatalogStateChanged() {
-            catalogVisibleCount = 48;
+            catalogVisibleCount = komiCatalogPageSize();
             komiCatalogRestorePending = false;
             komiSyncCatalogUrl();
             render();
@@ -811,7 +814,7 @@ async function loadDataFromCloud(attempt = 0) {
         }
         function openKomiCollection(collection) {
             catalogFilterGenre='Все'; catalogFilterYear='Все'; catalogFilterType='Все';
-            catalogSearchQuery=''; catalogVisibleCount=48;
+            catalogSearchQuery=''; catalogVisibleCount=komiCatalogPageSize();
             catalogCollection=Object.hasOwn(komiCollections, collection) ? collection : 'all';
             catalogCategory='all';
             catalogSort=collection === 'recent' ? 'updated' : 'rating';
@@ -832,7 +835,7 @@ async function loadDataFromCloud(attempt = 0) {
             const button = event.target.closest('[data-komi-genre]');
             if (!button) return;
             catalogCollection='all'; catalogFilterYear='Все'; catalogFilterType='Все'; catalogCategory='all';
-            catalogSearchQuery=''; catalogVisibleCount=48; catalogFilterGenre=button.dataset.komiGenre;
+            catalogSearchQuery=''; catalogVisibleCount=komiCatalogPageSize(); catalogFilterGenre=button.dataset.komiGenre;
             navigate('catalog');
         });
         let komiCatalogFocusPending = false;
@@ -944,7 +947,7 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterYear='Все';
             catalogSort=value==='top100'?'rating':'popular';
             catalogSearchQuery='';
-            catalogVisibleCount=48;
+            catalogVisibleCount=komiCatalogPageSize();
             navigate('catalog');
         });
         document.addEventListener('change', event => {
@@ -965,7 +968,7 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterType = 'Все';
             catalogSort = 'popular';
             catalogSearchQuery = '';
-            catalogVisibleCount = 48;
+            catalogVisibleCount = komiCatalogPageSize();
             if (kind === 'genre') catalogFilterGenre = value;
             else if (kind === 'year') catalogFilterYear = value;
             else if (kind === 'type') catalogFilterType = value;
@@ -1079,15 +1082,25 @@ async function loadDataFromCloud(attempt = 0) {
             catalogFilterGenre='Все';catalogFilterYear='Все';catalogFilterType='Все';
             catalogSort='popular';catalogSearchQuery='';komiHideWatched=false;komiCatalogStateChanged();
         }
-        function komiRefreshCatalogGrid() {
+        function komiRefreshCatalogGrid(appendFrom = null) {
             if(currentView!=='catalog')return;
             const filtered=komiCatalogFiltered();
             const grid=document.getElementById('komiCatalogGrid');
             const count=document.getElementById('komiCatalogCount');
             const more=document.getElementById('komiCatalogMore');
-            if(grid)grid.innerHTML=filtered.length
-                ?filtered.slice(0,catalogVisibleCount).map(a=>renderCard(a)).join('')
-                :'<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>';
+            if(grid) {
+                const canAppend = Number.isInteger(appendFrom) && appendFrom >= 0 &&
+                    filtered.length > appendFrom &&
+                    grid.querySelectorAll(':scope > .anime-card').length === Math.min(appendFrom,filtered.length);
+                if(canAppend) {
+                    grid.insertAdjacentHTML('beforeend',
+                        filtered.slice(appendFrom,catalogVisibleCount).map(a=>renderCard(a)).join(''));
+                } else {
+                    grid.innerHTML=filtered.length
+                        ?filtered.slice(0,catalogVisibleCount).map(a=>renderCard(a)).join('')
+                        :'<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>';
+                }
+            }
             if(count)count.textContent='Найдено: '+filtered.length;
             const headingCount = document.getElementById('komiCatalogHeadingCount');
             if (headingCount) headingCount.textContent = filtered.length + ' тайтлов найдено';
@@ -1098,7 +1111,7 @@ async function loadDataFromCloud(attempt = 0) {
         }
         function komiUpdateCatalogQuery(value){
             catalogSearchQuery=String(value||'').slice(0,120);
-            catalogVisibleCount=48;
+            catalogVisibleCount=komiCatalogPageSize();
             komiCatalogRestorePending=false;
             komiSyncCatalogUrl();
             komiRefreshCatalogGrid();
@@ -1109,16 +1122,19 @@ async function loadDataFromCloud(attempt = 0) {
                 '<nav class="komi-fastnav" aria-label="Быстрые разделы"><button class="is-prominent" data-komi-onclick="showKomiYear(\'2026\')"> Новинки 2026</button><button data-komi-onclick="navigate(\'catalog\')">▦ Весь каталог</button><button data-komi-onclick="document.getElementById(\'komiCalendarSection\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})"> Новые серии</button><button data-komi-onclick="randomAnimeWithAnimation()">◇ Случайное аниме</button></nav>';
         }
 
-        let catalogVisibleCount = 48;
+        let catalogVisibleCount = komiCatalogPageSize();
         if (currentView === 'catalog') {
             komiReadCatalogUrl();
             const saved = komiCatalogSavedPosition();
             if (saved && Number.isFinite(saved.visibleCount))
-                catalogVisibleCount = Math.max(48, Math.min(2400, Math.ceil(saved.visibleCount / 48) * 48));
+                catalogVisibleCount = Math.max(komiCatalogPageSize(), Math.min(window.matchMedia?.('(max-width: 767px)').matches ? 240 : 2400, Math.ceil(saved.visibleCount / komiCatalogPageSize()) * komiCatalogPageSize()));
         }
         function showMoreCatalog() {
-            catalogVisibleCount += 48;
-            komiRefreshCatalogGrid();
+            const previouslyRendered = catalogVisibleCount;
+            catalogVisibleCount += komiCatalogPageSize();
+            // Append only newly revealed cards; retaining existing poster DOM avoids
+            // re-decoding images and restarting CSS animations after every click.
+            komiRefreshCatalogGrid(previouslyRendered);
             komiStoreCatalogPosition();
         }
 
@@ -3230,7 +3246,7 @@ async function loadDataFromCloud(attempt = 0) {
             const raw = document.getElementById('searchInput')?.value.trim().slice(0,120) || '';
             if (!raw || window.KomiHybridSearch?.isUsers(raw)) return;
             catalogSearchQuery = raw;
-            catalogVisibleCount = 48;
+            catalogVisibleCount = komiCatalogPageSize();
             catalogFilterGenre = 'Все';
             catalogFilterYear = 'Все';
             catalogFilterType = 'Все';
@@ -4407,7 +4423,7 @@ async function loadDataFromCloud(attempt = 0) {
 
         function showKomiYear(year) {
             catalogFilterYear = String(year);
-            catalogVisibleCount = 48;
+            catalogVisibleCount = komiCatalogPageSize();
             navigate('catalog');
         }
 
@@ -5091,7 +5107,7 @@ async function loadDataFromCloud(attempt = 0) {
                 komiReadCatalogUrl();
                 komiCatalogRestorePending = true;
                 const saved = komiCatalogSavedPosition();
-                if (saved && Number.isFinite(saved.visibleCount)) catalogVisibleCount = Math.max(48, Math.min(2400, Math.ceil(saved.visibleCount / 48) * 48));
+                if (saved && Number.isFinite(saved.visibleCount)) catalogVisibleCount = Math.max(komiCatalogPageSize(), Math.min(window.matchMedia?.('(max-width: 767px)').matches ? 240 : 2400, Math.ceil(saved.visibleCount / komiCatalogPageSize()) * komiCatalogPageSize()));
                 currentView='catalog'; render();
             } else if (hash === '#partners') {
                 if (currentView !== 'partners') { currentView='partners'; render(); }
