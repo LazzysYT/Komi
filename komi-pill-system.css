@@ -280,3 +280,67 @@ body:has(#store-filters) :is(.topbar a.btn,.studio-button,.studio-action,.store-
     transition:none!important;
   }
 }
+
+/* 2026-11-23 · First-paint/SPA layout parity.
+ * index.html now renders the same five quick-category pills as
+ * komiHomeQuickFiltersMarkup(). Place them in a dedicated row rather than
+ * allowing CSS grid auto-placement to collide with the title and selects. */
+.komi-media-hub #komiHomeQuickFilters {
+  grid-template-columns: max-content minmax(0, 1fr) max-content !important;
+  grid-template-rows: auto auto !important;
+  align-items: center !important;
+  min-width: 0 !important;
+}
+.komi-media-hub #komiHomeQuickFiltersTitle {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  min-width: 0;
+  margin: 0 !important;
+  line-height: 1.25 !important;
+  letter-spacing: -.025em !important;
+  white-space: nowrap !important;
+}
+.komi-media-hub #komiHomeQuickFilters > .catalog-filters-box {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  min-width: 0 !important;
+}
+.komi-media-hub #komiHomeQuickFilters > .section-see-all {
+  grid-column: 3 !important;
+  grid-row: 1 !important;
+}
+.komi-media-hub #komiHomeQuickFilters > .komi-home-quick-categories {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  align-self: center !important;
+  display: flex !important;
+  justify-content: flex-start !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  max-width: 100% !important;
+  margin: 2px 0 0 !important;
+  padding: 4px 0 !important;
+}
+@media (max-width: 767px) {
+  .komi-media-hub #komiHomeQuickFilters {
+    grid-template-columns: minmax(0, 1fr) auto !important;
+    grid-template-rows: auto auto auto !important;
+  }
+  .komi-media-hub #komiHomeQuickFiltersTitle {
+    grid-column: 1 !important;
+    grid-row: 1 !important;
+    white-space: normal !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .section-see-all {
+    grid-column: 2 !important;
+    grid-row: 1 !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .komi-home-quick-categories {
+    grid-column: 1 / -1 !important;
+    grid-row: 2 !important;
+  }
+  .komi-media-hub #komiHomeQuickFilters > .catalog-filters-box {
+    grid-column: 1 / -1 !important;
+    grid-row: 3 !important;
+  }
+}
