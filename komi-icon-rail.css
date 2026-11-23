@@ -180,6 +180,61 @@ body.komi-media-hub .komi-icon-rail > .komi-rail-indicator {
 }
 body.komi-media-hub .komi-icon-rail > .komi-rail-indicator.is-visible { opacity: 1; }
 
+/* Desktop name capsules: specificity intentionally beats bundled
+   .komi-side-button > span:not(#sidebarAvatarIcon,#notifBadge) rules, which
+   would otherwise hide the tooltip even though it has display:block. */
+@media (min-width: 768px) {
+  body.komi-media-hub .komi-side-nav.komi-icon-rail
+    :is(.komi-side-button,.komi-side-logo) > span.komi-rail-tooltip:not(#sidebarAvatarIcon,#notifBadge) {
+    box-sizing: border-box !important;
+    position: absolute !important;
+    z-index: 15 !important;
+    top: 50% !important;
+    left: calc(100% + 16px) !important;
+    right: auto !important;
+    bottom: auto !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    width: max-content !important;
+    max-width: min(230px, calc(100vw - 100px)) !important;
+    min-height: 36px !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 8px 14px !important;
+    border: 1px solid rgba(255,255,255,.13) !important;
+    border-radius: 12px !important;
+    background: #1C1C21 !important;
+    color: #FFFFFF !important;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.055),
+                0 8px 26px rgba(0,0,0,.55) !important;
+    font: 700 13px/1.25 Inter,Manrope,sans-serif !important;
+    letter-spacing: .005em !important;
+    text-transform: none !important;
+    white-space: nowrap !important;
+    text-align: center !important;
+    text-overflow: clip !important;
+    overflow: visible !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transform: translate3d(-8px,-50%,0) scale(.97) !important;
+    transition: opacity .2s ease,
+                transform .24s cubic-bezier(.22,1,.36,1),
+                visibility .2s ease !important;
+  }
+  body.komi-media-hub .komi-side-nav.komi-icon-rail
+    :is(.komi-side-button,.komi-side-logo):is(:hover,:focus-visible) > span.komi-rail-tooltip:not(#sidebarAvatarIcon,#notifBadge) {
+    opacity: 1 !important;
+    visibility: visible !important;
+    transform: translate3d(0,-50%,0) scale(1) !important;
+  }
+  body.komi-media-hub .komi-side-nav.komi-icon-rail
+    :is(.komi-side-button,.komi-side-logo):is(:hover,:focus-visible) {
+    z-index: 10 !important;
+  }
+}
+
 /* Pop-out capsules (not native title attributes). */
 body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo) > .komi-rail-tooltip {
   box-sizing: border-box !important;
