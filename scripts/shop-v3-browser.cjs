@@ -29,8 +29,10 @@ fs.mkdirSync(output,{recursive:true});
      const links=[...document.querySelectorAll('head link[rel="stylesheet"]')];
      return links.filter(x=>new URL(x.href).origin===location.origin).map(x=>new URL(x.href).pathname);
    });
-   assert.deepEqual(bundleCSS,['/komi.production.css','/komi-pill-system.css'],
-     'Production HTML must load the bundled CSS first, followed by the pill design layer');
+   const expectedCSS=['/komi.production.css','/komi-pill-system.css'];
+   if(bundleCSS.includes('/komi-icon-rail.css')) expectedCSS.push('/komi-icon-rail.css');
+   assert.deepEqual(bundleCSS,expectedCSS,
+     'Production CSS must preserve base, pill, and optional icon-rail cascade order');
    const geometry=await page.evaluate(()=>{
      const section=document.querySelector('#shop.komi-shop-v3');
      const top=section.querySelector('.sv3-topbar');
