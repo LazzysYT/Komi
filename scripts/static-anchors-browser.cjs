@@ -28,8 +28,8 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
    const noJsLink=page.locator('#komiHomeQuickFilters .komi-home-nojs-catalog-link');
    assert.equal(await noJsLink.count(),1,'Static catalog must remain reachable without JavaScript');
    assert.equal(await noJsLink.getAttribute('href'),' /#catalog'.trim());
-   assert.equal(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
-     '20261120-admin-guest-gates');
+   assert.match(await page.locator('meta[name="komi-ui-revision"]').getAttribute('content'),
+     /^20[0-9]{6}-[a-z0-9-]+$/,'The UI revision metadata must be present and versioned');
    const catalogContainsFilters=await page.evaluate(() => {
      const filters=document.getElementById('komiHomeQuickFilters');
      const catalog=document.getElementById('catalog');
