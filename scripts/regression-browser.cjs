@@ -512,7 +512,14 @@ async function checkNotifications(page) {
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
-   assert.ok(width>1000 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
+   assert.ok(width>1000 ? cinema.sidebarBesideVideo : width>=768 ? cinema.sidebarAfterVideo : await page.evaluate(() => {
+      // On phones, the episodes sidebar is intentionally hosted by the mobile
+      // bottom sheet rather than occupying space below the video.
+      const sheet=document.querySelector('#watchModal #komiMobileSheet');
+      const sidebar=sheet?.querySelector('.komi-watch-sidebar');
+      return Boolean(document.documentElement.classList.contains('komi-mobile-sheets-ready')
+        && sheet && sidebar && sidebar.isConnected);
+    }),JSON.stringify(cinema));
    assert.equal(cinema.color,'rgb(255, 255, 255)');
    assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)',JSON.stringify(cinema));
    assert.notEqual(cinema.before,'none','Active episode must have a white indicator');
