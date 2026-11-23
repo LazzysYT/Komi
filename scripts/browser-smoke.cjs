@@ -19,7 +19,7 @@ fs.mkdirSync(output, { recursive: true });
       const state = await page.evaluate(() => ({
         title: document.title,
         description: document.querySelector('meta[name="description"]')?.content || '',
-        mainText: document.querySelector('main')?.innerText?.slice(0, 300) || '',
+        mainText: (document.querySelector('main') || document.getElementById('mainContainer'))?.innerText?.slice(0, 300) || '',
         horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
         googleButton: !!document.querySelector('.komi-google-btn'),
         loginForm: !!document.querySelector('#loginFormContainer'),
