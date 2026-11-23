@@ -387,3 +387,7 @@
  #shop.komi-shop-v5 :is(button,.sv3-item,.sv3-hide-toggle input::after){animation:none!important;transition:none!important}
  #shop.komi-shop-v5 .sv3-item:hover{transform:none}
 }
+
+/* Avoid a dim-to-bright flash before dynamic shop hydration. */
+#shop.komi-shop-v5.komi-static-shop button:disabled{opacity:1;cursor:default}
+@media(max-width:960px){#shop.komi-shop-v5.komi-static-shop .sv3-fitting{display:none}}
