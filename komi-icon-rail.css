@@ -1,0 +1,412 @@
+/* KomiAnime Icon Rail — place AFTER komi.production.css and komi-pill-system.css.
+   Overrides only the existing rail; routes and business logic remain untouched. */
+body.komi-media-hub {
+  --hub-rail: 72px;
+  --komi-rail-width: 72px;
+  --rail-bg: #09090B;
+  --rail-active: #1C1C21;
+  --rail-muted: #6E6E77;
+  --rail-white: #FFFFFF;
+}
+
+/* Negative float margin prevents a sticky sibling from doubling the existing
+   margin-left:var(--hub-rail) on .app-layout. */
+body.komi-media-hub .komi-side-nav.komi-icon-rail {
+  box-sizing: border-box !important;
+  position: sticky !important;
+  inset: auto !important;
+  top: 0 !important;
+  left: 0 !important;
+  bottom: auto !important;
+  float: left;
+  margin: 0 -72px 0 0 !important;
+  padding: 16px 12px !important;
+  width: 72px !important;
+  min-width: 72px !important;
+  height: 100vh !important;
+  height: 100dvh !important;
+  min-height: 0 !important;
+  display: flex !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  overflow: visible !important;
+  border: 0 !important;
+  border-right: 1px solid rgba(255,255,255,.075) !important;
+  border-radius: 0 !important;
+  background: var(--rail-bg) !important;
+  color: var(--rail-white) !important;
+  box-shadow: none !important;
+  z-index: 101 !important;
+  isolation: isolate;
+}
+
+body.komi-media-hub .komi-icon-rail .komi-side-logo {
+  box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 1;
+  flex: 0 0 46px;
+  display: grid !important;
+  place-items: center !important;
+  width: 46px !important;
+  height: 46px !important;
+  padding: 0 !important;
+  border: 1px solid rgba(255,255,255,.05) !important;
+  border-radius: 14px !important;
+  background: #141417 !important;
+  color: #FFFFFF !important;
+  box-shadow: none !important;
+  font: 800 25px/1 Manrope,Inter,sans-serif !important;
+  letter-spacing: -.08em;
+  cursor: pointer;
+  transition: background .18s, transform .18s !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-logo:hover {
+  background: #1C1C21 !important;
+  transform: scale(1.05) !important;
+}
+
+body.komi-media-hub .komi-icon-rail .komi-side-links {
+  box-sizing: border-box !important;
+  position: relative;
+  display: flex !important;
+  flex: 1 1 auto !important;
+  min-height: 0;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 16px 0 !important;
+  flex-direction: column !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 10px !important;
+  overflow: visible !important;
+  scrollbar-width: none;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-links::-webkit-scrollbar { display: none; }
+body.komi-media-hub .komi-icon-rail .komi-rail-extra,
+body.komi-media-hub .komi-icon-rail .komi-side-bottom {
+  display: flex !important;
+  flex: 0 0 auto !important;
+  width: 100% !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  flex-direction: column !important;
+  justify-content: center !important;
+  align-items: center !important;
+  gap: 10px !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-rail-extra {
+  margin-bottom: 14px !important;
+  padding-bottom: 14px !important;
+  border-bottom: 1px solid rgba(255,255,255,.07);
+}
+
+body.komi-media-hub .komi-icon-rail .komi-side-button {
+  box-sizing: border-box !important;
+  position: relative !important;
+  z-index: 1;
+  display: flex !important;
+  flex: 0 0 48px !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 48px !important;
+  height: 48px !important;
+  min-height: 48px !important;
+  padding: 0 !important;
+  margin: 0 !important;
+  border: 1px solid transparent !important;
+  border-radius: 15px !important;
+  color: var(--rail-muted) !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  outline-offset: 3px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color .18s, background .18s, box-shadow .18s,
+              transform .18s cubic-bezier(.22,1,.36,1) !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-button:hover {
+  color: var(--rail-white) !important;
+  background: rgba(255,255,255,.05) !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  transform: scale(1.05) !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-button:active {
+  transform: scale(.92) !important;
+  transition-duration: 110ms !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-button:is(.is-active,.active,[aria-current="page"]) {
+  background: var(--rail-active) !important;
+  color: var(--rail-white) !important;
+  border-color: transparent !important;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08) !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-button:is(:focus-visible) {
+  outline: 2px solid #FFFFFF !important;
+  outline-offset: 3px !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-rail-svg,
+body.komi-media-hub .komi-icon-rail .komi-rail-svg * {
+  flex-shrink: 0;
+  fill: currentColor !important;
+  stroke: none !important;
+  stroke-width: 0 !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-rail-svg {
+  display: block !important;
+  width: 22px !important;
+  height: 22px !important;
+}
+
+/* Single, animated marker follows the center of whichever desktop item is active. */
+body.komi-media-hub .komi-icon-rail > .komi-rail-indicator {
+  position: absolute !important;
+  top: 0;
+  left: 0;
+  z-index: 3;
+  width: 4px;
+  height: 22px;
+  border-radius: 0 4px 4px 0;
+  background: #FFFFFF;
+  box-shadow: 0 0 12px rgba(255,255,255,.45);
+  opacity: 0;
+  pointer-events: none;
+  will-change: transform;
+  transition: transform .3s cubic-bezier(.22,1,.36,1), opacity .15s ease;
+}
+body.komi-media-hub .komi-icon-rail > .komi-rail-indicator.is-visible { opacity: 1; }
+
+/* Pop-out capsules (not native title attributes). */
+body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo) > .komi-rail-tooltip {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  top: 50% !important;
+  left: calc(100% + 12px) !important;
+  right: auto !important;
+  width: max-content !important;
+  height: auto !important;
+  max-width: 210px;
+  padding: 6px 12px !important;
+  display: block !important;
+  border: 1px solid rgba(255,255,255,.1) !important;
+  border-radius: 10px !important;
+  background: #18181C !important;
+  color: #FFFFFF !important;
+  box-shadow: 0 10px 25px rgba(0,0,0,.45) !important;
+  font: 600 13px/1.35 Inter,sans-serif !important;
+  letter-spacing: 0;
+  white-space: nowrap;
+  text-align: left;
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none;
+  transform: translate(-6px,-50%) !important;
+  transition: opacity .18s, transform .18s, visibility .18s !important;
+}
+body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):is(:hover,:focus-visible) > .komi-rail-tooltip {
+  opacity: 1 !important;
+  visibility: visible !important;
+  transform: translate(0,-50%) !important;
+}
+
+@keyframes komi-bell-swing {
+  0%,100% { transform: rotate(0); }
+  25% { transform: rotate(12deg); }
+  70% { transform: rotate(-12deg); }
+}
+body.komi-media-hub .komi-icon-rail .komi-rail-bell:hover > svg {
+  transform-origin: 50% 14%;
+  animation: komi-bell-swing .5s ease-in-out;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-premium > svg {
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+/* Preserve the dynamic img that app-main.js mounts into #sidebarAvatarIcon. */
+body.komi-media-hub .komi-icon-rail .komi-side-account {
+  background: transparent !important;
+}
+body.komi-media-hub .komi-icon-rail .komi-side-account > #sidebarAvatarIcon {
+  box-sizing: border-box !important;
+  position: static !important;
+  display: grid !important;
+  flex: 0 0 40px;
+  place-items: center !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  border: 1.5px solid rgba(255,255,255,.14) !important;
+  border-radius: 50% !important;
+  background: #141417 !important;
+  color: #FFFFFF !important;
+  font-size: 22px !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  overflow: hidden !important;
+  transform: none !important;
+}
+body.komi-media-hub .komi-icon-rail #sidebarAvatarIcon img {
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+}
+body.komi-media-hub .komi-icon-rail #sidebarAvatarIcon > svg {
+  width: 22px !important;
+  height: 22px !important;
+  fill: currentColor !important;
+  stroke: none !important;
+}
+
+/* App controls the badge's inline display; CSS only turns the count into a dot. */
+body.komi-media-hub .komi-icon-rail #notifBadge {
+  box-sizing: border-box !important;
+  position: absolute !important;
+  top: 6px !important;
+  right: 5px !important;
+  bottom: auto !important;
+  left: auto !important;
+  width: 8px !important;
+  height: 8px !important;
+  min-width: 8px !important;
+  min-height: 8px !important;
+  padding: 0 !important;
+  border: 2px solid #09090B !important;
+  border-radius: 50% !important;
+  background: #FFFFFF !important;
+  color: transparent !important;
+  font-size: 0 !important;
+  box-shadow: none !important;
+  pointer-events: none;
+}
+body.komi-media-hub .komi-icon-rail #notifDropdown {
+  z-index: 8 !important;
+}
+
+@media (min-width: 768px) and (max-height: 650px) {
+  body.komi-media-hub .komi-icon-rail .komi-side-links { gap: 3px !important; padding-block: 8px !important; }
+  body.komi-media-hub .komi-icon-rail .komi-rail-extra { margin-bottom: 7px !important; padding-bottom: 7px !important; }
+  body.komi-media-hub .komi-icon-rail .komi-side-bottom { gap: 3px !important; }
+}
+
+/* Exactly five compact mobile destinations; Shop, Party and Premium remain
+   reachable from the existing header “Ещё” popup (do not delete their actions). */
+@media (max-width: 767px) {
+  body.komi-media-hub { --hub-rail: 0px; --komi-rail-width: 0px; }
+  body.komi-media-hub .app-layout { margin-left: 0 !important; }
+  body.komi-media-hub .komi-side-nav.komi-icon-rail {
+    position: fixed !important;
+    float: none !important;
+    inset: auto 0 0 0 !important;
+    top: auto !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: grid !important;
+    grid-template-columns: repeat(5,minmax(0,1fr)) !important;
+    align-items: center !important;
+    justify-items: center !important;
+    column-gap: 3px !important;
+    width: 100% !important;
+    min-width: 0 !important;
+    height: calc(70px + env(safe-area-inset-bottom)) !important;
+    min-height: 70px !important;
+    margin: 0 !important;
+    padding: 6px max(8px,env(safe-area-inset-right)) calc(6px + env(safe-area-inset-bottom)) max(8px,env(safe-area-inset-left)) !important;
+    border: 0 !important;
+    border-top: 1px solid rgba(255,255,255,.10) !important;
+    background: rgba(9,9,11,.88) !important;
+    -webkit-backdrop-filter: blur(16px);
+    backdrop-filter: blur(16px);
+    box-shadow: 0 -8px 24px rgba(0,0,0,.26) !important;
+  }
+  body.komi-media-hub .komi-icon-rail > :is(.komi-side-logo,.komi-rail-indicator,.komi-rail-extra) {
+    display: none !important;
+  }
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-links,.komi-side-bottom) {
+    display: contents !important;
+  }
+  body.komi-media-hub .komi-icon-rail .komi-side-button {
+    display: none !important;
+  }
+  body.komi-media-hub .komi-icon-rail #sideHomeBtn,
+  body.komi-media-hub .komi-icon-rail #sideCatalogBtn,
+  body.komi-media-hub .komi-icon-rail #sideListsBtn,
+  body.komi-media-hub .komi-icon-rail #notifBellBtn,
+  body.komi-media-hub .komi-icon-rail .komi-side-account {
+    box-sizing: border-box !important;
+    position: relative !important;
+    display: flex !important;
+    flex: 1 1 auto !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    width: 100% !important;
+    max-width: 90px;
+    height: 56px !important;
+    min-height: 56px !important;
+    padding: 4px 2px !important;
+    border-radius: 14px !important;
+    grid-row: 1 !important;
+    order: unset !important;
+  }
+  body.komi-media-hub .komi-icon-rail #sideHomeBtn { grid-column: 1 !important; }
+  body.komi-media-hub .komi-icon-rail #sideCatalogBtn { grid-column: 2 !important; }
+  body.komi-media-hub .komi-icon-rail #sideListsBtn { grid-column: 3 !important; }
+  body.komi-media-hub .komi-icon-rail #notifBellBtn { grid-column: 4 !important; }
+  body.komi-media-hub .komi-icon-rail .komi-side-account { grid-column: 5 !important; }
+  body.komi-media-hub .komi-icon-rail .komi-side-account > #sidebarAvatarIcon {
+    width: 25px !important;
+    height: 25px !important;
+    flex: 0 0 25px;
+  }
+  body.komi-media-hub .komi-icon-rail :is(#sideHomeBtn,#sideCatalogBtn,#sideListsBtn,#notifBellBtn,.komi-side-account) > .komi-rail-tooltip {
+    position: static !important;
+    display: block !important;
+    padding: 0 !important;
+    max-width: 100% !important;
+    transform: none !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: none !important;
+    box-shadow: none !important;
+    color: inherit !important;
+    font: 700 9px/1.2 Inter,sans-serif !important;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  body.komi-media-hub .komi-icon-rail #notifBadge {
+    top: 5px !important;
+    right: calc(50% - 18px) !important;
+    left: auto !important;
+  }
+  body.komi-media-hub .komi-icon-rail #notifDropdown {
+    position: absolute !important;
+    left: auto !important;
+    right: 8px !important;
+    top: auto !important;
+    bottom: calc(100% + 10px) !important;
+    width: min(360px,calc(100vw - 16px)) !important;
+    max-height: min(65vh,480px) !important;
+    overflow-y: auto !important;
+  }
+  body.komi-media-hub { padding-bottom: calc(75px + env(safe-area-inset-bottom)) !important; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  body.komi-media-hub .komi-icon-rail *,
+  body.komi-media-hub .komi-icon-rail *::before,
+  body.komi-media-hub .komi-icon-rail *::after {
+    transition-duration: .01ms !important;
+    animation-duration: .01ms !important;
+  }
+}
