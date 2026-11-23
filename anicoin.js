@@ -64,9 +64,9 @@ function aniCoinBadge() {
     return aniCoinItems.find(item => item.id === aniCoinWallet?.equipped)?.name || '';
 }
 
-async function openAniCoinShop() {
+async function openAniCoinShop(fromRoute = false) {
     aniCoinStatus = '';
-    navigate('shop');
+    if (!fromRoute) navigate('shop');
     if (!currentUser?.authUserId) return;
     let timeout;
     try {
@@ -529,7 +529,7 @@ function aniCoinStartEmbed() {
 }
 
 // Initial shop deep-link: subsequent hash changes use the central vanilla-JS router.
-if (location.hash === '#shop') openAniCoinShop();
+if (typeof komiRouteView === 'function' && komiRouteView() === 'shop') openAniCoinShop(true);
 
 
 /* External embeds cannot report their exact playback state across origins.
