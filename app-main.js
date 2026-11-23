@@ -539,7 +539,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (myFriends.length) {
                 friendsHtml += myFriends.map((name,index) => {
                     const profile = userProfiles[name] || {};
-                    const safeName = escapeFriendHtml(komiVisibleUsername(name, profile, false));
+                    const safeName = escapeFriendHtml(typeof komiVisibleUsername === 'function' ? komiVisibleUsername(name, profile, false) : (profile.displayName || name));
                     const safeAvatar = escapeFriendHtml(profile.avatar ||
                         'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
                     return `
@@ -4217,10 +4217,10 @@ async function loadDataFromCloud(attempt = 0) {
             const questXp = currentUser?.username === username &&
                 komiQuestRewardState.owner === currentUser?.authUserId
                 ? Number(komiQuestRewardState.data?.quest_xp_total) || 0 : 0;
-            const verified = currentUser?.username === username &&
-                komiServerXpState.owner === currentUser?.authUserId
+            const verified = currentUser?.username===username &&
+                komiServerXpState.owner===currentUser?.authUserId
                 ? komiServerXpState.data : null;
-            const xp = Math.max(0, Number(verified?.xp ?? (watched * 100 + watching * 20 + friends * 15 + premiumXp + questXp)) || 0);
+            const xp=verified?.xp ?? (watched*100+watching*20+friends*15+premiumXp+questXp);
             const raw = [
                 ['first-watch','Просмотр','Первый просмотр',watched,1],
                 ['watch-three','Просмотр','3 аниме',watched,3],
@@ -4263,7 +4263,7 @@ async function loadDataFromCloud(attempt = 0) {
                 target, earned: Number(value) >= target
             }));
             return {watched, watching, planned, favorites, listed, friends, xp, premiumXp,
-                level: Math.floor(xp / 500) + 1, achievements,
+                level: Math.floor(xp/500)+1, achievements,
                 badges: achievements.filter(item => item.earned).map(item => item.label)};
         }
         function komiRecommendations() {
