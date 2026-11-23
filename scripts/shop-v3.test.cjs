@@ -27,10 +27,14 @@ vm.createContext(context);
 vm.runInContext(read('komi-shop-catalog.js'),context);
 vm.runInContext(read('komi-shop-icons.js'),context);
 vm.runInContext(js,context);
+// Mirror the SPA's real refresh callback so clicks actually rerender in the unit harness.
+context.renderAniCoinShop=()=>context.window.KomiShopV3.render(container,guest);
 const products=context.window.KomiShopCatalog.items;
 const guest={owner:'',store:null,wallet:null,displayName:'Гость',avatar:''};
 const owned={owner:'uid-one',store:{balance:500,owned:['frame_moon','title_cinema'],frame_id:'frame_moon'},wallet:{balance:500},displayName:'Тестовый зритель',avatar:''};
 function reset(){
+ // Keep each test independent: clear persisted filters through the same UI handler.
+ if(scripts.click)scripts.click(eventButton('data-v3-reset-filters'));
  context.window.KomiShopV3.reset();
  context.window.KomiShopV3.render(container,guest);
 }
@@ -42,6 +46,7 @@ function eventButton(name,id){
   if(name==='data-v3-category')d.v3Category=id;
    if(name==='data-v3-sort')d.v3Sort=id;
   if(name==='data-v3-reset')d.v3Reset='';
+  if(name==='data-v3-reset-filters')d.v3ResetFilters='';
   return {dataset:d,hasAttribute(k){return k===name;}};
  }}};
 }
@@ -77,12 +82,13 @@ test('current account purchased items cost zero when building a preview cart',()
  assert.equal(calculate([moon],null),moon.cost);
 });
 test('category switch preserves trials and guest can trial without buying',async()=>{
- context.window.KomiShopV3.render(container,guest);
+ reset();
  const frame=products.find(x=>x.id==='frame_moon');
  await scripts.click(eventButton('data-v3-try','frame_moon'));
  assert.deepEqual([...context.window.KomiShopV3.selected()],['frame_moon']);
  await scripts.click(eventButton('data-v3-category','shape'));
- assert.ok(container.innerHTML.includes('aria-pressed="true"'));
+ assert.match(container.innerHTML,/data-v3-category="shape" aria-pressed="true"/);
+ assert.equal((container.innerHTML.match(/data-shop-item-action=/g)||[]).length,4);
  assert.equal(context.window.KomiShopV3.selected().length,1);
  assert.match(container.innerHTML,/Выбрано для примерки/);
  context.window.KomiShopV3.reset();
@@ -166,7 +172,7 @@ test('shop V5 presents one weekly collection and filled icons while preserving p
   const icons=read('komi-shop-icons.js');
   const v5css=read('komi-shop-v5.css');
   const premium=read('komi-premium.js');
-  context.window.KomiShopV3.render(container,guest);
+  reset();
   const output=container.innerHTML;
   assert.match(output,/class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5"/);
   assert.match(output,/Магазин KomiAnime/);
