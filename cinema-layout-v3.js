@@ -10,10 +10,15 @@
   const capturedFrames = new Map();
   const measuredDurations = new Map();
   function frameKey(ctx,index) {return String(ctx.animeId)+':'+ctx.season+':'+index;}
+  function indexEpisodePreviews(ctx) {
+    const urls = ctx.episodeMeta.map(ep => episodePreview(ep?.preview));
+    const counts = new Map();
+    for (const url of urls) if (url) counts.set(url,(counts.get(url)||0)+1);
+    return urls.map(url => url && counts.get(url) === 1 ? url : '');
+  }
   function uniquePreview(ctx,index) {
-    const url=episodePreview(ctx.episodeMeta?.[index]?.preview);
-    if (!url) return '';
-    return ctx.episodeMeta.filter(ep=>episodePreview(ep?.preview)===url).length===1 ? url : '';
+    const url=ctx.uniquePreviews?.[index] || '';
+    return ctx.failedPreviews?.has(url) ? '' : url;
   }
   function actualPreview(ctx,index) {return uniquePreview(ctx,index)||capturedFrames.get(frameKey(ctx,index))||'';}
   function captureCurrentFrame(ctx) {
@@ -86,7 +91,7 @@
         .filter(Boolean).join(' · ');
     caption.hidden = !caption.textContent;
   }
-  function paintEpisodeImage(frame, sources) {
+  function paintEpisodeImage(frame, sources, onFailure) {
     frame.querySelector('img')?.remove();
     const candidates=[...new Set(sources.filter(Boolean))];
     if(!candidates.length)return;
@@ -98,7 +103,11 @@
       if(next>=candidates.length){image.remove();return;}
       image.src=candidates[next++];
     };
-    image.addEventListener('error',tryNext);
+    image.addEventListener('error',()=>{
+      if (!frame.isConnected || image.parentNode !== frame) return;
+      onFailure?.(candidates[next-1]);
+      tryNext();
+    });
     frame.prepend(image);
     tryNext();
   }
@@ -110,7 +119,9 @@
     number.className='komi-episode-thumb-badge';
     number.textContent=label;
     frame.append(number);
-    paintEpisodeImage(frame,[actualPreview(context,index),...context.episodeFallbacks]);
+    paintEpisodeImage(frame,[actualPreview(context,index),...context.episodeFallbacks], url => {
+      if (url && url === context.uniquePreviews[index]) context.failedPreviews.add(url);
+    });
     return frame;
   }
   function setListMode(context, list) {
@@ -205,6 +216,8 @@
     context.grid = grid;
     context.title = heading.querySelector('h1')?.textContent || 'KomiAnime';
     context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
+    context.uniquePreviews = indexEpisodePreviews(context);
+    context.failedPreviews = new Set();
     // Prefer a real episode frame, then the title's own landscape artwork,
     // then its poster. Keep the badge even if every image request fails.
     context.episodeFallbacks = [...new Set([
@@ -289,10 +302,10 @@
     gridButton.addEventListener('click', () => setListMode(context,false));
     listButton.addEventListener('click', () => setListMode(context,true));
     setListMode(context,true);
-    if (context.video && !actualPreview(context,context.index)) {
+    if (context.video) {
       let attempts=0,lastAttempt=-30;
       const takeFrame=()=>{
-        if (context.video.currentTime<12 || context.video.currentTime-lastAttempt<8) return;
+        if (actualPreview(context,context.index) || context.video.currentTime<12 || context.video.currentTime-lastAttempt<8) return;
         lastAttempt=context.video.currentTime;
         if (++attempts>5 || captureCurrentFrame(context)) context.video.removeEventListener('timeupdate',takeFrame);
       };
@@ -351,8 +364,10 @@
     placeQuality();
     compact.addEventListener('change', placeQuality, {signal:context.abort.signal});
     function refreshQualities() {
-      const levels = context.video?.komiHls?.levels;
-      if (!levels?.length) return;
+      const hls = context.video?.komiHls;
+      const levels = hls?.levels;
+      if (!levels?.length) { qualityLabel.hidden = true; quality.disabled = true; return; }
+      const selected = hls.autoLevelEnabled ? '-1' : String(hls.currentLevel);
       quality.replaceChildren(new Option('Авто','-1'));
       const seen = new Set();
       levels.forEach((level,index) => {
@@ -361,13 +376,15 @@
         seen.add(label);
         quality.add(new Option(label,String(index)));
       });
+      quality.value = [...quality.options].some(option => option.value === selected) ? selected : '-1';
       quality.disabled = false;
       qualityLabel.hidden = false;
     }
     quality.addEventListener('change', () => {
       if (context.video?.komiHls) context.video.komiHls.currentLevel = Number(quality.value);
     });
-    context.video?.addEventListener('loadedmetadata',refreshQualities);
+    for (const event of ['loadedmetadata','komi:hls-levels']) context.video?.addEventListener(event,refreshQualities,{signal:context.abort.signal});
+    refreshQualities();
 
     const toolbar = content.querySelector('.komi-cinema-toolbar');
     if (toolbar) {
@@ -460,12 +477,16 @@
     if (label) label.textContent = document.fullscreenElement === current.content ? 'Обычный размер' : 'На весь экран';
   });
 
-  root.KomiPlayerUX.mount = function cinemaMount(settings = {}) {
+  function disposeCinema() {
     if (current) {
       current.observer?.disconnect();
       current.abort?.abort();
       current = null;
     }
+  }
+  root.KomiPlayerUX.disposeCinema = disposeCinema;
+  root.KomiPlayerUX.mount = function cinemaMount(settings = {}) {
+    disposeCinema();
     const context = baseMount(settings);
     if (context) {
       context.abort = new AbortController();
