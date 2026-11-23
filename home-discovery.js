@@ -76,15 +76,18 @@
       'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="' + path + '"></path></svg>';
   }
-  function artworkImage(anime, context, loading, className = '') {
+  function artworkImage(anime, context, loading, className = '', deferHero = false) {
     const source = anime.banner || anime.poster;
     const directSource = className === 'komi-hub-hero-art' && typeof source === 'string'
       ? source.replace(/(https:\/\/shikimori\.(?:io|one)\/system\/animes\/)preview(\/[1-9]\d*\.jpe?g(?:\?\d+)?)/i, '$1original$2')
       : source;
     const direct = typeof directSource === 'string' && /^https:\/\//i.test(directSource)
       ? ' data-poster-direct="' + escape(directSource) + '"' : '';
-    return '<img class="' + className + '" src="' + context.artwork(anime) + '" alt="" loading="' +
-      loading + '" decoding="async" referrerpolicy="no-referrer"' +
+    const actualSrc = context.artwork(anime);
+    const deferred = className === 'komi-hub-hero-art' && deferHero;
+    return '<img class="' + className + '" src="' + (deferred ? '/anime-artwork.svg' : escape(actualSrc)) +
+      '" alt="" loading="' + loading + '" decoding="async" referrerpolicy="no-referrer"' +
+      (deferred ? ' data-komi-hero-deferred-src="' + escape(actualSrc) + '"' : '') +
       (className === 'komi-hub-hero-art' && loading === 'eager' ? ' fetchpriority="high"' : '') + direct +
       ' data-komi-onerror="komiCardPosterFallback(this)">';
   }
@@ -93,6 +96,8 @@
     if (!slides.length) return '';
     const index = ((Number(context.currentSlideIndex) || 0) % slides.length + slides.length) % slides.length;
     const total = String(slides.length).padStart(2, '0');
+    const compactNetwork = typeof root.matchMedia === 'function' &&
+      root.matchMedia('(max-width: 767px)').matches;
     return '<section class="komi-home-hero" aria-label="Рекомендуем посмотреть">' +
       '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка аниме">' +
       '<div class="hero-slides-wrapper">' + slides.map((anime, i) => {
@@ -113,7 +118,7 @@
           (still ? ' data-komi-hero-still="' + escape(still) + '"' : '') +
           ' aria-hidden="' + (i === index ? 'false' : 'true') + '"' +
           ' aria-label="' + escape(anime.title) + '">' +
-          artworkImage(anime, context, i === index ? 'eager' : 'lazy', 'komi-hub-hero-art') +
+          artworkImage(anime, context, i === index ? 'eager' : 'lazy', 'komi-hub-hero-art', compactNetwork && i !== index) +
           '<div class="komi-home-hero-content">' +
           '<div class="komi-hub-hero-kicker"><span>' + escape(category) + '</span>' +
           '<button type="button" class="komi-hub-save" aria-label="Добавить в список" title="Добавить в список" data-komi-onclick="' + listAction + '">' +

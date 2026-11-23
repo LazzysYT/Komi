@@ -1737,7 +1737,18 @@ async function loadDataFromCloud(attempt = 0) {
                 const active = idx === currentSlideIndex;
                 slide.classList.toggle('active', active);
                 slide.setAttribute('aria-hidden', String(!active));
+                if (active) {
+                    const deferred = slide.querySelector('img.komi-hub-hero-art[data-komi-hero-deferred-src]');
+                    if (deferred) {
+                        const source = deferred.dataset.komiHeroDeferredSrc;
+                        delete deferred.dataset.komiHeroDeferredSrc;
+                        deferred.loading = 'eager';
+                        if (source) deferred.src = source;
+                    }
+                }
             });
+            // HD artwork for mobile is needed only when its slide becomes visible.
+            window.KomiHeroArt?.scan?.();
             dots.forEach((dot, idx) => {
                 const active = idx === currentSlideIndex;
                 dot.classList.toggle('active', active);
@@ -5082,9 +5093,25 @@ async function loadDataFromCloud(attempt = 0) {
             }
         }
         render();
-        loadDataFromCloud();
-        // Broadcast dates can load in parallel with the 6,000+ item catalog.
-        loadKomiEpisodeSchedule();
+        const initialCatalogPromise = loadDataFromCloud();
+        // Let the public catalog load first on mobile: its first paint should
+        // not compete with twelve AniList requests for broadcast dates.
+        const mobileInitialLoad = window.matchMedia?.('(max-width: 767px)').matches;
+        if (mobileInitialLoad) {
+            void initialCatalogPromise.finally(() => {
+                if (document.hidden) return;
+                if (typeof window.requestIdleCallback === 'function')
+                    window.requestIdleCallback(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, {timeout:10000});
+                else setTimeout(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 3500);
+            });
+            document.addEventListener('visibilitychange', () => {
+                if (!document.hidden && !komiCalendarLastFetch && !komiCalendarLoading &&
+                    (komiHomeCatalogReady || catalogInitialLoadFailed))
+                    void loadKomiEpisodeSchedule();
+            });
+        } else {
+            loadKomiEpisodeSchedule();
+        }
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         queueKomiSessionRestore().finally(() => {
             if (location.hash === '#profile') applyKomiHashRoute();

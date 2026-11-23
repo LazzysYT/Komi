@@ -143,7 +143,9 @@
 
   function apply(id, entry) {
     document.querySelectorAll(SELECTOR).forEach(slide => {
-      if (slide.dataset.komiAnimeId === id) void applyArtwork(slide, entry);
+      if (slide.dataset.komiAnimeId === id &&
+          (!root.matchMedia?.('(max-width: 767px)').matches ||
+            slide.classList.contains('active'))) void applyArtwork(slide, entry);
     });
   }
 
@@ -187,7 +189,11 @@
   }
 
   function scan() {
+    const mobile = root.matchMedia?.('(max-width: 767px)').matches || false;
     document.querySelectorAll(SELECTOR).forEach(slide => {
+      // On cellular, do not request high-resolution alternatives for slides
+      // the visitor has not selected yet.
+      if (mobile && !slide.classList.contains('active')) return;
       bindImage(slide);
       const id = String(slide.dataset.komiAnimeId || '');
       if (!/^[1-9]\d{0,9}$/.test(id)) return;
@@ -206,6 +212,7 @@
     }, 100);
   }
 
+  root.KomiHeroArt = {scan};
   const container = document.getElementById('mainContainer');
   if (container) {
     new MutationObserver(scheduleScan).observe(container, {childList:true, subtree:true});
