@@ -128,7 +128,7 @@ function card(p,ctx,avatar,name){
  '<button type="button" class="komi-coin-sample sv3-item-scene sv5-preview-button" data-v3-try="'+esc(p.id)+'" aria-pressed="'+String(chosen)+'" aria-label="Примерить '+esc(p.label)+'">'+
  '<span class="sv4-scene-halo" aria-hidden="true"></span>'+visual(p,avatar,name)+'</button>'+
  '<div class="sv3-item-copy"><h3>'+esc(p.label)+'</h3></div>'+
- '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(ariaAction)+'"'+(disabled?' disabled':'')+'>'+label+'</button></div>'+
+ '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(ariaAction)+'"'+(equipped?' title="Нажми, чтобы снять"':'')+(disabled?' disabled':'')+'>'+label+'</button></div>'+
  '</article>';
 }
 function currentItems(ctx){
@@ -168,8 +168,8 @@ function layout(ctx){
  '<div class="sv4-hero">'+
  '<header class="sv3-topbar"><div class="sv3-heading"><p class="sv3-overline">KOMI ANIME / ANI COIN</p><h1 id="anicoin-title">Магазин KomiAnime</h1>'+
  '<p>Укрась профиль, собери свой стиль и примерь предметы до покупки.</p>'+
- '<span class="sv4-hero-caption">'+icon('sparkles',14)+' Оформляй свой профиль по-своему</span></div>'+
- '<div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin">'+icon('coins',17)+' <strong class="sv3-tabular">'+balanceText+'</strong> AniCoin</span>'+
+ '</div>'+ 
+ '<div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin">♧ <strong class="sv3-tabular">'+balanceText+'</strong> AniCoin</span>'+
  '<details class="sv3-earn"><summary>'+icon('plus',16)+' Как получить</summary><div class="sv3-earn-pop"><strong>Как заработать AniCoin</strong>'+
  '<p>1 AniCoin за каждые 20 минут подтверждённого просмотра, награды ежедневных квестов и разовые +500 при активации Premium.</p>'+
  '<a href="/premium.html">Возможности Premium</a></div></details>'+
