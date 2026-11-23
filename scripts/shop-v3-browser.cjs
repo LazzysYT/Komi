@@ -14,43 +14,44 @@ fs.mkdirSync(output,{recursive:true});
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
    await shop.waitFor({timeout:20000});
    assert.equal(await page.locator('#shop .sv3-item').count(),85,'Guest must see all 85 products');
-   assert.equal(await page.locator('#shop .sv3-unit-price').count(),85,'Every product needs visible guest price');
+   assert.equal(await page.locator('#shop .sv5-preview-button').count(),85,'Every product must have a click-to-preview button');
    assert.ok((await page.locator('#shop .sv3-primary-buy').first().innerText()).includes('Войти'),
      'Guest buy action must request login');
-   assert.equal(await page.locator('#shop .sv3-bento>article').count(),2);
-   assert.equal(await page.locator('#shop .sv4-feature-card').count(),6,
-     'All six premium-sticker feature cards must render');
-   assert.ok(await page.locator('#shop .sv4-feature-card .komi-sticker-icon').count()>=6,
-     'Use the same monochrome vector icon style throughout the feature row');
-   assert.equal(await page.locator('#shop .sv4-hero').isVisible(),true);
-   assert.ok(await page.locator('#shop .sv3-item-actions .komi-sticker-icon').count()>=70,
-     'Modern action icons must be present on each purchasable item');
+   assert.equal(await page.locator('#shop .sv5-weekly').count(),1,'Exactly one weekly collection must appear');
+   assert.equal(await page.locator('#shop .sv4-feature-card').count(),0,'Remove the six legacy feature cards');
+   assert.equal(await page.locator('#shop [data-v3-category]').count(),7,'Show seven large pill categories');
+   assert.equal(await page.locator('#shop [data-v3-sort]').count(),4,'Sort is a four-button segment');
+   assert.equal(await page.locator('#shop .sv3-item-actions .komi-shop-gift-button').count(),85,
+     'The gift integration must inject one filled SVG action per product');
+   assert.ok(await page.locator('#shop .komi-shop-gift-button .komi-sticker-icon').count()>=85,
+     'Gift icons use filled vector graphics');
    const bundleCSS=await page.evaluate(()=>{
      const links=[...document.querySelectorAll('head link[rel="stylesheet"]')];
      return links.filter(x=>new URL(x.href).origin===location.origin).map(x=>new URL(x.href).pathname);
    });
    const expectedCSS=['/komi.production.css','/komi-pill-system.css'];
    if(bundleCSS.includes('/komi-icon-rail.css')) expectedCSS.push('/komi-icon-rail.css');
+   expectedCSS.push('/komi-shop-v5.css');
    assert.deepEqual(bundleCSS,expectedCSS,
      'Production CSS must preserve base, pill, and optional icon-rail cascade order');
    const geometry=await page.evaluate(()=>{
      const section=document.querySelector('#shop.komi-shop-v3');
      const top=section.querySelector('.sv3-topbar');
-     const featured=section.querySelector('.sv3-bento');
+     const featured=section.querySelector('.sv5-weekly');
      const tabs=section.querySelector('.sv3-filters');
      const grid=section.querySelector('.sv3-product-grid');
      const box=e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom,height:r.height,width:r.width};};
      return {headerPosition:getComputedStyle(top).position,
-       header:box(top),bento:box(featured),filters:box(tabs),
+       header:box(top),weekly:box(featured),filters:box(tabs),
        columns:getComputedStyle(grid).gridTemplateColumns.split(' ').filter(Boolean).length,
        horizontalOverflow:document.documentElement.scrollWidth>window.innerWidth+2};
    });
    assert.equal(geometry.headerPosition,'relative',
      'Legacy site header must not make the inner shop topbar sticky');
-   assert.ok(geometry.header.bottom+8<=geometry.bento.top,
-     'Shop topbar must never overlap weekly Bento cards: '+JSON.stringify(geometry));
-   assert.ok(geometry.filters.height<=90,
-     'Desktop filter tabs should stay on one row: '+JSON.stringify(geometry));
+   assert.ok(geometry.header.bottom+8<=geometry.weekly.top,
+     'Shop topbar must not overlap weekly collection: '+JSON.stringify(geometry));
+   assert.ok(geometry.filters.height<=145,
+     'Two-tier category/sort bar should remain compact: '+JSON.stringify(geometry));
    assert.ok(geometry.columns>=3,
      'Desktop shelf should use the available width: '+JSON.stringify(geometry));
    assert.equal(geometry.horizontalOverflow,false,'Desktop storefront should not overflow horizontally');
@@ -62,9 +63,11 @@ fs.mkdirSync(output,{recursive:true});
    assert.equal(await page.locator('#shop .sv3-item').count(),4,'Shapes category must show four products');
    assert.ok((await page.locator('#shop .sv3-selection-list').innerText()).includes('Лунная рамка'),
      'Selecting another category must not clear the fitting room');
-   await page.locator('#shop [data-v3-sort]').selectOption('price-up');
-   const prices=await page.locator('#shop .sv3-unit-price').allInnerTexts();
-   const values=prices.map(x=>Number((x.match(/\d+/)||[])[0]));
+   await page.locator('#shop [data-v3-sort="price-up"]').click();
+   const values=await page.locator('#shop [data-shop-item-action]').evaluateAll(nodes=>{
+     const catalog=window.KomiShopCatalog.items;
+     return nodes.map(node=>catalog.find(item=>item.id===node.dataset.shopItemAction)?.cost);
+   });
    assert.deepEqual(values,[...values].sort((a,b)=>a-b),'Price sorting must be numeric');
    await page.screenshot({path:path.join(output,'shop-v3-desktop.png'),fullPage:true});
    await page.setViewportSize({width:390,height:844});
@@ -90,6 +93,6 @@ fs.mkdirSync(output,{recursive:true});
    assert.equal(mobileGeometry.horizontalOverflow,false,
      'Mobile storefront must fit viewport width: '+JSON.stringify(mobileGeometry));
    await page.screenshot({path:path.join(output,'shop-v3-mobile.png'),fullPage:false});
-   console.log('PASS Komi Shop V3 guest desktop + mobile: catalog, prices, filters, combo try-on, bottom sheet');
+   console.log('PASS Komi Shop V5 guest desktop + mobile: 85 products, weekly banner, gift SVG, sorting, previews and bottom sheet');
  }finally{await page.close();await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
