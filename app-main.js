@@ -268,7 +268,13 @@ function komiMaybeOpenSeoAnime() {
     setTimeout(() => openWatchModal(requested, season && episode ? season : null, 0, null, season && episode ? episode : null), 0);
 }
 
-async function loadDataFromCloud(attempt = 0) {
+let komiCatalogLoadPending = null;
+function loadDataFromCloud(attempt = 0) {
+    if (komiCatalogLoadPending) return komiCatalogLoadPending;
+    komiCatalogLoadPending = komiLoadCatalogPages(attempt).finally(() => { komiCatalogLoadPending = null; });
+    return komiCatalogLoadPending;
+}
+async function komiLoadCatalogPages(attempt = 0) {
     catalogInitialLoadFailed = false;
     // Public-only IndexedDB snapshot may paint the complete catalog immediately
     // while current Supabase data is fetched and verified in the background.
@@ -332,7 +338,12 @@ async function loadDataFromCloud(attempt = 0) {
             }
             // PostgREST may cap rows below our request; continue by last ID until empty.
         }
-        animeList = catalog;
+        // Keep already loaded title details only if the public card version still matches.
+        const existing = new Map(animeList.filter(item => item.komiDetailsLoaded && item.komiCardUpdatedAt && item.komiDetailsLoadedAt === item.komiCardUpdatedAt).map(item => [String(item.id), item]));
+        animeList = catalog.map(item => {
+            const old = existing.get(String(item.id));
+            return old && old.komiDetailsLoadedAt === item.komiCardUpdatedAt ? old : item;
+        });
         ++komiCatalogRevision;
         catalogInitialLoadComplete = true;
         komiHomeCatalogReady = true;
@@ -5107,7 +5118,7 @@ async function loadDataFromCloud(attempt = 0) {
 
 
         async function refreshKomiCatalogUpdates() {
-            if (!_supabase || document.hidden || !catalogInitialLoadComplete || catalogRefreshInProgress) return;
+            if (!_supabase || document.hidden || !catalogInitialLoadComplete || komiCatalogLoadPending || catalogRefreshInProgress) return;
             catalogRefreshInProgress = true;
             const until = new Date().toISOString();
             try {
@@ -5160,7 +5171,10 @@ async function loadDataFromCloud(attempt = 0) {
                         changed = true;
                     }
                 }
-                if (changed) ++komiCatalogRevision;
+                if (changed) {
+                    ++komiCatalogRevision;
+                    void window.KomiPublicCatalogCache?.write(animeList);
+                }
                 if (changed && (currentView === 'home' || currentView === 'catalog') &&
                     !document.getElementById('watchModal')?.classList.contains('active')) render();
             } catch (error) {
