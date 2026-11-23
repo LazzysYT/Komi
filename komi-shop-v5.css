@@ -379,7 +379,7 @@
  #shop.komi-shop-v5 .sv3-item{min-height:249px;padding:11px;gap:9px}
  #shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy{font-size:10px;padding:9px 5px}
 }
-@media(max-width:430px){
+@media(max-width:520px){
  #shop.komi-shop-v5 .sv3-product-grid{grid-template-columns:1fr}
  #shop.komi-shop-v5 .sv3-item{min-height:233px}
  #shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy{font-size:12px}
