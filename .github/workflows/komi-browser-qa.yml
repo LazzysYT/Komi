@@ -1,0 +1,67 @@
+name: Komi browser and Lighthouse QA
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: komi-browser-qa-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Regression tests
+        run: node tests/navigation-player-v72.test.cjs
+      - name: Install QA tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/komi-qa" --ignore-scripts --no-save playwright@1.65.1
+          "$RUNNER_TEMP/komi-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Generate original test video
+        run: |
+          ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=320x180:rate=15 -t 18 -c:v libx264 -pix_fmt yuv420p -movflags +faststart "$RUNNER_TEMP/komi-qa.mp4"
+      - name: Desktop and mobile browser checks
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/komi-qa/node_modules"
+          export KOMI_QA_VIDEO="$RUNNER_TEMP/komi-qa.mp4"
+          node tests/browser-smoke-v73.cjs
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install Lighthouse
+        run: npm install --prefix "$RUNNER_TEMP/komi-lh" --ignore-scripts --no-save lighthouse@12.8.2
+      - name: Audit current production (not unreleased PR)
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          test -n "$CHROME_PATH"
+          LH="$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse"
+          for mode in mobile desktop; do
+            args=()
+            if [ "$mode" = desktop ]; then args+=(--preset=desktop); fi
+            "$LH" https://komianime.online/ "${args[@]}" --chrome-flags="--headless --no-sandbox" --output=json --output-path="$RUNNER_TEMP/komi-$mode.json" --quiet
+          done
+          node - "$RUNNER_TEMP/komi-mobile.json" "$RUNNER_TEMP/komi-desktop.json" <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
+          const fs=require('node:fs');
+          console.log('## Production baseline — current deployed site only');
+          for (const file of process.argv.slice(2)) {
+            const r=JSON.parse(fs.readFileSync(file,'utf8'));
+            if(r.runtimeError) throw Error(r.runtimeError.message);
+            console.log(file.includes('mobile')?'Mobile':'Desktop',JSON.stringify({
+              url:r.finalDisplayedUrl||r.finalUrl,
+              fetchedAt:r.fetchTime,
+              performance:r.categories.performance.score,
+              accessibility:r.categories.accessibility.score,
+              bestPractices:r.categories['best-practices'].score,
+              seo:r.categories.seo.score,
+              lcp:r.audits['largest-contentful-paint'].numericValue,
+              cls:r.audits['cumulative-layout-shift'].numericValue,
+              tbt:r.audits['total-blocking-time'].numericValue
+            }));
+          }
+          NODE
