@@ -815,15 +815,22 @@ async function loadDataFromCloud(attempt = 0) {
         });
         let komiCatalogFocusPending = false;
         function komiOpenFullCatalogFilters() {
-            // A catalog fetch can finish AFTER the click. Preserve the focus
-            // request so delayed rendering never strands keyboard users in nav.
+            // Preserve focus across navigation, late paints, and the click's default action.
             komiCatalogFocusPending = true;
             navigate('catalog');
-            const search = document.getElementById('komiCatalogSearchInput');
-            if (search) {
-                search.focus({preventScroll:false});
-                komiCatalogFocusPending = false;
-            } else document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+            const focusSearch = () => {
+                if (currentView !== 'catalog') return;
+                const field = document.getElementById('komiCatalogSearchInput');
+                if (field) {
+                    field.focus({preventScroll:false});
+                    komiCatalogFocusPending = false;
+                }
+            };
+            if (!document.getElementById('komiCatalogSearchInput'))
+                document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+            focusSearch();
+            requestAnimationFrame(focusSearch);
+            setTimeout(focusSearch, 100);
         }
         function komiHomeQuickFiltersMarkup() {
             const genreOptions = availableGenresList.filter(genre =>
