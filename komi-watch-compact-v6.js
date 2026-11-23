@@ -77,8 +77,10 @@
     const menu = more.querySelector('.komi-deck-menu');
     const source = controls.querySelector('.komi-watch-source');
     if (source) {
-      source.classList.add('komi-player-source-floating');
-      wrapper.append(source);
+      if (wrapper.querySelector('video, iframe')) {
+        source.classList.add('komi-player-source-floating');
+        wrapper.append(source);
+      } else if (menu) menu.append(source);
       // The HUD already owns the source chooser. Keep the original select in
       // the DOM for existing source handlers, but do not render it twice.
       if (wrapper.querySelector('.komi-v4-source-trigger')) {
@@ -95,14 +97,17 @@
       menu.append(recovery);
     }
     const views = sidebar.querySelector('.komi-episode-view-toggle');
-    if (views && menu) menu.append(views);
+    if (views) sidebar.querySelector('.komi-episode-number-grid')?.before(views);
+    const share = controls.querySelector('.komi-cinema-share');
+    if (share) { share.textContent = '↗'; share.title = 'Поделиться серией'; actions.append(share); }
 
     // Move only remaining original actions; keep their own registered listeners.
     if (menu) {
-      const leftovers = controls.querySelectorAll('button, a, details, select');
+      const leftovers = [...controls.children];
       leftovers.forEach(el => {
-        if (el === more || more.contains(el) || source?.contains(el) || adfree?.contains(el)) return;
-        menu.append(el);
+        if (el === more || el === source || el === adfree || el.classList.contains('komi-cinema-action-status')) return;
+        // Move each complete control group: labels, hidden state and nested menus stay intact.
+        if (el.matches('button,a,details,select,label') || el.querySelector('button,a,details,select')) menu.append(el);
       });
     }
     more.querySelector('summary')?.setAttribute('title', 'Дополнительно');
@@ -203,14 +208,17 @@
       if (!stage || !section) return result;
       stage.append(section);
       const title = section.querySelector('.komi-comments-heading');
-      if (title) title.append(create('span', 'komi-comments-episode-label', ' · ' + (Number(root.komiActiveEpisode) + 1 || 1) + ' серия'));
+      if (title && !title.querySelector('.komi-comments-episode-label')) {
+        const number = content.querySelector('.komi-episode-number.active')?.dataset.episodeNumber;
+        if (number) title.append(create('span', 'komi-comments-episode-label', ' · ' + number + ' серия'));
+      }
       const field = section.querySelector('.komi-comments-input');
       if (field) {
         field.rows = 1;
         field.placeholder = 'Поделись впечатлениями о серии…';
       }
       const form = section.querySelector('.komi-comments-form');
-      if (form) {
+      if (form && !form.querySelector('.komi-comment-compose-avatar')) {
         const avatar = create('span', 'komi-comment-compose-avatar', 'K');
         avatar.setAttribute('aria-hidden','true');
         const existing = document.querySelector('#sidebarAvatarIcon img');
