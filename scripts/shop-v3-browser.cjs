@@ -32,6 +32,7 @@ fs.mkdirSync(output,{recursive:true});
    const expectedCSS=['/komi.production.css','/komi-pill-system.css'];
    if(bundleCSS.includes('/komi-icon-rail.css')) expectedCSS.push('/komi-icon-rail.css');
    expectedCSS.push('/komi-shop-v5.css');
+   expectedCSS.push('/button-animations.css');
    assert.deepEqual(bundleCSS,expectedCSS,
      'Production CSS must preserve base, pill, and optional icon-rail cascade order');
    const geometry=await page.evaluate(()=>{
