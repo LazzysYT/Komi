@@ -1,5 +1,6 @@
 /* Strict public-poster URL allowlist shared by browser and Vercel Function.
- * Unknown providers are left unchanged by the client; the API never fetches them.
+ * Browser images use a public resizing CDN; the bounded /api/poster endpoint
+ * stays available for legacy clients. Unknown providers stay unchanged.
  * Keep this as a plain JS file (no new build dependencies).
  */
 (function (root) {
@@ -24,11 +25,21 @@
     }
     return url.href;
   }
-  function cachedPosterUrl(raw) {
+  function cachedPosterUrl(raw, width) {
+    const checked = validatePosterSource(raw);
+    if (!checked) return String(raw || '');
+    // Only public, allowlisted anime art may reach the external CDN.
+    // Catalog cards use 360 px; full-size banners explicitly request 1280 px.
+    const size = Number(width) === 1280 ? 1280 : 360;
+    return 'https://wsrv.nl/?url=' + encodeURIComponent(checked) + '&w=' + size + '&output=webp';
+  }
+  // Social preview crawlers need a stable first-party URL. Keep that
+  // low-volume server-side path separate from browser image traffic.
+  function posterApiUrl(raw) {
     const checked = validatePosterSource(raw);
     return checked ? '/api/poster?src=' + encodeURIComponent(checked) : String(raw || '');
   }
-  const api = { validatePosterSource, cachedPosterUrl };
+  const api = { validatePosterSource, cachedPosterUrl, posterApiUrl };
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) {
     root.komiCachedPosterUrl = cachedPosterUrl;

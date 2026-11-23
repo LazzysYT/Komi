@@ -2727,7 +2727,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (/^https:\/\/shikimori\.(?:io|one)\/system\/animes\/preview\/[1-9]\d*\.jpe?g(?:\?\d+)?$/i.test(source)) {
                 source = source.replace('/system/animes/preview/', '/system/animes/original/');
             }
-            return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source) : source;
+            return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source, 1280) : source;
         }
         function komiCardPosterFallback(img) {
             if (!img) return;
