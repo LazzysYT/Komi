@@ -25,7 +25,34 @@ fs.mkdirSync(output, { recursive: true });
         loginForm: !!document.querySelector('#loginFormContainer'),
         registrationForm: !!document.querySelector('#registerFormContainer'),
       }));
-      const result = { width, status: response?.status(), ...state, errors };
+      // Visual layout contract: genres span the entire section and catalog tools
+      // stack below them. Catch legacy three-column grid regressions on reload.
+      const genreLayout = await page.evaluate(() => {
+        const section = document.getElementById('komiHomeQuickFilters');
+        const moods = section?.querySelector('.komi-moods');
+        const cards = [...(moods?.querySelectorAll('.komi-mood-card') || [])];
+        const heading = section?.querySelector(':scope > .komi-catalog-head-row');
+        const pills = section?.querySelector(':scope > .komi-home-quick-categories');
+        if (!section || !moods || cards.length !== 8 || !heading || !pills) {
+          return { ok:false, issue:'Expected eight genre cards and separate catalog rows', cards:cards.length };
+        }
+        const sectionBox = section.getBoundingClientRect();
+        const moodsBox = moods.getBoundingClientRect();
+        const headingBox = heading.getBoundingClientRect();
+        const pillsBox = pills.getBoundingClientRect();
+        const boxes = cards.map(card => card.getBoundingClientRect());
+        const columns = innerWidth >= 1024 ? 4 : 2;
+        const fullWidth = moodsBox.width >= sectionBox.width * 0.95;
+        const wideCards = boxes.every(box => box.width >= sectionBox.width / columns * 0.7);
+        const sameRow = boxes.slice(0, columns).every(box => Math.abs(box.top - boxes[0].top) <= 3);
+        const secondRow = boxes[columns].top >= boxes[0].bottom - 3;
+        const belowGenres = headingBox.top >= Math.max(...boxes.map(box => box.bottom)) - 3;
+        const pillsBelow = pillsBox.top >= headingBox.bottom - 3;
+        return {ok:fullWidth && wideCards && sameRow && secondRow && belowGenres && pillsBelow,
+          cards:cards.length,columns,fullWidth,wideCards,sameRow,secondRow,belowGenres,pillsBelow,
+          firstCardWidth:Math.round(boxes[0].width),sectionWidth:Math.round(sectionBox.width)};
+      });
+      const result = { width, status: response?.status(), ...state, genreLayout, errors };
       results.push(result);
       // Exercise the real auth UI without creating test users or sending credentials.
       const authChecks = await page.evaluate(() => {
@@ -46,6 +73,7 @@ fs.mkdirSync(output, { recursive: true });
         return result;
       });
       result.authChecks = authChecks;
+      if (!genreLayout.ok) { console.error('FAIL genre layout', genreLayout); process.exitCode = 1; }
       if (Object.values(authChecks).some(value => value !== true)) {
         console.error('FAIL auth UI', authChecks);
         process.exitCode = 1;
