@@ -79,9 +79,60 @@
           "value": "noindex, follow"
         }
       ]
+    },
+    {
+      "source": "/shop",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/partners",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
+      "source": "/profile",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/profile",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/partners",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/shop",
+      "destination": "/index.html"
+    },
     {
       "source": "/catalog",
       "destination": "/index.html"
