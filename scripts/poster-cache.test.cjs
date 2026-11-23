@@ -23,10 +23,12 @@ function mockStream(bytes){return {
     async cancel(){}
   }}
 };}
-test('known poster hosts and image paths are cached, unknown origins are not',()=>{
+test('only allowlisted public posters are sent to wsrv.nl, other URLs stay direct',()=>{
   for(const url of [validShiki,validOld,validAniList]) {
     assert.equal(validatePosterSource(url),url);
-    assert.equal(cachedPosterUrl(url),'/api/poster?src='+encodeURIComponent(url));
+    assert.equal(cachedPosterUrl(url),'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w=360&output=webp');
+    assert.equal(cachedPosterUrl(url,1280),'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w=1280&output=webp');
+    assert.equal(cachedPosterUrl(url,99999),cachedPosterUrl(url));
   }
   for(const bad of [
     'http://shikimori.io/uploads/poster/animes/1/a.jpg',
@@ -43,13 +45,15 @@ test('known poster hosts and image paths are cached, unknown origins are not',()
   assert.equal(cachedPosterUrl('https://cdn.myanimelist.net/images/anime/1/a.jpg'),
     'https://cdn.myanimelist.net/images/anime/1/a.jpg');
 });
-test('all pre-rendered image sources use the same-origin poster cache, with direct fallback',()=>{
+test('all pre-rendered public posters use external CDN with direct fallback',()=>{
   const images=[...html.matchAll(/<img\b[^>]*data-poster-direct="https:\/\/(?:shikimori\.io|shikimori\.one|s4\.anilist\.co)[^"]+"[^>]*>/g)];
   assert.ok(images.length>=37,'Initial static poster cache is not attached');
   for(const [tag] of images) {
-    assert.match(tag,/src="\/api\/poster\?src=https%3A%2F%2F/);
+    assert.match(tag,/src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
+    assert.match(tag,/&amp;w=360&amp;output=webp/);
     assert.match(tag,/data-komi-error="poster-error"/);
   }
+  assert.doesNotMatch(html,/\/api\/poster\?src=/,'Static HTML should not invoke Vercel poster functions');
   assert.ok(html.indexOf('poster-cache-client.js') < html.indexOf('app-main.js'));
 });
 test('cached poster streams safe image bytes with CDN headers',async()=>{
