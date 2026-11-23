@@ -1,0 +1,321 @@
+/*
+ * KomiAnime / button-animations.css
+ * Motion layer only. Load AFTER the site's other styles.
+ * Uses CSS individual transforms (scale / translate / rotate) to preserve
+ * existing transform-based positioning, carousels, tooltips, and JS handlers.
+ */
+:root {
+  --ease-spring: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-press: cubic-bezier(0.4, 0, 0.2, 1);
+  --komi-motion-dark: #09090B;
+  --komi-motion-surface: #16161A;
+  --komi-motion-hover: #1C1C21;
+  --komi-motion-white: #FFFFFF;
+}
+
+/* Every button, tab, interactive pill, clickable card and link-button.
+   Do not transform wrappers that position a modal, menu or player overlay. */
+:where(
+  button,
+  [role="button"],
+  summary,
+  a.btn,
+  a.btn-secondary,
+  a[class*="-btn"],
+  a[class*="button"],
+  a.pill,
+  a[class*="tab"],
+  a[href][class*="card"],
+  [role="link"][class*="card"],
+  .komi-hub-resume,
+  .komi-catalog-chip,
+  .komi-catalog-genre-tag
+):not(:disabled):not([aria-disabled="true"]):not([inert]) {
+  transition:
+    scale 0.18s var(--ease-spring),
+    transform 0.18s var(--ease-spring),
+    translate 0.18s var(--ease-spring),
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.22s ease,
+    color 0.18s ease,
+    opacity 0.18s ease,
+    filter 0.18s ease !important;
+  transform-origin: center center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  :where(
+    button,
+    [role="button"],
+    summary,
+    a.btn,
+    a.btn-secondary,
+    a[class*="-btn"],
+    a[class*="button"],
+    a.pill,
+    a[class*="tab"],
+    a[href][class*="card"],
+    [role="link"][class*="card"],
+    .komi-hub-resume,
+    .komi-catalog-chip,
+    .komi-catalog-genre-tag
+  ):not(:disabled):not([aria-disabled="true"]):not([inert]):hover {
+    scale: 1.04;
+  }
+
+  /* Clickable cards are less aggressive than small control buttons. */
+  :where(a[href][class*="card"], [role="link"][class*="card"]):not([aria-disabled="true"]):hover {
+    scale: 1.018;
+    translate: 0 -2px;
+    border-color: rgba(255,255,255,0.22);
+  }
+
+  /* Main white actions: hero, shop, forms and Premium. */
+  :where(
+    .btn-primary, .btn-glow, .komi-hub-play, .komi-seo-primary-link,
+    .sv3-primary-buy, .sv3-featured-try, .sv3-capsule-foot button,
+    .store-buy-btn, .studio-action-primary, .komi-primary-btn
+  ):not(:disabled):not([aria-disabled="true"]):hover {
+    scale: 1.04;
+    background-color: #FFFFFF !important;
+    border-color: #FFFFFF !important;
+    color: #09090B !important;
+    box-shadow: 0 6px 24px rgba(255,255,255,0.22) !important;
+  }
+
+  /* Secondary glass / graphite actions. */
+  :where(
+    .btn-secondary, .btn-glow-secondary, .sv3-outline-btn,
+    .sv3-reset, .sv3-try-btn, .komi-catalog-clear,
+    .komi-mobile-filter-trigger, .studio-action,
+    .studio-button, .store-button, .section-see-all
+  ):not(:disabled):not([aria-disabled="true"]):hover {
+    scale: 1.035;
+    background-color: rgba(255,255,255,0.14) !important;
+    border-color: rgba(255,255,255,0.24) !important;
+    color: #FFFFFF !important;
+  }
+
+  /* Keep the play glyph independent of the primary pill's movement. */
+  :where(.btn-glow, .komi-hub-play, .komi-seo-primary-link, .btn-primary):hover
+    :is(svg, .play-icon, .icon-play, .hero-play-icon) {
+    translate: 2.5px 0;
+    scale: 1.08;
+  }
+
+  /* Icon buttons and carousel controls. */
+  :where(
+    .hero-slider-arrow, .komi-hub-carousel-controls button,
+    .slider-arrow, .carousel-arrow, .icon-button, .btn-icon,
+    .sv3-gift-btn, .komi-hub-resume-play
+  ):not(:disabled):not([aria-disabled="true"]):hover {
+    scale: 1.08;
+    background-color: rgba(255,255,255,0.18) !important;
+    border-color: rgba(255,255,255,0.24) !important;
+  }
+
+  /* Resume capsule and search input: move the wrapper, never the typed text. */
+  .komi-media-hub .komi-hub-resume:hover {
+    scale: 1.015;
+    translate: 0 -1px;
+    border-color: rgba(255,255,255,0.22) !important;
+  }
+  .komi-media-hub .komi-hub-resume:hover .komi-hub-resume-play {
+    scale: 1.1;
+    background: #FFFFFF !important;
+    color: #09090B !important;
+  }
+  .komi-media-hub .komi-hub-overlay .search-bar:hover {
+    scale: 1.015;
+    translate: 0 -1px;
+    border-color: rgba(255,255,255,0.22) !important;
+    box-shadow: 0 6px 22px rgba(0,0,0,0.19) !important;
+  }
+}
+
+/* Both main and Premium search wrappers retain their own focus behavior. */
+.komi-media-hub .komi-hub-overlay .search-bar {
+  transition: scale .18s var(--ease-spring), translate .18s var(--ease-spring),
+              border-color .18s ease, box-shadow .22s ease !important;
+}
+.komi-media-hub .komi-hub-overlay .search-bar:focus-within {
+  border-color: rgba(255,255,255,0.35) !important;
+}
+.komi-hub-resume-play,
+:where(.btn-glow,.komi-hub-play,.komi-seo-primary-link,.btn-primary)
+  :is(svg,.play-icon,.icon-play,.hero-play-icon) {
+  transition: scale .18s var(--ease-spring), translate .18s var(--ease-spring),
+              background-color .18s ease, color .18s ease;
+}
+
+/* The 72px rail: keep active-page markers and pop-out tooltips untouched. */
+body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo) {
+  transform: none !important; /* prior CSS used transform: scale(), now use scale */
+  scale: 1;
+  transition: scale .18s var(--ease-spring),
+              background-color .18s ease, color .18s ease,
+              border-color .18s ease, box-shadow .22s ease !important;
+  will-change: scale;
+}
+body.komi-media-hub .komi-icon-rail .komi-rail-svg {
+  transform-origin: 50% 50%;
+  transition: scale .18s var(--ease-spring), rotate .18s var(--ease-spring) !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:disabled):hover {
+    transform: none !important;
+    scale: 1.06;
+    background: #1C1C21 !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255,255,255,0.10) !important;
+    box-shadow: 0 6px 18px rgba(0,0,0,.27) !important;
+  }
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:disabled):hover > .komi-rail-svg {
+    scale: 1.12;
+    rotate: -4deg;
+  }
+  /* Existing bell swing in komi-icon-rail.css remains available. */
+  body.komi-media-hub .komi-icon-rail .komi-rail-bell:hover > .komi-rail-svg {
+    rotate: 0deg;
+  }
+}
+
+/* Burger and textual navigation in the header/mobile drawer. */
+:where(.komi-hub-tools-menu > summary, .komi-mobile-more-toggle) {
+  transition: scale .18s var(--ease-spring),
+              background-color .18s ease, color .18s ease !important;
+}
+@media (hover: hover) and (pointer: fine) {
+  :where(.komi-hub-tools-menu > summary, .komi-mobile-more-toggle):hover {
+    scale: 1.06;
+    background-color: #1C1C21 !important;
+    color: #FFFFFF !important;
+  }
+}
+:where(
+  .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+  .komi-mobile-more-menu > button, .komi-mobile-more-menu > a,
+  .komi-nav-drawer [role="menuitem"]
+) {
+  position: relative;
+}
+:where(
+  .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+  .komi-mobile-more-menu > button, .komi-mobile-more-menu > a,
+  .komi-nav-drawer [role="menuitem"]
+)::before {
+  content: "";
+  position: absolute;
+  top: 25%;
+  bottom: 25%;
+  left: 5px;
+  width: 3px;
+  border-radius: 99px;
+  background: #FFFFFF;
+  opacity: 0;
+  scale: 1 .4;
+  pointer-events: none;
+  transition: opacity .18s ease, scale .18s var(--ease-spring);
+}
+@media (hover: hover) and (pointer: fine) {
+  .komi-media-hub :is(
+    .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+    .komi-mobile-more-menu > button, .komi-mobile-more-menu > a
+  ):not(:disabled):not([aria-disabled="true"]):hover,
+  .komi-nav-drawer [role="menuitem"]:not([aria-disabled="true"]):hover {
+    translate: 3px 0;
+    background-color: rgba(255,255,255,0.07) !important;
+    color: #FFFFFF !important;
+  }
+  :where(
+    .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+    .komi-mobile-more-menu > button, .komi-mobile-more-menu > a,
+    .komi-nav-drawer [role="menuitem"]
+  ):hover::before {
+    opacity: 1;
+    scale: 1 1;
+  }
+  :where(
+    .komi-hub-tools-panel > button, .komi-hub-tools-panel > a,
+    .komi-mobile-more-menu > button, .komi-mobile-more-menu > a
+  ):hover > svg {
+    translate: 3px 0;
+  }
+}
+:where(.komi-hub-tools-panel, .komi-mobile-more-menu) :is(button,a) > svg {
+  transition: translate .18s var(--ease-spring);
+}
+
+/* Tactile press — faster than hover. No routing/handler changes. */
+:where(
+  button, [role="button"], summary, a.btn, a.btn-secondary,
+  a[class*="-btn"], a[class*="button"], a.pill,
+  a[href][class*="card"], [role="link"][class*="card"],
+  .komi-hub-resume, .komi-catalog-chip, .komi-catalog-genre-tag
+):not(:disabled):not([aria-disabled="true"]):not([inert]):active {
+  scale: .94 !important;
+  transition: scale .09s var(--ease-press),
+              transform .18s var(--ease-spring),
+              translate .18s var(--ease-spring),
+              background-color .18s ease, border-color .18s ease,
+              box-shadow .22s ease, color .18s ease !important;
+}
+body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:disabled):active {
+  transform: none !important;
+  scale: .91 !important;
+  transition: scale .09s var(--ease-press), background-color .18s ease !important;
+}
+:where(.hero-slider-arrow,.slider-arrow,.carousel-arrow,.icon-button,.btn-icon,
+       .komi-hub-carousel-controls button,.sv3-gift-btn):not(:disabled):active {
+  scale: .92 !important;
+}
+:where(button,[role="button"],summary,a.btn,.pill,.komi-hub-resume)
+  :is(svg,.play-icon,.icon-play,.hero-play-icon) {
+  /* Don't accidentally animate positioned icons or avatars via the parent. */
+  backface-visibility: hidden;
+}
+
+/* Explicitly inactive, locked or processing controls never bounce. */
+:where(button,[role="button"],.btn,.pill,summary,a[class*="-btn"],
+       .komi-hub-resume):is(:disabled,[aria-disabled="true"],[inert],[aria-busy="true"]),
+:where(fieldset:disabled) :is(button,.btn) {
+  scale: 1 !important;
+  translate: none !important;
+  rotate: none !important;
+  cursor: not-allowed;
+}
+/* Extra breathing room without changing overflow-x:auto to visible. */
+:where(.komi-catalog-category-pills,.komi-catalog-chips,.sv3-category-tabs,
+       .komi-home-leaderboard-tabs,.komi-friends-tabs,.profile-section-tabs,
+       .profile-nav-tabs,.premium-tabs) {
+  scroll-padding-inline: 10px;
+}
+
+/* Avoid hover-stuck visuals on touch devices, while keeping press feedback. */
+@media (hover: none) {
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):hover {
+    transform: none !important;
+    background-color: transparent;
+  }
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo).is-active:hover,
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo)[aria-current="page"]:hover {
+    background-color: #1C1C21 !important;
+  }
+}
+
+/* Reduced motion keeps focus, colors and click actions usable. */
+@media (prefers-reduced-motion: reduce) {
+  :where(button,[role="button"],summary,a.btn,a.btn-secondary,a[class*="-btn"],
+         a[class*="button"],a.pill,a[href][class*="card"],
+         .komi-hub-resume,.komi-catalog-chip,.komi-catalog-genre-tag,
+         .komi-hub-overlay .search-bar,.komi-hub-resume-play),
+  body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo,.komi-rail-svg),
+  :where(.komi-hub-tools-panel,.komi-mobile-more-menu) :is(button,a)::before {
+    scale: 1 !important;
+    translate: none !important;
+    rotate: none !important;
+    transition: none !important;
+  }
+}
