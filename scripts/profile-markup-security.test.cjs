@@ -14,7 +14,7 @@ test('profile buttons never splice a user nickname into executable handler sourc
  assert.match(source,/sendFriendRequest\(window\.komiViewedProfileName\)/);
  assert.match(source,/postToProfileWall\(window\.komiWallProfileName\)/);
  const premium=fs.readFileSync(path.join(__dirname,'../profile-premium.js'),'utf8');
- assert.match(source,/KomiProfileUI\\.fullFriendRows\\(myFriends\\)/);
+ assert.ok(source.includes('KomiProfileUI.fullFriendRows(myFriends)'));
  assert.ok(premium.includes("openProfile(window.komiProfileFriendNames['+i+'])"),
   'friend links must resolve via an indexed name, never a user-authored handler');
  assert.doesNotMatch(source,/openProfile\('\$\{friend\}'\)/);
