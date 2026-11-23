@@ -25,12 +25,12 @@ function fixture(secondValue){
        if(table!=='komi_catalog_cards')throw Error('unexpected table '+table);
        const query={
          select(){return this;},gt(){return this;},order(){return this;},
-         limit(n){calls.push(n);return calls.length===1?Promise.resolve({data:first,error:null}):second;}
+         limit(n){calls.push(n);return calls.length===1?Promise.resolve({data:first,error:null}):calls.length===2?second:Promise.resolve({data:[],error:null});}
        };
        return query;
       }
    },
-   animeList:[],catalogInitialLoadComplete:false,catalogInitialLoadFailed:false,
+   animeList:[],catalogInitialLoadComplete:false,catalogInitialLoadFailed:false,komiCatalogRevision:0,
    komiHomeCatalogReady:false,komiHomePreviewCatalog:null,currentView:'home',
    komiStoreReadyResume(){},
    window:{KomiHomeSnapshot:{write(){}}},komiAnimeYear:a=>a.year,komiCatalogType:a=>a.type,
@@ -53,12 +53,14 @@ test('the first 48 IDs load for catalog/search but never render a temporary home
  assert.equal(x.renders.length,0,'Home hero must remain on SEO first paint during partial scan');
  assert.equal(x.context.animeList.length,48);
  assert.equal(x.calls[0],48);
- assert.equal(x.calls[1],500);
+ assert.equal(x.calls[1],1000);
  assert.equal(x.context.catalogInitialLoadComplete,true);
  const later=[49,50].map(id=>({shikimori_id:id,data:{title:'Anime '+id},updated_at:'2026-11-10'}));
  x.resolveSecond({data:later,error:null});
  await pending;
  assert.equal(x.context.animeList.length,50);
+ assert.deepEqual(x.calls,[48,1000,1000], 'Page scan continues until the first empty response');
+ assert.equal(x.context.komiCatalogRevision,1, 'Full catalog completion invalidates public-list caches');
  assert.deepEqual(x.renders.at(-1),{loaded:true,count:50,ready:true});
  assert.equal(x.context.catalogInitialLoadFailed,false);
 });
