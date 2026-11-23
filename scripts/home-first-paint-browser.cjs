@@ -37,7 +37,10 @@ const make=(id,year,score)=>({
       await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(second)});
       return;
     }
-    await route.continue();
+    // The optimized loader continues scanning until an empty page, even when
+    // PostgREST caps a requested 1000-row page. Keep this fixture isolated
+    // from the real Supabase catalog after our 58 synthetic rows.
+    await route.fulfill({status:200,contentType:'application/json',body:'[]'});
   });
   try{
     await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
