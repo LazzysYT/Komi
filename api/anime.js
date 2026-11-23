@@ -68,7 +68,7 @@ module.exports = async function animePage(req,res) {
 <p>${desc}</p>
 ${genres.length?'<p>Жанры: '+genres.map(html).join(', ')+'</p>':''}
 ${count?'<p>Количество серий: '+Math.floor(count)+'</p>':''}
-<nav class="actions" aria-label="Действия"><a class="action primary" href="${watchUrl}">▷ Смотреть в KomiAnime</a><a class="action" href="/#catalog">Весь каталог</a></nav>
+<nav class="actions" aria-label="Действия"><a class="action primary" href="${watchUrl}">▷ Смотреть в KomiAnime</a><a class="action" href="/catalog">Весь каталог</a></nav>
 <p id="komiSeoWatchNotice" role="status" aria-live="polite"></p>
 </article></main></body></html>`;
     return send(res,200,'text/html; charset=utf-8',req.method==='HEAD'?'':page);
