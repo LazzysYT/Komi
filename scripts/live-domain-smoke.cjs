@@ -247,15 +247,23 @@ fs.mkdirSync(output,{recursive:true});
         const google=page.locator('#authModal .komi-google-btn');
         assert.equal(await google.isVisible(),true,'Google sign-in must have a visible button');
         assert.ok((await google.innerText()).includes('Google'),'Google sign-in must have readable text');
-        assert.equal(await page.locator('#tabLoginBtn').isVisible(),true);
-        assert.equal(await page.locator('#tabRegisterBtn').isVisible(),true);
+        assert.equal(await page.locator('#tabLoginBtn').isVisible(),false,
+          'Login footer link stays hidden while the login form itself is active');
+        assert.equal(await page.locator('#tabRegisterBtn').isVisible(),true,
+          'Login view must offer the register link');
         assert.equal(await page.locator('#loginFormContainer button[type="submit"]').isVisible(),true,
           'Komi sign-in submit button must be visible');
         await page.locator('#tabRegisterBtn').click();
         assert.equal(await page.locator('#registerFormContainer button[type="submit"]').isVisible(),true,
           'Registration submit button must appear when switching tabs');
+        assert.equal(await page.locator('#tabLoginBtn').isVisible(),true,
+          'Registration view must offer a visible return-to-login link');
+        assert.equal(await page.locator('#tabRegisterBtn').isVisible(),false);
         await page.locator('#tabLoginBtn').click();
         assert.equal(await page.locator('#loginFormContainer button[type="submit"]').isVisible(),true);
+        assert.equal(await page.locator('#tabRegisterBtn').isVisible(),true,
+          'Switching back must restore the registration link');
+        assert.equal(await page.locator('#tabLoginBtn').isVisible(),false);
         await page.evaluate(()=>closeAuthModal());
         await page.evaluate(()=>{location.hash='#shop'});
         await page.waitForSelector('#anicoin-title',{timeout:15000});
