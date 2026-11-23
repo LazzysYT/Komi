@@ -12,6 +12,7 @@ test('generated bundle leads the explicit, versioned mobile override cascade',()
   const expected=['/komi.production.css','/komi-pill-system.css'];
   if (head.includes('href="/komi-icon-rail.css')) expected.push('/komi-icon-rail.css');
    expected.push('/komi-shop-v5.css');
+  expected.push('/button-animations.css');
   assert.deepEqual(local,expected,'Last-loaded mobile layers must preserve deliberate cascade order');
   assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
   for(const filename of expected) assert.ok(fs.existsSync(path.join(root,filename.slice(1))),filename+' missing');
