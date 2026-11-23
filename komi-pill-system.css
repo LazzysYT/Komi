@@ -218,3 +218,65 @@ body:has(#store-filters) :is(.topbar a.btn,.studio-button,.studio-action,.store-
     flex:0 0 auto!important;min-width:max-content!important
   }
 }
+
+
+/* 2026-11-23: finish the pill language across navigation, account,
+   mobile sheets and legacy controls without changing application handlers. */
+.komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu,.komi-friends-drawer)
+  :is(button:not(.komi-friends-close),a.btn-secondary),
+.komi-media-hub :is(.komi-home-quick-dropdown,.komi-catalog-filter-chip)
+  :is(button,select),
+.komi-media-hub :is(.komi-profile-subtabs,.player-source-tabs,.season-tabs)
+  button{
+  border-radius:999px!important;
+  font-family:Manrope,Inter,sans-serif!important;
+  font-weight:800!important;
+  transition:background-color .18s ease,color .18s ease,
+    box-shadow .18s ease,transform .12s ease;
+}
+.komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu,.komi-friends-drawer)
+  button:active:not(:disabled),
+.komi-media-hub :is(.komi-home-quick-dropdown,.komi-catalog-filter-chip) button:active:not(:disabled){
+  transform:scale(.95);
+}
+.komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu)
+  :is(button:not(.komi-sound-toggle),a.btn-secondary):not(:disabled){
+  background-color:#16161A!important;
+  border:1px solid rgba(255,255,255,.10)!important;
+  color:#FFFFFF!important;
+}
+.komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu)
+  :is(button,a):focus-visible,
+.komi-media-hub :is(.komi-profile-tabs,.komi-home-leaderboard-tabs,.komi-friends-tabs)
+  button:focus-visible{
+  outline:2px solid #FFFFFF!important;
+  outline-offset:3px!important;
+}
+.komi-media-hub .komi-catalog-hide-switch input{
+  cursor:pointer;
+}
+.komi-media-hub .komi-home-leaderboard-tabs button[aria-pressed="true"]{
+  background:#242429!important;
+  color:#FFFFFF!important;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08)!important;
+}
+.komi-media-hub .komi-leaderboard-person:focus-visible{
+  outline:2px solid #FFFFFF;outline-offset:3px;
+}
+@media(max-width:767px){
+  .komi-media-hub :is(.komi-friends-tabs,.komi-profile-tabs,.komi-home-quick-categories){
+    overflow-x:auto!important;flex-wrap:nowrap!important;
+    overscroll-behavior-x:contain;scrollbar-width:none!important;
+  }
+  .komi-media-hub :is(.komi-friends-tabs,.komi-profile-tabs,.komi-home-quick-categories)::-webkit-scrollbar{
+    display:none;
+  }
+}
+@media(prefers-reduced-motion:reduce){
+  .komi-media-hub :is(button,a,select){
+    scroll-behavior:auto!important;
+  }
+  .komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu,.komi-friends-drawer) button{
+    transition:none!important;
+  }
+}
