@@ -318,7 +318,7 @@ async function checkNotifications(page) {
    assert.equal(await moods.count(),8,'Home must show eight mood genre cards');
    assert.equal(await page.locator('#komiHomeQuickFilters .komi-catalog-category-pills button').count(),5,
      'Home must retain five quick catalog categories');
-   await page.locator('#komiHomeQuickFilters [data-komi-mood-genre="Экшен"]').click();
+   await page.locator('#komiHomeQuickFilters .komi-mood-card[data-komi-mood-genre="Экшен"]').click();
    await page.waitForFunction(()=>currentView==='catalog');
    assert.equal(await page.evaluate(()=>catalogFilterGenre),'Экшен');
    assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
