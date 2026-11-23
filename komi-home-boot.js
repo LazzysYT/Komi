@@ -2,9 +2,10 @@
    CSP-safe external script in <head>; hydrated markup is switched on before paint. */
 (() => {
   'use strict';
-  if (!/^\/(?:index\.html)?$/.test(location.pathname) ||
+  const catalogRoute = location.pathname === '/catalog' || location.hash.toLowerCase() === '#catalog';
+  if (!catalogRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
       (location.hash && location.hash !== '#home') ||
-      new URLSearchParams(location.search).has('anime')) return;
+      new URLSearchParams(location.search).has('anime'))) return;
 
   const html = document.documentElement;
   html.classList.add('komi-home-booting');
