@@ -3,7 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
-const {validatePosterSource,cachedPosterUrl}=require('../poster-cache-client');
+const {validatePosterSource,cachedPosterUrl,posterApiUrl}=require('../poster-cache-client');
 const handler=require('../api/poster');
 const root=path.join(__dirname,'..');
 const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
@@ -29,6 +29,7 @@ test('only allowlisted public posters are sent to wsrv.nl, other URLs stay direc
     assert.equal(cachedPosterUrl(url),'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w=360&output=webp');
     assert.equal(cachedPosterUrl(url,1280),'https://wsrv.nl/?url='+encodeURIComponent(url)+'&w=1280&output=webp');
     assert.equal(cachedPosterUrl(url,99999),cachedPosterUrl(url));
+    assert.equal(posterApiUrl(url),'/api/poster?src='+encodeURIComponent(url));
   }
   for(const bad of [
     'http://shikimori.io/uploads/poster/animes/1/a.jpg',
@@ -43,6 +44,8 @@ test('only allowlisted public posters are sent to wsrv.nl, other URLs stay direc
     validShiki+'#fragment'
   ]) assert.equal(validatePosterSource(bad),'','Unsafe poster origin/path accepted: '+bad);
   assert.equal(cachedPosterUrl('https://cdn.myanimelist.net/images/anime/1/a.jpg'),
+    'https://cdn.myanimelist.net/images/anime/1/a.jpg');
+  assert.equal(posterApiUrl('https://cdn.myanimelist.net/images/anime/1/a.jpg'),
     'https://cdn.myanimelist.net/images/anime/1/a.jpg');
 });
 test('all pre-rendered public posters use external CDN with direct fallback',()=>{

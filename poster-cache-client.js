@@ -33,7 +33,13 @@
     const size = Number(width) === 1280 ? 1280 : 360;
     return 'https://wsrv.nl/?url=' + encodeURIComponent(checked) + '&w=' + size + '&output=webp';
   }
-  const api = { validatePosterSource, cachedPosterUrl };
+  // Social preview crawlers need a stable first-party URL. Keep that
+  // low-volume server-side path separate from browser image traffic.
+  function posterApiUrl(raw) {
+    const checked = validatePosterSource(raw);
+    return checked ? '/api/poster?src=' + encodeURIComponent(checked) : String(raw || '');
+  }
+  const api = { validatePosterSource, cachedPosterUrl, posterApiUrl };
   if (typeof module === 'object' && module.exports) module.exports = api;
   if (root) {
     root.komiCachedPosterUrl = cachedPosterUrl;
