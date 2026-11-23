@@ -4639,6 +4639,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
             window.KomiMobileSheets?.close?.(false);
             window.KomiPlayerUX?.cancelPendingNext?.();
+            window.KomiPlayerUX?.disposeCinema?.();
             ++komiDetailOpenToken;
             if (document.fullscreenElement?.closest?.('#watchModal')) document.exitFullscreen?.().catch(() => {});
             if (typeof aniCoinStopEmbed === 'function') aniCoinStopEmbed();
@@ -4863,8 +4864,8 @@ async function komiLoadCatalogPages(attempt = 0) {
             const sourceOrigin = currentEp.origins[selectedSource] || {index:currentEp.originalIdx, name:selectedSource};
             const activeOrigin = activeUrl ? new URL(activeUrl).origin : '';
             const alternateSource = directSources.find(name => name !== selectedSource) ||
-                sourceNames.find(name => name !== selectedSource && new URL(sources[name]).origin !== activeOrigin) ||
-                sourceNames.find(name => name !== selectedSource);
+                sourceNames.find(name => name !== selectedSource && sources[name] && new URL(sources[name]).origin !== activeOrigin) ||
+                sourceNames.find(name => name !== selectedSource && sources[name]);
             const isExternalPlayer = komiPlayerKind(activeUrl) === 'embed';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
