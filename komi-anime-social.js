@@ -10,13 +10,21 @@ function mount(){
  const id=Number(comments.dataset.animeId),tag=content.querySelector('#komiAnimeSocial');
  if(tag&&tag.dataset.animeId===String(id))return;
  tag?.remove();
- const section=k().node('section',undefined,'komi-lab-card');
+ // Keep reviews and studio-specific follows available without adding two
+ // oversized full-width panels below the comments. This is separate from
+ // per-anime episode notifications in the series sidebar.
+ const section=document.createElement('details');
+ section.className='komi-lab-card komi-social-disclosure';
  section.id='komiAnimeSocial';section.dataset.animeId=String(id);
- section.append(k().node('h3','Рецензии и озвучка'));
+ const summary=document.createElement('summary');
+ summary.textContent='Рецензии и подписки на озвучку';
+ section.append(summary);
  const row=k().node('div',undefined,'komi-lab-row'),result=k().node('div');
- row.append(k().btn('Рецензии',()=>reviews(id,result)),k().btn('Подписка на озвучку',()=>voices(id,result)));
+ row.append(k().btn('Рецензии',()=>reviews(id,result)),k().btn('Озвучки',()=>voices(id,result)));
  section.append(row,result);
- comments.before(section);
+ const extras=content.querySelector('.komi-clean-extras-body');
+ if(extras)extras.append(section);
+ else comments.before(section);
 }
 function alive(id,out){return out.isConnected&&Number(document.getElementById('komiAnimeComments')?.dataset.animeId)===id}
 async function reviews(id,out){

@@ -4949,6 +4949,7 @@ async function loadDataFromCloud(attempt = 0) {
                 hasNext,
                 displayNumber,
                 watchStill: Array.isArray(anime.screenshots) ? anime.screenshots[0] : '',
+                watchBanner: anime.banner || '',
                 originalIndex: sourceOrigin.index,
                 originalSource: sourceOrigin.name,
                 episodeSlots: currentSeasonEpisodes.map(episode => episode.slots),
