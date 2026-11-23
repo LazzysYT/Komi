@@ -81,7 +81,7 @@
         ' data-komi-mood-genre="' + escape(name) + '" aria-pressed="' + selected + '"' +
         ' aria-label="Жанр ' + escape(name) + ': ' + escape(description) + '">' +
         (art?.src ? '<img class="komi-mood-art" src="' + escape(art.src) +
-          '" alt="" width="360" height="160" loading="eager" decoding="async" fetchpriority="' +
+          '" alt="" width="360" height="160" loading="lazy" decoding="async" fetchpriority="' +
           (index < 4 ? 'auto' : 'low') + '" referrerpolicy="no-referrer"' + fallback + '>' : '') +
         '<span class="komi-mood-gradient" aria-hidden="true"></span>' +
         '<span class="komi-mood-copy"><strong>' + escape(name) + '</strong><small>' + escape(description) + '</small></span></button>';

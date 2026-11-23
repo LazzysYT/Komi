@@ -32,12 +32,17 @@
   }
   function shelf(title, subtitle, list, kind, renderCard, classname) {
     if (!list.length) return '';
+    // On small screens each shelf is a preview; keep the full collection via
+    // the existing 'Смотреть все' action. This cuts DOM and poster requests.
+    const compact = typeof root.matchMedia === 'function' &&
+      root.matchMedia('(max-width: 767px)').matches;
+    const visible = compact ? list.slice(0, 7) : list;
     return '<section class="komi-home-shelf komi-feature-section ' + (classname || '') + '">' +
       '<div class="komi-home-heading"><div><h2>' + escape(title) + '</h2>' +
       '<p class="komi-home-subtitle">' + escape(subtitle) + '</p></div>' +
       '<button type="button" class="komi-home-all" ' + collectionAction(kind) +
       '>Смотреть все <span aria-hidden="true">↗</span></button></div>' +
-      '<div class="komi-home-rail">' + list.map(renderCard).join('') + '</div></section>';
+      '<div class="komi-home-rail">' + visible.map(renderCard).join('') + '</div></section>';
   }
   const genreOptions = [
     {name:'Экшен',subtitle:'Драки и погони',symbol:'↗',choices:['Экшен']},
@@ -269,7 +274,7 @@
       continueShelf(history, context) +
       '<section class="komi-hub-catalog-preview" aria-label="Каталог аниме">' +
       (typeof context.quickFilters === 'function' ? context.quickFilters() : '') +
-      '<div class="anime-grid">' + catalogPreview.map(context.renderCard).join('') + '</div></section>' +
+      '<div class="anime-grid">' + (typeof root.matchMedia === 'function' && root.matchMedia('(max-width: 767px)').matches ? catalogPreview.slice(0, 7) : catalogPreview).map(context.renderCard).join('') + '</div></section>' +
       shelf('Популярное прямо сейчас','Высокие оценки Shikimori и недавно обновлённые серии',popular,'all',context.renderCard,'komi-home-popular') +
       shelf('Новинки сезона','Релизы '+latestYear+' года из каталога',season,'all',context.renderCard,'komi-home-season') +
       shelf('На один вечер','Сериалы продолжительностью до 13 серий',short,'short',context.renderCard,'komi-home-evening') +

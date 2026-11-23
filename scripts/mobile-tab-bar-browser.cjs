@@ -28,6 +28,37 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
         };
       });
       if(mobile){
+        const geometry=await page.evaluate(()=>{
+          const selectors=['#sideHomeBtn','#sideCatalogBtn','#sideListsBtn','.komi-side-bottom > .komi-side-account'];
+          return selectors.map(selector=>{
+            const el=document.querySelector('.komi-side-nav '+selector);
+            const rect=el.getBoundingClientRect();
+            const label=el.querySelector('.komi-rail-tooltip');
+            const labelRect=label?.getBoundingClientRect();
+            return {selector,left:rect.left,right:rect.right,top:rect.top,
+              bottom:rect.bottom,labelLeft:labelRect?.left,labelRight:labelRect?.right,
+              labelWidth:label?.clientWidth,scrollWidth:label?.scrollWidth};
+          });
+        });
+        for(let i=0;i<geometry.length;i++){
+          const item=geometry[i];
+          assert.ok(item.left>=-1 && item.right<=width+1,'Dock button leaves screen: '+JSON.stringify(item));
+          assert.ok(item.labelLeft>=item.left-1 && item.labelRight<=item.right+1,
+            'Label spills outside its button: '+JSON.stringify(item));
+          if(i>0)assert.ok(geometry[i-1].right<=item.left+2,'Adjacent mobile dock items overlap: '+JSON.stringify(geometry));
+        }
+        // A signed-in notification control must not create a phantom fifth
+        // grid item, even if account hydration sets it inline.
+        await page.evaluate(()=>{
+          document.body.classList.add('komi-authenticated');
+          document.getElementById('notifBellBtn').style.display='flex';
+        });
+        assert.equal(await page.locator('#notifBellBtn').isVisible(),false,
+          'Signed-in notification bell should remain in the More menu, not overlap the dock');
+        await page.evaluate(()=>{
+          document.body.classList.remove('komi-authenticated');
+          document.getElementById('notifBellBtn').style.removeProperty('display');
+        });
         assert.equal(state.navCount,4,'Guest navigation exposes four personal-safe tabs at '+width+': '+JSON.stringify(state));
         assert.deepEqual(state.labels,['Главная','Каталог','Мои списки','Профиль']);
         assert.equal(state.moreVisible,true);
