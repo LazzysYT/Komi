@@ -347,6 +347,8 @@ async function checkNotifications(page) {
    await page.waitForSelector('#komiCatalogAdvanced:not([hidden])');
    assert.equal(await page.locator('#komiCatalogAdvanced select').count(),4,
      'Advanced catalog panel must retain genre, year, type and sort controls');
+   await page.locator('#komiCatalogYear').selectOption('Все');
+   await page.waitForFunction(()=>catalogFilterYear==='Все');
    await page.locator('#komiCatalogType').selectOption('Фильм');
    await page.waitForFunction(()=>catalogFilterType==='Фильм');
    assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
