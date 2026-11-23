@@ -25,8 +25,12 @@
     if (view === 'premium' || hash === '#premium') return rail.querySelector('#sidePremiumBtn');
     if (view === 'shop' || hash === '#shop') return rail.querySelector('#sideShopBtn');
     if (view === 'catalog' || hash === '#catalog') return rail.querySelector('#sideCatalogBtn');
-    if (view === 'partners' || hash === '#partners') return rail.querySelector('#sidePartnersBtn');
-    if (isLists) return rail.querySelector('#sideListsBtn');
+    if (view === 'partners' || hash === '#partners') return mobile.matches
+      ? null : rail.querySelector('#sidePartnersBtn');
+    // Lists stay reachable through Profile on desktop; mobile keeps its own Lists tab.
+    if (isLists) return mobile.matches
+      ? rail.querySelector('#sideListsBtn')
+      : rail.querySelector('.komi-side-account');
     if (isProfile) return rail.querySelector('.komi-side-account');
     if (view === 'home' || (!view && !hash)) return rail.querySelector('#sideHomeBtn');
     return null; // Other pages/modal states do not invent a selected destination.
