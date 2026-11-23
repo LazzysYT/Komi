@@ -392,3 +392,107 @@
   .komi-media-hub .komi-home-hero .hero-dot::before,
   .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow { transition: none !important; }
 }
+
+/* Keep first paint/no-JS SEO hero and loading skeleton visually consistent. */
+.komi-media-hub .komi-boot-hero,
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+  height: clamp(500px, 68vh, 660px) !important;
+  min-height: 500px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: #09090B !important;
+}
+.komi-media-hub .komi-boot-hero {
+  padding: clamp(24px, 5vw, 72px);
+  background: radial-gradient(ellipse at 75% 28%, #232328 0%, #111115 45%, #09090B 100%) !important;
+}
+.komi-media-hub .komi-boot-tag { display: none; }
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding: 120px clamp(24px, 5vw, 72px) 86px !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight::after {
+  background:
+    linear-gradient(90deg, #09090B 0%, rgba(9,9,11,.85) 35%, rgba(9,9,11,.25) 68%, transparent 100%),
+    linear-gradient(0deg, #09090B 0%, rgba(9,9,11,.75) 24%, transparent 60%);
+}
+.komi-media-hub .komi-seo-spotlight-art img {
+  object-fit: cover !important;
+  object-position: center 20% !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-copy { width: min(560px, 100%); }
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 {
+  margin: 0 0 14px !important;
+  font: 800 clamp(28px, 3.6vw, 46px)/1.08 Inter, Manrope, sans-serif !important;
+  color: #FFFFFF !important;
+}
+.komi-media-hub .komi-seo-spotlight-facts { gap: 8px; margin: 0 0 11px; }
+.komi-media-hub .komi-seo-spotlight-facts span,
+.komi-media-hub .komi-seo-spotlight-facts span:first-child {
+  padding: 5px 12px !important;
+  background: rgba(255,255,255,.1) !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: #FFFFFF !important;
+  font: 700 13px/1.15 Inter, sans-serif !important;
+}
+.komi-media-hub .komi-seo-spotlight-genres {
+  margin: 0 0 11px !important;
+  color: #A1A1AA !important;
+  font: 600 13px/1.4 Inter, sans-serif !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight p:not(.komi-seo-spotlight-genres) {
+  margin: 0 !important;
+  color: #D4D4D8 !important;
+  font: 400 14px/1.5 Inter, sans-serif !important;
+  -webkit-line-clamp: 3;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a.komi-seo-primary-link {
+  min-height: 48px;
+  padding: 15px 30px;
+  border: 1px solid #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #09090B !important;
+  font: 800 15px/1 Inter, sans-serif;
+  box-shadow: 0 6px 24px rgba(255,255,255,.18) !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a.komi-seo-info {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.12) !important;
+  color: #FFFFFF !important;
+}
+.komi-media-hub .komi-seo-spotlight-actions svg { width: 18px; height: 18px; }
+.komi-media-hub .komi-home-hero .hero-slide:is(.komi-hd-wide,.komi-hd-softwide,.komi-hd-poster) .komi-hub-hero-art {
+  object-position: center 20% !important;
+}
+@media (max-width: 768px) {
+  .komi-media-hub .komi-boot-hero,
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+    height: clamp(540px, 76svh, 690px) !important;
+    min-height: 540px !important;
+  }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding: 160px 22px 96px !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight::after {
+    background:
+      linear-gradient(90deg, rgba(9,9,11,.88),rgba(9,9,11,.12)),
+      linear-gradient(0deg,#09090B,rgba(9,9,11,.82) 36%,transparent 84%);
+  }
+}
+@media (max-width: 480px) {
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding: 158px 17px 85px !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 { font-size: clamp(28px, 8vw, 38px) !important; }
+}
