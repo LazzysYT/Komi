@@ -70,3 +70,7 @@
 .komi-media-hub .komi-catalog-v5 .komi-catalog-search svg {flex:0 0 19px;width:19px;height:19px;fill:none;stroke:#8E8E93;stroke-width:2;}
 .komi-media-hub .komi-catalog-v5 .komi-catalog-search input {flex:1;min-width:0;border:0;outline:0;box-shadow:none;background:transparent;color:#fff;font:500 14px Inter,sans-serif;}
 .komi-media-hub .komi-catalog-v5 .komi-catalog-search:focus-within {border-color:rgba(255,255,255,.35);}
+/* Keep floating community controls from intercepting taps inside mobile episode sheets. */
+@media (max-width:767px) {
+  body:has(#komiMobileSheet.is-open) #sideFriendsBtn { pointer-events:none!important; }
+}
