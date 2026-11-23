@@ -191,3 +191,166 @@
     justify-content: flex-start;
   }
 }
+
+/* Catalog v5 regression fix: stacked responsive layout, desktop + mobile.
+   The legacy .komi-hub-catalog-toolbar is a compact 3-column grid. In v5 it
+   contains full sections (genre cards, heading, category pills and search),
+   so it must NOT inherit the legacy toolbar's grid placement or frame. */
+body.komi-media-hub #mainContainer #catalog.komi-hub-catalog-toolbar.komi-catalog-v5 {
+  display: flex !important;
+  flex-direction: column !important;
+  flex-wrap: nowrap !important;
+  align-items: stretch !important;
+  justify-content: flex-start !important;
+  gap: 0 !important;
+  grid-template-columns: none !important;
+  grid-template-rows: none !important;
+  box-sizing: border-box !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  min-height: 0 !important;
+  height: auto !important;
+  margin: 0 0 20px !important;
+  padding: 0 clamp(10px, 1vw, 20px) 16px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > :is(
+  .komi-moods, .komi-catalog-head-row, .komi-catalog-category-pills,
+  .komi-catalog-search, .komi-catalog-advanced
+) {
+  box-sizing: border-box !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  grid-area: auto !important;
+  align-self: stretch !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-moods {
+  display: block !important;
+  margin: 0 0 32px !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-heading {
+  display: flex !important;
+  width: 100% !important;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-grid {
+  display: grid !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 14px !important;
+  width: 100% !important;
+  min-width: 0 !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-card {
+  box-sizing: border-box !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  height: clamp(128px, 9vw, 152px) !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-copy :is(strong, small) {
+  overflow-wrap: break-word;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-head-row {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  flex-wrap: wrap !important;
+  gap: 12px 24px !important;
+  margin: 0 0 14px !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-heading {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-tools {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-category-pills {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
+  overflow-x: auto !important;
+  scrollbar-width: none;
+  margin: 0 0 16px !important;
+  padding: 2px 0 6px !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-category-pills::-webkit-scrollbar {
+  display: none;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search {
+  display: flex !important;
+  align-items: center !important;
+  max-width: 600px !important;
+  margin: 0 0 16px !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-advanced > .catalog-filters-box {
+  display: grid !important;
+  grid-column: auto !important;
+  grid-row: auto !important;
+  width: 100% !important;
+  min-width: 0 !important;
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  gap: 12px !important;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-advanced .catalog-filters-box label {
+  display: block !important;
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 0 7px !important;
+  overflow: visible !important;
+  clip-path: none !important;
+  white-space: normal !important;
+}
+@media (max-width: 1023px) {
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-advanced > .catalog-filters-box {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+}
+@media (max-width: 600px) {
+  body.komi-media-hub #mainContainer #catalog.komi-hub-catalog-toolbar.komi-catalog-v5 {
+    padding: 0 10px 16px !important;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-moods {
+    margin-bottom: 26px !important;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-grid {
+    gap: 10px !important;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-card {
+    height: 112px !important;
+    border-radius: 15px !important;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-copy {
+    inset: auto 10px 12px 12px;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-copy strong {
+    font-size: 15px;
+    overflow-wrap: anywhere;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-copy small {
+    font-size: 11px;
+    overflow-wrap: anywhere;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-tools {
+    justify-content: flex-start !important;
+    width: 100%;
+  }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-advanced > .catalog-filters-box {
+    grid-template-columns: 1fr !important;
+  }
+}
