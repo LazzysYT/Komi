@@ -4638,9 +4638,9 @@ async function loadDataFromCloud(attempt = 0) {
                 : null;
             const effectivePreference = availablePreference || preferredSource;
             const sourcePlan = KomiPlayerCore.selectPlaybackSource(sources, {
-                requestedSource: requestedSource !== null ? requestedSource :
-                    (!adFreeOnly && effectivePreference && Object.hasOwn(sources,effectivePreference)
-                        ? effectivePreference : null),
+                // A remembered studio is a preference, not a new explicit click.
+                // Keep a usable direct stream ahead of a previously saved iframe.
+                requestedSource: requestedSource !== null ? requestedSource : null,
                 preferredSource: effectivePreference,
                 adFreeOnly,
                 partnerPreferred: sources[KOMI_ANIVIBE_LABEL] ? KOMI_ANIVIBE_LABEL : null
