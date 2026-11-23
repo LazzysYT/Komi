@@ -35,28 +35,39 @@
       '<span>'+name+'</span>'+(count===null?'':'<small class="profile-tab-counter">'+format(count)+'</small>')+'</button>'
     ).join('')+'</nav>';
   }
-  function achievementWidget(username,isMe){
-    var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,watched:0,watching:0,friends:0,badges:[]};
-    var badges=Array.isArray(info.badges)?info.badges:[];
-    // Only existing confirmed list/friend counters drive achievement progress.
-    var definitions=[
-      ['Первый просмотр',info.watched,1],
-      ['10 аниме',info.watched,10],
-      ['Знаток аниме',info.watched,50],
-      ['Первый друг',info.friends,1],
-      ['Марафон',info.watching,5]
-    ];
-    var tiles=definitions.map(([label,count,target])=>{
-      var progress=Math.min(target,number(count)),earned=progress>=target;
-      return '<div class="profile-achievement'+(earned?' is-earned':' is-locked')+'" tabindex="0" data-profile-tilt title="'+escapeText(label)+': '+progress+'/'+target+'">'+
-        '<span class="profile-achievement-icon" aria-hidden="true">'+(earned?'✦':'◇')+'</span>'+
-        '<span class="profile-achievement-progress">'+progress+'/'+target+'</span>'+
-        '<small>'+escapeText(label)+'</small></div>';
-    }).join('');
-    return '<section class="profile-widget profile-achievement-widget">'+
+  function achievementWidget(username,isMe,full=false){
+    var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,achievements:[],badges:[]};
+    // Backward-compatible preview for public profiles with older achievement data.
+    var definitions=Array.isArray(info.achievements)?info.achievements:[
+      ['first-watch','Просмотр','Первый просмотр',info.watched,1],
+      ['watch-ten','Просмотр','10 аниме',info.watched,10],
+      ['watch-50','Просмотр','Знаток аниме',info.watched,50],
+      ['friend-one','Сообщество','Первый друг',info.friends,1],
+      ['watching-five','Просмотр','Марафон',info.watching,5]
+    ].map(([id,category,label,value,target])=>({
+      id,category,label,value:Math.min(target,number(value)),target,earned:number(value)>=target
+    }));
+    var earned=definitions.filter(item=>item.earned).length;
+    var previewIds=['first-watch','watch-ten','favorite-one','list-five','friend-one','xp-500'];
+    var chosen=full?definitions:previewIds.map(id=>definitions.find(item=>item.id===id)).filter(Boolean);
+    var renderTiles=items=>'<div class="profile-achievements"'+(isMe?' data-komi-quests':'')+'>'+items.map(item=>{
+      var progress=Math.min(number(item.target),number(item.value));
+      var unlocked=Boolean(item.earned);
+      return '<div class="profile-achievement'+(unlocked?' is-earned':' is-locked')+'" tabindex="0" data-profile-tilt title="'+escapeText(item.label)+': '+progress+'/'+item.target+'">'+
+        '<span class="profile-achievement-icon" aria-hidden="true">'+(unlocked?'✦':'◇')+'</span>'+
+        '<span class="profile-achievement-progress">'+progress+'/'+item.target+'</span>'+
+        '<small>'+escapeText(item.label)+'</small></div>';
+    }).join('')+'</div>';
+    var tiles=full?['Просмотр','Коллекция','Сообщество','Опыт'].map(category=>{
+      var items=chosen.filter(item=>item.category===category);
+      return items.length?'<div class="profile-achievement-group"><h4 style="font-size:12px;font-weight:800;color:#E2E2E2;margin:17px 0 9px">'+escapeText(category)+'</h4>'+renderTiles(items)+'</div>':'';
+    }).join(''):renderTiles(chosen);
+    return '<section class="profile-widget profile-achievement-widget'+(full?' profile-achievements-full':'')+'">'+
       header('Витрина достижений','<span class="profile-caption">'+format(info.xp)+' XP</span>')+
-      '<div class="profile-achievements"'+(isMe?' data-komi-quests':'')+'>'+tiles+'</div>'+
-      (!badges.length?'<p class="profile-achievements-empty">Первое достижение ещё впереди — начни просмотр или добавь друга.</p>':'')+
+      '<p class="profile-caption" style="margin:0 0 12px">Открыто '+earned+' из '+definitions.length+' достижений</p>'+
+      tiles+
+      (!definitions.length?'<p class="profile-achievements-empty">Загружаем достижения…</p>':'')+
+      (!full?'<button type="button" class="profile-shop-link" data-komi-onclick="profilePageSection=\'achievements\';render()">Все достижения ('+definitions.length+')</button>':'')+
       (isMe?'<button type="button" class="profile-shop-link" data-komi-onclick="openAniCoinShop()">✧ Открыть магазин AniCoin</button>':'')+'</section>';
   }
   function watchHistory(ctx){
@@ -104,6 +115,19 @@
         '</span><span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
     }).join('');
   }
+  function fullFriendRows(names) {
+    return names.map((name,i)=>{
+      var profile=userProfiles[name]||{};
+      var label=typeof komiVisibleUsername==='function'
+        ? komiVisibleUsername(name,profile,false) : String(profile.displayName||name);
+      var avatar=safeUrl(profile.avatar);
+      return '<button type="button" class="komi-profile-friend" style="display:inline-flex;align-items:center;gap:10px;min-width:185px;max-width:100%;text-align:left;margin:4px" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
+        '<span class="profile-friend-avatar" style="position:relative;overflow:hidden">'+escapeText(label.slice(0,1))+
+        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
+        '</span><span style="min-width:0"><strong style="display:block;overflow-wrap:anywhere">'+escapeText(label)+'</strong>'+
+        '<small style="display:block;color:#999;font-size:10px">Открыть профиль</small></span></button>';
+    }).join('');
+  }
   function content(ctx){
     var fullCounts=statusNames.reduce((total,key)=>total+number(ctx.statsCounts[key]),0);
     var history=watchHistory(ctx);
@@ -111,7 +135,7 @@
       header('История просмотра','<span class="profile-caption">Последние эпизоды</span>')+
       (ctx.isMe?'<div class="profile-watch-grid">'+(watchCards(ctx,30)||blank('Здесь появятся последние серии и сохранённые таймкоды после просмотра.'))+'</div>'+
        (history.length>30?'<p class="profile-caption">Показаны 30 последних тайтлов.</p>':''):blank('История просмотра доступна только владельцу профиля.'))+'</section>';
-    if(ctx.section==='achievements')return '<div class="profile-enter">'+achievementWidget(ctx.username,ctx.isMe)+'</div>';
+    if(ctx.section==='achievements')return '<div class="profile-enter">'+achievementWidget(ctx.username,ctx.isMe,true)+'</div>';
     if(ctx.section!=='overview')return '';
 
     var favoriteIds=Object.keys(userFavorites[ctx.username]||{});
@@ -221,6 +245,10 @@
       var list=widget.querySelector('.profile-friends-mini');
       if(list)list.innerHTML=friendRows(names)||blank('Список друзей пока пуст.');
     }
+    var fullList=profile.querySelector('.komi-profile-friend-list');
+    if(fullList)fullList.innerHTML=fullFriendRows(names)||'<p>Пока нет друзей.</p>';
+    var fullHeading=profile.querySelector('.komi-profile-friends-section > h3');
+    if(fullHeading)fullHeading.textContent='Друзья ('+names.length+')';
     var badge=profile.querySelector('[data-profile-friends-count]');
     if(badge)badge.textContent='◉ Друзей: '+names.length;
     var tabCount=profile.querySelector('[data-profile-tab="friends"] .profile-tab-counter');
@@ -325,4 +353,5 @@
     var tile=event.target?.closest?.('[data-profile-tilt]');if(tile&&!tile.contains(event.relatedTarget))tile.style.transform='';
   });
   root.KomiProfileUI={navigation,content,appearance,metrics,syncWallet,refreshFriends};
+  root.KomiProfileUI.fullFriendRows=fullFriendRows;
 })(window);

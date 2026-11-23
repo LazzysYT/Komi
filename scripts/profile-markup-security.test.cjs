@@ -13,18 +13,22 @@ test('profile buttons never splice a user nickname into executable handler sourc
  assert.match(source,/removeFriend\(window\.komiViewedProfileName\)/);
  assert.match(source,/sendFriendRequest\(window\.komiViewedProfileName\)/);
  assert.match(source,/postToProfileWall\(window\.komiWallProfileName\)/);
- assert.match(source,/openProfile\(window\.komiProfileFriendNames\[\$\{i\}\]\)/);
+ const premium=fs.readFileSync(path.join(__dirname,'../profile-premium.js'),'utf8');
+ assert.ok(source.includes('KomiProfileUI.fullFriendRows(myFriends)'));
+ assert.ok(premium.includes("openProfile(window.komiProfileFriendNames['+i+'])"),
+  'friend links must resolve via an indexed name, never a user-authored handler');
  assert.doesNotMatch(source,/openProfile\('\$\{friend\}'\)/);
  assert.doesNotMatch(source,/(?:removeFriend|sendFriendRequest|postToProfileWall)\('\$\{username\}'\)/);
 });
 test('profile folders, genres, friends and avatars escape untrusted fields',()=>{
  for(const piece of [
   'safeProfileText(fname)',
-  'safeProfileText(friend)',
   'komiSafeUrl(senderAvatar)',
   'window.komiProfileFolderNames[\u0024{i}]'
  ])assert.ok(source.includes(piece),piece);
  const premium=fs.readFileSync(path.join(__dirname,'../profile-premium.js'),'utf8');
+ assert.ok(premium.includes('escapeText(label)'), 'Friend cards must escape public display names');
+ assert.ok(premium.includes('escapeText(avatar)'), 'Friend avatars must escape URL attributes');
  assert.ok(premium.includes('escapeText(name)'), 'Genre names are escaped in the premium dashboard');
  assert.ok(premium.includes('escapeText(anime.title)'), 'Anime titles are escaped in the premium dashboard');
  assert.doesNotMatch(source,/profileActiveTab='\$\{fname\}'/);

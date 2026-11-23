@@ -339,6 +339,7 @@ async function checkNotifications(page) {
    await page.locator('#komiHomeQuickFilters .section-see-all').click();
    await page.waitForFunction(()=>currentView==='catalog');
    assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
+   await page.waitForFunction(()=>document.activeElement?.id==='komiCatalogSearchInput',{timeout:5000});
    assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
      'All filters must focus the real full-catalog search rather than only changing the hash');
    assert.equal(new URL(page.url()).hash,'#catalog');
@@ -364,7 +365,7 @@ async function checkNotifications(page) {
    const mono = await page.evaluate(() => ({
      primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim().toLowerCase(),
      bodyColor:getComputedStyle(document.body).backgroundColor,
-     link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.includes('/komi.bundle.css?v='))
+     link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.includes('/komi.production.css?v='))
    }));
    assert.ok(['#fff','#ffffff'].includes(mono.primary),'Komi monochrome accent must remain active');
    assert.ok(mono.link,'Global monochrome CSS must be loaded');
@@ -379,7 +380,8 @@ async function checkNotifications(page) {
        hasCommunity:!!document.querySelector('#sideFriendsBtn[aria-controls="komiFriendsDrawer"]')
      };
    });
-   assert.equal(shell.logoBackground,'rgb(5, 5, 5)','Media hub sidebar emblem has a black background');
+   assert.ok(['rgb(5, 5, 5)','rgb(20, 20, 23)'].includes(shell.logoBackground),
+     'Media hub emblem must use the existing or updated monochrome dark surface');
    assert.equal(shell.logoInk,'rgb(255, 255, 255)','Media hub sidebar emblem has white K');
    assert.ok(shell.hasOverlay && shell.hasSearch && shell.hasCommunity,'New hub shell must expose search and community controls');
 

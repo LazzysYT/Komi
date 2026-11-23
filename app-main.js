@@ -458,7 +458,7 @@ async function loadDataFromCloud(attempt = 0) {
             }
             list.innerHTML = '<div class="komi-friends-count">Найдено: '+unique.length+'</div>'+unique.map((name,index)=>{
                 const profile = userProfiles[name] || {};
-                const safeName = escapeFriendHtml(profile.displayName || name);
+                const safeName = escapeFriendHtml(komiVisibleUsername(name, profile, false));
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.has(name);
@@ -539,7 +539,7 @@ async function loadDataFromCloud(attempt = 0) {
             if (myFriends.length) {
                 friendsHtml += myFriends.map((name,index) => {
                     const profile = userProfiles[name] || {};
-                    const safeName = escapeFriendHtml(name);
+                    const safeName = escapeFriendHtml(typeof komiVisibleUsername === 'function' ? komiVisibleUsername(name, profile, false) : (profile.displayName || name));
                     const safeAvatar = escapeFriendHtml(profile.avatar ||
                         'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
                     return `
@@ -815,15 +815,22 @@ async function loadDataFromCloud(attempt = 0) {
         });
         let komiCatalogFocusPending = false;
         function komiOpenFullCatalogFilters() {
-            // A catalog fetch can finish AFTER the click. Preserve the focus
-            // request so delayed rendering never strands keyboard users in nav.
+            // Preserve focus across navigation, late paints, and the click's default action.
             komiCatalogFocusPending = true;
             navigate('catalog');
-            const search = document.getElementById('komiCatalogSearchInput');
-            if (search) {
-                search.focus({preventScroll:false});
-                komiCatalogFocusPending = false;
-            } else document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+            const focusSearch = () => {
+                if (currentView !== 'catalog') return;
+                const field = document.getElementById('komiCatalogSearchInput');
+                if (field) {
+                    field.focus({preventScroll:false});
+                    komiCatalogFocusPending = false;
+                }
+            };
+            if (!document.getElementById('komiCatalogSearchInput'))
+                document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+            focusSearch();
+            requestAnimationFrame(focusSearch);
+            setTimeout(focusSearch, 100);
         }
         function komiHomeQuickFiltersMarkup() {
             const genreOptions = availableGenresList.filter(genre =>
@@ -2353,7 +2360,7 @@ async function loadDataFromCloud(attempt = 0) {
                     </div>
 
                     </div>
-                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? myFriends.map((friend,i)=>`<button class="komi-profile-friend" data-komi-onclick="openProfile(window.komiProfileFriendNames[${i}])">${safeProfileText(friend)}</button>`).join('') : '<p>Пока нет друзей.</p>'}</div></div>
+                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? KomiProfileUI.fullFriendRows(myFriends) : '<p>Пока нет друзей.</p>'}</div></div>
                     <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
                     <div class="profile-wall-section">
                         <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
@@ -4205,19 +4212,66 @@ async function loadDataFromCloud(attempt = 0) {
             if (index+1<eps.length) openWatchModal(String(animeId),season,index+1);
         }
         function komiAchievements(username) {
-            const statuses=userAnimeStatuses[username]||{};
-            const watched=Object.values(statuses).filter(v=>v==='Просмотрено').length;
-            const watching=Object.values(statuses).filter(v=>v==='Смотрю').length;
-            const friends=friendsFor(username).length;
-            const premiumXp=window.KomiPremium?.xpForUsername(username) || 0;
+            // Milestones reflect saved account data only. No client-side XP or coin grants.
+            const statuses = Object.values(userAnimeStatuses[username] || {});
+            const watched = statuses.filter(v => v === 'Просмотрено').length;
+            const watching = statuses.filter(v => v === 'Смотрю').length;
+            const planned = statuses.filter(v => v === 'В планах').length;
+            const listed = statuses.filter(v => ['Просмотрено','Смотрю','В планах','Отложено','Брошено'].includes(v)).length;
+            const favorites = Object.keys(userFavorites[username] || {}).length;
+            const friends = friendsFor(username).length;
+            const premiumXp = window.KomiPremium?.xpForUsername(username) || 0;
             const questXp = currentUser?.username === username &&
                 komiQuestRewardState.owner === currentUser?.authUserId
-                ? Number(komiQuestRewardState.data?.quest_xp_total)||0 : 0;
+                ? Number(komiQuestRewardState.data?.quest_xp_total) || 0 : 0;
             const verified = currentUser?.username===username &&
                 komiServerXpState.owner===currentUser?.authUserId
                 ? komiServerXpState.data : null;
             const xp=verified?.xp ?? (watched*100+watching*20+friends*15+premiumXp+questXp);
-            return {watched,watching,friends,xp,premiumXp,level:Math.floor(xp/500)+1,badges:[watched>=1&&' Первый просмотр',watched>=10&&' 10 аниме',watched>=50&&' Знаток аниме',friends>=1&&' Первый друг',watching>=5&&' Марафон'].filter(Boolean)};
+            const raw = [
+                ['first-watch','Просмотр','Первый просмотр',watched,1],
+                ['watch-three','Просмотр','3 аниме',watched,3],
+                ['watch-five','Просмотр','5 аниме',watched,5],
+                ['watch-ten','Просмотр','10 аниме',watched,10],
+                ['watch-25','Просмотр','25 аниме',watched,25],
+                ['watch-50','Просмотр','Знаток аниме',watched,50],
+                ['watch-100','Просмотр','100 аниме',watched,100],
+                ['watch-250','Просмотр','Легенда 250',watched,250],
+                ['watching-one','Просмотр','Начал смотреть',watching,1],
+                ['watching-three','Просмотр','3 в процессе',watching,3],
+                ['watching-five','Просмотр','Марафон',watching,5],
+                ['watching-ten','Просмотр','10 в процессе',watching,10],
+                ['plan-one','Коллекция','Первый план',planned,1],
+                ['plan-five','Коллекция','5 в планах',planned,5],
+                ['plan-ten','Коллекция','10 в планах',planned,10],
+                ['plan-25','Коллекция','25 в планах',planned,25],
+                ['favorite-one','Коллекция','Первое любимое',favorites,1],
+                ['favorite-three','Коллекция','3 любимых',favorites,3],
+                ['favorite-five','Коллекция','5 любимых',favorites,5],
+                ['favorite-ten','Коллекция','10 любимых',favorites,10],
+                ['favorite-25','Коллекция','25 любимых',favorites,25],
+                ['list-one','Коллекция','Первое в списке',listed,1],
+                ['list-five','Коллекция','Коллекция 5',listed,5],
+                ['list-ten','Коллекция','Коллекция 10',listed,10],
+                ['list-25','Коллекция','Коллекция 25',listed,25],
+                ['list-50','Коллекция','Коллекция 50',listed,50],
+                ['list-100','Коллекция','Коллекция 100',listed,100],
+                ['friend-one','Сообщество','Первый друг',friends,1],
+                ['friend-three','Сообщество','3 друга',friends,3],
+                ['friend-five','Сообщество','Команда из 5',friends,5],
+                ['friend-ten','Сообщество','10 друзей',friends,10],
+                ['friend-20','Сообщество','20 друзей',friends,20],
+                ['xp-500','Опыт','500 XP',xp,500],
+                ['xp-1500','Опыт','1500 XP',xp,1500],
+                ['xp-5000','Опыт','5000 XP',xp,5000]
+            ];
+            const achievements = raw.map(([id,category,label,value,target]) => ({
+                id, category, label, value: Math.min(target, Math.max(0, Number(value) || 0)),
+                target, earned: Number(value) >= target
+            }));
+            return {watched, watching, planned, favorites, listed, friends, xp, premiumXp,
+                level: Math.floor(xp/500)+1, achievements,
+                badges: achievements.filter(item => item.earned).map(item => item.label)};
         }
         function komiRecommendations() {
             if (!currentUser) return [];
@@ -4591,9 +4645,9 @@ async function loadDataFromCloud(attempt = 0) {
                 : null;
             const effectivePreference = availablePreference || preferredSource;
             const sourcePlan = KomiPlayerCore.selectPlaybackSource(sources, {
-                requestedSource: requestedSource !== null ? requestedSource :
-                    (!adFreeOnly && effectivePreference && Object.hasOwn(sources,effectivePreference)
-                        ? effectivePreference : null),
+                // A remembered studio is a preference, not a new explicit click.
+                // Keep a usable direct stream ahead of a previously saved iframe.
+                requestedSource: requestedSource !== null ? requestedSource : null,
                 preferredSource: effectivePreference,
                 adFreeOnly,
                 partnerPreferred: sources[KOMI_ANIVIBE_LABEL] ? KOMI_ANIVIBE_LABEL : null

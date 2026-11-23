@@ -22,6 +22,8 @@ let aniCoinWatchQueue = Promise.resolve();
 async function aniCoinRequest(action, options = {}, expectedOwner = currentUser?.authUserId) {
     const owner = currentUser?.authUserId;
     if (!owner || owner !== expectedOwner || !_supabase) return;
+    const previousBalance = aniCoinOwner === owner && Number.isSafeInteger(Number(aniCoinWallet?.balance))
+        ? Number(aniCoinWallet.balance) : null;
     const { data, error } = await _supabase.rpc('komi_anicoin', { p_action: action, ...options });
     if (error) throw error;
     if (currentUser?.authUserId !== owner) return;
@@ -40,6 +42,20 @@ async function aniCoinRequest(action, options = {}, expectedOwner = currentUser?
         badge.hidden = !badge.textContent;
     }
     if (window.KomiProfileUI?.syncWallet) window.KomiProfileUI.syncWallet();
+    if (action === 'watch') {
+        const balance = Number(data?.balance);
+        const earned = previousBalance === null || !Number.isSafeInteger(balance)
+            ? 0 : Math.max(0, balance - previousBalance);
+        const status = document.getElementById('komi-embed-coin-status');
+        if (status && aniCoinEmbedSession?.owner === owner) {
+            const seconds = Math.max(0, Math.min(1199, Number(data?.seconds) || 0));
+            status.textContent = 'Учёт активного времени · ' +
+                Math.floor(seconds / 60) + ' мин ' + seconds % 60 +
+                ' сек / 20 мин · Баланс: ' + balance.toLocaleString('ru-RU') + ' AniCoin';
+        }
+        if (earned > 0 && typeof komiStatusFeedback === 'function')
+            komiStatusFeedback('+' + earned + ' AniCoin за просмотр!');
+    }
     return data;
 }
 
@@ -456,12 +472,19 @@ function aniCoinStopEmbed() {
     aniCoinEmbedSession = null;
     if (aniCoinEmbedTimer) clearInterval(aniCoinEmbedTimer);
     aniCoinEmbedTimer = null;
+    const controls = document.querySelector('[data-komi-embed-coins]');
+    if (controls) {
+        const start = controls.querySelector('[data-komi-coin-embed-start]');
+        const stop = controls.querySelector('[data-komi-coin-embed-stop]');
+        if (start) start.hidden = false;
+        if (stop) stop.hidden = true;
+    }
 }
 function aniCoinStartEmbed() {
     const iframe = document.querySelector('#watchModal.active #watchModalContent .player-box iframe');
     if (!iframe || !currentUser?.authUserId) {
-        aniCoinStatus = 'Войдите в аккаунт, чтобы учитывать время просмотра.';
-        return;
+        aniCoinStatus = 'Войдите в аккаунт и откройте серию для учёта.';
+        return false;
     }
     aniCoinStopEmbed();
     const sample = {
@@ -502,6 +525,7 @@ function aniCoinStartEmbed() {
             if (status?.isConnected) status.textContent = 'Нет соединения — прогресс ожидает отправки';
         }).finally(() => {sample.sending = false;});
     }, 1000);
+    return true;
 }
 
 // Initial shop deep-link: subsequent hash changes use the central vanilla-JS router.
@@ -520,6 +544,8 @@ function aniCoinMountEmbedControls() {
     }
     const box = modal.querySelector('#watchModalContent .player-box');
     const iframe = box?.querySelector('iframe');
+    if (aniCoinEmbedSession && (aniCoinEmbedSession.iframe !== iframe ||
+        aniCoinEmbedSession.owner !== currentUser?.authUserId)) aniCoinStopEmbed();
     if (!iframe || !currentUser?.authUserId) return;
     if (box.parentElement?.querySelector('[data-komi-embed-coins]')) return;
     const controls = document.createElement('div');
@@ -536,7 +562,7 @@ function aniCoinMountEmbedControls() {
     stop.setAttribute('data-komi-coin-embed-stop', '');
     const description = document.createElement('p');
     description.id = 'komi-embed-coin-status';
-    description.textContent = '1 AniCoin за 20 минут активного времени в открытом плеере. Внешний плеер не передаёт данные о паузах — останови учёт, если не смотришь.';
+    description.textContent = '1 AniCoin за каждые 20 минут. Во внешнем плеере нажмите «Начать учёт»: учитывается только время в открытой активной вкладке, а не события воспроизведения. При паузе нажмите «Остановить».';
     controls.append(button, stop, description);
     box.insertAdjacentElement('afterend', controls);
 }
@@ -550,8 +576,7 @@ function aniCoinInitEmbedControls() {
     document.addEventListener('click', event => {
         const begin = event.target.closest?.('[data-komi-coin-embed-start]');
         const end = event.target.closest?.('[data-komi-coin-embed-stop]');
-        if (begin) {
-            aniCoinStartEmbed();
+        if (begin && aniCoinStartEmbed()) {
             begin.hidden = true;
             const stop = begin.parentElement.querySelector('[data-komi-coin-embed-stop]');
             if (stop) stop.hidden = false;
