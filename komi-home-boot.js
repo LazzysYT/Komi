@@ -2,8 +2,8 @@
    CSP-safe external script in <head>; hydrated markup is switched on before paint. */
 (() => {
   'use strict';
-  const catalogRoute = location.pathname === '/catalog' || location.hash.toLowerCase() === '#catalog';
-  if (!catalogRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
+  const sectionRoute = /^\/(catalog|shop|partners|profile)$/.test(location.pathname) || /^#(catalog|shop|partners|profile)$/.test(location.hash.toLowerCase());
+  if (!sectionRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
       (location.hash && location.hash !== '#home') ||
       new URLSearchParams(location.search).has('anime'))) return;
 
