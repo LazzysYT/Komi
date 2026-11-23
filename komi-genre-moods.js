@@ -25,28 +25,55 @@
     return genresOf(anime).some(item => choices.has(norm(item)));
   }
 
+  // Small, stable genre thumbnails should never request 1280px hero art.
+  // The poster CDN helper only allows trusted public image origins.
+  const moodArtworkCache = new Map();
+  function compactArtwork(anime) {
+    if (typeof root.komiValidatePosterSource !== 'function' ||
+        typeof root.komiCachedPosterUrl !== 'function') return null;
+    for (const raw of [anime?.banner, anime?.poster, anime?.screenshots?.[0]]) {
+      const direct = root.komiValidatePosterSource(raw);
+      if (direct) return {src: root.komiCachedPosterUrl(direct, 360), direct};
+    }
+    return null;
+  }
+
   function render({ animeList = [], genre = 'Все', availableGenres = [], artwork }) {
     const items = Array.isArray(animeList) ? animeList : [];
     const genres = [...new Set([...availableGenres, ...MOODS.map(item => item[0])])];
-    const cards = MOODS.map(([name, description]) => {
+    const cards = MOODS.map(([name, description], index) => {
       const candidates = items.filter(anime => matches(anime, name) &&
         (anime.banner || anime.poster || (typeof anime.screenshots?.[0] === 'string')));
+      // Prefer artwork that can be served as a compact cached thumbnail.
+      // The selection is retained across catalog hydration/re-renders to avoid refetches.
       const quality = anime =>
-        (typeof anime.screenshots?.[0] === 'string' ? 6 : anime.banner ? 4 : 0) +
+        (compactArtwork(anime) ? 12 : 0) +
+        (typeof anime.screenshots?.[0] === 'string' ? 1 : 0) +
         (Number(anime.shikiRating) || 0) / 2;
       const sourceAnime = candidates.reduce((best, anime) =>
         !best || quality(anime) > quality(best) ? anime : best, null);
-      const screenshot = typeof sourceAnime?.screenshots?.[0] === 'string' ? sourceAnime.screenshots[0] : '';
-      const art = sourceAnime && typeof artwork === 'function'
-        ? artwork({ ...sourceAnime, banner: screenshot || sourceAnime.banner || sourceAnime.poster })
-        : '';
+      let art = moodArtworkCache.get(name);
+      if (!art && sourceAnime && typeof artwork === 'function') {
+        art = compactArtwork(sourceAnime);
+        if (!art) {
+          const screenshot = typeof sourceAnime.screenshots?.[0] === 'string'
+            ? sourceAnime.screenshots[0] : '';
+          art = {src: artwork({...sourceAnime, banner: screenshot || sourceAnime.banner || sourceAnime.poster}), direct: ''};
+        }
+        if (art?.src) moodArtworkCache.set(name, art);
+      }
       const selected = norm(genre) === norm(name) ||
         (name === 'Исэкай' && norm(genre) === 'исекай') ||
         (name === 'Ужасы' && norm(genre) === 'хоррор');
+      const fallback = art?.direct
+        ? ' data-poster-direct="' + escape(art.direct) + '" data-komi-onerror="komiCardPosterFallback(this)"'
+        : ' data-komi-onerror="this.style.display=\'none\'"';
       return '<button type="button" class="komi-mood-card' + (selected ? ' is-selected' : '') + '"' +
         ' data-komi-mood-genre="' + escape(name) + '" aria-pressed="' + selected + '"' +
         ' aria-label="Жанр ' + escape(name) + ': ' + escape(description) + '">' +
-        (art ? '<img class="komi-mood-art" src="' + escape(art) + '" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer" data-komi-onerror="this.style.display=\'none\'">' : '') +
+        (art?.src ? '<img class="komi-mood-art" src="' + escape(art.src) +
+          '" alt="" width="360" height="160" loading="eager" decoding="async" fetchpriority="' +
+          (index < 4 ? 'auto' : 'low') + '" referrerpolicy="no-referrer"' + fallback + '>' : '') +
         '<span class="komi-mood-gradient" aria-hidden="true"></span>' +
         '<span class="komi-mood-copy"><strong>' + escape(name) + '</strong><small>' + escape(description) + '</small></span></button>';
     }).join('');
