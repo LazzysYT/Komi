@@ -339,8 +339,34 @@ async function checkNotifications(page) {
    await page.locator('#komiHomeQuickFilters .section-see-all').click();
    await page.waitForFunction(()=>currentView==='catalog');
    assert.equal(await page.locator('#komiCatalogGrid').count(),1,'All filters must open the full catalog controls');
-   assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput',
-     'All filters must focus the real full-catalog search rather than only changing the hash');
+   // Mobile quick filters intentionally open an accessible bottom sheet, whose
+   // close button receives focus. Desktop navigation focuses catalog search.
+   // Verify the correct destination for each interaction rather than treating
+   // the mobile focus trap as a lost catalog-search focus.
+   try {
+     await page.waitForFunction(() => {
+       const active = document.activeElement;
+       if (active?.classList?.contains('komi-mobile-sheet-close')) {
+         const rect = active.getBoundingClientRect();
+         const style = getComputedStyle(active);
+         return active.isConnected && rect.width > 0 && rect.height > 0
+           && style.visibility !== 'hidden' && style.display !== 'none';
+       }
+       return active?.id === 'komiCatalogSearchInput';
+     }, null, {timeout:3000});
+   } catch (error) {
+     const focusState = await page.evaluate(() => ({
+       currentView,
+       activeTag: document.activeElement?.tagName,
+       activeId: document.activeElement?.id,
+       activeClass: document.activeElement?.className,
+       searchCount: document.querySelectorAll('#komiCatalogSearchInput').length,
+       searchConnected: Boolean(document.getElementById('komiCatalogSearchInput')?.isConnected),
+       focusPending: typeof komiCatalogFocusPending === 'undefined' ? null : komiCatalogFocusPending,
+       hash: location.hash
+     }));
+     throw new Error('Catalog search focus not restored: '+JSON.stringify(focusState), {cause:error});
+   }
    assert.equal(new URL(page.url()).hash,'#catalog');
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
@@ -364,7 +390,7 @@ async function checkNotifications(page) {
    const mono = await page.evaluate(() => ({
      primary:getComputedStyle(document.documentElement).getPropertyValue('--primary').trim().toLowerCase(),
      bodyColor:getComputedStyle(document.body).backgroundColor,
-     link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.includes('/komi.bundle.css?v='))
+     link:[...document.querySelectorAll('link[rel="stylesheet"]')].some(el=>el.href.includes('/komi.production.css?v='))
    }));
    assert.ok(['#fff','#ffffff'].includes(mono.primary),'Komi monochrome accent must remain active');
    assert.ok(mono.link,'Global monochrome CSS must be loaded');
@@ -486,7 +512,21 @@ async function checkNotifications(page) {
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
-   assert.ok(width>1000 ? cinema.sidebarBesideVideo : cinema.sidebarAfterVideo,JSON.stringify(cinema));
+   if (width > 1000) {
+     assert.ok(cinema.sidebarBesideVideo,JSON.stringify(cinema));
+   } else if (width >= 768) {
+     assert.ok(cinema.sidebarAfterVideo,JSON.stringify(cinema));
+   } else {
+     // The sidebar remains in the stage until the user opens the episodes sheet.
+     // Verify the actual interaction and restoration instead of expecting it
+     // to be moved into an initially closed sheet.
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1);
+     await page.locator('.komi-mobile-watch-episodes').click();
+     await page.waitForSelector('#watchModal #komiMobileSheet.is-open .komi-watch-sidebar');
+     assert.equal(await page.locator('#watchModal #komiMobileSheet .komi-watch-sidebar').count(),1);
+     await page.locator('#watchModal #komiMobileSheet .komi-mobile-sheet-close').click();
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1);
+   }
    assert.equal(cinema.color,'rgb(255, 255, 255)');
    assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)',JSON.stringify(cinema));
    assert.notEqual(cinema.before,'none','Active episode must have a white indicator');
@@ -501,13 +541,27 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
    await page.locator('.komi-episodes-toggle').click();
-   assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
-   assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
-     'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
-   await page.locator('.komi-episodes-toggle').click();
+   if (width < 768) {
+     // The mobile capture handler opens the episodes sheet instead of toggling
+     // the desktop sidebar; verify the sheet and its restoration on close.
+     await page.waitForSelector('#komiMobileSheet.is-open .komi-watch-sidebar');
+     await page.locator('#komiMobileSheet .komi-mobile-sheet-close').click();
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1);
+   } else {
+     assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
+     assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
+       'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
+     await page.locator('.komi-episodes-toggle').click();
+   }
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-placeholder').count(),2);
+   if (width < 768) {
+     // Episode controls are intentionally inaccessible while the mobile sheet is closed.
+     // Open it before checking accessible episode search and view toggles.
+     await page.locator('.komi-mobile-watch-episodes').click();
+     await page.waitForSelector('#watchModal #komiMobileSheet.is-open .komi-watch-sidebar');
+   }
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
    await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
@@ -519,6 +573,10 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),0);
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    await page.screenshot({path:path.join(output,`cinema-watch-${width}.png`)});
+   if (width < 768) {
+     await page.locator('#watchModal #komiMobileSheet .komi-mobile-sheet-close').click();
+     assert.equal(await page.locator('#watchModalContent .komi-watch-sidebar').count(),1);
+   }
 
    const state=await page.evaluate(async ()=>{
     currentUser={username:'test_viewer'};

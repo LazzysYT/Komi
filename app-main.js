@@ -824,6 +824,17 @@ async function loadDataFromCloud(attempt = 0) {
                 search.focus({preventScroll:false});
                 komiCatalogFocusPending = false;
             } else document.getElementById('mainContainer')?.scrollIntoView({block:'start'});
+            // The click's native focus handling can run after delegated navigation
+            // replaces the button. Restore focus on the next frame, not during
+            // the click dispatch, and never steal focus after leaving catalog.
+            requestAnimationFrame(() => {
+                if (currentView !== 'catalog') return;
+                const input = document.getElementById('komiCatalogSearchInput');
+                if (input && (komiCatalogFocusPending || document.activeElement === document.body)) {
+                    input.focus({preventScroll:false});
+                    komiCatalogFocusPending = false;
+                }
+            });
         }
         function komiHomeQuickFiltersMarkup() {
             const genreOptions = availableGenresList.filter(genre =>
@@ -4591,9 +4602,10 @@ async function loadDataFromCloud(attempt = 0) {
                 : null;
             const effectivePreference = availablePreference || preferredSource;
             const sourcePlan = KomiPlayerCore.selectPlaybackSource(sources, {
-                requestedSource: requestedSource !== null ? requestedSource :
-                    (!adFreeOnly && effectivePreference && Object.hasOwn(sources,effectivePreference)
-                        ? effectivePreference : null),
+                // Only an explicit current click is a requested source. A saved
+                // iframe preference must not override an available direct stream.
+                requestedSource,
+
                 preferredSource: effectivePreference,
                 adFreeOnly,
                 partnerPreferred: sources[KOMI_ANIVIBE_LABEL] ? KOMI_ANIVIBE_LABEL : null
