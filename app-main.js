@@ -156,11 +156,21 @@
         let searchHistory = safeParse(localStorage.getItem('komi_search_history'), ['Экшен', 'Романтика']);
         let siteStats = safeParse(localStorage.getItem('komi_stats'), { visits: 1420, views: 8900 });
 
-        function komiIsCatalogRoute() { return location.pathname === '/catalog' || location.hash.toLowerCase() === '#catalog'; }
-        let currentView = location.hash === '#premium' ? 'premium' : komiIsCatalogRoute() ? 'catalog' : location.hash === '#shop' ? 'shop' : location.hash === '#partners' ? 'partners' : 'home';
+        function komiRouteView() {
+            const path = location.pathname;
+            const hash = location.hash.toLowerCase();
+            for (const view of ['catalog','shop','partners','profile']) {
+                if (path === '/' + view || ((path === '/' || path === '/index.html') && hash === '#' + view)) return view;
+            }
+            if (hash === '#premium' && path === '/') return 'premium';
+            return 'home';
+        }
+        function komiIsCatalogRoute() { return komiRouteView() === 'catalog'; }
+        let currentView = komiRouteView();
         const komiSharedProfileQuery = new URLSearchParams(location.search).get('profile');
-        let profileTargetUser = location.hash === '#profile' && /^[A-Za-z0-9_.-]{1,80}$/.test(komiSharedProfileQuery || '') ? komiSharedProfileQuery : null;
-        if (profileTargetUser) currentView = 'profile';
+        let profileTargetUser = currentView === 'profile' && /^[A-Za-z0-9_.-]{1,80}$/.test(komiSharedProfileQuery || '') ? komiSharedProfileQuery : null;
+        // The own-profile route is rendered only after session restoration.
+        if (currentView === 'profile' && !profileTargetUser) currentView = 'home';
         let profileActiveTab = 'Просмотрено';
         let profilePageSection = 'overview';
         let profileCollectionSearchQuery = '';
@@ -1146,20 +1156,23 @@ async function loadDataFromCloud(attempt = 0) {
             if (currentView === 'catalog') komiStoreCatalogPosition();
             if (slideInterval) clearInterval(slideInterval);
             currentView = view;
-            const route = view === 'premium' ? '#premium' : view === 'shop' ? '#shop' : view === 'catalog' ? '#catalog' : view === 'partners' ? '#partners' : '';
-            const target = view === 'catalog' ? komiCatalogRoute() : '/' + route;
+            const route = ['shop','partners'].includes(view) ? '/' + view : view === 'premium' ? '/#premium' : '/';
+            const target = view === 'catalog' ? komiCatalogRoute() : route;
             if (location.pathname + location.search + location.hash !== target)
                 history.pushState(null, '', target);
+            document.documentElement.dataset.komiShopRoute = String(view === 'shop');
             render(); // render() already refreshes the header.
         }
 
         function openProfile(username) {
             const handle = String(username || currentUser?.username || '').trim();
             if (!handle) { openAuthModal('login'); return; }
+            if (currentView === 'catalog') komiStoreCatalogPosition();
             if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
+            document.documentElement.dataset.komiShopRoute = 'false';
             const isOwn = currentUser?.username === handle;
-            const route = isOwn ? '/#profile' : '/?profile=' + encodeURIComponent(handle) + '#profile';
+            const route = isOwn ? '/profile' : '/profile?profile=' + encodeURIComponent(handle);
             if (location.pathname + location.search + location.hash !== route) history.pushState(null, '', route);
             profileTargetUser = handle;
             render(); // header updates inside render()
@@ -1171,9 +1184,8 @@ async function loadDataFromCloud(attempt = 0) {
                 komiStatusFeedback('Не удалось подготовить ссылку на профиль.');
                 return;
             }
-            const link = new URL('/', location.origin);
+            const link = new URL('/profile', location.origin);
             link.searchParams.set('profile', handle);
-            link.hash = 'profile';
             try {
                 if (!navigator.clipboard?.writeText) throw new Error('Clipboard unavailable');
                 await navigator.clipboard.writeText(link.href);
@@ -3824,7 +3836,7 @@ async function loadDataFromCloud(attempt = 0) {
                 if (typeof aniCoinRequest === 'function') aniCoinRequest('read').catch(() => {});
                 loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
                 loadAccountNotifications().catch(error => console.warn('Уведомления:', error.message));
-                if (location.hash === '#profile' && !new URLSearchParams(location.search).get('profile')) { currentView = 'profile'; profileTargetUser = username; }
+                if (komiRouteView() === 'profile' && !new URLSearchParams(location.search).get('profile')) { currentView = 'profile'; profileTargetUser = username; }
                 saveData(); closeAuthModal(); render();
             } catch (error) {
                 console.error('Google session:', error);
@@ -5145,20 +5157,24 @@ async function loadDataFromCloud(attempt = 0) {
         setInterval(refreshKomiCatalogUpdates, 120000);
 
         function applyKomiHashRoute() {
-            const hash = location.hash.toLowerCase();
-            if ((komiIsCatalogRoute() || ['#shop','#profile','#partners','#home'].includes(hash) || (!hash && location.pathname === '/')) && document.getElementById('watchModal')?.classList.contains('active')) closeWatchModal();
-            if (hash === '#shop') {
-                if (typeof openAniCoinShop === 'function') openAniCoinShop();
-                else navigate('shop');
-            } else if (komiIsCatalogRoute()) {
+            const view = komiRouteView();
+            if (/^\/anime\/[1-9][0-9]{0,11}$/.test(location.pathname)) return;
+            if (document.getElementById('watchModal')?.classList.contains('active')) closeWatchModal();
+            document.documentElement.dataset.komiShopRoute = String(view === 'shop');
+            if (view === 'shop') {
+                if (currentView !== 'shop') {
+                    currentView='shop'; render();
+                    if (typeof openAniCoinShop === 'function') void openAniCoinShop(true);
+                }
+            } else if (view === 'catalog') {
                 komiReadCatalogUrl();
                 komiCatalogRestorePending = true;
                 const saved = komiCatalogSavedPosition();
                 if (saved && Number.isFinite(saved.visibleCount)) catalogVisibleCount = Math.max(komiCatalogPageSize(), Math.min(window.matchMedia?.('(max-width: 767px)').matches ? 240 : 2400, Math.ceil(saved.visibleCount / komiCatalogPageSize()) * komiCatalogPageSize()));
                 currentView='catalog'; render();
-            } else if (hash === '#partners') {
+            } else if (view === 'partners') {
                 if (currentView !== 'partners') { currentView='partners'; render(); }
-            } else if (hash === '#profile') {
+            } else if (view === 'profile') {
                 const sharedName = new URLSearchParams(location.search).get('profile');
                 if (/^[A-Za-z0-9_.-]{1,80}$/.test(sharedName || '')) {
                     if (currentView !== 'profile' || profileTargetUser !== sharedName) {
@@ -5170,14 +5186,22 @@ async function loadDataFromCloud(attempt = 0) {
                     profileTargetUser=currentUser.username;
                     if (currentView !== 'profile') { currentView='profile'; render(); }
                 } else openAuthModal('login');
-            } else if ((!hash || hash === '#home') && ['shop','catalog','profile','partners'].includes(currentView)) {
+            } else if (view === 'home' && ['shop','catalog','profile','partners'].includes(currentView)) {
                 komiStartupHomeCommitted = true;
                 currentView='home';
                 render();
             }
         }
-        window.addEventListener('hashchange', applyKomiHashRoute);
-        window.addEventListener('popstate', applyKomiHashRoute);
+        let komiLastHistoryRoute = '';
+        function komiHistoryChanged() {
+            const route = location.pathname + location.search + location.hash;
+            if (komiLastHistoryRoute === route) return;
+            komiLastHistoryRoute = route;
+            queueMicrotask(() => { komiLastHistoryRoute = ''; });
+            applyKomiHashRoute();
+        }
+        window.addEventListener('hashchange', komiHistoryChanged);
+        window.addEventListener('popstate', komiHistoryChanged);
 
         // Return visits paint the last complete PUBLIC home selection immediately.
         // Never read user progress/avatars from this cache; Supabase auth restores those.
@@ -5211,7 +5235,7 @@ async function loadDataFromCloud(attempt = 0) {
         }
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         queueKomiSessionRestore().finally(() => {
-            if (location.hash === '#profile') applyKomiHashRoute();
+            if (komiRouteView() === 'profile') applyKomiHashRoute();
         });
         // Restore the stored session when returning from browser back/forward cache.
         window.addEventListener('pageshow', event => {
