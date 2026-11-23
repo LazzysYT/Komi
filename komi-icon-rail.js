@@ -25,6 +25,7 @@
     if (view === 'premium' || hash === '#premium') return rail.querySelector('#sidePremiumBtn');
     if (view === 'shop' || hash === '#shop') return rail.querySelector('#sideShopBtn');
     if (view === 'catalog' || hash === '#catalog') return rail.querySelector('#sideCatalogBtn');
+    if (view === 'partners' || hash === '#partners') return rail.querySelector('#sidePartnersBtn');
     if (isLists) return rail.querySelector('#sideListsBtn');
     if (isProfile) return rail.querySelector('.komi-side-account');
     if (view === 'home' || (!view && !hash)) return rail.querySelector('#sideHomeBtn');
