@@ -87,6 +87,8 @@
         document.getElementById('komiWatchSourceSelect')?.value || '');
     if((match=/^toggleFavorite\('([0-9]{1,15})', 'Любимые'\)$/.exec(text)) && isId(match[1]))
       return ()=>toggleFavorite(match[1],'Любимые');
+    if((match=/^toggleHeroAnimeList\('([0-9]{1,15})'\)$/.exec(text)) && isId(match[1]))
+      return ()=>toggleHeroAnimeList(match[1]);
     if((match=/^setAnimeStatus\('([0-9]{1,15})', '([^']+)'\)$/.exec(text)) &&
       isId(match[1]) && allowedStatuses.has(match[2]))
       return ()=>setAnimeStatus(match[1],match[2]);
