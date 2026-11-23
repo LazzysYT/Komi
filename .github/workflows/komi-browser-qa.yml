@@ -6,7 +6,7 @@ permissions:
   contents: read
 concurrency:
   group: komi-browser-qa-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 jobs:
   browser:
     runs-on: ubuntu-latest
@@ -24,6 +24,8 @@ jobs:
           "$RUNNER_TEMP/komi-qa/node_modules/.bin/playwright" install --with-deps chromium
       - name: Generate original test video
         run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
           ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=320x180:rate=15 -t 18 -c:v libx264 -pix_fmt yuv420p -movflags +faststart "$RUNNER_TEMP/komi-qa.mp4"
       - name: Desktop and mobile browser checks
         run: |
