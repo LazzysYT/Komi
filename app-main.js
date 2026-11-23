@@ -1113,8 +1113,7 @@ async function loadDataFromCloud(attempt = 0) {
             const target = view === 'catalog' ? komiCatalogRoute() : '/' + route;
             if (location.pathname + location.search + location.hash !== target)
                 history.replaceState(history.state, '', target);
-            render();
-            renderHeaderUser();
+            render(); // render() already refreshes the header.
         }
 
         function openProfile(username) {
@@ -1126,8 +1125,7 @@ async function loadDataFromCloud(attempt = 0) {
             const route = isOwn ? '/#profile' : '/?profile=' + encodeURIComponent(handle) + '#profile';
             if (location.pathname + location.search + location.hash !== route) history.replaceState(null, '', route);
             profileTargetUser = handle;
-            render();
-            renderHeaderUser();
+            render(); // header updates inside render()
         }
 
         async function komiCopyProfileLink() {
@@ -4329,7 +4327,20 @@ async function loadDataFromCloud(attempt = 0) {
             const favs=userFavorites[currentUser.username]||{};
             const tastes={};
             animeList.forEach(a=>{if(statuses[a.id]||favs[a.id]) (a.genres||[]).forEach(g=>{tastes[g]=(tastes[g]||0)+1;});});
-            return animeList.filter(a=>!statuses[a.id]&&!favs[a.id]).map(a=>({anime:a,score:(a.genres||[]).reduce((n,g)=>n+(tastes[g]||0),0)*10+(Number(a.shikiRating)||0)})).sort((a,b)=>b.score-a.score).slice(0,7).map(x=>x.anime);
+            // Only seven results are shown. Keep the best seven in stable score
+            // order rather than allocating and sorting thousands of objects.
+            const best = [];
+            for (const anime of animeList) {
+                if (statuses[anime.id] || favs[anime.id]) continue;
+                const score = (anime.genres||[]).reduce((n,g)=>n+(tastes[g]||0),0)*10+
+                    (Number(anime.shikiRating)||0);
+                if (best.length === 7 && score <= best[6].score) continue;
+                let position = best.findIndex(item => score > item.score);
+                if (position === -1) position = best.length;
+                best.splice(position,0,{anime,score});
+                if (best.length > 7) best.pop();
+            }
+            return best.map(item=>item.anime);
         }
 
         function komiRecentMarkup(username, limit=6) {
