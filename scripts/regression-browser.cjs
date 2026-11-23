@@ -345,12 +345,14 @@ async function checkNotifications(page) {
    // the mobile focus trap as a lost catalog-search focus.
    try {
      await page.waitForFunction(() => {
-       const sheet = document.querySelector('.komi-mobile-sheet.is-open');
-       if (sheet && !sheet.hidden) {
-         return sheet.contains(document.activeElement)
-           && Boolean(sheet.querySelector('.komi-mobile-sheet-close'));
+       const active = document.activeElement;
+       if (active?.classList?.contains('komi-mobile-sheet-close')) {
+         const rect = active.getBoundingClientRect();
+         const style = getComputedStyle(active);
+         return active.isConnected && rect.width > 0 && rect.height > 0
+           && style.visibility !== 'hidden' && style.display !== 'none';
        }
-       return document.activeElement?.id === 'komiCatalogSearchInput';
+       return active?.id === 'komiCatalogSearchInput';
      }, null, {timeout:3000});
    } catch (error) {
      const focusState = await page.evaluate(() => ({
