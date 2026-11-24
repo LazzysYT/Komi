@@ -357,6 +357,12 @@
       node.remove();
     }
   }
+  function retainSection(next, existing) {
+    if (!next || !existing || next === existing) return;
+    const html = sectionMarkup.get(next);
+    if (html) sectionMarkup.set(existing,html);
+    next.replaceWith(existing);
+  }
   function afterRender(container) {
     const labels = new Map([
       ['Календарь серий','Актуальное расписание выхода эпизодов'],
@@ -386,5 +392,5 @@
       observer.observe(community);
     } else if (community && typeof IntersectionObserver !== 'function') root.KomiPublicLeaderboard?.mount(community);
   }
-  root.KomiHomeDiscovery = {render,patch,afterRender,recentProgress};
+  root.KomiHomeDiscovery = {render,patch,retainSection,afterRender,recentProgress};
 })(globalThis);
