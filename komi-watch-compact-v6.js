@@ -90,7 +90,16 @@
       }
     }
     // Keep mobile source and episode controls outside the hidden legacy deck.
-    const mobileDock = controls.querySelector('.komi-mobile-watch-actions');
+    let mobileDock = controls.querySelector('.komi-mobile-watch-actions');
+    if (!mobileDock && root.KomiMobileSheets) {
+      mobileDock = create('div','komi-mobile-watch-actions');
+      const dub = create('button','komi-mobile-watch-source','♫ Озвучка');
+      const episodes = create('button','komi-mobile-watch-episodes','☷ Серии');
+      for (const btn of [dub,episodes]) { btn.type='button'; btn.setAttribute('aria-haspopup','dialog'); btn.setAttribute('aria-controls','komiMobileSheet'); }
+      dub.addEventListener('click',()=>void root.KomiMobileSheets.openSource(dub));
+      episodes.addEventListener('click',()=>void root.KomiMobileSheets.openEpisodes(episodes));
+      mobileDock.append(dub,episodes);
+    }
     if (mobileDock) actions.prepend(mobileDock);
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
