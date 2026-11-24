@@ -574,3 +574,10 @@
   .komi-media-hub .komi-home-hero .komi-hero-video {transition:none !important;}
   .komi-media-hub .komi-home-hero .hero-dot.active::before{background:#fff !important;}
 }
+
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {
+  .komi-media-hub .komi-home-hero .hero-slide:is(.komi-hd-wide,.komi-hd-softwide) .komi-hub-hero-art,
+  .komi-media-hub .komi-home-hero .hero-slide .komi-hero-video {
+    translate:var(--komi-hero-x,0px) var(--komi-hero-y,0px);
+  }
+}
