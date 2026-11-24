@@ -320,6 +320,27 @@
     },true);
     const main = document.getElementById('mainContainer');
     if (main) new MutationObserver(tryPendingFilters).observe(main,{childList:true});
-    root.KomiMobileSheets = {openFilters,openSource,openEpisodes,close};
+    function ensureWatchDock() {
+        const content=document.getElementById('watchModalContent');
+        const sidebar=content?.querySelector('.komi-watch-sidebar');
+        const host=content?.querySelector('.komi-watch-quick-actions') || content?.querySelector('.komi-player-heading') || content?.querySelector('.komi-watch-controls');
+        if (!host || !sidebar || !mobile.matches) return;
+        let dock=content.querySelector('.komi-mobile-watch-actions');
+        if (!dock) {
+            dock=document.createElement('div');
+            dock.className='komi-mobile-watch-actions';
+            dock.append(button('♫ Озвучка','komi-mobile-watch-source'),button('☷ Серии','komi-mobile-watch-episodes'));
+            for(const item of dock.children) {
+                item.setAttribute('aria-haspopup','dialog');
+                item.setAttribute('aria-controls','komiMobileSheet');
+            }
+        }
+        if(dock.parentElement!==host)host.prepend(dock);
+        dock.hidden=false;
+    }
+    const watchContent=document.getElementById('watchModalContent');
+    if(watchContent) new MutationObserver(ensureWatchDock).observe(watchContent,{childList:true,subtree:true});
+    mobile.addEventListener?.('change',ensureWatchDock);
+    root.KomiMobileSheets = {openFilters,openSource,openEpisodes,close,ensureWatchDock};
     document.documentElement.classList.add('komi-mobile-sheets-ready');
 })(globalThis);
