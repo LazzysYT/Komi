@@ -5216,7 +5216,7 @@ async function komiLoadCatalogPages(attempt = 0) {
 
 
         async function refreshKomiCatalogUpdates() {
-            if (!_supabase || document.hidden || !catalogInitialLoadComplete || komiCatalogLoadPending || catalogRefreshInProgress) return;
+            if (!_supabase || document.hidden || navigator.onLine === false || !catalogInitialLoadComplete || komiCatalogLoadPending || catalogRefreshInProgress) return;
             catalogRefreshInProgress = true;
             const until = new Date().toISOString();
             try {
@@ -5224,17 +5224,42 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const pageSize = 100;
                 let lastUpdatedId = 0;
                 while (true) {
-                    const { data, error } = await _supabase.from('komi_catalog_cards')
-                        .select('shikimori_id,data,updated_at')
-                        .gte('updated_at', catalogRefreshSince)
-                        .lt('updated_at', until)
-                        .gt('shikimori_id', lastUpdatedId)
-                        .order('shikimori_id', { ascending: true })
-                        .limit(pageSize);
+                    const controller = new AbortController();
+                    let timer;
+                    let result;
+                    try {
+                        const request = _supabase.from('komi_catalog_cards')
+                            .select('shikimori_id,data,updated_at')
+                            .gte('updated_at', catalogRefreshSince)
+                            .lt('updated_at', until)
+                            .gt('shikimori_id', lastUpdatedId)
+                            .order('shikimori_id', { ascending: true })
+                            .limit(pageSize).abortSignal(controller.signal);
+                        result = await Promise.race([
+                            request,
+                            new Promise((_, reject) => {
+                                timer = setTimeout(() => {
+                                    reject(new Error('Превышено время обновления каталога'));
+                                    controller.abort();
+                                }, 12000);
+                            })
+                        ]);
+                    } finally { clearTimeout(timer); }
+                    const { data, error } = result;
                     if (error) throw error;
-                    rows.push(...(data || []));
-                    if (!data || data.length < pageSize) break;
-                    lastUpdatedId = data[data.length - 1].shikimori_id;
+                    if (!data?.length) break;
+                    rows.push(...data);
+                    const nextId = Number(data[data.length - 1].shikimori_id);
+                    if (!Number.isSafeInteger(nextId) || nextId <= lastUpdatedId)
+                        throw new Error('Некорректная пагинация обновлений');
+                    lastUpdatedId = nextId;
+                    if (data.length < pageSize) break;
+                }
+                // Most polls have no changes. Do not rebuild an index of the
+                // entire catalog just to confirm an empty incremental response.
+                if (!rows.length) {
+                    catalogRefreshSince = until;
+                    return;
                 }
                 let changed = false;
                 const indexById = new Map(animeList.map((item, index) => [String(item.id), index]));

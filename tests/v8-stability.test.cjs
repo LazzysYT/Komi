@@ -13,7 +13,7 @@ for (const id of ['notifBellBtn', 'komiFriendsMyTab']) {
   assert.match(html, new RegExp('id="' + id + '"[^>]*hidden'));
 }
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
-assert.match(html, /app-main\.js\?v=20261124-v8-stability1/);
+assert.match(html, /app-main\.js\?v=20261124-v8-stability3/);
 assert.match(html, /komi-home-boot\.js\?v=20261124-v8-stability1/);
 assert.equal((html.match(/class="anime-card komi-seo-card"/g) || []).length, 36);
 assert.doesNotMatch(html, /Добавить \/ Редактировать аниме/);
@@ -70,3 +70,8 @@ assert.match(community, /button.isConnected&&owner\(\)===uid/);
 assert.match(community, /featureButton\('Импорт списков','KomiImport'/);
 assert.match(community, /featureButton\('Anime Wrapped','KomiWrapped'/);
 console.log('V8 stability checks passed (syntax, guest markup, static SEO, timeout and empty roulette).');
+
+assert.match(app, /if \(!rows.length\) \{\s*catalogRefreshSince = until;\s*return;/);
+assert.match(app, /nextId <= lastUpdatedId/);
+assert.match(app, /document.hidden \|\| navigator.onLine === false \|\| !catalogInitialLoadComplete/);
+assert.equal((html.match(/rel="preconnect" href="https:\/\/wsrv\.nl"/g)||[]).length,1);
