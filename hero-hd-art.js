@@ -188,7 +188,11 @@
     }
   }
 
+  function bindVisible() {
+    document.querySelectorAll(SELECTOR+'.active').forEach(bindImage);
+  }
   function scan() {
+    bindVisible();
     const connection = root.navigator?.connection;
     if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '') || document.hidden) return;
     document.querySelectorAll(SELECTOR).forEach(slide => {
@@ -206,6 +210,9 @@
   }
 
   function scheduleScan() {
+    // The existing low-resolution picture must be visible immediately;
+    // HD metadata and network upgrades are deliberately deferred.
+    bindVisible();
     if (scanTimer !== null) return;
     scanTimer = setTimeout(() => {
       scanTimer = null;
