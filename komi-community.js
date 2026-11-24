@@ -21,12 +21,46 @@ function dialog(title){
  overlay.onclick=e=>{if(e.target===overlay)close.click()};close.focus();return body;
 }
 function card(into,title,description){const c=node('section',undefined,'komi-lab-card');c.append(node('h3',title),node('p',description||''));into.append(c);return c}
+const featureScripts = new Map();
+const featurePaths = Object.freeze({KomiImport:'/komi-import.js',KomiWrapped:'/komi-wrapped.js'});
+function loadFeature(name){
+ if(typeof window[name]?.open==='function')return Promise.resolve(window[name]);
+ if(featureScripts.has(name))return featureScripts.get(name);
+ const url=featurePaths[name];
+ if(!url)return Promise.reject(new Error('Unknown feature'));
+ const task=new Promise((resolve,reject)=>{
+  const script=node('script');
+  script.src=url;
+  script.async=true;
+  const cleanup=()=>{clearTimeout(timer);script.onload=script.onerror=null};
+  const fail=()=>{cleanup();script.remove();reject(new Error('Feature unavailable'))};
+  const timer=setTimeout(fail,12000);
+  script.onload=()=>{if(typeof window[name]?.open!=='function'){fail();return}cleanup();resolve(window[name])};
+  script.onerror=fail;
+  document.head.append(script);
+ }).catch(error=>{featureScripts.delete(name);throw error});
+ featureScripts.set(name,task);
+ return task;
+}
+function featureButton(title,name,out){
+ const button=btn(title,async()=>{
+  if(!signed())return;
+  const uid=owner();
+  button.disabled=true;notice(out,'Загрузка…');
+  try{
+   const feature=await loadFeature(name);
+   if(button.isConnected&&owner()===uid){notice(out,'');feature.open()}
+  }catch{if(button.isConnected)notice(out,'Не удалось загрузить. Попробуй ещё раз.')}
+  finally{button.disabled=false}
+ });
+ return button;
+}
 function hub(){
  const root=dialog('KomiAnime · Инструменты');
- const row=node('div',undefined,'komi-lab-row');
- row.append(btn('Импорт списков',()=>window.KomiImport?.open()),btn('Подборки',collections),
- btn('Anime Wrapped',()=>window.KomiWrapped?.open()),btn('Пригласить друга',referral));
- root.append(row);
+ const row=node('div',undefined,'komi-lab-row'),out=node('p',undefined,'komi-lab-status');
+ row.append(featureButton('Импорт списков','KomiImport',out),btn('Подборки',collections),
+ featureButton('Anime Wrapped','KomiWrapped',out),btn('Пригласить друга',referral));
+ root.append(row,out);
  card(root,'Всё в одном месте','Импорт Shikimori и MyAnimeList, подборки сообщества, карточка итогов и приглашения.');
  root.append(node('p','Рецензии и подписки на озвучку находятся в карточках аниме.','komi-lab-note'));
 }

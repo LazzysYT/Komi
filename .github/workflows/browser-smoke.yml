@@ -18,7 +18,7 @@ on:
 jobs:
   smoke:
     runs-on: ubuntu-24.04
-    timeout-minutes: 12
+    timeout-minutes: 20
     env:
       KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
       KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
@@ -45,29 +45,52 @@ jobs:
           node --check scripts/party-real-auth-e2e.cjs
           node --test scripts/*.test.cjs
           python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-preview.log 2>&1 &
+          failures=0
+          for script in \
+            scripts/v8-guest-browser.cjs \
+            scripts/shop-v3-browser.cjs \
+            scripts/regression-browser.cjs \
+            scripts/home-first-paint-browser.cjs \
+            scripts/resume-hydration-browser.cjs \
+            scripts/profile-collection-browser.cjs \
+            scripts/mobile-profile-browser.cjs \
+            scripts/saved-card-hydration-browser.cjs \
+            scripts/auth-oauth-browser.cjs \
+            scripts/search-suggestions-browser.cjs \
+            scripts/search-shortcut-browser.cjs \
+            scripts/cloud-folders-browser.cjs \
+            scripts/profile-markup-security-browser.cjs \
+            scripts/party-regression.cjs \
+            scripts/friend-party-browser.cjs \
+            scripts/player-ux-browser.cjs \
+            scripts/cloud-watched-browser.cjs \
+            scripts/mobile-tab-bar-browser.cjs \
+            scripts/mobile-bottom-sheets-browser.cjs \
+            scripts/browser-smoke.cjs \
+            scripts/static-anchors-browser.cjs \
+            scripts/static-ui-events-browser.cjs \
+            scripts/dynamic-ui-events-browser.cjs \
+            scripts/csp-enforcement-browser.cjs; do
+            echo "::group::Browser check $script"
+            if node "$script"; then
+              echo "PASSED $script"
+            else
+              echo "::error::FAILED $script"
+              failures=$((failures+1))
+            fi
+            echo "::endgroup::"
+          done
+          test "$failures" -eq 0
+      - name: Verify minified build in Chromium
+        if: ${{ !cancelled() }}
+        env:
+          KOMI_TEST_URL: http://127.0.0.1:8766
+        run: |
+          npx --yes --package=esbuild@0.25.12 --package=postcss@8.5.6 -- node scripts/minify-static.cjs
+          python3 -m http.server 8766 --bind 127.0.0.1 >/tmp/komi-minified.log 2>&1 &
+          node scripts/v8-critical-browser.cjs
+          node scripts/v8-guest-browser.cjs
           node scripts/shop-v3-browser.cjs
-          node scripts/regression-browser.cjs
-          node scripts/home-first-paint-browser.cjs
-          node scripts/resume-hydration-browser.cjs
-          node scripts/profile-collection-browser.cjs
-          node scripts/mobile-profile-browser.cjs
-          node scripts/saved-card-hydration-browser.cjs
-          node scripts/auth-oauth-browser.cjs
-          node scripts/search-suggestions-browser.cjs
-          node scripts/search-shortcut-browser.cjs
-          node scripts/cloud-folders-browser.cjs
-          node scripts/profile-markup-security-browser.cjs
-          node scripts/party-regression.cjs
-          node scripts/friend-party-browser.cjs
-          node scripts/player-ux-browser.cjs
-          node scripts/cloud-watched-browser.cjs
-          node scripts/mobile-tab-bar-browser.cjs
-          node scripts/mobile-bottom-sheets-browser.cjs
-          node scripts/browser-smoke.cjs
-          node scripts/static-anchors-browser.cjs
-          node scripts/static-ui-events-browser.cjs
-          node scripts/dynamic-ui-events-browser.cjs
-          node scripts/csp-enforcement-browser.cjs
       - name: Smoke-test actual komianime.online as a signed-out visitor
         timeout-minutes: 4
         run: node scripts/live-domain-smoke.cjs

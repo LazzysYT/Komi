@@ -26,13 +26,13 @@ fs.mkdirSync(output,{recursive:true});
    assert.ok(await page.locator('#shop .komi-shop-gift-button .komi-sticker-icon').count()>=85,
      'Gift icons use filled vector graphics');
    const bundleCSS=await page.evaluate(()=>{
-     const links=[...document.querySelectorAll('head link[rel="stylesheet"]')];
+     const links=[...document.querySelectorAll('head link[rel="stylesheet"]:not([data-komi-first-paint])')];
      return links.filter(x=>new URL(x.href).origin===location.origin).map(x=>new URL(x.href).pathname);
    });
    const expectedCSS=['/komi.production.css','/komi-pill-system.css'];
    if(bundleCSS.includes('/komi-icon-rail.css')) expectedCSS.push('/komi-icon-rail.css');
    expectedCSS.push('/komi-shop-v5.css');
-   expectedCSS.push('/button-animations.css','/komi-genre-moods.css');
+   expectedCSS.push('/button-animations.css','/komi-genre-moods.css','/komi-watch-compact-v6.css','/komi-hero-senku.css');
    assert.deepEqual(bundleCSS,expectedCSS,
      'Production CSS must preserve base, pill, and optional icon-rail cascade order');
    const geometry=await page.evaluate(()=>{

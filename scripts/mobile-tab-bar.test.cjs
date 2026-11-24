@@ -9,7 +9,7 @@ test('five core tabs and overflow access preserve original desktop controls',()=
   for(const label of ['sideHomeBtn','sideCatalogBtn','sideFriendsBtn','komiMobileMoreToggle','komiMobileMoreMenu'])
     assert.match(html,new RegExp('id="'+label+'"'));
   assert.match(html,/class="komi-side-button komi-side-account"/);
-  assert.match(html,/<script src="\.\/mobile-nav\.js"><\/script>/);
+  assert.match(html,/<script defer src="\.\/mobile-nav\.js(?:\?v=[\w-]+)?"><\/script>/);
   for(const action of ['shop','party','notifications','partners'])
     assert.match(html,new RegExp('data-komi-mobile-extra="'+action+'"'));
   for(const selector of ['.komi-side-links > :nth-child(3)', '.komi-side-links > :nth-child(6)',

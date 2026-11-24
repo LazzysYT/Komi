@@ -1,0 +1,135 @@
+name: Komi browser and Lighthouse QA
+on:
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: komi-browser-qa-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Regression tests
+        run: node tests/navigation-player-v72.test.cjs
+      - name: Install QA tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/komi-qa" --ignore-scripts --no-save playwright@1.65.1
+          "$RUNNER_TEMP/komi-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Generate original test video
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends ffmpeg
+          ffmpeg -hide_banner -loglevel error -f lavfi -i testsrc2=size=320x180:rate=15 -t 18 -c:v libx264 -pix_fmt yuv420p -movflags +faststart "$RUNNER_TEMP/komi-qa.mp4"
+      - name: Desktop and mobile browser checks
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/komi-qa/node_modules"
+          export KOMI_QA_VIDEO="$RUNNER_TEMP/komi-qa.mp4"
+          node tests/browser-smoke-v73.cjs
+  lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Install Lighthouse
+        run: npm install --prefix "$RUNNER_TEMP/komi-lh" --ignore-scripts --no-save lighthouse@12.8.2
+      - name: Audit current production (not unreleased PR)
+        run: |
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          test -n "$CHROME_PATH"
+          LH="$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse"
+          for mode in mobile desktop; do
+            args=()
+            if [ "$mode" = desktop ]; then args+=(--preset=desktop); fi
+            "$LH" https://komianime.online/ "${args[@]}" --chrome-flags="--headless --no-sandbox" --output=json --output-path="$RUNNER_TEMP/komi-$mode.json" --quiet
+          done
+          node - "$RUNNER_TEMP/komi-mobile.json" "$RUNNER_TEMP/komi-desktop.json" <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
+          const fs=require('node:fs');
+          console.log('## Production baseline — current deployed site only');
+          for (const file of process.argv.slice(2)) {
+            const r=JSON.parse(fs.readFileSync(file,'utf8'));
+            if(r.runtimeError) throw Error(r.runtimeError.message);
+            console.log(file.includes('mobile')?'Mobile':'Desktop',JSON.stringify({
+              url:r.finalDisplayedUrl||r.finalUrl,
+              fetchedAt:r.fetchTime,
+              performance:r.categories.performance.score,
+              accessibility:r.categories.accessibility.score,
+              bestPractices:r.categories['best-practices'].score,
+              seo:r.categories.seo.score,
+              lcp:r.audits['largest-contentful-paint'].numericValue,
+              cls:r.audits['cumulative-layout-shift'].numericValue,
+              tbt:r.audits['total-blocking-time'].numericValue
+            }));
+          }
+          NODE
+
+  candidate-lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Install Lighthouse
+        run: npm install --prefix "$RUNNER_TEMP/komi-lh" --ignore-scripts --no-save lighthouse@12.8.2
+      - name: Compare baseline and candidate using local static servers
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          git worktree add --detach "$RUNNER_TEMP/komi-baseline" "$BASE_SHA"
+          python3 "$GITHUB_WORKSPACE/tests/static-perf-server.py" 8765 --directory "$RUNNER_TEMP/komi-baseline" >"$RUNNER_TEMP/komi-base.log" 2>&1 &
+          BASE_PID=$!
+          python3 "$GITHUB_WORKSPACE/tests/static-perf-server.py" 8766 --directory "$GITHUB_WORKSPACE" >"$RUNNER_TEMP/komi-candidate.log" 2>&1 &
+          HEAD_PID=$!
+          trap 'kill "$BASE_PID" "$HEAD_PID" 2>/dev/null || true' EXIT
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          test -n "$CHROME_PATH"
+          LH="$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse"
+          for version in baseline candidate; do
+            port=8765
+            if [ "$version" = candidate ]; then port=8766; fi
+            curl --fail --silent --retry 5 --retry-connrefused "http://127.0.0.1:$port/" >/dev/null
+            for mode in mobile desktop; do
+              args=()
+              if [ "$mode" = desktop ]; then args+=(--preset=desktop); fi
+              "$LH" "http://127.0.0.1:$port/" "${args[@]}" --chrome-flags="--headless --no-sandbox" --output=json --output-path="$RUNNER_TEMP/komi-$version-$mode.json" --quiet
+            done
+          done
+          node - "$RUNNER_TEMP" <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
+          const fs=require('node:fs');
+          console.log('## Local compressed static comparison (not production Vercel)');
+          console.log('Same runner, gzip text assets for both versions, real public network dependencies; no account credentials or deployed API functions.');
+          for (const version of ['baseline','candidate']) for (const mode of ['mobile','desktop']) {
+            const r=JSON.parse(fs.readFileSync(process.argv[2]+'/komi-'+version+'-'+mode+'.json','utf8'));
+            if(r.runtimeError) throw Error(r.runtimeError.message);
+            console.log(version,mode,JSON.stringify({
+              performance: Math.round(r.categories.performance.score*100),
+              lcp: r.audits['largest-contentful-paint'].numericValue,
+              cls: r.audits['cumulative-layout-shift'].numericValue,
+              tbt: r.audits['total-blocking-time'].numericValue,
+              fcp: r.audits['first-contentful-paint'].numericValue
+            }));
+            if(version==='candidate') {
+              for (const key of ['largest-contentful-paint-element','lcp-breakdown-insight','render-blocking-resources','render-blocking-insight','bootup-time','mainthread-work-breakdown','unused-javascript','unused-css-rules','total-byte-weight','network-requests']) {
+                const audit=r.audits[key]; if(!audit) continue;
+                const items=(audit.details?.items||[]).slice(0,8).map(item=>({
+                  url:typeof item.url==='string'?item.url.split('?')[0]:undefined,
+                  node:item.node?.selector||item.node?.nodeLabel,
+                  label:item.label||item.groupLabel,
+                  duration:item.duration||item.total||item.wastedMs,
+                  bytes:item.totalBytes||item.transferSize||item.wastedBytes
+                }));
+                console.log('Diagnostic',mode,key,JSON.stringify({display:audit.displayValue,items}));
+              }
+            }
+          }
+          NODE

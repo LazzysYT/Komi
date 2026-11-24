@@ -1,0 +1,498 @@
+/* KomiAnime — full-bleed monochrome hero, isolated from the site's legacy cascade.
+   Loaded after komi.production.css, komi-pill-system.css and komi-icon-rail.css. */
+.komi-media-hub .komi-home-hero {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+}
+.komi-media-hub .komi-home-hero #heroSlider {
+  position: relative;
+  isolation: isolate;
+  width: 100%;
+  height: clamp(500px, 68vh, 660px) !important;
+  min-height: 500px !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: #09090B !important;
+}
+.komi-media-hub .komi-home-hero .hero-slides-wrapper {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.komi-media-hub .komi-home-hero .hero-slide {
+  position: absolute;
+  inset: 0;
+  display: none;
+  align-items: flex-start;
+  justify-content: flex-end;
+  box-sizing: border-box;
+  padding: 120px clamp(24px, 5vw, 72px) 86px !important;
+  overflow: hidden;
+  background: #09090B url("/anime-artwork.svg") center / cover no-repeat;
+}
+.komi-media-hub .komi-home-hero .hero-slide.active {
+  display: flex;
+  opacity: 1 !important;
+  animation: none !important; /* no first-paint flash */
+}
+.komi-media-hub .komi-home-hero .hero-slide .komi-hub-hero-art {
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center 20% !important;
+}
+.komi-media-hub .komi-home-hero .hero-slide::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, #09090B 0%, rgba(9,9,11,.85) 35%, rgba(9,9,11,.25) 68%, transparent 100%),
+    linear-gradient(0deg, #09090B 0%, rgba(9,9,11,.75) 24%, transparent 60%);
+}
+.komi-media-hub .komi-home-hero .hero-slide::after { content: none !important; }
+.komi-media-hub .komi-home-hero .komi-home-hero-content {
+  position: relative;
+  z-index: 2;
+  width: min(560px, 100%);
+  max-width: 560px;
+  min-width: 0;
+  margin: 0;
+}
+.komi-media-hub .komi-home-hero .komi-hub-title-wrap {
+  display: flex;
+  align-items: flex-end;
+  min-height: 0;
+}
+.komi-media-hub .komi-home-hero .komi-hub-title-logo {
+  display: block;
+  width: auto;
+  max-width: min(420px, 100%);
+  max-height: 110px;
+  object-fit: contain;
+  object-position: left bottom;
+}
+.komi-media-hub .komi-home-hero .komi-hub-title-wrap.has-logo:not(.logo-failed) .komi-hub-title-text {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+.komi-media-hub .komi-home-hero .komi-hub-title-wrap.logo-failed .komi-hub-title-logo { display: none; }
+.komi-media-hub .komi-home-hero .komi-hub-title-wrap.logo-failed .komi-hub-title-text {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  overflow: hidden !important;
+  clip: auto !important;
+  white-space: normal !important;
+}
+.komi-media-hub .komi-home-hero .hero-slide h1.komi-hub-title-text {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  margin: 0 !important;
+  color: #FFFFFF !important;
+  font: 800 clamp(28px, 3.6vw, 46px)/1.08 Inter, Manrope, sans-serif !important;
+  letter-spacing: -.035em;
+  text-shadow: 0 2px 20px rgba(0,0,0,.35);
+}
+.komi-media-hub .komi-home-hero .hero-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.komi-media-hub .komi-home-hero .hero-meta span,
+.komi-media-hub .komi-home-hero .hero-meta span:first-child {
+  display: inline-flex;
+  align-items: center;
+  min-height: 27px;
+  box-sizing: border-box;
+  padding: 5px 12px !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  background: rgba(255,255,255,.1) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font: 700 13px/1.15 Inter, sans-serif !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.komi-media-hub .komi-home-hero .komi-hub-genres {
+  margin: 11px 0 0;
+  color: #A1A1AA;
+  font: 600 13px/1.4 Inter, sans-serif;
+}
+.komi-media-hub .komi-home-hero .hero-slide p.komi-hub-description {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  max-width: 560px;
+  max-height: none;
+  margin: 12px 0 0 !important;
+  color: #D4D4D8 !important;
+  font: 400 14px/1.5 Inter, sans-serif !important;
+}
+.komi-media-hub .komi-home-hero .hero-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+.komi-media-hub .komi-home-hero .hero-buttons :is(a, button) {
+  box-sizing: border-box;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 15px 26px;
+  border-radius: 999px !important;
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
+}
+.komi-media-hub .komi-home-hero .hero-buttons svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+.komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-play {
+  padding: 15px 30px;
+  border: 1px solid #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #09090B !important;
+  font: 800 15px/1.2 Inter, sans-serif;
+  box-shadow: 0 6px 24px rgba(255,255,255,.18) !important;
+}
+.komi-media-hub .komi-home-hero .hero-buttons button.komi-hub-list,
+.komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-info {
+  border: 1px solid rgba(255,255,255,.08) !important;
+  background: rgba(255,255,255,.12) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: none !important;
+}
+.komi-media-hub .komi-home-hero .hero-buttons button.komi-hub-list {
+  font: 700 15px/1.2 Inter, sans-serif;
+}
+.komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-info {
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
+  padding: 0;
+}
+.komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-info svg {
+  width: 20px;
+  height: 20px;
+}
+.komi-media-hub .komi-home-hero .hero-buttons :is(a, button):hover {
+  transform: translateY(-2px) scale(1.03);
+  filter: none !important;
+}
+.komi-media-hub .komi-home-hero .hero-buttons :is(a, button):active {
+  transform: scale(.96);
+}
+.komi-media-hub .komi-home-hero .hero-buttons button.komi-hub-list[aria-pressed="true"] {
+  background: rgba(255,255,255,.19) !important;
+}
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls {
+  position: absolute;
+  right: clamp(20px, 4vw, 56px);
+  bottom: 28px;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.komi-media-hub .komi-home-hero .komi-hub-slide-count {
+  position: static !important;
+  display: inline-flex;
+  align-items: baseline;
+  gap: 4px;
+  color: #FFFFFF;
+  font: 800 13px/1 Inter, sans-serif;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.komi-media-hub .komi-home-hero .komi-hub-slide-count span {
+  color: #A1A1AA;
+  font-weight: 600;
+}
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-dots {
+  position: static !important;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  transform: none !important;
+}
+.komi-media-hub .komi-home-hero .hero-dot,
+.komi-media-hub .komi-home-hero .hero-dot.active {
+  display: grid;
+  place-items: center;
+  width: 24px !important;
+  min-width: 24px !important;
+  height: 32px !important;
+  min-height: 32px !important;
+  padding: 0;
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+.komi-media-hub .komi-home-hero .hero-dot::before,
+.komi-media-hub .komi-home-hero .hero-dot.active::before {
+  content: "";
+  display: block;
+  width: 24px;
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255,255,255,.25);
+  box-shadow: none;
+  transition: background-color .18s ease;
+}
+.komi-media-hub .komi-home-hero .hero-dot.active::before {
+  background: #FFFFFF !important;
+}
+.komi-media-hub .komi-home-hero .hero-dot:hover::before { background: rgba(255,255,255,.75); }
+.komi-media-hub .komi-home-hero .komi-hub-arrows { display: flex; align-items: center; gap: 8px; }
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow {
+  position: static !important;
+  display: grid;
+  place-items: center;
+  transform: none !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  padding: 0;
+  border: 1px solid rgba(255,255,255,.08) !important;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.1) !important;
+  color: #FFFFFF !important;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: none !important;
+  cursor: pointer;
+  transition: background-color .18s ease, scale .18s ease;
+}
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow:is(:hover,:focus-visible) {
+  background: rgba(255,255,255,.2) !important;
+  scale: 1.05;
+}
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow:active { scale: .96; }
+.komi-media-hub .komi-home-hero :is(.hero-slider-arrow, .hero-dot, .hero-buttons a, .hero-buttons button):focus-visible {
+  outline: 2px solid #FFFFFF !important;
+  outline-offset: 3px;
+}
+.komi-media-hub .komi-hub-resume {
+  top: 86px;
+  right: clamp(16px, 3vw, 48px);
+  left: auto;
+  bottom: auto;
+  background: rgba(22,22,26,.70);
+  border-color: rgba(255,255,255,.12);
+}
+@media (max-width: 768px) {
+  .komi-media-hub .komi-home-hero #heroSlider {
+    height: clamp(540px, 76svh, 690px) !important;
+    min-height: 540px !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-slide {
+    padding: 160px 22px 96px !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-slide::before {
+    background:
+      linear-gradient(90deg, rgba(9,9,11,.88) 0%, rgba(9,9,11,.42) 75%, rgba(9,9,11,.12) 100%),
+      linear-gradient(0deg, #09090B 0%, rgba(9,9,11,.82) 36%, transparent 84%);
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-slide-count { font-size: 12px; }
+  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls {
+    right: 18px;
+    bottom: 22px;
+    gap: 10px;
+  }
+  .komi-media-hub .komi-hub-resume {
+    top: 87px;
+    right: 12px;
+    max-width: 240px;
+  }
+}
+@media (max-width: 480px) {
+  .komi-media-hub .komi-home-hero .hero-slide { padding: 158px 17px 85px !important; }
+  .komi-media-hub .komi-home-hero .hero-slide h1.komi-hub-title-text {
+    font-size: clamp(28px, 8vw, 38px) !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-meta { gap: 6px; }
+  .komi-media-hub .komi-home-hero .hero-meta span,
+  .komi-media-hub .komi-home-hero .hero-meta span:first-child {
+    font-size: 11px !important;
+    padding: 5px 9px !important;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-genres { font-size: 12px; }
+  .komi-media-hub .komi-home-hero .hero-slide p.komi-hub-description {
+    font-size: 12px !important;
+    -webkit-line-clamp: 2;
+  }
+  .komi-media-hub .komi-home-hero .hero-buttons { gap: 8px; margin-top: 16px; }
+  .komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-play {
+    padding: 12px 18px !important;
+    min-height: 44px;
+    font-size: 13px;
+  }
+  .komi-media-hub .komi-home-hero .hero-buttons button.komi-hub-list {
+    padding: 12px 15px !important;
+    min-height: 44px;
+    font-size: 13px;
+  }
+  .komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-info {
+    width: 44px; height: 44px; min-width: 44px; min-height: 44px;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls { gap: 7px; right: 12px; bottom: 18px; }
+  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-dots { gap: 2px; }
+  .komi-media-hub .komi-home-hero .hero-dot,
+  .komi-media-hub .komi-home-hero .hero-dot.active { width: 17px !important; min-width: 17px !important; }
+  .komi-media-hub .komi-home-hero .hero-dot::before,
+  .komi-media-hub .komi-home-hero .hero-dot.active::before { width: 17px; }
+  .komi-media-hub .komi-home-hero .komi-hub-arrows { gap: 5px; }
+  .komi-media-hub .komi-hub-resume { width: min(220px, calc(100% - 24px)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .komi-media-hub .komi-home-hero .hero-buttons :is(a, button),
+  .komi-media-hub .komi-home-hero .hero-dot::before,
+  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow { transition: none !important; }
+}
+
+/* Keep first paint/no-JS SEO hero and loading skeleton visually consistent. */
+.komi-media-hub .komi-boot-hero,
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+  height: clamp(500px, 68vh, 660px) !important;
+  min-height: 500px !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background-color: #09090B !important;
+}
+.komi-media-hub .komi-boot-hero {
+  padding: clamp(24px, 5vw, 72px);
+  background: radial-gradient(ellipse at 75% 28%, #232328 0%, #111115 45%, #09090B 100%) !important;
+}
+.komi-media-hub .komi-boot-tag { display: none; }
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+  justify-content: flex-start;
+  align-items: flex-end;
+  padding: 120px clamp(24px, 5vw, 72px) 86px !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight::after {
+  background:
+    linear-gradient(90deg, #09090B 0%, rgba(9,9,11,.85) 35%, rgba(9,9,11,.25) 68%, transparent 100%),
+    linear-gradient(0deg, #09090B 0%, rgba(9,9,11,.75) 24%, transparent 60%);
+}
+.komi-media-hub .komi-seo-spotlight-art img {
+  object-fit: cover !important;
+  object-position: center 20% !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-copy { width: min(560px, 100%); }
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 {
+  margin: 0 0 14px !important;
+  font: 800 clamp(28px, 3.6vw, 46px)/1.08 Inter, Manrope, sans-serif !important;
+  color: #FFFFFF !important;
+}
+.komi-media-hub .komi-seo-spotlight-facts { gap: 8px; margin: 0 0 11px; }
+.komi-media-hub .komi-seo-spotlight-facts span,
+.komi-media-hub .komi-seo-spotlight-facts span:first-child {
+  padding: 5px 12px !important;
+  background: rgba(255,255,255,.1) !important;
+  border: 0 !important;
+  border-radius: 999px !important;
+  color: #FFFFFF !important;
+  font: 700 13px/1.15 Inter, sans-serif !important;
+}
+.komi-media-hub .komi-seo-spotlight-genres {
+  margin: 0 0 11px !important;
+  color: #A1A1AA !important;
+  font: 600 13px/1.4 Inter, sans-serif !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight p:not(.komi-seo-spotlight-genres) {
+  margin: 0 !important;
+  color: #D4D4D8 !important;
+  font: 400 14px/1.5 Inter, sans-serif !important;
+  -webkit-line-clamp: 3;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 22px;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a.komi-seo-primary-link {
+  min-height: 48px;
+  padding: 15px 30px;
+  border: 1px solid #FFFFFF !important;
+  background: #FFFFFF !important;
+  color: #09090B !important;
+  font: 800 15px/1 Inter, sans-serif;
+  box-shadow: 0 6px 24px rgba(255,255,255,.18) !important;
+}
+.komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-actions a.komi-seo-info {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  min-height: 48px;
+  padding: 0;
+  border-radius: 50% !important;
+  background: rgba(255,255,255,.12) !important;
+  color: #FFFFFF !important;
+}
+.komi-media-hub .komi-seo-spotlight-actions svg { width: 18px; height: 18px; }
+.komi-media-hub .komi-home-hero .hero-slide:is(.komi-hd-wide,.komi-hd-softwide,.komi-hd-poster) .komi-hub-hero-art {
+  object-position: center 20% !important;
+}
+@media (max-width: 768px) {
+  .komi-media-hub .komi-boot-hero,
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+    height: clamp(540px, 76svh, 690px) !important;
+    min-height: 540px !important;
+  }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding: 160px 22px 96px !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight::after {
+    background:
+      linear-gradient(90deg, rgba(9,9,11,.88),rgba(9,9,11,.12)),
+      linear-gradient(0deg,#09090B,rgba(9,9,11,.82) 36%,transparent 84%);
+  }
+}
+@media (max-width: 480px) {
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding: 158px 17px 85px !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 { font-size: clamp(28px, 8vw, 38px) !important; }
+}

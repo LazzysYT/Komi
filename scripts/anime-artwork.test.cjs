@@ -15,11 +15,13 @@ test('animeArtwork is defined before the card renderer and reuses the safe poste
   const artwork=vm.runInNewContext('('+helper[0].trim()+')',{
     // Match the live high-resolution source path, rather than the older
     // preview-thumbnail helper, which is intended only for catalog cards.
+    currentView: 'home', window: {},
     komiSafeUrl(source) {
       if (!source || !String(source).startsWith('https://')) return '';
       return String(source);
     },
-    komiCachedPosterUrl(source) {
+    komiCachedPosterUrl(source, width) {
+      assert.equal(width,768);
       calls.push(source);
       return source;
     }

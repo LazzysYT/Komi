@@ -4,7 +4,7 @@ const vm=require('node:vm');
 const fs=require('node:fs');
 const path=require('node:path');
 const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
-const start=html.indexOf('async function loadDataFromCloud(');
+const start=html.indexOf('function loadDataFromCloud(');
 const end=html.indexOf('        async function saveAnimeToCloud()',start);
 assert.ok(start>=0&&end>start,'Unable to find catalog loader');
 const source=html.slice(start,end);
@@ -17,7 +17,8 @@ function fixture(secondValue){
  const second=secondValue===undefined?
    new Promise(resolve=>{resolveSecond=resolve;}):
    Promise.resolve(secondValue);
- const renders=[],errors=[],timers=[],calls=[];
+ const renders=[],errors=[],timers=new Map(),calls=[],signals=[];
+ let nextTimer=1;
  const context=vm.createContext({
    _supabase:{
       from(table){
@@ -25,12 +26,13 @@ function fixture(secondValue){
        if(table!=='komi_catalog_cards')throw Error('unexpected table '+table);
        const query={
          select(){return this;},gt(){return this;},order(){return this;},
-         limit(n){calls.push(n);return calls.length===1?Promise.resolve({data:first,error:null}):calls.length===2?second:Promise.resolve({data:[],error:null});}
+         limit(n){calls.push(n);return this;},
+         abortSignal(signal){signals.push(signal);return calls.length===1?Promise.resolve({data:first,error:null}):calls.length===2?second:Promise.resolve({data:[],error:null});}
        };
        return query;
       }
    },
-   animeList:[],catalogInitialLoadComplete:false,catalogInitialLoadFailed:false,komiCatalogRevision:0,
+   komiCatalogLoadPending:null,animeList:[],catalogInitialLoadComplete:false,catalogInitialLoadFailed:false,komiCatalogRevision:0,
    komiHomeCatalogReady:false,komiHomePreviewCatalog:null,currentView:'home',
    komiStoreReadyResume(){},
    window:{KomiHomeSnapshot:{write(){}}},komiAnimeYear:a=>a.year,komiCatalogType:a=>a.type,
@@ -38,12 +40,14 @@ function fixture(secondValue){
    userFriends:{},userNotifications:{},localStorage:{getItem(){return null;}},
    render(){renders.push({loaded:context.catalogInitialLoadComplete,count:context.animeList.length,ready:context.komiHomeCatalogReady})},
    updateNotificationsUI(){},
-   setTimeout(fn,ms){timers.push(ms);return 1;},
+   AbortController,
+   setTimeout(fn,ms){const id=nextTimer++;timers.set(id,{fn,ms});return id;},
+   clearTimeout(id){timers.delete(id);},
    console:{log(){},warn(){},error(e){errors.push(String(e));}},
    Date,Error
  });
  vm.runInContext(source,context);
- return {context,renders,calls,timers,errors,resolveSecond,run:()=>vm.runInContext('loadDataFromCloud()',context)};
+ return {context,renders,calls,timers,signals,errors,resolveSecond,run:()=>vm.runInContext('loadDataFromCloud()',context)};
 }
 
 test('the first 48 IDs load for catalog/search but never render a temporary home hero',async()=>{
@@ -71,5 +75,21 @@ test('failed later page preserves partial data while SEO first paint stays stabl
  assert.equal(x.context.catalogInitialLoadComplete,true);
  assert.equal(x.context.animeList.length,48);
  assert.ok(x.renders.every(result=>result.loaded && !result.ready));
- assert.deepEqual(x.timers,[2000]);
+ assert.deepEqual([...x.timers.values()].map(t=>t.ms),[2000]);
+});
+
+
+test('a stalled catalog page aborts after 12 seconds, retains the first page and retries',async()=>{
+ const x=fixture();
+ const pending=x.run();
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.equal(x.context.animeList.length,48);
+ const deadline=[...x.timers.values()].find(t=>t.ms===12000);
+ assert.ok(deadline,'Every page needs a deadline');
+ deadline.fn();
+ await pending;
+ assert.equal(x.signals[1].aborted,true);
+ assert.equal(x.context.animeList.length,48);
+ assert.equal(x.context.komiHomeCatalogReady,false);
+ assert.deepEqual([...x.timers.values()].map(t=>t.ms),[2000]);
 });

@@ -95,7 +95,7 @@ test('favorites cannot claim success for a local-only account', async () => {
   const context=vm.createContext({
     currentUser:{username:'legacy_user'}, userFavorites:favorites, _supabase:null,
     komiStatusFeedback:m=>messages.push(m), openAuthModal:()=>{throw Error('should show status instead')},
-    Error, Set
+    document:{querySelectorAll:()=>[]}, Error, Set
   });
   vm.runInContext(source,context);
   await vm.runInContext("toggleFavorite('12','Любимые')",context);

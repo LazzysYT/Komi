@@ -38,6 +38,7 @@ async function attachKomiMedia(video, raw, onError) {
             video.komiMediaFailed = true;
             video.komiHls = null;
             hls.destroy();
+            video.dispatchEvent(new Event('komi:hls-levels'));
             onError();
         };
         hls.on(Hls.Events.ERROR, (_, data) => {
@@ -61,6 +62,8 @@ async function attachKomiMedia(video, raw, onError) {
             }
             fail();
         });
+        const notifyLevels = () => { if (active()) video.dispatchEvent(new Event('komi:hls-levels')); };
+        for (const event of [Hls.Events.MANIFEST_PARSED,Hls.Events.LEVELS_UPDATED,Hls.Events.LEVEL_SWITCHED].filter(Boolean)) hls.on(event,notifyLevels);
         hls.loadSource(source.url);
         hls.attachMedia(video);
     } catch { if (video.isConnected && video.komiMediaToken === token) onError(); }

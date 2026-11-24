@@ -308,32 +308,39 @@
     });
     root.addEventListener('pagehide', () => close(false));
 
-    // Compose with the already installed V3/V4/monochrome mount chain.
-    if (typeof root.KomiPlayerUX?.mount === 'function') {
-        const existingMount = root.KomiPlayerUX.mount;
-        root.KomiPlayerUX.mount = function mobileSheetMount(settings = {}) {
-            const context = existingMount(settings);
-            const controls = context?.content?.querySelector('.komi-watch-controls');
-            const sidebar = context?.content?.querySelector('.komi-watch-sidebar');
-            const source = context?.content?.querySelector('#komiWatchSourceSelect');
-            if (!controls || !sidebar || !source) return context;
-            const dock = document.createElement('div');
-            dock.className = 'komi-mobile-watch-actions';
-            const dub = button('♫ Озвучка', 'komi-mobile-watch-source');
-            dub.setAttribute('aria-haspopup','dialog');
-            dub.setAttribute('aria-controls','komiMobileSheet');
-            dub.addEventListener('click', () => void openSource(dub));
-            const episodes = button('☷ Серии', 'komi-mobile-watch-episodes');
-            episodes.setAttribute('aria-haspopup','dialog');
-            episodes.setAttribute('aria-controls','komiMobileSheet');
-            episodes.addEventListener('click', () => void openEpisodes(episodes));
-            dock.append(dub,episodes);
-            controls.prepend(dock);
-            return context;
-        };
-    }
+    // The dock is part of the base player HTML, independent of enhancement
+    // mount order. Delegated handlers survive episode changes.
+    document.addEventListener('click', event => {
+        const trigger=event.target.closest?.('#watchModal :is(.komi-mobile-watch-source,.komi-mobile-watch-episodes)');
+        if (!trigger || !watchReady()) return;
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        if (trigger.classList.contains('komi-mobile-watch-source')) void openSource(trigger);
+        else void openEpisodes(trigger);
+    },true);
     const main = document.getElementById('mainContainer');
     if (main) new MutationObserver(tryPendingFilters).observe(main,{childList:true});
-    root.KomiMobileSheets = {openFilters,openSource,openEpisodes,close};
+    function ensureWatchDock() {
+        const content=document.getElementById('watchModalContent');
+        const sidebar=content?.querySelector('.komi-watch-sidebar');
+        const host=content?.querySelector('.komi-watch-quick-actions') || content?.querySelector('.komi-player-heading') || content?.querySelector('.komi-watch-controls');
+        if (!host || !sidebar || !mobile.matches) return;
+        let dock=content.querySelector('.komi-mobile-watch-actions');
+        if (!dock) {
+            dock=document.createElement('div');
+            dock.className='komi-mobile-watch-actions';
+            dock.append(button('♫ Озвучка','komi-mobile-watch-source'),button('☷ Серии','komi-mobile-watch-episodes'));
+            for(const item of dock.children) {
+                item.setAttribute('aria-haspopup','dialog');
+                item.setAttribute('aria-controls','komiMobileSheet');
+            }
+        }
+        if(dock.parentElement!==host)host.prepend(dock);
+        dock.hidden=false;
+    }
+    const watchContent=document.getElementById('watchModalContent');
+    if(watchContent) new MutationObserver(ensureWatchDock).observe(watchContent,{childList:true,subtree:true});
+    mobile.addEventListener?.('change',ensureWatchDock);
+    root.KomiMobileSheets = {openFilters,openSource,openEpisodes,close,ensureWatchDock};
     document.documentElement.classList.add('komi-mobile-sheets-ready');
 })(globalThis);

@@ -40,6 +40,16 @@
     }
     return selected;
   }
+  async function projectInChunks(cards) {
+    if (!Array.isArray(cards) || cards.length > MAX_RECORDS) return [];
+    const selected=[];
+    for(let offset=0;offset<cards.length;offset+=256) {
+      selected.push(...project(cards.slice(offset,offset+256)));
+      // Yield between small batches instead of monopolizing the UI thread.
+      if (offset+256<cards.length) await new Promise(resolve=>root.setTimeout(resolve,0));
+    }
+    return selected;
+  }
   function open() {
     if (!root.indexedDB) return Promise.resolve(null);
     if(opening)return opening;
@@ -73,7 +83,7 @@
           record.savedAt>Date.now()+60000 || Date.now()-record.savedAt>TTL ||
           !Array.isArray(record.items) || record.items.length<48 ||
           record.items.length>MAX_RECORDS) return null;
-      const cleaned=project(record.items);
+      const cleaned=await projectInChunks(record.items);
       return cleaned.length===record.items.length ? cleaned : null;
     } catch { return null; }
   }
@@ -86,7 +96,7 @@
           root.requestIdleCallback(resolve,{timeout:2500});
         else root.setTimeout(resolve,0);
       });
-      const items=project(cards);
+      const items=await projectInChunks(cards);
       if(items.length!==cards.length)return false;
       const db=await open();
       if(!db)return false;

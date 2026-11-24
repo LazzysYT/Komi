@@ -36,21 +36,21 @@ test('public profile route and clipboard URL use the same canonical account hand
   const ctx = {
     currentUser: {username:'owner'}, slideInterval:null, currentView:'home',
     profileTargetUser:null, location:{pathname:'/',search:'',hash:'',origin:'https://komianime.online'},
-    history:{replaceState:(_a,_b,r)=>{route=r}}, render:()=>{},renderHeaderUser:()=>{},
+    history:{pushState:(_a,_b,r)=>{route=r}}, render:()=>{},renderHeaderUser:()=>{},
     window:{komiViewedProfileName:'other_user'},
     navigator:{clipboard:{writeText:async t=>{copied=t}}},
     komiStatusFeedback:t=>{feedback=t},
-    URL, encodeURIComponent, document:{}, openAuthModal:()=>{}, clearInterval:()=>{}
+    URL, encodeURIComponent, document:{documentElement:{dataset:{}}}, openAuthModal:()=>{}, clearInterval:()=>{}
   };
   vm.runInNewContext(source[0], ctx);
   ctx.openProfile('other_user');
-  assert.equal(route, '/?profile=other_user#profile');
+  assert.equal(route, '/profile?profile=other_user');
   assert.equal(ctx.profileTargetUser, 'other_user');
   route = '';
   ctx.openProfile('owner');
-  assert.equal(route, '/#profile');
+  assert.equal(route, '/profile');
   await ctx.komiCopyProfileLink();
-  assert.equal(copied, 'https://komianime.online/?profile=other_user#profile');
+  assert.equal(copied, 'https://komianime.online/profile?profile=other_user');
   assert.match(feedback, /скопирована/);
   assert.match(code, /sharedName = new URLSearchParams\(location\.search\)\.get\('profile'\)/);
   assert.match(code, /!new URLSearchParams\(location\.search\)\.get\('profile'\)/);

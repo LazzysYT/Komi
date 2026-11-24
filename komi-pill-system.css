@@ -344,3 +344,25 @@ body:has(#store-filters) :is(.topbar a.btn,.studio-button,.studio-action,.store-
     grid-row: 3 !important;
   }
 }
+
+/* V7.1: shared dialog controls, without altering the player or profile artwork. */
+.komi-media-hub .modal-overlay:not(#watchModal) .modal-content {
+  background-color:#131316!important;border:1px solid rgba(255,255,255,.09)!important;
+  border-radius:24px!important;
+}
+.komi-media-hub .modal-overlay:not(#watchModal) .modal-content :is(.btn-secondary,.btn-glow-secondary,.btn-glow,.form-control,button[type="submit"]) {
+  font-family:Manrope,Inter,sans-serif!important;min-height:42px;box-sizing:border-box;
+}
+.komi-media-hub .modal-overlay:not(#watchModal) .modal-content :is(.form-control,textarea.form-control) {
+  background:#19191d!important;border-color:#303036!important;border-radius:14px!important;
+}
+.komi-media-hub .modal-overlay:not(#watchModal) .modal-content :is(button[type="submit"],.btn-glow,.btn-secondary,.btn-glow-secondary) {
+  border-radius:999px!important;
+}
+.komi-media-hub .modal-overlay:not(#watchModal) .modal-close {
+  display:grid;place-items:center;line-height:1;padding:0;border-radius:50%!important;
+  width:40px;min-width:40px;height:40px;min-height:40px;background:#242429!important;
+  border-color:#39393e!important;color:#fff!important;
+}
+@media(max-width:600px){.komi-media-hub .modal-overlay:not(#watchModal) .modal-content{border-radius:18px!important;}}
+@media(prefers-reduced-motion:reduce){.komi-media-hub .modal-content :is(button,a,input,select){transition:none!important;}}

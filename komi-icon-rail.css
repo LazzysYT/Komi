@@ -562,3 +562,11 @@ html.komi-home-booting body.komi-media-hub #mainContainer > .komi-boot-shell {
 @media (prefers-reduced-motion: reduce) {
   .komi-boot-line, .komi-boot-pill, .komi-boot-cards span { animation: none; }
 }
+
+/* The public hero is the exact hydrated layout, not the legacy SEO layout. */
+.komi-boot-real-hero{display:none}
+html.komi-home-boot-preview .komi-boot-real-hero{display:block}
+html.komi-home-boot-preview .komi-boot-shell>.komi-boot-hero{display:none}
+html.komi-home-boot-preview .komi-boot-real-hero .hero-slide.active .komi-hub-hero-art{opacity:1!important}
+/* A skeleton never needs continuous repaints while the page hydrates. */
+.komi-boot-line,.komi-boot-pill,.komi-boot-cards span{animation:none!important}

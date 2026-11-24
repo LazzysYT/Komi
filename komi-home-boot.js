@@ -2,12 +2,51 @@
    CSP-safe external script in <head>; hydrated markup is switched on before paint. */
 (() => {
   'use strict';
-  if (!/^\/(?:index\.html)?$/.test(location.pathname) ||
+  // Start font CSS without making the first screen depend on a remote stylesheet.
+  document.addEventListener('load', event => {
+    if (event.target?.id === 'komi-font-css' || event.target?.matches?.('link[data-komi-deferred-style]')) {
+      event.target.media = 'all';
+      if (event.target.dataset?.komiDeferredStyle === 'base') {
+        // Full stylesheet includes the same rules in their original order.
+        // Once ready, discard the temporary first-paint stylesheet.
+        document.querySelector('link[data-komi-first-paint]')?.remove();
+      }
+    }
+  }, true);
+  // Shop-only rules stay nonblocking on the homepage; retain their original
+  // cascade position and activate immediately when entering the shop.
+  const ensureShopStyle=()=>{
+    if (/^\/(?:catalog|shop|partners|profile)$/.test(location.pathname) || /^#(?:catalog|shop|partners|profile)$/.test(location.hash.toLowerCase())) {
+      const base=document.querySelector('link[data-komi-deferred-style="base"]');
+      if (base) base.media='all';
+    }
+    if (location.pathname==='/shop'||location.hash.toLowerCase()==='#shop') {
+      const link=document.querySelector('link[data-komi-deferred-style="shop"]');
+      if (link) link.media='all';
+    }
+  };
+  const styleObserver=new MutationObserver(()=>{ensureShopStyle();if(document.querySelector('link[data-komi-deferred-style="shop"]'))styleObserver.disconnect();});
+  styleObserver.observe(document.head,{childList:true});
+  window.addEventListener('popstate',ensureShopStyle);
+  window.addEventListener('hashchange',ensureShopStyle);
+  document.addEventListener('DOMContentLoaded',ensureShopStyle,{once:true});
+  const sectionRoute = /^\/(catalog|shop|partners|profile)$/.test(location.pathname) || /^#(catalog|shop|partners|profile)$/.test(location.hash.toLowerCase());
+  if (!sectionRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
       (location.hash && location.hash !== '#home') ||
-      new URLSearchParams(location.search).has('anime')) return;
+      new URLSearchParams(location.search).has('anime'))) return;
 
   const html = document.documentElement;
   html.classList.add('komi-home-booting');
+  if (!sectionRoute) {
+    html.classList.add('komi-home-boot-preview');
+    const src = document.querySelector('meta[name="komi-first-hero"]')?.content;
+    if (src && src.startsWith('https://wsrv.nl/?url=')) {
+      const preload = document.createElement('link');
+      preload.rel = 'preload'; preload.as = 'image'; preload.href = src;
+      preload.fetchPriority = 'high'; preload.referrerPolicy = 'no-referrer';
+      document.head.append(preload);
+    }
+  }
   let observer = null;
   let timer = null;
   let done = false;
@@ -15,7 +54,7 @@
   function finish() {
     if (done) return;
     done = true;
-    html.classList.remove('komi-home-booting');
+    html.classList.remove('komi-home-booting','komi-home-boot-preview');
     if (observer) observer.disconnect();
     if (timer !== null) clearTimeout(timer);
   }
@@ -48,7 +87,8 @@
     observe();
   }
   // If a script or network request fails, restore the navigable SEO fallback.
-  timer = setTimeout(finish, 20000);
+  // A slow or unavailable JS/CDN must not hide the real, navigable HTML for 20 seconds.
+  timer = setTimeout(finish, 5000);
   window.addEventListener('hashchange', () => {
     if (location.hash && location.hash !== '#home') finish();
   });

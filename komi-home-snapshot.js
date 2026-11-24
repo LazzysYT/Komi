@@ -38,40 +38,46 @@
   function featured(catalog, yearFn, now = Date.now()) {
     if (!Array.isArray(catalog) || typeof yearFn !== 'function') return [];
     const currentYear = new Date(now).getFullYear();
-    const candidates = catalog.filter(a => validId(a) &&
-      (safeUrl(a.banner) || safeUrl(a.poster)) &&
-      year(a, yearFn) >= 2000 && year(a, yearFn) <= currentYear &&
-      score(a) > 0);
-    const available = candidates.filter(a => episodeCount(a) > 0 && score(a) >= 7);
+    const candidates = [];
+    for (const a of catalog) {
+      if (!validId(a) || !(safeUrl(a.banner) || safeUrl(a.poster))) continue;
+      const y=year(a,yearFn), rating=score(a);
+      if (y<2000 || y>currentYear || rating<=0) continue;
+      candidates.push({anime:a,year:y,rating,count:episodeCount(a),id:Number(id(a))});
+    }
+    const available = candidates.filter(a => a.count > 0 && a.rating >= 7);
     const eligible = available.length >= 5 ? available :
-      candidates.filter(a => score(a) >= 7);
+      candidates.filter(a => a.rating >= 7);
     const sorted = (eligible.length ? eligible : candidates).sort((a,b) =>
-      year(b, yearFn) - year(a, yearFn) || score(b) - score(a) ||
-      Number(id(a)) - Number(id(b)));
-    return sorted.slice(0,5);
+      b.year - a.year || b.rating - a.rating || a.id - b.id);
+    return sorted.slice(0,5).map(a=>a.anime);
   }
   function sample(catalog, yearFn, typeFn, now = Date.now()) {
     if (!Array.isArray(catalog) || typeof yearFn !== 'function' || typeof typeFn !== 'function') return [];
     const all = catalog.filter(validId);
     if (!all.length) return [];
-    const byScore = (a, b) => score(b) - score(a);
-    const byYear = (a, b) => year(b, yearFn) - year(a, yearFn) || byScore(a,b);
-    const byUpdated = (a, b) => updated(b) - updated(a);
-    const byPopular = (a, b) =>
-      ((updated(b) > now - 30*86400000 ? 2 : 0) + score(b)/10) -
-      ((updated(a) > now - 30*86400000 ? 2 : 0) + score(a)/10);
-    const thisYear = new Date(now).getFullYear();
-    const groups = [
-      featured(all, yearFn, now),
-      all.filter(a => safeUrl(a.poster)).sort(byYear).slice(0, 7),
-      all.filter(a => score(a) > 0).sort(byScore).slice(0, 18),
-      all.filter(a => year(a, yearFn) === thisYear).sort((a,b) => byUpdated(a,b) || byScore(a,b)).slice(0, 18),
-      all.filter(a => score(a) > 0).sort(byPopular).slice(0, 18),
-      all.filter(a => updated(a) > 0).sort(byUpdated).slice(0, 18),
-      all.filter(a => type(a, typeFn) === 'Сериал' && episodeCount(a) > 0 &&
-        episodeCount(a) <= 13 && score(a) >= 7).sort(byScore).slice(0, 18),
-      all.filter(a => type(a, typeFn) === 'Фильм').sort(byScore).slice(0, 14),
-      all.slice(0, 22)
+    // Compute expensive date/year/type keys once, not for each sort comparison.
+    const recentThreshold=now-30*86400000;
+    const metadata=all.map(anime=>{
+      const date=updated(anime), rating=score(anime);
+      return {anime,year:year(anime,yearFn),type:type(anime,typeFn),
+        count:episodeCount(anime),rating,date,popular:(date>recentThreshold?2:0)+rating/10};
+    });
+    const byScore=(a,b)=>b.rating-a.rating;
+    const byYear=(a,b)=>b.year-a.year||byScore(a,b);
+    const byUpdated=(a,b)=>b.date-a.date;
+    const best=(items,compare,limit)=>items.sort(compare).slice(0,limit).map(x=>x.anime);
+    const thisYear=new Date(now).getFullYear();
+    const groups=[
+      featured(all,yearFn,now),
+      best(metadata.filter(a=>safeUrl(a.anime.poster)),byYear,7),
+      best(metadata.filter(a=>a.rating>0),byScore,18),
+      best(metadata.filter(a=>a.year===thisYear),(a,b)=>byUpdated(a,b)||byScore(a,b),18),
+      best(metadata.filter(a=>a.rating>0),(a,b)=>b.popular-a.popular,18),
+      best(metadata.filter(a=>a.date>0),byUpdated,18),
+      best(metadata.filter(a=>a.type==='Сериал'&&a.count>0&&a.count<=13&&a.rating>=7),byScore,18),
+      best(metadata.filter(a=>a.type==='Фильм'),byScore,14),
+      all.slice(0,22)
     ];
     const seen = new Set(), picked = [];
     for (const group of groups) for (const item of group) {

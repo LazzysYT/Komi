@@ -680,7 +680,7 @@
 /* Watch v6.3 — artwork fallback, single-line status and two brand accents. */
 #watchModal .komi-episode-list .komi-episode-preview.komi-episode-thumb {
   position:relative!important;display:block!important;overflow:hidden!important;
-  flex:0 0 82px!important;width:82px!important;max-width:82px!important;height:48px!important;
+  flex:0 0 88px!important;width:88px!important;max-width:88px!important;height:auto!important;aspect-ratio:16/9!important;
   border-radius:8px!important;background:linear-gradient(135deg,#343434,#181818)!important;
   filter:none!important;isolation:isolate;
 }
@@ -747,3 +747,57 @@
   #watchModal #komiAnimeComments .komi-comments-actions button[type="submit"] {padding-inline:10px!important;font-size:12px!important}
   #watchModal #komiAnimeComments .komi-comments-form:has(.komi-comments-actions small) {grid-template-columns:32px minmax(0,1fr)!important}
 }
+
+/* Preserve readable captions and keyboard focus across compact controls. */
+#watchModal .komi-episode-list .komi-list-label {min-width:0!important;overflow-wrap:anywhere;}
+#watchModal .komi-episode-list .komi-list-label small {white-space:normal!important;line-height:1.35!important;}
+#watchModal :is(.komi-watch-quick-actions button,.komi-watch-quick-actions summary,.komi-episode-number):focus-visible {outline:2px solid #ddd!important;outline-offset:2px!important;}
+@media(max-width:600px){#watchModal .player-wrapper .komi-next-countdown{right:10px!important;bottom:60px!important;}}
+
+/* V7.1: independent episode view controls and non-obstructive sharing. */
+#watchModal .komi-watch-quick-actions > .komi-cinema-share {
+  flex:0 0 42px!important;width:42px!important;height:42px!important;
+  padding:0!important;display:grid!important;place-items:center!important;font-size:20px!important;
+}
+#watchModal .komi-watch-sidebar .komi-episode-view-toggle {
+  display:flex!important;align-items:center!important;gap:4px!important;
+  border:1px solid #2b2b30!important;background:#101013!important;
+  border-radius:999px!important;padding:4px!important;margin:8px 0!important;width:max-content!important;max-width:100%!important;
+}
+#watchModal .komi-watch-sidebar .komi-episode-view-toggle button {
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  padding:7px 13px!important;min-height:34px!important;border-radius:999px!important;
+  border:1px solid transparent!important;background:transparent!important;color:#a6a6ad!important;font:700 12px/1.2 Manrope,Inter,sans-serif!important;
+}
+#watchModal .komi-watch-sidebar .komi-episode-view-toggle button[aria-pressed="true"] {
+  background:#2b2b30!important;color:#fff!important;border-color:#39393e!important;
+}
+#watchModal .komi-watch-quick-actions .komi-deck-menu > :is(.komi-cinema-toolbar,.komi-player-notice,.komi-watch-source) {
+  display:flex;flex-direction:column;gap:8px;min-width:0;width:100%;
+}
+#watchModal .komi-watch-quick-actions .komi-deck-menu :is([hidden],.komi-player-notice[hidden],.komi-quality-control[hidden],button[hidden]) {display:none!important;}
+#watchModal .komi-watch-quick-actions .komi-deck-menu :is(select,input) {max-width:100%;min-width:0;}
+@media(max-width:600px){#watchModal .komi-watch-quick-actions > .komi-cinema-share {flex-basis:40px!important;width:40px!important;height:40px!important;}}
+
+/* Preserve one-tap access to mobile episode/source sheets after compact layout. */
+@media(max-width:767px){#watchModal .komi-watch-quick-actions>.komi-mobile-watch-actions{display:flex!important;flex:1 0 100%!important;min-width:0;width:100%!important;gap:8px!important}#watchModal .komi-watch-quick-actions>.komi-mobile-watch-actions>button{flex:1 1 0;min-width:0;justify-content:center;padding-inline:10px!important}}
+
+/* Delay layout and painting of distant shelves without hiding or removing them. */
+@supports(content-visibility:auto){.komi-home-discovery>.komi-home-shelf:not(.komi-home-continue),.komi-home-discovery>.komi-feature-section,.komi-home-discovery>.komi-home-browse-footer{content-visibility:auto;contain-intrinsic-size:auto 340px}}
+@media(max-width:767px){@supports(content-visibility:auto){.komi-home-discovery>.komi-home-shelf:not(.komi-home-continue),.komi-home-discovery>.komi-feature-section{contain-intrinsic-size:auto 300px}}}
+
+/* Reserve shelf geometry until the real cards approach the viewport. */
+.komi-home-rail-pending{min-height:280px;background:none;}
+.komi-home-rail-pending::before{content:'';display:block;flex:1;min-width:0;min-height:240px;border-radius:16px;background:#141417;}
+@media(max-width:767px){.komi-home-rail-pending{min-height:245px}.komi-home-rail-pending::before{min-height:220px}}
+
+/* Use the dedicated episodes sheet on phones, with one desktop toggle. */
+@media(max-width:767px){#watchModal .komi-watch-quick-actions:has(.komi-mobile-watch-actions)>.komi-episodes-toggle{display:none!important}}
+/* Recovery gets its own grid row only while visible; normal layout stays unchanged. */
+#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])){grid-template-rows:auto auto auto auto auto!important}
+#watchModal #komiPlayerRecovery:not([hidden]){grid-column:1!important;grid-row:4!important;position:relative;max-width:100%;min-width:0}
+#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > #komiAnimeComments{grid-row:5!important}
+#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:1 / span 5!important}
+#watchModal.komi-episodes-collapsed .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:6!important}
+@media(max-width:1050px){#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:6!important}}
+#watchModal #komiPlayerRecovery[hidden]{display:none!important}

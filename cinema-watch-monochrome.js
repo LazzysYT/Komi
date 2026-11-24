@@ -69,7 +69,9 @@
     // They must not be hidden inside the closed overflow menu.
     if (menu.children.length) { more.append(menu); right.append(more); }
     const note = find('.komi-cinema-action-status');
+    const mobileDock = controls.querySelector('.komi-mobile-watch-actions');
     controls.replaceChildren(left, right);
+    if (mobileDock) controls.prepend(mobileDock);
     if (note) controls.append(note);
     stage.append(controls);
     if (recovery) stage.append(recovery);

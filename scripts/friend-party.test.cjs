@@ -36,5 +36,5 @@ test('friend room UI reads server-filtered rooms and uses textContent rather tha
   assert.match(js,/protectedFriendList\.idsByName/);
   assert.match(app,/window\.KomiFriendRooms\?\.refresh\(\)/);
   assert.match(html,/<section id="komiFriendRoomsSection"[^>]*hidden>/);
-  assert.match(html,/<script src="\.\/friend-party\.js"><\/script>/);
+  assert.match(html,/<script defer src="\.\/friend-party\.js(?:\?v=[\w-]+)?"><\/script>/);
 });

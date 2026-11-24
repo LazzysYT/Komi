@@ -13,8 +13,11 @@
   const MISSING_TTL = 60 * 60 * 1000;
   const cache = new Map();
   const pending = new Set();
+  const retryAfter = new Map();
   let fetching = false;
   let scanTimer = null;
+  let firstVisibleId = '';
+  let userSelectedSlide = false;
 
   function trustedAniListImage(raw) {
     try {
@@ -90,29 +93,51 @@
       const picture = new Image();
       picture.decoding = 'async';
       picture.referrerPolicy = 'no-referrer';
-      picture.onload = () => resolve({
+      let settled = false;
+      const finish = result => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timer);
+        picture.onload = picture.onerror = null;
+        resolve(result);
+      };
+      const timer = setTimeout(() => {
+        finish(null);
+        picture.removeAttribute('src');
+      }, 3500);
+      picture.onload = () => finish({
         url, width: picture.naturalWidth, height: picture.naturalHeight
       });
-      picture.onerror = () => resolve(null);
+      picture.onerror = () => finish(null);
       picture.src = url;
     });
   }
 
   async function applyArtwork(slide, entry) {
     const img = bindImage(slide);
-    if (!img) return;
+    if (!img || !slide.classList.contains('active')) return;
+    // Do not replace the initial already-visible artwork with a second large
+    // image. Upgrade when the visitor selects a different slide; keep the
+    // first artwork stable instead of triggering a late LCP and extra download.
+    if (!userSelectedSlide && String(slide.dataset.komiAnimeId||'')===firstVisibleId) return;
     const still = safeStill(slide.dataset.komiHeroStill);
     const originalPoster = safeStill(img.dataset.posterDirect);
     const signature = [entry.banner, still, entry.cover, originalPoster].join('|');
     if (img.dataset.komiHeroChecked === signature) return;
     img.dataset.komiHeroChecked = signature;
+    const stillActive = () => {
+      if (!img.isConnected || img.dataset.komiHeroChecked !== signature) return false;
+      if (slide.classList.contains('active') && !document.hidden) return true;
+      delete img.dataset.komiHeroChecked;
+      return false;
+    };
 
     // Prefer the largest real widescreen image (banner or anime screenshot).
     // At 900-1199px, slight softening prevents visible upscaling artifacts.
     let bestLandscape = null;
     for (const url of new Set([entry.banner, still].filter(Boolean))) {
       const result = await preflight(url);
-      if (!img.isConnected || img.dataset.komiHeroChecked !== signature) return;
+      if (!stillActive()) return;
       if (result && result.width >= 900 && result.height > 0 &&
           result.width / result.height >= 1.55 &&
           (!bestLandscape || result.width > bestLandscape.width)) {
@@ -120,7 +145,7 @@
       }
     }
     if (bestLandscape) {
-      if (img.src !== bestLandscape.url) img.src = bestLandscape.url;
+      if (stillActive() && img.src !== bestLandscape.url) img.src = bestLandscape.url;
       return;
     }
 
@@ -129,13 +154,13 @@
     let bestPortrait = null;
     for (const url of new Set([entry.cover, originalPoster].filter(Boolean))) {
       const result = await preflight(url);
-      if (!img.isConnected || img.dataset.komiHeroChecked !== signature) return;
+      if (!stillActive()) return;
       if (result && result.width >= 480 && result.height > result.width * 1.05 &&
           (!bestPortrait || result.width > bestPortrait.width)) {
         bestPortrait = result;
       }
     }
-    if (bestPortrait && bestPortrait.width > (img.naturalWidth || 0) + 90 &&
+    if (stillActive() && bestPortrait && bestPortrait.width > (img.naturalWidth || 0) + 90 &&
         img.src !== bestPortrait.url) {
       img.src = bestPortrait.url;
     }
@@ -163,24 +188,31 @@
           ' Page(page:1,perPage:5) {' +
           ' media(type:ANIME,idMal_in:$ids) {' +
           ' idMal isAdult bannerImage coverImage { extraLarge } } } }';
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), 6000);
         try {
           const response = await fetch(API, {
             method: 'POST',
             headers: {'Content-Type':'application/json', Accept:'application/json'},
             body: JSON.stringify({query, variables:{ids:batch.map(Number)}}),
-            credentials: 'omit'
+            credentials: 'omit',
+            signal: controller.signal
           });
-          if (!response.ok) continue;
+          if (!response.ok) throw new Error('Hero artwork unavailable');
           const payload = await response.json();
           const results = payload?.data?.Page?.media;
-          if (!Array.isArray(results)) continue;
+          if (!Array.isArray(results)) throw new Error('Invalid artwork metadata');
           const byId = new Map(results.filter(item => item && !item.isAdult)
             .map(item => [String(item.idMal), item]));
           for (const id of batch) {
+            retryAfter.delete(id);
             apply(id, saveCached(id, byId.get(id)));
           }
         } catch {
-          // Keep the existing image when AniList is offline or rate-limited.
+          // Keep existing artwork and avoid repeat requests during provider outages.
+          for (const id of batch) retryAfter.set(id, Date.now() + 60000);
+        } finally {
+          clearTimeout(timer);
         }
       }
     } finally {
@@ -188,34 +220,57 @@
     }
   }
 
+  function bindVisible() {
+    document.querySelectorAll(SELECTOR+'.active').forEach(slide=>{
+      const id=String(slide.dataset.komiAnimeId||'');
+      if (!firstVisibleId) firstVisibleId=id;
+      bindImage(slide);
+    });
+  }
   function scan() {
-    const mobile = root.matchMedia?.('(max-width: 767px)').matches || false;
+    bindVisible();
+    const connection = root.navigator?.connection;
+    if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '') || document.hidden) return;
     document.querySelectorAll(SELECTOR).forEach(slide => {
       // On cellular, do not request high-resolution alternatives for slides
       // the visitor has not selected yet.
-      if (mobile && !slide.classList.contains('active')) return;
+      if (!slide.classList.contains('active')) return;
       bindImage(slide);
       const id = String(slide.dataset.komiAnimeId || '');
-      if (!/^[1-9]\d{0,9}$/.test(id)) return;
+      if (!/^[1-9]\d{0,9}$/.test(id) || (!userSelectedSlide && id===firstVisibleId)) return;
       const cached = getCached(id);
       if (cached) void applyArtwork(slide, cached);
-      else pending.add(id);
+      else if ((retryAfter.get(id) || 0) <= Date.now()) pending.add(id);
     });
     if (pending.size) void fetchPending();
   }
 
   function scheduleScan() {
+    // The existing low-resolution picture must be visible immediately;
+    // HD metadata and network upgrades are deliberately deferred.
+    bindVisible();
     if (scanTimer !== null) return;
     scanTimer = setTimeout(() => {
       scanTimer = null;
-      scan();
-    }, 100);
+      const connection = root.navigator?.connection;
+      if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
+      if (document.hidden) return;
+      if (typeof root.requestIdleCallback === 'function') root.requestIdleCallback(scan,{timeout:5000});
+      else scan();
+    }, 1800);
   }
 
-  root.KomiHeroArt = {scan};
+  function selectedSlide() {
+    userSelectedSlide=true;
+    scan();
+  }
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) scheduleScan();
+  });
+  root.KomiHeroArt = {scan,selectedSlide};
   const container = document.getElementById('mainContainer');
   if (container) {
     new MutationObserver(scheduleScan).observe(container, {childList:true, subtree:true});
-    scan();
+    scheduleScan();
   }
 })(window);

@@ -55,7 +55,7 @@ test('anime SEO handler validates IDs and escapes catalog text',async()=>{
     assert.doesNotMatch(res.body,/src="javascript:/);
     assert.match(res.body,/application\/ld\+json/);
     assert.match(res.body,/href="https:\/\/komianime\.online\/anime\/42#player"/);
-    assert.match(res.body,/src="\/anime-watch-bridge\.js"/);
+    assert.match(res.body,/src="\/anime-watch-bridge\.js(?:\?v=[\w.-]+)?"/);
     assert.match(res.body,/name="komi-anime-id" content="42"/);
     assert.doesNotMatch(res.body,/\?anime=42/);
     assert.match(res.body,/og:image" content="https:\/\/komianime\.online\/anime-artwork\.svg"/);

@@ -28,15 +28,14 @@
       new URLSearchParams(location.search).get('autoplay') === '1';
     if (!wantsPlayer) return;
 
-    try {
-      sessionStorage.setItem('komi_watch_deeplink_v1', id);
-    } catch {
-      const message = document.getElementById('komiSeoWatchNotice');
-      if (message) message.textContent = 'Не удалось автоматически открыть просмотр. Разрешите хранение данных сайта и повторите попытку.';
-      return;
+    const params = new URLSearchParams(location.search);
+    const destination = new URLSearchParams({anime:id});
+    const season = params.get('season'), episode = params.get('episode');
+    if (/^[1-9][0-9]{0,5}$/.test(season || '') && /^[1-9][0-9]{0,5}$/.test(episode || '')) {
+      destination.set('season',season); destination.set('episode',episode);
     }
-    // A same-tab handoff opens the existing native player without a public /?anime= URL.
-    window.location.replace('/');
+    // Temporary same-tab handoff; the main application restores the canonical path.
+    window.location.replace('/?' + destination.toString());
   }
   window.addEventListener('hashchange', openRequestedPlayer);
   openRequestedPlayer();

@@ -28,7 +28,7 @@ test('production CSP enforces external script boundaries instead of report-only'
   const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
   const app=fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
   assert.ok(app.length>100000);
-  assert.match(html,/<script src="\.\/app-main\.js(?:\?v=[\w-]+)?"><\/script>/);
+  assert.match(html,/<script defer src="\.\/app-main\.js(?:\?v=[\w-]+)?"><\/script>/);
   assert.doesNotMatch(html,/<script\s*>[\s\S]*?<\/script>/);
   assert.ok(directives['style-src'].includes('https://fonts.googleapis.com'));
   assert.ok(directives['font-src'].includes('https://fonts.gstatic.com'));

@@ -359,7 +359,7 @@ async function checkNotifications(page) {
      'All filters must reveal the real catalog filter panel');
    assert.equal(await page.locator('#komiCatalogGenre, #komiCatalogYear, #komiCatalogType, #komiCatalogSort').count(),4,
      'Advanced filters must retain all original filtering dimensions');
-   assert.equal(new URL(page.url()).hash,'#catalog');
+   assert.equal(new URL(page.url()).pathname,'/catalog');
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('#komiHomeQuickFilters');
 
@@ -370,13 +370,17 @@ async function checkNotifications(page) {
       episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
     catalogInitialLoadComplete=true;komiHomeCatalogReady=true;render();
    });
-   assert.match(await page.locator('.komi-hub-hero-kicker').textContent(), /<img data-komi-injected/);
+   assert.match(await page.locator('.hero-slide.active .komi-hub-genres').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    await page.evaluate(()=>{
      localStorage.setItem('komi_source_1','Embed');
      return openWatchModal('1');
    });
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
+   assert.equal(await page.locator('#watchModal .komi-watch-quick-actions > .komi-deck-more').count(),1,
+     'Compact player must mount exactly one overflow menu');
+   assert.equal(await page.locator('#watchModal .komi-deck-menu #komiPlayerRecovery').count(),0,
+     'Source recovery must not be trapped in a collapsed menu');
    assert.match(await page.locator('.crunchy-hero-info').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    const mono = await page.evaluate(() => ({
@@ -487,7 +491,7 @@ async function checkNotifications(page) {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
-     const heading=modal.querySelector('.watch-cinema-layout > .komi-player-heading').getBoundingClientRect();
+     const heading=stage.querySelector(':scope > .komi-player-heading').getBoundingClientRect();
      const sidebarNode=stage.querySelector('.komi-watch-sidebar');
      const sidebar=sidebarNode.getBoundingClientRect();
      const sidebarHidden=getComputedStyle(sidebarNode).display==='none';
@@ -496,7 +500,7 @@ async function checkNotifications(page) {
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       titleGap:player.top-heading.bottom,sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
+       titleGap:heading.top-player.bottom,sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
        background:active.backgroundColor,before:getComputedStyle(episode,'::before').content,
@@ -508,25 +512,27 @@ async function checkNotifications(page) {
    assert.equal(cinema.stageDisplay,'grid');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
    // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
-   assert.ok(width>1000 ? cinema.sidebarBesideVideo : (cinema.sidebarHidden || cinema.sidebarAfterVideo),JSON.stringify(cinema));
+   assert.ok(width>1050 ? cinema.sidebarBesideVideo : (cinema.sidebarHidden || cinema.sidebarAfterVideo),JSON.stringify(cinema));
    assert.equal(cinema.color,'rgb(255, 255, 255)');
-   assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)',JSON.stringify(cinema));
-   assert.notEqual(cinema.before,'none','Active episode must have a white indicator');
+   assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)' || (cinema.background==='rgba(255, 69, 79, 0.1)' && cinema.border==='rgb(255, 69, 79)'),JSON.stringify(cinema));
+   assert.notEqual(cinema.before,'none','Active episode must have a visible indicator');
    assert.notEqual(cinema.after,'none','Episode progress must remain visible');
-   await page.waitForSelector('.komi-episodes-toggle');
+   await page.waitForSelector(width<=767 ? '.komi-mobile-watch-episodes' : '.komi-episodes-toggle');
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
+   assert.equal(await page.locator('.komi-watch-rail .komi-rail-bell, .komi-watch-rail [aria-label="Уведомления"]').count(),0,'Guest watch rail must not expose notifications');
    assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),true);
    assert.equal(await page.locator('.komi-native-hud').count(),1);
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
    assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
-   await page.locator('.komi-episodes-toggle').click();
    if (width <= 767) {
+     await page.locator('.komi-mobile-watch-episodes').click();
      await page.locator('#komiMobileSheet.is-open .komi-watch-sidebar').waitFor();
      assert.equal(await page.locator('#komiMobileSheetTitle').textContent(),'Список серий');
    } else {
+     await page.locator('.komi-episodes-toggle').click();
      assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'false');
      assert.equal(await page.locator('.komi-watch-sidebar').getAttribute('aria-hidden'),null,
        'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
@@ -534,7 +540,7 @@ async function checkNotifications(page) {
    }
    const view = page.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
-   assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-placeholder').count(),2);
+   assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-thumb').count(),2);
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
    await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
@@ -567,6 +573,12 @@ async function checkNotifications(page) {
    assert.equal(state.index,1,'Progress on the old second row still belongs to the combined first episode');
    await page.getByText('Не удалось загрузить видео.',{exact:true}).waitFor();
    assert.equal(await playback.getByRole('slider',{name:'Позиция видео'}).isDisabled(),true);
+   const recoveryLayout = await page.evaluate(()=>{
+     const recovery=document.querySelector('#komiPlayerRecovery').getBoundingClientRect();
+     const actions=document.querySelector('.komi-watch-quick-actions').getBoundingClientRect();
+     return {recoveryTop:recovery.top,actionsBottom:actions.bottom};
+   });
+   assert.ok(recoveryLayout.recoveryTop>=recoveryLayout.actionsBottom-1,JSON.stringify(recoveryLayout));
    await page.getByRole('button',{name:'Повторить загрузку'}).click();
    await page.waitForFunction(()=>!window.komiFailedTestVideo.isConnected && !!document.getElementById('animeVideoPlayer'));
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');

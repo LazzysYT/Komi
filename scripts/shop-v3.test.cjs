@@ -134,7 +134,7 @@ test('shop layout overrides the site-wide sticky header and keeps categories in 
  assert.match(css,/position:relative!important/);
  assert.match(css,/\.sv3-category-tabs\{[\s\S]*?flex-wrap:nowrap/);
  assert.match(css,/\.sv3-product-grid\{[\s\S]*?grid-template-columns:repeat\(auto-fit/);
- assert.match(html,/komi\.production\.css\?v=20261122h/);
+ assert.match(html,/komi\.production\.css\?v=20261124-v8-critical8/);
 });
 test('shop avatars match verified Premium GIF rather than stale normal photo',()=>{
  const start=core.indexOf('function aniCoinCurrentProfileAvatar(');

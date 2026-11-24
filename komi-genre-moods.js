@@ -17,12 +17,23 @@
   const norm = value => String(value || '').trim().toLocaleLowerCase('ru-RU');
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const genresOf = anime => Array.isArray(anime?.genres) ? anime.genres : [anime?.genre].filter(Boolean);
-  const aliasesOf = genre => MOODS.find(([name, , aliases]) => norm(name) === norm(genre))?.[2] || [genre];
+  const moodAliases = new Map(MOODS.map(([name, , aliases]) => [norm(name),new Set(aliases.map(norm))]));
+  const normalizedGenres = new WeakMap();
 
   function matches(anime, genre) {
     if (!genre || genre === 'Все') return true;
-    const choices = new Set(aliasesOf(genre).map(norm));
-    return genresOf(anime).some(item => choices.has(norm(item)));
+    const key=norm(genre);
+    const choices=moodAliases.get(key) || new Set([key]);
+    if (!anime || typeof anime!=='object') return false;
+    const source=anime.genres, fallback=anime.genre;
+    let cached=normalizedGenres.get(anime);
+    // Catalog rows are replaced on refresh; also detect replaced genre arrays.
+    if (!cached || cached.source!==source || cached.fallback!==fallback ||
+        cached.length!==(source?.length||0)) {
+      cached={source,fallback,length:source?.length||0,values:genresOf(anime).map(norm)};
+      normalizedGenres.set(anime,cached);
+    }
+    return cached.values.some(item=>choices.has(item));
   }
 
   // Small, stable genre thumbnails should never request 1280px hero art.
@@ -38,7 +49,7 @@
     return null;
   }
 
-  function render({ animeList = [], genre = 'Все', availableGenres = [], artwork }) {
+  function render({ animeList = [], genre = 'Все', availableGenres = [], artwork, deferImages = false }) {
     const items = Array.isArray(animeList) ? animeList : [];
     const genres = [...new Set([...availableGenres, ...MOODS.map(item => item[0])])];
     const cards = MOODS.map(([name, description], index) => {
@@ -80,7 +91,7 @@
       return '<button type="button" class="komi-mood-card' + (selected ? ' is-selected' : '') + '"' +
         ' data-komi-mood-genre="' + escape(name) + '" aria-pressed="' + selected + '"' +
         ' aria-label="Жанр ' + escape(name) + ': ' + escape(description) + '">' +
-        (art?.src ? '<img class="komi-mood-art" src="' + escape(art.src) +
+        (art?.src ? '<img class="komi-mood-art" ' + (deferImages ? 'src="/anime-artwork.svg" data-komi-lazy-src="' : 'src="') + escape(art.src) +
           '" alt="" width="360" height="160" loading="lazy" decoding="async" fetchpriority="' +
           (index < 4 ? 'auto' : 'low') + '" referrerpolicy="no-referrer"' + fallback + '>' : '') +
         '<span class="komi-mood-gradient" aria-hidden="true"></span>' +

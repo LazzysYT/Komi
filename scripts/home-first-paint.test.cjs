@@ -77,7 +77,7 @@ test('public preview cache can be read immediately but expires and fails closed'
 });
 test('home never paints the first catalog batch and keeps SEO first paint without JS',()=>{
   assert.match(html,/class="anime-card komi-seo-card"/);
-  assert.match(html,/src="\.\/komi-home-snapshot\.js"/);
+  assert.match(html,/src="\.\/komi-home-snapshot\.js(?:\?v=[\w.-]+)?"/);
   assert.match(app,/if \(currentView !== 'home'\) render\(\)/);
   assert.match(app,/if \(!komiHomeCatalogReady && !komiHomePreviewCatalog\)/);
   assert.match(app,/animeList: komiHomeCatalogReady \? animeList : komiHomePreviewCatalog/);
