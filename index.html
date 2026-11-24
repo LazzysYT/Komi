@@ -138,7 +138,7 @@
   </div>
 
   <div class="komi-side-bottom">
-    <button type="button" id="notifBellBtn" class="komi-side-button komi-rail-bell"
+    <button type="button" id="notifBellBtn" class="komi-side-button komi-rail-bell" hidden style="display:none!important"
             data-komi-click="notifications" aria-controls="notifDropdown"
             aria-label="Уведомления" aria-expanded="false">
       <svg class="komi-rail-svg" viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
@@ -152,13 +152,13 @@
 
     <!-- Profile stays visible at the bottom of desktop and mobile navigation. -->
     <button type="button" class="komi-side-button komi-side-account" data-komi-click="profile"
-            aria-label="Профиль">
+            aria-label="Войти">
       <span id="sidebarAvatarIcon" class="komi-rail-avatar">
         <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true">
           <path d="M12 12.1a4.7 4.7 0 1 0 0-9.4 4.7 4.7 0 0 0 0 9.4ZM3 21.1a9 9 0 0 1 18 0 .9.9 0 0 1-.9.9H3.9a.9.9 0 0 1-.9-.9Z"/>
         </svg>
       </span>
-      <span class="komi-rail-tooltip" aria-hidden="true">Профиль</span>
+      <span class="komi-rail-tooltip" aria-hidden="true">Войти</span>
     </button>
 
     <!-- Keep IDs and inner elements: the app replaces notification content at runtime. -->
@@ -182,9 +182,9 @@
         <span class="online-counter" hidden><span class="online-dot" aria-hidden="true"></span><span id="onlineCountText" role="status" aria-live="polite"></span></span></button>
     <div id="komiFriendsBackdrop" class="komi-friends-backdrop" data-komi-click="friends-close"></div>
     <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" inert>
-        <div class="komi-friends-heading"><h2>Люди и друзья</h2><button class="komi-friends-close" data-komi-click="friends-close" aria-label="Закрыть">✕</button></div>
-        <div class="komi-friends-search"><span>⌕</span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." data-komi-input="friends-search" autocomplete="off" aria-label="Поиск по нику"></div>
-        <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" data-komi-click="friends-all">Все пользователи</button><button id="komiFriendsMyTab" data-komi-click="friends-following">Мои друзья</button></div>
+        <div class="komi-friends-heading"><h2>Люди и друзья</h2><button class="komi-friends-close" data-komi-click="friends-close" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+        <div class="komi-friends-search"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." data-komi-input="friends-search" autocomplete="off" aria-label="Поиск по нику"></div>
+        <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" data-komi-click="friends-all">Все пользователи</button><button id="komiFriendsMyTab" hidden style="display:none!important" data-komi-click="friends-following">Мои друзья</button></div>
         <section id="komiFriendRoomsSection" class="komi-friend-rooms-section" aria-label="Комнаты друзей" hidden>
             <div class="komi-friend-rooms-heading"><strong>Смотрят вместе</strong><button type="button" id="komiFriendRoomsRefresh">Обновить</button></div>
             <div id="komiFriendRoomsList" aria-live="polite" aria-relevant="additions text"></div>
@@ -214,7 +214,7 @@
                         <button type="button" data-komi-click="random">Случайное аниме</button>
                         <button type="button" data-komi-click="partners">Партнёры</button>
                         <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:14px;min-height:39px;padding:9px 14px;">✧ Komi Premium</a>
-                        <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true">◇</span><span id="komiHeaderAniCoinValue">—</span></button>
+                        <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 21 12 12 21 3 12Z"/></svg></span><span id="komiHeaderAniCoinValue">—</span></button>
                         <div id="userHeaderArea"><button type="button" class="nav-btn" data-komi-onclick="playSound(); openAuthModal('login')" aria-label="Войти или зарегистрироваться">Войти / Регистрация</button></div>
                     </div>
                 </details>
@@ -227,7 +227,7 @@
                     aria-label="Дополнительные разделы" hidden>
                     <button type="button" data-komi-mobile-extra="shop">Магазин AniCoin</button>
                     <button type="button" data-komi-mobile-extra="party">Смотреть с друзьями</button>
-                    <button type="button" data-komi-mobile-extra="notifications">Уведомления</button>
+                    <button type="button" data-komi-mobile-extra="notifications" hidden style="display:none!important">Уведомления</button>
                     <button type="button" data-komi-mobile-extra="partners">Партнёры</button>
                     <a class="btn-secondary" href="/premium.html" style="display:flex;justify-content:center;text-decoration:none;border-radius:13px;padding:12px;">✧ Komi Premium</a>
                     <button type="button" data-komi-click="random">Случайное аниме</button>
@@ -636,7 +636,7 @@
     <script defer src="./komi-premium-store.js?v=20261122d"></script>
     <script defer src="./komi-public-catalog-cache.js?v=20261124-perf-v77"></script>
     <script defer src="./komi-home-seed.js?v=20261124-v1"></script>
-    <script defer src="./app-main.js?v=20261124-v7hero"></script>
+    <script defer src="./app-main.js?v=20261124-v8-stability1"></script>
     <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
     <script defer src="./hero-hd-art.js?v=20261124-perf-v79"></script>
     <script defer src="./komi-hero-title.js?v=20261124-v7hero"></script>
