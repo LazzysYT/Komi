@@ -42,7 +42,7 @@
       '<p class="komi-home-subtitle">' + escape(subtitle) + '</p></div>' +
       '<button type="button" class="komi-home-all" ' + collectionAction(kind) +
       '>Смотреть все <span aria-hidden="true">↗</span></button></div>' +
-      '<div class="komi-home-rail">' + visible.map(renderCard).join('') + '</div></section>';
+      '<div class="komi-home-rail komi-home-rail-pending" aria-busy="true"><template data-komi-lazy-shelf>' + visible.map(renderCard).join('') + '</template></div></section>';
   }
   const genreOptions = [
     {name:'Экшен',subtitle:'Драки и погони',symbol:'↗',choices:['Экшен']},
@@ -363,7 +363,50 @@
     if (html) sectionMarkup.set(existing,html);
     next.replaceWith(existing);
   }
+  // Explicit viewport loading avoids Chromium's large native lazy-image
+  // lookahead competing with the hero for mobile bandwidth.
+  let viewportObserver = null;
+  const pendingViewport = new Set();
+  function activate(node) {
+    if (node.matches('.komi-home-rail-pending')) {
+      const template = node.querySelector('template[data-komi-lazy-shelf]');
+      if (template) { node.append(template.content); template.remove(); }
+      node.classList.remove('komi-home-rail-pending');
+      node.removeAttribute('aria-busy');
+      observeViewport(node);
+    } else if (node.matches('img[data-komi-lazy-src]')) {
+      const source=node.dataset.komiLazySrc;
+      delete node.dataset.komiLazySrc;
+      if (source) {node.loading='eager';node.src=source;}
+    }
+  }
+  function forgetViewport(node) {
+    pendingViewport.delete(node);
+    viewportObserver?.unobserve(node);
+  }
+  function observeViewport(container) {
+    for (const node of pendingViewport) if (!node.isConnected) forgetViewport(node);
+    if (typeof IntersectionObserver === 'function' && !viewportObserver) {
+      viewportObserver=new IntersectionObserver(entries=>{
+        for (const entry of entries) {
+          if (!entry.target.isConnected) {forgetViewport(entry.target);continue;}
+          if (entry.isIntersecting) {forgetViewport(entry.target);activate(entry.target);}
+        }
+      },{rootMargin:'200px 100px'});
+    }
+    for (const node of container.querySelectorAll('.komi-home-rail-pending,img[data-komi-lazy-src]')) {
+      if (pendingViewport.has(node)) continue;
+      if (!viewportObserver) activate(node);
+      else {pendingViewport.add(node);viewportObserver.observe(node);}
+    }
+  }
+  if (typeof root.addEventListener === 'function') root.addEventListener('beforeprint',()=>{
+    const home=document.querySelector('.komi-home-discovery');
+    if (home) for (const rail of home.querySelectorAll('.komi-home-rail-pending')) {forgetViewport(rail);activate(rail);}
+    if (home) for (const img of home.querySelectorAll('img[data-komi-lazy-src]')) {forgetViewport(img);activate(img);}
+  });
   function afterRender(container) {
+    observeViewport(container);
     const labels = new Map([
       ['Календарь серий','Актуальное расписание выхода эпизодов'],
       ['Аниме 2026','Тайтлы этого года в нашей библиотеке'],
@@ -392,5 +435,5 @@
       observer.observe(community);
     } else if (community && typeof IntersectionObserver !== 'function') root.KomiPublicLeaderboard?.mount(community);
   }
-  root.KomiHomeDiscovery = {render,patch,retainSection,afterRender,recentProgress};
+  root.KomiHomeDiscovery = {render,patch,retainSection,afterRender,observeViewport,recentProgress};
 })(globalThis);
