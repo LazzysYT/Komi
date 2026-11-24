@@ -1840,8 +1840,14 @@ async function komiLoadCatalogPages(attempt = 0) {
             slideInterval = null;
             const slider = document.getElementById('heroSlider');
             if (!slider || slider.querySelectorAll('.hero-slide').length < 2) return;
+            slider.style.setProperty('--komi-hero-progress', '0%');
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            let elapsed = 0, last = performance.now();
+            const duration = 10000;
             slideInterval = setInterval(() => {
+                const now = performance.now();
+                const delta = Math.min(250, Math.max(0, now - last));
+                last = now;
                 if (!slider.isConnected || document.hidden || slider.matches(':hover, :focus-within')) return;
                 // Never compete with first paint or load extra artwork on a constrained link.
                 if (document.readyState !== 'complete' || !komiHomeCatalogReady) return;
@@ -1849,12 +1855,16 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
                 const image = slider.querySelector('.hero-slide.active .komi-hub-hero-art');
                 if (image && (!image.complete || !image.naturalWidth)) return;
+                elapsed += delta;
+                slider.style.setProperty('--komi-hero-progress', Math.min(100,elapsed/duration*100).toFixed(1)+'%');
                 const maxSlides = slider.querySelectorAll('.hero-slide').length;
-                if (maxSlides > 1) {
+                if (elapsed >= duration && maxSlides > 1) {
                     currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
+                    elapsed = 0;
+                    slider.style.setProperty('--komi-hero-progress','0%');
                     updateHeroSlideView();
                 }
-            }, 10000);
+            }, 100);
         }
 
         function changeSlide(direction) {
