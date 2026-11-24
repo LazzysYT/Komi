@@ -9,6 +9,7 @@
 
   const html = document.documentElement;
   html.classList.add('komi-home-booting');
+  if (!sectionRoute) html.classList.add('komi-home-boot-preview');
   let observer = null;
   let timer = null;
   let done = false;
@@ -16,7 +17,7 @@
   function finish() {
     if (done) return;
     done = true;
-    html.classList.remove('komi-home-booting');
+    html.classList.remove('komi-home-booting','komi-home-boot-preview');
     if (observer) observer.disconnect();
     if (timer !== null) clearTimeout(timer);
   }
