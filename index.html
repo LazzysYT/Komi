@@ -6,7 +6,7 @@
     <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
     <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
     <meta name="theme-color" content="#090909">
-    <meta name="komi-ui-revision" content="20261124-navigation-player-v7.3">
+    <meta name="komi-ui-revision" content="20261124-navigation-player-v7.4">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="Komi Anime Hub">
@@ -47,7 +47,7 @@
     <link rel="dns-prefetch" href="//s4.anilist.co">
 
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Manrope:wght@600;700;800&family=Plus+Jakarta+Sans:wght@700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0"></script>
   
     
     
@@ -610,56 +610,57 @@
     <div class="modal-overlay" id="watchModal"><div class="modal-content" id="watchModalContent"></div></div>
     <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1000px;" id="watchPartyModalContent"></div></div>
 
-    <script src="./poster-cache-client.js?v=20261123-wsrv1"></script>
-    <script src="./player-core.js"></script>
-    <script src="./player-source-preferences.js?v=20261121a"></script>
-    <script src="./komi-genre-moods.js?v=20261123-mobileperf-v2"></script>
-    <script src="./home-discovery.js?v=20261123-mobile-lite-v1"></script>
-    <script src="./komi-public-leaderboard.js?v=20261122a"></script>
-    <script src="./komi-home-snapshot.js"></script>
-    <script src="./komi-resume-cache.js"></script>
-    <script src="./profile-premium.js?v=20261123-milestones"></script>
-    <script src="./komi-shop-icons.js?v=20261123-shopv5"></script>
-    <script src="./komi-premium.js?v=20261122h"></script>
-    <script src="./komi-ref-capture.js?v=20261121"></script>
-    <script src="./komi-checkout.js?v=20261122e"></script>
-    <script src="./komi-premium-media.js"></script>
-    <script src="./komi-premium-themes.js"></script>
-    <script src="./komi-premium-decor.js"></script>
-    <script src="./komi-shop-catalog.js?v=20261122d"></script>
-    <script src="./komi-premium-store.js?v=20261122d"></script>
-    <script src="./komi-public-catalog-cache.js?v=20261123-perf1"></script>
-    <script src="./app-main.js?v=20261124-nav-v73"></script>
-    <script src="./catalog-quick-actions.js?v=20261121a"></script>
-    <script src="./hero-hd-art.js?v=20261123-mobile-lite-v1"></script>
-    <script src="./hybrid-search.js?v=20261122a"></script>
-    <script src="./komi-comments.js?v=20261122d"></script>
-    <script src="./static-ui-events.js"></script>
-    <script src="./accessibility.js"></script>
-    <script src="./mobile-nav.js"></script>
-    <script src="./player-controls.js"></script>
-    <script src="./player-runtime.js?v=20261124-v72"></script>
-    <script src="./player-ux.js"></script>
-    <script src="./cinema-layout-v3.js?v=20261124w7"></script>
-    <script src="./cinema-hud-v4.js"></script>
-    <script src="./cinema-clean-v5.js"></script>
-    <script src="./cinema-watch-monochrome.js?v=20261119"></script>
-    <script src="./anime-details.js"></script>
-    <script src="./watch-party.js?v=20261122c"></script>
-    <script src="./friend-party.js"></script>
-    <script src="./komi-shop-v3.js?v=20261123-shopv5"></script>
-    <script src="./anicoin.js?v=20261124-routes"></script>
-    <script src="./komi-shop-social.js?v=20261123-shopv5"></script>
-    <script src="./dynamic-ui-events.js"></script>
-    <script src="./mobile-bottom-sheets.js?v=20261121b"></script>
-    <script src="./komi-ui-sound.js"></script>
+    <script defer src="./poster-cache-client.js?v=20261123-wsrv1"></script>
+    <script defer src="./player-core.js"></script>
+    <script defer src="./player-source-preferences.js?v=20261121a"></script>
+    <script defer src="./komi-genre-moods.js?v=20261123-mobileperf-v2"></script>
+    <script defer src="./home-discovery.js?v=20261124-perf-v74"></script>
+    <script defer src="./komi-public-leaderboard.js?v=20261122a"></script>
+    <script defer src="./komi-home-snapshot.js"></script>
+    <script defer src="./komi-resume-cache.js"></script>
+    <script defer src="./profile-premium.js?v=20261123-milestones"></script>
+    <script defer src="./komi-shop-icons.js?v=20261123-shopv5"></script>
+    <script defer src="./komi-premium.js?v=20261122h"></script>
+    <script defer src="./komi-ref-capture.js?v=20261121"></script>
+    <script defer src="./komi-checkout.js?v=20261122e"></script>
+    <script defer src="./komi-premium-media.js"></script>
+    <script defer src="./komi-premium-themes.js"></script>
+    <script defer src="./komi-premium-decor.js"></script>
+    <script defer src="./komi-shop-catalog.js?v=20261122d"></script>
+    <script defer src="./komi-premium-store.js?v=20261122d"></script>
+    <script defer src="./komi-public-catalog-cache.js?v=20261123-perf1"></script>
+    <script defer src="./komi-home-seed.js?v=20261124-v1"></script>
+    <script defer src="./app-main.js?v=20261124-perf-v74"></script>
+    <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
+    <script defer src="./hero-hd-art.js?v=20261124-perf-v74"></script>
+    <script defer src="./hybrid-search.js?v=20261122a"></script>
+    <script defer src="./komi-comments.js?v=20261122d"></script>
+    <script defer src="./static-ui-events.js"></script>
+    <script defer src="./accessibility.js"></script>
+    <script defer src="./mobile-nav.js"></script>
+    <script defer src="./player-controls.js"></script>
+    <script defer src="./player-runtime.js?v=20261124-v72"></script>
+    <script defer src="./player-ux.js"></script>
+    <script defer src="./cinema-layout-v3.js?v=20261124w7"></script>
+    <script defer src="./cinema-hud-v4.js"></script>
+    <script defer src="./cinema-clean-v5.js"></script>
+    <script defer src="./cinema-watch-monochrome.js?v=20261119"></script>
+    <script defer src="./anime-details.js"></script>
+    <script defer src="./watch-party.js?v=20261122c"></script>
+    <script defer src="./friend-party.js"></script>
+    <script defer src="./komi-shop-v3.js?v=20261123-shopv5"></script>
+    <script defer src="./anicoin.js?v=20261124-routes"></script>
+    <script defer src="./komi-shop-social.js?v=20261123-shopv5"></script>
+    <script defer src="./dynamic-ui-events.js"></script>
+    <script defer src="./mobile-bottom-sheets.js?v=20261121b"></script>
+    <script defer src="./komi-ui-sound.js"></script>
     <!-- Additive community tools; all existing scripts and handlers remain unchanged. -->
-    <script src="./komi-community.js"></script>
-    <script src="./komi-import.js"></script>
-    <script src="./komi-wrapped.js"></script>
-    <script src="./komi-anime-social.js?v=20261123-six-fixes"></script>
-    <script src="./komi-party-quiz.js"></script>
-    <script src="./komi-icon-rail.js?v=20261123-rail-layout-v3"></script>
-    <script src="./komi-watch-compact-v6.js?v=20261124-mobilefix"></script>
+    <script defer src="./komi-community.js"></script>
+    <script defer src="./komi-import.js"></script>
+    <script defer src="./komi-wrapped.js"></script>
+    <script defer src="./komi-anime-social.js?v=20261123-six-fixes"></script>
+    <script defer src="./komi-party-quiz.js"></script>
+    <script defer src="./komi-icon-rail.js?v=20261123-rail-layout-v3"></script>
+    <script defer src="./komi-watch-compact-v6.js?v=20261124-mobilefix"></script>
 </body>
 </html>
