@@ -13,7 +13,7 @@ for (const id of ['notifBellBtn', 'komiFriendsMyTab', 'notifDropdown']) {
   assert.match(html, new RegExp('id="' + id + '"[^>]*hidden'));
 }
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
-assert.match(html, /app-main\.js\?v=20261124-v8-stability4/);
+assert.match(html, /app-main\.js\?v=20261124-v8-stability5/);
 assert.match(html, /komi-home-boot\.js\?v=20261124-v8-stability1/);
 assert.equal((html.match(/class="anime-card komi-seo-card"/g) || []).length, 36);
 assert.doesNotMatch(html, /Добавить \/ Редактировать аниме/);
@@ -75,3 +75,14 @@ assert.match(app, /if \(!rows.length\) \{\s*catalogRefreshSince = until;\s*retur
 assert.match(app, /nextId <= lastUpdatedId/);
 assert.match(app, /document.hidden \|\| navigator.onLine === false \|\| !catalogInitialLoadComplete/);
 assert.equal((html.match(/rel="preconnect" href="https:\/\/wsrv\.nl"/g)||[]).length,1);
+
+assert.match(app,/function komiCalendarPosterMarkup\(anime\)/);
+assert.match(app,/data-komi-lazy-src/);
+const snapshot = require('../komi-home-snapshot.js');
+const cards = Array.from({length:1000},(_,i)=>({id:String(i+1),title:'Anime '+i,poster:'https://example.test/'+i+'.jpg',year:String(2000+i%27),type:i%2?'Фильм':'Сериал',shikiRating:7+(i%30)/10,episodeCount:12,lastEpisodeAddedAt:'2026-11-22T00:00:00Z'}));
+let yearCalls=0,typeCalls=0;
+const sample=snapshot.sample(cards,a=>{yearCalls++;return a.year},a=>{typeCalls++;return a.type},Date.parse('2026-11-24'));
+assert.ok(sample.length>=48 && sample.length<=150);
+assert.equal(new Set(sample.map(a=>a.id)).size,sample.length);
+assert.ok(yearCalls<=cards.length*2,'Snapshot year normalization must remain linear');
+assert.equal(typeCalls,cards.length);

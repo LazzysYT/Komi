@@ -4569,10 +4569,17 @@ async function komiLoadCatalogPages(attempt = 0) {
 
         function komiYearSections() {
             const years = ['2026', '2025', '2024'];
+            const groups = new Map(years.map(year=>[year,{count:0,items:[]}]));
+            for (const anime of animeList) {
+                const group=groups.get(komiAnimeYear(anime));
+                if (!group) continue;
+                group.count++;
+                if (group.items.length<7) group.items.push(anime);
+            }
             return years.map(year => {
-                const items = animeList.filter(a => komiAnimeYear(a) === year);
+                const {items,count}=groups.get(year);
                 if (!items.length) return '';
-                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Аниме ' + year + '</h2><button class="section-see-all" data-komi-onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + items.length + '</button></div><div class="anime-grid">' + items.slice(0, 7).map(a => renderCard(a)).join('') + '</div></section>';
+                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Аниме ' + year + '</h2><button class="section-see-all" data-komi-onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + count + '</button></div><div class="anime-grid">' + items.map(a => renderCard(a)).join('') + '</div></section>';
             }).join('');
         }
 
@@ -4647,6 +4654,16 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (section) section.outerHTML = komiReleaseCalendar();
         }
 
+        function komiCalendarPosterMarkup(anime) {
+            const source=komiCardPosterSource(anime.poster || anime.banner);
+            const defer=currentView==='home' && /^https?:\/\//i.test(source.preferred);
+            return '<img loading="lazy" decoding="async" width="64" height="96" fetchpriority="low" referrerpolicy="no-referrer" src="' +
+                escapeFriendHtml(defer?'/anime-artwork.svg':source.preferred) + '"' +
+                (defer?' data-komi-lazy-src="'+escapeFriendHtml(source.preferred)+'"':'') +
+                (source.direct?' data-poster-direct="'+escapeFriendHtml(source.direct)+'"':'') +
+                (source.original?' data-poster-original="'+escapeFriendHtml(source.original)+'"':'') +
+                ' alt="" class="komi-calendar-poster" data-komi-onerror="komiCardPosterFallback(this)">';
+        }
         function komiReleaseCalendar() {
             const now = Date.now();
             const maxTime = now + 14 * 86400000;
@@ -4685,12 +4702,11 @@ async function komiLoadCatalogPages(attempt = 0) {
                 result += '<div class="komi-release-list">' + upcoming.map(entry => {
                     const date = new Date(entry.date);
                     const title = escapeFriendHtml(entry.anime.title);
-                    const poster = escapeFriendHtml(entry.anime.poster || '');
                     const day = date.toLocaleDateString('ru-RU', {weekday:'short',day:'numeric',month:'short'});
                     const hour = date.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
                     const episodeText = entry.episode ? 'Серия ' + entry.episode : 'Следующая серия';
                     return '<button type="button" data-komi-onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
-                        '<img loading="lazy" src="' + poster + '" alt="" class="komi-calendar-poster" data-komi-onerror="this.style.display=\'none\'">'+
+                        komiCalendarPosterMarkup(entry.anime)+
                         '<span class="komi-calendar-info"><small>' + day + ' · ' + hour + '</small><strong>' + title + '</strong><em>' + episodeText + '</em></span>'+
                         '<span class="komi-calendar-tag">Эфир</span></button>';
                 }).join('') + '</div>';
@@ -4706,7 +4722,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 result += '<div class="section-header" style="margin-top:17px"><h3 class="section-title" style="font-size:15px!important"> Добавлены новые серии</h3></div>';
                 result += '<div class="komi-release-list">' + latest.map(entry =>
                     '<button type="button" data-komi-onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
-                        '<img loading="lazy" src="' + escapeFriendHtml(entry.anime.poster || '') + '" alt="" class="komi-calendar-poster" data-komi-onerror="this.style.display=\'none\'">'+
+                        komiCalendarPosterMarkup(entry.anime)+
                         '<span class="komi-calendar-info"><small>' + new Date(entry.date).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) + '</small>'+
                         '<strong>' + escapeFriendHtml(entry.anime.title) + '</strong><em>' + (entry.anime.lastEpisodeNumber ? 'Серия ' + Number(entry.anime.lastEpisodeNumber) : 'Новая серия') + '</em></span>'+
                     '</button>').join('') + '</div>';
