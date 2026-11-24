@@ -67,3 +67,56 @@ jobs:
             }));
           }
           NODE
+
+  candidate-lighthouse:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+          ref: ${{ github.event.pull_request.head.sha }}
+          fetch-depth: 0
+      - name: Install Lighthouse
+        run: npm install --prefix "$RUNNER_TEMP/komi-lh" --ignore-scripts --no-save lighthouse@12.8.2
+      - name: Compare baseline and candidate using local static servers
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          set -euo pipefail
+          [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]]
+          git worktree add --detach "$RUNNER_TEMP/komi-baseline" "$BASE_SHA"
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory "$RUNNER_TEMP/komi-baseline" >"$RUNNER_TEMP/komi-base.log" 2>&1 &
+          BASE_PID=$!
+          python3 -m http.server 8766 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE" >"$RUNNER_TEMP/komi-candidate.log" 2>&1 &
+          HEAD_PID=$!
+          trap 'kill "$BASE_PID" "$HEAD_PID" 2>/dev/null || true' EXIT
+          export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
+          test -n "$CHROME_PATH"
+          LH="$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse"
+          for version in baseline candidate; do
+            port=8765
+            if [ "$version" = candidate ]; then port=8766; fi
+            curl --fail --silent --retry 5 --retry-connrefused "http://127.0.0.1:$port/" >/dev/null
+            for mode in mobile desktop; do
+              args=()
+              if [ "$mode" = desktop ]; then args+=(--preset=desktop); fi
+              "$LH" "http://127.0.0.1:$port/" "${args[@]}" --chrome-flags="--headless --no-sandbox" --output=json --output-path="$RUNNER_TEMP/komi-$version-$mode.json" --quiet
+            done
+          done
+          node - "$RUNNER_TEMP" <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
+          const fs=require('node:fs');
+          console.log('## Local static comparison (not production Vercel)');
+          console.log('Same runner, real public network dependencies; no account credentials or deployed API functions.');
+          for (const version of ['baseline','candidate']) for (const mode of ['mobile','desktop']) {
+            const r=JSON.parse(fs.readFileSync(process.argv[2]+'/komi-'+version+'-'+mode+'.json','utf8'));
+            if(r.runtimeError) throw Error(r.runtimeError.message);
+            console.log(version,mode,JSON.stringify({
+              performance: Math.round(r.categories.performance.score*100),
+              lcp: r.audits['largest-contentful-paint'].numericValue,
+              cls: r.audits['cumulative-layout-shift'].numericValue,
+              tbt: r.audits['total-blocking-time'].numericValue,
+              fcp: r.audits['first-contentful-paint'].numericValue
+            }));
+          }
+          NODE
