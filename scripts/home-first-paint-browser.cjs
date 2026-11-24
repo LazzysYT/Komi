@@ -47,16 +47,26 @@ const make=(id,year,score)=>({
     await firstFetched;
     await Promise.race([secondRequested,new Promise((_,reject)=>
       setTimeout(()=>reject(new Error('Second catalog page not requested')),5000))]);
-    assert.equal(await page.locator('#mainContainer .komi-seo-spotlight').count(),1,
-      'Do not replace crawlable first paint with 48 old anime');
-    assert.equal(await page.locator('#mainContainer .komi-home-hero').count(),0,
-      'No temporary low-ID carousel before the complete catalog');
-    releaseSecond();
+    // V7+ ships a public seed selection, replacing SEO markup with an
+    // interactive preview before the network finishes. The essential invariant
+    // is that a partial low-ID page must never replace that selection.
     const hero=page.locator('#mainContainer .komi-home-hero .hero-slide.active h1');
-    await hero.waitFor({timeout:20000});
+    await hero.waitFor({timeout:10000});
+    const preview=await page.evaluate(()=>{
+      const ids=[...document.querySelectorAll('#mainContainer .komi-home-hero .hero-slide[data-komi-anime-id]')].map(el=>String(el.dataset.komiAnimeId));
+      const expected=new Set(window.KomiHomeSnapshot.featured(window.KomiHomeSeed,komiAnimeYear).map(a=>String(a.id)));
+      return {ids,expected:[...expected],ready:komiHomeCatalogReady};
+    });
+    assert.ok(preview.ids.length>0,'Public seed carousel must be visible');
+    assert.ok(preview.ids.every(id=>preview.expected.includes(id)),'Only public seed selection may render before the final catalog');
+    assert.equal(preview.ready,false,'The first 48 records must not be marked as complete');
+    assert.doesNotMatch(await hero.innerText(),/First paint (?:[1-9]|[1-4][0-8])$/);
+    releaseSecond();
+    await page.waitForFunction(()=>komiHomeCatalogReady&&/^First paint (?:49|5[0-7])$/.test(document.querySelector('#mainContainer .komi-home-hero .hero-slide.active h1')?.textContent.trim()),null,{timeout:20000});
     const finalHero=await hero.innerText();
     assert.match(finalHero,/First paint (?:49|5[0-7])/);
 
+    await page.waitForFunction(()=>{try{return JSON.parse(localStorage.getItem('komi.public.home.preview.v2')||'null')?.items?.some(a=>a.id==='57')}catch{return false}},null,{timeout:20000});
     // The public snapshot is now cached; keep the same finished hero visible
     // during the next refresh, even while the first 48 IDs are fetched again.
     secondFetched=new Promise(resolve=>releaseSecond=resolve);
@@ -65,8 +75,9 @@ const make=(id,year,score)=>({
     await secondRequested;
     const cachedHero=page.locator('#mainContainer .komi-home-hero .hero-slide.active h1');
     await cachedHero.waitFor({timeout:10000});
-    assert.equal(await cachedHero.innerText(),finalHero,
-      'A returning visitor should see the complete cached selection immediately');
+    const cachedTitle=await cachedHero.innerText();
+    assert.match(cachedTitle,/^First paint (?:49|5[0-7])$/,'A returning visitor must see the complete cached selection, never the first 48');
+    assert.equal(cachedTitle,finalHero,'Returning visitor should retain the same featured selection');
     releaseSecond();
     await page.waitForFunction(()=>komiHomeCatalogReady,{timeout:20000});
     assert.equal(await cachedHero.innerText(),finalHero);

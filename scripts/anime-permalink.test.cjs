@@ -50,14 +50,13 @@ test('SEO detail remains readable and does not open a player without request', (
   assert.ok(run.events.has('hashchange'));
 });
 
-test('watch link uses the same-tab handoff and never exposes ?anime= routing', () => {
+test('watch link uses temporary same-tab handoff and canonical player URL', () => {
   const run = simulateBridge('#player');
-  assert.deepEqual(run.redirects, ['/']);
-  assert.equal(run.storage.get('komi_watch_deeplink_v1'), '52991');
-  assert.match(bridge, /window\.location\.replace\('\/'\)/);
-  assert.doesNotMatch(bridge, /window\.location\.replace\('\/\?anime=/);
+  assert.deepEqual(run.redirects, ['/?anime=52991']);
+  assert.equal(run.storage.size, 0);
+  assert.match(bridge, /window\.location\.replace\('\/\?' \+ destination\.toString\(\)\)/);
   assert.match(main, /sessionStorage\.getItem\('komi_watch_deeplink_v1'\)/);
-  assert.match(main, /history\.replaceState\(null, '', '\/anime\/' \+ requested \+ '#player'\)/);
+  assert.match(main, /history\.replaceState\(null, '', '\/anime\/' \+ requested \+ \(query\.size \? '\?' \+ query\.toString\(\) : ''\) \+ '#player'\)/);
   assert.doesNotMatch(home, /href="\/\?anime=/);
 });
 
@@ -65,8 +64,8 @@ test('clicking watch on an existing detail page via #player triggers handoff', (
   const run = simulateBridge();
   run.location.hash = '#player';
   run.events.get('hashchange')();
-  assert.deepEqual(run.redirects, ['/']);
-  assert.equal(run.storage.get('komi_watch_deeplink_v1'), '52991');
+  assert.deepEqual(run.redirects, ['/?anime=52991']);
+  assert.equal(run.storage.size, 0);
 });
 
 test('broken SEO poster uses local SVG; no external executable error handler', () => {
@@ -79,4 +78,9 @@ test('auth callbacks never point to the SEO-only /anime/:id route', () => {
   assert.doesNotMatch(main, /window\.location\.origin \+ window\.location\.pathname/);
   assert.ok(main.includes("redirectTo: 'https://komianime.online/'"));
   assert.ok(main.includes("emailRedirectTo: 'https://komianime.online/'"));
+});
+
+test('episode permalink preserves validated season and episode through handoff',()=>{
+ assert.deepEqual(simulateBridge('#player','?season=2&episode=5').redirects,['/?anime=52991&season=2&episode=5']);
+ assert.deepEqual(simulateBridge('#player','?season=bad&episode=5').redirects,['/?anime=52991']);
 });

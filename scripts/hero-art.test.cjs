@@ -13,12 +13,12 @@ function tick() {
   return new Promise(resolve => setImmediate(resolve));
 }
 
-async function runFixture({ids = ['52991'], media = [], imageSizes = {}} = {}) {
+async function runFixture({ids = ['52991'], media = [], imageSizes = {}, select = true} = {}) {
   const requests = [];
   const selectors = [];
   const storage = new Map();
   const slides = ids.map(id => {
-    const classes = new Set(['hero-slide', 'komi-hd-poster']);
+    const classes = new Set(['hero-slide', 'komi-hd-poster', ...(id===ids[0]?['active']:[])]);
     const events = {};
     const img = {
       dataset: {},
@@ -43,6 +43,7 @@ async function runFixture({ids = ['52991'], media = [], imageSizes = {}} = {}) {
       classes,
       dataset: {komiAnimeId: id, komiHeroStill: ''},
       classList: {
+        contains(name) { return classes.has(name); },
         toggle(name, enabled) {
           if (enabled) classes.add(name); else classes.delete(name);
         }
@@ -65,7 +66,9 @@ async function runFixture({ids = ['52991'], media = [], imageSizes = {}} = {}) {
     }
   }
   const context = {
-    window: {},
+    window: {navigator:{},matchMedia:()=>({matches:false})},
+    AbortController,
+    clearTimeout() {},
     URL,
     Date,
     Promise,
@@ -76,10 +79,12 @@ async function runFixture({ids = ['52991'], media = [], imageSizes = {}} = {}) {
       setItem(key, value) { storage.set(key, value); }
     },
     document: {
+      hidden:false,
+      addEventListener() {},
       getElementById() { return {}; },
       querySelectorAll(selector) {
         selectors.push(selector);
-        return slides;
+        return selector.endsWith('.active') ? slides.filter(s=>s.classes.has('active')) : slides;
       }
     },
     setTimeout() { return 1; },
@@ -90,6 +95,7 @@ async function runFixture({ids = ['52991'], media = [], imageSizes = {}} = {}) {
     }
   };
   vm.runInNewContext(source, context, {filename: 'hero-hd-art.js'});
+  if(select) context.window.KomiHeroArt.selectedSlide();
   for (let i = 0; i < 12; i++) await tick();
   return {slides, requests, selectors, storage};
 }
@@ -103,7 +109,7 @@ test('hero uses one filtered Page query and upgrades a real landscape banner', a
   });
   assert.equal(result.requests.length, 1);
   assert.match(result.requests[0].query, /idMal_in:\$ids/);
-  assert.deepEqual(Array.from(result.requests[0].variables.ids), [52991,54321]);
+  assert.deepEqual(Array.from(result.requests[0].variables.ids), [52991]);
   assert.equal(result.slides[0].img.src, banner);
   assert.equal(result.slides[0].classes.has('komi-hd-wide'), true);
   assert.equal(result.slides[0].classes.has('komi-hd-poster'), false);
@@ -148,4 +154,10 @@ test('medium native-resolution landscape fills hero with slight softening', asyn
   assert.equal(result.slides[0].img.src, mediumBanner);
   assert.equal(result.slides[0].classes.has('komi-hd-softwide'), true);
   assert.equal(result.slides[0].classes.has('komi-hd-poster'), false);
+});
+
+test('initial slide remains stable and inactive slides do not request HD artwork',async()=>{
+ const result=await runFixture({ids:['52991','54321'],select:false});
+ assert.equal(result.requests.length,0);
+ assert.equal(result.slides[0].img.src,'https://shikimori.io/cover.jpg');
 });

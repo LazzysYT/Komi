@@ -17,12 +17,23 @@
   const norm = value => String(value || '').trim().toLocaleLowerCase('ru-RU');
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const genresOf = anime => Array.isArray(anime?.genres) ? anime.genres : [anime?.genre].filter(Boolean);
-  const aliasesOf = genre => MOODS.find(([name, , aliases]) => norm(name) === norm(genre))?.[2] || [genre];
+  const moodAliases = new Map(MOODS.map(([name, , aliases]) => [norm(name),new Set(aliases.map(norm))]));
+  const normalizedGenres = new WeakMap();
 
   function matches(anime, genre) {
     if (!genre || genre === 'Все') return true;
-    const choices = new Set(aliasesOf(genre).map(norm));
-    return genresOf(anime).some(item => choices.has(norm(item)));
+    const key=norm(genre);
+    const choices=moodAliases.get(key) || new Set([key]);
+    if (!anime || typeof anime!=='object') return false;
+    const source=anime.genres, fallback=anime.genre;
+    let cached=normalizedGenres.get(anime);
+    // Catalog rows are replaced on refresh; also detect replaced genre arrays.
+    if (!cached || cached.source!==source || cached.fallback!==fallback ||
+        cached.length!==(source?.length||0)) {
+      cached={source,fallback,length:source?.length||0,values:genresOf(anime).map(norm)};
+      normalizedGenres.set(anime,cached);
+    }
+    return cached.values.some(item=>choices.has(item));
   }
 
   // Small, stable genre thumbnails should never request 1280px hero art.

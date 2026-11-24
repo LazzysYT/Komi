@@ -187,7 +187,7 @@
       const original = selector === '#sideFriendsBtn'
         ? document.getElementById('sideFriendsBtn')
         : siteRail?.querySelector(selector);
-      if (!original) continue;
+      if (!original || (original.dataset.komiClick==='notifications' && original.hidden)) continue;
       const label = original.getAttribute('aria-label') || original.title;
       const shortcut = button('', 'komi-watch-rail-button', label);
       shortcut.title = label;

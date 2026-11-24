@@ -4,11 +4,22 @@
   'use strict';
   // Start font CSS without making the first screen depend on a remote stylesheet.
   document.addEventListener('load', event => {
-    if (event.target?.id === 'komi-font-css' || event.target?.matches?.('link[data-komi-deferred-style]')) event.target.media = 'all';
+    if (event.target?.id === 'komi-font-css' || event.target?.matches?.('link[data-komi-deferred-style]')) {
+      event.target.media = 'all';
+      if (event.target.dataset?.komiDeferredStyle === 'base') {
+        // Full stylesheet includes the same rules in their original order.
+        // Once ready, discard the temporary first-paint stylesheet.
+        document.querySelector('link[data-komi-first-paint]')?.remove();
+      }
+    }
   }, true);
   // Shop-only rules stay nonblocking on the homepage; retain their original
   // cascade position and activate immediately when entering the shop.
   const ensureShopStyle=()=>{
+    if (/^\/(?:catalog|shop|partners|profile)$/.test(location.pathname) || /^#(?:catalog|shop|partners|profile)$/.test(location.hash.toLowerCase())) {
+      const base=document.querySelector('link[data-komi-deferred-style="base"]');
+      if (base) base.media='all';
+    }
     if (location.pathname==='/shop'||location.hash.toLowerCase()==='#shop') {
       const link=document.querySelector('link[data-komi-deferred-style="shop"]');
       if (link) link.media='all';
@@ -76,7 +87,8 @@
     observe();
   }
   // If a script or network request fails, restore the navigable SEO fallback.
-  timer = setTimeout(finish, 20000);
+  // A slow or unavailable JS/CDN must not hide the real, navigable HTML for 20 seconds.
+  timer = setTimeout(finish, 5000);
   window.addEventListener('hashchange', () => {
     if (location.hash && location.hash !== '#home') finish();
   });

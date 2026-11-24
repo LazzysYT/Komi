@@ -64,7 +64,8 @@ test('guest shop first paint and real preview have no auth dependency',()=>{
  assert.match(html,/class="sv5-static-card"/);
   assert.match(html,/class="sv5-weekly"/);
  assert.match(html,/src="\/shop-first-paint\.js\?/);
- assert.match(initial,/location\.hash==='\#shop'/);
+ assert.match(initial,/location\.hash\.toLowerCase\(\)==='#shop'/);
+ assert.match(initial,/location\.pathname==='\/shop'/);
  assert.match(coin,/data-shop-preview/);
  assert.match(coin,/komiShopPreviewDialog/);
  assert.match(coin,/data-komi-shop-avatar/);

@@ -298,11 +298,28 @@ async function komiLoadCatalogPages(attempt = 0) {
         let lastId = 0;
         while (true) {
             const pageSize = catalog.length ? 1000 : 48;
-            const { data: rows, error } = await _supabase
-                .from('komi_catalog_cards').select('shikimori_id,data,updated_at')
-                .gt('shikimori_id', lastId)
-                .order('shikimori_id', { ascending: true })
-                .limit(pageSize);
+            const controller = new AbortController();
+            let requestTimer;
+            let result;
+            try {
+                const request = _supabase
+                    .from('komi_catalog_cards').select('shikimori_id,data,updated_at')
+                    .gt('shikimori_id', lastId)
+                    .order('shikimori_id', { ascending: true })
+                    .limit(pageSize).abortSignal(controller.signal);
+                result = await Promise.race([
+                    request,
+                    new Promise((_, reject) => {
+                        requestTimer = setTimeout(() => {
+                            reject(new Error('Превышено время ожидания каталога'));
+                            controller.abort();
+                        }, 12000);
+                    })
+                ]);
+            } finally {
+                clearTimeout(requestTimer);
+            }
+            const { data: rows, error } = result;
             if (error) throw error;
             if (!rows || rows.length === 0) break;
             for (const row of rows) {
@@ -322,7 +339,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                     episodes: []
                 });
             }
-            lastId = rows[rows.length - 1].shikimori_id;
+            const nextId = Number(rows[rows.length - 1].shikimori_id);
+            if (!Number.isSafeInteger(nextId) || nextId <= lastId)
+                throw new Error('Некорректная пагинация каталога');
+            lastId = nextId;
             // Allow catalog/search to use the first batch, but never rebuild the
             // home carousel from 48 low-ID records: the final selection differs.
             if (catalog.length) {
@@ -637,12 +657,12 @@ async function komiLoadCatalogPages(attempt = 0) {
 
         function toggleNotifications() {
             const dropdown = document.getElementById('notifDropdown');
-            if (!dropdown.classList.toggle('active')) return;
-            if (!currentUser?.authUserId) {
+            if (!currentUser?.authUserId || dropdown.hidden) {
                 dropdown.classList.remove('active');
                 openAuthModal('login');
                 return;
             }
+            if (!dropdown.classList.toggle('active')) return;
             loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
             loadAccountNotifications().catch(() => komiStatusFeedback('Не удалось загрузить уведомления. Откройте список ещё раз.'));
         }
@@ -1044,6 +1064,16 @@ async function komiLoadCatalogPages(attempt = 0) {
         // Returning to an unchanged, unfiltered catalog should never re-sort
         // thousands of titles. Private watched-status filters bypass this cache.
         let komiDefaultCatalogCache = null;
+        // Derive expensive sort keys only once per item, not O(n log n)
+        // times inside comparisons. Stable ties keep the existing card order.
+        function komiSortCatalogByYear(items, newestId = false) {
+            return items.map(anime => ({
+                anime, year: Number(komiAnimeYear(anime)) || 0,
+                rating: Number(anime.shikiRating) || 0,
+                id: Number(anime.shikimoriId || anime.id) || 0
+            })).sort((a,b) => b.year-a.year || (newestId ? b.id-a.id : b.rating-a.rating))
+                .map(item=>item.anime);
+        }
         function komiCatalogFiltered() {
             if (catalogCollection === 'all' && catalogCategory === 'all' &&
                 catalogFilterGenre === 'Все' && catalogFilterYear === 'Все' &&
@@ -1053,9 +1083,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     komiDefaultCatalogCache?.revision === komiCatalogRevision &&
                     komiDefaultCatalogCache?.length === animeList.length)
                     return komiDefaultCatalogCache.sorted;
-                const sorted = [...animeList].sort((a,b) =>
-                    Number(komiAnimeYear(b)) - Number(komiAnimeYear(a)) ||
-                    (Number(b.shikiRating)||0) - (Number(a.shikiRating)||0));
+                const sorted = komiSortCatalogByYear(animeList);
                 komiDefaultCatalogCache = {
                     source: animeList, revision: komiCatalogRevision,
                     length: animeList.length, sorted
@@ -1081,13 +1109,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if(queries.length&&![a.title,a.originalTitle,a.english,a.japanese,...(Array.isArray(a.synonyms)?a.synonyms:[]),...genres].some(v=>queries.some(q=>String(v||'').toLocaleLowerCase('ru-RU').includes(q))))return false;
                 return true;
             });
-            if(catalogSort==='popular')filtered.sort((a,b)=>
-                Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||
-                (Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
-            else if(catalogSort==='updated')filtered.sort((a,b)=>(Date.parse(b.lastEpisodeAddedAt)||0)-(Date.parse(a.lastEpisodeAddedAt)||0));
+            if(catalogSort==='popular')return komiSortCatalogByYear(filtered);
+            else if(catalogSort==='updated')return filtered.map(anime=>({anime,date:Date.parse(anime.lastEpisodeAddedAt)||0}))
+                .sort((a,b)=>b.date-a.date).map(item=>item.anime);
             else if(catalogSort==='rating')filtered.sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
             else if(catalogSort==='alphabet')filtered.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ru'));
-            else if(catalogSort==='year')filtered.sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id));
+            else if(catalogSort==='year')return komiSortCatalogByYear(filtered,true);
             return filtered;
         }
         function komiCatalogChipsMarkup() {
@@ -1242,8 +1269,41 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (handle && !isTechnicalId(handle)) return handle;
             return isOwnProfile ? 'Мой профиль' : 'Пользователь Komi';
         }
+        function komiSetSidebarAvatarFallback(sidebarAvatarIcon) {
+            if (sidebarAvatarIcon.querySelector('svg') && !sidebarAvatarIcon.querySelector('img')) return;
+            const icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+            icon.setAttribute('viewBox','0 0 24 24');
+            icon.setAttribute('width','22');
+            icon.setAttribute('height','22');
+            icon.setAttribute('fill','currentColor');
+            icon.setAttribute('aria-hidden','true');
+            const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+            path.setAttribute('d','M12 12.1a4.7 4.7 0 1 0 0-9.4 4.7 4.7 0 0 0 0 9.4ZM3 21.1a9 9 0 0 1 18 0 .9.9 0 0 1-.9.9H3.9a.9.9 0 0 1-.9-.9Z');
+            icon.append(path);
+            sidebarAvatarIcon.replaceChildren(icon);
+        }
         function renderHeaderUser() {
             const area = document.getElementById('userHeaderArea');
+            const authenticated = Boolean(currentUser?.authUserId);
+            const profileButton = document.querySelector('.komi-side-account');
+            if (profileButton) {
+                const label = authenticated ? 'Профиль' : 'Войти';
+                profileButton.setAttribute('aria-label', label);
+                const tooltip = profileButton.querySelector('.komi-rail-tooltip');
+                if (tooltip) tooltip.textContent = label;
+            }
+            for (const control of document.querySelectorAll('#notifBellBtn, [data-komi-mobile-extra="notifications"], #komiFriendsMyTab, #notifDropdown')) {
+                control.hidden = !authenticated;
+                if (authenticated) control.style.removeProperty('display');
+                else control.style.setProperty('display','none','important');
+            }
+            if (!authenticated) {
+                document.getElementById('notifDropdown')?.classList.remove('active');
+                if (komiFriendsTab === 'friends') {
+                    komiFriendsTab = 'all';
+                    if (document.getElementById('komiFriendsDrawer')?.classList.contains('open')) renderFriendsDrawer();
+                }
+            }
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
             const headerCoin = document.getElementById('komiHeaderAniCoin');
             if (headerCoin) {
@@ -1260,14 +1320,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                 // Never reuse an image from a different account after sign-out/switch.
                 if (!owner) {
                     if (komiSessionResolved || sidebarAvatarIcon.dataset.komiAvatarOwner) {
-                        sidebarAvatarIcon.textContent = '◉';
+                        komiSetSidebarAvatarFallback(sidebarAvatarIcon);
                         delete sidebarAvatarIcon.dataset.komiAvatarOwner;
                         delete sidebarAvatarIcon.dataset.komiPendingAvatar;
                     }
                 } else {
                     if (sidebarAvatarIcon.dataset.komiAvatarOwner !== owner) {
                         sidebarAvatarIcon.replaceChildren();
-                        sidebarAvatarIcon.textContent = '◉';
+                        komiSetSidebarAvatarFallback(sidebarAvatarIcon);
                         sidebarAvatarIcon.dataset.komiAvatarOwner = owner;
                         delete sidebarAvatarIcon.dataset.komiPendingAvatar;
                     }
@@ -3043,11 +3103,15 @@ async function komiLoadCatalogPages(attempt = 0) {
                     ? (allPlayable.length ? 'По этому фильтру пока нет подходящих аниме. Выбери другой.' : 'Пока нет аниме с доступными сериями')
                     : 'Каталог загружается. Повтори попытку через несколько секунд.';
                 imgEl.src = '/anime-artwork.svg';
+                imgEl.alt = 'Нет подходящего аниме';
+                imgEl.style.opacity = '1';
+                document.getElementById('rouletteContainer')?.classList.remove('is-loading');
+                if (catalogInitialLoadFailed && !catalogInitialLoadComplete) {
+                    titleEl.textContent = 'Не удалось загрузить каталог. Попробуй снова.';
+                }
+                if (!catalogInitialLoadComplete && !komiCatalogLoadPending)
+                    void loadDataFromCloud();
                 modal.classList.add('active');
-                // A stale timer must never dismiss a newer roulette run.
-                setTimeout(() => {
-                    if (run === komiRouletteRun) modal.classList.remove('active');
-                }, 4500);
                 return;
             }
             playSound();
@@ -4512,10 +4576,17 @@ async function komiLoadCatalogPages(attempt = 0) {
 
         function komiYearSections() {
             const years = ['2026', '2025', '2024'];
+            const groups = new Map(years.map(year=>[year,{count:0,items:[]}]));
+            for (const anime of animeList) {
+                const group=groups.get(komiAnimeYear(anime));
+                if (!group) continue;
+                group.count++;
+                if (group.items.length<7) group.items.push(anime);
+            }
             return years.map(year => {
-                const items = animeList.filter(a => komiAnimeYear(a) === year);
+                const {items,count}=groups.get(year);
                 if (!items.length) return '';
-                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Аниме ' + year + '</h2><button class="section-see-all" data-komi-onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + items.length + '</button></div><div class="anime-grid">' + items.slice(0, 7).map(a => renderCard(a)).join('') + '</div></section>';
+                return '<section class="komi-feature-section"><div class="section-header"><h2 class="section-title"> Аниме ' + year + '</h2><button class="section-see-all" data-komi-onclick="showKomiYear(\'' + year + '\')">Все аниме ' + year + ' · ' + count + '</button></div><div class="anime-grid">' + items.map(a => renderCard(a)).join('') + '</div></section>';
             }).join('');
         }
 
@@ -4590,6 +4661,16 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (section) section.outerHTML = komiReleaseCalendar();
         }
 
+        function komiCalendarPosterMarkup(anime) {
+            const source=komiCardPosterSource(anime.poster || anime.banner);
+            const defer=currentView==='home' && /^https?:\/\//i.test(source.preferred);
+            return '<img loading="lazy" decoding="async" width="64" height="96" fetchpriority="low" referrerpolicy="no-referrer" src="' +
+                escapeFriendHtml(defer?'/anime-artwork.svg':source.preferred) + '"' +
+                (defer?' data-komi-lazy-src="'+escapeFriendHtml(source.preferred)+'"':'') +
+                (source.direct?' data-poster-direct="'+escapeFriendHtml(source.direct)+'"':'') +
+                (source.original?' data-poster-original="'+escapeFriendHtml(source.original)+'"':'') +
+                ' alt="" class="komi-calendar-poster" data-komi-onerror="komiCardPosterFallback(this)">';
+        }
         function komiReleaseCalendar() {
             const now = Date.now();
             const maxTime = now + 14 * 86400000;
@@ -4628,12 +4709,11 @@ async function komiLoadCatalogPages(attempt = 0) {
                 result += '<div class="komi-release-list">' + upcoming.map(entry => {
                     const date = new Date(entry.date);
                     const title = escapeFriendHtml(entry.anime.title);
-                    const poster = escapeFriendHtml(entry.anime.poster || '');
                     const day = date.toLocaleDateString('ru-RU', {weekday:'short',day:'numeric',month:'short'});
                     const hour = date.toLocaleTimeString('ru-RU', {hour:'2-digit',minute:'2-digit'});
                     const episodeText = entry.episode ? 'Серия ' + entry.episode : 'Следующая серия';
                     return '<button type="button" data-komi-onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
-                        '<img loading="lazy" src="' + poster + '" alt="" class="komi-calendar-poster" data-komi-onerror="this.style.display=\'none\'">'+
+                        komiCalendarPosterMarkup(entry.anime)+
                         '<span class="komi-calendar-info"><small>' + day + ' · ' + hour + '</small><strong>' + title + '</strong><em>' + episodeText + '</em></span>'+
                         '<span class="komi-calendar-tag">Эфир</span></button>';
                 }).join('') + '</div>';
@@ -4649,7 +4729,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 result += '<div class="section-header" style="margin-top:17px"><h3 class="section-title" style="font-size:15px!important"> Добавлены новые серии</h3></div>';
                 result += '<div class="komi-release-list">' + latest.map(entry =>
                     '<button type="button" data-komi-onclick="openWatchModal(\'' + entry.anime.id + '\')" class="komi-release-row">'+
-                        '<img loading="lazy" src="' + escapeFriendHtml(entry.anime.poster || '') + '" alt="" class="komi-calendar-poster" data-komi-onerror="this.style.display=\'none\'">'+
+                        komiCalendarPosterMarkup(entry.anime)+
                         '<span class="komi-calendar-info"><small>' + new Date(entry.date).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}) + '</small>'+
                         '<strong>' + escapeFriendHtml(entry.anime.title) + '</strong><em>' + (entry.anime.lastEpisodeNumber ? 'Серия ' + Number(entry.anime.lastEpisodeNumber) : 'Новая серия') + '</em></span>'+
                     '</button>').join('') + '</div>';
@@ -4812,6 +4892,9 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null, requestedEpisodeNumber = null) {
+            // Keep watch-specific CSS out of the first paint critical path.
+            const watchStyle=document.querySelector('link[data-komi-deferred-style="watch"]');
+            if (watchStyle) watchStyle.media='all';
             siteStats.views++;
             saveData();
             
@@ -5159,7 +5242,7 @@ async function komiLoadCatalogPages(attempt = 0) {
 
 
         async function refreshKomiCatalogUpdates() {
-            if (!_supabase || document.hidden || !catalogInitialLoadComplete || komiCatalogLoadPending || catalogRefreshInProgress) return;
+            if (!_supabase || document.hidden || navigator.onLine === false || !catalogInitialLoadComplete || komiCatalogLoadPending || catalogRefreshInProgress) return;
             catalogRefreshInProgress = true;
             const until = new Date().toISOString();
             try {
@@ -5167,17 +5250,42 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const pageSize = 100;
                 let lastUpdatedId = 0;
                 while (true) {
-                    const { data, error } = await _supabase.from('komi_catalog_cards')
-                        .select('shikimori_id,data,updated_at')
-                        .gte('updated_at', catalogRefreshSince)
-                        .lt('updated_at', until)
-                        .gt('shikimori_id', lastUpdatedId)
-                        .order('shikimori_id', { ascending: true })
-                        .limit(pageSize);
+                    const controller = new AbortController();
+                    let timer;
+                    let result;
+                    try {
+                        const request = _supabase.from('komi_catalog_cards')
+                            .select('shikimori_id,data,updated_at')
+                            .gte('updated_at', catalogRefreshSince)
+                            .lt('updated_at', until)
+                            .gt('shikimori_id', lastUpdatedId)
+                            .order('shikimori_id', { ascending: true })
+                            .limit(pageSize).abortSignal(controller.signal);
+                        result = await Promise.race([
+                            request,
+                            new Promise((_, reject) => {
+                                timer = setTimeout(() => {
+                                    reject(new Error('Превышено время обновления каталога'));
+                                    controller.abort();
+                                }, 12000);
+                            })
+                        ]);
+                    } finally { clearTimeout(timer); }
+                    const { data, error } = result;
                     if (error) throw error;
-                    rows.push(...(data || []));
-                    if (!data || data.length < pageSize) break;
-                    lastUpdatedId = data[data.length - 1].shikimori_id;
+                    if (!data?.length) break;
+                    rows.push(...data);
+                    const nextId = Number(data[data.length - 1].shikimori_id);
+                    if (!Number.isSafeInteger(nextId) || nextId <= lastUpdatedId)
+                        throw new Error('Некорректная пагинация обновлений');
+                    lastUpdatedId = nextId;
+                    if (data.length < pageSize) break;
+                }
+                // Most polls have no changes. Do not rebuild an index of the
+                // entire catalog just to confirm an empty incremental response.
+                if (!rows.length) {
+                    catalogRefreshSince = until;
+                    return;
                 }
                 let changed = false;
                 const indexById = new Map(animeList.map((item, index) => [String(item.id), index]));
