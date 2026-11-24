@@ -38,7 +38,7 @@
     return null;
   }
 
-  function render({ animeList = [], genre = 'Все', availableGenres = [], artwork }) {
+  function render({ animeList = [], genre = 'Все', availableGenres = [], artwork, deferImages = false }) {
     const items = Array.isArray(animeList) ? animeList : [];
     const genres = [...new Set([...availableGenres, ...MOODS.map(item => item[0])])];
     const cards = MOODS.map(([name, description], index) => {
@@ -80,7 +80,7 @@
       return '<button type="button" class="komi-mood-card' + (selected ? ' is-selected' : '') + '"' +
         ' data-komi-mood-genre="' + escape(name) + '" aria-pressed="' + selected + '"' +
         ' aria-label="Жанр ' + escape(name) + ': ' + escape(description) + '">' +
-        (art?.src ? '<img class="komi-mood-art" src="' + escape(art.src) +
+        (art?.src ? '<img class="komi-mood-art" ' + (deferImages ? 'src="/anime-artwork.svg" data-komi-lazy-src="' : 'src="') + escape(art.src) +
           '" alt="" width="360" height="160" loading="lazy" decoding="async" fetchpriority="' +
           (index < 4 ? 'auto' : 'low') + '" referrerpolicy="no-referrer"' + fallback + '>' : '') +
         '<span class="komi-mood-gradient" aria-hidden="true"></span>' +
