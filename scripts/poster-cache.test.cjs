@@ -53,7 +53,7 @@ test('all pre-rendered public posters use external CDN with direct fallback',()=
   assert.ok(images.length>=37,'Initial static poster cache is not attached');
   for(const [tag] of images) {
     assert.match(tag,/src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
-    assert.match(tag,/&amp;w=360&amp;output=webp/);
+    assert.match(tag,tag.includes('komi-hub-hero-art') ? /&amp;w=768&amp;output=webp/ : /&amp;w=360&amp;output=webp/);
     assert.match(tag,/data-komi-error="poster-error"/);
   }
   assert.doesNotMatch(html,/\/api\/poster\?src=/,'Static HTML should not invoke Vercel poster functions');

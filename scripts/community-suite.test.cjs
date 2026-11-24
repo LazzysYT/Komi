@@ -11,9 +11,17 @@ const voteFix=read('supabase/migrations/20261120150000_review_votes_ownership_fi
 const html=read('index.html');
 
 test('community modules are loaded after app initialization without touching legacy scripts',()=>{
- for(const name of ['komi-community.js','komi-import.js','komi-wrapped.js','komi-anime-social.js','komi-party-quiz.js'])
+ for(const name of ['komi-community.js','komi-anime-social.js','komi-party-quiz.js'])
    assert.match(html,new RegExp('<script defer src="\\./'+name.replace('.','\\.')+'(?:\\?v=[\\w-]+)?"></script>'));
  assert.ok(html.indexOf('app-main.js')<html.indexOf('komi-community.js'));
+ const hub=read('komi-community.js');
+ for(const [name,file] of [['KomiImport','komi-import.js'],['KomiWrapped','komi-wrapped.js']]){
+   assert.ok(!html.includes(file),'On-demand feature must not load at startup');
+   assert.ok(hub.includes(name+":'/"+file+"'"));
+   assert.ok(read(file).includes('window.'+name+'='));
+ }
+ assert.match(hub,/featureScripts.has\(name\)/);
+ assert.match(hub,/owner\(\)===uid/);
 });
 test('new social writes respect per-user RLS and owner permissions',()=>{
  for(const table of ['komi_collections','komi_collection_items','komi_collection_likes','komi_reviews','komi_review_votes','komi_voice_follows'])

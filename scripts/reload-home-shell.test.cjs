@@ -10,7 +10,7 @@ const js = read('komi-home-boot.js');
 const css = read('komi-icon-rail.css');
 
 test('SEO HTML remains indexable, JS shell is isolated and loads before the body', () => {
-  assert.match(html,/komi-home-boot\.js\?v=20261123-v1/);
+  assert.match(html,/komi-home-boot\.js\?v=20261124-v8-stability1/);
   assert.ok(html.indexOf('komi-home-boot.js') < html.indexOf('<body'));
   assert.match(html,/class="anime-card komi-seo-card"/);
   assert.match(html,/class="komi-boot-shell"/);
@@ -21,15 +21,16 @@ test('SEO HTML remains indexable, JS shell is isolated and loads before the body
 });
 test('on reload, leave SEO markup in DOM but reveal the home only after hydration', () => {
   const states = new Set();
-  let loaded, observer, timer, hydrated=false, detached=false;
+  let observer, timer, hydrated=false, detached=false;
+  const loaded=[];
   const main = {children:[{}], querySelector(selector) {
     if(selector === '.komi-home-discovery') return hydrated ? {} : null;
     return !hydrated && (selector === '.komi-seo-fallback'||selector === '.komi-seo-card') ? {} : null;
   }};
   const document = {
-    documentElement:{classList:{add:x=>states.add(x),remove:x=>states.delete(x)}},
-    readyState:'loading',
-    addEventListener:(name,fn)=>{if(name==='DOMContentLoaded')loaded=fn},
+    documentElement:{classList:{add:(...xs)=>xs.forEach(x=>states.add(x)),remove:(...xs)=>xs.forEach(x=>states.delete(x))}},
+    readyState:'loading', head:{}, querySelector:()=>null,
+    addEventListener:(name,fn)=>{if(name==='DOMContentLoaded')loaded.push(fn)},
     getElementById:id=>id==='mainContainer'?main:null
   };
   class Observer {
@@ -41,7 +42,7 @@ test('on reload, leave SEO markup in DOM but reveal the home only after hydratio
     window:{addEventListener(){}},URLSearchParams,MutationObserver:Observer,
     setTimeout:fn=>{timer=fn;return 42},clearTimeout(){}});
   assert.ok(states.has('komi-home-booting'));
-  loaded();
+  loaded.forEach(fn=>fn());
   assert.ok(observer.started);
   assert.ok(states.has('komi-home-booting'));
   hydrated=true;

@@ -25,13 +25,15 @@ function harness() {
     destroy(){this.destroyed=true}
   }
   let failures=0;
+  const events=[];
   const video={
     isConnected:true,komiMediaFailed:false,
     canPlayType(){return ''},
-    pause(){},removeAttribute(){},querySelectorAll(){return []},load(){}
+    pause(){},removeAttribute(){},querySelectorAll(){return []},load(){},
+    dispatchEvent(event){events.push(event.type);return true}
   };
   const context=vm.createContext({
-    window:{Hls},
+    window:{Hls}, Event,
     document:{addEventListener(){}},
     KomiPlayerCore:{source},
     video,
@@ -41,7 +43,7 @@ function harness() {
   });
   vm.runInContext(code,context,{filename:'player-runtime.js'});
   const attach=raw=>vm.runInContext('attachKomiMedia(video, '+JSON.stringify(raw)+', failed)',context);
-  return {video,timers,instances,attach,dispose:()=>vm.runInContext('disposeKomiMedia(video)',context),
+  return {video,timers,instances,events,attach,dispose:()=>vm.runInContext('disposeKomiMedia(video)',context),
     failures:()=>failures, fireNext:()=>{const [id,job]=timers.entries().next().value||[];if(!job)throw Error('No retry timer');timers.delete(id);job.fn();return job.delay}};
 }
 
@@ -65,6 +67,7 @@ test('HLS makes only two bounded retries before showing the recoverable error UI
   assert.equal(h.failures(),1);
   assert.equal(stream.destroyed,true);
   assert.equal(h.video.komiMediaFailed,true);
+  assert.deepEqual(h.events,['komi:hls-levels']);
   assert.equal(h.timers.size,0);
 });
 
