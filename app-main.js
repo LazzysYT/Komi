@@ -4950,6 +4950,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                                 </div>
                             </div>
                             <div class="komi-watch-controls">
+                                <div class="komi-mobile-watch-actions">
+                                    <button type="button" class="komi-mobile-watch-source" aria-haspopup="dialog" aria-controls="komiMobileSheet">♫ Озвучка</button>
+                                    <button type="button" class="komi-mobile-watch-episodes" aria-haspopup="dialog" aria-controls="komiMobileSheet">☷ Серии</button>
+                                </div>
                                 <div class="komi-watch-source">
                                     <label for="komiWatchSourceSelect">Озвучка / плеер</label>
                                     <select id="komiWatchSourceSelect" data-komi-onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
