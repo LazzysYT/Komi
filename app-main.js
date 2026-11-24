@@ -1480,7 +1480,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                     const heroSignature = hero => [...hero.querySelectorAll('.hero-slide')].map(slide =>
                         [slide.dataset.komiAnimeId, slide.classList.contains('active'),
                          slide.querySelector('img')?.dataset.posterDirect || '',
-                         slide.querySelector('h1')?.textContent || ''].join('|')).join('::');
+                         slide.querySelector('.komi-home-hero-content')?.textContent || '',
+                         slide.querySelector('.komi-hub-save')?.dataset.komiOnclick || ''].join('|')).join('::');
                     const oldHeroSignature = previousHero ? heroSignature(previousHero) : '';
                     const homeMarkup = window.KomiHomeDiscovery.render({
                         animeList: komiHomeCatalogReady ? animeList : komiHomePreviewCatalog,
@@ -1503,14 +1504,20 @@ async function komiLoadCatalogPages(attempt = 0) {
                     if (!komiHomeHeroMayPaint(homeMarkup, container)) return;
                     komiStartupHomeCommitted = true;
                     komiLastHomeMarkup = homeMarkup;
-                    container.innerHTML = homeMarkup;
-                    const nextHero = container.querySelector('.komi-home-hero');
                     const heroOwner = currentUser?.authUserId || '';
+                    if (window.KomiHomeDiscovery.patch)
+                        window.KomiHomeDiscovery.patch(container, homeMarkup, heroOwner);
+                    else container.innerHTML = homeMarkup;
+                    const nextHero = container.querySelector('.komi-home-hero');
                     if (nextHero && previousHero && previousOwner === heroOwner &&
                         oldHeroSignature === heroSignature(nextHero)) {
                         // A network/account refresh should not reset an already loaded
                         // hero image, its fade animation or the current carousel slide.
-                        nextHero.replaceWith(previousHero);
+                        if (nextHero !== previousHero) {
+                            if (window.KomiHomeDiscovery.retainSection) window.KomiHomeDiscovery.retainSection(nextHero, previousHero);
+                            else nextHero.replaceWith(previousHero);
+                        }
+                        previousHero.dataset.komiOwner = heroOwner;
                     } else if (nextHero) nextHero.dataset.komiOwner = heroOwner;
                     window.KomiHomeDiscovery.afterRender(container);
                     startHeroAutoSlide();
