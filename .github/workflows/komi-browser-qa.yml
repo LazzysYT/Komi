@@ -6,7 +6,7 @@ permissions:
   contents: read
 concurrency:
   group: komi-browser-qa-${{ github.event.pull_request.number }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   browser:
     runs-on: ubuntu-latest
