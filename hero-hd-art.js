@@ -13,6 +13,9 @@
   const MISSING_TTL = 60 * 60 * 1000;
   const cache = new Map();
   const pending = new Set();
+  const metadata = new Map();
+  const metadataPending = new Map();
+  const runningVideos = new Set();
   const retryAfter = new Map();
   let fetching = false;
   let scanTimer = null;
@@ -229,7 +232,46 @@
       bindImage(slide);
     });
   }
+  function applyMetadata(slide, item) {
+    if (!slide.classList.contains('active') || !slide.isConnected) return;
+    const still = safeStill(item?.still);
+    const banner = safeStill(item?.banner);
+    const video = safeStill(item?.video);
+    if (still) slide.dataset.komiHeroStill = still;
+    if (banner) slide.dataset.komiHeroBanner = banner;
+    if (video && /\.(mp4|webm)$/i.test(new URL(video).pathname)) slide.dataset.komiHeroVideo = video;
+    const content = slide.querySelector('.komi-home-hero-content');
+    if (content && item?.description) {
+      let description = content.querySelector('p');
+      if (!description) {
+        description = document.createElement('p');
+        description.className = 'komi-hub-description';
+        const actions = content.querySelector('.hero-buttons');
+        content.insertBefore(description,actions || null);
+      }
+      if (description.textContent !== item.description) description.textContent = item.description;
+    }
+    const entry = getCached(slide.dataset.komiAnimeId) || {};
+    if (banner || still) void applyArtwork(slide,entry);
+    syncVideos();
+  }
+  function loadMetadata(slide,id) {
+    if (typeof root.komiFetchHeroMetadata !== 'function') return;
+    if (metadata.has(id)) { applyMetadata(slide,metadata.get(id)); return; }
+    if (metadataPending.has(id)) return;
+    const task = root.komiFetchHeroMetadata(id).then(item => {
+      if (!item) return;
+      metadata.set(id,item);
+      if (metadata.size > 20) metadata.delete(metadata.keys().next().value);
+      document.querySelectorAll(SELECTOR+'.active').forEach(current => {
+        if (current.dataset.komiAnimeId === id) applyMetadata(current,item);
+      });
+    }).catch(()=>{}).finally(()=>metadataPending.delete(id));
+    metadataPending.set(id,task);
+  }
+
   function syncVideos() {
+    for (const video of runningVideos) if (!video.isConnected) { video.pause(); runningVideos.delete(video); }
     const connection = root.navigator?.connection;
     const allowed = !document.hidden && !connection?.saveData && !/(^|-)2g$/.test(connection?.effectiveType || '') && !root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     document.querySelectorAll(SELECTOR).forEach(slide => {
@@ -249,6 +291,7 @@
         video.addEventListener('error', () => { slide.dataset.komiHeroVideoFailed = url; video.classList.remove('is-playing'); });
         slide.querySelector('img.komi-hub-hero-art')?.after(video);
         video.src = url;
+        runningVideos.add(video);
       }
       if (video.paused) video.play().catch(() => { video.classList.remove('is-playing'); });
     });
@@ -265,6 +308,7 @@
       bindImage(slide);
       const id = String(slide.dataset.komiAnimeId || '');
       if (!/^[1-9]\d{0,9}$/.test(id)) return;
+      loadMetadata(slide,id);
       const cached = getCached(id);
       if (cached) void applyArtwork(slide, cached);
       else if ((retryAfter.get(id) || 0) <= Date.now()) pending.add(id);
@@ -295,6 +339,24 @@
     if (!document.hidden) scheduleScan();
     syncVideos();
   });
+  // One delegated pointer handler, only on fine pointers with motion enabled.
+  if (root.matchMedia?.('(hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference)').matches) {
+    document.addEventListener('pointermove', event => {
+      const slider = event.target.closest?.('#heroSlider');
+      if (!slider || !slider.closest('.komi-home-hero')) return;
+      const rect = slider.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      slider.style.setProperty('--komi-hero-x', ((event.clientX-rect.left)/rect.width-.5)*-10+'px');
+      slider.style.setProperty('--komi-hero-y', ((event.clientY-rect.top)/rect.height-.5)*-6+'px');
+    }, {passive:true});
+    document.addEventListener('pointerout', event => {
+      const slider = event.target.closest?.('#heroSlider');
+      if (slider && !slider.contains(event.relatedTarget)) {
+        slider.style.removeProperty('--komi-hero-x');
+        slider.style.removeProperty('--komi-hero-y');
+      }
+    }, {passive:true});
+  }
   root.KomiHeroArt = {scan,selectedSlide,syncVideos};
   const container = document.getElementById('mainContainer');
   if (container) {
