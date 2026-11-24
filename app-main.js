@@ -1835,6 +1835,21 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
         }
 
+        // Fetch only public hero metadata on demand; never download episodes for the carousel.
+        window.komiFetchHeroMetadata = async function(id) {
+            if (!_supabase || !/^[1-9][0-9]{0,11}$/.test(String(id))) return null;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4500);
+            try {
+                const {data,error} = await _supabase.from('anime_catalog')
+                    .select('description:data->>desc,still:data->screenshots->>0,banner:data->>banner_url,video:data->>banner_video_url')
+                    .eq('shikimori_id',Number(id)).abortSignal(controller.signal).maybeSingle();
+                if(error || !data) return null;
+                return {description:cleanAnimeDescription(data.description).slice(0,850),still:data.still,banner:data.banner,video:data.video};
+            } catch { return null; }
+            finally { clearTimeout(timeout); }
+        };
+
         function startHeroAutoSlide() {
             if (slideInterval) clearInterval(slideInterval);
             slideInterval = null;
@@ -3564,7 +3579,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (!komiAdminUiLoader) {
                     komiAdminUiLoader = new Promise((resolve, reject) => {
                         const script = document.createElement('script');
-                        script.src = '/komi-admin-ui.js?v=20261122-premium';
+                        script.src = '/komi-admin-ui.js?v=20261124-v811';
                         script.async = true;
                         script.onload = resolve;
                         script.onerror = () => reject(new Error('Admin UI could not load'));
@@ -3698,6 +3713,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 animeId.readOnly=true;
                 document.getElementById('animeTitle').value=a.title||'';
                 document.getElementById('animePoster').value=a.poster||'';
+                document.getElementById('animeHeroBanner').value=a.banner_url||a.bannerUrl||'';
+                document.getElementById('animeHeroVideo').value=a.banner_video_url||a.bannerVideoUrl||a.bannerVideo||'';
                 document.getElementById('animeShikiRating').value=a.shikiRating||'';
                 document.getElementById('animeScreenshots').value=(a.screenshots||[]).join(', ');
                 document.getElementById('animeTrailer').value=a.trailer||'';
@@ -3756,6 +3773,20 @@ async function komiLoadCatalogPages(attempt = 0) {
                 alert('Введите название и безопасную HTTPS-ссылку на постер.');
                 return;
             }
+            const bannerUrl = String(document.getElementById('animeHeroBanner')?.value||'').trim();
+            const videoUrl = String(document.getElementById('animeHeroVideo')?.value||'').trim();
+            const validMedia = (raw, video=false) => {
+                if(!raw) return true;
+                if(raw.length>2000) return false;
+                try {
+                    const url = new URL(raw);
+                    return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&(!video||/\.(mp4|webm)$/i.test(url.pathname));
+                } catch { return false; }
+            };
+            if(!validMedia(bannerUrl)||!validMedia(videoUrl,true)) {
+                alert('Баннер должен быть HTTPS-ссылкой, видео — прямой HTTPS-ссылкой на MP4 или WebM.');
+                return;
+            }
             const episodesByKey=new Map();
             for(const group of document.querySelectorAll('#episodesList > div')) {
                 const season=Number(group.querySelector('.ep-season')?.value);
@@ -3784,6 +3815,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const screenshots=document.getElementById('animeScreenshots').value.split(',').map(x=>x.trim()).filter(x=>x.startsWith('https://')).slice(0,20);
             const rating=Number(document.getElementById('animeShikiRating').value);
             const data={...previous,id:String(id),shikimoriId:id,title,poster,
+                banner_url:bannerUrl,banner_video_url:videoUrl,
                 shikiRating:Number.isFinite(rating)&&rating>=0&&rating<=10?rating:0,
                 year:document.getElementById('animeYear').value.trim().slice(0,10),
                 type:document.getElementById('animeType').value.trim().slice(0,32)||'Сериал',
