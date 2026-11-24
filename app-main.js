@@ -1775,12 +1775,18 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
             slideInterval = setInterval(() => {
                 if (!slider.isConnected || document.hidden || slider.matches(':hover, :focus-within')) return;
+                // Never compete with first paint or load extra artwork on a constrained link.
+                if (document.readyState !== 'complete' || !komiHomeCatalogReady) return;
+                const connection = navigator.connection;
+                if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
+                const image = slider.querySelector('.hero-slide.active .komi-hub-hero-art');
+                if (image && (!image.complete || !image.naturalWidth)) return;
                 const maxSlides = slider.querySelectorAll('.hero-slide').length;
                 if (maxSlides > 1) {
                     currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
                     updateHeroSlideView();
                 }
-            }, 6000);
+            }, 10000);
         }
 
         function changeSlide(direction) {
