@@ -2,6 +2,10 @@
    CSP-safe external script in <head>; hydrated markup is switched on before paint. */
 (() => {
   'use strict';
+  // Start font CSS without making the first screen depend on a remote stylesheet.
+  document.addEventListener('load', event => {
+    if (event.target?.id === 'komi-font-css') event.target.media = 'all';
+  }, true);
   const sectionRoute = /^\/(catalog|shop|partners|profile)$/.test(location.pathname) || /^#(catalog|shop|partners|profile)$/.test(location.hash.toLowerCase());
   if (!sectionRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
       (location.hash && location.hash !== '#home') ||
@@ -9,7 +13,16 @@
 
   const html = document.documentElement;
   html.classList.add('komi-home-booting');
-  if (!sectionRoute) html.classList.add('komi-home-boot-preview');
+  if (!sectionRoute) {
+    html.classList.add('komi-home-boot-preview');
+    const src = document.querySelector('meta[name="komi-first-hero"]')?.content;
+    if (src && src.startsWith('https://wsrv.nl/?url=')) {
+      const preload = document.createElement('link');
+      preload.rel = 'preload'; preload.as = 'image'; preload.href = src;
+      preload.fetchPriority = 'high'; preload.referrerPolicy = 'no-referrer';
+      document.head.append(preload);
+    }
+  }
   let observer = null;
   let timer = null;
   let done = false;
