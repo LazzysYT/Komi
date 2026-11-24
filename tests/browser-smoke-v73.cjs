@@ -65,6 +65,22 @@ async function run(){
     const card=page.locator('.anime-card[data-komi-anime-id="900001"]').first();
     await card.waitFor({state:'visible',timeout:45000});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),true,'catalog horizontal overflow');
+    // Exercise the real browser DOM, independent of network or media fixtures.
+    const reconcile = await page.evaluate(()=>{
+      const host=document.createElement('div');
+      const markup=(sections)=>'<div class="komi-home-discovery">'+sections.map(([id,body])=>'<section id="'+id+'">'+body+'</section>').join('')+'</div>';
+      const api=window.KomiHomeDiscovery;
+      api.patch(host,markup([['hero','Public'],['history','Owner A'],['catalog','<button>Open</button>']]),'A');
+      const home=host.firstElementChild, hero=home.children[0], history=home.children[1], catalog=home.children[2];
+      catalog.dataset.qa='retained';
+      api.patch(host,markup([['hero','Public'],['history','Updated A'],['catalog','<button>Open</button>'],['new','Added']]),'A');
+      const same=host.firstElementChild===home&&home.children[0]===hero&&home.children[2]===catalog&&catalog.dataset.qa==='retained';
+      const updated=home.children[1]!==history&&home.children[1].textContent==='Updated A';
+      api.patch(host,markup([['hero','Public'],['history','Owner B'],['catalog','<button>Open</button>']]),'B');
+      return {same,updated,isolated:host.firstElementChild!==home&&host.querySelector('#history').textContent==='Owner B'&&!host.querySelector('[data-qa]')};
+    });
+    assert.deepEqual(reconcile,{same:true,updated:true,isolated:true},'reuse unchanged DOM without crossing account boundary');
+
     await card.click();
     await page.locator('#watchModal.active').waitFor({state:'visible',timeout:20000});
     if (name.startsWith('mobile')) {
