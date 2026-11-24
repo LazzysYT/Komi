@@ -4,8 +4,21 @@
   'use strict';
   // Start font CSS without making the first screen depend on a remote stylesheet.
   document.addEventListener('load', event => {
-    if (event.target?.id === 'komi-font-css') event.target.media = 'all';
+    if (event.target?.id === 'komi-font-css' || event.target?.matches?.('link[data-komi-deferred-style]')) event.target.media = 'all';
   }, true);
+  // Shop-only rules stay nonblocking on the homepage; retain their original
+  // cascade position and activate immediately when entering the shop.
+  const ensureShopStyle=()=>{
+    if (location.pathname==='/shop'||location.hash.toLowerCase()==='#shop') {
+      const link=document.querySelector('link[data-komi-deferred-style="shop"]');
+      if (link) link.media='all';
+    }
+  };
+  const styleObserver=new MutationObserver(()=>{ensureShopStyle();if(document.querySelector('link[data-komi-deferred-style="shop"]'))styleObserver.disconnect();});
+  styleObserver.observe(document.head,{childList:true});
+  window.addEventListener('popstate',ensureShopStyle);
+  window.addEventListener('hashchange',ensureShopStyle);
+  document.addEventListener('DOMContentLoaded',ensureShopStyle,{once:true});
   const sectionRoute = /^\/(catalog|shop|partners|profile)$/.test(location.pathname) || /^#(catalog|shop|partners|profile)$/.test(location.hash.toLowerCase());
   if (!sectionRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
       (location.hash && location.hash !== '#home') ||
