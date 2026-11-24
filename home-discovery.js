@@ -277,6 +277,16 @@
       catalogPreview, films} = cachedPublicHome;
     const recommended = context.recommendations();
     const history = recentProgress(context, animeList);
+    // The same title may appear in several shelves. Build its card once per
+    // render; this cache never survives an account or catalog state change.
+    const cardMarkup = new Map();
+    const originalCard = context.renderCard;
+    context = {...context, renderCard(anime) {
+      const key = id(anime);
+      if (!key) return originalCard(anime);
+      if (!cardMarkup.has(key)) cardMarkup.set(key,originalCard(anime));
+      return cardMarkup.get(key);
+    }};
     return '<div class="komi-home-discovery">' +
       hero(slider,context) +
       (slider.length ? resumeCapsule(history[0], context) : '') +
@@ -301,6 +311,52 @@
       '<a href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer">Telegram</a></nav></div>' +
       '</div>';
   }
+  // Keep equal sections mounted through catalog/session refreshes. Parsing into
+  // a template is inert; images and observers only start for genuinely new DOM.
+  const sectionMarkup = new WeakMap();
+  const leaderboardObservers = new WeakMap();
+  function patch(container, markup, owner) {
+    const template = document.createElement('template');
+    template.innerHTML = markup;
+    const next = template.content.firstElementChild;
+    const current = container.querySelector(':scope > .komi-home-discovery');
+    if (!next || !next.classList.contains('komi-home-discovery')) {
+      container.innerHTML = markup;
+      return;
+    }
+    const prepared = Array.from(next.children, node => ({node,html:node.outerHTML}));
+    if (!current || current.dataset.komiHomeOwner !== owner) {
+      next.dataset.komiHomeOwner = owner;
+      for (const item of prepared) sectionMarkup.set(item.node,item.html);
+      container.replaceChildren(next);
+      return;
+    }
+    const available = new Map();
+    for (const node of current.children) {
+      const html = sectionMarkup.get(node);
+      if (!html) continue;
+      if (!available.has(html)) available.set(html,[]);
+      available.get(html).push(node);
+    }
+    const desired = prepared.map(item => {
+      const existing = available.get(item.html)?.shift();
+      const node = existing || item.node;
+      sectionMarkup.set(node,item.html);
+      return node;
+    });
+    const keep = new Set(desired);
+    for (let index=0;index<desired.length;index++) {
+      const node=desired[index];
+      const at=current.children[index]||null;
+      if (node!==at) current.insertBefore(node,at);
+    }
+    for (const node of [...current.children]) {
+      if (keep.has(node)) continue;
+      const observer=leaderboardObservers.get(node);
+      if (observer) observer.disconnect();
+      node.remove();
+    }
+  }
   function afterRender(container) {
     const labels = new Map([
       ['Календарь серий','Актуальное расписание выхода эпизодов'],
@@ -319,15 +375,16 @@
       heading.insertAdjacentElement('afterend',p);
     }
     const community = container.querySelector('#komiLeaderboard');
-    if (community && typeof IntersectionObserver === 'function') {
+    if (community && !community.dataset.komiRankMounted && !leaderboardObservers.has(community) && typeof IntersectionObserver === 'function') {
       const observer = new IntersectionObserver(entries => {
         if (!community.isConnected) { observer.disconnect(); return; }
         if (entries.some(entry => entry.isIntersecting)) {
           observer.disconnect(); root.KomiPublicLeaderboard?.mount(community);
         }
       }, {rootMargin:'300px'});
+      leaderboardObservers.set(community,observer);
       observer.observe(community);
-    } else if (community) root.KomiPublicLeaderboard?.mount(community);
+    } else if (community && typeof IntersectionObserver !== 'function') root.KomiPublicLeaderboard?.mount(community);
   }
-  root.KomiHomeDiscovery = {render,afterRender,recentProgress};
+  root.KomiHomeDiscovery = {render,patch,afterRender,recentProgress};
 })(globalThis);
