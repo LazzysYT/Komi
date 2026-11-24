@@ -66,6 +66,10 @@ async function run(){
     await card.waitFor({state:'visible',timeout:45000});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),true,'catalog horizontal overflow');
     await card.click();
+    await page.locator('#watchModal.active').waitFor({state:'visible',timeout:20000});
+    if (name.startsWith('mobile')) {
+      await page.locator('#watchModal .komi-mobile-watch-episodes').click();
+    }
     await page.locator('#watchModal.active .komi-episode-number').first().waitFor({state:'visible',timeout:20000});
     const thumbs=page.locator('#watchModal .komi-episode-thumb-image');
     await thumbs.first().waitFor({state:'visible'});
@@ -73,11 +77,15 @@ async function run(){
     const urls=await thumbs.evaluateAll(images=>images.map(i=>i.src));
     assert.equal(new Set(urls).size,2,'episode previews must be distinct');
     await page.locator('#watchModal .komi-episode-number[data-episode-number="2"]').click();
+    if (name.startsWith('mobile')) {
+      await page.locator('#watchModal .komi-mobile-watch-episodes').click();
+    }
     await page.locator('#watchModal .komi-episode-number[data-episode-number="2"].active').waitFor();
     await page.locator('#watchModal .komi-episode-view-toggle [data-view="grid"]').click();
     assert.equal(await page.locator('#watchModal .komi-episode-number-grid').evaluate(el=>el.classList.contains('komi-episode-list')),false);
     await page.locator('#watchModal .komi-episode-view-toggle [data-view="list"]').click();
     await page.locator('#watchModal .komi-episode-thumb-image').first().waitFor({state:'visible'});
+    if (name.startsWith('mobile')) await page.locator('#watchModal .komi-mobile-sheet-close').click();
     await page.locator('#watchModal .modal-close').first().click();
     assert.equal(await page.locator('#watchModal').evaluate(el=>el.classList.contains('active')),false);
     await page.goto(origin+'/#catalog',{waitUntil:'domcontentloaded'});
