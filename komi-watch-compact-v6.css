@@ -785,3 +785,8 @@
 /* Delay layout and painting of distant shelves without hiding or removing them. */
 @supports(content-visibility:auto){.komi-home-discovery>.komi-home-shelf:not(.komi-home-continue),.komi-home-discovery>.komi-feature-section,.komi-home-discovery>.komi-home-browse-footer{content-visibility:auto;contain-intrinsic-size:auto 340px}}
 @media(max-width:767px){@supports(content-visibility:auto){.komi-home-discovery>.komi-home-shelf:not(.komi-home-continue),.komi-home-discovery>.komi-feature-section{contain-intrinsic-size:auto 300px}}}
+
+/* Reserve shelf geometry until the real cards approach the viewport. */
+.komi-home-rail-pending{min-height:280px;background:none;}
+.komi-home-rail-pending::before{content:'';display:block;flex:1;min-width:0;min-height:240px;border-radius:16px;background:#141417;}
+@media(max-width:767px){.komi-home-rail-pending{min-height:245px}.komi-home-rail-pending::before{min-height:220px}}
