@@ -189,7 +189,8 @@
   }
 
   function scan() {
-    const mobile = root.matchMedia?.('(max-width: 767px)').matches || false;
+    const connection = root.navigator?.connection;
+    if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '') || document.hidden) return;
     document.querySelectorAll(SELECTOR).forEach(slide => {
       // On cellular, do not request high-resolution alternatives for slides
       // the visitor has not selected yet.
