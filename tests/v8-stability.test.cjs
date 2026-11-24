@@ -9,11 +9,11 @@ const html = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
 const boot = fs.readFileSync(path.join(root, 'komi-home-boot.js'), 'utf8');
 new vm.Script(app);
 new vm.Script(boot);
-for (const id of ['notifBellBtn', 'komiFriendsMyTab']) {
+for (const id of ['notifBellBtn', 'komiFriendsMyTab', 'notifDropdown']) {
   assert.match(html, new RegExp('id="' + id + '"[^>]*hidden'));
 }
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
-assert.match(html, /app-main\.js\?v=20261124-v8-stability3/);
+assert.match(html, /app-main\.js\?v=20261124-v8-stability4/);
 assert.match(html, /komi-home-boot\.js\?v=20261124-v8-stability1/);
 assert.equal((html.match(/class="anime-card komi-seo-card"/g) || []).length, 36);
 assert.doesNotMatch(html, /Добавить \/ Редактировать аниме/);
