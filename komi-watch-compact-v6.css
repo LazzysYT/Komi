@@ -781,3 +781,7 @@
 
 /* Preserve one-tap access to mobile episode/source sheets after compact layout. */
 @media(max-width:767px){#watchModal .komi-watch-quick-actions>.komi-mobile-watch-actions{display:flex!important;flex:1 0 100%!important;min-width:0;width:100%!important;gap:8px!important}#watchModal .komi-watch-quick-actions>.komi-mobile-watch-actions>button{flex:1 1 0;min-width:0;justify-content:center;padding-inline:10px!important}}
+
+/* Delay layout and painting of distant shelves without hiding or removing them. */
+@supports(content-visibility:auto){.komi-home-discovery>.komi-home-shelf:not(.komi-home-continue),.komi-home-discovery>.komi-feature-section,.komi-home-discovery>.komi-home-browse-footer{content-visibility:auto;contain-intrinsic-size:auto 340px}}
+@media(max-width:767px){@supports(content-visibility:auto){.komi-home-discovery>.komi-home-shelf:not(.komi-home-continue),.komi-home-discovery>.komi-feature-section{contain-intrinsic-size:auto 300px}}}
