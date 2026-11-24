@@ -96,8 +96,9 @@
     if (!slides.length) return '';
     const index = ((Number(context.currentSlideIndex) || 0) % slides.length + slides.length) % slides.length;
     const total = String(slides.length).padStart(2, '0');
-    const compactNetwork = typeof root.matchMedia === 'function' &&
-      root.matchMedia('(max-width: 767px)').matches;
+    // Fetch the visible slide first on every connection. Inactive slides
+    // are activated by the existing carousel controller.
+    const compactNetwork = true;
     return '<section class="komi-home-hero" aria-label="Рекомендуем посмотреть">' +
       '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка аниме">' +
       '<div class="hero-slides-wrapper">' + slides.map((anime, i) => {
@@ -315,7 +316,15 @@
       heading.insertAdjacentElement('afterend',p);
     }
     const community = container.querySelector('#komiLeaderboard');
-    if (community) root.KomiPublicLeaderboard?.mount(community);
+    if (community && typeof IntersectionObserver === 'function') {
+      const observer = new IntersectionObserver(entries => {
+        if (!community.isConnected) { observer.disconnect(); return; }
+        if (entries.some(entry => entry.isIntersecting)) {
+          observer.disconnect(); root.KomiPublicLeaderboard?.mount(community);
+        }
+      }, {rootMargin:'300px'});
+      observer.observe(community);
+    } else if (community) root.KomiPublicLeaderboard?.mount(community);
   }
   root.KomiHomeDiscovery = {render,afterRender,recentProgress};
 })(globalThis);
