@@ -2852,7 +2852,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (/^https:\/\/shikimori\.(?:io|one)\/system\/animes\/preview\/[1-9]\d*\.jpe?g(?:\?\d+)?$/i.test(source)) {
                 source = source.replace('/system/animes/preview/', '/system/animes/original/');
             }
-            const compact = window.matchMedia?.('(max-width: 767px)').matches;
+            const compact = currentView === 'home' || window.matchMedia?.('(max-width: 767px)').matches;
             return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source, compact ? 768 : 1280) : source;
         }
         function komiCardPosterFallback(img) {
