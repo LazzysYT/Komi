@@ -120,6 +120,8 @@
         const animeId = id(anime);
         // Shikimori IDs match MAL IDs; internal routes always use Komi's own ID.
         const malId = String(anime.shikimoriId || anime.idMal || anime.malId || animeId);
+        const banner = [anime.banner_url, anime.bannerUrl].find(url => typeof url === 'string' && /^https:\/\//i.test(url));
+        const video = [anime.banner_video_url, anime.bannerVideoUrl, anime.bannerVideo].find(url => typeof url === 'string' && /^https:\/\/[^\s]+\.(?:mp4|webm)(?:\?[^\s]*)?$/i.test(url));
         const still = Array.isArray(anime.screenshots)
           ? anime.screenshots.find(url => typeof url === 'string' && /^https:\/\//i.test(url)) : '';
         const year = context.year(anime);
@@ -136,6 +138,8 @@
         return '<article class="hero-slide komi-hd-poster' + (active ? ' active' : '') + '"' +
           ' data-komi-anime-id="' + escape(malId) + '"' +
           ' data-komi-hero-saved="' + (saved ? 'true' : 'false') + '"' +
+          (banner ? ' data-komi-hero-banner="' + escape(banner) + '"' : '') +
+          (video ? ' data-komi-hero-video="' + escape(video) + '"' : '') +
           (still ? ' data-komi-hero-still="' + escape(still) + '"' : '') +
           ' aria-hidden="' + (active ? 'false' : 'true') + '"' +
           (active ? '' : ' inert') +
