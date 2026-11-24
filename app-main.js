@@ -5066,6 +5066,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
             renderAnimeExtras(anime, seasonNumbers);
             window.KomiComments?.mount(anime.id);
+            window.KomiMobileSheets?.ensureWatchDock?.();
             void komiMountFollowButton(anime);
         }
 
