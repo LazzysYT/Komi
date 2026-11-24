@@ -377,6 +377,10 @@ async function checkNotifications(page) {
      return openWatchModal('1');
    });
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
+   assert.equal(await page.locator('#watchModal .komi-watch-quick-actions > .komi-deck-more').count(),1,
+     'Compact player must mount exactly one overflow menu');
+   assert.equal(await page.locator('#watchModal .komi-deck-menu #komiPlayerRecovery').count(),0,
+     'Source recovery must not be trapped in a collapsed menu');
    assert.match(await page.locator('.crunchy-hero-info').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);
    const mono = await page.evaluate(() => ({

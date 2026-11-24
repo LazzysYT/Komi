@@ -86,3 +86,10 @@ assert.ok(sample.length>=48 && sample.length<=150);
 assert.equal(new Set(sample.map(a=>a.id)).size,sample.length);
 assert.ok(yearCalls<=cards.length*2,'Snapshot year normalization must remain linear');
 assert.equal(typeCalls,cards.length);
+
+const compact=fs.readFileSync(path.join(root,'komi-watch-compact-v6.js'),'utf8');
+new vm.Script(compact);
+assert.ok(compact.indexOf('actions.append(more)')<compact.indexOf('const leftovers ='));
+assert.match(compact,/el.contains\(menu\)/);
+assert.doesNotMatch(compact,/menu.append\(recovery\)/);
+assert.equal(JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).outputDirectory,'.');

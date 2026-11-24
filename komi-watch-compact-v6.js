@@ -75,6 +75,9 @@
       more.append(trigger, create('div', 'komi-deck-menu'));
     }
     const menu = more.querySelector('.komi-deck-menu');
+    // Detach the nested menu before moving remaining control groups.
+    // A group containing the menu cannot be appended inside that menu.
+    actions.append(more);
     const source = controls.querySelector('.komi-watch-source');
     if (source) {
       if (wrapper.querySelector('video, iframe')) {
@@ -104,9 +107,10 @@
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
     const recovery = content.querySelector('#komiPlayerRecovery');
-    if (recovery && menu) {
-      recovery.classList.add('komi-recovery-in-menu');
-      menu.append(recovery);
+    if (recovery) {
+      // Keep source recovery accessible when the overflow menu is closed.
+      recovery.classList.remove('komi-recovery-in-menu');
+      if (recovery.parentElement !== stage) stage.append(recovery);
     }
     const views = sidebar.querySelector('.komi-episode-view-toggle');
     if (views) sidebar.querySelector('.komi-episode-number-grid')?.before(views);
@@ -117,13 +121,13 @@
     if (menu) {
       const leftovers = [...controls.children];
       leftovers.forEach(el => {
-        if (el === more || el === source || el === adfree || el.classList.contains('komi-cinema-action-status')) return;
+        if (el === more || el === source || el === adfree || el.contains(menu) || el.classList.contains('komi-cinema-action-status')) return;
         // Move each complete control group: labels, hidden state and nested menus stay intact.
         if (el.matches('button,a,details,select,label') || el.querySelector('button,a,details,select')) menu.append(el);
       });
     }
     more.querySelector('summary')?.setAttribute('title', 'Дополнительно');
-    actions.append(more);
+    if (more.parentElement !== actions) actions.append(more);
     const feedback = controls.querySelector('.komi-cinema-action-status');
     if (feedback) actions.append(feedback);
 
