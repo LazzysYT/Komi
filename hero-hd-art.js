@@ -15,6 +15,8 @@
   const pending = new Set();
   let fetching = false;
   let scanTimer = null;
+  let firstVisibleId = '';
+  let userSelectedSlide = false;
 
   function trustedAniListImage(raw) {
     try {
@@ -100,7 +102,11 @@
 
   async function applyArtwork(slide, entry) {
     const img = bindImage(slide);
-    if (!img) return;
+    if (!img || !slide.classList.contains('active')) return;
+    // Do not replace the initial already-visible artwork with a second large
+    // image. Upgrade when the visitor selects a different slide; keep the
+    // first artwork stable instead of triggering a late LCP and extra download.
+    if (!userSelectedSlide && String(slide.dataset.komiAnimeId||'')===firstVisibleId) return;
     const still = safeStill(slide.dataset.komiHeroStill);
     const originalPoster = safeStill(img.dataset.posterDirect);
     const signature = [entry.banner, still, entry.cover, originalPoster].join('|');
@@ -189,7 +195,11 @@
   }
 
   function bindVisible() {
-    document.querySelectorAll(SELECTOR+'.active').forEach(bindImage);
+    document.querySelectorAll(SELECTOR+'.active').forEach(slide=>{
+      const id=String(slide.dataset.komiAnimeId||'');
+      if (!firstVisibleId) firstVisibleId=id;
+      bindImage(slide);
+    });
   }
   function scan() {
     bindVisible();
@@ -201,7 +211,7 @@
       if (!slide.classList.contains('active')) return;
       bindImage(slide);
       const id = String(slide.dataset.komiAnimeId || '');
-      if (!/^[1-9]\d{0,9}$/.test(id)) return;
+      if (!/^[1-9]\d{0,9}$/.test(id) || (!userSelectedSlide && id===firstVisibleId)) return;
       const cached = getCached(id);
       if (cached) void applyArtwork(slide, cached);
       else pending.add(id);
@@ -224,7 +234,11 @@
     }, 1800);
   }
 
-  root.KomiHeroArt = {scan};
+  function selectedSlide() {
+    userSelectedSlide=true;
+    scan();
+  }
+  root.KomiHeroArt = {scan,selectedSlide};
   const container = document.getElementById('mainContainer');
   if (container) {
     new MutationObserver(scheduleScan).observe(container, {childList:true, subtree:true});
