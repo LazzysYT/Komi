@@ -6,6 +6,8 @@ on:
       - 'index.html'
       - '*.js'
       - '*.css'
+      - 'scripts/minify-static.cjs'
+      - 'vercel.json'
       - '.github/workflows/komi-v8-lighthouse.yml'
   workflow_dispatch:
 permissions:
@@ -30,6 +32,8 @@ jobs:
           node-version: '22'
       - name: Install pinned Lighthouse
         run: npm install --prefix "$RUNNER_TEMP/komi-lh" --no-save --package-lock=false --ignore-scripts lighthouse@13.6.0
+      - name: Minify candidate as in Vercel build
+        run: npx --yes --package=esbuild@0.25.12 -- node scripts/minify-static.cjs
       - name: Compare production and local candidate
         env:
           DEVICE: ${{ matrix.device }}
@@ -47,7 +51,7 @@ jobs:
           "$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse" http://127.0.0.1:8765/ "${args[@]}" --output-path=./lighthouse-results/candidate.json
           node <<'NODE'
           const fs=require('node:fs');
-          const out=['## Lighthouse '+process.env.DEVICE,'','Local candidate uses a static server; its hosting latency and headers differ from production.','', '| Target | Performance | LCP (ms) | TBT (ms) | CLS |','| --- | ---: | ---: | ---: | ---: |'];
+          const out=['## Lighthouse '+process.env.DEVICE,'','Minified local candidate uses a static server; hosting latency, compression and headers differ from production.','', '| Target | Performance | LCP (ms) | TBT (ms) | CLS |','| --- | ---: | ---: | ---: | ---: |'];
           let candidateScore;
           for(const name of ['production','candidate']){
             const r=JSON.parse(fs.readFileSync('lighthouse-results/'+name+'.json','utf8'));

@@ -69,6 +69,14 @@ jobs:
           node scripts/static-ui-events-browser.cjs
           node scripts/dynamic-ui-events-browser.cjs
           node scripts/csp-enforcement-browser.cjs
+      - name: Verify minified build in Chromium
+        env:
+          KOMI_TEST_URL: http://127.0.0.1:8766
+        run: |
+          npx --yes --package=esbuild@0.25.12 -- node scripts/minify-static.cjs
+          python3 -m http.server 8766 --bind 127.0.0.1 >/tmp/komi-minified.log 2>&1 &
+          node scripts/v8-guest-browser.cjs
+          node scripts/shop-v3-browser.cjs
       - name: Smoke-test actual komianime.online as a signed-out visitor
         timeout-minutes: 4
         run: node scripts/live-domain-smoke.cjs
