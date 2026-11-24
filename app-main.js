@@ -1802,6 +1802,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (!maxSlides) return;
             currentSlideIndex = (currentSlideIndex + direction + maxSlides) % maxSlides;
             updateHeroSlideView();
+            window.KomiHeroArt?.selectedSlide?.();
             startHeroAutoSlide();
         }
 
@@ -1811,6 +1812,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (!maxSlides || !Number.isInteger(index) || index < 0 || index >= maxSlides) return;
             currentSlideIndex = index;
             updateHeroSlideView();
+            window.KomiHeroArt?.selectedSlide?.();
             startHeroAutoSlide();
         }
 
@@ -5282,7 +5284,31 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
         }
         render();
-        const initialCatalogPromise = loadDataFromCloud();
+        // Public preview is interactive immediately; give the visible hero a
+        // short head start before downloading the full catalog. User input,
+        // catalog routes and deep links bypass the wait.
+        const initialCatalogPromise = new Promise(resolve => {
+            let started=false, timer=0;
+            const events=['pointerdown','keydown','focusin','popstate','hashchange'];
+            const image=document.querySelector('.komi-home-discovery .hero-slide.active .komi-hub-hero-art');
+            const start=()=>{
+                if(started)return;
+                started=true;
+                clearTimeout(timer);
+                for(const event of events) window.removeEventListener(event,start,true);
+                image?.removeEventListener('load',start);
+                image?.removeEventListener('error',start);
+                resolve(loadDataFromCloud());
+            };
+            if(currentView!=='home'||!komiHomePreviewCatalog||!image||image.complete||
+                new URLSearchParams(location.search).has('anime')||komiRouteView()!=='home') {
+                start();return;
+            }
+            for(const event of events) window.addEventListener(event,start,{capture:true,once:true,passive:true});
+            image.addEventListener('load',start,{once:true});
+            image.addEventListener('error',start,{once:true});
+            timer=setTimeout(start,1800);
+        });
         // Let the public catalog load first on mobile: its first paint should
         // not compete with twelve AniList requests for broadcast dates.
         // Delay non-critical calendar work on all screen sizes.
