@@ -170,6 +170,6 @@
       "permanent": true
     }
   ],
-  "buildCommand": "npx --yes --package=esbuild@0.25.12 -- node scripts/minify-static.cjs",
+  "buildCommand": "npx --yes --package=esbuild@0.25.12 --package=postcss@8.5.6 -- node scripts/minify-static.cjs",
   "outputDirectory": "."
 }

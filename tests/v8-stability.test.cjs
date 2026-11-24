@@ -14,7 +14,7 @@ for (const id of ['notifBellBtn', 'komiFriendsMyTab', 'notifDropdown']) {
 }
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
 assert.match(html, /app-main\.js\?v=20261124-v8-stability7/);
-assert.match(html, /komi-home-boot\.js\?v=20261124-v8-stability1/);
+assert.match(html, /komi-home-boot\.js\?v=20261124-v8-stability8/);
 assert.equal((html.match(/class="anime-card komi-seo-card"/g) || []).length, 36);
 assert.doesNotMatch(html, /Добавить \/ Редактировать аниме/);
 assert.match(boot, /setTimeout\(finish, 5000\)/);

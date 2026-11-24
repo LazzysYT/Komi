@@ -22,6 +22,7 @@ try {
     console.log(name+': '+original.length+' -> '+minified.length+' bytes');
   }
   for(const {input,output} of pending)fs.renameSync(output,input);
+  require('./build-first-paint.cjs').buildFirstPaint(root);
 } finally {
   for(const {output} of pending)fs.rmSync(output,{force:true});
 }

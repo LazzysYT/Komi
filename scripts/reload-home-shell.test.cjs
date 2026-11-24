@@ -10,7 +10,7 @@ const js = read('komi-home-boot.js');
 const css = read('komi-icon-rail.css');
 
 test('SEO HTML remains indexable, JS shell is isolated and loads before the body', () => {
-  assert.match(html,/komi-home-boot\.js\?v=20261124-v8-stability1/);
+  assert.match(html,/komi-home-boot\.js\?v=20261124-v8-stability8/);
   assert.ok(html.indexOf('komi-home-boot.js') < html.indexOf('<body'));
   assert.match(html,/class="anime-card komi-seo-card"/);
   assert.match(html,/class="komi-boot-shell"/);

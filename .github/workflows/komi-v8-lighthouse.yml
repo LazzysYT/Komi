@@ -7,6 +7,8 @@ on:
       - '*.js'
       - '*.css'
       - 'scripts/minify-static.cjs'
+      - 'scripts/build-first-paint.cjs'
+      - 'scripts/lighthouse-static-server.py'
       - 'vercel.json'
       - '.github/workflows/komi-v8-lighthouse.yml'
   workflow_dispatch:
@@ -33,17 +35,18 @@ jobs:
       - name: Install pinned Lighthouse
         run: npm install --prefix "$RUNNER_TEMP/komi-lh" --no-save --package-lock=false --ignore-scripts lighthouse@13.6.0
       - name: Minify candidate as in Vercel build
-        run: npx --yes --package=esbuild@0.25.12 -- node scripts/minify-static.cjs
+        run: npx --yes --package=esbuild@0.25.12 --package=postcss@8.5.6 -- node scripts/minify-static.cjs
       - name: Compare production and local candidate
         env:
           DEVICE: ${{ matrix.device }}
         run: |
           set -euo pipefail
           export CHROME_PATH="$(command -v google-chrome)"
-          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-lighthouse-server.log 2>&1 &
+          python3 scripts/lighthouse-static-server.py > /tmp/komi-lighthouse-server.log 2>&1 &
           server=$!
           trap 'kill "$server" 2>/dev/null || true' EXIT
           curl -fsS --retry 8 --retry-connrefused --retry-delay 1 http://127.0.0.1:8765/ > /dev/null
+          curl -fsSI -H 'Accept-Encoding: gzip' http://127.0.0.1:8765/komi.production.css | grep -i '^Content-Encoding: gzip'
           mkdir -p lighthouse-results
           args=(--only-categories=performance --output=json --chrome-flags="--headless=new --no-sandbox" --max-wait-for-load=45000 --quiet)
           if [ "$DEVICE" = desktop ]; then args+=(--preset=desktop); fi
@@ -51,7 +54,7 @@ jobs:
           "$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse" http://127.0.0.1:8765/ "${args[@]}" --output-path=./lighthouse-results/candidate.json
           node <<'NODE'
           const fs=require('node:fs');
-          const out=['## Lighthouse '+process.env.DEVICE,'','Minified local candidate uses a static server; hosting latency, compression and headers differ from production.','', '| Target | Performance | LCP (ms) | TBT (ms) | CLS |','| --- | ---: | ---: | ---: | ---: |'];
+          const out=['## Lighthouse '+process.env.DEVICE,'','Local candidate uses minification and gzip like typical production delivery; hosting latency and headers differ. Scores are not directly comparable with prior uncompressed local runs.','', '| Target | Performance | LCP (ms) | TBT (ms) | CLS |','| --- | ---: | ---: | ---: | ---: |'];
           let candidateScore;
           for(const name of ['production','candidate']){
             const r=JSON.parse(fs.readFileSync('lighthouse-results/'+name+'.json','utf8'));
