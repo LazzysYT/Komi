@@ -89,6 +89,9 @@
         source.setAttribute('aria-hidden','true');
       }
     }
+    // Keep mobile source and episode controls outside the hidden legacy deck.
+    const mobileDock = controls.querySelector('.komi-mobile-watch-actions');
+    if (mobileDock) actions.prepend(mobileDock);
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
     const recovery = content.querySelector('#komiPlayerRecovery');
