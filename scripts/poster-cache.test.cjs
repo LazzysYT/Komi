@@ -52,7 +52,12 @@ test('all pre-rendered public posters use external CDN with direct fallback',()=
   const images=[...html.matchAll(/<img\b[^>]*data-poster-direct="https:\/\/(?:shikimori\.io|shikimori\.one|s4\.anilist\.co)[^"]+"[^>]*>/g)];
   assert.ok(images.length>=37,'Initial static poster cache is not attached');
   for(const [tag] of images) {
-    assert.match(tag,/src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
+    const deferred = tag.includes('data-komi-hero-deferred-src=');
+    if (deferred) {
+      assert.match(tag,/\ssrc="\/anime-artwork\.svg"/);
+      assert.match(tag,/data-komi-hero-deferred-src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
+      assert.match(tag,/loading="lazy"/);
+    } else assert.match(tag,/\ssrc="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
     assert.match(tag,tag.includes('komi-hub-hero-art') ? /&amp;w=768&amp;output=webp/ : /&amp;w=360&amp;output=webp/);
     assert.match(tag,/data-komi-error="poster-error"/);
   }
