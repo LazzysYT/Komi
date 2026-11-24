@@ -76,7 +76,8 @@
     observe();
   }
   // If a script or network request fails, restore the navigable SEO fallback.
-  timer = setTimeout(finish, 20000);
+  // A slow or unavailable JS/CDN must not hide the real, navigable HTML for 20 seconds.
+  timer = setTimeout(finish, 5000);
   window.addEventListener('hashchange', () => {
     if (location.hash && location.hash !== '#home') finish();
   });
