@@ -161,7 +161,7 @@
     </button>
 
     <!-- Keep IDs and inner elements: the app replaces notification content at runtime. -->
-    <div class="notification-dropdown" id="notifDropdown">
+    <div class="notification-dropdown" id="notifDropdown" hidden style="display:none!important">
       <div class="notif-header">
         <span>Уведомления</span>
         <button type="button" id="markNotificationsReadBtn" class="btn-secondary"
@@ -220,7 +220,7 @@
                 <button type="button" id="komiMobileMoreToggle" class="komi-mobile-more-toggle"
                     aria-haspopup="true" aria-expanded="false" aria-controls="komiMobileMoreMenu"
                     aria-label="Дополнительные разделы">
-                    <span aria-hidden="true">⋯</span><span class="komi-mobile-more-caption">Ещё</span>
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></svg><span class="komi-mobile-more-caption">Ещё</span>
                 </button>
                 <div id="komiMobileMoreMenu" class="komi-mobile-more-menu" role="group"
                     aria-label="Дополнительные разделы" hidden>

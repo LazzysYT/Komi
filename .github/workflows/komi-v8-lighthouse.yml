@@ -55,7 +55,11 @@ jobs:
             const score=Math.round(r.categories.performance.score*100);
             const a=r.audits;
             out.push('| '+name+' | '+score+' | '+Math.round(a['largest-contentful-paint'].numericValue)+' | '+Math.round(a['total-blocking-time'].numericValue)+' | '+a['cumulative-layout-shift'].numericValue.toFixed(3)+' |');
-            if(name==='candidate') candidateScore=score;
+            if(name==='candidate') {
+              candidateScore=score;
+              console.log('Largest potential savings (ms):', Object.values(a).filter(x=>Number.isFinite(x.details?.overallSavingsMs)&&x.details.overallSavingsMs>0).sort((x,y)=>y.details.overallSavingsMs-x.details.overallSavingsMs).slice(0,8).map(x=>({id:x.id,ms:Math.round(x.details.overallSavingsMs)})));
+              console.log('Largest network resources:', (a['network-requests']?.details?.items||[]).filter(x=>Number.isFinite(x.transferSize)).sort((x,y)=>y.transferSize-x.transferSize).slice(0,8).map(x=>({url:String(x.url).split('?')[0],bytes:x.transferSize})));
+            }
           }
           out.push('', 'Target: 90+ (candidate). A local score is not a verified production score.');
           const report=out.join('\n')+'\n';

@@ -657,12 +657,12 @@ async function komiLoadCatalogPages(attempt = 0) {
 
         function toggleNotifications() {
             const dropdown = document.getElementById('notifDropdown');
-            if (!dropdown.classList.toggle('active')) return;
-            if (!currentUser?.authUserId) {
+            if (!currentUser?.authUserId || dropdown.hidden) {
                 dropdown.classList.remove('active');
                 openAuthModal('login');
                 return;
             }
+            if (!dropdown.classList.toggle('active')) return;
             loadProtectedFriends().catch(error => console.warn('Список друзей:', error.message));
             loadAccountNotifications().catch(() => komiStatusFeedback('Не удалось загрузить уведомления. Откройте список ещё раз.'));
         }
@@ -1285,7 +1285,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const tooltip = profileButton.querySelector('.komi-rail-tooltip');
                 if (tooltip) tooltip.textContent = label;
             }
-            for (const control of document.querySelectorAll('#notifBellBtn, [data-komi-mobile-extra="notifications"], #komiFriendsMyTab')) {
+            for (const control of document.querySelectorAll('#notifBellBtn, [data-komi-mobile-extra="notifications"], #komiFriendsMyTab, #notifDropdown')) {
                 control.hidden = !authenticated;
                 if (authenticated) control.style.removeProperty('display');
                 else control.style.setProperty('display','none','important');
