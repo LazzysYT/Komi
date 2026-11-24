@@ -1,7 +1,7 @@
 /* Komi Anime: progressive hero artwork with native-resolution fallbacks.
  * Requests public metadata only; does not send account information.
  * Wide images must be genuinely wide and high resolution. Low-resolution
- * portraits fill the entire hero with soft focus instead of a narrow strip.
+ * portraits stay sharp and contained; wide images upgrade after first paint.
  */
 (function (root) {
   'use strict';
@@ -116,13 +116,14 @@
   async function applyArtwork(slide, entry) {
     const img = bindImage(slide);
     if (!img || !slide.classList.contains('active')) return;
-    // Do not replace the initial already-visible artwork with a second large
-    // image. Upgrade when the visitor selects a different slide; keep the
-    // first artwork stable instead of triggering a late LCP and extra download.
-    if (!userSelectedSlide && String(slide.dataset.komiAnimeId||'')===firstVisibleId) return;
+    // Upgrade the initial portrait only when a verified landscape is available.
+    // Keep an already-wide first paint intact.
+    const firstUnselected = !userSelectedSlide && String(slide.dataset.komiAnimeId||'')===firstVisibleId;
+    if (firstUnselected && slide.classList.contains('komi-hd-wide')) return;
+    const banner = safeStill(slide.dataset.komiHeroBanner);
     const still = safeStill(slide.dataset.komiHeroStill);
     const originalPoster = safeStill(img.dataset.posterDirect);
-    const signature = [entry.banner, still, entry.cover, originalPoster].join('|');
+    const signature = [banner, entry.banner, still, entry.cover, originalPoster].join('|');
     if (img.dataset.komiHeroChecked === signature) return;
     img.dataset.komiHeroChecked = signature;
     const stillActive = () => {
@@ -135,7 +136,7 @@
     // Prefer the largest real widescreen image (banner or anime screenshot).
     // At 900-1199px, slight softening prevents visible upscaling artifacts.
     let bestLandscape = null;
-    for (const url of new Set([entry.banner, still].filter(Boolean))) {
+    for (const url of new Set([banner, entry.banner, still].filter(Boolean))) {
       const result = await preflight(url);
       if (!stillActive()) return;
       if (result && result.width >= 900 && result.height > 0 &&
@@ -149,7 +150,8 @@
       return;
     }
 
-    // No HD landscape: fill the full hero with a softly blurred portrait.
+    // No HD landscape: keep the first paint stable; later slides may improve their portrait.
+    if (firstUnselected) return;
     // Use the original cover if it has better native dimensions than the proxy.
     let bestPortrait = null;
     for (const url of new Set([entry.cover, originalPoster].filter(Boolean))) {
@@ -227,8 +229,33 @@
       bindImage(slide);
     });
   }
+  function syncVideos() {
+    const connection = root.navigator?.connection;
+    const allowed = !document.hidden && !connection?.saveData && !/(^|-)2g$/.test(connection?.effectiveType || '') && !root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    document.querySelectorAll(SELECTOR).forEach(slide => {
+      const existing = slide.querySelector('video.komi-hero-video');
+      const active = allowed && slide.classList.contains('active');
+      const url = safeStill(slide.dataset.komiHeroVideo);
+      if (!active || !url) { if (existing) { existing.pause(); existing.classList.remove('is-playing'); } return; }
+      if (slide.dataset.komiHeroVideoFailed === url) return;
+      let video = existing;
+      if (!video) {
+        video = document.createElement('video');
+        video.className = 'komi-hero-video';
+        video.muted = true; video.defaultMuted = true; video.loop = true;
+        video.playsInline = true; video.preload = 'none';
+        video.setAttribute('aria-hidden','true');
+        video.addEventListener('playing', () => { if (slide.classList.contains('active') && !document.hidden) video.classList.add('is-playing'); });
+        video.addEventListener('error', () => { slide.dataset.komiHeroVideoFailed = url; video.classList.remove('is-playing'); });
+        slide.querySelector('img.komi-hub-hero-art')?.after(video);
+        video.src = url;
+      }
+      if (video.paused) video.play().catch(() => { video.classList.remove('is-playing'); });
+    });
+  }
   function scan() {
     bindVisible();
+    syncVideos();
     const connection = root.navigator?.connection;
     if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '') || document.hidden) return;
     document.querySelectorAll(SELECTOR).forEach(slide => {
@@ -237,7 +264,7 @@
       if (!slide.classList.contains('active')) return;
       bindImage(slide);
       const id = String(slide.dataset.komiAnimeId || '');
-      if (!/^[1-9]\d{0,9}$/.test(id) || (!userSelectedSlide && id===firstVisibleId)) return;
+      if (!/^[1-9]\d{0,9}$/.test(id)) return;
       const cached = getCached(id);
       if (cached) void applyArtwork(slide, cached);
       else if ((retryAfter.get(id) || 0) <= Date.now()) pending.add(id);
@@ -266,8 +293,9 @@
   }
   document.addEventListener('visibilitychange', () => {
     if (!document.hidden) scheduleScan();
+    syncVideos();
   });
-  root.KomiHeroArt = {scan,selectedSlide};
+  root.KomiHeroArt = {scan,selectedSlide,syncVideos};
   const container = document.getElementById('mainContainer');
   if (container) {
     new MutationObserver(scheduleScan).observe(container, {childList:true, subtree:true});
