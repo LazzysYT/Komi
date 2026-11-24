@@ -6,7 +6,7 @@
     <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
     <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
     <meta name="theme-color" content="#090909">
-    <meta name="komi-ui-revision" content="20261124-navigation-player-v7.7">
+    <meta name="komi-ui-revision" content="20261124-navigation-player-v7.8">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="Komi Anime Hub">
@@ -22,16 +22,16 @@
     <script src="/premium-entry.js?v=20261121"></script>
     <script src="/shop-first-paint.js?v=20261124-v2"></script>
     <!-- Runs before body parsing: JS visitors never see the SEO fallback flash. -->
-    <script src="/komi-home-boot.js?v=20261124-v5"></script>
+    <script src="/komi-home-boot.js?v=20261124-v78"></script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
     <link rel="stylesheet" href="/komi.production.css?v=20261122h-partners-v2">
     <link rel="stylesheet" href="/komi-pill-system.css?v=20261124-v71">
     <link rel="stylesheet" href="/komi-icon-rail.css?v=20261124-v75">
-    <link rel="stylesheet" href="/komi-shop-v5.css?v=20261123-shopmono-v5">
+    <link rel="stylesheet" href="/komi-shop-v5.css?v=20261123-shopmono-v5" media="print" data-komi-deferred-style="shop">
     <link rel="stylesheet" href="/button-animations.css?v=20261123a">
     <link rel="stylesheet" href="/komi-genre-moods.css?v=20261123-mobilefix-v4">
-    <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261124-v74">
+    <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261124-v78">
     
     
     
@@ -284,7 +284,7 @@
                 </div>
                 <div class="komi-seo-spotlight-art">
                     <img src="https://wsrv.nl/?url=https%3A%2F%2Fshikimori.io%2Fuploads%2Fposter%2Fanimes%2F52991%2Fdc841cc9fce2aa1e9907a4b61c5d1d92.jpeg&amp;w=360&amp;output=webp" data-poster-direct="https://shikimori.io/uploads/poster/animes/52991/dc841cc9fce2aa1e9907a4b61c5d1d92.jpeg" referrerpolicy="no-referrer" data-komi-error="poster-error"
-                         width="360" height="540" fetchpriority="high" loading="eager" decoding="async"
+                         width="360" height="540" fetchpriority="low" loading="lazy" decoding="async"
                          alt="Постер аниме «Провожающая в последний путь Фрирен»">
                 </div>
             </section>
@@ -618,8 +618,8 @@
     <script defer src="./poster-cache-client.js?v=20261124-v75"></script>
     <script defer src="./player-core.js"></script>
     <script defer src="./player-source-preferences.js?v=20261121a"></script>
-    <script defer src="./komi-genre-moods.js?v=20261123-mobileperf-v2"></script>
-    <script defer src="./home-discovery.js?v=20261124-perf-v77"></script>
+    <script defer src="./komi-genre-moods.js?v=20261124-perf-v78"></script>
+    <script defer src="./home-discovery.js?v=20261124-perf-v78"></script>
     <script defer src="./komi-public-leaderboard.js?v=20261122a"></script>
     <script defer src="./komi-home-snapshot.js"></script>
     <script defer src="./komi-resume-cache.js"></script>
@@ -635,7 +635,7 @@
     <script defer src="./komi-premium-store.js?v=20261122d"></script>
     <script defer src="./komi-public-catalog-cache.js?v=20261124-perf-v77"></script>
     <script defer src="./komi-home-seed.js?v=20261124-v1"></script>
-    <script defer src="./app-main.js?v=20261124-perf-v77"></script>
+    <script defer src="./app-main.js?v=20261124-perf-v78"></script>
     <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
     <script defer src="./hero-hd-art.js?v=20261124-perf-v75"></script>
     <script defer src="./hybrid-search.js?v=20261122a"></script>
