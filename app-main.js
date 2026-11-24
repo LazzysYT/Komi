@@ -1064,6 +1064,16 @@ async function komiLoadCatalogPages(attempt = 0) {
         // Returning to an unchanged, unfiltered catalog should never re-sort
         // thousands of titles. Private watched-status filters bypass this cache.
         let komiDefaultCatalogCache = null;
+        // Derive expensive sort keys only once per item, not O(n log n)
+        // times inside comparisons. Stable ties keep the existing card order.
+        function komiSortCatalogByYear(items, newestId = false) {
+            return items.map(anime => ({
+                anime, year: Number(komiAnimeYear(anime)) || 0,
+                rating: Number(anime.shikiRating) || 0,
+                id: Number(anime.shikimoriId || anime.id) || 0
+            })).sort((a,b) => b.year-a.year || (newestId ? b.id-a.id : b.rating-a.rating))
+                .map(item=>item.anime);
+        }
         function komiCatalogFiltered() {
             if (catalogCollection === 'all' && catalogCategory === 'all' &&
                 catalogFilterGenre === 'Все' && catalogFilterYear === 'Все' &&
@@ -1073,9 +1083,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     komiDefaultCatalogCache?.revision === komiCatalogRevision &&
                     komiDefaultCatalogCache?.length === animeList.length)
                     return komiDefaultCatalogCache.sorted;
-                const sorted = [...animeList].sort((a,b) =>
-                    Number(komiAnimeYear(b)) - Number(komiAnimeYear(a)) ||
-                    (Number(b.shikiRating)||0) - (Number(a.shikiRating)||0));
+                const sorted = komiSortCatalogByYear(animeList);
                 komiDefaultCatalogCache = {
                     source: animeList, revision: komiCatalogRevision,
                     length: animeList.length, sorted
@@ -1101,13 +1109,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if(queries.length&&![a.title,a.originalTitle,a.english,a.japanese,...(Array.isArray(a.synonyms)?a.synonyms:[]),...genres].some(v=>queries.some(q=>String(v||'').toLocaleLowerCase('ru-RU').includes(q))))return false;
                 return true;
             });
-            if(catalogSort==='popular')filtered.sort((a,b)=>
-                Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||
-                (Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
-            else if(catalogSort==='updated')filtered.sort((a,b)=>(Date.parse(b.lastEpisodeAddedAt)||0)-(Date.parse(a.lastEpisodeAddedAt)||0));
+            if(catalogSort==='popular')return komiSortCatalogByYear(filtered);
+            else if(catalogSort==='updated')return filtered.map(anime=>({anime,date:Date.parse(anime.lastEpisodeAddedAt)||0}))
+                .sort((a,b)=>b.date-a.date).map(item=>item.anime);
             else if(catalogSort==='rating')filtered.sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
             else if(catalogSort==='alphabet')filtered.sort((a,b)=>String(a.title||'').localeCompare(String(b.title||''),'ru'));
-            else if(catalogSort==='year')filtered.sort((a,b)=>Number(komiAnimeYear(b))-Number(komiAnimeYear(a))||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id));
+            else if(catalogSort==='year')return komiSortCatalogByYear(filtered,true);
             return filtered;
         }
         function komiCatalogChipsMarkup() {

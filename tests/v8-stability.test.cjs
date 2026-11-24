@@ -13,7 +13,7 @@ for (const id of ['notifBellBtn', 'komiFriendsMyTab', 'notifDropdown']) {
   assert.match(html, new RegExp('id="' + id + '"[^>]*hidden'));
 }
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
-assert.match(html, /app-main\.js\?v=20261124-v8-stability7/);
+assert.match(html, /app-main\.js\?v=20261124-v8-stability9/);
 assert.match(html, /komi-home-boot\.js\?v=20261124-v8-stability8/);
 assert.equal((html.match(/class="anime-card komi-seo-card"/g) || []).length, 36);
 assert.doesNotMatch(html, /Добавить \/ Редактировать аниме/);
@@ -97,3 +97,14 @@ assert.equal(JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).o
 assert.match(html,/komi-watch-compact-v6\.css[^"]*" media="print" data-komi-deferred-style="watch"/);
 assert.match(app,/if \(watchStyle\) watchStyle.media='all'/);
 assert.match(compact,/if \(drawer\) actions.append\(drawer\)/);
+
+// Real sort implementation, executed against a deterministic 1,000-card fixture.
+const sortStart=app.indexOf('function komiSortCatalogByYear(');
+const sortEnd=app.indexOf('function komiCatalogFiltered()',sortStart);
+let sortYearCalls=0;
+const sortContext=vm.createContext({komiAnimeYear:a=>{sortYearCalls++;return a.year}});
+vm.runInContext(app.slice(sortStart,sortEnd),sortContext);
+const oldSort=[...cards].sort((a,b)=>Number(b.year)-Number(a.year)||Number(b.shikiRating)-Number(a.shikiRating));
+assert.equal(JSON.stringify(sortContext.komiSortCatalogByYear(cards).map(a=>a.id)),JSON.stringify(oldSort.map(a=>a.id)));
+assert.equal(sortYearCalls,cards.length);
+assert.equal(JSON.stringify(sortContext.komiSortCatalogByYear(cards,true).map(a=>a.id)),JSON.stringify([...cards].sort((a,b)=>Number(b.year)-Number(a.year)||Number(b.id)-Number(a.id)).map(a=>a.id)));

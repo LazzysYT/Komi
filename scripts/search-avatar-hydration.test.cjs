@@ -15,7 +15,7 @@ test('search has one visible keyboard focus ring on wrapper, not a nested input 
   assert.match(css,/\.komi-hub-overlay \.search-bar:focus-within\s*\{\s*border-color:/);
   assert.match(css,/\.komi-media-hub \.komi-hub-overlay #searchDropdown\.active\s*\{/);
   assert.ok(bundle.includes(css.trim()),'The live CSS bundle must contain search corrections');
-  assert.match(html,/href="\/komi\.production\.css\?v=\d+[a-z](?:-[a-z0-9-]+)?"/);
+  assert.match(html,/href="\/komi\.production\.css\?v=\d+(?:[a-z])?(?:-[a-z0-9-]+)?"/);
 });
 
 test('verified avatar cache only returns the same account URL and never persists secrets',()=>{
