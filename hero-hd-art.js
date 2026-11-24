@@ -193,7 +193,7 @@
     document.querySelectorAll(SELECTOR).forEach(slide => {
       // On cellular, do not request high-resolution alternatives for slides
       // the visitor has not selected yet.
-      if (mobile && !slide.classList.contains('active')) return;
+      if (!slide.classList.contains('active')) return;
       bindImage(slide);
       const id = String(slide.dataset.komiAnimeId || '');
       if (!/^[1-9]\d{0,9}$/.test(id)) return;
@@ -208,14 +208,18 @@
     if (scanTimer !== null) return;
     scanTimer = setTimeout(() => {
       scanTimer = null;
-      scan();
-    }, 100);
+      const connection = root.navigator?.connection;
+      if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
+      if (document.hidden) return;
+      if (typeof root.requestIdleCallback === 'function') root.requestIdleCallback(scan,{timeout:5000});
+      else scan();
+    }, 1800);
   }
 
   root.KomiHeroArt = {scan};
   const container = document.getElementById('mainContainer');
   if (container) {
     new MutationObserver(scheduleScan).observe(container, {childList:true, subtree:true});
-    scan();
+    scheduleScan();
   }
 })(window);
