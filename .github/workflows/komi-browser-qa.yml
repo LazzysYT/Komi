@@ -86,9 +86,9 @@ jobs:
           set -euo pipefail
           [[ "$BASE_SHA" =~ ^[a-f0-9]{40}$ ]]
           git worktree add --detach "$RUNNER_TEMP/komi-baseline" "$BASE_SHA"
-          python3 -m http.server 8765 --bind 127.0.0.1 --directory "$RUNNER_TEMP/komi-baseline" >"$RUNNER_TEMP/komi-base.log" 2>&1 &
+          python3 "$GITHUB_WORKSPACE/tests/static-perf-server.py" 8765 --directory "$RUNNER_TEMP/komi-baseline" >"$RUNNER_TEMP/komi-base.log" 2>&1 &
           BASE_PID=$!
-          python3 -m http.server 8766 --bind 127.0.0.1 --directory "$GITHUB_WORKSPACE" >"$RUNNER_TEMP/komi-candidate.log" 2>&1 &
+          python3 "$GITHUB_WORKSPACE/tests/static-perf-server.py" 8766 --directory "$GITHUB_WORKSPACE" >"$RUNNER_TEMP/komi-candidate.log" 2>&1 &
           HEAD_PID=$!
           trap 'kill "$BASE_PID" "$HEAD_PID" 2>/dev/null || true' EXIT
           export CHROME_PATH="$(command -v google-chrome || command -v chromium)"
@@ -106,8 +106,8 @@ jobs:
           done
           node - "$RUNNER_TEMP" <<'NODE' | tee -a "$GITHUB_STEP_SUMMARY"
           const fs=require('node:fs');
-          console.log('## Local static comparison (not production Vercel)');
-          console.log('Same runner, real public network dependencies; no account credentials or deployed API functions.');
+          console.log('## Local compressed static comparison (not production Vercel)');
+          console.log('Same runner, gzip text assets for both versions, real public network dependencies; no account credentials or deployed API functions.');
           for (const version of ['baseline','candidate']) for (const mode of ['mobile','desktop']) {
             const r=JSON.parse(fs.readFileSync(process.argv[2]+'/komi-'+version+'-'+mode+'.json','utf8'));
             if(r.runtimeError) throw Error(r.runtimeError.message);
