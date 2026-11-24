@@ -899,7 +899,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const years = [...new Set(animeList.map(komiAnimeYear).filter(Boolean))]
                 .sort((a,b) => Number(b)-Number(a));
             return '<section id="komiHomeQuickFilters" class="komi-feature-section" aria-labelledby="komiHomeQuickFiltersTitle">' +
-                window.KomiGenreMoods.render({animeList, genre:'Все', availableGenres:availableGenresList, artwork:animeArtwork}) +
+                window.KomiGenreMoods.render({animeList, genre:'Все', availableGenres:availableGenresList, artwork:animeArtwork, deferImages:true}) +
                 '<div class="komi-catalog-head-row"><div class="komi-catalog-heading">' +
                   '<h2 id="komiHomeQuickFiltersTitle">Каталог аниме</h2><span class="komi-catalog-number">' +
                     animeList.length + ' тайтлов</span></div>' +
@@ -2909,6 +2909,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 ).join('') + '</div></div>';
             const posterSource=komiCardPosterSource(anime.poster || anime.banner);
             const poster=escapeFriendHtml(posterSource.preferred);
+            const deferPoster=currentView==='home' && /^https?:\/\//i.test(posterSource.preferred);
+            const posterMarkup=deferPoster ? 'src="/anime-artwork.svg" data-komi-lazy-src="'+poster+'"' : 'src="'+poster+'"';
             const posterDirectAttr=posterSource.direct ? ' data-poster-direct="'+escapeFriendHtml(posterSource.direct)+'"' : '';
             const posterOriginalAttr=posterSource.original ? ' data-poster-original="'+escapeFriendHtml(posterSource.original)+'"' : '';
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
@@ -2918,7 +2920,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 'data-komi-onclick="playSound();openWatchModal(\''+id+'\')" data-komi-onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+
                 '<div class="anime-poster-box">'+statusMarkup+quickStatusMarkup+
-                    '<img src="'+poster+'" alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterDirectAttr+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
+                    '<img '+posterMarkup+' alt="Постер: '+name+'" class="anime-poster" loading="lazy" decoding="async" referrerpolicy="no-referrer"'+posterDirectAttr+posterOriginalAttr+' data-komi-onerror="komiCardPosterFallback(this)">'+
                     '<div class="anime-poster-fallback" style="display:'+(poster?'none':'flex')+';position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:10px;padding:12px;text-align:center;background:linear-gradient(145deg,#1f1f1f,#101010);color:#939393"><span style="font-size:30px;font-weight:800;color:#eaeaea">K</span><span style="font-size:11px;line-height:1.4">Постер недоступен</span></div>'+
                     '<div class="komi-card-hover-ui" aria-hidden="false">'+'<span class="komi-card-hover-play" aria-hidden="true">▶</span>'+'<div class="komi-card-hover-actions">'+'<button type="button" class="komi-card-details-now" data-komi-card-detail aria-label="Подробнее: '+name+'">Подробнее</button>'+'<button type="button" class="komi-card-watch-now" data-komi-onclick="playSound();openWatchModal(\''+id+'\')" aria-label="Смотреть: '+name+'">▶ Смотреть</button>'+'</div></div>'+
                 '</div>'+
