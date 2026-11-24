@@ -4885,6 +4885,9 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null, requestedEpisodeNumber = null) {
+            // Keep watch-specific CSS out of the first paint critical path.
+            const watchStyle=document.querySelector('link[data-komi-deferred-style="watch"]');
+            if (watchStyle) watchStyle.media='all';
             siteStats.views++;
             saveData();
             

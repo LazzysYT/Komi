@@ -790,3 +790,8 @@
 .komi-home-rail-pending{min-height:280px;background:none;}
 .komi-home-rail-pending::before{content:'';display:block;flex:1;min-width:0;min-height:240px;border-radius:16px;background:#141417;}
 @media(max-width:767px){.komi-home-rail-pending{min-height:245px}.komi-home-rail-pending::before{min-height:220px}}
+
+/* Use the dedicated episodes sheet on phones, with one desktop toggle. */
+@media(max-width:767px){#watchModal .komi-watch-quick-actions:has(.komi-mobile-watch-actions)>.komi-episodes-toggle{display:none!important}}
+#watchModal #komiPlayerRecovery:not([hidden]){grid-column:1!important;max-width:100%;min-width:0}
+#watchModal #komiPlayerRecovery[hidden]{display:none!important}

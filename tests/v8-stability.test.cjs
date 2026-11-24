@@ -13,7 +13,7 @@ for (const id of ['notifBellBtn', 'komiFriendsMyTab', 'notifDropdown']) {
   assert.match(html, new RegExp('id="' + id + '"[^>]*hidden'));
 }
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
-assert.match(html, /app-main\.js\?v=20261124-v8-stability5/);
+assert.match(html, /app-main\.js\?v=20261124-v8-stability7/);
 assert.match(html, /komi-home-boot\.js\?v=20261124-v8-stability1/);
 assert.equal((html.match(/class="anime-card komi-seo-card"/g) || []).length, 36);
 assert.doesNotMatch(html, /Добавить \/ Редактировать аниме/);
@@ -93,3 +93,7 @@ assert.ok(compact.indexOf('actions.append(more)')<compact.indexOf('const leftove
 assert.match(compact,/el.contains\(menu\)/);
 assert.doesNotMatch(compact,/menu.append\(recovery\)/);
 assert.equal(JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).outputDirectory,'.');
+
+assert.match(html,/komi-watch-compact-v6\.css[^"]*" media="print" data-komi-deferred-style="watch"/);
+assert.match(app,/if \(watchStyle\) watchStyle.media='all'/);
+assert.match(compact,/if \(drawer\) actions.append\(drawer\)/);

@@ -114,6 +114,8 @@
     }
     const views = sidebar.querySelector('.komi-episode-view-toggle');
     if (views) sidebar.querySelector('.komi-episode-number-grid')?.before(views);
+    const drawer = controls.querySelector('.komi-episodes-toggle');
+    if (drawer) actions.append(drawer);
     const share = controls.querySelector('.komi-cinema-share');
     if (share) { share.textContent = '↗'; share.title = 'Поделиться серией'; actions.append(share); }
 
