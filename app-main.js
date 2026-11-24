@@ -348,7 +348,14 @@ async function komiLoadCatalogPages(attempt = 0) {
         catalogInitialLoadComplete = true;
         komiHomeCatalogReady = true;
         komiHomePreviewCatalog = null;
-        window.KomiHomeSnapshot?.write(animeList, komiAnimeYear, komiCatalogType);
+        // First render must not wait for selection, serialization or storage.
+        const cacheRevision = komiCatalogRevision;
+        const writeSnapshot = () => {
+            if (cacheRevision !== komiCatalogRevision) return;
+            window.KomiHomeSnapshot?.write(catalog, komiAnimeYear, komiCatalogType);
+        };
+        if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(writeSnapshot,{timeout:8000});
+        else setTimeout(writeSnapshot,1500);
         // Persist only the public, view-projected fields. Account data is never cached.
         void window.KomiPublicCatalogCache?.write(catalog);
         komiStoreReadyResume();
@@ -1446,7 +1453,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 // Before Supabase resolves the account, preserve the SEO first
                 // paint. Do not briefly render an anonymous home that is then
                 // replaced with the user's authenticated watch history.
-                if (_supabase && !komiSessionResolved) {
+                if (_supabase && !komiSessionResolved && !komiHomePreviewCatalog && !komiHomeCatalogReady) {
                     if (!container.querySelector('.komi-seo-card') &&
                         komiSeoFirstPaintMarkup.includes('komi-seo-card'))
                         container.innerHTML = komiSeoFirstPaintMarkup;
@@ -2845,7 +2852,8 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (/^https:\/\/shikimori\.(?:io|one)\/system\/animes\/preview\/[1-9]\d*\.jpe?g(?:\?\d+)?$/i.test(source)) {
                 source = source.replace('/system/animes/preview/', '/system/animes/original/');
             }
-            return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source, 1280) : source;
+            const compact = window.matchMedia?.('(max-width: 767px)').matches;
+            return typeof komiCachedPosterUrl === 'function' ? komiCachedPosterUrl(source, compact ? 768 : 1280) : source;
         }
         function komiCardPosterFallback(img) {
             if (!img) return;
@@ -5246,18 +5254,20 @@ async function komiLoadCatalogPages(attempt = 0) {
         // Never read user progress/avatars from this cache; Supabase auth restores those.
         if (currentView === 'home' && !new URLSearchParams(location.search).has('anime')) {
             const cached = window.KomiHomeSnapshot?.read();
-            if (cached?.length) {
-                komiHomePreviewCatalog = cached;
-                animeList = cached;
-                catalogInitialLoadComplete = true;
+            const preview = cached?.length ? cached : window.KomiHomeSeed;
+            if (Array.isArray(preview) && preview.length >= 5) {
+                komiHomePreviewCatalog = preview;
+                animeList = preview;
+                // Public-only first paint; private history still needs a verified owner.
+                komiStartupHomeCommitted = true;
             }
         }
         render();
         const initialCatalogPromise = loadDataFromCloud();
         // Let the public catalog load first on mobile: its first paint should
         // not compete with twelve AniList requests for broadcast dates.
-        const mobileInitialLoad = window.matchMedia?.('(max-width: 767px)').matches;
-        if (mobileInitialLoad) {
+        // Delay non-critical calendar work on all screen sizes.
+        {
             void initialCatalogPromise.finally(() => {
                 if (document.hidden) return;
                 if (typeof window.requestIdleCallback === 'function')
@@ -5269,8 +5279,6 @@ async function komiLoadCatalogPages(attempt = 0) {
                     (komiHomeCatalogReady || catalogInitialLoadFailed))
                     void loadKomiEpisodeSchedule();
             });
-        } else {
-            loadKomiEpisodeSchedule();
         }
         setInterval(() => { if (!document.hidden) loadKomiEpisodeSchedule(); }, 30 * 60 * 1000);
         queueKomiSessionRestore().finally(() => {
