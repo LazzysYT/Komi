@@ -298,11 +298,28 @@ async function komiLoadCatalogPages(attempt = 0) {
         let lastId = 0;
         while (true) {
             const pageSize = catalog.length ? 1000 : 48;
-            const { data: rows, error } = await _supabase
-                .from('komi_catalog_cards').select('shikimori_id,data,updated_at')
-                .gt('shikimori_id', lastId)
-                .order('shikimori_id', { ascending: true })
-                .limit(pageSize);
+            const controller = new AbortController();
+            let requestTimer;
+            let result;
+            try {
+                const request = _supabase
+                    .from('komi_catalog_cards').select('shikimori_id,data,updated_at')
+                    .gt('shikimori_id', lastId)
+                    .order('shikimori_id', { ascending: true })
+                    .limit(pageSize).abortSignal(controller.signal);
+                result = await Promise.race([
+                    request,
+                    new Promise((_, reject) => {
+                        requestTimer = setTimeout(() => {
+                            reject(new Error('Превышено время ожидания каталога'));
+                            controller.abort();
+                        }, 12000);
+                    })
+                ]);
+            } finally {
+                clearTimeout(requestTimer);
+            }
+            const { data: rows, error } = result;
             if (error) throw error;
             if (!rows || rows.length === 0) break;
             for (const row of rows) {
@@ -322,7 +339,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                     episodes: []
                 });
             }
-            lastId = rows[rows.length - 1].shikimori_id;
+            const nextId = Number(rows[rows.length - 1].shikimori_id);
+            if (!Number.isSafeInteger(nextId) || nextId <= lastId)
+                throw new Error('Некорректная пагинация каталога');
+            lastId = nextId;
             // Allow catalog/search to use the first batch, but never rebuild the
             // home carousel from 48 low-ID records: the final selection differs.
             if (catalog.length) {
@@ -1242,8 +1262,41 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (handle && !isTechnicalId(handle)) return handle;
             return isOwnProfile ? 'Мой профиль' : 'Пользователь Komi';
         }
+        function komiSetSidebarAvatarFallback(sidebarAvatarIcon) {
+            if (sidebarAvatarIcon.querySelector('svg') && !sidebarAvatarIcon.querySelector('img')) return;
+            const icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+            icon.setAttribute('viewBox','0 0 24 24');
+            icon.setAttribute('width','22');
+            icon.setAttribute('height','22');
+            icon.setAttribute('fill','currentColor');
+            icon.setAttribute('aria-hidden','true');
+            const path = document.createElementNS('http://www.w3.org/2000/svg','path');
+            path.setAttribute('d','M12 12.1a4.7 4.7 0 1 0 0-9.4 4.7 4.7 0 0 0 0 9.4ZM3 21.1a9 9 0 0 1 18 0 .9.9 0 0 1-.9.9H3.9a.9.9 0 0 1-.9-.9Z');
+            icon.append(path);
+            sidebarAvatarIcon.replaceChildren(icon);
+        }
         function renderHeaderUser() {
             const area = document.getElementById('userHeaderArea');
+            const authenticated = Boolean(currentUser?.authUserId);
+            const profileButton = document.querySelector('.komi-side-account');
+            if (profileButton) {
+                const label = authenticated ? 'Профиль' : 'Войти';
+                profileButton.setAttribute('aria-label', label);
+                const tooltip = profileButton.querySelector('.komi-rail-tooltip');
+                if (tooltip) tooltip.textContent = label;
+            }
+            for (const control of document.querySelectorAll('#notifBellBtn, [data-komi-mobile-extra="notifications"], #komiFriendsMyTab')) {
+                control.hidden = !authenticated;
+                if (authenticated) control.style.removeProperty('display');
+                else control.style.setProperty('display','none','important');
+            }
+            if (!authenticated) {
+                document.getElementById('notifDropdown')?.classList.remove('active');
+                if (komiFriendsTab === 'friends') {
+                    komiFriendsTab = 'all';
+                    if (document.getElementById('komiFriendsDrawer')?.classList.contains('open')) renderFriendsDrawer();
+                }
+            }
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
             const headerCoin = document.getElementById('komiHeaderAniCoin');
             if (headerCoin) {
@@ -1260,14 +1313,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                 // Never reuse an image from a different account after sign-out/switch.
                 if (!owner) {
                     if (komiSessionResolved || sidebarAvatarIcon.dataset.komiAvatarOwner) {
-                        sidebarAvatarIcon.textContent = '◉';
+                        komiSetSidebarAvatarFallback(sidebarAvatarIcon);
                         delete sidebarAvatarIcon.dataset.komiAvatarOwner;
                         delete sidebarAvatarIcon.dataset.komiPendingAvatar;
                     }
                 } else {
                     if (sidebarAvatarIcon.dataset.komiAvatarOwner !== owner) {
                         sidebarAvatarIcon.replaceChildren();
-                        sidebarAvatarIcon.textContent = '◉';
+                        komiSetSidebarAvatarFallback(sidebarAvatarIcon);
                         sidebarAvatarIcon.dataset.komiAvatarOwner = owner;
                         delete sidebarAvatarIcon.dataset.komiPendingAvatar;
                     }
@@ -3043,11 +3096,15 @@ async function komiLoadCatalogPages(attempt = 0) {
                     ? (allPlayable.length ? 'По этому фильтру пока нет подходящих аниме. Выбери другой.' : 'Пока нет аниме с доступными сериями')
                     : 'Каталог загружается. Повтори попытку через несколько секунд.';
                 imgEl.src = '/anime-artwork.svg';
+                imgEl.alt = 'Нет подходящего аниме';
+                imgEl.style.opacity = '1';
+                document.getElementById('rouletteContainer')?.classList.remove('is-loading');
+                if (catalogInitialLoadFailed && !catalogInitialLoadComplete) {
+                    titleEl.textContent = 'Не удалось загрузить каталог. Попробуй снова.';
+                }
+                if (!catalogInitialLoadComplete && !komiCatalogLoadPending)
+                    void loadDataFromCloud();
                 modal.classList.add('active');
-                // A stale timer must never dismiss a newer roulette run.
-                setTimeout(() => {
-                    if (run === komiRouletteRun) modal.classList.remove('active');
-                }, 4500);
                 return;
             }
             playSound();
