@@ -30,7 +30,7 @@
     if (!checked) return String(raw || '');
     // Only public, allowlisted anime art may reach the external CDN.
     // Catalog cards use 360 px; full-size banners explicitly request 1280 px.
-    const size = Number(width) === 1280 ? 1280 : 360;
+    const size = [768,1280].includes(Number(width)) ? Number(width) : 360;
     return 'https://wsrv.nl/?url=' + encodeURIComponent(checked) + '&w=' + size + '&output=webp';
   }
   // Social preview crawlers need a stable first-party URL. Keep that
