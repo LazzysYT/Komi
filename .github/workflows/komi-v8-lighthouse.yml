@@ -1,0 +1,72 @@
+name: Komi V8 Lighthouse
+on:
+  pull_request:
+    branches: [main, polish/navigation-player-20261124]
+    paths:
+      - 'index.html'
+      - '*.js'
+      - '*.css'
+      - '.github/workflows/komi-v8-lighthouse.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: lighthouse-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  performance:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        device: [mobile, desktop]
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Install pinned Lighthouse
+        run: npm install --prefix "$RUNNER_TEMP/komi-lh" --no-save --package-lock=false --ignore-scripts lighthouse@13.6.0
+      - name: Compare production and local candidate
+        env:
+          DEVICE: ${{ matrix.device }}
+        run: |
+          set -euo pipefail
+          export CHROME_PATH="$(command -v google-chrome)"
+          python3 -m http.server 8765 --bind 127.0.0.1 > /tmp/komi-lighthouse-server.log 2>&1 &
+          server=$!
+          trap 'kill "$server" 2>/dev/null || true' EXIT
+          curl -fsS --retry 8 --retry-connrefused --retry-delay 1 http://127.0.0.1:8765/ > /dev/null
+          mkdir -p lighthouse-results
+          args=(--only-categories=performance --output=json --chrome-flags="--headless=new --no-sandbox" --max-wait-for-load=45000 --quiet)
+          if [ "$DEVICE" = desktop ]; then args+=(--preset=desktop); fi
+          "$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse" https://komianime.online/ "${args[@]}" --output-path=./lighthouse-results/production.json
+          "$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse" http://127.0.0.1:8765/ "${args[@]}" --output-path=./lighthouse-results/candidate.json
+          node <<'NODE'
+          const fs=require('node:fs');
+          const out=['## Lighthouse '+process.env.DEVICE,'','Local candidate uses a static server; its hosting latency and headers differ from production.','', '| Target | Performance | LCP (ms) | TBT (ms) | CLS |','| --- | ---: | ---: | ---: | ---: |'];
+          let candidateScore;
+          for(const name of ['production','candidate']){
+            const r=JSON.parse(fs.readFileSync('lighthouse-results/'+name+'.json','utf8'));
+            if(r.runtimeError || !Number.isFinite(r.categories?.performance?.score)) throw Error(name+': no valid performance result');
+            const score=Math.round(r.categories.performance.score*100);
+            const a=r.audits;
+            out.push('| '+name+' | '+score+' | '+Math.round(a['largest-contentful-paint'].numericValue)+' | '+Math.round(a['total-blocking-time'].numericValue)+' | '+a['cumulative-layout-shift'].numericValue.toFixed(3)+' |');
+            if(name==='candidate') candidateScore=score;
+          }
+          out.push('', 'Target: 90+ (candidate). A local score is not a verified production score.');
+          const report=out.join('\n')+'\n';
+          console.log(report);
+          fs.appendFileSync(process.env.GITHUB_STEP_SUMMARY,report);
+          if(candidateScore<90) process.exitCode=1;
+          NODE
+      - name: Save performance reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: komi-lighthouse-${{ matrix.device }}
+          path: lighthouse-results/
+          if-no-files-found: ignore
