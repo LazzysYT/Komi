@@ -573,6 +573,12 @@ async function checkNotifications(page) {
    assert.equal(state.index,1,'Progress on the old second row still belongs to the combined first episode');
    await page.getByText('Не удалось загрузить видео.',{exact:true}).waitFor();
    assert.equal(await playback.getByRole('slider',{name:'Позиция видео'}).isDisabled(),true);
+   const recoveryLayout = await page.evaluate(()=>{
+     const recovery=document.querySelector('#komiPlayerRecovery').getBoundingClientRect();
+     const actions=document.querySelector('.komi-watch-quick-actions').getBoundingClientRect();
+     return {recoveryTop:recovery.top,actionsBottom:actions.bottom};
+   });
+   assert.ok(recoveryLayout.recoveryTop>=recoveryLayout.actionsBottom-1,JSON.stringify(recoveryLayout));
    await page.getByRole('button',{name:'Повторить загрузку'}).click();
    await page.waitForFunction(()=>!window.komiFailedTestVideo.isConnected && !!document.getElementById('animeVideoPlayer'));
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');

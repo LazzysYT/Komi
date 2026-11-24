@@ -793,5 +793,11 @@
 
 /* Use the dedicated episodes sheet on phones, with one desktop toggle. */
 @media(max-width:767px){#watchModal .komi-watch-quick-actions:has(.komi-mobile-watch-actions)>.komi-episodes-toggle{display:none!important}}
-#watchModal #komiPlayerRecovery:not([hidden]){grid-column:1!important;max-width:100%;min-width:0}
+/* Recovery gets its own grid row only while visible; normal layout stays unchanged. */
+#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])){grid-template-rows:auto auto auto auto auto!important}
+#watchModal #komiPlayerRecovery:not([hidden]){grid-column:1!important;grid-row:4!important;position:relative;max-width:100%;min-width:0}
+#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > #komiAnimeComments{grid-row:5!important}
+#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:1 / span 5!important}
+#watchModal.komi-episodes-collapsed .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:6!important}
+@media(max-width:1050px){#watchModal .komi-watch-stage:has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:6!important}}
 #watchModal #komiPlayerRecovery[hidden]{display:none!important}
