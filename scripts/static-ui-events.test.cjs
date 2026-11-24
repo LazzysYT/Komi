@@ -12,7 +12,7 @@ test('static HTML has no inline JS event attributes, including dormant admin tem
   for(const [_,kind,action] of matches){
     assert.match(source,new RegExp("case '"+kind+":"+action+"'"), 'Unmapped '+kind+':'+action);
   }
-  assert.match(html,/<script src="\.\/static-ui-events\.js"><\/script>/);
+  assert.match(html,/<script defer src="\.\/static-ui-events\.js(?:\?v=[\w-]+)?"><\/script>/);
 });
 test('static event delegation uses explicit allowlist and no source evaluation',()=>{
   assert.match(source,/document\.addEventListener\(type, event=>delegate\(type,event\)/);

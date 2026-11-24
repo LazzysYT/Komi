@@ -14,7 +14,7 @@ test('no dynamic HTML template emits raw inline event handlers',()=>{
  }
  assert.ok(total>=100,'All existing dynamic HTML event attributes should be replaced');
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
- assert.match(html,/<script src="\.\/dynamic-ui-events\.js"><\/script>/);
+ assert.match(html,/<script defer src="\.\/dynamic-ui-events\.js(?:\?v=[\w-]+)?"><\/script>/);
 });
 test('dynamic event routing uses finite allowlisted expressions, never general evaluation',()=>{
  const source=fs.readFileSync(path.join(root,'dynamic-ui-events.js'),'utf8');

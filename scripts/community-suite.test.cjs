@@ -12,7 +12,7 @@ const html=read('index.html');
 
 test('community modules are loaded after app initialization without touching legacy scripts',()=>{
  for(const name of ['komi-community.js','komi-import.js','komi-wrapped.js','komi-anime-social.js','komi-party-quiz.js'])
-   assert.match(html,new RegExp('<script src="\\./'+name.replace('.','\\.')+'"></script>'));
+   assert.match(html,new RegExp('<script defer src="\\./'+name.replace('.','\\.')+'(?:\\?v=[\\w-]+)?"></script>'));
  assert.ok(html.indexOf('app-main.js')<html.indexOf('komi-community.js'));
 });
 test('new social writes respect per-user RLS and owner permissions',()=>{
