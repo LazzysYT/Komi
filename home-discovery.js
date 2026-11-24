@@ -245,26 +245,29 @@
     const revision = Number(context.catalogRevision) || 0;
     if (!cachedPublicHome || cachedPublicHome.source !== source ||
         cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
-      const ranked = [...animeList].filter(a => score(a)>0).sort((a,b)=>score(b)-score(a));
+      // Cache normalized sort keys once per catalog revision. Date parsing and
+      // year/type normalization must never happen inside thousands of comparisons.
+      const now = Date.now(), recentThreshold = now - 30*86400000;
+      const latestYear = String(new Date(now).getFullYear());
+      const metadata = animeList.map(anime => ({
+        anime, score:score(anime), updated:updated(anime),
+        year:context.year(anime), type:context.type(anime), count:count(anime)
+      }));
+      const best = (items,compare,limit) => items.sort(compare).slice(0,limit).map(item=>item.anime);
+      const byScore=(a,b)=>b.score-a.score;
+      const byRecent=(a,b)=>b.updated-a.updated;
+      const ranked = best(metadata.filter(item=>item.score>0),byScore,12);
       const slider = typeof root.KomiHomeSnapshot?.featured === 'function'
         ? root.KomiHomeSnapshot.featured(animeList, context.year)
-        : [...animeList].filter(a => /^https:\/\//i.test(a.poster || '') &&
-            score(a) >= 7 && count(a) > 0)
-            .sort((a,b)=>Number(context.year(b))-Number(context.year(a))||score(b)-score(a)).slice(0,5);
-      const latestYear = String(new Date().getFullYear());
-      const recent = [...animeList].filter(a=>updated(a)>0)
-        .sort((a,b)=>updated(b)-updated(a)).slice(0,12);
-      const season = [...animeList].filter(a=>context.year(a)===latestYear)
-        .sort((a,b)=>updated(b)-updated(a)||score(b)-score(a)).slice(0,12);
-      const short = [...animeList].filter(a=>context.type(a)==='Сериал' &&
-        count(a)>0 && count(a)<=13 && score(a)>=7).sort((a,b)=>score(b)-score(a)).slice(0,12);
-      const now = Date.now(), recentThreshold = now - 30*86400000;
-      const popular = [...animeList].filter(a=>score(a)>0)
-        .sort((a,b)=>((updated(b)>recentThreshold?2:0)+score(b)/10)-
-                      ((updated(a)>recentThreshold?2:0)+score(a)/10)).slice(0,12);
-      const catalogPreview = [...new Set([...popular, ...animeList])].slice(0, 12);
-      const films = animeList.filter(a=>context.type(a)==='Фильм')
-        .sort((a,b)=>score(b)-score(a)).slice(0,10);
+        : best(metadata.filter(item=>/^https:\/\//i.test(item.anime.poster||'') && item.score>=7 && item.count>0),
+            (a,b)=>Number(b.year)-Number(a.year)||byScore(a,b),5);
+      const recent = best(metadata.filter(item=>item.updated>0),byRecent,12);
+      const season = best(metadata.filter(item=>item.year===latestYear),(a,b)=>byRecent(a,b)||byScore(a,b),12);
+      const short = best(metadata.filter(item=>item.type==='Сериал'&&item.count>0&&item.count<=13&&item.score>=7),byScore,12);
+      const popularity = item => (item.updated>recentThreshold?2:0)+item.score/10;
+      const popular = best(metadata.filter(item=>item.score>0),(a,b)=>popularity(b)-popularity(a),12);
+      const catalogPreview = [...new Set([...popular, ...animeList])].slice(0,12);
+      const films = best(metadata.filter(item=>item.type==='Фильм'),byScore,10);
       cachedPublicHome = {
         source, revision, length:source.length, ranked, slider, latestYear,
         recent, season, short, popular, catalogPreview, films
