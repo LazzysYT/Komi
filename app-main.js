@@ -1478,15 +1478,16 @@ async function komiLoadCatalogPages(attempt = 0) {
                     const previousHero = container.querySelector('.komi-home-hero');
                     const previousOwner = previousHero?.dataset.komiOwner || '';
                     const heroSignature = hero => [...hero.querySelectorAll('.hero-slide')].map(slide =>
-                        [slide.dataset.komiAnimeId, slide.classList.contains('active'),
+                        [slide.dataset.komiAnimeId, slide.dataset.komiHeroSaved, slide.classList.contains('active'),
                          slide.querySelector('img')?.dataset.posterDirect || '',
                          slide.querySelector('.komi-home-hero-content')?.textContent || '',
-                         slide.querySelector('.komi-hub-save')?.dataset.komiOnclick || ''].join('|')).join('::');
+                         slide.querySelector('.komi-hub-list')?.dataset.komiOnclick || ''].join('|')).join('::');
                     const oldHeroSignature = previousHero ? heroSignature(previousHero) : '';
                     const homeMarkup = window.KomiHomeDiscovery.render({
                         animeList: komiHomeCatalogReady ? animeList : komiHomePreviewCatalog,
                         catalogRevision: komiCatalogRevision,
                         currentUser, progress:komiEpisodeProgress,
+                        statuses: currentUser?.authUserId ? (userAnimeStatuses[currentUser.username] || {}) : {},
                         resumeReady: Boolean(currentUser?.authUserId &&
                             komiHomeCatalogReady && komiResumeReadyUid === currentUser.authUserId),
                         resumePreview:komiResumePreview,
@@ -1827,6 +1828,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const active = idx === currentSlideIndex;
                 slide.classList.toggle('active', active);
                 slide.setAttribute('aria-hidden', String(!active));
+                slide.inert = !active;
                 if (active) {
                     const deferred = slide.querySelector('img.komi-hub-hero-art[data-komi-hero-deferred-src]');
                     if (deferred) {
@@ -1837,6 +1839,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                     }
                 }
             });
+            const counter = slider.querySelector('[data-komi-slide-current]');
+            if (counter) counter.textContent = String(currentSlideIndex + 1).padStart(2, '0');
             // HD artwork for mobile is needed only when its slide becomes visible.
             window.KomiHeroArt?.scan?.();
             dots.forEach((dot, idx) => {
@@ -4297,6 +4301,12 @@ async function komiLoadCatalogPages(attempt = 0) {
             notice.textContent = message;
             clearTimeout(komiStatusFeedback.timer);
             komiStatusFeedback.timer = setTimeout(() => notice.remove(), 5000);
+        }
+        function toggleHeroAnimeList(animeId) {
+            if (!currentUser?.authUserId) { openAuthModal('login'); return; }
+            const id = String(animeId);
+            const current = userAnimeStatuses[currentUser.username]?.[id];
+            setAnimeStatus(id, current || 'В планах');
         }
         async function setAnimeStatus(animeId, status) {
             if (!currentUser) { openAuthModal('login'); return; }
