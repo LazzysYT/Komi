@@ -75,8 +75,35 @@ const style=node=>{
    assert.deepEqual(await first.evaluate(style),homeStyle);
    assert.equal(await first.locator('small').textContent(),'2026 · Фильм · 1 сер.');
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth+2),false);
-   await first.locator('a').focus();
    const quick=first.getByRole('button',{name:/В список:/});
+   const watch=first.getByRole('button',{name:/Смотреть:/});
+   if (!touch) await first.hover();
+   await quick.click();
+   assert.equal(await quick.getAttribute('aria-expanded'),'true');
+   if (!touch) {
+     await page.mouse.move(0,0);
+     assert.equal(await quick.evaluate(n=>getComputedStyle(n).opacity),'1','An open menu keeps its toggle visible');
+   }
+   await quick.click();
+   assert.equal(await quick.getAttribute('aria-expanded'),'false');
+   assert.equal(await first.getByRole('group',{name:/Выбрать статус/}).isVisible(),false);
+   await page.mouse.move(0,0);
+   if (!touch) {
+     await page.waitForFunction(()=>[...document.querySelectorAll(
+       '#komiCatalogGrid > article:first-child :is(.komi-card-quick-toggle,.komi-catalog-watch)'
+     )].filter(n=>getComputedStyle(n).opacity==='0').length===2,null,{timeout:2000});
+     for (const btn of [quick,watch])
+       assert.equal(await btn.evaluate(n=>getComputedStyle(n).opacity),'0','Mouse focus must not pin the card actions');
+   } else {
+     assert.equal(await quick.evaluate(n=>getComputedStyle(n).opacity),'1','Touch users can reopen the menu without hover');
+   }
+   await first.locator('a').focus();
+   await page.keyboard.press('Tab');
+   assert.equal(await quick.evaluate(n=>document.activeElement===n&&n.matches(':focus-visible')),true);
+   await page.waitForFunction(()=>{
+     const el=document.activeElement;
+     return el?.matches('.komi-card-quick-toggle')&&getComputedStyle(el).opacity==='1';
+   },null,{timeout:2000});
    if (touch) assert.equal(await quick.evaluate(n=>getComputedStyle(n).opacity),'1');
    await quick.click();
    assert.equal(await quick.getAttribute('aria-expanded'),'true');

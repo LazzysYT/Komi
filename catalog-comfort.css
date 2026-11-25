@@ -156,7 +156,10 @@
 .komi-catalog-card :is(a,button):focus-visible {outline:2px solid #fff;outline-offset:2px;}
 .komi-catalog-card .komi-card-quick-menu button:focus-visible {outline-offset:-2px;}
 @media (hover:hover) and (pointer:fine) {
-    .komi-catalog-card:not(:hover):not(:focus-within) :is(.komi-card-quick-toggle,.komi-catalog-watch) {opacity:0;}
+    /* Clicking the toggle leaves mouse focus on it after closing. Only
+       keyboard focus, hover or an expanded menu should keep actions visible. */
+    .komi-catalog-card:not(:hover):not(:has(:focus-visible,.komi-card-quick.is-open))
+        :is(.komi-card-quick-toggle,.komi-catalog-watch) {opacity:0;}
     .komi-catalog-card:hover .komi-discovery-poster {border-color:rgba(255,255,255,.28);}
 }
 @media (max-width:767px) {
