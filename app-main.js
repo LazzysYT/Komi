@@ -230,7 +230,7 @@ function komiHomeHeroMayPaint(markup, container) {
             komiHeroReadyImages.add(src);
             if (currentView === 'home') render();
         };
-        const deadline = setTimeout(finish, 1400);
+        const deadline = setTimeout(finish, window.KomiHeroDaily ? 3200 : 1400);
         image.onload = () => {
             // Decode in the browser cache before replacing the SEO first paint.
             Promise.resolve(typeof image.decode === 'function' ? image.decode() : null)
@@ -1976,6 +1976,43 @@ async function komiLoadCatalogPages(attempt = 0) {
             finally { clearTimeout(timeout); }
         };
 
+        const komiHeroTransitions = new WeakMap();
+        function heroTransitionState(slider) {
+            if (!komiHeroTransitions.has(slider)) komiHeroTransitions.set(slider, {token:0,pending:null,failed:new Set()});
+            return komiHeroTransitions.get(slider);
+        }
+        function heroNextIndex(slider, from) {
+            const items = [...slider.querySelectorAll('.hero-slide')];
+            const state = heroTransitionState(slider);
+            for (let i=1;i<items.length;i++) {
+                const index = (from + i) % items.length;
+                if (!state.failed.has(items[index])) return index;
+            }
+            return -1;
+        }
+        async function requestHeroSlide(slider, index, manual) {
+            const slide = slider.querySelectorAll('.hero-slide')[index];
+            if (!slide) return;
+            const state = heroTransitionState(slider);
+            const token = ++state.token;
+            state.pending = index;
+            const ready = index === currentSlideIndex || !window.KomiHeroDaily || await window.KomiHeroDaily.prepare(slide);
+            if (state.token !== token || !slider.isConnected || document.getElementById('heroSlider') !== slider) return;
+            state.pending = null;
+            if (!ready) {
+                state.failed.add(slide);
+                if (manual) startHeroAutoSlide();
+                return;
+            }
+            state.failed.delete(slide);
+            currentSlideIndex = index;
+            updateHeroSlideView();
+            if (manual) {
+                window.KomiHeroArt?.selectedSlide?.();
+                startHeroAutoSlide();
+            }
+        }
+
         function startHeroAutoSlide() {
             if (slideInterval) clearInterval(slideInterval);
             slideInterval = null;
@@ -1983,7 +2020,8 @@ async function komiLoadCatalogPages(attempt = 0) {
             window.KomiHeroArt?.syncVideos?.();
             if (!slider || slider.querySelectorAll('.hero-slide').length < 2) return;
             slider.style.setProperty('--komi-hero-progress', '0%');
-            let elapsed = 0, last = performance.now();
+            const state = heroTransitionState(slider);
+            let elapsed = 0, last = performance.now(), warmed = null;
             const duration = 7000;
             slideInterval = setInterval(() => {
                 const now = performance.now();
@@ -2005,15 +2043,19 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const connection = navigator.connection;
                 if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
                 const image = slider.querySelector('.hero-slide.active .komi-hub-hero-art');
-                if (image && !image.complete) return;
+                if ((image && !image.complete) || state.pending !== null) return;
+                const next = heroNextIndex(slider,currentSlideIndex);
+                if (next < 0) return;
+                if (elapsed >= 1000 && warmed !== next && window.KomiHeroDaily?.imageIsReal(image)) {
+                    warmed = next;
+                    void window.KomiHeroDaily.prepare(slider.querySelectorAll('.hero-slide')[next]);
+                }
                 elapsed += delta;
                 slider.style.setProperty('--komi-hero-progress', Math.min(100,elapsed/duration*100).toFixed(1)+'%');
-                const maxSlides = slider.querySelectorAll('.hero-slide').length;
-                if (elapsed >= duration && maxSlides > 1) {
-                    currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
+                if (elapsed >= duration) {
                     elapsed = 0;
                     slider.style.setProperty('--komi-hero-progress','0%');
-                    updateHeroSlideView();
+                    void requestHeroSlide(slider,next,false);
                 }
             }, 100);
         }
@@ -2022,20 +2064,15 @@ async function komiLoadCatalogPages(attempt = 0) {
             const slider = document.getElementById('heroSlider');
             const maxSlides = slider ? slider.querySelectorAll('.hero-slide').length : 0;
             if (!maxSlides) return;
-            currentSlideIndex = (currentSlideIndex + direction + maxSlides) % maxSlides;
-            updateHeroSlideView();
-            window.KomiHeroArt?.selectedSlide?.();
-            startHeroAutoSlide();
+            const from = heroTransitionState(slider).pending ?? currentSlideIndex;
+            void requestHeroSlide(slider,(from + direction + maxSlides) % maxSlides,true);
         }
 
         function setSlide(index) {
             const slider = document.getElementById('heroSlider');
             const maxSlides = slider ? slider.querySelectorAll('.hero-slide').length : 0;
             if (!maxSlides || !Number.isInteger(index) || index < 0 || index >= maxSlides) return;
-            currentSlideIndex = index;
-            updateHeroSlideView();
-            window.KomiHeroArt?.selectedSlide?.();
-            startHeroAutoSlide();
+            void requestHeroSlide(slider,index,true);
         }
 
         function updateHeroSlideView() {
@@ -2056,7 +2093,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         const source = deferred.dataset.komiHeroDeferredSrc;
                         delete deferred.dataset.komiHeroDeferredSrc;
                         deferred.loading = 'eager';
-                        if (source) deferred.src = source;
+                        if (source && deferred.getAttribute('src') !== source) deferred.src = source;
                     }
                 }
             });
@@ -5794,8 +5831,8 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (Array.isArray(preview) && preview.length >= 5) {
                 komiHomePreviewCatalog = preview;
                 animeList = preview;
-                // Public-only first paint; private history still needs a verified owner.
-                komiStartupHomeCommitted = true;
+                // Give today's image the same first-paint gate on both cold and cached visits.
+                komiStartupHomeCommitted = !window.KomiHeroDaily;
             }
         }
         komiMaybeOpenSeoAnime();

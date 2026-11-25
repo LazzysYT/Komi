@@ -513,6 +513,7 @@
       const id = String(slide.dataset.komiAnimeId || '');
       if (!/^[1-9]\d{0,11}$/.test(id)) return;
       loadMetadata(slide,id);
+      if (slide.dataset.komiDailyArt === 'true') return;
       const cached = getCached(id);
       void applyArtwork(slide,cached || {}).then(hasLandscape => {
         if (hasLandscape !== false || cached || getCached(id) || fetchingIds.has(id) || !slide.classList.contains('active') || slide.isConnected === false ||

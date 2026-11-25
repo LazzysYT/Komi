@@ -6,20 +6,21 @@ const path = require('node:path');
 const vm = require('node:vm');
 const app = fs.readFileSync(path.join(__dirname, '..', 'app-main.js'), 'utf8');
 
-function timerFixture(count = 3) {
+function timerFixture(count = 3, daily) {
   let now = 0, nextTimer = 0, changes = 0, selected = 0, progress = '0%';
   const timers = new Map();
   const state = {paused:false, reduced:false, hidden:false, complete:true};
+  const images = Array.from({length:count},(_,index)=>({index}));
   const slider = {
     isConnected:true,
     style:{setProperty:(key, value) => {if (key === '--komi-hero-progress') progress = value;}},
     matches:() => state.paused,
-    querySelectorAll:() => Array(count).fill({}),
+    querySelectorAll:() => images,
     querySelector:() => ({complete:state.complete, naturalWidth:1920})
   };
   const context = vm.createContext({
     document:{getElementById:() => slider, get hidden() {return state.hidden;}, readyState:'complete'},
-    window:{matchMedia:() => ({matches:state.reduced}), KomiHeroArt:{
+    window:{KomiHeroDaily:daily,matchMedia:() => ({matches:state.reduced}), KomiHeroArt:{
       isPaused:() => state.paused || state.hidden || state.reduced,
       syncVideos:() => {}, selectedSlide:() => selected++
     }},
@@ -29,7 +30,7 @@ function timerFixture(count = 3) {
     clearInterval:id => timers.delete(id),
     updateHeroSlideView:() => changes++
   });
-  const source = app.slice(app.indexOf('function startHeroAutoSlide()'), app.indexOf('function updateHeroSlideView()'));
+  const source = app.slice(app.indexOf('const komiHeroTransitions'), app.indexOf('function updateHeroSlideView()'));
   vm.runInContext(source + '\nstartHeroAutoSlide();', context);
   return {
     state, slider, timers, context,
@@ -127,4 +128,35 @@ test('hero metadata uses a small public projection, not full episode payloads', 
   assert.doesNotMatch(projection, /episodes|\*/);
   assert.match(projection, /banner:data->>banner_url,video:data->>banner_video_url/);
   assert.equal(await context.window.komiFetchHeroMetadata('invalid'), null);
+});
+
+test('banner, title and route keep their old slide until the new art is ready',async()=>{
+  const pending = new Map();
+  const daily = {imageIsReal:()=>true,prepare:slide=>new Promise(resolve=>pending.set(slide.index,resolve))};
+  const f=timerFixture(4,daily);
+  f.advance(12);
+  assert.deepEqual([...pending.keys()],[1]);
+  f.context.setSlide(2);
+  assert.equal(f.context.currentSlideIndex,0);
+  pending.get(2)(false);
+  await new Promise(setImmediate);
+  assert.equal(f.context.currentSlideIndex,0);
+  f.context.setSlide(1);
+  pending.get(1)(true);
+  await new Promise(setImmediate);
+  assert.equal(f.context.currentSlideIndex,1);
+  assert.equal(f.changes,1);
+});
+
+test('fast clicks cannot commit an older asynchronously decoded banner',async()=>{
+  const pending=new Map();
+  const f=timerFixture(4,{prepare:slide=>new Promise(resolve=>pending.set(slide.index,resolve))});
+  f.context.setSlide(1);
+  f.context.setSlide(2);
+  pending.get(2)(true);
+  await new Promise(setImmediate);
+  pending.get(1)(true);
+  await new Promise(setImmediate);
+  assert.equal(f.context.currentSlideIndex,2);
+  assert.equal(f.changes,1);
 });
