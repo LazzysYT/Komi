@@ -21,7 +21,7 @@ const micro='<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><
    await page.route('**/*',async route=>{
     const url=new URL(route.request().url());
     if(url.host==='hero.test'&&url.pathname==='/')return route.fulfill({contentType:'text/html; charset=utf-8',body:shell});
-    if(url.host==='image.tmdb.org'){
+    if(/^\/assets\/hero\/daily\/[1-9]\d{0,11}-[A-Za-z0-9]+\.webp$/.test(url.pathname)){
       keys.add(url.pathname);
       if(keys.size===2)await gateNext;
       else if(keys.size===3){await gateThird;return route.fulfill({status:404});}
@@ -42,7 +42,7 @@ const micro='<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><
    assert.equal(first.id,expected);
    assert.equal(first.link,'/anime/'+expected+'#player');
    await page.getByRole('button',{name:'Показать слайд 2',exact:true}).click();
-   await page.waitForFunction(()=>document.querySelectorAll('.hero-slide')[1].querySelector('img').getAttribute('src').includes('tmdb'));
+   await page.waitForFunction(()=>document.querySelectorAll('.hero-slide')[1].querySelector('img').getAttribute('src').startsWith('/assets/hero/daily/'));
    assert.equal((await active()).id,expected,'the title does not change during the image delay');
    releaseNext();
    await page.waitForFunction(()=>document.querySelectorAll('.hero-slide')[1].classList.contains('active'));

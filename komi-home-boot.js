@@ -24,7 +24,7 @@
   const first = lead(); // Fixed for the lifetime of the page, including refreshes of its data.
   function artwork(id) {
     const key = stills[id];
-    return Object.prototype.hasOwnProperty.call(stills,id) ? 'https://image.tmdb.org/t/p/w1280/' + key + '.jpg' : '';
+    return Object.prototype.hasOwnProperty.call(stills,id) ? '/assets/hero/daily/' + id + '-' + key + '.webp' : '';
   }
   function lineup(catalog, seed = []) {
     const live = new Map(catalog.filter(item=>order.includes(String(item?.id))).map(item=>[String(item.id),item]));
@@ -83,9 +83,39 @@
 (() => {
   'use strict';
   if (typeof document === 'undefined') return;
+  const isHomeEntry = () => /^\/(?:index\.html)?$/.test(location.pathname) &&
+    (!location.hash || location.hash === '#home') &&
+    !new URLSearchParams(location.search).has('anime');
+  let fontLink = null;
+  let fontsMayActivate = !isHomeEntry();
+  let fontFramesScheduled = false;
+  let fontDeadline = null;
+  function activateFonts() {
+    fontsMayActivate = true;
+    if (fontDeadline !== null) { clearTimeout(fontDeadline); fontDeadline = null; }
+    if (fontLink) fontLink.media = 'all';
+  }
+  function activateFontsAfterPaint() {
+    if (fontsMayActivate || fontFramesScheduled) return;
+    fontFramesScheduled = true;
+    const frame = typeof window.requestAnimationFrame === 'function'
+      ? callback => window.requestAnimationFrame(callback) : callback => setTimeout(callback,0);
+    frame(() => frame(activateFonts));
+  }
+  // Use the same bounded deadline as the first image. A failed image or route
+  // change releases fonts earlier; every page keeps the original font family.
+  if (!fontsMayActivate) fontDeadline = setTimeout(activateFonts,4200);
+  const fontsForRoute = () => { if (!isHomeEntry()) activateFonts(); };
+  window.addEventListener('popstate',fontsForRoute);
+  window.addEventListener('hashchange',fontsForRoute);
   // Start font CSS without making the first screen depend on a remote stylesheet.
   document.addEventListener('load', event => {
-    if (event.target?.id === 'komi-font-css' || event.target?.matches?.('link[data-komi-deferred-style]')) {
+    if (event.target?.id === 'komi-font-css') {
+      fontLink = event.target;
+      if (fontsMayActivate) fontLink.media = 'all';
+      return;
+    }
+    if (event.target?.matches?.('link[data-komi-deferred-style]')) {
       event.target.media = 'all';
       if (event.target.dataset?.komiDeferredStyle === 'base') {
         // Full stylesheet includes the same rules in their original order.
@@ -105,12 +135,25 @@
       const link=document.querySelector('link[data-komi-deferred-style="shop"]');
       if (link) link.media='all';
     }
+    if (location.pathname==='/profile'||location.hash.toLowerCase()==='#profile') {
+      const link=document.querySelector('link[data-komi-deferred-style="profile"]');
+      if (link) link.media='all';
+    }
+    if (/^\/(?:shop|profile)$/.test(location.pathname)||/^#(?:shop|profile)$/.test(location.hash.toLowerCase())) {
+      const link=document.querySelector('link[data-komi-deferred-style="cosmetics"]');
+      if (link) link.media='all';
+    }
   };
-  const styleObserver=new MutationObserver(()=>{ensureShopStyle();if(document.querySelector('link[data-komi-deferred-style="shop"]'))styleObserver.disconnect();});
+  const styleObserver=new MutationObserver(()=>{
+    ensureShopStyle();
+    if(document.querySelector('link[data-komi-deferred-style="shop"]')&&
+       document.querySelector('link[data-komi-deferred-style="profile"]')&&
+       document.querySelector('link[data-komi-deferred-style="cosmetics"]'))styleObserver.disconnect();
+  });
   styleObserver.observe(document.head,{childList:true});
   window.addEventListener('popstate',ensureShopStyle);
   window.addEventListener('hashchange',ensureShopStyle);
-  document.addEventListener('DOMContentLoaded',ensureShopStyle,{once:true});
+  document.addEventListener('DOMContentLoaded',()=>{ensureShopStyle();styleObserver.disconnect();},{once:true});
   const incomingAnime = new URLSearchParams(location.search).get('anime');
   if (/^\/(?:index\.html)?$/.test(location.pathname) && /^[1-9][0-9]{0,11}$/.test(incomingAnime || '')) {
     const html = document.documentElement;
@@ -129,21 +172,53 @@
       new URLSearchParams(location.search).has('anime'))) return;
 
   const html = document.documentElement;
+  const daily = window.KomiHeroDaily;
+  let firstImage = null;
   html.classList.add('komi-home-booting');
   if (!sectionRoute) {
-    const daily = window.KomiHeroDaily;
     // A fixed real preview would show yesterday's title briefly. Keep the
     // neutral shell until the selected daily image has actually decoded.
     const src = daily?.artwork?.(daily.first) || document.querySelector('meta[name="komi-first-hero"]')?.content;
     const nativeBanner = /^https:\/\/s[34]\.anilist\.co\/file\/anilistcdn\/media\/anime\/banner\/[A-Za-z0-9_-]+\.(?:jpe?g|png|webp|avif)$/i;
+    const bundledDaily = daily && src === daily.artwork(daily.first) &&
+      /^\/assets\/hero\/daily\/[1-9]\d{0,11}-[A-Za-z0-9]+\.webp$/.test(src);
     if (src && (src.startsWith('https://wsrv.nl/?url=') || nativeBanner.test(src) ||
-        /^https:\/\/image\.tmdb\.org\/t\/p\/w1280\/[A-Za-z0-9_-]+\.jpg$/.test(src))) {
+        bundledDaily)) {
       const preload = document.createElement('link');
       preload.rel = 'preload'; preload.as = 'image'; preload.href = src;
       preload.fetchPriority = 'high'; preload.referrerPolicy = 'no-referrer';
       document.head.append(preload);
     }
+    if (daily && src && typeof Image === 'function') {
+      const image = new Image();
+      image.decoding = 'async';
+      image.loading = 'eager';
+      image.fetchPriority = 'high';
+      image.referrerPolicy = 'no-referrer';
+      firstImage = {id:daily.first,src,image,ready:false,promise:null};
+      firstImage.promise = new Promise(resolve => {
+        let settled = false;
+        const finish = ready => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(deadline);
+          image.onload = image.onerror = null;
+          firstImage.ready = ready;
+          resolve(ready);
+        };
+        const deadline = setTimeout(() => finish(false), 4200);
+        image.onload = () => {
+          if (!daily.imageIsReal(image)) { finish(false); return; }
+          Promise.resolve(typeof image.decode === 'function' ? image.decode() : null)
+            .then(() => finish(daily.imageIsReal(image)), () => finish(false));
+        };
+        image.onerror = () => finish(false);
+        image.src = src;
+      });
+      daily.firstImage = firstImage;
+    }
   }
+  if (!firstImage) activateFonts();
   let observer = null;
   let timer = null;
   let done = false;
@@ -154,6 +229,83 @@
     html.classList.remove('komi-home-booting','komi-home-boot-preview');
     if (observer) observer.disconnect();
     if (timer !== null) clearTimeout(timer);
+    document.removeEventListener?.('readystatechange',paintDailyPreview);
+    if (isHomeEntry()) activateFontsAfterPaint();
+    else activateFonts();
+  }
+
+  function paintDailyPreview() {
+    // Interactive is reached once HTML is parsed, before deferred application
+    // scripts finish. Never change a main element the parser is still filling.
+    if (done || !firstImage?.ready || document.readyState === 'loading') return;
+    const main = document.getElementById('mainContainer');
+    if (!main || main.querySelector('.komi-home-discovery')) return;
+    const template = main.querySelector('template.komi-boot-real-hero');
+    const hero = template?.content?.firstElementChild?.cloneNode(true);
+    const wrapper = hero?.querySelector('.hero-slides-wrapper');
+    if (!wrapper) return;
+    const slides = [...wrapper.querySelectorAll('.hero-slide[data-komi-anime-id]')];
+    const lineup = daily.lineup(slides.map(slide => ({id:slide.dataset.komiAnimeId,slide})));
+    const promo = wrapper.querySelector('.hero-slide[data-komi-promo]');
+    if (lineup.length !== 5 || !promo || lineup[0].id !== firstImage.id) return;
+    let activeSlide = null;
+    for (const [index,item] of lineup.entries()) {
+      const slide = item.slide, active = index === 0;
+      const image = slide.querySelector('.komi-hub-hero-art');
+      const link = slide.querySelector('.komi-hub-play');
+      if (!image || link?.getAttribute('href') !== '/anime/'+item.id+'#player') return;
+      const src = daily.artwork(item.id);
+      slide.classList.toggle('active',active);
+      slide.classList.remove('komi-hd-poster','komi-hd-softwide');
+      slide.classList.add('komi-hd-wide');
+      slide.setAttribute('aria-hidden',String(!active));
+      slide.toggleAttribute('inert',!active);
+      slide.dataset.komiHeroBanner = src;
+      slide.dataset.komiDailyArt = 'true';
+      if (active) {
+        // Insert the very image decoded in <head>. Hydration adopts this node,
+        // keeping the actual LCP frame attached rather than painting it twice.
+        for (const attribute of image.attributes) {
+          if (!['src','loading','fetchpriority','data-komi-hero-deferred-src'].includes(attribute.name))
+            firstImage.image.setAttribute(attribute.name,attribute.value);
+        }
+        firstImage.image.width = 1280;
+        firstImage.image.height = 720;
+        image.remove();
+        activeSlide = slide;
+        slide.classList.add('komi-art-ready');
+      } else {
+        image.src = '/anime-artwork.svg';
+        image.loading = 'lazy';
+        image.removeAttribute('fetchpriority');
+        image.dataset.komiHeroDeferredSrc = src;
+      }
+    }
+    promo.classList.remove('active');
+    promo.setAttribute('aria-hidden','true');
+    promo.setAttribute('inert','');
+    wrapper.replaceChildren(...lineup.map(item => item.slide),promo);
+    for (const button of hero.querySelectorAll('button')) button.disabled = true;
+    // The native watch link works before the JS-only list/carousel controls.
+    const home = document.createElement('div');
+    home.className = 'komi-home-discovery komi-home-storefront';
+    home.dataset.komiBootPreview = '';
+    home.dataset.komiHomeOwner = '';
+    home.append(hero);
+    // Adopt the prepared template into the live document before inserting its
+    // decoded image, so that image never moves into an inert template document.
+    activeSlide.prepend(firstImage.image);
+    const footer = document.createElement('footer');
+    footer.className = 'komi-home-browse-footer';
+    const catalog = document.createElement('a');
+    catalog.className = 'komi-home-catalog-link';
+    catalog.setAttribute('href','/catalog');
+    catalog.textContent = 'Весь каталог';
+    footer.append(catalog);
+    home.append(footer);
+    daily.preview = hero;
+    main.replaceChildren(home);
+    finish();
   }
 
   function checkReady() {
@@ -182,6 +334,14 @@
     document.addEventListener('DOMContentLoaded', observe, {once:true});
   } else {
     observe();
+  }
+  if (firstImage) {
+    document.addEventListener('readystatechange',paintDailyPreview);
+    firstImage.promise.then(ready => {
+      if (ready) paintDailyPreview();
+      else activateFonts();
+    });
+    paintDailyPreview();
   }
   // If a script or network request fails, restore the navigable SEO fallback.
   // A slow or unavailable JS/CDN must not hide the real, navigable HTML for 20 seconds.

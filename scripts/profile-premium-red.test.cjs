@@ -64,7 +64,7 @@ test('overview uses real saved data and the summary leaves unverified metrics un
  for(const k of ['episodes','hours'])assert.match(summary,new RegExp('data-profile-field="'+k+'"[^>]*>—'));
  assert.doesNotMatch(summary,/data-profile-field="meanScore"/);
  assert.match(html,/data-profile-list="Просмотрено" aria-label="Просмотрено: 1 — открыть список"/);
- assert.match(html,/<small>100% коллекции<\/small>/);
+ assert.match(html,/<span>Просмотрено<\/span><strong>1<\/strong><small>100%<\/small>/);
   assert.match(html,/profile-achievement-progress/);
  assert.match(html,/profile-distribution-part/);
  assert.match(html,/profile-distribution-part" style="--profile-segment:#[A-Fa-f0-9]{6};flex:1/);

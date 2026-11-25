@@ -215,6 +215,8 @@ function komiHomeHeroMayPaint(markup, container) {
     const match = markup.match(/<img class="komi-hub-hero-art" src="([^"]+)"/);
     if (!match) return true;
     const src = match[1].replace(/&amp;/g, '&');
+    const firstImage = window.KomiHeroDaily?.firstImage;
+    if (firstImage?.ready && firstImage.src === src) return true;
     if (komiHeroReadyImages.has(src)) return true;
     if (!komiHeroPendingImages.has(src)) {
         komiHeroPendingImages.add(src);
@@ -1697,9 +1699,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                     template.innerHTML = heroMarkup;
                     const renderedHero = template.content.firstElementChild;
                     const signature = renderedHero ? heroSignature(renderedHero) : '';
+                    const bootHeroWasPending = Boolean(container.querySelector(':scope > [data-komi-boot-preview]'));
+                    const adoptedBootHero = previousHero?.komiHomeHeroRender?.signature !== signature &&
+                        window.KomiHomeDiscovery.adoptBootHero?.(container, renderedHero, heroMarkup, heroOwner);
+                    if (adoptedBootHero && previousHero)
+                        previousHero.komiHomeHeroRender = {signature, markup:heroMarkup};
                     const previousRender = previousHero?.komiHomeHeroRender;
                     const retainHero = Boolean(window.KomiHomeDiscovery.patch && previousRender &&
-                        previousOwner === heroOwner && signature && previousRender.signature === signature);
+                        (adoptedBootHero || previousOwner === heroOwner) && signature && previousRender.signature === signature);
                     // Keep the original section input so patch() reuses its mounted node.
                     // Replacing then reinserting the image still causes a late LCP and
                     // restarts media. Public card hydration also omits full descriptions;
@@ -1716,7 +1723,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             ? previousRender : {signature, markup:heroMarkup};
                     }
                     window.KomiHomeDiscovery.afterRender(container);
-                    if (!nextHero || nextHero !== previousHero) startHeroAutoSlide();
+                    if (!nextHero || nextHero !== previousHero || (adoptedBootHero && bootHeroWasPending)) startHeroAutoSlide();
                     return;
                 }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
@@ -5999,6 +6006,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             let started=false, timer=0;
             const events=['pointerdown','keydown','focusin','popstate','hashchange'];
             const image=document.querySelector('.komi-home-discovery .hero-slide.active .komi-hub-hero-art');
+            const dailyImage=window.KomiHeroDaily?.firstImage;
             const start=()=>{
                 if(started)return;
                 started=true;
@@ -6008,13 +6016,20 @@ async function komiLoadCatalogPages(attempt = 0) {
                 image?.removeEventListener('error',start);
                 resolve(loadDataFromCloud());
             };
-            if(currentView!=='home'||!komiHomePreviewCatalog||!image||image.complete||
+            if(currentView!=='home'||!komiHomePreviewCatalog||
                 new URLSearchParams(location.search).has('anime')||komiRouteView()!=='home') {
                 start();return;
             }
             for(const event of events) window.addEventListener(event,start,{capture:true,once:true,passive:true});
-            image.addEventListener('load',start,{once:true});
-            image.addEventListener('error',start,{once:true});
+            // The daily image exists before the hero DOM is mounted. Waiting on
+            // that same decode prevents a missing DOM image starting the full
+            // catalogue scan while the first frame is still downloading.
+            if(dailyImage?.promise && !dailyImage.ready) dailyImage.promise.then(start,start);
+            else if(!image || image.complete) {start();return;}
+            else {
+                image.addEventListener('load',start,{once:true});
+                image.addEventListener('error',start,{once:true});
+            }
             timer=setTimeout(start,1800);
         });
         // Let the public catalog load first on mobile: its first paint should

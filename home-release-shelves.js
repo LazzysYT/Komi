@@ -99,19 +99,21 @@
       (typeof compact?.original === 'string' && /^https:\/\//i.test(compact.original) ? ' data-poster-original="' + escape(compact.original) + '"' : '') +
       ' referrerpolicy="no-referrer" data-komi-onerror="komiCardPosterFallback(this)">';
   }
-  function dateLabel(value, withTime) {
-    const date = new Date(value);
-    const day = date.toLocaleDateString('ru-RU', {day:'numeric', month:'short'});
-    return withTime ? day + ' · ' + date.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) : day;
-  }
   function cards(entries, context, upcoming) {
+    // Reuse locale setup within this shelf; a new render picks up any change
+    // to the viewer's local timezone rather than keeping a global formatter.
+    const dayFormat = new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short'});
+    const timeFormat = upcoming
+      ? new Intl.DateTimeFormat('ru-RU', {hour:'2-digit', minute:'2-digit'}) : null;
     return '<ul class="komi-home-release-rail">' + entries.map(entry => {
       const episode = entry.number ? (entry.season ? 'Сезон ' + entry.season + ' · ' : '') + 'Серия ' + entry.number
         : 'Следующая серия';
+      const date = new Date(entry.date);
+      const label = dayFormat.format(date) + (timeFormat ? ' · ' + timeFormat.format(date) : '');
       return '<li><a class="komi-home-release-card" href="' + entry.href + '" data-komi-anime-id="' + entry.id + '">' +
         image(entry.anime, context) + '<span class="komi-home-release-copy">' +
-        '<time datetime="' + new Date(entry.date).toISOString() + '">' +
-          (upcoming ? '' : 'Добавлена ') + escape(dateLabel(entry.date, upcoming)) + '</time>' +
+        '<time datetime="' + date.toISOString() + '">' +
+          (upcoming ? '' : 'Добавлена ') + escape(label) + '</time>' +
         '<strong>' + escape(entry.anime.title) + '</strong><span>' + escape(episode) + '</span>' +
         '<small>' + (upcoming ? 'По расписанию' : 'Смотреть серию') + '</small></span></a></li>';
     }).join('') + '</ul>';

@@ -11,11 +11,12 @@ const root=path.join(__dirname,'..');
  try {
   for(const width of [1440,390]){
    const context=await browser.newContext({viewport:{width,height:850},javaScriptEnabled:false});
-   // Python's static CI server does not apply Vercel rewrites. Mirror only the
-   // declared /catalog -> /index.html mapping for local navigation checks.
+   // Python's static CI server does not execute the catalog API. Require its
+   // real rewrite, then use the local shell for native URL/query navigation;
+   // catalog-seo.test.cjs separately verifies the API's rendered HTML.
    if (['localhost','127.0.0.1'].includes(new URL(base).hostname)) {
     const config=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8'));
-    assert.ok(config.rewrites.some(rule=>rule.source==='/catalog'&&rule.destination==='/index.html'));
+    assert.ok(config.rewrites.some(rule=>rule.source==='/catalog'&&rule.destination==='/api/catalog'));
     await context.route(url=>url.origin===origin&&url.pathname==='/catalog',route=>
       route.fulfill({path:path.join(root,'index.html'),contentType:'text/html; charset=utf-8'}));
    }

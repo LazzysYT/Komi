@@ -3959,6 +3959,13 @@ body > header > .header-inner{
 }
 html.komi-home-booting .komi-static-storefront { display: none !important; }
 
+/* Native focus moves between real suggestion buttons, including community results. */
+#searchDropdown :is(.search-dropdown-item,.komi-search-user-result,.komi-search-view-all):focus-visible {
+  outline:2px solid #eee;
+  outline-offset:-2px;
+  background:#29292d!important;
+}
+
 
 /* --- styles/inline-tail.css --- */
 /* Original inline style block 8; order preserved. */

@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4262066374546613" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Closed surfaces stay absent even if external styles or scripts are delayed.
@@ -22,9 +21,9 @@
     <meta name="komi-seo-revision" content="20261125-search-discovery">
     <meta name="google-site-verification" content="Nzv_eECGzk4WUEI3NHG6YX6nwstJ8jVuypU15341JGA">
     <meta name="theme-color" content="#090909">
-    <meta name="komi-ui-revision" content="20261125-home-guest-polish">
+    <meta name="komi-ui-revision" content="20261125-mobile-startup-r7">
     <meta name="komi-shop-revision" content="20261125-shop-v7">
-    <meta name="komi-profile-revision" content="20261125-profile-senku-v2">
+    <meta name="komi-profile-revision" content="20261125-profile-overview">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="KomiAnime">
@@ -46,9 +45,6 @@
     <link rel="preconnect" href="https://wsrv.nl" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
     <meta name="komi-first-hero" content="https://s4.anilist.co/file/anilistcdn/media/anime/banner/189046-MDk2CaVuRWpb.jpg">
-    <!-- Redirect the old #premium route before the main SPA loads. -->
-    <script src="/premium-entry.js?v=20261121"></script>
-    <script src="/shop-first-paint.js?v=20261124-v2"></script>
     <!-- Runs before body parsing: JS visitors never see the SEO fallback flash. -->
     <style id="komi-watch-entry-visibility">
     #komiWatchEntry{display:none}
@@ -58,20 +54,24 @@
     html.komi-watch-entry #komiWatchEntry a{color:#c9c9ce;font-size:14px;padding:8px 12px;border:1px solid #323237;border-radius:9px;text-decoration:none}
     #komiWatchEntry a:focus-visible{outline:2px solid #fff;outline-offset:2px}
     </style>
-    <script src="/komi-home-boot.js?v=20261125-daily-hero"></script>
+    <script src="/komi-home-boot.js?v=20261125-mobile-startup-r6"></script>
+    <!-- Give the daily artwork first priority, then resolve legacy entry routes. -->
+    <script src="/premium-entry.js?v=20261121"></script>
+    <script src="/shop-first-paint.js?v=20261124-v2"></script>
+    <script defer src="/komi-ads-loader.js?v=20261125-mobile-startup-r3"></script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
-    <link rel="stylesheet" href="/komi.production.css?v=20261125-home-guest-audit">
+    <link rel="stylesheet" href="/komi.production.css?v=20261125-mobile-startup-r7">
     <link rel="stylesheet" href="/komi-pill-system.css?v=20261124-v71">
     <link rel="stylesheet" href="/komi-icon-rail.css?v=20261124-v75">
     <link rel="stylesheet" href="/komi-shop-v5.css?v=20261125-shop-v7-fix3" media="print" data-komi-deferred-style="shop">
-    <link rel="stylesheet" href="/komi-shop-v6-goods.css?v=20261125-shop-v7-fix1">
-    <link rel="stylesheet" href="/button-animations.css?v=20261123a">
+    <link rel="stylesheet" href="/komi-shop-v6-goods.css?v=20261125-shop-v7-fix1" media="print" data-komi-deferred-style="cosmetics">
+    <link rel="stylesheet" href="/button-animations.css?v=20261123a" media="print" data-komi-deferred-style="motion">
     <link rel="stylesheet" href="/komi-genre-moods.css?v=20261123-mobilefix-v4">
     <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261125-guest-fixes" media="print" data-komi-deferred-style="watch">
     <link rel="stylesheet" href="/komi-hero-senku.css?v=20261125-watch-v9-portrait-stage">
-    <link rel="stylesheet" href="/profile-studio.css?v=20261125-profile-overview">
-    <link rel="stylesheet" href="/public-info.css?v=20261125-search-discovery">
+    <link rel="stylesheet" href="/profile-studio.css?v=20261125-profile-overview" media="print" data-komi-deferred-style="profile">
+    <link rel="stylesheet" href="/public-info.css?v=20261125-mobile-startup-r5">
     
     
     
@@ -490,8 +490,8 @@
     <script defer src="./player-source-preferences.js?v=20261125-watch-v9"></script>
     <script defer src="./komi-genre-moods.js?v=20261125-guest-fixes"></script>
     <script defer src="./anime-description.js?v=20261125-home-guest-polish"></script>
-    <script defer src="./home-release-shelves.js?v=20261125-guest-fixes-r4"></script>
-    <script defer src="./home-discovery.js?v=20261125-home-guest-polish"></script>
+    <script defer src="./home-release-shelves.js?v=20261125-mobile-startup-r7"></script>
+    <script defer src="./home-discovery.js?v=20261125-mobile-startup-r7"></script>
     <script defer src="./komi-home-snapshot.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-resume-cache.js"></script>
     <script defer src="./profile-premium.js?v=20261125-profile-overview"></script>
@@ -508,9 +508,9 @@
     <script defer src="./komi-public-catalog-cache.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-home-seed.js?v=20261125-v811-cinematic"></script>
     <script defer src="/komi-page-meta.js?v=20261125-search-discovery"></script>
-    <script defer src="./app-main.js?v=20261125-partner-killxiv"></script>
+    <script defer src="./app-main.js?v=20261125-mobile-startup-r7-profile-overview"></script>
     <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
-    <script defer src="./hero-hd-art.js?v=20261125-daily-hero"></script>
+    <script defer src="./hero-hd-art.js?v=20261125-mobile-startup-r4"></script>
     <script defer src="./komi-hero-title.js?v=20261124-v7hero"></script>
     <script defer src="./hybrid-search.js?v=20261122a"></script>
     <script defer src="./komi-comments.js?v=20261125-watch-discussion"></script>
@@ -530,11 +530,11 @@
     <script defer src="./komi-shop-v3.js?v=20261125-guest-fixes"></script>
     <script defer src="./anicoin.js?v=20261125-shop-v7-fix1"></script>
     <script defer src="./komi-shop-social.js?v=20261125-shop-v7"></script>
-    <script defer src="./dynamic-ui-events.js?v=20261125-profile-senku-v2"></script>
+    <script defer src="./dynamic-ui-events.js?v=20261125-profile-overview"></script>
     <script defer src="./mobile-bottom-sheets.js?v=20261125-watch-v9"></script>
     <script defer src="./komi-ui-sound.js"></script>
     <!-- Additive community tools; all existing scripts and handlers remain unchanged. -->
-    <script defer src="./komi-community.js?v=20261125-profile-senku-v2"></script>
+    <script defer src="./komi-community.js?v=20261125-profile-overview"></script>
     <script defer src="./komi-anime-social.js?v=20261123-six-fixes"></script>
     <script defer src="./komi-party-quiz.js"></script>
     <script defer src="./komi-icon-rail.js?v=20261123-rail-layout-v3"></script>

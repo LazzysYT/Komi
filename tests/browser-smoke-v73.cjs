@@ -5,8 +5,11 @@ const {chromium,devices}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs'),path=require('node:path'),http=require('node:http');
 const root=path.resolve(__dirname,'..');
-const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.json':'application/json'};
-const csp=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).headers[0].headers.find(x=>x.key==='Content-Security-Policy').value;
+const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.svg':'image/svg+xml','.webp':'image/webp','.json':'application/json'};
+const globalHeaders=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).headers
+ .find(rule=>rule.source==='/(.*)'&&!rule.has&&!rule.missing)?.headers;
+const csp=globalHeaders?.find(header=>header.key==='Content-Security-Policy')?.value;
+assert.equal(typeof csp,'string','The global production CSP must be applied to the browser fixture');
 const server=http.createServer((req,res)=>{
  const url=new URL(req.url,'http://localhost');
  const pathname=url.pathname;

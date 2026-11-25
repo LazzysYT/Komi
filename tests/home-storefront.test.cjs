@@ -37,6 +37,86 @@ test('a populated upcoming schedule follows genres and precedes the catalogue fo
  assert.ok(html.indexOf('komi-home-upcoming')<html.indexOf('komi-home-browse-footer'));
  assert.match(html,/Серия 13/);
 });
+test('valid daily lineups never compute a discarded full-catalog featured selection',()=>{
+ const f=fixture();let featuredCalls=0;const yearCalls=[];
+ f.scope.KomiHeroDaily={lineup:()=>f.animeList.slice(5),artwork:()=>''};
+ f.scope.KomiHomeSnapshot={featured(){featuredCalls++;return f.animeList.slice(0,5);}};
+ f.context.year=anime=>{yearCalls.push(anime.id);return f.scope.komiAnimeYear(anime);};
+ const heroIds=html=>[...html.matchAll(/<article\b[^>]*data-komi-anime-id="([^"]+)"/g)].map(match=>match[1]);
+ for(const revision of [1,1,2]){
+  f.context.catalogRevision=revision;
+  yearCalls.length=0;
+  assert.deepEqual(heroIds(f.render()),['6','7','8','9','10']);
+  assert.deepEqual(yearCalls,['6','7','8','9','10'],'only the five displayed daily titles need year labels');
+ }
+ assert.equal(featuredCalls,0,'daily selection must not sort the catalog for an unused fallback');
+});
+test('an insufficient daily lineup computes and caches the original featured fallback',()=>{
+ const f=fixture();let daily=f.animeList.slice(5),featuredCalls=0;
+ vm.runInContext(fs.readFileSync(path.join(root,'komi-home-snapshot.js'),'utf8'),f.scope);
+ const featured=f.scope.KomiHomeSnapshot.featured;
+ f.scope.KomiHomeSnapshot.featured=(...args)=>{featuredCalls++;return featured(...args);};
+ f.scope.KomiHeroDaily={lineup:()=>daily,artwork:()=>''};
+ const before=f.render();
+ daily=f.animeList.slice(0,1);
+ const after=f.render();
+ const ids=[...after.matchAll(/<article\b[^>]*data-komi-anime-id="([^"]+)"/g)].map(match=>match[1]);
+ assert.deepEqual(ids,Array.from(featured(f.animeList,f.context.year),anime=>String(anime.id)));
+ assert.equal(featuredCalls,1,'fallback must be available without a catalog revision change');
+ const recommendations=html=>html.match(/<section class="komi-home-shelf komi-feature-section komi-home-popular">[\s\S]*?<\/section>/)?.[0];
+ assert.equal(recommendations(after),recommendations(before),'daily availability must not change recommendations');
+ f.render();assert.equal(featuredCalls,1,'reuse the computed fallback on an unchanged catalog');
+ f.context.catalogRevision++;
+ f.render();assert.equal(featuredCalls,2,'a new catalog revision must refresh the fallback');
+});
+test('the legacy hero fallback preserves year/rating order, stable ties and episode eligibility',()=>{
+ const f=fixture();let daily=f.animeList.slice(5);
+ f.scope.KomiHeroDaily={lineup:()=>daily,artwork:()=>''};
+ Object.assign(f.animeList[0],{poster:'http://example.org/unsafe.jpg',year:2029,shikiRating:10});
+ Object.assign(f.animeList[1],{episodeCount:0,year:2028,shikiRating:10});
+ Object.assign(f.animeList[2],{year:2027,shikiRating:8.4});
+ Object.assign(f.animeList[3],{year:2027,shikiRating:6.9});
+ Object.assign(f.animeList[4],{year:2026,shikiRating:8.4});
+ Object.assign(f.animeList[5],{year:2026,shikiRating:8.4});
+ Object.assign(f.animeList[6],{episodeCount:0,episodes:[{}],year:2027,shikiRating:9});
+ f.render();
+ daily=[];
+ const expected=f.animeList.filter(anime=>/^https:\/\//i.test(anime.poster||'')&&
+  Number(anime.shikiRating)>=7&&(Number(anime.episodeCount)||anime.episodes.length)>0)
+  .sort((a,b)=>Number(b.year)-Number(a.year)||Number(b.shikiRating)-Number(a.shikiRating))
+  .slice(0,5).map(anime=>anime.id);
+ const html=f.render();
+ assert.deepEqual([...html.matchAll(/<article\b[^>]*data-komi-anime-id="([^"]+)"/g)].map(match=>match[1]),expected);
+ assert.deepEqual(expected,['7','3','5','6','8']);
+});
+test('bounded recommendations equal the previous stable sort for ties, invalid data and date boundaries',()=>{
+ const f=fixture(),now=Date.parse('2026-11-25T12:00:00Z'),threshold=now-30*86400000;
+ f.scope.Date=class extends Date{static now(){return now;}};
+ f.scope.KomiHeroDaily={lineup:()=>f.animeList.slice(0,5),artwork:()=>''};
+ const make=(id,shikiRating,lastEpisodeAddedAt='')=>({...f.animeList[0],id:String(id),shikiRating,lastEpisodeAddedAt});
+ const iso=value=>new Date(value).toISOString();
+ const mixed=Array.from({length:360},(_,i)=>make(i+1,((i*37)%101)/10,iso(now-((i*137)%90)*86400000)));
+ const edges=[make(501,Infinity),make(502,Infinity,iso(now)),make(503,NaN),make(504,-1),make(505,0),
+  make('../bad',100),make(0,100),make(506,'8.4'),make(507,8,iso(threshold)),
+  make(508,8,iso(threshold+1)),make(509,8,iso(now)),make(510,8,iso(now+1)),make(511,8,'invalid'),
+  make(512,29),make(513,9,iso(now))];
+ const tied=Array.from({length:30},(_,i)=>make(601+i,8));
+ const infinite=Array.from({length:20},(_,i)=>make(701+i,Infinity));
+ const reference=rows=>{
+  const metadata=rows.map(anime=>({anime,score:Number(anime.shikiRating)||0,updated:Date.parse(anime.lastEpisodeAddedAt)||0}));
+  const popularity=item=>(item.updated>threshold&&item.updated<=now?2:0)+item.score/10;
+  return metadata.filter(item=>item.score>0&&/^[1-9][0-9]{0,14}$/.test(String(item.anime.id||'')))
+   .sort((a,b)=>popularity(b)-popularity(a)||b.score-a.score).slice(0,12).map(item=>String(item.anime.id));
+ };
+ for(const rows of [mixed,[...edges,...mixed],tied,[...mixed,...infinite],edges.slice(0,7)]){
+  const original=rows.map(anime=>anime.id),actual=[];
+  f.context.animeList=rows;f.context.catalogRevision++;
+  f.context.renderCard=anime=>{actual.push(String(anime.id));return '';};
+  f.render();
+  assert.deepEqual(actual,reference(rows));
+  assert.deepEqual(rows.map(anime=>anime.id),original,'ranking must not reorder the shared catalog');
+ }
+});
 test('unfinished history uses original owner, slot and time; zero/completed/foreign entries remain hidden',()=>{
  const f=fixture(); f.context.currentUser={username:'owner',authUserId:'uid-a'};
  const p={season:2,index:3,time:143,duration:1440,updated:200};

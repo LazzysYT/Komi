@@ -54,6 +54,7 @@ jobs:
             scripts/resume-hydration-browser.cjs \
             scripts/profile-collection-browser.cjs \
             scripts/mobile-profile-browser.cjs \
+            scripts/profile-overview-browser.cjs \
             scripts/saved-card-hydration-browser.cjs \
             scripts/auth-oauth-browser.cjs \
             scripts/search-suggestions-browser.cjs \
@@ -89,6 +90,7 @@ jobs:
           npx --yes --package=esbuild@0.25.12 --package=postcss@8.5.6 -- node scripts/minify-static.cjs
           python3 -m http.server 8766 --bind 127.0.0.1 >/tmp/komi-minified.log 2>&1 &
           node scripts/v8-critical-browser.cjs
+          node scripts/home-first-paint-browser.cjs
           node scripts/v8-guest-browser.cjs
           node scripts/shop-v3-browser.cjs
       - name: Smoke-test actual komianime.online as a signed-out visitor

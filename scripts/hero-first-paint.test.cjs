@@ -7,7 +7,7 @@ const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
 const css=fs.readFileSync(path.join(__dirname,'../mono-ui.css'),'utf8');
 const main=html.split('<main id="mainContainer">')[1]?.split('</main>')[0]||'';
 
-test('fixed hero reference stays inside a template while the daily boot remains neutral',()=>{
+test('fixed hero reference stays inside a template until daily artwork is decoded',()=>{
   const templates=[...main.matchAll(/<template class="komi-boot-real-hero">([\s\S]*?)<\/template>/g)];
   assert.equal(templates.length,1,'One dormant hero template is retained');
   assert.match(templates[0][1],/<section class="komi-home-hero"/);

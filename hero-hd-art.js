@@ -52,6 +52,15 @@
   function safeStill(raw) {
     try {
       if (typeof raw !== 'string' || raw.length > 2000) return '';
+      // Only the canonical bundled daily stills may use relative URLs. Resolve
+      // against this document's real origin, including local preview ports.
+      const bundled = raw.match(/^\/assets\/hero\/daily\/([1-9]\d{0,11})-[A-Za-z0-9]+\.webp$/);
+      if (bundled && root.KomiHeroDaily?.artwork(bundled[1]) === raw) {
+        const page = new URL(root.location.href);
+        const resolved = new URL(raw,page);
+        return /^https?:$/.test(page.protocol) && !page.username && !page.password &&
+          resolved.origin === page.origin ? resolved.href : '';
+      }
       const u = new URL(raw);
       return u.protocol === 'https:' && !u.username && !u.password && !u.port ? u.href : '';
     } catch { return ''; }
