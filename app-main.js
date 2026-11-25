@@ -1956,6 +1956,17 @@ async function komiLoadCatalogPages(attempt = 0) {
                                             </span>
                                             <span class="komi-partner-card-cta">Открыть TikTok <span aria-hidden="true">↗</span></span>
                                         </a>
+                                    </li>
+                                    <li>
+                                        <a class="komi-partner-card" href="https://www.tiktok.com/@killxiv" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр xavier, @killxiv — открыть профиль в новой вкладке">
+                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
+                                            <span class="komi-partner-card-body">
+                                                <img class="komi-partner-avatar-photo" src="/assets/partners/killxiv.jpg" alt="Аватар xavier" width="76" height="76" loading="lazy" decoding="async">
+                                                <span class="komi-partner-card-name"><strong>xavier</strong><small>@killxiv</small></span>
+                                            </span>
+                                            <span class="komi-partner-card-cta">Открыть TikTok <span aria-hidden="true">↗</span></span>
+                                        </a>
+                                    </li>
                                 </ul>
                             </article>
                             <article class="komi-partners-panel">

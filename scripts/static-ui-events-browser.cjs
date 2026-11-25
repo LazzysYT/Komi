@@ -4,8 +4,10 @@ const fs=require('node:fs');
 const path=require('node:path');
 const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
 const config=JSON.parse(fs.readFileSync(path.join(__dirname,'../vercel.json'),'utf8'));
-const csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').value
-    .replace("script-src-attr 'unsafe-inline'","script-src-attr 'none'");
+const productionCsp=config.headers.find(rule=>rule.source==='/(.*)'&&!rule.has&&!rule.missing)
+    ?.headers.find(header=>header.key==='Content-Security-Policy')?.value;
+assert.equal(typeof productionCsp,'string','The global production CSP must be applied to the browser fixture');
+const csp=productionCsp.replace("script-src-attr 'unsafe-inline'","script-src-attr 'none'");
 
 async function assertCanonicalRoute(page,pathname,view){
  const url=new URL(page.url());

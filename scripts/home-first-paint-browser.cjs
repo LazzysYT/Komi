@@ -94,6 +94,25 @@ const make=(id,year,score)=>({
     assert.equal(frame.image,dailyArtwork,'The decoded artwork must match the daily lead');
     assert.equal(frame.link,'/anime/'+dailyLead+'#player','The watch link must match the title and artwork');
   };
+  const assertFooterBelowFirstViewport=async label=>{
+    const original=page.viewportSize();
+    try{
+      for(const viewport of [{width:1280,height:800},{width:390,height:844}]){
+        await page.setViewportSize(viewport);
+        await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+        const footer=await page.locator('body > .komi-public-footer').evaluate(node=>{
+          const rect=node.getBoundingClientRect(),style=getComputedStyle(node);
+          return {top:rect.top,height:rect.height,viewport:innerHeight,
+            visible:!node.hidden&&style.display!=='none'&&style.visibility!=='hidden',
+            links:[...node.querySelectorAll('a')].map(link=>link.getAttribute('href'))};
+        });
+        assert.ok(footer.visible&&footer.height>0,label+': the native public footer must remain available');
+        assert.ok(footer.top>=footer.viewport-1,
+          label+': public footer must stay below the first '+viewport.width+'px viewport while app-main is held');
+        assert.deepEqual(footer.links,['/','/catalog','/about','/contacts']);
+      }
+    }finally{await page.setViewportSize(original);}
+  };
   const captureBootPreview=async label=>{
     const boot=page.locator('#mainContainer .komi-home-discovery[data-komi-boot-preview]');
     await boot.waitFor({state:'visible',timeout:10000});
@@ -121,6 +140,7 @@ const make=(id,year,score)=>({
     assert.equal(state.nativeWatch,true,label+': the watch link must work before JavaScript handlers exist');
     assert.ok(state.buttons>0,'The preview must retain its pending JavaScript controls');
     assert.equal(state.allDisabled,true,label+': JavaScript-only hero controls must wait for hydration');
+    await assertFooterBelowFirstViewport(label);
     const frame=await readActiveHero();
     assertDailyPair(frame,dailySeedTitle);
     const image=await activeHero.locator('.komi-hub-hero-art').elementHandle();
@@ -230,6 +250,6 @@ const make=(id,year,score)=>({
     ]);
     assert.equal(await page.locator('h1').textContent(),'Native watch navigation');
     assert.equal(errors.length,0,'No page exceptions: '+errors.join('; '));
-    console.log('PASS early, cold and cached reload: daily title/art/watch route paired, decoded image node retained, native watch link works before app-main');
+    console.log('PASS early, cold and cached reload: daily title/art/watch route paired, decoded image node retained, native watch link works before app-main, public footer stays below desktop/mobile first viewport');
   }finally{closing=true;appMain.resolve();releaseSecond();await context.close();await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
