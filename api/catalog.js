@@ -37,22 +37,23 @@ function metadata(source, indexable) {
 function card(row) {
   const data = row.data;
   const name = plainText(data.title || data.originalTitle || 'Без названия').slice(0, 180);
-  const year = /^[0-9]{4}$/.test(String(data.year || '')) ? String(data.year) : '';
-  const type = plainText(data.type || '').slice(0, 32);
+  const year = [data.year, data.aired_on, data.airedOn, data.releaseYear]
+    .map(value => String(value ?? '').match(/(?:^|\D)((?:19|20)\d{2})(?:\D|$)/)?.[1]).find(Boolean) || '';
+  const kind = String(data.type || data.kind || '').toLowerCase();
+  const type = ['movie','film','фильм'].includes(kind) ? 'Фильм'
+    : kind === 'ova' ? 'OVA' : kind === 'ona' ? 'ONA' : kind === 'special' ? 'Special' : 'Сериал';
   const count = Number.isSafeInteger(Number(data.episodeCount)) && Number(data.episodeCount) > 0 ? Number(data.episodeCount) : 0;
-  const genres = Array.isArray(data.genres) ? data.genres.slice(0, 2).map(plainText).join(', ') : '';
   const score = Number(data.shikiRating);
   const rating = Number.isFinite(score) && score > 0 && score <= 10 ? score.toFixed(1) : '';
   const original = safeImage(data.poster || data.banner);
   const image = cachedPosterUrl(original);
-  return '<a class="anime-card komi-seo-card" href="/anime/' + row.shikimori_id + '" aria-label="Подробнее: ' + html(name) + '">'
-    + (rating ? '<span class="anime-rating-badge" aria-label="Оценка Shikimori: ' + rating + '">★ ' + rating + '</span>' : '')
-    + '<div class="anime-poster-box"><img class="anime-poster" src="' + html(image) + '"'
-    + ' width="240" height="360" alt="Постер: ' + html(name) + '" loading="lazy" decoding="async" referrerpolicy="no-referrer"'
-    + (image !== original ? ' data-poster-direct="' + html(original) + '"' : '') + ' data-komi-onerror="komiCardPosterFallback(this)"></div>'
-    + '<div class="anime-info"><div class="anime-title">' + html(name) + '</div>'
-    + '<div class="komi-card-meta">' + [year, type].filter(Boolean).map(value => '<span>' + html(value) + '</span>').join('') + '</div>'
-    + '<div class="anime-meta-card"><span>' + html(genres) + '</span>' + (count ? '<span>' + count + ' сер.</span>' : '') + '</div></div></a>';
+  const metadata = [year, type, count ? count + ' сер.' : ''].filter(Boolean).join(' · ');
+  return '<article class="komi-catalog-card"><a class="komi-discovery-card komi-seo-card" href="/anime/' + row.shikimori_id + '" aria-label="Подробнее: ' + html(name) + '">'
+    + '<span class="komi-discovery-poster"><img src="' + html(image) + '"'
+    + ' width="240" height="360" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"'
+    + (image !== original ? ' data-poster-direct="' + html(original) + '"' : '') + ' data-komi-error="poster-error">'
+    + (rating ? '<span class="komi-discovery-rating" aria-label="Оценка Shikimori: ' + rating + '">★ ' + rating + '</span>' : '')
+    + '</span><span class="komi-discovery-copy"><strong>' + html(name) + '</strong><small>' + html(metadata) + '</small></span></a></article>';
 }
 
 function catalogMarkup(rows) {
@@ -60,7 +61,7 @@ function catalogMarkup(rows) {
     + '<div class="komi-catalog-head-row"><div class="komi-catalog-heading"><h1 id="komiCatalogSeoTitle">Каталог аниме</h1></div></div>'
     + '<p>Аниме-сериалы, фильмы, OVA и ONA в KomiAnime. Откройте карточку, чтобы узнать о тайтле и доступных сериях.</p>'
     + '<noscript><p>Ниже — часть каталога. Включите JavaScript для поиска, фильтров и просмотра всей коллекции.</p></noscript>'
-    + '</section><div class="anime-grid" aria-label="Аниме в каталоге">' + rows.map(card).join('') + '</div>';
+    + '</section><div class="komi-catalog-card-grid" aria-label="Аниме в каталоге">' + rows.map(card).join('') + '</div>';
 }
 
 function render(rows, indexable) {

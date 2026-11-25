@@ -45,6 +45,11 @@ test('catalog response contains crawlable links and its own metadata before Java
     const main = res.body.split('<main id="mainContainer">')[1].split('</main>')[0];
     assert.match(main, /<h1 id="komiCatalogSeoTitle">Каталог аниме<\/h1>/);
     assert.match(main, /href="\/anime\/52991"/);
+    assert.match(main, /class="komi-catalog-card-grid"/);
+    assert.match(main, /class="komi-discovery-poster"/);
+    assert.match(main, /class="komi-discovery-rating"/);
+    assert.match(main, /<small>2023 · Сериал · 28 сер\.<\/small>/);
+    assert.doesNotMatch(main, /anime-poster-box|komi-card-hover-ui/);
     assert.match(main, /Провожающая в последний путь Фрирен/);
     assert.doesNotMatch(main, /komi-static-storefront|komi-home-hero|<template/);
     assert.match(res.body, /src="(?:\.\/|\/)?app-main\.js/);

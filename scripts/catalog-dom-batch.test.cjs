@@ -11,7 +11,7 @@ test('show more appends instead of replacing existing cards, preserving images',
   assert.match(src,/komiRefreshCatalogGrid\(previouslyRendered\)/);
   assert.match(src,/function komiRefreshCatalogGrid\(appendFrom = null\)/);
   assert.match(src,/grid\.insertAdjacentHTML\('beforeend'/);
-  assert.match(src,/grid\.querySelectorAll\(':scope > \.anime-card'\)/);
+  assert.match(src,/grid\.querySelectorAll\(':scope > \.komi-catalog-card'\)/);
 });
 test('saved mobile catalog positions are capped to avoid thousands of card nodes',()=>{
   assert.match(src,/matches \? 240 : 2400/);

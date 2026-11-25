@@ -34,7 +34,7 @@ test('initial main DOM has a compact, accessible storefront and functional ancho
   assert.match(actions, /href="\/anime\/52991"/);
   assert.match(html, /function komiCatalogLoadingMarkup\(\)/);
   // The transient placeholder is still used when live data really has no cards.
-  assert.match(html, /<div id="anime-grid" class="anime-grid" aria-busy="true" aria-label="Загрузка каталога">/);
+  assert.match(html, /<div class="komi-catalog-card-grid" aria-busy="true" aria-label="Загрузка каталога">/);
 });
 
 test('all artwork placeholders are root absolute', () => {

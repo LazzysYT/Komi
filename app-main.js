@@ -1255,13 +1255,13 @@ async function komiLoadCatalogPages(attempt = 0) {
             if(grid) {
                 const canAppend = Number.isInteger(appendFrom) && appendFrom >= 0 &&
                     filtered.length > appendFrom &&
-                    grid.querySelectorAll(':scope > .anime-card').length === Math.min(appendFrom,filtered.length);
+                    grid.querySelectorAll(':scope > .komi-catalog-card').length === Math.min(appendFrom,filtered.length);
                 if(canAppend) {
                     grid.insertAdjacentHTML('beforeend',
-                        filtered.slice(appendFrom,catalogVisibleCount).map(a=>renderCard(a)).join(''));
+                        filtered.slice(appendFrom,catalogVisibleCount).map(renderKomiCatalogCard).join(''));
                 } else {
                     grid.innerHTML=filtered.length
-                        ?filtered.slice(0,catalogVisibleCount).map(a=>renderCard(a)).join('')
+                        ?filtered.slice(0,catalogVisibleCount).map(renderKomiCatalogCard).join('')
                         :'<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>';
                 }
             }
@@ -1605,7 +1605,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         function komiCatalogLoadingMarkup() {
             return '<section id="catalog" class="komi-static-catalog" aria-label="Каталог аниме">' +
                 '<div class="section-header"><h1 class="section-title">Каталог аниме</h1></div>' +
-                '<div id="anime-grid" class="anime-grid" aria-busy="true" aria-label="Загрузка каталога">' +
+                '<div class="komi-catalog-card-grid" aria-busy="true" aria-label="Загрузка каталога">' +
                 '<div class="komi-catalog-skeleton-card" aria-hidden="true"></div>'.repeat(6) +
                 '</div><p class="komi-catalog-skeleton-label" role="status">Загружаем каталог аниме…</p></section>';
         }
@@ -1893,8 +1893,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                     </section>
                     ${catalogFilterGenre !== 'Все' ? `<div class="komi-catalog-selected-genre" aria-live="polite"><span>Выбран жанр:</span><button type="button" data-komi-mood-genre="Все" aria-label="Сбросить жанр ${escapeFriendHtml(catalogFilterGenre)}">${escapeFriendHtml(catalogFilterGenre)} ×</button></div>` : ''}
                     <div class="komi-catalog-status"><span class="komi-catalog-count" id="komiCatalogCount">Найдено: ${filtered.length}</span><span>Аниме с доступными сериями</span></div>
-                    <div class="anime-grid" id="komiCatalogGrid">
-                      ${filtered.length === 0 ? `<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>` : filtered.slice(0, catalogVisibleCount).map(a => renderCard(a)).join('')}
+                    <div class="komi-catalog-card-grid" id="komiCatalogGrid">
+                      ${filtered.length === 0 ? `<div class="komi-catalog-empty"><strong>Ничего не найдено</strong><p>Измени запрос или сбрось фильтры.</p><button class="komi-catalog-clear" data-komi-onclick="komiResetCatalogFilters()">Сбросить фильтры</button></div>` : filtered.slice(0, catalogVisibleCount).map(renderKomiCatalogCard).join('')}
                     </div>
                     <div id="komiCatalogMore" style="display:${filtered.length > catalogVisibleCount ? 'flex' : 'none'};justify-content:center;margin:24px 0;">
                       ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
@@ -3250,6 +3250,9 @@ async function komiLoadCatalogPages(attempt = 0) {
             img.onerror = null;
             img.src = '/anime-artwork.svg';
         }
+        function renderKomiCatalogCard(anime) {
+            return renderCard(anime, {variant:'catalog'});
+        }
         function renderCard(anime, options = {}) {
             const year=komiAnimeYear(anime);
             const type=komiCatalogType(anime);
@@ -3259,21 +3262,24 @@ async function komiLoadCatalogPages(attempt = 0) {
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
-            // The discovery shelf is a simple native link. Catalogue cards keep
-            // their established status/quick-action controls in the catalogue.
-            if (options.variant === 'discovery') {
+            const inCatalog = options.variant === 'catalog';
+            let storefrontLink = '';
+            if (inCatalog || options.variant === 'discovery') {
                 if (!/^[1-9][0-9]{0,14}$/.test(id)) return '';
                 const source = komiCardPosterSource(anime.poster || anime.banner);
                 const total = Math.max(0, Number(anime.episodeCount) || (Array.isArray(anime.episodes) ? anime.episodes.length : 0));
                 const metadata = [year, type, total ? total + ' сер.' : ''].filter(Boolean).map(escapeFriendHtml).join(' · ');
-                return '<a class="komi-discovery-card" href="/anime/' + id + '" aria-label="Подробнее: ' + name + '">' +
-                    '<span class="komi-discovery-poster"><img src="/anime-artwork.svg" data-komi-lazy-src="' + escapeFriendHtml(source.preferred) +
-                    '" width="240" height="360" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"' +
+                const imageAttrs = inCatalog ? 'src="' + escapeFriendHtml(source.preferred) + '"' :
+                    'src="/anime-artwork.svg" data-komi-lazy-src="' + escapeFriendHtml(source.preferred) + '"';
+                storefrontLink = '<a class="komi-discovery-card" href="/anime/' + id + '" aria-label="Подробнее: ' + name + '">' +
+                    '<span class="komi-discovery-poster"><img ' + imageAttrs +
+                    ' width="240" height="360" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"' +
                     (source.direct ? ' data-poster-direct="' + escapeFriendHtml(source.direct) + '"' : '') +
                     (source.original ? ' data-poster-original="' + escapeFriendHtml(source.original) + '"' : '') +
                     ' data-komi-onerror="komiCardPosterFallback(this)">' +
-                    (rating !== '—' ? '<span class="komi-discovery-rating" aria-label="Оценка Shikimori: ' + rating + '">★ ' + rating + '</span>' : '') +
+                    (rating !== '—' && score <= 10 ? '<span class="komi-discovery-rating" aria-label="Оценка Shikimori: ' + rating + '">★ ' + rating + '</span>' : '') +
                     '</span><span class="komi-discovery-copy"><strong>' + name + '</strong><small>' + metadata + '</small></span></a>';
+                if (!inCatalog) return storefrontLink;
             }
             const status = currentUser?.authUserId ? userAnimeStatuses[currentUser.username]?.[id] : '';
             const safeStatus = ['Просмотрено','В планах','Смотрю','Отложено','Брошено','Любимые'].includes(status) ? status : '';
@@ -3288,6 +3294,16 @@ async function komiLoadCatalogPages(attempt = 0) {
                 ['Смотрю','В планах','Просмотрено'].map(option =>
                     '<button type="button" data-komi-quick-status="' + option + '" aria-pressed="' + (status===option) + '">' + option + '</button>'
                 ).join('') + '</div></div>';
+            const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
+            const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
+            if (inCatalog) {
+                return '<article class="komi-catalog-card" data-komi-anime-id="' + id + '">' + storefrontLink +
+                    '<div class="komi-catalog-card-actions">' + quickStatusMarkup +
+                    '<button type="button" class="komi-catalog-watch" data-komi-onclick="playSound();openWatchModal(\'' + id +
+                    '\')" aria-label="Смотреть: ' + name + '" title="Смотреть"><svg aria-hidden="true" viewBox="0 0 24 24">' +
+                    '<path fill="currentColor" d="M8 5v14l11-7z"/></svg></button>' +
+                    (statusMarkup || (fresh ? '<span class="komi-card-status">Новая серия</span>' : '')) + '</div></article>';
+            }
             const posterSource=komiCardPosterSource(anime.poster || anime.banner);
             const poster=escapeFriendHtml(posterSource.preferred);
             const deferPoster=currentView==='home' && /^https?:\/\//i.test(posterSource.preferred);
@@ -3295,8 +3311,6 @@ async function komiLoadCatalogPages(attempt = 0) {
             const posterDirectAttr=posterSource.direct ? ' data-poster-direct="'+escapeFriendHtml(posterSource.direct)+'"' : '';
             const posterOriginalAttr=posterSource.original ? ' data-poster-original="'+escapeFriendHtml(posterSource.original)+'"' : '';
             const episodeCount=Number(anime.episodeCount)||(Array.isArray(anime.episodes)?anime.episodes.length:0);
-            const lastAdded=Date.parse(anime.lastEpisodeAddedAt);
-            const fresh=Number.isFinite(lastAdded)&&Date.now()>=lastAdded&&Date.now()-lastAdded<72*3600000;
             return '<div class="anime-card" data-komi-anime-id="'+escapeFriendHtml(id)+'" role="button" tabindex="0" aria-label="Открыть аниме '+name+'" '+
                 'data-komi-onclick="playSound();openWatchModal(\''+id+'\')" data-komi-onkeydown="if(event.key===\'Enter\'||event.key===\' \'){event.preventDefault();openWatchModal(\''+id+'\')}">'+
                 '<div class="anime-rating-badge">★ '+rating+'</div>'+

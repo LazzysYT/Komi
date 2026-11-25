@@ -3821,7 +3821,7 @@ body > header > .header-inner{
 .komi-media-hub .komi-home-storefront .komi-home-rail-pending {
   min-height: 370px;
 }
-.komi-media-hub .komi-home-storefront .komi-discovery-card {
+.komi-media-hub :is(.komi-home-storefront,.komi-catalog-card-grid) .komi-discovery-card {
   flex: 0 0 clamp(160px, 14vw, 190px);
   display: flex;
   flex-direction: column;
@@ -3835,7 +3835,7 @@ body > header > .header-inner{
   cursor: pointer;
   transition: transform .2s var(--ease-spring), opacity .2s;
 }
-.komi-media-hub .komi-home-storefront .komi-discovery-poster {
+.komi-media-hub :is(.komi-home-storefront,.komi-catalog-card-grid) .komi-discovery-poster {
   display: block;
   position: relative;
   width: 100%;
@@ -3845,13 +3845,13 @@ body > header > .header-inner{
   background: var(--komi-pill-matte, #16161A);
   border: 1px solid rgba(255,255,255,.08);
 }
-.komi-media-hub .komi-home-storefront .komi-discovery-poster img {
+.komi-media-hub :is(.komi-home-storefront,.komi-catalog-card-grid) .komi-discovery-poster img {
   display: block;
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
-.komi-media-hub .komi-home-storefront .komi-discovery-rating {
+.komi-media-hub :is(.komi-home-storefront,.komi-catalog-card-grid) .komi-discovery-rating {
   position: absolute;
   top: 10px;
   left: 10px;
@@ -3863,13 +3863,13 @@ body > header > .header-inner{
   font: 800 13px/1.3 Inter, sans-serif;
   font-variant-numeric: tabular-nums;
 }
-.komi-media-hub .komi-home-storefront .komi-discovery-copy {
+.komi-media-hub :is(.komi-home-storefront,.komi-catalog-card-grid) .komi-discovery-copy {
   display: flex;
   flex-direction: column;
   gap: 5px;
   min-width: 0;
 }
-.komi-media-hub .komi-home-storefront .komi-discovery-copy strong {
+.komi-media-hub :is(.komi-home-storefront,.komi-catalog-card-grid) .komi-discovery-copy strong {
   display: -webkit-box;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
@@ -3878,8 +3878,8 @@ body > header > .header-inner{
   font: 700 15px/1.4 Inter, sans-serif;
   overflow-wrap: anywhere;
 }
-.komi-media-hub .komi-home-storefront .komi-discovery-copy small {
-  color: var(--home-muted);
+.komi-media-hub :is(.komi-home-storefront,.komi-catalog-card-grid) .komi-discovery-copy small {
+  color: var(--home-muted, #a7a7ad);
   font: 500 13px/1.5 Inter, sans-serif;
   min-height: 3em;
 }
@@ -8244,6 +8244,74 @@ background:radial-gradient(ellipse at 90% 0,#c3a46721,transparent 65%),#111114;c
     }
     .anime-card .komi-card-quick-toggle::before,
     .anime-card .komi-card-quick-toggle::after {width:15px!important;}
+}
+
+/* Same poster surface as Recommendations; only the grid and actions differ. */
+.komi-media-hub .komi-catalog-card-grid {
+    --home-muted: #a7a7ad;
+    display:grid;
+    grid-template-columns:repeat(auto-fill,minmax(min(100%,150px),1fr));
+    gap:20px 16px;
+    min-width:0;
+    width:100%;
+}
+.komi-catalog-card-grid .komi-catalog-skeleton-card {aspect-ratio:2/3;min-height:0;}
+.komi-catalog-card-grid > .komi-catalog-empty {grid-column:1/-1;}
+.komi-catalog-card {
+    position:relative;
+    min-width:0;
+    container-type:inline-size;
+}
+.komi-catalog-card:focus-within {z-index:2;}
+.komi-catalog-card:has(.komi-card-quick.is-open) {z-index:3;}
+.komi-catalog-card .komi-catalog-card-actions {
+    position:absolute;
+    inset:0 0 auto;
+    width:100%;
+    aspect-ratio:2/3;
+    pointer-events:none;
+}
+.komi-catalog-card :is(.komi-card-quick,.komi-catalog-watch) {position:absolute;pointer-events:auto;}
+.komi-catalog-card .komi-card-quick {top:6px;right:6px;z-index:1;}
+.komi-catalog-card .komi-card-quick-menu {top:48px;width:min(170px,calc(100cqw - 12px));}
+.komi-catalog-card :is(.komi-card-quick-toggle,.komi-catalog-watch) {
+    display:grid;
+    place-items:center;
+    width:44px;
+    height:44px;
+    padding:0;
+    border:1px solid rgba(255,255,255,.28);
+    border-radius:50%;
+    background:rgba(9,9,11,.86);
+    color:#fff;
+    cursor:pointer;
+}
+.komi-catalog-card .komi-card-quick-toggle {font:500 24px/1 Inter,sans-serif;box-shadow:none;}
+.komi-catalog-card .komi-catalog-watch {bottom:6px;right:6px;}
+.komi-catalog-card .komi-catalog-watch svg {width:20px;height:20px;pointer-events:none;}
+.komi-catalog-card .komi-card-status {
+    position:absolute;
+    inset:auto auto 12px 10px;
+    max-width:calc(100% - 68px);
+    margin:0;
+    padding:4px 7px;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    border-radius:999px;
+    background:rgba(9,9,11,.9);
+    color:#fff;
+    font:700 11px/1.2 Inter,sans-serif;
+}
+.komi-catalog-card :is(.komi-card-quick-toggle,.komi-catalog-watch):hover {background:#fff;color:#09090b;}
+.komi-catalog-card :is(a,button):focus-visible {outline:2px solid #fff;outline-offset:2px;}
+.komi-catalog-card .komi-card-quick-menu button:focus-visible {outline-offset:-2px;}
+@media (hover:hover) and (pointer:fine) {
+    .komi-catalog-card:not(:hover):not(:focus-within) :is(.komi-card-quick-toggle,.komi-catalog-watch) {opacity:0;}
+    .komi-catalog-card:hover .komi-discovery-poster {border-color:rgba(255,255,255,.28);}
+}
+@media (max-width:767px) {
+    .komi-media-hub .komi-catalog-card-grid {grid-template-columns:repeat(auto-fill,minmax(min(100%,128px),1fr));gap:16px 12px;}
 }
 
 /* --- player-comfort.css --- */
