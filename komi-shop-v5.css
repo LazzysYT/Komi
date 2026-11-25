@@ -272,8 +272,8 @@ body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-co
  #shop.komi-shop-studio .sv3-profile{max-width:440px;width:100%;margin:0 auto}
 }
 @media(max-width:767px){
- #shop.komi-shop-studio{padding:14px 16px 180px}
- #mainContainer > #shop.komi-shop-studio > header.sv3-topbar{gap:12px;margin-bottom:16px!important}
+ #shop.komi-shop-studio{padding:12px 16px 180px}
+ #mainContainer > #shop.komi-shop-studio > header.sv3-topbar{gap:8px;margin-bottom:10px!important}
  #shop.komi-shop-studio .sv3-heading{flex-basis:100%}
  #shop.komi-shop-studio .sv3-heading h1{font-size:25px;line-height:1.2}
  #shop.komi-shop-studio .sv3-heading>p:last-child{font-size:12px;margin-top:5px;line-height:1.5}
@@ -285,8 +285,8 @@ body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-co
  #shop.komi-shop-studio .sv3-earn summary{font-size:12px;padding:10px 12px;min-height:42px}
  #shop.komi-shop-studio .sv3-earn-pop{right:0}
  #shop.komi-shop-studio .sv3-price-notice{padding:10px 12px;font-size:12px;margin-bottom:12px}
- #shop.komi-shop-studio .sv7-toolbar{gap:9px;margin-bottom:8px}
- #shop.komi-shop-studio .sv7-browse-head{grid-template-columns:minmax(0,1fr);gap:9px}
+ #shop.komi-shop-studio .sv7-toolbar{gap:6px;margin-bottom:6px}
+ #shop.komi-shop-studio .sv7-browse-head{grid-template-columns:minmax(0,1fr);gap:6px}
  #shop.komi-shop-studio .sv7-view-tabs{width:100%;gap:4px;padding:3px}
  #shop.komi-shop-studio .sv7-view-tabs button{flex:1;padding:8px 12px;font-size:13px;min-height:36px}
  #shop.komi-shop-studio .sv7-search{min-height:44px;padding:0 12px;border-radius:12px}
@@ -297,11 +297,11 @@ body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-co
  #shop.komi-shop-studio .sv7-toggles{gap:8px 12px;justify-content:space-between}
  #shop.komi-shop-studio .sv3-hide-toggle{font-size:11px;gap:6px;min-height:32px}
  #shop.komi-shop-studio .sv3-hide-toggle input{width:16px;height:16px;min-width:16px}
- #shop.komi-shop-studio .sv7-collections{padding-bottom:6px;margin-bottom:12px}
+ #shop.komi-shop-studio .sv7-collections{padding-bottom:4px;margin-bottom:8px}
  #shop.komi-shop-studio .sv7-collections>summary{font-size:13px;min-height:32px}
  #shop.komi-shop-studio .sv7-collections summary small{font-size:11px;margin-left:0}
  #shop.komi-shop-studio .sv7-collection-rail{grid-template-columns:repeat(6,155px)}
- #shop.komi-shop-studio .sv3-market-caption{margin-bottom:10px;gap:8px;min-height:24px}
+ #shop.komi-shop-studio .sv3-market-caption{margin-bottom:6px;gap:8px;min-height:24px}
  #shop.komi-shop-studio .sv3-market-caption h2{font-size:16px}
  #shop.komi-shop-studio .sv3-market-caption>span{font-size:11px}
  #shop.komi-shop-studio .sv3-market-caption button{font-size:11px}
