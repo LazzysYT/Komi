@@ -112,6 +112,24 @@
             strictBlocked: Boolean(options.adFreeOnly && !approved.length)
         };
     }
+    // This precise embed displayed «Данного сезона не существует» in Kodik.
+    // Keep the catalog, dub names and original episode/Party indices untouched;
+    // a corrected URL, a neighboring episode or a different title stays eligible.
+    function watchEpisodeSources(sources, {animeId, season, number} = {}) {
+        const selected = {...sources};
+        if (String(animeId) !== '5114' || Number(season) !== 1 || Number(number) !== 2) return selected;
+        for (const [name, raw] of Object.entries(selected)) {
+            const parsed = source(raw);
+            if (!parsed.url) continue;
+            const url = new URL(parsed.url);
+            if (url.origin === 'https://kodikplayer.com' &&
+                url.pathname === '/serial/7884/d5bb968fd3ac83b29b02a5c955166563/720p' &&
+                url.searchParams.get('season') === '1' &&
+                url.searchParams.get('only_episode') === 'true' &&
+                url.searchParams.get('episode') === '2') delete selected[name];
+        }
+        return selected;
+    }
     function createWriter(write, onError = () => {}) {
         const entries = new Map();
         return {
@@ -133,7 +151,7 @@
             flush() { return Promise.all([...entries.values()].map(entry => entry.promise)); }
         };
     }
-    const api = {source, finite, episodeSeason, seasonEpisodes, verifiedAdFree, selectPlaybackSource, createWriter};
+    const api = {source, finite, episodeSeason, seasonEpisodes, verifiedAdFree, selectPlaybackSource, watchEpisodeSources, createWriter};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerCore = api;
 })(globalThis);

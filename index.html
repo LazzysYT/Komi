@@ -37,14 +37,14 @@
     <script src="/komi-home-boot.js?v=20261125-daily-hero"></script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
-    <link rel="stylesheet" href="/komi.production.css?v=20261125-shop-v7-fix1">
+    <link rel="stylesheet" href="/komi.production.css?v=20261125-guest-fixes">
     <link rel="stylesheet" href="/komi-pill-system.css?v=20261124-v71">
     <link rel="stylesheet" href="/komi-icon-rail.css?v=20261124-v75">
     <link rel="stylesheet" href="/komi-shop-v5.css?v=20261125-shop-v7-fix3" media="print" data-komi-deferred-style="shop">
     <link rel="stylesheet" href="/komi-shop-v6-goods.css?v=20261125-shop-v7-fix1">
     <link rel="stylesheet" href="/button-animations.css?v=20261123a">
     <link rel="stylesheet" href="/komi-genre-moods.css?v=20261123-mobilefix-v4">
-    <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261125-watch-entry" media="print" data-komi-deferred-style="watch">
+    <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261125-guest-fixes" media="print" data-komi-deferred-style="watch">
     <link rel="stylesheet" href="/komi-hero-senku.css?v=20261125-watch-v9-portrait-stage">
     <link rel="stylesheet" href="/profile-studio.css?v=20261125-profile-senku-v2">
     
@@ -375,14 +375,14 @@
     <!-- Модальные окна -->
     <!-- Admin editor is loaded only after Supabase verifies the admin role. -->
 <div class="modal-overlay" id="authModal">
-        <div class="modal-content komi-auth-dialog" aria-labelledby="komiAuthTitle">
+        <div class="modal-content komi-auth-dialog" aria-labelledby="komiAuthTitle" aria-describedby="komiAuthIntroText">
             <button type="button" class="modal-close komi-auth-close" data-komi-click="auth-close" aria-label="Закрыть окно входа">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18M6 6l12 12"/></svg>
             </button>
             <div class="komi-auth-intro">
                 <img class="komi-auth-brand" src="./icon.svg" alt="" width="76" height="76" aria-hidden="true">
                 <h2 id="komiAuthTitle"><span class="komi-auth-login-title">Вход в Komi</span><span class="komi-auth-register-title">Регистрация в Komi</span></h2>
-                <p>Один аккаунт для истории просмотра, списков, AniCoin и достижений.</p>
+                <p id="komiAuthIntroText">Один аккаунт для истории просмотра, списков, AniCoin и достижений.</p>
             </div>
             <button type="button" class="komi-google-btn" data-komi-click="auth-google">
                 <span class="komi-google-g" aria-hidden="true">G</span>
@@ -456,10 +456,10 @@
     <div class="modal-overlay" id="watchPartyModal"><div class="modal-content" style="max-width: 1000px;" id="watchPartyModalContent"></div></div>
 
     <script defer src="./poster-cache-client.js?v=20261124-v75"></script>
-    <script defer src="./player-core.js"></script>
+    <script defer src="./player-core.js?v=20261125-guest-fixes"></script>
     <script defer src="./player-source-preferences.js?v=20261125-watch-v9"></script>
-    <script defer src="./komi-genre-moods.js?v=20261125-genre-art"></script>
-    <script defer src="./home-release-shelves.js?v=20261125-v812-storefront"></script>
+    <script defer src="./komi-genre-moods.js?v=20261125-guest-fixes"></script>
+    <script defer src="./home-release-shelves.js?v=20261125-guest-fixes"></script>
     <script defer src="./home-discovery.js?v=20261125-daily-hero"></script>
     <script defer src="./komi-home-snapshot.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-resume-cache.js"></script>
@@ -476,7 +476,7 @@
     <script defer src="./komi-premium-store.js?v=20261125-shop-v7-fix1"></script>
     <script defer src="./komi-public-catalog-cache.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-home-seed.js?v=20261125-v811-cinematic"></script>
-    <script defer src="./app-main.js?v=20261125-daily-hero"></script>
+    <script defer src="./app-main.js?v=20261125-guest-fixes"></script>
     <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
     <script defer src="./hero-hd-art.js?v=20261125-daily-hero"></script>
     <script defer src="./komi-hero-title.js?v=20261124-v7hero"></script>
@@ -493,9 +493,9 @@
     <script defer src="./cinema-clean-v5.js"></script>
     <script defer src="./cinema-watch-monochrome.js?v=20261125-watch-v9"></script>
     <script defer src="./anime-details.js"></script>
-    <script defer src="./watch-party.js?v=20261122c"></script>
+    <script defer src="./watch-party.js?v=20261125-guest-fixes"></script>
     <script defer src="./friend-party.js"></script>
-    <script defer src="./komi-shop-v3.js?v=20261125-shop-v7-fix1"></script>
+    <script defer src="./komi-shop-v3.js?v=20261125-guest-fixes"></script>
     <script defer src="./anicoin.js?v=20261125-shop-v7-fix1"></script>
     <script defer src="./komi-shop-social.js?v=20261125-shop-v7"></script>
     <script defer src="./dynamic-ui-events.js?v=20261125-profile-senku-v2"></script>
@@ -506,6 +506,6 @@
     <script defer src="./komi-anime-social.js?v=20261123-six-fixes"></script>
     <script defer src="./komi-party-quiz.js"></script>
     <script defer src="./komi-icon-rail.js?v=20261123-rail-layout-v3"></script>
-    <script defer src="./komi-watch-compact-v6.js?v=20261125-episode-filmstrip"></script>
+    <script defer src="./komi-watch-compact-v6.js?v=20261125-guest-fixes"></script>
 </body>
 </html>

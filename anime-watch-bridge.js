@@ -31,8 +31,9 @@
     const params = new URLSearchParams(location.search);
     const destination = new URLSearchParams({anime:id});
     const season = params.get('season'), episode = params.get('episode');
-    if (/^[1-9][0-9]{0,5}$/.test(season || '') && /^[1-9][0-9]{0,5}$/.test(episode || '')) {
-      destination.set('season',season); destination.set('episode',episode);
+    if (/^[1-9][0-9]{0,5}$/.test(episode || '')) {
+      if (/^[1-9][0-9]{0,5}$/.test(season || '')) destination.set('season',season);
+      destination.set('episode',episode);
     }
     // Temporary same-tab handoff; the main application restores the canonical path.
     window.location.replace('/?' + destination.toString());

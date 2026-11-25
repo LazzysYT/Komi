@@ -315,3 +315,71 @@ test('cold episode request loads a single title before waiting for catalogue pag
   assert.deepEqual(loaded,['61469']);
   assert.deepEqual(calls,[['route','/anime/61469?season=1&episode=2#player'],['watch','61469',1,0,null,2]]);
 });
+
+test('episode-only release links resolve the real season and never play episode one accidentally', async()=>{
+  const f=watchFixture([ep(1,{Voice:embed(1)},1),ep(8,{Voice:embed('s2e8')},2)]);
+  await f.open(null,0,'Voice',8);
+  assert.equal(f.context.lastUrl,'/anime/5114?season=2&episode=8#player');
+  assert.equal(f.mounts[0].displayNumber,8);
+  const missing=watchFixture([ep(1,{Voice:embed(1)})]);
+  await missing.open(null,0,'Voice',8);
+  assert.match(missing.markup,/не нашлось доступного источника/);
+  assert.equal(missing.bindings.length,0);
+});
+test('duplicate numbers across seasons ask the viewer instead of playing an incorrect source', async()=>{
+  const f=watchFixture([ep(8,{Voice:embed('s1e8')},1),ep(8,{Voice:embed('s2e8')},2)]);
+  await f.open(null,0,'Voice',8);
+  assert.match(f.markup,/нескольких сезонах/);
+  assert.match(f.markup,/>Сезон 1<\/button>/);
+  assert.match(f.markup,/>Сезон 2<\/button>/);
+  assert.equal(f.bindings.length,0);
+  await f.open(2,0,'Voice',8);
+  assert.equal(f.context.lastUrl,'/anime/5114?season=2&episode=8#player');
+});
+
+const brokenAlchemyDub = 'https://kodikplayer.com/serial/7884/d5bb968fd3ac83b29b02a5c955166563/720p?season=1&only_episode=true&episode=2';
+
+test('only the observed Alchemist episode 2 embed is excluded, never the studio or catalog record', () => {
+  const validSameStudio = brokenAlchemyDub.replace('/7884/', '/9999/');
+  const alternateQueryOrder = brokenAlchemyDub.split('?')[0] + '?episode=2&only_episode=true&season=1';
+  const sources = {'AniDUB':brokenAlchemyDub,'AniDUB (2)':validSameStudio,'Дубль':alternateQueryOrder,Kodik:embed(2)};
+  const exact = {animeId:'5114',season:1,number:2};
+  assert.deepEqual(core.watchEpisodeSources(sources, exact), {'AniDUB (2)':validSameStudio,Kodik:embed(2)});
+  for (const identity of [{...exact,animeId:'512'}, {...exact,season:2},{...exact,number:3}])
+    assert.deepEqual(core.watchEpisodeSources(sources, identity), sources);
+  assert.equal(sources.AniDUB, brokenAlchemyDub);
+});
+
+test('deep-link episode 2 falls back from the dead player while keeping original episode/Party slots', async () => {
+  const f = watchFixture([
+    ep(1, {AniDUB:embed(1)}), ep(2, {AniDUB:brokenAlchemyDub}), ep(2,{Альтернатива:embed('alt-2')}),
+    ep(3, {AniDUB:embed(3)})
+  ], {watchRoute:true});
+  await f.open(1, 0, 'AniDUB', 2);
+  assert.equal(f.selected,'Альтернатива');
+  assert.equal(f.bindings.at(-1)[3],embed('alt-2'));
+  assert.equal(f.mounts.at(-1).originalIndex,2,'Party uses the index of the original working record');
+  assert.equal(f.mounts.at(-1).originalSource,'Альтернатива');
+  assert.deepEqual(JSON.parse(JSON.stringify(f.mounts.at(-1).episodeSlots)),[[0],[1,2],[3]]);
+  assert.match(f.note,/AniDUB.*недоступна.*Альтернатива/);
+  assert.doesNotMatch(f.markup,/kodikplayer\.com/);
+  assert.match(f.markup,/komi-player-support[^>]*>[\s\S]*?id="komiPlayerHelp"/);
+  const recovery = f.elements.get('komiPlayerRecovery'), help = f.elements.get('komiPlayerHelp');
+  help.fire('click');
+  assert.equal(recovery.hidden,false);
+  help.fire('click');
+  assert.equal(recovery.hidden,true);
+  assert.equal(help.getAttribute('aria-expanded'),'false');
+  await f.open(1, 2);
+  assert.equal(f.selected,'AniDUB','Source intent is restored on the next real episode');
+});
+
+test('episode 2 does not mount a broken iframe if there is no supported alternative', async () => {
+  const f = watchFixture([ep(1,{AniDUB:embed(1)}),ep(2,{AniDUB:brokenAlchemyDub})]);
+  await f.open(1,1,'AniDUB');
+  assert.equal(f.selected,'Недоступно');
+  assert.equal(f.bindings.at(-1)[3],'');
+  assert.equal(f.frame,null);
+  assert.match(f.note,/Других доступных источников нет/);
+  assert.equal(f.storage.size,0);
+});
