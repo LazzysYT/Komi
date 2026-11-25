@@ -1,0 +1,27 @@
+/* Projection Room collection: original compact monochrome cosmetic swatches. */
+:is(.komi-store-frame-matte,.frame-matte){
+ box-shadow:0 0 0 3px #3e3e46,0 0 0 4px #dedee3!important;
+}
+:is(.komi-store-frame-anamorphic,.frame-anamorphic){
+ box-shadow:0 0 0 2px #131318,0 0 0 4px #eeeeef,7px 0 0 1px #919198,-7px 0 0 1px #919198,0 0 18px #fff4!important;
+}
+:is(.komi-store-banner-projection,.banner-projection){
+ --komi-banner-pattern:conic-gradient(from -90deg at 86% 74%,#111114 0deg 42deg,#8b8b94 42deg 62deg,#eeeeef 62deg 64deg,#26262c 64deg 90deg,#15151a 90deg 360deg);
+}
+.komi-store-icon-ticket{color:#eeeeef;text-shadow:0 0 10px #fff6}
+.komi-store-plate-subtitle{
+ background:linear-gradient(180deg,#1e1e23 0%,#121216 73%,#96969f 74% 77%,#131317 78%)!important;
+}
+.komi-store-xp-perforation progress,
+.komi-store-xp-perforation.komi-shop-xp-swatch::after{
+ background:#25252b;
+}
+.komi-store-xp-perforation progress::-webkit-progress-value{
+ background:repeating-linear-gradient(90deg,#efeff3 0 6px,#6d6d76 6px 9px)!important;
+}
+.komi-store-xp-perforation progress::-moz-progress-bar{
+ background:repeating-linear-gradient(90deg,#efeff3 0 6px,#6d6d76 6px 9px)!important;
+}
+.komi-store-xp-perforation.komi-shop-xp-swatch::after{
+ background:repeating-linear-gradient(90deg,#efeff3 0 6px,#6d6d76 6px 9px)!important;
+}

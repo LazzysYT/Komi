@@ -448,6 +448,9 @@
         action.textContent=wallet && Number(wallet.balance)<product.cost?'Не хватает AniCoin':(product.type==='reaction'?'Купить набор · ':'Купить и надеть · ')+product.cost+' ◈';
         action.disabled=!active || !wallet || Number(wallet.balance)<product.cost || state.shopping;
       }
+      if(window.KomiShopCatalog?.isPreview?.()===true||!owned&&window.KomiShopCatalog?.canCheckout?.()!==true){
+        action.disabled=true;action.textContent=window.KomiShopCatalog?.isPreview?.()?'Только примерка':'Покупки пока недоступны';
+      }
       action.addEventListener('click',event=>{event.stopPropagation();void storeAction(product,owned?(currentlyEquipped?'unequip':'equip'):(product.type==='reaction'?'buy':'buy_equip'));});
       controls.append(preview,action);
       const rarity=document.createElement('span');rarity.className='komi-shop-rarity';
@@ -477,7 +480,8 @@
     return data.user.id;
   }
   async function storeAction(product,action) {
-    if (state.shopping || !state.wallet || !['buy','equip','buy_equip','unequip'].includes(action)) return;
+    if (state.shopping || !state.wallet || !['buy','equip','buy_equip','unequip'].includes(action) || window.KomiShopCatalog?.isPreview?.()===true) return;
+    if (['buy','buy_equip'].includes(action) && window.KomiShopCatalog?.canCheckout?.()!==true) return;
     if (['buy','buy_equip'].includes(action) && !window.confirm('Купить «'+product.label+'» за '+product.cost+' AniCoin?')) return;
     state.shopping=true;paintStore();
     message('store-status',action==='buy_equip'?'Покупаем и надеваем…':action==='buy'?'Покупаем набор…':action==='equip'?'Надеваем предмет…':'Снимаем предмет…');
@@ -595,6 +599,7 @@
       if (state.userId) {
         try {
           const wallet=assertResponse(await state.client.rpc('komi_premium_store',{p_action:'read',p_item:null}));
+          await window.KomiShopCatalog?.checkPricing?.(state.client);
           if (request!==state.serial)return;
           if (!wallet || !Array.isArray(wallet.owned) ||
               !Number.isSafeInteger(Number(wallet.balance))) throw Error('Некорректный баланс.');

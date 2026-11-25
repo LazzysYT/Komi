@@ -123,6 +123,7 @@ async function loadWallet(id){
  if(!client||!id||verifiedOwner()!==id)return;
  const {data,error}=await client.rpc('komi_premium_store',{p_action:'read',p_item:null});
  if(error)throw error;
+ await root.KomiShopCatalog?.checkPricing?.(client);
  if(verifiedOwner()!==id)return;
  if(!data||!Number.isSafeInteger(Number(data.balance))||!Array.isArray(data.owned))throw Error('Invalid wallet');
  wallet=data;owner=id;
@@ -140,8 +141,9 @@ function paint(panel){
   const owned=wallet.owned.includes(product.id);
   const equipped=wallet[product.type+'_id']===product.id;
   button.dataset.action=product.type==='reaction'?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy_equip';
-  button.disabled=busy || (product.type==='reaction'&&owned)||(!owned&&Number(wallet.balance)<product.cost);
-  button.textContent=product.type==='reaction'&&owned?'Набор куплен':equipped?'Снять':owned?'Надеть':Number(wallet.balance)<product.cost?'Недостаточно AniCoin':'Купить · '+product.cost+' ◈';
+  const locked=root.KomiShopCatalog?.isPreview?.()===true||!owned&&root.KomiShopCatalog?.canCheckout?.()!==true;
+  button.disabled=locked || busy || (product.type==='reaction'&&owned)||(!owned&&Number(wallet.balance)<product.cost);
+  button.textContent=locked?'Только предпросмотр':product.type==='reaction'&&owned?'Набор куплен':equipped?'Снять':owned?'Надеть':Number(wallet.balance)<product.cost?'Недостаточно AniCoin':'Купить · '+product.cost+' ◈';
  }
 }
 function mount(container,id,active){
@@ -150,7 +152,7 @@ function mount(container,id,active){
  css();
  const panel=document.createElement('section');
  panel.className='komi-premium-store';panel.dataset.premiumStorePanel=id;
- const title=document.createElement('h2');title.textContent='Магазин AniCoin · 85 товаров';
+ const title=document.createElement('h2');title.textContent='Магазин AniCoin · '+products.length+' товаров';
  const description=document.createElement('p');
  description.textContent='Рамки, титулы, обложки, эффекты и статусы. Покупки защищены сервером. Вся коллекция также доступна в #shop.';
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
@@ -195,7 +197,7 @@ function mount(container,id,active){
  panel.append(title,description,balance,grid,status);
  grid.addEventListener('click',async event=>{
   const button=event.target.closest('[data-premium-item]');
-  if(!button||button.disabled||busy||verifiedOwner()!==id||!client)return;
+  if(!button||button.disabled||busy||verifiedOwner()!==id||!client||root.KomiShopCatalog?.isPreview?.()===true)return;
   const product=products.find(x=>x.id===button.dataset.premiumItem);
   if(!product)return;
   busy=true;paint(panel);status.textContent='Проверяем покупку…';
@@ -204,6 +206,7 @@ function mount(container,id,active){
    if(authError||user?.id!==id)throw Error('Требуется вход в аккаунт.');
    const action=button.dataset.action;
    if(!['buy','buy_equip','equip','unequip'].includes(action))throw Error('Invalid action');
+   if(['buy','buy_equip'].includes(action)&&root.KomiShopCatalog?.canCheckout?.()!==true)throw Error('Сервер ещё не подтвердил цены.');
    const {data,error}=await client.rpc('komi_premium_store',{p_action:action,p_item:product.id});
    if(error)throw error;
    if(verifiedOwner()!==id)return;

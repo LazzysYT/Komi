@@ -119,6 +119,7 @@ async function aniCoinLoadStore(id) {
         const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
         if (error) throw error;
         if (!Array.isArray(data?.owned)) throw Error('Сервер вернул неверные данные магазина.');
+        await window.KomiShopCatalog?.checkPricing?.(_supabase);
         if (currentUser?.authUserId!==id) return;
         aniCoinShopWallet=data;aniCoinShopOwner=id;
         const profile=await _supabase.from('komi_profiles').select('username,display_name,avatar_url').eq('user_id',id).maybeSingle();
@@ -149,6 +150,7 @@ window.komiShopReloadStore=async function(){
     try{
         const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
         if(error)throw error;
+        await window.KomiShopCatalog?.checkPricing?.(_supabase);
         if(currentUser?.authUserId!==owner)return;
         aniCoinShopWallet=data;aniCoinShopOwner=owner;
         if(currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
@@ -162,11 +164,15 @@ window.komiShopReloadStore=async function(){
 window.komiShopCheckoutCart=async function(itemIds,expectedOwner){
     const id=currentUser?.authUserId;
     if(!id||id!==expectedOwner||!_supabase)throw Error('Войди в Komi, чтобы покупать.');
+    if(window.KomiShopCatalog?.isPreview?.()===true)throw Error('В предпросмотре покупки отключены.');
     if(!Array.isArray(itemIds)||!itemIds.length||itemIds.length>12||aniCoinShopBusy)
         throw Error('Выбери от 1 до 12 предметов.');
     const unique=new Set(itemIds);
     if(unique.size!==itemIds.length||!itemIds.every(item=>window.KomiShopCatalog?.find(item)))
         throw Error('Некорректный состав корзины.');
+    const owned=aniCoinShopOwner===id?new Set(aniCoinShopWallet?.owned||[]):new Set();
+    if(itemIds.some(itemId=>!owned.has(itemId))&&window.KomiShopCatalog?.canCheckout?.()!==true)
+        throw Error('Покупки пока недоступны: сервер не подтвердил цены.');
     aniCoinShopBusy=true;
     try{
         const {data:authentication,error:authenticationError}=await _supabase.auth.getUser();
@@ -365,6 +371,11 @@ document.addEventListener('click',async event=>{
     const product=window.KomiShopCatalog?.find(button.dataset.shopItemAction);
     const operation=button.dataset.shopOperation;
     if(!id||!product||!['buy','buy_equip','equip','unequip'].includes(operation)||aniCoinShopOwner!==id)return;
+    if(window.KomiShopCatalog?.isPreview?.()===true ||
+        (['buy','buy_equip'].includes(operation)&&window.KomiShopCatalog?.canCheckout?.()!==true)){
+        aniCoinShopStatus='Покупка недоступна: сервер ещё не подтвердил цены.';
+        renderAniCoinShop(document.getElementById('mainContainer'));return;
+    }
     if(['buy','buy_equip'].includes(operation) && !window.confirm('Приобрести «'+product.label+'» за '+product.cost+' AniCoin?'))return;
     document.getElementById('komiShopPreviewDialog')?.close();
     aniCoinShopBusy=true;
