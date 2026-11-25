@@ -34,7 +34,7 @@ test('anime SSR returns unique canonical and social card without client-side rou
     assert.match(html,/<link rel="canonical" href="https:\/\/komianime\.online\/anime\/52991">/);
     assert.doesNotMatch(html,/<link rel="canonical" href="https:\/\/komianime\.online\/"/);
     assert.match(html,/<meta property="og:title" content="Провожающая в последний путь Фрирен/);
-    assert.match(html,/<meta property="og:site_name" content="Komi Anime">/);
+    assert.match(html,/<meta property="og:site_name" content="KomiAnime">/);
     assert.match(html,/<meta property="og:description" content="История путешествия/);
     assert.match(html,/<meta property="og:url" content="https:\/\/komianime\.online\/anime\/52991">/);
     assert.match(html,/<meta property="og:image" content="https:\/\/komianime\.online\/api\/poster\?src=/);

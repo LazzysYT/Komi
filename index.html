@@ -16,20 +16,32 @@
             #komiMobileMoreToggle, #komiMobileMoreMenu { display: none !important; }
         }
     </style>
-    <title>Komi Anime Hub — каталог аниме, серии и списки просмотра</title>
-    <meta name="description" content="Komi Anime Hub — каталог аниме с поиском, информацией о сериях, личными списками просмотра и сообществом.">
+    <title>KomiAnime — смотреть аниме онлайн и находить новые истории</title>
+    <meta name="description" content="KomiAnime (Коми Аниме) — аниме онлайн, каталог с поиском по жанрам, новые серии и личные списки. Выбирай историю на вечер и продолжай просмотр с того места, где остановился.">
+    <meta name="robots" content="index, follow, max-image-preview:large">
+    <meta name="komi-seo-revision" content="20261125-search-discovery">
+    <meta name="google-site-verification" content="Nzv_eECGzk4WUEI3NHG6YX6nwstJ8jVuypU15341JGA">
     <meta name="theme-color" content="#090909">
     <meta name="komi-ui-revision" content="20261125-home-guest-polish">
     <meta name="komi-shop-revision" content="20261125-shop-v7">
     <meta name="komi-profile-revision" content="20261125-profile-senku-v2">
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
-    <meta property="og:site_name" content="Komi Anime Hub">
-    <meta property="og:title" content="Komi Anime Hub — каталог аниме">
-    <meta property="og:description" content="Находи аниме, следи за сериями и веди свой список просмотра.">
+    <meta property="og:site_name" content="KomiAnime">
+    <meta property="og:title" content="KomiAnime — смотреть аниме онлайн и находить новые истории">
+    <meta property="og:description" content="Находи аниме по жанрам, следи за новыми сериями и сохраняй свой список просмотра в KomiAnime.">
     <meta property="og:url" content="https://komianime.online/">
-    <meta name="twitter:card" content="summary">
+    <meta property="og:image" content="https://komianime.online/assets/hero/komi-promo-first-frame.webp">
+    <meta property="og:image:width" content="1280">
+    <meta property="og:image:height" content="720">
+    <meta property="og:image:alt" content="KomiAnime — komianime.online">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="KomiAnime — смотреть аниме онлайн и находить новые истории">
+    <meta name="twitter:description" content="Каталог аниме, новые серии, личные списки и сообщество KomiAnime.">
+    <meta name="twitter:image" content="https://komianime.online/assets/hero/komi-promo-first-frame.webp">
+    <meta name="twitter:image:alt" content="KomiAnime — komianime.online">
     <link rel="canonical" href="https://komianime.online/">
+    <script type="application/ld+json" id="komi-site-schema">{"@context":"https://schema.org","@type":"WebSite","@id":"https://komianime.online/#website","name":"KomiAnime","alternateName":["Коми Аниме","Komi Anime"],"url":"https://komianime.online/","inLanguage":"ru","description":"Каталог аниме, новые серии, личные списки просмотра и сообщество KomiAnime.","sameAs":["https://www.tiktok.com/@komi_animeofficial","https://t.me/+X9yUQPEBldo2MzNi"]}</script>
     <link rel="preconnect" href="https://s4.anilist.co">
     <link rel="preconnect" href="https://wsrv.nl" crossorigin>
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
@@ -59,6 +71,7 @@
     <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261125-guest-fixes" media="print" data-komi-deferred-style="watch">
     <link rel="stylesheet" href="/komi-hero-senku.css?v=20261125-watch-v9-portrait-stage">
     <link rel="stylesheet" href="/profile-studio.css?v=20261125-profile-senku-v2">
+    <link rel="stylesheet" href="/public-info.css?v=20261125-search-discovery">
     
     
     
@@ -289,9 +302,9 @@
                 </div>
             </div>
             <div class="komi-home-storefront komi-static-storefront">
-            <section class="komi-seo-fallback komi-seo-spotlight komi-seo-poster-fallback" aria-label="О Komi Anime Hub">
+            <section class="komi-seo-fallback komi-seo-spotlight komi-seo-poster-fallback" aria-label="О KomiAnime">
                 <div class="komi-seo-spotlight-copy">
-                    <h1>Komi Anime Hub — каталог аниме</h1>
+                    <h1>KomiAnime — каталог аниме</h1>
                     <h2>Провожающая в последний путь Фрирен</h2>
                     <div class="komi-seo-spotlight-facts" aria-label="Информация об аниме">
                         <span>★ 9.25</span><span>2023</span>
@@ -383,6 +396,11 @@
             </section>
         </main>
     </div>
+
+    <footer class="komi-public-footer" aria-label="О сайте KomiAnime">
+        <div class="komi-public-footer-copy"><a class="komi-public-footer-brand" href="/">KomiAnime</a><p>Коми Аниме — каталог, новые серии и твои списки просмотра.</p></div>
+        <nav aria-label="Информация о KomiAnime"><a href="/catalog">Каталог аниме</a><a href="/about">О проекте</a><a href="/contacts">Контакты</a></nav>
+    </footer>
 
     <!-- Модальные окна -->
     <!-- Admin editor is loaded only after Supabase verifies the admin role. -->
@@ -489,7 +507,8 @@
     <script defer src="./komi-premium-store.js?v=20261125-shop-v7-fix1"></script>
     <script defer src="./komi-public-catalog-cache.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-home-seed.js?v=20261125-v811-cinematic"></script>
-    <script defer src="./app-main.js?v=20261125-home-guest-audit-r4"></script>
+    <script defer src="/komi-page-meta.js?v=20261125-search-discovery"></script>
+    <script defer src="./app-main.js?v=20261125-search-discovery"></script>
     <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
     <script defer src="./hero-hd-art.js?v=20261125-daily-hero"></script>
     <script defer src="./komi-hero-title.js?v=20261124-v7hero"></script>
