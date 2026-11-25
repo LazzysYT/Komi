@@ -81,7 +81,7 @@ const fixture = `<!doctype html><html lang="ru"><meta charset="utf-8"><body>
       });
     });
     const episodes = page.locator('.komi-episode-number');
-    await page.waitForFunction(() => document.querySelectorAll('.komi-episode-thumb')[2].dataset.previewKind === 'frame');
+    await page.waitForFunction(() => { const frames = [...document.querySelectorAll('.komi-episode-thumb')].slice(0,3); return frames.length === 3 && frames.every(frame => frame.dataset.previewKind === 'frame'); });
     assert.equal(await episodes.count(),68,'All provider positions must remain available');
     assert.equal(await page.locator('#komiEpisodeSummary').innerText(),'64 серии + 4 дополнительных выпуска');
     assert.equal(await page.locator('.komi-episode-number-grid').getAttribute('aria-describedby'),'komiEpisodeSummary');

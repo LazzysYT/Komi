@@ -227,7 +227,15 @@
   function paintWatchEpisodeFrame(context,index,frame) {
     const urls = [actualPreview(context,index),context.externalPreviews?.[index]];
     paintEpisodeImage(frame,urls.filter(url => url && !context.failedPreviews.has(url)).map(url => ({url,kind:'frame'})),
-      url => { context.failedPreviews.add(url); hydrateEpisodeFrames(context); });
+      url => {
+        context.failedPreviews.add(url);
+        hydrateEpisodeFrames(context);
+        // The public index can arrive after this image's candidate list was made.
+        const backup = context.externalPreviews?.[index];
+        if (backup && !context.failedPreviews.has(backup)) queueMicrotask(() => {
+          if (frame.isConnected && !frame.querySelector('img')) paintWatchEpisodeFrame(context,index,frame);
+        });
+      });
   }
   function makeEpisodeThumb(context,index,label) {
     const frame=document.createElement('span');
