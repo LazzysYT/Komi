@@ -159,8 +159,8 @@
             all.length ? String(all.length) + (records.length >= 50 ? '+' : '') : '0';
         if (!all.length) {
             if (cacheEntry) list.append(element('p', 'komi-comments-empty', scope.episodeNumber === null
-                ? 'Пока нет комментариев об аниме. Начни обсуждение!'
-                : 'К этой серии пока нет комментариев. Начни обсуждение!'));
+                ? 'Об аниме пока нет комментариев.'
+                : 'К этой серии пока нет комментариев.'));
             else section.querySelector('.komi-comments-count').textContent = '…';
             return;
         }
@@ -387,10 +387,10 @@
         section.dataset.scopeKey = scope.key;
         const episode = scope.episodeNumber !== null;
         const label = section.querySelector('.komi-comments-episode-label');
-        label.textContent = episode ? ' · Сезон ' + scope.season + ', серия ' + scope.episodeNumber : ' · Об аниме';
+        label.textContent = episode ? 'Сезон ' + scope.season + ', серия ' + scope.episodeNumber : 'Об аниме';
+        label.hidden = !episode;
         const note = section.querySelector('.komi-comments-thread-note');
-        note.textContent = episode ? 'Обсуждение выбранной серии. Скрывай спойлеры: ||скрытый текст||.'
-            : 'Общее обсуждение аниме. Старые комментарии без номера серии сохранены здесь.';
+        note.textContent = 'Чтобы скрыть спойлер, заключи текст в ||двойные черты||.';
         for (const button of section.querySelectorAll('[data-comment-thread]'))
             button.setAttribute('aria-pressed', String(button.dataset.commentThread === (episode ? 'episode' : 'general')));
         if (field) {
