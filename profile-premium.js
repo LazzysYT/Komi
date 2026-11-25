@@ -21,17 +21,26 @@
   var appearances=new Map(),metricOverrides=new Map();
   var lastProfile=null,rootObserver=null,previousTab='overview';
   var prefersLessMotion=()=>Boolean(root.matchMedia&&root.matchMedia('(prefers-reduced-motion: reduce)').matches);
-  function navigation(active,friendCount,listCount=0,awardCount=0){
+  function guest(){
+    return '<section id="profile" class="komi-profile-studio komi-profile-guest" aria-labelledby="komi-profile-guest-title">'+
+      '<div class="komi-profile-guest-emblem" aria-hidden="true">K</div><span class="komi-profile-guest-label">ЛИЧНЫЙ ПРОФИЛЬ</span>'+
+      '<h1 id="komi-profile-guest-title">Твой уголок в KomiAnime</h1>'+
+      '<p>Войди, чтобы открыть свои списки, историю просмотра, друзей и достижения.</p>'+
+      '<div class="komi-profile-guest-actions"><button type="button" data-profile-guest-login>Войти в профиль</button>'+
+      '<a href="/catalog">Открыть каталог</a></div></section>';
+  }
+  function navigation(active,friendCount,listCount=0,awardCount=0,canSeeActivity=false){
     var pages=[
       ['overview','Обзор',null],
       ['anime','Списки',listCount],
       ['history','История',null],
+      ...(canSeeActivity?[['activity','Активность',null]]:[]),
       ['achievements','Достижения',awardCount],
       ['friends','Друзья',friendCount],
       ['comments','Стена',null]
     ];
     return '<nav class="komi-profile-tabs profile-premium-tabs" aria-label="Разделы профиля" data-profile-active="'+escapeText(active)+'">'+pages.map(([id,name,count])=>
-      '<button type="button" class="komi-profile-tab'+(id===active?' active':'')+'" data-profile-tab="'+id+'" aria-pressed="'+(id===active)+'" data-komi-onclick="profilePageSection=\''+id+'\';render()">'+
+      '<button type="button" class="komi-profile-tab'+(id===active?' active':'')+'" data-profile-tab="'+id+'" aria-pressed="'+(id===active)+'" aria-controls="komiProfilePanel">'+
       '<span>'+name+'</span>'+(count===null?'':'<small class="profile-tab-counter">'+format(count)+'</small>')+'</button>'
     ).join('')+'</nav>';
   }
@@ -188,8 +197,11 @@
     var favoritesOrGenres='<section class="profile-widget profile-genres-widget">'+header('Любимые жанры')+
       '<div class="profile-genres">'+(genres||blank('Жанры появятся после добавления тайтлов в списки.'))+'</div></section>';
     return '<div class="profile-bento profile-enter">'+
-      '<div class="profile-bento-main">'+stats+watching+favourite+'</div>'+
-      '<aside class="profile-bento-side">'+achievementWidget(ctx.username,ctx.isMe)+friends+favoritesOrGenres+'</aside>'+
+      '<div class="profile-bento-main">'+(ctx.isMe?watching+stats:stats+watching)+favourite+'</div>'+
+      '<aside class="profile-bento-side">'+(ctx.canSeeProfileActivity?
+        '<section class="profile-widget profile-activity-shortcut">'+header('Активность')+
+        '<p>Ежедневная отметка, задания и награды.</p><button type="button" class="profile-shop-link" data-profile-jump="activity">Открыть активность</button></section>':'')+
+        achievementWidget(ctx.username,ctx.isMe)+friends+favoritesOrGenres+'</aside>'+
       '</div>';
   }
   function syncWallet(){
@@ -259,7 +271,7 @@
     if(!profile){lastProfile=null;return}
     if(profile===lastProfile)return;
     lastProfile=profile;
-    var title=profile.querySelector('h2');
+    var title=profile.querySelector('h1,h2');
     if(title)document.title=title.textContent+' · KomiAnime';
     if(appearances.has(profile.dataset.profileUser))appearance(profile.dataset.profileUser,appearances.get(profile.dataset.profileUser));
     if(metricOverrides.has(profile.dataset.profileUser))metrics(profile.dataset.profileUser,metricOverrides.get(profile.dataset.profileUser));
@@ -309,9 +321,19 @@
   document.addEventListener('click',event=>{
     var button=event.target&&event.target.closest&&event.target.closest('#profile button,#profile a');
     if(!button)return;
+    if(button.matches('[data-profile-guest-login]')){openAuthModal('login');return;}
+    const nextSection=button.dataset.profileTab||button.dataset.profileJump;
+    if(nextSection){
+      const tabs=[...button.closest('#profile').querySelectorAll('[data-profile-tab]')];
+      if(nextSection===profilePageSection||!tabs.some(tab=>tab.dataset.profileTab===nextSection))return;
+      profilePageSection=nextSection;
+      render();
+      [...document.querySelectorAll('#profile [data-profile-tab]')].find(tab=>tab.dataset.profileTab===nextSection)?.focus();
+      return;
+    }
     if(button.matches('[data-profile-edit], [data-profile-settings]')){
       var box=document.querySelector('#profile .profile-settings-box');
-      if(box){var visible=box.classList.toggle('is-open');button.setAttribute('aria-expanded',String(visible));if(visible)box.querySelector('input')?.focus({preventScroll:true})}
+      if(box){var visible=box.classList.toggle('is-open');button.closest('#profile').querySelectorAll('[data-profile-edit], [data-profile-settings]').forEach(control=>control.setAttribute('aria-expanded',String(visible)));if(visible)box.querySelector('#newDisplayName')?.focus()}
     }
     if(button.matches('[data-profile-share]')){
       Promise.resolve(komiCopyProfileLink()).then(ok=>{
@@ -352,6 +374,6 @@
   document.addEventListener('pointerout',event=>{
     var tile=event.target?.closest?.('[data-profile-tilt]');if(tile&&!tile.contains(event.relatedTarget))tile.style.transform='';
   });
-  root.KomiProfileUI={navigation,content,appearance,metrics,syncWallet,refreshFriends};
+  root.KomiProfileUI={guest,navigation,content,appearance,metrics,syncWallet,refreshFriends};
   root.KomiProfileUI.fullFriendRows=fullFriendRows;
 })(window);

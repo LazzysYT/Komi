@@ -1,0 +1,81 @@
+/* KomiAnime profile navigation and layout. Functional hooks and cosmetics stay in the existing components. */
+#profile.komi-profile-studio{
+  --studio-bg:#09090b;--studio-panel:#141417;--studio-line:#ffffff1e;--studio-muted:#b7b7bf;
+  min-width:0;color:#fff;
+}
+#profile.komi-profile-studio :is(button,a,input):focus-visible{
+  outline:2px solid #fff;outline-offset:3px;
+}
+#profile.komi-profile-studio.komi-profile-guest{
+  position:relative;isolation:isolate;overflow:hidden;
+  display:grid;justify-items:start;align-content:center;gap:12px;
+  width:min(100% - 28px,860px);min-height:clamp(300px,52vh,476px);
+  margin:clamp(18px,5vh,55px) auto;padding:clamp(20px,6vw,64px);
+  background:radial-gradient(ellipse at 84% 25%,#2b2b32,#131316 55%,#101013);
+  border:1px solid var(--studio-line);border-radius:26px;
+}
+.komi-profile-guest::before{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:repeating-linear-gradient(120deg,#ffffff18 0 1px,transparent 1px 24px);
+  mask-image:linear-gradient(115deg,transparent 42%,#000);
+}
+.komi-profile-guest-emblem{
+  display:grid;place-items:center;width:58px;aspect-ratio:1;
+  border:1px solid #ffffff30;border-radius:18px;background:#17171b;
+  font:800 30px/1 Manrope,Inter,sans-serif;
+}
+.komi-profile-guest-label{font-size:11px;letter-spacing:.16em;color:#c5c5cc;font-weight:800}
+.komi-profile-guest h1{font:800 clamp(28px,5vw,53px)/1.06 Manrope,Inter,sans-serif;max-width:17ch;letter-spacing:-.04em;margin:0}
+.komi-profile-guest p{color:var(--studio-muted);max-width:45ch;font-size:14px;line-height:1.55;margin:0}
+.komi-profile-guest-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:7px}
+.komi-profile-guest-actions :is(a,button){
+  display:inline-flex;align-items:center;justify-content:center;padding:9px 17px;min-height:44px;
+  border:1px solid #ffffff38;border-radius:999px;background:#232329;color:#fff;text-decoration:none;font:800 13px/1.3 Manrope,Inter,sans-serif;
+}
+.komi-profile-guest-actions button{background:#fff;color:#09090b;cursor:pointer}
+
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-header-card{
+  min-height:clamp(250px,29vw,360px)!important;
+  align-items:flex-start!important;justify-content:flex-end!important;
+  padding:72px clamp(17px,4vw,48px) 25px!important;text-align:left!important;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-header-card::after{
+  background:linear-gradient(90deg,#0c0c10e6 0%,#0b0b1088 47%,#0b0b1026 100%),
+     linear-gradient(0deg,#101014 0%,transparent 76%)!important;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-avatar-frame{align-self:flex-start!important}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-info-grid{align-items:flex-start!important;text-align:left!important}
+#profile.komi-profile-studio.komi-profile-premium-mono :is(.profile-name-row,.profile-badges-row,.profile-hero-actions){justify-content:flex-start!important}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-name-row h2{text-align:left!important;overflow-wrap:anywhere}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-bio{margin:0!important;text-align:left!important;font-size:13px!important}
+#profile.komi-profile-studio.komi-profile-premium-mono .komi-level-progress{margin:3px 0 0!important}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-premium-tabs.komi-profile-tabs{
+  width:100%!important;margin:13px 0 17px!important;padding:6px!important;border-radius:16px!important;background:#151519!important;
+  scrollbar-width:thin;scrollbar-color:#4a4a53 #151519;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-premium-tabs::before{display:none!important}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-premium-tabs .komi-profile-tab{
+  min-height:44px;flex:0 0 auto;scroll-margin-inline:7px;padding-inline:13px!important;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-premium-tabs .komi-profile-tab:focus-visible{outline-offset:-3px}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-premium-tabs .komi-profile-tab.active{background:#fff!important;color:#09090b!important}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-premium-tabs::-webkit-scrollbar{display:block;height:5px}
+#profile.komi-profile-studio .komi-profile-panel{min-width:0}
+#profile.komi-profile-studio .profile-activity-shortcut p{font-size:13px;color:var(--studio-muted);line-height:1.5;margin:4px 0 13px}
+#profile.komi-profile-studio .profile-activity-shortcut .profile-shop-link{min-height:40px}
+#profile.komi-profile-studio .komi-profile-anime-section .profile-stats-grid{margin:0 0 13px}
+#profile.komi-profile-studio .profile-settings-box{scroll-margin-block-start:72px}
+
+@media(max-width:620px){
+  #profile.komi-profile-studio.komi-profile-premium-mono .profile-header-card{
+    min-height:0!important;padding:72px 14px 18px!important;border-radius:20px!important;
+  }
+  #profile.komi-profile-studio.komi-profile-premium-mono .profile-hero-tools{
+    left:12px!important;right:12px!important;justify-content:flex-start!important;gap:5px!important;
+  }
+  #profile.komi-profile-studio.komi-profile-premium-mono .profile-hero-tools .profile-glass{min-height:40px}
+  #profile.komi-profile-studio .profile-stat-card{min-height:54px}
+}
+@media(prefers-reduced-motion:reduce){
+  #profile.komi-profile-studio :is(.profile-enter,.komi-profile-tab,.komi-profile-guest-actions button){animation:none!important;transition:none!important}
+}

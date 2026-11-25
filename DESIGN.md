@@ -103,3 +103,7 @@ Source URLs are parsed once by player-core.js. player-runtime.js owns media init
 ### AniCoin shop
 
 The shop uses the same matte neutrals and white primary controls as discovery. The weekly collection is a single editorial feature with a monochrome texture and live samples; cosmetic items themselves retain their intended colors. Tiles separate preview, title, price and action so the price stays readable when an account cannot afford a purchase. Desktop keeps the fitting room beside the catalog; narrow views use the existing anchored sheet and two columns where labels and actions fit. Keep account states and server-backed operations intact: preview is free, actual purchasing uses the AniCoin ledger, and the redesigned shop does not change Premium pricing.
+
+### Profile: identity, navigation, then content
+
+The cover and personal cosmetics remain on a left-aligned identity card. Primary profile navigation comes immediately after the identity/settings region. Overview starts with private resume cards for the owner and keeps viewing stats, favorites, achievements, friends and genres. For verified owners, a compact activity shortcut opens a separate tab for daily check-in and server-backed quests. The public profile never renders that tab. Use a high-contrast active pill, a visible horizontal scroll affordance for narrow screens, and restore keyboard focus after switching. A signed-out visitor at the own-profile route gets an explicit sign-in button, not a modal on top of the home page.

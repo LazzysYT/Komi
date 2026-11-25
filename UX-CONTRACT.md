@@ -45,3 +45,7 @@ The first hero artwork retains high fetch priority and explicit geometry. Inacti
 Permissions remain owned by Supabase RLS and RPC checks in migrations. Legacy public tables are a documented remaining security issue, not a permission model to extend. No data deletion or ownership migration is part of this patch.
 
 Personal progress is not copied to shared legacy local-storage maps. Pending writes capture the account and are skipped after account changes. Browser shutdown/network loss can still prevent the final request; no offline delivery guarantee is made.
+
+### Profile navigation
+
+Keep existing shared links, collection searches and folder CRUD, settings/privacy, watch history privacy, wallet/purchase actions, profile music and animated cosmetics. Overview and rewards are distinct navigation destinations; only a verified owner can access reward controls. Guest access to the own-profile route shows only sign-in and catalog actions, never cached identity data. On section changes, keep keyboard focus on the selected navigation button. Both header controls for the one settings panel show the same expanded state.

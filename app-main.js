@@ -169,8 +169,7 @@
         let currentView = komiRouteView();
         const komiSharedProfileQuery = new URLSearchParams(location.search).get('profile');
         let profileTargetUser = currentView === 'profile' && /^[A-Za-z0-9_.-]{1,80}$/.test(komiSharedProfileQuery || '') ? komiSharedProfileQuery : null;
-        // The own-profile route is rendered only after session restoration.
-        if (currentView === 'profile' && !profileTargetUser) currentView = 'home';
+        // An unsigned visitor sees an inert sign-in prompt, never account data.
         let profileActiveTab = 'Просмотрено';
         let profilePageSection = 'overview';
         let profileCollectionSearchQuery = '';
@@ -2303,7 +2302,11 @@ async function komiLoadCatalogPages(attempt = 0) {
             return komiProfileAnimeIndexCache.index;
         }
         function renderProfileView(container) {
-            const username = profileTargetUser || (currentUser ? currentUser.username : 'Гость');
+            if (!profileTargetUser && !currentUser) {
+                container.innerHTML = KomiProfileUI.guest();
+                return;
+            }
+            const username = profileTargetUser || currentUser.username;
             const p = userProfiles[username] || { 
                 avatar: `https://api.dicebear.com/7.x/bottts/svg?seed=${username}`, 
                 status: 'Отаку ★', 
@@ -2317,6 +2320,8 @@ async function komiLoadCatalogPages(attempt = 0) {
 
             const myFriends = friendsFor(username);
             const isMe = currentUser && currentUser.username === username;
+            const canSeeProfileActivity = Boolean(isMe && currentUser?.authUserId);
+            if (profilePageSection === 'activity' && !canSeeProfileActivity) profilePageSection = 'overview';
             const amIFriend = currentUser && friendsFor(currentUser.username).includes(username);
 
             const userStatuses = userAnimeStatuses[username] || {};
@@ -2419,7 +2424,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             window.komiProfileFolderNames=customFolderNames.slice();
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
-                <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-mono" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
+                <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-mono komi-profile-studio" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
                     <div class="profile-header-card" data-profile-hero>
                         <div class="profile-cover" data-profile-cover aria-hidden="true">${komiSafeUrl(p.banner || p.cover || p.coverUrl) ? `<img src="${safeProfileText(komiSafeUrl(p.banner || p.cover || p.coverUrl))}" alt="" loading="lazy">` : ''}</div>
                         <div class="profile-hero-tools">
@@ -2526,7 +2531,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                             </div>
                             ` : ''}
 
-                    ${isMe && currentUser?.authUserId ? `
+                    ${KomiProfileUI.navigation(profilePageSection, myFriends.length, Object.keys(userStatuses).length, profileExperience.badges.length, canSeeProfileActivity)}
+                    <div id="komiProfilePanel" class="komi-profile-panel">
+                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity}) : ''}
+                    ${canSeeProfileActivity && profilePageSection === 'activity' ? `
                     <section class="profile-activity-card" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
                         <div class="profile-activity-heading">
                             <div class="profile-activity-heading-main">
@@ -2550,7 +2558,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             <button type="button" class="profile-checkin-button" data-komi-click="daily-checkin" disabled>Отметить день</button>
                         </div>
                     </section>` : ''}
-                    ${isMe && currentUser?.authUserId ? `
+                    ${canSeeProfileActivity && profilePageSection === 'activity' ? `
                     <section class="profile-daily-quests" data-komi-quest-rewards="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневные задания с серверными наградами">
                         <div class="profile-daily-heading"><h3>Ежедневные задания</h3><span class="profile-server-xp-badge" data-quest-xp-badge>Серверный XP · …</span></div>
                         <div class="profile-daily-grid">
@@ -2569,7 +2577,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                         </div>
                         <p class="profile-daily-message" data-quest-reward-status role="status" aria-live="polite">Проверяем награды…</p>
                     </section>` : ''}
-                                        <div class="profile-stats-grid" ${profilePageSection === 'anime' ? '' : 'hidden'}>
+                    <div class="komi-profile-anime-section" style="display:${profilePageSection === 'anime' ? 'block' : 'none'}">
+                    <div class="profile-stats-grid" role="group" aria-label="Статусы коллекции">
                         <button type="button" class="profile-stat-card ${profileActiveTab === 'Просмотрено' ? 'active' : ''}" aria-pressed="${profileActiveTab === 'Просмотрено'}" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; profilePageSection='anime'; render()">
                             <div class="stat-num">${statsCounts['Просмотрено']}</div>
                             <div class="stat-label">Просмотрено</div>
@@ -2596,9 +2605,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         </button>
                     </div>
 
-                    ${KomiProfileUI.navigation(profilePageSection, myFriends.length, Object.keys(userStatuses).length, komiAchievements(username).badges.length)}
-                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection}) : ''}
-                    <div class="komi-profile-anime-section" style="display:${profilePageSection === 'anime' ? 'block' : 'none'}">
+
                     ${customFolderNames.length > 0 || isMe ? `
                         <div style="display:flex; gap:5px; align-items:center; flex-wrap:wrap; background:var(--bg-card); padding:10px 14px; border-radius:12px; border:1px solid var(--border);">
                             <span style="font-size:11px; font-weight:700; color:var(--text-muted);">Папки:</span>
@@ -2622,7 +2629,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
                                 <h3 style="font-size:15px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${safeProfileText(profileActiveTab)}</span></h3>
                                 <div style="position:relative; width: 180px;">
-                                    <input type="text" class="form-control" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" data-komi-oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
+                                    <input type="text" class="form-control" aria-label="Поиск в коллекции" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" data-komi-oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
                                 </div>
                             </div>
 
@@ -2646,8 +2653,8 @@ async function komiLoadCatalogPages(attempt = 0) {
 
                         <div class="profile-sidebar-menu">
                             <h3 style="font-size:12px; font-weight:700; margin-bottom:4px;"> Статистика</h3>
-                            <div class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span> Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></div>
-                            <div class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Любимые'; render()"><span>♡ Любимое</span> <b>${favoritesCount}</b></div>
+                            <button type="button" class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Просмотрено'; render()"><span>Просмотрено</span> <b>${statsCounts['Просмотрено']}</b></button>
+                            <button type="button" class="profile-menu-item" data-komi-onclick="playSound(); profileActiveTab='Любимые'; render()"><span>♡ Любимое</span> <b>${favoritesCount}</b></button>
                             <div class="profile-menu-item"><span> Друзья</span> <b>${myFriends.length}</b></div>
                         </div>
                     </div>
@@ -2684,9 +2691,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                         </div>
                     </div>
                     </div>
+                    </div>
                 </section>
             `;
-            if (isMe && currentUser?.authUserId) {
+            if (canSeeProfileActivity) {
                 void komiDailyActivityRead();
                 void komiVerifiedXpRead();
                 const privacyPanel=container.querySelector('[data-komi-privacy-panel]');
@@ -4018,7 +4026,9 @@ async function komiLoadCatalogPages(attempt = 0) {
                         await leaveWatchPartyRoom();
                         saveData();
                     }
-                    // Auth resolution is the signal to paint the anonymous home.
+                    // Drop the previously authenticated target before painting the own-profile route.
+                    if (komiRouteView() === 'profile' && !new URLSearchParams(location.search).has('profile'))
+                        profileTargetUser = null;
                     render();
                     return;
                 }
@@ -5576,10 +5586,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                         currentView = 'profile';
                         render();
                     }
-                } else if (currentUser) {
-                    profileTargetUser=currentUser.username;
-                    if (currentView !== 'profile') { currentView='profile'; render(); }
-                } else openAuthModal('login');
+                } else {
+                    const ownName = currentUser?.username || null;
+                    if (currentView !== 'profile' || profileTargetUser !== ownName) {
+                        profileTargetUser = ownName;
+                        currentView = 'profile';
+                        render();
+                    }
+                }
             } else if (view === 'home' && ['shop','catalog','profile','partners'].includes(currentView)) {
                 komiStartupHomeCommitted = true;
                 currentView='home';
