@@ -15,7 +15,13 @@ for (const id of ['notifBellBtn', 'komiFriendsMyTab', 'notifDropdown']) {
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
 const revision=html.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
 assert.match(revision,/^\d{8}-[\w-]+$/);
-assert.equal(html.match(/app-main\.js\?v=([^"]+)/)?.[1],revision);
+const profileRevision=html.match(/<meta name="komi-profile-revision" content="([^"]+)"/)?.[1];
+assert.match(profileRevision,/^\d{8}-profile-[\w-]+$/);
+assert.equal(html.match(/app-main\.js\?v=([^"]+)/)?.[1],revision+'-'+profileRevision.replace(/^\d{8}-/,''));
+assert.equal(html.match(/profile-premium\.js\?v=([^"]+)/)?.[1],profileRevision);
+assert.equal(html.match(/profile-studio\.css\?v=([^"]+)/)?.[1],profileRevision);
+assert.equal(html.match(/komi-community\.js\?v=([^"]+)/)?.[1],profileRevision);
+assert.equal(html.match(/dynamic-ui-events\.js\?v=([^"]+)/)?.[1],profileRevision);
 assert.match(html, /komi-home-boot\.js\?v=\d{8}[-\w]+/);
 const staticCards=html.match(/class="komi-discovery-card komi-seo-card"/g) || [];
 assert.ok(staticCards.length>0&&staticCards.length<=12);

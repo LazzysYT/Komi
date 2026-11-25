@@ -9,7 +9,7 @@ const src=file=>fs.readFileSync(path.join(dir,file),'utf8');
 
 function renderAdapter() {
   const sandbox={
-    window:{matchMedia:()=>({matches:true})},
+    matchMedia:()=>({matches:true}),
     document:{addEventListener:()=>{}},
     location:{origin:'https://komianime.online'},
     URL,
@@ -18,10 +18,13 @@ function renderAdapter() {
     komiEpisodeProgress:{owner_123:{index:2,season:1,time:125,duration:1000,updated:1795000000000}},
     komiAchievements:()=>({xp:150,badges:['Первый просмотр']})
   };
-  vm.runInNewContext(src('profile-premium.js'),sandbox);
-  const ui=sandbox.window.KomiProfileUI;
+  sandbox.window=sandbox;
+  vm.createContext(sandbox);
+  vm.runInContext(src('home-discovery.js'),sandbox);
+  vm.runInContext(src('profile-premium.js'),sandbox);
+  const ui=sandbox.KomiProfileUI;
   const base={
-    username:'owner',isMe:true,statsCounts:{'Смотрю':1,'В планах':0,'Просмотрено':1,'Отложено':0,'Брошено':0},
+    username:'owner',isMe:true,resumeReady:true,statsCounts:{'Смотрю':1,'В планах':0,'Просмотрено':1,'Отложено':0,'Брошено':0},
     topGenres:[['Фэнтези',2]],myFriends:['friend'],
     profileAnimeById:new Map([['123',{id:'123',title:'Anime test',poster:'https://example.org/p.png'}]])
   };
@@ -53,11 +56,11 @@ test('owner gets real saved history, but public visitor never sees it',()=>{
 test('overview exposes truthful statistics, favorite preview, friends and achievements',()=>{
   const {ui,base}=renderAdapter();
   const html=ui.content({...base,section:'overview'});
-  for(const phrase of ['Статистика просмотра','Продолжить просмотр','Любимые жанры','Витрина достижений','Топ избранного','Друзья','Anime test'])
+  for(const phrase of ['Мои списки','Продолжить просмотр','Любимые жанры','Витрина достижений','Топ избранного','Друзья','Anime test'])
     assert.ok(html.includes(phrase),phrase);
-  assert.match(html,/data-profile-field="episodes">0/);
-  assert.match(html,/data-profile-field="hours">0/);
-  assert.match(html,/data-profile-field="meanScore">0/);
+  const summary=ui.summary({level:1,xp:150,multiplier:1,titleCount:2,friendCount:1});
+  assert.match(summary,/data-profile-field="episodes"[^>]*>—/);
+  assert.match(summary,/data-profile-field="hours"[^>]*>—/);
   assert.match(html,/--profile-segment:#F1F1F1/);
 });
 

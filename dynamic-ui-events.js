@@ -47,6 +47,7 @@
     "document.querySelector('.profile-settings-box')?.classList.toggle('is-open')":
       ()=>document.querySelector('.profile-settings-box')?.classList.toggle('is-open'),
     "updateUserProfile(this)":(_,el)=>updateUserProfile(el),
+    "logoutUser('local')":()=>logoutUser('local'),
     "logoutUser('global')":()=>logoutUser('global'),
     "openProfile(window.komiViewedProfileName)":()=>openProfile(root.komiViewedProfileName),
     "komiCopyProfileLink()":()=>komiCopyProfileLink(),

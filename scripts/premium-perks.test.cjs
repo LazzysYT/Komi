@@ -3,6 +3,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+const vm=require('node:vm');
 const read=name=>fs.readFileSync(path.join(__dirname,'..',name),'utf8');
 
 test('Premium appears in Komi rail, SPA route and public features page',()=>{
@@ -31,7 +32,11 @@ test('one-time server bonus cannot be faked by browser or repeated on renewal',(
   assert.doesNotMatch(ui,/\.(?:insert|update|upsert)\(/);
   assert.match(app,/xpForUsername\(username\)/);
   assert.match(app,/Math\.floor\(xp\/500\)\+1/);
-  assert.match(app,/max="500"/);
+  assert.match(app,/KomiProfileUI\.summary/);
+  const scope={window:{},document:{addEventListener(){}}};
+  vm.runInNewContext(read('profile-premium.js'),scope);
+  const summary=scope.window.KomiProfileUI.summary({level:6,xp:62,multiplier:1.5,titleCount:0,friendCount:0});
+  assert.match(summary,/<progress max="500" value="62">62 из 500<\/progress>/);
 });
 
 test('GIF media can be uploaded only while premium is active, via RLS, and not edit bonus',()=>{

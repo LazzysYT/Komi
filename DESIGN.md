@@ -112,7 +112,13 @@ The shop uses the same matte neutrals and white primary controls as discovery. T
 
 ### Profile: identity, navigation, then content
 
-The cover and personal cosmetics remain on a left-aligned identity card. Primary profile navigation comes immediately after the identity/settings region. Overview starts with private resume cards for the owner and keeps viewing stats, favorites, achievements, friends and genres. For verified owners, a compact activity shortcut opens a separate tab for daily check-in and server-backed quests. The public profile never renders that tab. Use a high-contrast active pill, a visible horizontal scroll affordance for narrow screens, and restore keyboard focus after switching. A signed-out visitor at the own-profile route gets an explicit sign-in button, not a modal on top of the home page.
+The user requested a closer profile reference to Senku on 25 November. `profile-studio.css` now centers the avatar, name, cosmetics and profile actions over the existing cover, with a natural-height header and an 88px avatar. One summary strip places XP beside list, episode, time and friend metrics; unverified metrics display an em dash. This replaces the earlier left-aligned tall card and repeated numerical panels. The studio layer maps its surface and control aliases to the shared `--komi-pill-*` tokens; personal animated media, purchased frames, nickname styles and music retain their existing owners.
+
+The profile has a 1240px maximum width. Overview, lists, owner-only history and friends are primary navigation; a native «Ещё» disclosure holds achievements, wall and owner-only activity. Only the primary row scrolls horizontally, so the disclosure stays visible and its popup is not clipped. The selected section remains a white pill. Profile editing opens the existing settings panel; «Оформление» opens the existing Premium studio. The tools for collections and import belong inside Lists, not the primary navigation.
+
+Overview leads with at most two real unfinished resume cards when available, then direct list-status shortcuts and actual favorites with a single add action. Premium retains six favorite positions without drawing empty placeholders for every unused slot. The quieter side column contains the activity shortcut, up to three achievement previews, friends and genres. Full achievements and all account actions remain in their own sections. A signed-out visitor at the own-profile route gets the existing explicit sign-in screen.
+
+At 860px the overview becomes one column; at 620px the summary becomes two columns with XP spanning both. Header text wraps naturally, cards retain accessible names, and focus is restored to the selected primary control or the disclosure summary. Motion never delays content, and reduced motion removes hover/entry transforms.
 
 ### Home image first paint
 

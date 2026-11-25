@@ -6,7 +6,7 @@ const root=path.resolve(__dirname,'..');
 const read=file=>fs.readFileSync(path.join(root,file),'utf8');
 function adapter(){
   const scope={
-    window:{matchMedia:()=>({matches:true})},
+    matchMedia:()=>({matches:true}),
     document:{addEventListener:()=>{}},
     location:{origin:'https://komianime.online'},URL,
     userFavorites:{guest:{123:true}},
@@ -14,9 +14,12 @@ function adapter(){
     komiEpisodeProgress:{guest_123:{index:2,season:1,time:230,duration:1200,updated:1795000000000}},
     komiAchievements:()=>({xp:100,badges:['Первый просмотр']})
   };
-  vm.runInNewContext(read('profile-premium.js'),scope);
+  scope.window=scope;
+  vm.createContext(scope);
+  vm.runInContext(read('home-discovery.js'),scope);
+  vm.runInContext(read('profile-premium.js'),scope);
   const ctx={
-    username:'guest',isMe:true,
+    username:'guest',isMe:true,resumeReady:true,
     statsCounts:{'Смотрю':0,'В планах':0,'Просмотрено':1,'Отложено':0,'Брошено':0},
     myFriends:['friend'],topGenres:[['Драма',1]],
     profileAnimeById:new Map([['123',{id:'123',title:'Тестовое аниме',poster:'https://example.org/test.jpg'}]]),
@@ -51,34 +54,39 @@ test('Profile hero preserves data bindings, avatar upload, friends and login',()
  assert.ok(app.includes('userAnimeStatuses[username]'));
  assert.ok(app.includes('KomiProfileUI.content'));
 });
-test('Bento views use real saved data and server-backed metrics are never fabricated',()=>{
+test('overview uses real saved data and the summary leaves unverified metrics unavailable',()=>{
  const {ui,ctx}=adapter();
  const html=ui.content(ctx);
- for(const phrase of ['Топ избранного','Продолжить просмотр','Статистика просмотра','Витрина достижений','Тестовое аниме','Серия 3'])
+ for(const phrase of ['Топ избранного','Продолжить просмотр','Мои списки','Витрина достижений','Тестовое аниме','Серия 3'])
    assert.ok(html.includes(phrase),phrase);
  assert.ok(html.includes('/api/poster?src='));
- for(const k of ['episodes','hours','meanScore'])assert.match(html,new RegExp('data-profile-field="'+k+'">0'));
-  assert.match(html,/profile-info-tooltip/);
+ const summary=ui.summary({level:1,xp:100,multiplier:1,titleCount:1,friendCount:1});
+ for(const k of ['episodes','hours'])assert.match(summary,new RegExp('data-profile-field="'+k+'"[^>]*>—'));
+ assert.doesNotMatch(summary,/data-profile-field="meanScore"/);
+ assert.match(html,/data-profile-list="Просмотрено" aria-label="Просмотрено: 1 — открыть список"/);
+ assert.match(html,/<small>100% коллекции<\/small>/);
   assert.match(html,/profile-achievement-progress/);
  assert.match(html,/profile-distribution-part/);
- assert.match(html,/--profile-segment:#F1F1F1/);
+ assert.match(html,/profile-distribution-part" style="--profile-segment:#[A-Fa-f0-9]{6};flex:1/);
 });
 test('Privacy and escape protections remain active',()=>{
  const {ui,ctx}=adapter();
  const privateHistory=ui.content({...ctx,section:'history',isMe:false});
  assert.match(privateHistory,/доступна только владельцу/);
  assert.doesNotMatch(privateHistory,/Тестовое аниме|Серия 3/);
+ assert.doesNotMatch(ui.content({...ctx,isMe:false}),/data-profile-resume|Продолжить просмотр/);
  ctx.profileAnimeById=new Map([['123',{id:'123',title:'<svg onload=alert(1)>',poster:'javascript:alert(1)'}]]);
  const html=ui.content(ctx);
  assert.ok(html.includes('&lt;svg'));
  assert.doesNotMatch(html,/<svg onload=/);
  assert.doesNotMatch(html,/src="javascript:/);
 });
-test('Tab navigation retains six legacy sections and accessible active state',()=>{
+test('grouped navigation retains owner sections and an accessible active state',()=>{
  const {ui}=adapter();
- const nav=ui.navigation('friends',2,14,1);
- for(const section of ['overview','anime','history','achievements','friends','comments'])
+ const nav=ui.navigation('friends',2,14,1,true,true);
+ for(const section of ['overview','anime','history','activity','achievements','friends','comments'])
    assert.ok(nav.includes('data-profile-tab="'+section+'"'));
  assert.equal((nav.match(/aria-pressed="true"/g)||[]).length,1);
  assert.match(nav,/profile-tab-counter/);
+ assert.doesNotMatch(ui.navigation('friends',2,14,1,false,false),/data-profile-tab="(?:history|activity)"/);
 });

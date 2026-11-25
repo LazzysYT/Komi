@@ -199,7 +199,7 @@ async function refreshReferralBadge(){
 }
 try{const code=new URL(location.href).searchParams.get('ref');if(/^[a-f0-9]{32}$/.test(code||''))sessionStorage.setItem('komi_referral_pending',code)}catch{}
 function mount(){
- for(const [host,selector] of [[document.querySelector('.komi-hub-tools-panel'),'panel'],[document.getElementById('komiMobileMoreMenu'),'mobile'],[document.querySelector('.komi-profile-tabs'),'profile']]){
+ for(const [host,selector] of [[document.querySelector('.komi-hub-tools-panel'),'panel'],[document.getElementById('komiMobileMoreMenu'),'mobile'],[document.querySelector('#profile [data-profile-tools]'),'profile']]){
    if(!host||host.querySelector('[data-community-launch]'))continue;
    if(selector==='mobile'){
      // Keep the original five mobile popup buttons unchanged for existing navigation.

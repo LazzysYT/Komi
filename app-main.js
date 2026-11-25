@@ -143,6 +143,7 @@
         // Owner-scoped resume UI state. Public catalog previews intentionally
         // omit private watch history; account cache is read after verified auth.
         let komiResumeReadyUid = null;
+        let komiResumeLoadError = null;
         let komiResumePreview = [];
         function komiStoreReadyResume() {
             const uid = currentUser?.authUserId;
@@ -1228,6 +1229,13 @@ async function komiLoadCatalogPages(attempt = 0) {
         function openProfile(username) {
             const handle = String(username || currentUser?.username || '').trim();
             if (!handle) { openAuthModal('login'); return; }
+            // A different person's profile starts at its overview, without the
+            // previous account's collection query or private folder selection.
+            if (handle !== (profileTargetUser || currentUser?.username)) {
+                profilePageSection = 'overview';
+                profileActiveTab = 'Просмотрено';
+                profileCollectionSearchQuery = '';
+            }
             if (currentView === 'catalog') komiStoreCatalogPosition();
             if (slideInterval) clearInterval(slideInterval);
             currentView = 'profile';
@@ -1445,6 +1453,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             // or switching authenticated accounts.
             window.KomiResumeCache?.clear(user.authUserId);
             komiResumeReadyUid = null;
+            komiResumeLoadError = null;
             komiResumePreview = [];
             notificationRequest++;
             accountNotifications = { owner: null, rows: [], count: 0 };
@@ -2322,7 +2331,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const myFriends = friendsFor(username);
             const isMe = currentUser && currentUser.username === username;
             const canSeeProfileActivity = Boolean(isMe && currentUser?.authUserId);
-            if (profilePageSection === 'activity' && !canSeeProfileActivity) profilePageSection = 'overview';
+            if (profilePageSection === 'activity' && !canSeeProfileActivity || profilePageSection === 'history' && !isMe) profilePageSection = 'overview';
             const amIFriend = currentUser && friendsFor(currentUser.username).includes(username);
 
             const userStatuses = userAnimeStatuses[username] || {};
@@ -2428,11 +2437,6 @@ async function komiLoadCatalogPages(attempt = 0) {
                 <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-mono komi-profile-studio" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
                     <div class="profile-header-card" data-profile-hero>
                         <div class="profile-cover" data-profile-cover aria-hidden="true">${komiSafeUrl(p.banner || p.cover || p.coverUrl) ? `<img src="${safeProfileText(komiSafeUrl(p.banner || p.cover || p.coverUrl))}" alt="" loading="lazy">` : ''}</div>
-                        <div class="profile-hero-tools">
-                            ${isMe ? '<button type="button" class="profile-glass profile-glass-edit" data-profile-edit aria-expanded="false" aria-controls="profile-settings"><span aria-hidden="true">✎</span> Редактировать</button>' : ''}
-                            ${isMe ? '<button type="button" class="profile-glass" data-profile-settings aria-expanded="false" aria-controls="profile-settings"><span aria-hidden="true">⚙</span> Настройки</button>' : ''}
-                            <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">↗ Поделиться ссылкой</span><span class="profile-share-copied" aria-hidden="true">✓ Скопировано</span></button>
-                        </div>
                         <div class="profile-avatar-frame" data-profile-frame="${['red','neon','white'].includes(p.frame) ? safeProfileText(p.frame) : 'none'}">
                             <span class="profile-avatar-inner"><img src="${safeProfileText(komiSafeUrl(p.avatar) || 'https://api.dicebear.com/7.x/bottts/svg?seed=fallback')}" class="profile-avatar-box" alt="Аватар профиля" data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'"></span>
                             <span class="profile-avatar-effects" aria-hidden="true"></span>
@@ -2445,10 +2449,9 @@ async function komiLoadCatalogPages(attempt = 0) {
                                 ${isMe && typeof aniCoinBadge === 'function' && aniCoinBadge() ? `<span class="profile-title-badge profile-title-earned" data-anicoin-badge>${escapeFriendHtml(aniCoinBadge())}</span>` : ''}
                             </div>
                             
-                            <p class="profile-bio" data-profile-field="bio">${safeProfileText(p.bio || 'Твоя история в мире аниме.')}</p>
+                            <p class="profile-bio" data-profile-field="bio" ${p.bio ? '' : 'hidden'}>${safeProfileText(p.bio || '')}</p>
                             <div class="profile-badges-row">
                                 <span class="profile-badge-item" data-profile-presence>${safeProfileText(p.status || 'Люблю аниме')}</span>
-                                <span class="profile-badge-item" data-profile-friends-count>◉ Друзей: ${myFriends.length}</span>
                                 ${tasteCompatibility}
                                 <span class="profile-badge-item profile-reg-date">С нами с ${escapeFriendHtml(p.regDate || 'Не указана')}</span>
                                 ${isMe ? '<button type="button" class="profile-badge-item profile-wallet-chip" data-komi-onclick="openAniCoinShop()">◈ <span data-profile-balance>—</span> AniCoin</button>' : ''}
@@ -2465,11 +2468,6 @@ async function komiLoadCatalogPages(attempt = 0) {
                                   <img src="${safeProfileText(komiSafeUrl(anime.poster)||'/anime-artwork.svg')}" alt="" loading="lazy" decoding="async"><span>${safeProfileText(anime.title)}</span></a>`).join('')}
                                 </div>
                             </section>
-                            <div class="komi-level-progress profile-xp-capsule" aria-label="Уровень ${calculatedLevel}, ${xpProgress} из 500 XP, множитель ${xpMultiplier}x">
-                                <span class="profile-xp-level">Уровень <strong>${calculatedLevel}</strong></span>
-                                <span class="profile-xp-bar"><span>${xpProgress} / 500 XP</span><span class="profile-xp-progress-track" style="--komi-xp-percent:${(xpProgress / 500 * 100).toFixed(2)}%"><progress max="500" value="${xpProgress}">${xpProgress} из 500</progress></span></span>
-                                <span class="profile-xp-multiplier${xpMultiplier > 1 ? ' is-premium' : ''}">×${xpMultiplier.toLocaleString('ru-RU')}</span>
-                            </div>
                             <div class="komi-profile-actions profile-hero-actions">
                                 ${!isMe && currentUser ? `
                                     ${amIFriend
@@ -2480,7 +2478,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                             </div>
 
                         </div>
+                        <div class="profile-hero-tools">
+                            ${isMe ? '<button type="button" class="profile-glass profile-glass-edit" data-profile-edit data-profile-settings aria-expanded="false" aria-controls="profile-settings"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>Редактировать</button><a class="profile-glass" href="/premium.html"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg>Оформление</a>' : ''}
+                            <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">Поделиться</span><span class="profile-share-copied" aria-hidden="true">Скопировано</span></button>
+                        </div>
                     </div>
+                    ${KomiProfileUI.summary({level:calculatedLevel,xp:xpProgress,multiplier:xpMultiplier,titleCount:Object.keys(userStatuses).length,friendCount:isMe?myFriends.length:null})}
                     ${isMe ? `
                             <div class="profile-settings-box" id="profile-settings">
                                 <section class="komi-premium-profile-media" data-komi-premium-editor data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Анимация профиля">
@@ -2532,9 +2535,9 @@ async function komiLoadCatalogPages(attempt = 0) {
                             </div>
                             ` : ''}
 
-                    ${KomiProfileUI.navigation(profilePageSection, myFriends.length, Object.keys(userStatuses).length, profileExperience.badges.length, canSeeProfileActivity)}
+                    ${KomiProfileUI.navigation(profilePageSection, isMe?myFriends.length:null, Object.keys(userStatuses).length, profileExperience.badges.length, canSeeProfileActivity, isMe)}
                     <div id="komiProfilePanel" class="komi-profile-panel">
-                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity}) : ''}
+                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity,resumeReady:!currentUser?.authUserId||komiResumeReadyUid===currentUser.authUserId,resumeFailed:Boolean(isMe&&currentUser?.authUserId&&komiResumeLoadError?.owner===currentUser.authUserId&&komiResumeLoadError.username===username)}) : ''}
                     ${canSeeProfileActivity && profilePageSection === 'activity' ? `
                     <section class="profile-activity-card" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
                         <div class="profile-activity-heading">
@@ -2627,10 +2630,12 @@ async function komiLoadCatalogPages(attempt = 0) {
 
                     <div class="profile-layout-grid">
                         <div class="profile-main-content">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
+                            <div class="profile-collection-heading" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:8px;">
                                 <h3 style="font-size:15px; font-weight:800;">Коллекция: <span style="color:var(--primary);">${safeProfileText(profileActiveTab)}</span></h3>
-                                <div style="position:relative; width: 180px;">
-                                    <input type="text" class="form-control" aria-label="Поиск в коллекции" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" data-komi-oninput="updateProfileCollectionSearch(this)" style="padding: 6px 8px; font-size: 11px;">
+                                ${isMe ? '<div class="profile-collection-tools" data-profile-tools></div>' : ''}
+                                <div class="profile-collection-search" style="position:relative; width: 240px;max-width:100%">
+                                    <input type="text" class="form-control" aria-label="Поиск в коллекции" placeholder="Поиск в коллекции..." value="${safeProfileText(profileCollectionSearchQuery)}" data-komi-oninput="updateProfileCollectionSearch(this)" style="padding:10px 44px 10px 12px;font-size:14px;min-height:44px">
+                                    ${profileCollectionSearchQuery ? '<button type="button" class="profile-search-clear" data-profile-search-clear aria-label="Очистить поиск в коллекции"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>' : ''}
                                 </div>
                             </div>
 
@@ -2661,7 +2666,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     </div>
 
                     </div>
-                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья (${myFriends.length})</h3><div class="komi-profile-friend-list">${myFriends.length ? KomiProfileUI.fullFriendRows(myFriends) : '<p>Пока нет друзей.</p>'}</div></div>
+                    <div class="komi-profile-friends-section" style="display:${profilePageSection === 'friends' ? 'block' : 'none'}"><h3>Друзья${isMe ? ' ('+myFriends.length+')' : ''}</h3><div class="komi-profile-friend-list">${myFriends.length ? KomiProfileUI.fullFriendRows(myFriends) : isMe ? '<p>Пока нет друзей.</p>' : '<p>Список друзей этого пользователя недоступен.</p>'}</div>${isMe ? '<button type="button" class="profile-shop-link" data-profile-rooms>Найти друзей и посмотреть заявки</button>' : ''}</div>
                     <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
                     <div class="profile-wall-section">
                         <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
@@ -4052,6 +4057,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 // Verified Supabase sessions take precedence; legacy browser data is retained.
                 currentUser = { username, authProvider: session.user.app_metadata?.provider || 'email', authUserId: session.user.id };
                 komiResumeReadyUid = null;
+                komiResumeLoadError = null;
                 komiResumePreview = window.KomiResumeCache?.read(session.user.id) || [];
                 updateNotificationsUI();
                 // Show the account immediately from the same UID's verified avatar cache.
@@ -4429,11 +4435,12 @@ async function komiLoadCatalogPages(attempt = 0) {
             const username = currentUser.username;
             const loadStarted = Date.now();
             const loadEpoch = ++komiCollectionLoadEpoch;
+            komiResumeLoadError = null;
             const [lists, progress, favorites] = await Promise.all([
                 komiLoadAllOwnedRows('komi_anime_lists','anime_id,status',uid),
                 komiLoadAllOwnedRows('komi_watch_progress','anime_id,season,episode_index,position_seconds,duration_seconds,updated_at',uid),
                 komiLoadAllOwnedRows('komi_favorites','anime_id,category',uid)
-            ]);
+            ].map(request => request.catch(error => ({data:[],error}))));
             if (currentUser?.authUserId !== uid || currentUser?.username !== username ||
                 loadEpoch !== komiCollectionLoadEpoch) return;
             if (lists.error) console.warn('Не удалось загрузить личные списки:', lists.error.message);
@@ -4450,8 +4457,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                 userFavorites[username] =
                     komiMergeCollectionMutations('favorites',uid,loadStarted,serverFavorites);
             }
-            if (progress.error) console.warn('Не удалось загрузить прогресс:', progress.error.message);
+            if (progress.error) {
+                komiResumeLoadError = {owner:uid,username};
+                console.warn('Не удалось загрузить прогресс:', progress.error.message);
+            }
             else {
+                komiResumeLoadError = null;
                 const newerProgress = Object.fromEntries(Object.entries(komiEpisodeProgress).filter(([key,value]) =>
                     key.startsWith(username + '_') && value.updated >= loadStarted));
                 for (const key of Object.keys(komiEpisodeProgress)) {
@@ -4480,6 +4491,25 @@ async function komiLoadCatalogPages(attempt = 0) {
                 .catch(error=>console.warn('Дополнительные карточки профиля:',error.message));
             komiLoadCloudFolders(uid,username)
                 .catch(error=>console.warn('Облачные папки:',error.message));
+        }
+        async function retryKomiProfileHistory() {
+            const uid = currentUser?.authUserId;
+            const username = currentUser?.username;
+            if (!_supabase || !uid || komiResumeLoadError?.owner !== uid ||
+                komiResumeLoadError.username !== username) return;
+            const sameOwner = () => currentUser?.authUserId === uid && currentUser?.username === username;
+            // Clearing the error consumes the retry action before any await, so
+            // repeated clicks join no extra load and ready history stays visible.
+            komiResumeLoadError = null;
+            render();
+            komiSessionRestoreQueue = komiSessionRestoreQueue.catch(() => {}).then(async () => {
+                if (!sameOwner()) return;
+                await loadAuthenticatedAnimeData();
+                if (!sameOwner()) return;
+            });
+            await komiSessionRestoreQueue;
+            if (!sameOwner()) return;
+            return komiResumeReadyUid === uid && komiResumeLoadError?.owner !== uid;
         }
         async function persistAuthenticatedStatus(animeId, status) {
             const id = Number(animeId);

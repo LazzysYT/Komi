@@ -29,20 +29,40 @@
       '<div class="komi-profile-guest-actions"><button type="button" data-profile-guest-login>Войти в профиль</button>'+
       '<a href="/catalog">Открыть каталог</a></div></section>';
   }
-  function navigation(active,friendCount,listCount=0,awardCount=0,canSeeActivity=false){
+  function navigation(active,friendCount,listCount=0,awardCount=0,canSeeActivity=false,isMe=false){
     var pages=[
       ['overview','Обзор',null],
       ['anime','Списки',listCount],
-      ['history','История',null],
+      ...(isMe?[['history','История',null]]:[]),
+      ['friends','Друзья',friendCount]
+    ];
+    var secondary=[
       ...(canSeeActivity?[['activity','Активность',null]]:[]),
       ['achievements','Достижения',awardCount],
-      ['friends','Друзья',friendCount],
       ['comments','Стена',null]
     ];
-    return '<nav class="komi-profile-tabs profile-premium-tabs" aria-label="Разделы профиля" data-profile-active="'+escapeText(active)+'">'+pages.map(([id,name,count])=>
+    var renderButton=([id,name,count])=>
       '<button type="button" class="komi-profile-tab'+(id===active?' active':'')+'" data-profile-tab="'+id+'" aria-pressed="'+(id===active)+'" aria-controls="komiProfilePanel">'+
-      '<span>'+name+'</span>'+(count===null?'':'<small class="profile-tab-counter">'+format(count)+'</small>')+'</button>'
-    ).join('')+'</nav>';
+      '<span>'+name+'</span>'+(count===null?'':'<small class="profile-tab-counter">'+format(count)+'</small>')+'</button>';
+    var selectedMore=secondary.find(([id])=>id===active);
+    return '<nav class="profile-navigation-shell" aria-label="Разделы профиля">'+
+      '<div class="komi-profile-tabs profile-premium-tabs" data-profile-active="'+escapeText(active)+'">'+pages.map(renderButton).join('')+'</div>'+
+      '<details class="profile-more"><summary'+(selectedMore?' class="active"':'')+' aria-label="Дополнительные разделы профиля'+(selectedMore?': '+selectedMore[1]:'')+'">'+
+      '<span>'+(selectedMore?selectedMore[1]:'Ещё')+'</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'+
+      '<div class="profile-more-menu">'+secondary.map(renderButton).join('')+'</div></details></nav>';
+  }
+  function summary(ctx){
+    var xp=Math.min(499,number(ctx.xp)),level=number(ctx.level),multiplier=Math.max(1,number(ctx.multiplier));
+    return '<section class="profile-summary" aria-label="Статистика профиля">'+
+      '<div class="komi-level-progress profile-xp-capsule" aria-label="Уровень '+level+', '+xp+' из 500 XP, множитель '+multiplier+'x">'+
+      '<span class="profile-xp-level">Уровень <strong>'+format(level)+'</strong></span>'+
+      '<span class="profile-xp-bar"><span>'+format(xp)+' / 500 XP</span><span class="profile-xp-progress-track" style="--komi-xp-percent:'+(xp/5).toFixed(2)+'%"><progress max="500" value="'+xp+'">'+xp+' из 500</progress></span></span>'+
+      '<span class="profile-xp-multiplier'+(multiplier>1?' is-premium':'')+'">×'+format(multiplier)+'</span></div>'+
+      '<button type="button" class="profile-summary-item" data-profile-jump="anime"><strong>'+format(ctx.titleCount)+'</strong><span>Тайтлов в списках</span></button>'+
+      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="episodes" title="Пока нет проверенных данных">—</strong><span>Серий посмотрено</span></div>'+
+      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="hours" title="Пока нет проверенных данных">—</strong><span>Часов просмотра</span></div>'+
+      '<button type="button" class="profile-summary-item" data-profile-jump="friends"><strong data-profile-friends-total>'+
+      (ctx.friendCount==null?'—':format(ctx.friendCount))+'</strong><span>Друзей</span></button></section>';
   }
   function achievementWidget(username,isMe,full=false){
     var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,achievements:[],badges:[]};
@@ -57,8 +77,10 @@
       id,category,label,value:Math.min(target,number(value)),target,earned:number(value)>=target
     }));
     var earned=definitions.filter(item=>item.earned).length;
-    var previewIds=['first-watch','watch-ten','favorite-one','list-five','friend-one','xp-500'];
-    var chosen=full?definitions:previewIds.map(id=>definitions.find(item=>item.id===id)).filter(Boolean);
+    var unlocked=definitions.filter(item=>item.earned);
+    var next=definitions.filter(item=>!item.earned&&number(item.target)>0)
+      .sort((a,b)=>number(b.value)/number(b.target)-number(a.value)/number(a.target))[0];
+    var chosen=full?definitions:unlocked.slice(-2).concat(next?[next]:unlocked.slice(-3,-2));
     var renderTiles=items=>'<div class="profile-achievements"'+(isMe?' data-komi-quests':'')+'>'+items.map(item=>{
       var progress=Math.min(number(item.target),number(item.value));
       var unlocked=Boolean(item.earned);
@@ -72,20 +94,20 @@
       return items.length?'<div class="profile-achievement-group"><h4 style="font-size:12px;font-weight:800;color:#E2E2E2;margin:17px 0 9px">'+escapeText(category)+'</h4>'+renderTiles(items)+'</div>':'';
     }).join(''):renderTiles(chosen);
     return '<section class="profile-widget profile-achievement-widget'+(full?' profile-achievements-full':'')+'">'+
-      header('Витрина достижений','<span class="profile-caption">'+format(info.xp)+' XP</span>')+
+      header(full?'Все достижения':'Витрина достижений','<span class="profile-caption">'+earned+' / '+definitions.length+'</span>')+
       '<p class="profile-caption" style="margin:0 0 12px">Открыто '+earned+' из '+definitions.length+' достижений</p>'+
       tiles+
       (!definitions.length?'<p class="profile-achievements-empty">Загружаем достижения…</p>':'')+
-      (!full?'<button type="button" class="profile-shop-link" data-komi-onclick="profilePageSection=\'achievements\';render()">Все достижения ('+definitions.length+')</button>':'')+
-      (isMe?'<button type="button" class="profile-shop-link" data-komi-onclick="openAniCoinShop()">✧ Открыть магазин AniCoin</button>':'')+'</section>';
+      (!full?'<button type="button" class="profile-shop-link" data-profile-jump="achievements">Все достижения ('+definitions.length+')</button>':'')+
+      (isMe&&full?'<button type="button" class="profile-shop-link" data-komi-onclick="openAniCoinShop()">Открыть магазин AniCoin</button>':'')+'</section>';
   }
   function watchHistory(ctx){
-    if(!ctx.isMe)return [];
+    if(!ctx.isMe||ctx.resumeReady===false)return [];
     var prefix=ctx.username+'_';
     var store=typeof komiEpisodeProgress==='object'&&komiEpisodeProgress?komiEpisodeProgress:{};
     return Object.entries(store).filter(([key,p])=>key.startsWith(prefix)&&p&&typeof p==='object')
       .map(([key,p])=>({id:key.slice(prefix.length),item:p,anime:ctx.profileAnimeById.get(key.slice(prefix.length))}))
-      .filter(x=>/^[0-9]{1,15}$/.test(x.id))
+      .filter(x=>/^[0-9]{1,15}$/.test(x.id)&&Number.isSafeInteger(Number(x.item.index))&&Number(x.item.index)>=0&&Number.isSafeInteger(Number(x.item.season))&&Number(x.item.season)>0)
       .sort((a,b)=>number(b.item.updated)-number(a.item.updated));
   }
   function posterUrl(value){
@@ -94,22 +116,28 @@
     if(url.startsWith(location.origin+'/api/poster?'))return url;
     return '/api/poster?src='+encodeURIComponent(url);
   }
-  function watchCards(ctx,limit){
-    return watchHistory(ctx).slice(0,limit).map(({id,item,anime})=>{
+  function watchCards(ctx,limit,unfinishedOnly=false){
+    // Share the exact completed-episode boundary with the home shelf.
+    var items=watchHistory(ctx);
+    if(unfinishedOnly)items=items.filter(({item})=>root.KomiHomeDiscovery?.unfinished?.(item)===true);
+    return items.slice(0,limit).map(({id,item,anime})=>{
       var secs=number(item.time),duration=number(item.duration);
       var ratio=duration?Math.min(1,secs/duration):0;
       var stamp=Math.floor(secs/60)+':'+String(Math.floor(secs%60)).padStart(2,'0');
       var poster=posterUrl(anime&&anime.poster);
       var title=escapeText(anime&&anime.title||'Аниме #'+id);
-      var episode=number(item.index)+1;
       var season=Math.max(1,number(item.season));
-      return '<a class="profile-watch-card" href="/anime/'+encodeURIComponent(id)+'#player" data-profile-resume="'+escapeText(id)+'" aria-label="Продолжить '+title+', серия '+episode+'">'+
-        '<span class="profile-watch-image">'+(poster?'<img src="'+escapeText(poster)+'" alt="" loading="lazy">':'<span class="profile-watch-fallback" aria-hidden="true">K</span>')+
-        '<span class="profile-play" aria-hidden="true">▶</span></span>'+
+      var grouped=root.KomiPlayerCore?.seasonEpisodes?.(Array.isArray(anime?.episodes)?anime.episodes:[],season)||[];
+      var episode=number(grouped.find(entry=>entry.slots.includes(Number(item.index)))?.number)||number(item.index)+1;
+      var completed=duration>0&&secs>=duration-5;
+      var action=completed?'Снова':secs>0?'Продолжить':'Смотреть';
+      var timestamp=completed?'Серия просмотрена':secs>0?'Продолжить с '+stamp:'Смотреть с начала';
+      return '<a class="profile-watch-card" href="/anime/'+encodeURIComponent(id)+'?season='+season+'&amp;episode='+episode+'#player" data-profile-resume="'+escapeText(id)+'" aria-label="'+action+' '+title+', серия '+episode+'">'+
+        '<span class="profile-watch-image">'+(poster?'<img src="'+escapeText(poster)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="komiCardPosterFallback(this)">':'<span class="profile-watch-fallback" aria-hidden="true">K</span>')+'</span>'+
         '<span class="profile-watch-info"><strong>'+title+'</strong><small>Сезон '+season+' · Серия '+episode+'</small>'+
-        '<span class="profile-watch-progress"><i style="--profile-watch-progress:'+ratio+'"></i></span>'+
-        '<small class="profile-watch-timestamp">Продолжить с '+stamp+'</small></span>'+
-        '<span class="profile-watch-action" aria-hidden="true">↗</span></a>';
+        (secs>0&&duration>0?'<span class="profile-watch-progress"><i style="--profile-watch-progress:'+ratio+'"></i></span>':'')+
+        '<small class="profile-watch-timestamp">'+timestamp+'</small></span>'+
+        '<span class="profile-watch-action" aria-hidden="true">'+action+'</span></a>';
     }).join('');
   }
   function friendRows(names) {
@@ -120,7 +148,7 @@
       var avatar=safeUrl(p.avatar);
       return '<button type="button" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
         '<span class="profile-friend-avatar" style="position:relative;overflow:hidden">'+escapeText(label.slice(0,1))+
-        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
+        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.style.display=\'none\'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
         '</span><span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
     }).join('');
   }
@@ -132,7 +160,7 @@
       var avatar=safeUrl(profile.avatar);
       return '<button type="button" class="komi-profile-friend" style="display:inline-flex;align-items:center;gap:10px;min-width:185px;max-width:100%;text-align:left;margin:4px" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
         '<span class="profile-friend-avatar" style="position:relative;overflow:hidden">'+escapeText(label.slice(0,1))+
-        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.remove()" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
+        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.style.display=\'none\'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
         '</span><span style="min-width:0"><strong style="display:block;overflow-wrap:anywhere">'+escapeText(label)+'</strong>'+
         '<small style="display:block;color:#999;font-size:10px">Открыть профиль</small></span></button>';
     }).join('');
@@ -140,9 +168,12 @@
   function content(ctx){
     var fullCounts=statusNames.reduce((total,key)=>total+number(ctx.statsCounts[key]),0);
     var history=watchHistory(ctx);
+    var historyFailure=ctx.isMe&&ctx.resumeFailed?'<div class="profile-history-error" role="status">'+
+      blank(ctx.resumeReady===false?'Не удалось загрузить историю просмотра.':'Не удалось обновить историю. Сохранённые записи остаются доступны.')+
+      '<button type="button" class="profile-text-button" data-profile-history-retry>Повторить</button></div>':'';
     if(ctx.section==='history')return '<section class="profile-widget profile-history-full profile-enter">'+
       header('История просмотра','<span class="profile-caption">Последние эпизоды</span>')+
-      (ctx.isMe?'<div class="profile-watch-grid">'+(watchCards(ctx,30)||blank('Здесь появятся последние серии и сохранённые таймкоды после просмотра.'))+'</div>'+
+      (ctx.isMe?historyFailure+'<div class="profile-watch-grid">'+(watchCards(ctx,30)||(ctx.resumeFailed?'':blank(ctx.resumeReady===false?'Загружаем историю просмотра…':'Здесь появятся последние серии и сохранённые таймкоды после просмотра.')))+'</div>'+
        (history.length>30?'<p class="profile-caption">Показаны 30 последних тайтлов.</p>':''):blank('История просмотра доступна только владельцу профиля.'))+'</section>';
     if(ctx.section==='achievements')return '<div class="profile-enter">'+achievementWidget(ctx.username,ctx.isMe,true)+'</div>';
     if(ctx.section!=='overview')return '';
@@ -152,28 +183,22 @@
     var favoriteAnime=favoriteIds.map(id=>ctx.profileAnimeById.get(String(id))).filter(Boolean).slice(0,premiumShowcase?6:3);
     var statusColors=['#F1F1F1','#D0D0D0','#A8A8A8','#7F7F7F','#535353'];
     var segmentNames=statusNames.map((name,i)=>[name,number(ctx.statsCounts[name]),statusColors[i]]);
-    var distribution=segmentNames.map(([name,count,color])=>
-      '<button type="button" class="profile-distribution-part" title="'+name+': '+count+'" aria-label="'+name+': '+count+
-      '" style="--profile-segment:'+color+';flex:'+count+'" data-komi-onclick="profileActiveTab=\''+name+'\';profilePageSection=\'anime\';render()"></button>'
+    var distribution=segmentNames.filter(([,count])=>count>0).map(([name,count,color])=>
+      '<span class="profile-distribution-part" style="--profile-segment:'+color+';flex:'+count+'"></span>'
     ).join('');
     var legend=segmentNames.map(([name,count,color])=>
-      '<button type="button" data-komi-onclick="profileActiveTab=\''+name+'\';profilePageSection=\'anime\';render()" title="Показать: '+name+'">'+
-      '<i style="--profile-segment:'+color+'"></i><span>'+name+'</span><b>'+count+'</b></button>'
+      '<button type="button" class="profile-list-shortcut" data-profile-list="'+name+'" aria-label="'+name+': '+count+' — открыть список">'+
+      '<span>'+name+'</span><strong>'+format(count)+'</strong><small>'+(fullCounts?Math.round(count/fullCounts*100):0)+'% коллекции</small></button>'
     ).join('');
-    var metrics='<div class="profile-metrics">'+
-      '<div class="profile-metric"><strong data-profile-count="'+fullCounts+'">'+format(fullCounts)+'</strong><span>Тайтлов в списке</span></div>'+
-      '<div class="profile-metric"><strong class="is-missing" data-profile-field="episodes">0</strong><span>Серий посмотрено</span></div>'+
-      '<div class="profile-metric"><strong class="is-missing" data-profile-field="hours">0</strong><span>Часов просмотра</span></div>'+
-      '<div class="profile-metric"><strong class="is-missing" data-profile-field="meanScore">0</strong><span>Средняя оценка</span></div></div>';
-    var stats='<section class="profile-widget profile-stats-widget">'+header('Статистика просмотра','<span class="profile-stats-heading-meta"><span class="profile-caption">'+format(fullCounts)+' тайтлов</span>'+
-        '<span class="profile-info-popover"><button type="button" class="profile-info-trigger" aria-label="О показателях просмотра" aria-describedby="profile-stats-help">i</button>'+
-        '<span class="profile-info-tooltip" role="tooltip" id="profile-stats-help">Показатели обновятся при наличии проверенных данных просмотра и оценок.</span></span></span>')+
-      '<div class="profile-distribution" role="group" aria-label="Распределение статусов аниме">'+
+    var stats='<section class="profile-widget profile-stats-widget">'+header(ctx.isMe?'Мои списки':'Списки аниме',
+      '<button type="button" class="profile-text-button" data-profile-jump="anime">Все списки</button>')+
+      '<div class="profile-distribution" aria-hidden="true">'+
       (fullCounts?distribution:'<span class="profile-distribution-empty"></span>')+'</div>'+
-      '<div class="profile-legend">'+legend+'</div>'+metrics+'</section>';
-    var watching='<section class="profile-widget profile-continue-widget">'+header(ctx.isMe?'Продолжить просмотр':'Коллекция',
-      ctx.isMe?'<button type="button" class="profile-text-button" data-komi-onclick="profilePageSection=\'history\';render()">История ↗</button>':'')+
-      '<div class="profile-watch-grid">'+(ctx.isMe?watchCards(ctx,2)||blank('Пока нет записей просмотра. Открой любое аниме из каталога.'):blank('Сохранённые аниме доступны на вкладке «Списки».'))+'</div></section>';
+      '<div class="profile-list-shortcuts">'+legend+'</div></section>';
+    var resumeCards=ctx.isMe?watchCards(ctx,2,true):'';
+    var watching=resumeCards?'<section class="profile-widget profile-continue-widget">'+header('Продолжить просмотр',
+      '<button type="button" class="profile-text-button" data-profile-jump="history">Вся история</button>')+
+      '<div class="profile-watch-grid">'+resumeCards+'</div></section>':'';
     var favoriteLimit=premiumShowcase?6:3;
     var favoriteTiles=favoriteAnime.map(anime=>{
       var poster=posterUrl(anime.poster),id=escapeText(anime.id);
@@ -181,26 +206,25 @@
         (poster?'<img loading="lazy" src="'+escapeText(poster)+'" alt="">':'<div class="profile-favorite-missing">K</div>')+
         '<strong>'+escapeText(anime.title)+'</strong></a>';
     }).join('');
-    var favoriteBlanks=Array.from({length:Math.max(0,favoriteLimit-favoriteAnime.length)},()=>ctx.isMe
-      ? '<button type="button" class="profile-favorite-add" data-profile-add-favorite title="Выбрать аниме в каталоге" aria-label="Добавить аниме в избранное"><span aria-hidden="true">+</span></button>'
-      : '<div class="profile-favorite-add is-disabled" aria-label="Пустой слот избранного"><span aria-hidden="true">+</span></div>').join('');
+    var favoriteBlanks=ctx.isMe&&favoriteAnime.length<favoriteLimit
+      ? '<button type="button" class="profile-favorite-add" data-profile-add-favorite title="Выбрать аниме в каталоге" aria-label="Добавить аниме в избранное"><span aria-hidden="true">+</span><small>Добавить аниме</small></button>':'';
     var favourite='<section class="profile-widget profile-favorites-widget"'+(premiumShowcase?' data-premium-slots="6"':'')+'>'+
-      header('Топ избранного',(premiumShowcase?'<span class="profile-premium-slots-badge">✦ 6 слотов</span>':'')+
-        '<span class="profile-caption">'+favoriteIds.length+' в избранном</span>')+
-      '<div class="profile-favorites">'+favoriteTiles+favoriteBlanks+'</div></section>';
-    var friends='<section class="profile-widget profile-friends-widget">'+header('Друзья','<span class="profile-caption">'+ctx.myFriends.length+'</span>')+
-      '<div class="profile-friends-mini">'+(friendRows(ctx.myFriends)||blank('Список друзей пока пуст.'))+'</div>'+
-      (ctx.isMe?'<button type="button" class="profile-shop-link" data-profile-rooms>Комнаты и заявки в друзья ↗</button>':'')+'</section>';
+      header('Топ избранного','<button type="button" class="profile-text-button" data-profile-list="Любимые">Все любимые · '+favoriteIds.length+'</button>')+
+      (favoriteAnime.length||ctx.isMe?'<div class="profile-favorites">'+favoriteTiles+favoriteBlanks+'</div>':blank('В избранном пока нет аниме.'))+'</section>';
+    var friends='<section class="profile-widget profile-friends-widget">'+header('Друзья',ctx.isMe?'<span class="profile-caption">'+ctx.myFriends.length+'</span>':'')+
+      '<div class="profile-friends-mini">'+(friendRows(ctx.myFriends)||blank(ctx.isMe?'Список друзей пока пуст.':'Список друзей этого пользователя недоступен.'))+'</div>'+
+      '<button type="button" class="profile-shop-link" data-profile-jump="friends">Все друзья</button>'+
+      (ctx.isMe?'<button type="button" class="profile-shop-link" data-profile-rooms>Заявки и совместный просмотр</button>':'')+'</section>';
     var genres=ctx.topGenres.map(([name,count])=>
       '<button class="profile-genre" type="button" data-profile-genre="'+escapeText(name)+'">'+escapeText(name)+' <span>'+count+'</span></button>'
     ).join('');
     var favoritesOrGenres='<section class="profile-widget profile-genres-widget">'+header('Любимые жанры')+
       '<div class="profile-genres">'+(genres||blank('Жанры появятся после добавления тайтлов в списки.'))+'</div></section>';
     return '<div class="profile-bento profile-enter">'+
-      '<div class="profile-bento-main">'+(ctx.isMe?watching+stats:stats+watching)+favourite+'</div>'+
+      '<div class="profile-bento-main">'+watching+stats+favourite+'</div>'+
       '<aside class="profile-bento-side">'+(ctx.canSeeProfileActivity?
         '<section class="profile-widget profile-activity-shortcut">'+header('Активность')+
-        '<p>Ежедневная отметка, задания и награды.</p><button type="button" class="profile-shop-link" data-profile-jump="activity">Открыть активность</button></section>':'')+
+        '<p>Отметка дня и награды за просмотр.</p><button type="button" class="profile-shop-link" data-profile-jump="activity">Задания и награды</button></section>':'')+
         achievementWidget(ctx.username,ctx.isMe)+friends+favoritesOrGenres+'</aside>'+
       '</div>';
   }
@@ -227,7 +251,7 @@
     var frame=profile.querySelector('[data-profile-frame]');
     if(frame)frame.dataset.frame=['red','neon','none','white'].includes(opts.frame)?opts.frame:'none';
     var bio=profile.querySelector('[data-profile-field="bio"]');
-    if(bio&&opts.bio!==undefined)bio.textContent=String(opts.bio).slice(0,240);
+    if(bio&&opts.bio!==undefined){bio.textContent=String(opts.bio).slice(0,240);bio.hidden=!bio.textContent.trim();}
     var presence=profile.querySelector('[data-profile-presence]');
     if(presence&&opts.status!==undefined)presence.textContent=String(opts.status).slice(0,100);
   }
@@ -239,8 +263,9 @@
     for(var key of ['episodes','hours','meanScore']){
       var element=profile.querySelector('[data-profile-field="'+key+'"]'),value=data[key];
       if(!element)continue;
-      if(value==null||!Number.isFinite(Number(value))||Number(value)<0){element.textContent='0';element.classList.add('is-missing');element.removeAttribute('data-profile-count');continue;}
+      if(value==null||!Number.isFinite(Number(value))||Number(value)<0){element.textContent='—';element.classList.add('is-missing');element.removeAttribute('data-profile-count');continue;}
       element.classList.remove('is-missing');
+      element.removeAttribute('title');
       element.textContent=format(value);
       element.dataset.profileCount=String(value);
     }
@@ -263,6 +288,8 @@
     if(fullHeading)fullHeading.textContent='Друзья ('+names.length+')';
     var badge=profile.querySelector('[data-profile-friends-count]');
     if(badge)badge.textContent='◉ Друзей: '+names.length;
+    var total=profile.querySelector('[data-profile-friends-total]');
+    if(total)total.textContent=format(names.length);
     var tabCount=profile.querySelector('[data-profile-tab="friends"] .profile-tab-counter');
     if(tabCount)tabCount.textContent=format(names.length);
   }
@@ -322,13 +349,29 @@
     var button=event.target&&event.target.closest&&event.target.closest('#profile button,#profile a');
     if(!button)return;
     if(button.matches('[data-profile-guest-login]')){openAuthModal('login');return;}
-    const nextSection=button.dataset.profileTab||button.dataset.profileJump;
+    if(button.matches('[data-profile-history-retry]')){void retryKomiProfileHistory();return;}
+    if(button.matches('[data-profile-search-clear]')){
+      var search=document.querySelector('#profile input[data-komi-oninput="updateProfileCollectionSearch(this)"]');
+      if(search){search.value='';updateProfileCollectionSearch(search);}
+      return;
+    }
+    const requestedList=button.dataset.profileList;
+    const nextSection=button.dataset.profileTab||button.dataset.profileJump||(requestedList?'anime':'');
     if(nextSection){
       const tabs=[...button.closest('#profile').querySelectorAll('[data-profile-tab]')];
-      if(nextSection===profilePageSection||!tabs.some(tab=>tab.dataset.profileTab===nextSection))return;
+      if(!tabs.some(tab=>tab.dataset.profileTab===nextSection))return;
+      if(requestedList){
+        if(!statusNames.includes(requestedList)&&requestedList!=='Любимые')return;
+        profileActiveTab=requestedList;
+        profileCollectionSearchQuery='';
+      }else if(nextSection===profilePageSection)return;
       profilePageSection=nextSection;
       render();
-      [...document.querySelectorAll('#profile [data-profile-tab]')].find(tab=>tab.dataset.profileTab===nextSection)?.focus();
+      const selected=[...document.querySelectorAll('#profile [data-profile-tab]')].find(tab=>tab.dataset.profileTab===nextSection);
+      const more=selected?.closest?.('.profile-more');
+      const focusTarget=more?.querySelector('summary')||selected;
+      focusTarget?.focus({preventScroll:true});
+      if(!more&&focusTarget?.scrollIntoView)focusTarget.scrollIntoView({block:'nearest',inline:'nearest',behavior:'instant'});
       return;
     }
     if(button.matches('[data-profile-edit], [data-profile-settings]')){
@@ -360,11 +403,19 @@
       navigate('catalog');
     }
   });
+  document.addEventListener('click',event=>{
+    var more=document.querySelector('#profile .profile-more[open]');
+    if(more&&!more.contains(event.target))more.open=false;
+  });
   document.addEventListener('keydown',event=>{
+    if(event.key==='Escape'){
+      var more=event.target?.closest?.('.profile-more[open]');
+      if(more){event.preventDefault();more.open=false;more.querySelector('summary')?.focus();return;}
+    }
     var button=event.target?.closest?.('[data-profile-tab]');if(!button)return;
     var tabs=Array.from(button.parentElement.querySelectorAll('[data-profile-tab]')),idx=tabs.indexOf(button);
     var next=event.key==='ArrowRight'?tabs[(idx+1)%tabs.length]:event.key==='ArrowLeft'?tabs[(idx+tabs.length-1)%tabs.length]:event.key==='Home'?tabs[0]:event.key==='End'?tabs[tabs.length-1]:null;
-    if(next){event.preventDefault();next.focus()}
+    if(next){event.preventDefault();next.focus();next.scrollIntoView?.({block:'nearest',inline:'nearest'})}
   });
   document.addEventListener('pointermove',event=>{
     var tile=event.target?.closest?.('[data-profile-tilt]');if(!tile||prefersLessMotion()||event.pointerType!=='mouse')return;
@@ -374,6 +425,6 @@
   document.addEventListener('pointerout',event=>{
     var tile=event.target?.closest?.('[data-profile-tilt]');if(tile&&!tile.contains(event.relatedTarget))tile.style.transform='';
   });
-  root.KomiProfileUI={guest,navigation,content,appearance,metrics,syncWallet,refreshFriends};
+  root.KomiProfileUI={guest,navigation,summary,content,appearance,metrics,syncWallet,refreshFriends};
   root.KomiProfileUI.fullFriendRows=fullFriendRows;
 })(window);

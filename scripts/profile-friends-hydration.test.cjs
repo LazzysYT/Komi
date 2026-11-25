@@ -82,5 +82,21 @@ test('friend mini cards render safe nicknames, actual GIF avatars, and original 
   assert.match(html,/komiProfileFriendNames\[0\]/);
   assert.doesNotMatch(html,/<friend>|google_1234567890abcdef/);
   assert.match(premium,/refreshFriends\}/);
-  assert.match(app,/data-profile-friends-count/);
+  assert.match(app,/KomiProfileUI\.summary/);
+  assert.match(premium,/data-profile-friends-total/);
+});
+
+test('hydrating friends updates the compact summary without changing another profile',()=>{
+  const total={textContent:'—'};
+  const profile={dataset:{profileUser:technicalOwner},querySelector:selector=>selector==='[data-profile-friends-total]'?total:null};
+  const sandbox={document:{addEventListener(){},getElementById:()=>profile},URL,location:{origin:'https://komianime.online'},
+    currentUser:{username:technicalOwner,authUserId:owner},userProfiles:{}};
+  sandbox.window=sandbox;
+  vm.runInNewContext(premium,sandbox);
+  sandbox.KomiProfileUI.refreshFriends(['first','second']);
+  assert.equal(total.textContent,'2');
+  assert.deepEqual(Array.from(sandbox.komiProfileFriendNames),['first','second']);
+  profile.dataset.profileUser='other_user';
+  sandbox.KomiProfileUI.refreshFriends(['third']);
+  assert.equal(total.textContent,'2','a late owner response must not repaint a public profile');
 });

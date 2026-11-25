@@ -53,7 +53,9 @@ test('35 distinct milestones derive only from actual saved lists, favorites, fri
   const full=vm.runInContext("achievementWidget('owner',true,true)",ui);
   const small=vm.runInContext("achievementWidget('owner',true,false)",ui);
   assert.equal((full.match(/class="profile-achievement is-/g)||[]).length,35);
-  assert.equal((small.match(/class="profile-achievement is-/g)||[]).length,6);
+  assert.equal((small.match(/class="profile-achievement is-/g)||[]).length,3);
+  assert.equal((small.match(/class="profile-achievement is-earned/g)||[]).length,2);
+  assert.equal((small.match(/class="profile-achievement is-locked/g)||[]).length,1);
   assert.match(full,/Открыто \d+ из 35 достижений/);
   assert.match(small,/Все достижения \(35\)/);
 });
