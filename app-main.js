@@ -2124,6 +2124,72 @@ async function komiLoadCatalogPages(attempt = 0) {
         // Optional activity is stored by verified Supabase UID, never by editable nickname.
         // This state only caches server responses; no dates or rewards are user-authored.
         const komiDailyActivityState = { owner: null, data: null, inflight: null, claiming: false, error: '' };
+        const komiProfileOverviewWatch = {owner:null, value:null, inflight:null, updated:0, error:false};
+        function komiProfileWeekStart(now = new Date()) {
+            const date = new Date(now);
+            date.setUTCHours(0,0,0,0);
+            date.setUTCDate(date.getUTCDate() - (date.getUTCDay()+6)%7);
+            return date.toISOString();
+        }
+        function komiProfileOverviewGenres(userStatuses, animeById, recentIds = []) {
+            const completed = Object.entries(userStatuses).filter(([,status])=>status==='Просмотрено').map(([id])=>id);
+            return KomiProfileUI.genreCounts([...completed,...recentIds],animeById);
+        }
+        function komiProfileOverviewPaint(uid, animeById) {
+            const state=komiProfileOverviewWatch;
+            const panel=document.querySelector('[data-profile-week-owner]');
+            if (!uid || currentUser?.authUserId!==uid || state.owner!==uid || panel?.dataset.profileWeekOwner!==uid) return;
+            const count=panel.querySelector('[data-profile-week-episodes]');
+            const note=panel.querySelector('[data-profile-week-status]');
+            const retry=panel.querySelector('[data-profile-week-retry]');
+            if(retry)retry.hidden=!state.error||Boolean(state.inflight);
+            const value=state.value?.week===komiProfileWeekStart()?state.value:null;
+            if(count) count.textContent=Number.isSafeInteger(value?.count)?String(value.count):'—';
+            if(note) note.textContent=state.error?'Не удалось обновить просмотр.':
+                state.inflight&&!value?'Загружаем просмотр…':'';
+            const genreList=document.querySelector('#profile [data-profile-overview-genres]');
+            KomiProfileUI.paintOverviewGenres(genreList,komiProfileOverviewGenres(userAnimeStatuses[currentUser.username]||{},animeById,value?.ids||[]),true);
+        }
+        async function komiProfileOverviewRead(uid, animeById, force=false) {
+            if (!uid || !_supabase || currentUser?.authUserId!==uid ||
+                document.querySelector('[data-profile-week-owner]')?.dataset.profileWeekOwner!==uid) return;
+            const state=komiProfileOverviewWatch;
+            const week=komiProfileWeekStart();
+            if(state.owner!==uid){state.owner=uid;state.value=null;state.inflight=null;state.updated=0;state.error=false;}
+            if(!force && state.value?.week===week && Date.now()-state.updated<60000){komiProfileOverviewPaint(uid,animeById);return;}
+            if(state.inflight){komiProfileOverviewPaint(uid,animeById);return state.inflight;}
+            const controller=new AbortController();
+            const timeout=setTimeout(()=>controller.abort(),6500);
+            const now=new Date().toISOString();
+            let task;
+            task=(async()=>{
+              try {
+                const [weekly,recent]=await Promise.allSettled([
+                    _supabase.from('komi_watched_episodes').select('anime_id',{count:'exact',head:true})
+                        .eq('user_id',uid).gte('watched_at',week).lte('watched_at',now).abortSignal(controller.signal),
+                    _supabase.from('komi_watched_episodes').select('anime_id')
+                        .eq('user_id',uid).lte('watched_at',now).order('watched_at',{ascending:false}).limit(200).abortSignal(controller.signal)
+                ]);
+                if(state.owner!==uid||currentUser?.authUserId!==uid||state.inflight!==task)return;
+                const weeklyOk=weekly.status==='fulfilled'&&!weekly.value.error&&Number.isSafeInteger(weekly.value.count)&&weekly.value.count>=0;
+                const recentOk=recent.status==='fulfilled'&&!recent.value.error&&Array.isArray(recent.value.data);
+                const previous=state.value?.week===week?state.value:null;
+                state.value={week,count:weeklyOk?weekly.value.count:previous?.count??null,
+                    ids:recentOk?[...new Set(recent.value.data.map(row=>String(row?.anime_id||'')).filter(id=>/^[1-9][0-9]{0,14}$/.test(id)))]:previous?.ids||[]};
+                state.error=!weeklyOk||!recentOk; state.updated=Date.now();
+              } catch(error) {
+                if(state.owner===uid&&currentUser?.authUserId===uid)state.error=true;
+              } finally {
+                clearTimeout(timeout);
+                if(state.inflight!==task)return;
+                state.inflight=null;
+                komiProfileOverviewPaint(uid,animeById);
+              }
+            })();
+            state.inflight=task;
+            komiProfileOverviewPaint(uid,animeById);
+            return task;
+        }
         // Quest XP always comes from the authenticated server ledger, never from client counts.
         const komiQuestRewardState = { owner:null, data:null, request:0, busy:false, error:'' };
         function komiQuestRewardPaint() {
@@ -2212,13 +2278,15 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
         function komiDailyActivityPaint() {
             const uid = currentUser?.authUserId;
-            const panel = document.querySelector('[data-komi-daily-activity]');
-            if (!uid || !panel || panel.getAttribute('data-komi-daily-activity') !== uid) return;
+            const panel = document.querySelector('[data-komi-daily-activity]') || document.querySelector('[data-profile-week-owner]');
+            if (!uid || !panel || (panel.getAttribute('data-komi-daily-activity') || panel.dataset?.profileWeekOwner) !== uid) return;
             const state = komiDailyActivityState;
             if (state.owner !== uid) return;
             const value = state.data;
             const today = new Date().toISOString().slice(0, 10);
             const fresh = value?.server_day === today;
+            const overviewStreak=panel.querySelector('[data-profile-week-streak]');
+            if(overviewStreak) overviewStreak.textContent=fresh?String(value.streak_days):'—';
             const streak = panel.querySelector('[data-komi-daily-streak]');
             const total = panel.querySelector('[data-komi-daily-total]');
             const status = panel.querySelector('[data-komi-daily-status]');
@@ -2258,7 +2326,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
         async function komiDailyActivityRead(force = false) {
             const uid = currentUser?.authUserId;
-            if (!uid || !_supabase || !document.querySelector('[data-komi-daily-activity]')) return;
+            if (!uid || !_supabase || (!document.querySelector('[data-komi-daily-activity]') && !document.querySelector('[data-profile-week-owner]'))) return;
             const state = komiDailyActivityState;
             if (state.owner !== uid) {
                 state.owner = uid; state.data = null; state.inflight = null;
@@ -2502,15 +2570,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                 });
             }
 
-            // Calculate real genre preferences from titles saved to the library.
-            const genreTotals = {};
-            Object.keys(userStatuses).forEach(aId => {
-                const item = profileAnimeById.get(String(aId));
-                if (!item) return;
-                const genres = Array.isArray(item.genres) ? item.genres : [item.genre];
-                genres.filter(Boolean).forEach(g => { genreTotals[g] = (genreTotals[g] || 0) + 1; });
-            });
-            const topGenres = Object.entries(genreTotals).sort((a,b) => b[1] - a[1]).slice(0,5);
+            // Public profiles derive genres only from completed public lists.
+            // Private markers can enrich only the signed-in owner's overview.
+            const overviewWatch = canSeeProfileActivity && komiProfileOverviewWatch.owner===currentUser.authUserId &&
+                komiProfileOverviewWatch.value?.week===komiProfileWeekStart() ? komiProfileOverviewWatch.value : null;
+            const topGenres = profilePageSection==='overview'
+                ? komiProfileOverviewGenres(userStatuses,profileAnimeById,overviewWatch?.ids||[]) : [];
             // Compare only locally available, real watched records for an accepted friend.
             // Missing/private collections never produce a fabricated compatibility score.
             let tasteCompatibility = '';
@@ -2663,7 +2728,7 @@ async function komiLoadCatalogPages(attempt = 0) {
 
                     ${KomiProfileUI.navigation(profilePageSection, isMe?myFriends.length:null, Object.keys(userStatuses).length, profileExperience.badges.length, canSeeProfileActivity, isMe)}
                     <div id="komiProfilePanel" class="komi-profile-panel">
-                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity,resumeReady:!currentUser?.authUserId||komiResumeReadyUid===currentUser.authUserId,resumeFailed:Boolean(isMe&&currentUser?.authUserId&&komiResumeLoadError?.owner===currentUser.authUserId&&komiResumeLoadError.username===username)}) : ''}
+                    ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity,activityOwner:canSeeProfileActivity?currentUser.authUserId:'',resumeReady:!currentUser?.authUserId||komiResumeReadyUid===currentUser.authUserId,resumeFailed:Boolean(isMe&&currentUser?.authUserId&&komiResumeLoadError?.owner===currentUser.authUserId&&komiResumeLoadError.username===username)}) : ''}
                     ${canSeeProfileActivity && profilePageSection === 'activity' ? `
                     <section class="profile-activity-card" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
                         <div class="profile-activity-heading">
@@ -2828,6 +2893,12 @@ async function komiLoadCatalogPages(attempt = 0) {
             `;
             if (canSeeProfileActivity) {
                 void komiDailyActivityRead();
+                if(profilePageSection==='overview') {
+                    const overviewOwner=currentUser.authUserId;
+                    container.querySelector('[data-profile-week-retry]')?.addEventListener('click',()=>
+                        void komiProfileOverviewRead(overviewOwner,profileAnimeById,true));
+                    void komiProfileOverviewRead(overviewOwner,profileAnimeById);
+                }
                 void komiVerifiedXpRead();
                 const privacyPanel=container.querySelector('[data-komi-privacy-panel]');
                 privacyPanel?.addEventListener('click',event=>{
