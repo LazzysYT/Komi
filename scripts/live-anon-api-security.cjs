@@ -7,14 +7,22 @@
 const fs=require('node:fs');
 const path=require('node:path');
 const assert=require('node:assert/strict');
-const source=fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
-const match=(name)=>source.match(new RegExp("const "+name+"\\s*=\\s*'([^']+)'"))?.[1];
+function extractPublicConfig(source){
+ // esbuild normalizes string quotes even with whitespace-only minification.
+ // Read literal declarations without evaluating any browser application code.
+const match=(name)=>source.match(new RegExp("\\bconst\\s+"+name+"\\s*=\\s*(['\"])([^'\"\\\\\\r\\n]+)\\1(?=\\s*(?:;|,|$))"))?.[2];
 const origin=match('SUPABASE_URL');
 const key=match('SUPABASE_ANON_KEY');
 assert.ok(/^https:\/\/[a-z0-9-]+\.supabase\.co$/.test(origin||''),'Configured Supabase HTTPS origin is missing');
 assert.ok(key?.startsWith('sb_publishable_'),'Expected only a public Supabase key in browser code');
 assert.ok(!/sb_secret_[a-z0-9_-]{12,}/i.test(source),'Server secret must never be embedded in public JS');
 assert.ok(!/['"]service_role['"]\s*:\s*['"]eyJ/.test(source),'JWT service-role key in browser source');
+return {origin,key};
+}
+
+async function runCanary(){
+const source=fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
+const {origin,key}=extractPublicConfig(source);
 
 async function get(table,fields){
  const url=new URL(origin+'/rest/v1/'+table);
@@ -30,7 +38,6 @@ async function get(table,fields){
  }
  return {status:response.status,body:json};
 }
-(async()=>{
  // Required public data. This catches accidental revocation that would break
  // the catalog and comments for anonymous visitors.
  for(const [table,fields] of [
@@ -72,4 +79,6 @@ async function get(table,fields){
    console.log('PASS anonymous access denied or empty:',table);
  }
  console.log('PASS: live Supabase anonymous read-only exposure audit');
-})().catch(error=>{console.error(error.message);process.exitCode=1;});
+}
+module.exports={extractPublicConfig};
+if(require.main===module) runCanary().catch(error=>{console.error(error.message);process.exitCode=1;});

@@ -24,10 +24,11 @@ function classes(initial = []) {
 }
 const settle = async () => { for (let i=0;i<12;i++) await new Promise(resolve=>setImmediate(resolve)); };
 
-function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,playMode='success'} = {}) {
+function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,playMode='success',
+  intersectionObserver=true,initialIntersection=true,rect} = {}) {
   const timers = new Map(),frames = new Map(),imageRequests = [],apiRequests = [],videos = [],storage = new Map();
   const mutations = [],observers = [];
-  let nextTimer = 1,nextFrame = 1,currentSlider;
+  let nextTimer = 1,nextFrame = 1,currentSlider,geometryReads=0;
   const reduced = new Events(); reduced.matches = false;
   const fine = new Events(); fine.matches = true;
   const connection = new Events(); connection.saveData = false; connection.effectiveType = '4g';
@@ -45,9 +46,9 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
   const slider = new Events();
   Object.assign(slider,{
     dataset:{},isConnected:true,hover:false,slides:[],
-    rect:{left:0,top:0,right:1200,bottom:500,width:1200,height:500},
+    rect:rect || {left:0,top:0,right:1200,bottom:500,width:1200,height:500},
     properties:new Map(),
-    getBoundingClientRect() { return this.rect; },
+    getBoundingClientRect() { geometryReads++; return this.rect; },
     closest(selector) { return selector === '#heroSlider' || selector === '.komi-home-hero' ? this : null; },
     contains(node) { return node === this || node?.ownerSlider === this; },
     matches(selector) { return selector === ':hover' ? this.hover : selector === ':focus-within' ? this.contains(document.activeElement) : false; },
@@ -136,6 +137,7 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
       unobserve(target) { this.targets.delete(target); }
     }
   });
+  if (!intersectionObserver) delete root.IntersectionObserver;
   if (metadata) root.komiFetchHeroMetadata = metadata;
   const context = {
     window:root,document,URL,AbortController,Image,
@@ -149,9 +151,12 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
     fetch:async(_url,options)=>{ apiRequests.push(JSON.parse(options.body)); return {ok:true,json:async()=>({data:{Page:{media}}})}; }
   };
   vm.runInNewContext(source,context,{filename:'hero-hd-art.js'});
+  if (intersectionObserver && initialIntersection !== null)
+    observers[0].callback([{target:slider,isIntersecting:initialIntersection,intersectionRatio:initialIntersection?1:0}]);
   return {
     root,document,slider,slides:slider.slides,button,pauseIcon,playIcon,attributes,connection,reduced,fine,videos,
     imageRequests,apiRequests,timers,frames,observers,
+    get geometryReads() { return geometryReads; },
     runDeferred() { for (const [id,item] of [...timers]) if (item.delay === 1800) { timers.delete(id); item.fn(); } },
     mutate() { for (const observer of mutations) if(observer.target===main) observer.callback(); },
     watch(open) {
@@ -168,6 +173,34 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
   };
 }
 const videoUrl = 'https://media.example/hero.mp4';
+
+test('initial visibility waits for IntersectionObserver without a synchronous geometry read',async()=>{
+  const f=fixture({slides:[{komiHeroVideo:videoUrl}],initialIntersection:null});
+  assert.equal(f.geometryReads,0);
+  assert.equal(f.root.KomiHeroArt.isPaused(f.slider),true);
+  f.root.KomiHeroArt.scan();await settle();
+  assert.equal(f.videos.length,0);
+  assert.equal(f.apiRequests.length,0);
+  f.intersect(false);f.root.KomiHeroArt.scan();await settle();
+  assert.equal(f.videos.length,0);
+  f.intersect(true);f.runDeferred();await settle();
+  assert.equal(f.videos.length,1);
+  assert.equal(f.videos[0].paused,false);
+  assert.equal(f.geometryReads,0);
+});
+
+test('browsers without IntersectionObserver retain the initial geometry visibility fallback',async()=>{
+  const visible=fixture({slides:[{komiHeroVideo:videoUrl}],intersectionObserver:false});
+  visible.root.KomiHeroArt.scan();await settle();
+  assert.equal(visible.geometryReads,1);
+  assert.equal(visible.videos[0].paused,false);
+  const offscreen=fixture({slides:[{komiHeroVideo:videoUrl}],intersectionObserver:false,
+    rect:{left:0,right:1200,top:950,bottom:1450,width:1200,height:500}});
+  offscreen.root.KomiHeroArt.scan();await settle();
+  assert.equal(offscreen.geometryReads,1);
+  assert.equal(offscreen.root.KomiHeroArt.isPaused(offscreen.slider),true);
+  assert.equal(offscreen.videos.length,0);
+});
 
 test('first video waits for deferred scan and decoded first image; inactive videos never load',async()=>{
   const f=fixture({slides:[{komiHeroVideo:videoUrl},{komiHeroVideo:'https://media.example/next.webm'}],ready:false});

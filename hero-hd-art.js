@@ -83,13 +83,18 @@
     if (!slider || typeof slider.querySelectorAll !== 'function') return null;
     let state = sliderStates.get(slider);
     if (state) return state;
-    state = {visible:true, userPaused:false, resumeFocus:false, ignoreHover:false, listeners:[]};
-    const rect = slider.getBoundingClientRect?.();
-    if (rect && root.innerHeight && rect.height)
-      state.visible = rect.bottom > 0 && rect.top < root.innerHeight && rect.right > 0 && (!root.innerWidth || rect.left < root.innerWidth);
+    const observeVisibility = typeof root.IntersectionObserver === 'function';
+    state = {visible:!observeVisibility, userPaused:false, resumeFocus:false, ignoreHover:false, listeners:[]};
+    // The observer supplies initial visibility without forcing layout while the
+    // home is mounting. Hold autoplay until that first observation arrives.
+    if (!observeVisibility) {
+      const rect = slider.getBoundingClientRect?.();
+      if (rect && root.innerHeight && rect.height)
+        state.visible = rect.bottom > 0 && rect.top < root.innerHeight && rect.right > 0 && (!root.innerWidth || rect.left < root.innerWidth);
+    }
     sliderStates.set(slider,state);
     mountedSliders.add(slider);
-    if (typeof root.IntersectionObserver === 'function') {
+    if (observeVisibility) {
       if (!viewportObserver) viewportObserver = new root.IntersectionObserver(entries => {
         for (const entry of entries) {
           const current = sliderStates.get(entry.target);
