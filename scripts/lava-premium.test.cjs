@@ -29,15 +29,19 @@ test('Komi Premium discloses recurring terms and verified access without false g
  assert.ok((page.match(/Lava\.top/g)||[]).length<=2,'Payment provider appears only in the consent summary');
 });
 
-test('Shop links directly to checkout and also to Premium details',()=>{
+test('shop preserves Premium details in its earning help and promo dialog with the existing verified checkout path',()=>{
  const shop=read('anicoin.js');
+ const shopUi=read('komi-shop-v3.js');
  const index=read('index.html');
  assert.ok(shop.includes(checkout));
  assert.match(shop,/Стоимость будет показана в USD/);
  assert.match(shop,/после подтверждённой активации аккаунта/);
  assert.match(shop,/href="\/premium\.html"/);
  assert.match(shop,/Оформить Premium/);
- assert.ok((index.match(/href="\/premium\.html"/g)||[]).length>=3);
+ assert.match(index,/href="\/premium\.html"/);
+ assert.match(shopUi,/<details class="sv3-earn">[\s\S]*?href="\/premium\.html">Возможности Premium/);
+ assert.match(shopUi,/<dialog id="sv3PromoDialog"[\s\S]*?href="\/premium\.html">Перейти к Premium/);
+ assert.match(shopUi,/data-v3-promo-close/);
  assert.doesNotMatch(shop,/widget\.lava\.top|komi-lava-checkout/);
  assert.doesNotMatch(shop,/service_role|isAdmin\s*=\s*true|raw_user_meta_data/);
 });

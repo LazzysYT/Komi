@@ -7,6 +7,8 @@ let aniCoinShopWallet=null;
 let aniCoinShopOwner='';
 let aniCoinShopLoading=false;
 let aniCoinShopBusy=false;
+let aniCoinShopPendingAction=null;
+let aniCoinShopRetryApply=null;
 let aniCoinShopCategory='all';
 let aniCoinShopStatus='';
 let aniCoinShopFailedFor='';
@@ -140,7 +142,9 @@ async function aniCoinLoadStore(id) {
         }
     } finally {
         aniCoinShopLoading=false;
-        if (currentView==='shop' && currentUser?.authUserId===id)
+        // An account changed during this read may have been waiting on the
+        // shared loading flag. Render its own state so its inventory can load.
+        if (currentView==='shop')
             renderAniCoinShop(document.getElementById('mainContainer'));
     }
 }
@@ -163,7 +167,7 @@ window.komiShopReloadStore=async function(){
 // The fitting-room checkout uses a single database transaction; legacy card handlers remain intact.
 window.komiShopCheckoutCart=async function(itemIds,expectedOwner){
     const id=currentUser?.authUserId;
-    if(!id||id!==expectedOwner||!_supabase)throw Error('Войди в Komi, чтобы покупать.');
+    if(!id||id!==expectedOwner||!_supabase||currentView!=='shop')throw Error('Вернись в магазин и войди в Komi, чтобы покупать.');
     if(window.KomiShopCatalog?.isPreview?.()===true)throw Error('В предпросмотре покупки отключены.');
     if(!Array.isArray(itemIds)||!itemIds.length||itemIds.length>12||aniCoinShopBusy)
         throw Error('Выбери от 1 до 12 предметов.');
@@ -177,6 +181,8 @@ window.komiShopCheckoutCart=async function(itemIds,expectedOwner){
     try{
         const {data:authentication,error:authenticationError}=await _supabase.auth.getUser();
         if(authenticationError||authentication?.user?.id!==id)throw Error('Повтори вход в аккаунт.');
+        if(currentUser?.authUserId!==id)throw Error('Аккаунт изменился. Открой магазин заново.');
+        if(currentView!=='shop')throw Error('Вернись в магазин и повтори действие.');
         const {data,error}=await _supabase.rpc('komi_shop_cart_buy_equip',{p_items:itemIds});
         if(error)throw error;
         if(currentUser?.authUserId!==id)return null;
@@ -201,6 +207,8 @@ function renderAniCoinShop(container) {
             avatar:id===aniCoinShopOwner?aniCoinShopAvatar:'',
             displayName:id===aniCoinShopOwner?aniCoinShopDisplayName:'Пользователь Komi',
             shopStatus:aniCoinShopStatus||aniCoinStatus||'',
+            retryApplyItem:aniCoinShopRetryApply?.owner===id&&store?.owned?.includes(aniCoinShopRetryApply.item)&&
+                store?.[aniCoinShopRetryApply.type+'_id']!==aniCoinShopRetryApply.item?aniCoinShopRetryApply.item:'',
             loading:aniCoinShopLoading,busy:aniCoinShopBusy,
             failedFor:aniCoinShopFailedFor===id&&id
         });
@@ -310,6 +318,173 @@ function renderAniCoinShop(container) {
     if(id && !store && !aniCoinShopLoading && aniCoinShopFailedFor!==id)
         void aniCoinLoadStore(id);
 }
+// A card can stay visible while another tab changes the wallet, or while a
+// confirmation is open. Re-read its owner and quote before any paid operation.
+async function aniCoinRunStoreAction(itemId,requestedOperation) {
+    const owner=currentUser?.authUserId;
+    let product=window.KomiShopCatalog?.find(itemId);
+    if(!owner||!_supabase||!product||aniCoinShopBusy||currentView!=='shop'||aniCoinShopOwner!==owner||
+        !['buy','buy_equip','equip','unequip'].includes(requestedOperation))return;
+    if(window.KomiShopCatalog?.isPreview?.()===true){
+        aniCoinShopStatus='В предпросмотре изменение покупок отключено.';
+        renderAniCoinShop(document.getElementById('mainContainer'));return;
+    }
+    const pending={owner,item:itemId};
+    const previousStatus=aniCoinShopStatus;
+    let operation=requestedOperation;
+    let mutationAttempted=false;
+    aniCoinShopPendingAction=pending;
+    aniCoinShopBusy=true;
+    aniCoinShopStatus='Проверяем предмет и баланс…';
+    const active=()=>aniCoinShopPendingAction===pending&&aniCoinShopBusy&&
+        currentUser?.authUserId===owner&&aniCoinShopOwner===owner&&currentView==='shop';
+    const validStore=data=>data&&Array.isArray(data.owned)&&
+        Number.isSafeInteger(Number(data.balance))&&Number(data.balance)>=0;
+    const rememberStore=data=>{aniCoinShopWallet=data;aniCoinShopOwner=owner;};
+    const readVerifiedStore=async()=>{
+        const auth=await _supabase.auth.getUser();
+        if(!active())return null;
+        if(auth.error||auth.data?.user?.id!==owner)throw Error('Войди в аккаунт повторно.');
+        const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
+        if(!active())return null;
+        if(error)throw error;
+        if(!validStore(data))throw Error('Не удалось проверить баланс и покупки. Обнови магазин.');
+        await window.KomiShopCatalog?.checkPricing?.(_supabase);
+        if(!active())return null;
+        rememberStore(data);
+        return data;
+    };
+    const ownedOperation=store=>{
+        if(store.owned.includes(itemId)&&['buy','buy_equip'].includes(operation)){
+            if(operation==='buy'||product.type==='reaction'){
+                aniCoinShopStatus='Предмет уже в коллекции. Повторная покупка не нужна.';
+                return false;
+            }
+            operation='equip';
+        }
+        if(operation==='equip'&&!store.owned.includes(itemId))
+            throw Error('Этот предмет ещё не куплен. Выбери покупку в магазине.');
+        if(operation==='equip'&&store[product.type+'_id']===itemId){
+            aniCoinShopRetryApply=null;
+            aniCoinShopStatus='Предмет уже надет.';return false;
+        }
+        if(operation==='unequip'&&store[product.type+'_id']!==itemId){
+            aniCoinShopStatus='Предмет уже снят.';return false;
+        }
+        return true;
+    };
+    const rememberResult=(store,reconciled=false)=>{
+        const owned=store.owned.includes(itemId);
+        const equipped=store[product.type+'_id']===itemId;
+        if(['buy','buy_equip','equip'].includes(operation)&&!owned)
+            throw Error('Сервер не подтвердил покупку. Обнови магазин перед повторной попыткой.');
+        if(['buy_equip','equip'].includes(operation)&&!equipped){
+            aniCoinShopRetryApply={owner,item:itemId,type:product.type};
+            aniCoinShopStatus=(operation==='buy_equip'&&!reconciled?'Предмет «'+product.label+'» куплен, но не надет. ':'Предмет «'+product.label+'» остаётся в коллекции, но не надет. ')+
+                'Примени его ещё раз — повторной оплаты не будет.';
+            return;
+        }
+        if(operation==='unequip'&&equipped)throw Error('Не удалось снять предмет. Попробуй ещё раз.');
+        aniCoinShopRetryApply=null;
+        aniCoinShopFailedFor='';
+        aniCoinShopStatus=operation==='buy_equip'?(reconciled?'Предмет в коллекции и надет. Баланс обновлён.':'Куплено и надето!'):operation==='buy'
+            ?(reconciled?'Предмет в коллекции. Баланс обновлён.':product.type==='reaction'?'Набор куплен! Реакции доступны в Watch Party.':'Предмет куплен и добавлен в коллекцию.')
+            :operation==='equip'?'Предмет надет.':'Предмет снят.';
+    };
+    try {
+        renderAniCoinShop(document.getElementById('mainContainer'));
+        let verifiedStore=await readVerifiedStore();
+        if(!verifiedStore||!active())return;
+        product=window.KomiShopCatalog?.find(itemId);
+        if(!product)throw Error('Предмет больше недоступен. Обнови магазин.');
+        if(!ownedOperation(verifiedStore))return;
+        if(['buy','buy_equip'].includes(operation)){
+            if(window.KomiShopCatalog?.canCheckout?.()!==true)
+                throw Error('Покупка недоступна: сервер ещё не подтвердил цены.');
+            if(!Number.isSafeInteger(product.cost)||product.cost<=0)
+                throw Error('Не удалось проверить цену предмета. Обнови магазин.');
+            if(Number(verifiedStore.balance)<product.cost)
+                throw Error('Не хватает '+(product.cost-Number(verifiedStore.balance))+' AniCoin для покупки.');
+            if(typeof window.KomiShopV3?.confirmPurchase!=='function')
+                throw Error('Не удалось открыть подтверждение покупки. Обнови страницу.');
+            const quote={...product};
+            const confirmed=await window.KomiShopV3.confirmPurchase({
+                items:[quote],total:quote.cost,balance:verifiedStore.balance,owner,action:operation
+            });
+            if(!active())return;
+            if(!confirmed){aniCoinShopStatus=previousStatus;return;}
+            // Authentication, ownership, affordability and the displayed quote
+            // all need to survive the asynchronous confirmation independently.
+            verifiedStore=await readVerifiedStore();
+            if(!verifiedStore||!active())return;
+            product=window.KomiShopCatalog?.find(itemId);
+            if(!product||product.type!==quote.type||product.cost!==quote.cost)
+                throw Error('Цена или предмет изменились. Проверь обновлённую карточку и подтверди покупку снова.');
+            if(!ownedOperation(verifiedStore))return;
+            if(['buy','buy_equip'].includes(operation)){
+                if(window.KomiShopCatalog?.canCheckout?.()!==true)
+                    throw Error('Покупка недоступна: сервер ещё не подтвердил цены.');
+                if(Number(verifiedStore.balance)<product.cost)
+                    throw Error('Баланс изменился. Не хватает '+(product.cost-Number(verifiedStore.balance))+' AniCoin.');
+            }
+        }
+        if(!active())return;
+        const finalAuth=await _supabase.auth.getUser();
+        if(!active())return;
+        if(finalAuth.error||finalAuth.data?.user?.id!==owner)throw Error('Войди в аккаунт повторно.');
+        if(['buy','buy_equip'].includes(operation)){
+            const finalProduct=window.KomiShopCatalog?.find(itemId);
+            if(window.KomiShopCatalog?.canCheckout?.()!==true||!finalProduct||
+                finalProduct.type!==product.type||finalProduct.cost!==product.cost)
+                throw Error('Цена или предмет изменились. Проверь карточку и подтверди покупку снова.');
+        }
+        document.getElementById('komiShopPreviewDialog')?.close();
+        aniCoinShopStatus=operation==='buy_equip'?'Покупаем и надеваем…':operation==='buy'?'Покупаем предмет…':'Обновляем оформление…';
+        renderAniCoinShop(document.getElementById('mainContainer'));
+        mutationAttempted=true;
+        const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:operation,p_item:itemId});
+        if(!active())return;
+        if(error)throw error;
+        if(!validStore(data))throw Error('Не удалось подтвердить результат операции.');
+        rememberStore(data);
+        rememberResult(data);
+        if(typeof window.KomiPremiumStore?.refresh==='function')void window.KomiPremiumStore.refresh();
+        void aniCoinRequest('read',{},owner).catch(()=>{});
+    } catch(error) {
+        if(!active())return;
+        let recovered=false;
+        if(mutationAttempted){
+            try{
+                const latest=await readVerifiedStore();
+                if(!latest||!active())return;
+                // A lost response must not lead to a second charge. Only offer
+                // applying an already-owned item when the server confirms it.
+                if(latest.owned.includes(itemId)||operation==='unequip'){
+                    rememberResult(latest,true);recovered=true;
+                    if(typeof window.KomiPremiumStore?.refresh==='function')void window.KomiPremiumStore.refresh();
+                    void aniCoinRequest('read',{},owner).catch(()=>{});
+                }
+            }catch{
+                if(!active())return;
+                aniCoinShopFailedFor=owner;
+                aniCoinShopStatus='Не удалось проверить результат операции. Обнови магазин перед повторной попыткой.';
+                recovered=true;
+            }
+        }
+        if(!recovered&&active())aniCoinShopStatus=error?.message||'Не удалось выполнить операцию.';
+    } finally {
+        if(aniCoinShopPendingAction===pending){aniCoinShopPendingAction=null;aniCoinShopBusy=false;}
+        if(currentView==='shop'){
+            renderAniCoinShop(document.getElementById('mainContainer'));
+            if(currentUser?.authUserId===owner&&/^[a-z0-9_]+$/.test(itemId)){
+                const focusSelector=window.matchMedia?.('(max-width: 980px)')?.matches
+                    ?'#shop [data-v3-sheet]':'#shop [data-shop-item-action="'+itemId+'"]';
+                document.querySelector?.(focusSelector)?.focus?.({preventScroll:true});
+            }
+        }
+    }
+}
+
 document.addEventListener('click',async event=>{
     if(event.target.closest?.('[data-shop-preview-close]')){
         document.getElementById('komiShopPreviewDialog')?.close();
@@ -366,38 +541,7 @@ document.addEventListener('click',async event=>{
         if(typeof openAuthModal==='function')openAuthModal('login');
         return;
     }
-    if(!_supabase)return;
-    const id=currentUser?.authUserId;
-    const product=window.KomiShopCatalog?.find(button.dataset.shopItemAction);
-    const operation=button.dataset.shopOperation;
-    if(!id||!product||!['buy','buy_equip','equip','unequip'].includes(operation)||aniCoinShopOwner!==id)return;
-    if(window.KomiShopCatalog?.isPreview?.()===true ||
-        (['buy','buy_equip'].includes(operation)&&window.KomiShopCatalog?.canCheckout?.()!==true)){
-        aniCoinShopStatus='Покупка недоступна: сервер ещё не подтвердил цены.';
-        renderAniCoinShop(document.getElementById('mainContainer'));return;
-    }
-    if(['buy','buy_equip'].includes(operation) && !window.confirm('Приобрести «'+product.label+'» за '+product.cost+' AniCoin?'))return;
-    document.getElementById('komiShopPreviewDialog')?.close();
-    aniCoinShopBusy=true;
-    aniCoinShopStatus=operation==='buy_equip'?'Покупаем и надеваем…':operation==='buy'?'Покупаем набор…':'Обновляем оформление…';
-    renderAniCoinShop(document.getElementById('mainContainer'));
-    try {
-        const auth=await _supabase.auth.getUser();
-        if(auth.error||auth.data?.user?.id!==id)throw Error('Войди в аккаунт повторно.');
-        const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:operation,p_item:product.id});
-        if(error)throw error;
-        if(currentUser?.authUserId!==id)return;
-        if(!data||!Array.isArray(data.owned))throw Error('Неожиданный ответ сервера.');
-        aniCoinShopWallet=data;aniCoinShopOwner=id;
-        aniCoinShopStatus=operation==='buy_equip'?'Куплено и надето!':operation==='buy'?'Набор куплен! Реакции доступны в Watch Party.':operation==='equip'?'Предмет надет.':'Предмет снят.';
-        if (typeof window.KomiPremiumStore?.refresh==='function')void window.KomiPremiumStore.refresh();
-        void aniCoinRequest('read',{},id).catch(()=>{});
-    }catch(error){
-        if(currentUser?.authUserId===id)aniCoinShopStatus=error?.message||'Не удалось выполнить операцию.';
-    }finally{
-        aniCoinShopBusy=false;
-        if(currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
-    }
+    await aniCoinRunStoreAction(button.dataset.shopItemAction,button.dataset.shopOperation);
 });
 
 // Count real playback time only for the site's HTML5 player. Third-party iframes

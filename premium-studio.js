@@ -147,8 +147,11 @@
       if(item)showcase.classList.add('komi-store-'+item.cosmeticClass);
     }
     const iconItem=products.find(p=>p.id===activeItem('icon'));
+    const iconClasses=products.filter(p=>p.type==='icon'&&p.cosmeticClass).map(p=>'komi-store-'+p.cosmeticClass);
     for(const id of ['preview-shop-icon','comment-shop-icon']){
       const node=$(id);if(!node)continue;
+      node.classList.remove(...iconClasses);
+      if(iconItem?.type==='icon'&&iconItem.cosmeticClass)node.classList.add('komi-store-'+iconItem.cosmeticClass);
       node.textContent=iconItem?.symbol||'';
       node.hidden=!iconItem;
     }
