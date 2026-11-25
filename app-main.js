@@ -5453,7 +5453,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 originalSource: sourceOrigin.name,
                 episodeSlots: currentSeasonEpisodes.map(episode => episode.slots),
                 episodeMeta:currentSeasonEpisodes.map((ep,index)=>({
-                    number: /^\d+$/.test(String(ep.number ?? '').trim()) ? Number(ep.number) : null,
+                    number: /^\d+(?:\.0+)?$/.test(String(ep.number ?? '').trim()) ? Number(ep.number) : null,
                     supplementalLabel: episodePresentation.supplemental[index] ? 'Дополнительный выпуск · STEPonee' : '',
                     preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',
                     duration:ep?.duration ?? ep?.durationSeconds ?? null,

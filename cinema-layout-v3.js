@@ -60,21 +60,27 @@
   }
   function hydrateEpisodeFrames(ctx) {
     const id = ctx.episodeArtworkId;
-    if (ctx.episodeArtworkRequested || ctx.season !== 1 || !Number.isSafeInteger(id) ||
-        id < 1 || id > 10000000 || typeof root.fetch !== 'function' ||
-        root.navigator?.connection?.saveData ||
-        !ctx.episodeMeta.some(ep => ep?.number === 1 && !ep.supplementalLabel)) return;
-    if (!ctx.episodeMeta.some((ep,index) => Number.isSafeInteger(ep?.number) && !ep.supplementalLabel && !actualPreview(ctx,index))) return;
+    const grid = ctx.grid;
+    if (ctx.episodeArtworkRequested) return;
+    if (ctx.season !== 1 || !Number.isSafeInteger(id) || id < 1 || id > 10000000 ||
+        typeof root.fetch !== 'function') return;
+    const buttons = grid.querySelectorAll('.komi-episode-number');
+    const positions = ctx.episodeMeta.map((ep,index) => ep?.number ??
+      (id === 5114 ? Number(buttons[index]?.dataset.episodeNumber) : null));
+    if (!positions.includes(1)) return;
+    if (!ctx.episodeMeta.some((ep,index) => Number.isSafeInteger(positions[index]) && !ep?.supplementalLabel && !actualPreview(ctx,index))) return;
     ctx.episodeArtworkRequested = true;
+    grid.dataset.episodeFrames = 'loading';
     void getPublicEpisodeFrames(id).then(frames => {
       if (!currentContext(ctx) || ctx.abort.signal.aborted) return;
+      grid.dataset.episodeFrames = frames.size ? 'available' : 'unavailable';
       const numbers = new Map();
-      for (const ep of ctx.episodeMeta) numbers.set(ep?.number,(numbers.get(ep?.number)||0)+1);
+      for (const number of positions) numbers.set(number,(numbers.get(number)||0)+1);
       const catalogUrls = new Set([...ctx.uniquePreviews,...ctx.episodeFallbacks].filter(Boolean).map(url => url.replace('/w500/','/w300/')));
-      const buttons = ctx.grid.querySelectorAll('.komi-episode-number');
       ctx.episodeMeta.forEach((ep,index) => {
-        if (ep?.supplementalLabel || numbers.get(ep?.number) !== 1) return;
-        const url = frames.get(ep?.number);
+        const number = positions[index];
+        if (ep?.supplementalLabel || numbers.get(number) !== 1) return;
+        const url = frames.get(number);
         if (!url || catalogUrls.has(url)) return;
         ctx.externalPreviews[index] = url;
         const frame = buttons[index]?.querySelector('.komi-episode-thumb');
@@ -356,7 +362,7 @@
     context.grid = grid;
     context.title = heading.querySelector('h1')?.textContent || 'KomiAnime';
     context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
-    context.episodeArtworkId = settings.episodeArtworkId;
+    context.episodeArtworkId = Number(settings.episodeArtworkId || settings.animeId || context.animeId);
     context.externalPreviews = [];
     // Title art is used only to reject mislabeled episode metadata, never as row artwork.
     context.episodeFallbacks = [...new Set([

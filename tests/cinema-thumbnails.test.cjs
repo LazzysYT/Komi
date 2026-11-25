@@ -175,7 +175,7 @@ test('public data backfills only uniquely numbered season-one rows of the curren
     section('  function hydrateEpisodeFrames','  let current')+'return hydrateEpisodeFrames;')(
     {fetch(){}},()=>{requested++;return Promise.resolve(want);},()=>'',()=>isCurrent,()=>'',new Map(),()=>'',()=>{});
   const make=season=>({season,episodeArtworkId:5114,externalPreviews:[],uniquePreviews:[],episodeFallbacks:[],
-    abort:new AbortController(),grid:{querySelectorAll:()=>[]},
+    abort:new AbortController(),grid:{dataset:{},querySelectorAll:()=>[]},
     episodeMeta:[{number:1},{number:2},{number:2},{number:3,supplementalLabel:'extra'},{number:4}]});
   const later=make(2);load(later);assert.equal(requested,0);
   const obsolete=make(1);load(obsolete);isCurrent=false;await Promise.resolve();assert.deepEqual(obsolete.externalPreviews,[]);
