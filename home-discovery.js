@@ -268,11 +268,14 @@
     const source = Array.isArray(context.animeList) ? context.animeList : [];
     const animeList = source.filter(Boolean);
     if (!animeList.length) return '<section class="komi-home-empty">Аниме в каталоге пока нет.</section>';
+    const daily = root.KomiHeroDaily?.lineup(animeList, Array.isArray(root.KomiHomeSeed) ? root.KomiHomeSeed : []);
+    const usesDaily = daily?.length >= 2;
     const revision = Number(context.catalogRevision) || 0;
+    let metadata = null;
     if (!cachedPublicHome || cachedPublicHome.source !== source ||
         cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
       const now = Date.now(), recentThreshold = now - 30 * 86400000;
-      const metadata = animeList.map(anime => ({
+      metadata = animeList.map(anime => ({
         anime, score:score(anime), updated:updated(anime),
         year:context.year(anime), count:count(anime)
       }));
@@ -280,16 +283,21 @@
       const popular = metadata.filter(item => item.score > 0 && id(item.anime))
         .sort((a,b) => popularity(b) - popularity(a) || b.score - a.score)
         .slice(0,12).map(item => item.anime);
-      const slider = typeof root.KomiHomeSnapshot?.featured === 'function'
+      cachedPublicHome = {source, revision, length:source.length, slider:null, popular};
+    }
+    // The daily lineup already selects the hero. Sort the full catalog only
+    // when that lineup is unavailable, including after an earlier daily render.
+    if (!usesDaily && cachedPublicHome.slider === null) {
+      cachedPublicHome.slider = typeof root.KomiHomeSnapshot?.featured === 'function'
         ? root.KomiHomeSnapshot.featured(animeList, context.year)
-        : metadata.filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
+        : (metadata || animeList.map(anime => ({
+            anime, score:score(anime), year:context.year(anime), count:count(anime)
+          }))).filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
           .sort((a,b) => Number(b.year) - Number(a.year) || b.score - a.score)
           .slice(0,5).map(item => item.anime);
-      cachedPublicHome = {source, revision, length:source.length, slider, popular};
     }
     const {slider, popular} = cachedPublicHome;
-    const daily = root.KomiHeroDaily?.lineup(animeList, Array.isArray(root.KomiHomeSeed) ? root.KomiHomeSeed : []);
-    const lineup = daily?.length >= 2 ? daily : slider;
+    const lineup = usesDaily ? daily : slider;
     const history = recentProgress(context, animeList);
     const genres = typeof context.genres === 'function' ? context.genres() : genreShelf(animeList);
     return '<div class="komi-home-discovery komi-home-storefront">' +

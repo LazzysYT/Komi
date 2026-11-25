@@ -33,6 +33,8 @@ Daily title/artwork identity uses five explicitly mapped bundled WebP paths. The
 
 The public footer remains available in normal flow. Reserve a viewport minimum on the main layout throughout startup so mounting the early hero and later content shelves does not move a visible footer across the first screen. Cold and cached first-paint fixtures verify this at desktop and mobile widths, including the minified build.
 
+The production startup script preserves the source order of daily boot, legacy Premium entry and shop first-paint setup. Combining their delivery must retain early native navigation, route handling and classic-script globals. A usable daily lineup must bypass full-catalog featured fallback computation; incomplete daily data retains the existing fallback behavior.
+
 Manual selection resets the slide's seven-second progress cycle. Pausing preserves elapsed time; resuming uses the remaining time. Hidden documents, offscreen heroes and removed home routes must stop unnecessary autoplay and media work. Pauses from focus, pointer interaction and the explicit pause button must compose rather than accidentally resume each other. Reduced motion disables automatic movement; arrow and dot navigation continue to work.
 
 Only active-slide media may play. An optional muted looping MP4/WebM overlays the poster; unavailable media leaves usable artwork underneath. Artwork selection prefers an explicit banner, then a usable screenshot, then the established public HD fallback, with a contained poster as the final fallback. Low-bandwidth and reduced-motion preferences avoid automatic video requests. Media URLs and metadata must not expose personal account data or bypass the existing validation and Supabase permissions.

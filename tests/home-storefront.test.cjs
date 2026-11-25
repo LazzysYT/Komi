@@ -37,6 +37,35 @@ test('a populated upcoming schedule follows genres and precedes the catalogue fo
  assert.ok(html.indexOf('komi-home-upcoming')<html.indexOf('komi-home-browse-footer'));
  assert.match(html,/Серия 13/);
 });
+test('valid daily lineups never compute a discarded full-catalog featured selection',()=>{
+ const f=fixture();let featuredCalls=0;
+ f.scope.KomiHeroDaily={lineup:()=>f.animeList.slice(5),artwork:()=>''};
+ f.scope.KomiHomeSnapshot={featured(){featuredCalls++;return f.animeList.slice(0,5);}};
+ const heroIds=html=>[...html.matchAll(/<article\b[^>]*data-komi-anime-id="([^"]+)"/g)].map(match=>match[1]);
+ for(const revision of [1,1,2]){
+  f.context.catalogRevision=revision;
+  assert.deepEqual(heroIds(f.render()),['6','7','8','9','10']);
+ }
+ assert.equal(featuredCalls,0,'daily selection must not sort the catalog for an unused fallback');
+});
+test('an insufficient daily lineup computes and caches the original featured fallback',()=>{
+ const f=fixture();let daily=f.animeList.slice(5),featuredCalls=0;
+ vm.runInContext(fs.readFileSync(path.join(root,'komi-home-snapshot.js'),'utf8'),f.scope);
+ const featured=f.scope.KomiHomeSnapshot.featured;
+ f.scope.KomiHomeSnapshot.featured=(...args)=>{featuredCalls++;return featured(...args);};
+ f.scope.KomiHeroDaily={lineup:()=>daily,artwork:()=>''};
+ const before=f.render();
+ daily=f.animeList.slice(0,1);
+ const after=f.render();
+ const ids=[...after.matchAll(/<article\b[^>]*data-komi-anime-id="([^"]+)"/g)].map(match=>match[1]);
+ assert.deepEqual(ids,Array.from(featured(f.animeList,f.context.year),anime=>String(anime.id)));
+ assert.equal(featuredCalls,1,'fallback must be available without a catalog revision change');
+ const recommendations=html=>html.match(/<section class="komi-home-shelf komi-feature-section komi-home-popular">[\s\S]*?<\/section>/)?.[0];
+ assert.equal(recommendations(after),recommendations(before),'daily availability must not change recommendations');
+ f.render();assert.equal(featuredCalls,1,'reuse the computed fallback on an unchanged catalog');
+ f.context.catalogRevision++;
+ f.render();assert.equal(featuredCalls,2,'a new catalog revision must refresh the fallback');
+});
 test('unfinished history uses original owner, slot and time; zero/completed/foreign entries remain hidden',()=>{
  const f=fixture(); f.context.currentUser={username:'owner',authUserId:'uid-a'};
  const p={season:2,index:3,time:143,duration:1440,updated:200};

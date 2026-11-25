@@ -8,6 +8,7 @@ on:
       - '*.css'
       - 'scripts/minify-static.cjs'
       - 'scripts/build-first-paint.cjs'
+      - 'scripts/build-startup.cjs'
       - 'scripts/lighthouse-static-server.py'
       - 'vercel.json'
       - '.github/workflows/komi-v8-lighthouse.yml'
