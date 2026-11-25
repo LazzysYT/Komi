@@ -2,7 +2,45 @@
 (function () {
     'use strict';
     const cache = new Map();
+    const requestVersions = new Map();
     const MAX_TEXT = 1000;
+    let activeView = null;
+
+    // Public episode identity is the season and episode number, never a source
+    // array index: switching voice-over must keep the same discussion.
+    function commentScope(animeId, episode = {}) {
+        const id = Number(animeId);
+        if (!Number.isSafeInteger(id) || id <= 0) return null;
+        if (!episode || typeof episode !== 'object' || Array.isArray(episode)) return null;
+        const hasSeason = episode.season !== undefined && episode.season !== null;
+        const hasEpisode = episode.episodeNumber !== undefined && episode.episodeNumber !== null;
+        if (hasSeason !== hasEpisode) return null;
+        const season = hasSeason ? Number(episode.season) : null;
+        const episodeNumber = hasEpisode ? Number(episode.episodeNumber) : null;
+        if (hasSeason && (!Number.isSafeInteger(season) || season < 1 || season > 9999 ||
+            !Number.isSafeInteger(episodeNumber) || episodeNumber < 1 || episodeNumber > 99999)) return null;
+        return { animeId: id, season, episodeNumber,
+            key: id + ':' + (hasSeason ? season + ':' + episodeNumber : 'general') };
+    }
+
+    function currentSection(scope) {
+        const section = document.getElementById('komiAnimeComments');
+        return section?.dataset.scopeKey === scope.key ? section : null;
+    }
+
+    function applyScope(query, scope) {
+        query = query.eq('anime_id', scope.animeId);
+        return scope.episodeNumber === null
+            ? query.is('season', null).is('episode_number', null)
+            : query.eq('season', scope.season).eq('episode_number', scope.episodeNumber);
+    }
+
+    function invalidateScope(scope) {
+        cache.delete(scope.key);
+        // A read that began before a completed write cannot repopulate the
+        // cache, including when the viewer has switched to another thread.
+        requestVersions.set(scope.key, (requestVersions.get(scope.key) || 0) + 1);
+    }
 
     function element(tag, className, text) {
         const node = document.createElement(tag);
@@ -25,8 +63,13 @@
             const button = element('button', 'komi-comment-timecode', match[0]);
             button.type = 'button';
             button.title = 'Перейти к ' + match[0] + ' во встроенном плеере';
-            button.style.cssText = 'border:0;background:transparent;color:#ff626b;text-decoration:underline;cursor:pointer;font:inherit;padding:0 2px';
+            button.style.cssText = 'border:0;background:transparent;color:inherit;text-decoration:underline;cursor:pointer;font:inherit;padding:0 2px';
             button.addEventListener('click', () => {
+                const section = button.closest('#komiAnimeComments');
+                if (!section || section.dataset.scopeKey !== section.dataset.playerScopeKey) {
+                    statusMessage(section, 'Таймкоды доступны в обсуждении выбранной серии.');
+                    return;
+                }
                 const modal = document.getElementById('watchModal');
                 const video = modal?.classList.contains('active') ? modal.querySelector('#watchModalContent video') : null;
                 if (!video || !Number.isFinite(video.duration) || seconds >= video.duration) {
@@ -92,17 +135,17 @@
     }
 
     function statusMessage(section, message) {
-        const status = section.querySelector('.komi-comments-status');
+        const status = section?.querySelector('.komi-comments-status');
         if (status) status.textContent = message;
     }
 
-    function redraw(animeId) {
-        const section = document.getElementById('komiAnimeComments');
-        if (!section || section.dataset.animeId !== String(animeId)) return;
+    function redraw(scope) {
+        const section = currentSection(scope);
+        if (!section) return;
         const list = section.querySelector('.komi-comments-list');
         if (!list) return;
         list.replaceChildren();
-        const cacheEntry=cache.get(String(animeId));
+        const cacheEntry=cache.get(scope.key);
         const records=cacheEntry?.rows||[];
         const activeHighlights=cacheEntry?.highlights||new Map();
         const decorations=cacheEntry?.decorations||new Map();
@@ -111,11 +154,14 @@
             const aActive=activeHighlights.has(Number(a.id)) && Date.parse(activeHighlights.get(Number(a.id)))>Date.now();
             const bActive=activeHighlights.has(Number(b.id)) && Date.parse(activeHighlights.get(Number(b.id)))>Date.now();
             return Number(bActive)-Number(aActive) || Date.parse(b.created_at||0)-Date.parse(a.created_at||0);
-        }).concat(legacyComments(animeId));
+        }).concat(scope.episodeNumber === null ? legacyComments(scope.animeId) : []);
         section.querySelector('.komi-comments-count').textContent =
             all.length ? String(all.length) + (records.length >= 50 ? '+' : '') : '0';
         if (!all.length) {
-            list.append(element('p', 'komi-comments-empty', 'Пока нет комментариев. Начни обсуждение!'));
+            if (cacheEntry) list.append(element('p', 'komi-comments-empty', scope.episodeNumber === null
+                ? 'Пока нет комментариев об аниме. Начни обсуждение!'
+                : 'К этой серии пока нет комментариев. Начни обсуждение!'));
+            else section.querySelector('.komi-comments-count').textContent = '…';
             return;
         }
         const viewerId = (typeof currentUser !== 'undefined' && currentUser?.authUserId) || '';
@@ -141,13 +187,13 @@
             if (viewerId && String(item.user_id) === String(viewerId)) {
                 const button = element('button', 'komi-comment-delete', 'Удалить');
                 button.type = 'button';
-                button.addEventListener('click', () => removeComment(animeId, item.id, button));
+                button.addEventListener('click', () => removeComment(scope, item.id, button));
                 head.append(button);
                 if(!promoted && Number.isSafeInteger(Number(item.id)) && Number(item.id)>0){
                     const promote=element('button','komi-comment-highlight-buy','Выделить · 12 ◈');
                     promote.type='button';
                     promote.title='Выделение своего комментария на 24 часа за 12 AniCoin';
-                    promote.addEventListener('click',()=>buyHighlight(animeId,Number(item.id),promote));
+                    promote.addEventListener('click',()=>buyHighlight(scope,Number(item.id),promote));
                     head.append(promote);
                 }
             }
@@ -158,76 +204,114 @@
         }
     }
 
-    async function refresh(animeId, force) {
-        const key = String(animeId);
+    function loadError(scope, section) {
+        if (!section || currentSection(scope) !== section) return;
+        section.removeAttribute('aria-busy');
+        statusMessage(section, 'Не удалось загрузить комментарии. ');
+        const retry = element('button', 'btn-secondary komi-comments-retry', 'Повторить');
+        retry.type = 'button';
+        retry.addEventListener('click', () => void refreshScope(scope, true));
+        section.querySelector('.komi-comments-status')?.append(retry);
+    }
+
+    async function refreshScope(scope, force) {
+        const section = currentSection(scope);
         if (typeof _supabase === 'undefined' || !_supabase) {
-            const section = document.getElementById('komiAnimeComments');
-            if (section?.dataset.animeId === key) statusMessage(section, 'Сервис комментариев временно недоступен.');
+            loadError(scope, section);
             return;
         }
-        const existing = cache.get(key);
+        const existing = cache.get(scope.key);
         if (!force && existing?.loadedAt && Date.now() - existing.loadedAt < 60000) {
-            redraw(key);
-            return;
-        }
-        const { data, error } = await _supabase.from('komi_comments')
-            .select('id,anime_id,user_id,author_name,body,created_at')
-            .eq('anime_id', Number(key)).order('created_at', { ascending: false }).limit(50);
-        const section = document.getElementById('komiAnimeComments');
-        if (error) {
-            console.warn('Komi comments:', error.message);
-            if (section?.dataset.animeId === key) statusMessage(section, 'Не удалось загрузить комментарии.');
-            return;
-        }
-        const rows=Array.isArray(data)?data:[];
-        const highlights=new Map();
-        const ids=rows.map(row=>Number(row.id)).filter(Number.isSafeInteger);
-        if(ids.length){
-            const promotions=await _supabase.from('komi_comment_highlights')
-                .select('comment_id,expires_at').in('comment_id',ids)
-                .gt('expires_at',new Date().toISOString());
-            if(!promotions.error)
-                for(const promo of promotions.data||[])highlights.set(Number(promo.comment_id),promo.expires_at);
-        }
-        const decorations=new Map();
-        const authorIds=[...new Set(rows.map(row=>row.user_id).filter(Boolean))];
-        if(authorIds.length){
-          const publicCosmetics=await _supabase.from('komi_premium_cosmetic_equips')
-            .select('user_id,plate_id,name_id').in('user_id',authorIds);
-          if(!publicCosmetics.error)
-            for(const cosmetic of publicCosmetics.data||[])decorations.set(String(cosmetic.user_id),cosmetic);
-        }
-        cache.set(key,{rows,highlights,decorations,loadedAt:Date.now()});
-        if (section?.dataset.animeId === key) {
             statusMessage(section, '');
-            redraw(key);
+            section?.removeAttribute('aria-busy');
+            redraw(scope);
+            return;
+        }
+        const version = (requestVersions.get(scope.key) || 0) + 1;
+        requestVersions.set(scope.key, version);
+        const isLatest = () => requestVersions.get(scope.key) === version;
+        section?.setAttribute('aria-busy', 'true');
+        statusMessage(section, 'Загружаем комментарии…');
+        try {
+            const { data, error } = await applyScope(_supabase.from('komi_comments')
+                .select('id,anime_id,season,episode_number,user_id,author_name,body,created_at'), scope)
+                .order('created_at', { ascending: false }).order('id', { ascending: false }).limit(50);
+            if (!isLatest()) return;
+            if (error) throw error;
+            // Keep the boundary explicit even when a stale API/cache returns a
+            // broader set. General comments are never labelled as episode ones.
+            const rows = (Array.isArray(data) ? data : []).filter(row =>
+                Number(row.anime_id) === scope.animeId &&
+                (scope.episodeNumber === null
+                    ? row.season == null && row.episode_number == null
+                    : Number(row.season) === scope.season && Number(row.episode_number) === scope.episodeNumber));
+            const highlights = new Map();
+            const ids = rows.map(row => Number(row.id)).filter(Number.isSafeInteger);
+            if (ids.length) {
+                try {
+                    const promotions = await _supabase.from('komi_comment_highlights')
+                        .select('comment_id,expires_at').in('comment_id', ids)
+                        .gt('expires_at', new Date().toISOString());
+                    if (!promotions.error)
+                        for (const promo of promotions.data || []) highlights.set(Number(promo.comment_id), promo.expires_at);
+                } catch { /* Optional decoration must not hide the discussion. */ }
+            }
+            if (!isLatest()) return;
+            const decorations = new Map();
+            const authorIds = [...new Set(rows.map(row => row.user_id).filter(Boolean))];
+            if (authorIds.length) {
+                try {
+                    const publicCosmetics = await _supabase.from('komi_premium_cosmetic_equips')
+                        .select('user_id,plate_id,name_id').in('user_id', authorIds);
+                    if (!publicCosmetics.error)
+                        for (const cosmetic of publicCosmetics.data || []) decorations.set(String(cosmetic.user_id), cosmetic);
+                } catch { /* Public cosmetics are not required to read text. */ }
+            }
+            if (!isLatest()) return;
+            cache.set(scope.key, { rows, highlights, decorations, loadedAt: Date.now() });
+            if (currentSection(scope) === section) {
+                statusMessage(section, '');
+                section?.removeAttribute('aria-busy');
+                redraw(scope);
+            }
+        } catch (error) {
+            if (!isLatest()) return;
+            console.warn('Komi comments:', error?.message || 'Unavailable');
+            loadError(scope, section);
         }
     }
 
-    async function buyHighlight(animeId,id,button){
+    async function refresh(animeId, force, episode) {
+        const scope = episode === undefined && activeView?.scope.animeId === Number(animeId)
+            ? activeView.scope : commentScope(animeId, episode);
+        if (scope) return refreshScope(scope, force);
+    }
+
+    async function buyHighlight(scope,id,button){
         if(typeof currentUser==='undefined'||!currentUser?.authUserId||!_supabase)return;
         if(!window.confirm('Выделить этот комментарий на 24 часа за 12 AniCoin? Появится пометка о платном выделении.'))return;
         button.disabled=true;
-        const section=document.getElementById('komiAnimeComments');
+        const section=currentSection(scope);
         statusMessage(section,'Подтверждаем выделение на сервере…');
         try{
             const {data:{user},error:authError}=await _supabase.auth.getUser();
             if(authError||user?.id!==currentUser.authUserId)throw Error('Повторно войди в аккаунт.');
             const {error}=await _supabase.rpc('komi_shop_highlight',{p_comment_id:id});
             if(error)throw error;
-            await refresh(animeId,true);
+            await refreshScope(scope,true);
             if(typeof window.komiShopReloadStore==='function')void window.komiShopReloadStore();
-            statusMessage(section,'Комментарий выделен на 24 часа.');
+            if(currentSection(scope)===section)statusMessage(section,'Комментарий выделен на 24 часа.');
         }catch(error){
             button.disabled=false;
-            statusMessage(section,error?.message||'Выделение не удалось.');
+            if(currentSection(scope)===section)statusMessage(section,error?.message||'Выделение не удалось.');
         }
     }
 
-    async function addComment(event, animeId) {
+    async function addComment(event, view) {
         event.preventDefault();
-        const section = document.getElementById('komiAnimeComments');
-        if (!section || section.dataset.animeId !== String(animeId)) return;
+        const scope = view.scope;
+        const section = currentSection(scope);
+        if (!section || activeView !== view) return;
         if (typeof currentUser === 'undefined' || !currentUser?.authUserId || typeof _supabase === 'undefined' || !_supabase) {
             if (typeof openAuthModal === 'function') openAuthModal('login');
             statusMessage(section, 'Для комментариев войди через Google или email.');
@@ -237,17 +321,34 @@
         const field = form?.querySelector('textarea');
         const button = form?.querySelector('button[type="submit"]');
         const message = field?.value.trim() || '';
-        if (!message || message.length > MAX_TEXT) return;
+        if (!message || message.length > MAX_TEXT) {
+            statusMessage(section, !message ? 'Напиши комментарий перед отправкой.' : 'Комментарий должен быть не длиннее 1000 символов.');
+            field?.setAttribute('aria-invalid', 'true');
+            field?.focus();
+            return;
+        }
+        field?.removeAttribute('aria-invalid');
+        const owner = currentUser.authUserId;
+        const pendingKey = owner + ':' + scope.key;
+        if (view.pending.has(pendingKey)) return;
+        view.pending.add(pendingKey);
         button.disabled = true;
         statusMessage(section, 'Отправляем комментарий…');
         try {
             const { error } = await _supabase.from('komi_comments')
-                .insert({ anime_id: Number(animeId), user_id: currentUser.authUserId, body: message });
+                .insert({ anime_id: scope.animeId, season: scope.season, episode_number: scope.episodeNumber,
+                    user_id: owner, body: message });
             if (error) throw error;
-            if (field) field.value = '';
-            await refresh(animeId, true);
-            statusMessage(section, 'Комментарий опубликован.');
+            invalidateScope(scope);
+            if (view.drafts.get(scope.key)?.trim() === message) view.drafts.delete(scope.key);
+            if (currentSection(scope) === section && activeView === view && currentUser?.authUserId === owner) {
+                if (field?.value.trim() === message) field.value = '';
+                await refreshScope(scope, true);
+                if (currentSection(scope) === section && activeView === view && currentUser?.authUserId === owner)
+                    statusMessage(section, 'Комментарий опубликован.');
+            }
         } catch (error) {
+            if (currentSection(scope) !== section || activeView !== view || currentUser?.authUserId !== owner) return;
             if (error?.code === 'PT429') {
                 statusMessage(section, error.message);
                 return;
@@ -255,63 +356,131 @@
             console.error('Komi comment post:', error);
             statusMessage(section, 'Не удалось отправить комментарий. Попробуй снова.');
         } finally {
-            button.disabled = false;
+            view.pending.delete(pendingKey);
+            if (activeView === view) button.disabled = view.pending.has((currentUser?.authUserId || '') + ':' + view.scope.key);
         }
     }
 
-    async function removeComment(animeId, id, button) {
+    async function removeComment(scope, id, button) {
         if (!currentUser?.authUserId || !_supabase || !Number.isSafeInteger(Number(id))) return;
         button.disabled = true;
-        const { error } = await _supabase.from('komi_comments')
-            .delete().eq('id', Number(id)).eq('user_id', currentUser.authUserId);
-        if (error) {
+        const section = currentSection(scope);
+        const owner = currentUser.authUserId;
+        try {
+            const { error } = await applyScope(_supabase.from('komi_comments')
+                .delete().eq('id', Number(id)).eq('user_id', owner), scope);
+            if (error) throw error;
+            invalidateScope(scope);
+            await refreshScope(scope, true);
+        } catch {
             button.disabled = false;
-            const section = document.getElementById('komiAnimeComments');
-            if (section?.dataset.animeId === String(animeId)) statusMessage(section, 'Не удалось удалить комментарий.');
-            return;
+            if (currentSection(scope) === section) statusMessage(section, 'Не удалось удалить комментарий.');
         }
-        await refresh(animeId, true);
     }
 
-    function mount(animeId) {
+    function selectThread(view, scope) {
+        if (activeView !== view) return;
+        const { section } = view;
+        const field = section.querySelector('.komi-comments-input');
+        if (view.scope && field) view.drafts.set(view.scope.key, field.value);
+        view.scope = scope;
+        section.dataset.scopeKey = scope.key;
+        const episode = scope.episodeNumber !== null;
+        const label = section.querySelector('.komi-comments-episode-label');
+        label.textContent = episode ? ' · Сезон ' + scope.season + ', серия ' + scope.episodeNumber : ' · Об аниме';
+        const note = section.querySelector('.komi-comments-thread-note');
+        note.textContent = episode ? 'Обсуждение выбранной серии. Скрывай спойлеры: ||скрытый текст||.'
+            : 'Общее обсуждение аниме. Старые комментарии без номера серии сохранены здесь.';
+        for (const button of section.querySelectorAll('[data-comment-thread]'))
+            button.setAttribute('aria-pressed', String(button.dataset.commentThread === (episode ? 'episode' : 'general')));
+        if (field) {
+            field.value = view.drafts.get(scope.key) || '';
+            field.placeholder = episode ? 'Поделись впечатлениями о серии…' : 'Поделись впечатлениями об аниме…';
+            field.removeAttribute('aria-invalid');
+        }
+        section.querySelector('button[type="submit"]').disabled = view.pending.has((currentUser?.authUserId || '') + ':' + scope.key);
+        statusMessage(section, '');
+        redraw(scope);
+        void refreshScope(scope, false);
+    }
+
+    function mount(animeId, episode = {}) {
         const container = document.getElementById('watchModalContent');
-        if (!container) return;
+        const scope = commentScope(animeId, episode);
+        if (!container || !scope) return;
         container.querySelector('#komiAnimeComments')?.remove();
         const section = element('section', 'komi-comments');
         section.id = 'komiAnimeComments';
-        section.dataset.animeId = String(animeId);
+        section.dataset.animeId = String(scope.animeId);
+        section.dataset.scopeKey = scope.key;
+        section.dataset.playerScopeKey = scope.episodeNumber === null ? '' : scope.key;
         section.setAttribute('aria-labelledby', 'komiCommentsHeading');
+        const view = { section, scope: null, drafts: new Map(), pending: new Set() };
+        activeView = view;
 
         const heading = element('div', 'komi-comments-heading');
         heading.append(element('h2', '', 'Комментарии'));
         heading.querySelector('h2').id = 'komiCommentsHeading';
         heading.append(element('span', 'komi-comments-count', '0'));
+        heading.append(element('span', 'komi-comments-episode-label'));
         section.append(heading);
 
+        if (scope.episodeNumber !== null) {
+            const threads = element('div', 'komi-comments-thread-switch');
+            threads.setAttribute('role', 'group');
+            threads.setAttribute('aria-label', 'Выбрать обсуждение');
+            for (const [key, label, selected] of [
+                ['episode', 'Серия ' + scope.episodeNumber, scope],
+                ['general', 'Об аниме', commentScope(animeId)]
+            ]) {
+                const button = element('button', 'btn-secondary', label);
+                button.type = 'button';
+                button.dataset.commentThread = key;
+                button.setAttribute('aria-pressed', 'false');
+                button.addEventListener('click', () => selectThread(view, selected));
+                threads.append(button);
+            }
+            section.append(threads);
+        }
+        const threadNote = element('p', 'komi-comments-thread-note');
+        threadNote.id = 'komiCommentsThreadNote';
+        section.append(threadNote);
+
         const form = element('form', 'komi-comments-form');
+        form.noValidate = true;
         const input = element('textarea', 'komi-comments-input');
         input.name = 'body';
         input.maxLength = MAX_TEXT;
         input.rows = 3;
+        input.style.resize = 'none';
         input.required = true;
         input.placeholder = 'Поделись впечатлениями… Спойлеры: ||скрытый текст||';
         input.setAttribute('aria-label', 'Текст комментария');
+        input.setAttribute('aria-describedby', 'komiCommentsThreadNote komiCommentsStatus');
+        input.addEventListener('input', () => {
+            input.removeAttribute('aria-invalid');
+            // Short comments stay compact; long drafts remain readable without
+            // an unbounded textarea expanding the watch page.
+            input.style.height = 'auto';
+            input.style.height = Math.min(180, Math.max(44, input.scrollHeight)) + 'px';
+        });
         const actions = element('div', 'komi-comments-actions');
         const note = element('small', '', currentUser?.authUserId ? 'Имя берётся из твоего профиля Komi.' : 'Для публикации нужен вход через Google или email.');
         const send = element('button', '', 'Отправить');
         send.type = 'submit';
         actions.append(note, send);
         form.append(input, actions);
-        form.addEventListener('submit', event => addComment(event, animeId));
+        form.addEventListener('submit', event => void addComment(event, view));
         section.append(form);
         const status = element('p', 'komi-comments-status');
+        status.id = 'komiCommentsStatus';
         status.setAttribute('role', 'status');
         status.setAttribute('aria-live', 'polite');
         section.append(status);
         section.append(element('div', 'komi-comments-list'));
         container.append(section);
-        redraw(animeId);
-        refresh(animeId, false);
+        selectThread(view, scope);
+        return section;
     }
 
     window.KomiComments = { mount, refresh };

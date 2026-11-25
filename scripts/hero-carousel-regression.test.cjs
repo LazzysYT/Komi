@@ -34,16 +34,19 @@ test('discovery renders one visible slide and one selected indicator', () => {
   assert.ok(heroMarkup, 'hero section rendered');
   // CSS classes are an unordered set: HD artwork adds its own layout class.
   const slides = [...heroMarkup.matchAll(/<article class="([^"]*\bhero-slide\b[^"]*)"[^>]*aria-hidden="(true|false)"/g)];
-  assert.equal(slides.length, 3);
+  assert.equal(slides.length, 4, 'three anime and one final brand slide');
   assert.equal(slides.filter(([, classes]) => classes.split(/\s+/).includes('active')).length, 1);
   // The two SVG chevrons are also aria-hidden, so count slide articles only.
   assert.equal(slides.filter(([, classes, hidden]) => hidden === 'false' && classes.split(/\s+/).includes('active')).length, 1);
-  assert.equal(slides.filter(([, , hidden]) => hidden === 'true').length, 2);
+  assert.equal(slides.filter(([, , hidden]) => hidden === 'true').length, 3);
   assert.equal((heroMarkup.match(/class="hero-dot active"/g)||[]).length, 1);
+  assert.equal((heroMarkup.match(/class="hero-dot(?: active)?"/g)||[]).length, 4);
   assert.equal((heroMarkup.match(/aria-pressed="true"/g)||[]).length, 1);
+  assert.match(heroMarkup, /data-komi-slide-current>02<\/strong><span>\/ 04/);
   assert.match(heroMarkup, /data-komi-onclick="changeSlide\(-1\)"/);
   assert.match(heroMarkup, /data-komi-onclick="changeSlide\(1\)"/);
   assert.match(heroMarkup, /data-komi-onclick="setSlide\(1\)"/);
+  assert.match(heroMarkup, /data-komi-onclick="setSlide\(3\)"/);
   assert.match(heroMarkup, /<svg viewBox="0 0 24 24"/);
 });
 

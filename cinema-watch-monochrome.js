@@ -56,7 +56,7 @@
     const more = makeDetails('komi-deck-more', '⋯');
     more.firstElementChild.setAttribute('aria-label', 'Дополнительные действия плеера');
     const menu = make('div', 'komi-deck-menu');
-    for (const selector of ['.komi-watch-expand', '.komi-cinema-skip', '.komi-cinema-shortcuts', '.komi-cinema-external-note']) {
+    for (const selector of ['.komi-watch-expand', '.komi-cinema-skip', '.komi-cinema-shortcuts', '.komi-cinema-external-note', '#komiPlayerHelp']) {
       const element = find(selector);
       if (element) menu.append(element);
     }

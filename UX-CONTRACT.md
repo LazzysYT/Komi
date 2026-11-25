@@ -6,6 +6,9 @@
 | Form | player-runtime.js validation capture | Required/type constraints in form markup | Static forms opt in via novalidate | Regression browser test |
 | Toast | komiStatusFeedback | index.html | Existing status/error message | Regression browser test |
 | Media | player-core.js + player-runtime.js | Parsed HTTPS source and per-element episode identity | Direct video, HLS, external embed | Unit + browser regression |
+| Watch presentation and episode artwork | `komi-watch-compact-v6.js/.css`, `cinema-layout-v3.js` | Existing player context and actual episode metadata | Desktop rail; phone sheets; frame/poster/unavailable labels | `tests/cinema-thumbnails.test.cjs`, watch browser checks |
+| Voice-over continuity | `app-main.js`, `KomiSourcePrefs.match` | Explicit source intent for the open title | Carry across episodes, normalized label matching, recover intended voice after temporary fallback | `tests/watch-experience.test.cjs` |
+| Episode discussion | `komi-comments.js` | `komi_comments` anime_id + season + episode_number, existing RLS | Per-episode thread; general thread has both fields NULL | `tests/episode-comments.test.cjs`, live filtered read |
 | Persistence | komiProgressWriter | RLS-protected komi_watch_progress | 10-second sampling, immediate pause/seek/close | Ordered writer tests |
 | Hero navigation and list actions | `home-discovery.js` plus existing `app-main.js` handlers | Current catalogue ID, `/anime/:id` routes, authenticated list state | Watch link, add/remove from list button | Hero regression + browser navigation checks |
 | Hero rotation and pause | `app-main.js` | Seven-second elapsed-time clock and explicit pause state | Manual next/previous/dot selection, pause/resume, hover/focus pause | `tests/hero-v811.test.cjs` + browser timing checks |
@@ -21,6 +24,22 @@ The hero reuses existing SPA watch, details, authentication and list handlers. I
 Manual selection resets the slide's seven-second progress cycle. Pausing preserves elapsed time; resuming uses the remaining time. Hidden documents, offscreen heroes and removed home routes must stop unnecessary autoplay and media work. Pauses from focus, pointer interaction and the explicit pause button must compose rather than accidentally resume each other. Reduced motion disables automatic movement; arrow and dot navigation continue to work.
 
 Only active-slide media may play. An optional muted looping MP4/WebM overlays the poster; unavailable media leaves usable artwork underneath. Artwork selection prefers an explicit banner, then a usable screenshot, then the established public HD fallback, with a contained poster as the final fallback. Low-bandwidth and reduced-motion preferences avoid automatic video requests. Media URLs and metadata must not expose personal account data or bypass the existing validation and Supabase permissions.
+
+The first video pilot is one explicitly branded promotional slide appended to the home carousel, also available in the isolated `hero-video-preview.html`. A `data-komi-promo` slide reuses the same media runtime and skips anime metadata queries. Its catalogue link carries no anime/list action, and the first anime slide keeps its existing preload and render priority. The promo poster is deferred until the slide is active. At widths up to 767px or without hover/fine-pointer input, no video source is attached, including landscape phones. Changing the slide or enabling reduced motion, Save Data or 2G removes the video source and cancels its download. Pausing, focus/hover, a hidden document or offscreen hero pauses playback without discarding the user's explicit pause intent. The underlying decoded first frame remains visible until playback actually starts.
+
+## Watch screen and episode identity
+
+The existing media runtime, provider iframe, progress slots and Watch Party source indices remain authoritative. Episode navigation carries the selected voice-over when available. A temporary unavailable source uses the normal source-selection fallback and displays an explanation; the original intention remains available for the next episode and is not overwritten in persistent source preferences. Equivalent labels are matched through the existing source preference normalizer. Strict ad-free restrictions remain enforced by `KomiPlayerCore`.
+
+The list remains complete. For verified title 5114, season 1, numbers 65–68 with only STEPonee are labelled additional releases; the 64-episode main-series count is sourced from TBS and Aniplex, recorded in `docs/watch-experience-v9.md`. Original array indices, source URLs, season and progress slots are unchanged. No inference is made about their OVA identity. Other titles have no fixed-count rule.
+
+Desktop number search filters locally, has a visible clear control and keeps the current episode identity. The existing phone sheet moves the original episode rail rather than cloning it. Background siblings become inert while a sheet is open; Escape/backdrop/close restore their prior state and keyboard focus. Selecting the already active voice simply closes the sheet and restores focus.
+
+Recovery is hidden initially for both native and external media. A native media error or observed iframe error reveals retry/source choices. Because cross-origin iframe playback failures are not reliably observable, the existing overflow menu also exposes «Видео не работает?» for a viewer-reported failure. No timeout declares a still-loading provider to be broken.
+
+## Episode comments
+
+New episode messages use `(anime_id, season, episode_number)` rather than a player/source index. Existing comments without episode identity stay under «Об аниме». Switching voice-over keeps the same discussion; switching episode changes the query and cache key. Older requests cannot overwrite a later thread or refresh, and submission captures the selected thread/account before awaiting the server. User text remains DOM-rendered, and public comments retain their existing RLS author, rate-limit and deletion policies. General-thread timecodes do not seek an arbitrary open episode.
 
 Continue-watching remains an authenticated shelf. It appears only for owned entries with a valid episode identity and a finite saved position greater than zero. A known-duration episode with five seconds or less remaining is complete and omitted, matching the existing restore boundary; an unknown duration may still be resumed. Filtering precedes the shelf limit. Empty or unverified history remains absent, with no sign-in or loading card replacing it.
 

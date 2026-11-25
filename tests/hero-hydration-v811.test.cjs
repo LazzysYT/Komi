@@ -166,6 +166,30 @@ test('catalog hydration keeps the upgraded hero continuously attached and preser
   assert.equal(f.timerStarts, 1, 'unchanged refreshes do not restart progress');
 });
 
+test('catalog hydration retains a selected brand slide and its mounted video', () => {
+  const f = fixture(), hero = f.container.querySelector('.komi-home-hero');
+  const slides = hero.querySelectorAll('.hero-slide'), promo = slides.at(-1);
+  assert.equal(slides.length, 6);
+  assert.equal(promo.dataset.komiPromo, 'brand-loop');
+  f.scope.currentSlideIndex = 5;
+  slides.forEach((slide, index) => slide.classList.toggle('active', index === 5));
+  const poster = promo.querySelector('.komi-hub-hero-art');
+  poster.setAttribute('src', poster.dataset.komiHeroDeferredSrc);
+  delete poster.dataset.komiHeroDeferredSrc;
+  const video = new Node('video', {class:'komi-hero-video'});
+  video.currentTime = 2.5;
+  promo.insertBefore(video, promo.querySelector('.komi-home-hero-content'));
+  f.hydrate();
+  assert.equal(f.container.querySelector('.komi-home-hero'), hero);
+  assert.equal(promo.classList.contains('active'), true);
+  assert.equal(promo.querySelector('.komi-hero-video'), video);
+  assert.equal(video.isConnected, true);
+  assert.equal(video.removals, 0, 'hydration must not detach and restart the video');
+  assert.equal(video.currentTime, 2.5);
+  assert.equal(poster.removals, 0);
+  assert.equal(f.timerStarts, 1);
+});
+
 test('changed title, route or media replaces the old hero and starts its timer', () => {
   for (const change of [
     anime => {anime.title += ' — corrected';},

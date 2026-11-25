@@ -7,7 +7,7 @@
   'use strict';
 
   const API = 'https://graphql.anilist.co';
-  const SELECTOR = '.komi-home-hero .hero-slide[data-komi-anime-id]';
+  const SELECTOR = '.komi-home-hero .hero-slide:is([data-komi-anime-id],[data-komi-promo])';
   const CACHE_PREFIX = 'komi_hd_hero_v3_';
   const FOUND_TTL = 24 * 60 * 60 * 1000;
   const MISSING_TTL = 60 * 60 * 1000;
@@ -27,6 +27,7 @@
   const query = value => { try { return root.matchMedia?.(value) || {matches:false}; } catch { return {matches:false}; } };
   const reducedMotion = query('(prefers-reduced-motion: reduce)');
   const finePointer = query('(hover:hover) and (pointer:fine)');
+  const narrowViewport = query('(max-width: 767px)');
   const watchModal = document.getElementById('watchModal');
   let viewportObserver = null;
   let pointerFrame = null;
@@ -57,13 +58,30 @@
   }
 
   function safeVideo(raw) {
-    const url = safeStill(raw);
+    let url = safeStill(raw);
+    // Bundled promotional media uses a root-relative path so the first-paint
+    // shell works on both the production and preview origins. Do not accept
+    // protocol-relative URLs, backslashes or an insecure document origin.
+    if (!url && typeof raw === 'string' && raw.length <= 2000 &&
+        /^\/(?!\/)/.test(raw) && !/[\\\u0000-\u0020]/.test(raw)) {
+      try {
+        const page = new URL(root.location.href);
+        const resolved = new URL(raw,page);
+        if (page.protocol === 'https:' && resolved.origin === page.origin) url = safeStill(resolved.href);
+      } catch {}
+    }
     return url && /\.(mp4|webm)$/i.test(new URL(url).pathname) ? url : '';
   }
 
   function constrainedConnection() {
     const connection = root.navigator?.connection;
     return Boolean(connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || ''));
+  }
+
+  function videoDeviceAllowed() {
+    // The first video rollout is desktop-only. Checking pointer capabilities
+    // also keeps a landscape phone on its still image, even above 767px.
+    return !narrowViewport.matches && finePointer.matches;
   }
 
   function sliderFor(slide) {
@@ -137,7 +155,7 @@
       slider.dataset.komiHeroPaused = String(paused);
     }
     const slides = Array.from(slider.querySelectorAll('.hero-slide'));
-    const hasMotion = slides.length > 1 || slides.some(slide => safeVideo(slide.dataset?.komiHeroVideo));
+    const hasMotion = slides.length > 1 || (videoDeviceAllowed() && slides.some(slide => safeVideo(slide.dataset?.komiHeroVideo)));
     for (const button of slider.querySelectorAll('[data-komi-hero-toggle]')) {
       button.hidden = !hasMotion;
       button.disabled = restricted;
@@ -414,7 +432,7 @@
   }
 
   function videoMayPlay(slide,url) {
-    return slide.isConnected !== false && slide.classList.contains('active') &&
+    return videoDeviceAllowed() && slide.isConnected !== false && slide.classList.contains('active') &&
       safeVideo(slide.dataset.komiHeroVideo) === url && mediaReady.has(slide) && !isPaused(sliderFor(slide));
   }
 
@@ -426,7 +444,13 @@
       let video = slide.querySelector('video.komi-hero-video');
       const url = safeVideo(slide.dataset.komiHeroVideo);
       const record = video && videoRecords.get(video);
-      if (video && record?.url !== url) { disposeVideo(video); video = null; }
+      const stillOnly = !videoDeviceAllowed() || reducedMotion.matches || constrainedConnection();
+      // pause() alone can leave an active network download behind. Drop the
+      // source for inactive slides and newly restricted devices/preferences.
+      if (video && (record?.url !== url || stillOnly || !slide.classList.contains('active'))) {
+        disposeVideo(video); video = null;
+      }
+      if (stillOnly) return;
       if (!url || !videoMayPlay(slide,url)) { if (video) pauseVideo(video); return; }
       if (slide.dataset.komiHeroVideoFailed === url) return;
       if (!video) {
@@ -436,6 +460,7 @@
         video.className = 'komi-hero-video';
         video.muted = true; video.defaultMuted = true; video.loop = true;
         video.playsInline = true; video.preload = 'none';
+        video.poster = image.currentSrc || image.src;
         video.setAttribute('aria-hidden','true');
         const state = {url,pending:false,blocked:false,attempt:0};
         videoRecords.set(video,state);
@@ -566,7 +591,7 @@
     }
   };
   const preferencesChanged = () => { clearParallax(); syncVideos(); scheduleScan(); };
-  for (const media of [reducedMotion,finePointer]) {
+  for (const media of [reducedMotion,finePointer,narrowViewport]) {
     if (media.addEventListener) media.addEventListener('change',preferencesChanged);
     else media.addListener?.(preferencesChanged);
   }

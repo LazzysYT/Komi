@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#09090B">
+  <title>Видеобаннер KomiAnime · тест</title>
+  <link rel="preload" as="image" href="./assets/hero/komi-promo-first-frame.webp" fetchpriority="high">
+  <link rel="stylesheet" href="./komi-pill-system.css?v=20261125">
+  <link rel="stylesheet" href="./komi-hero-senku.css?v=20261125">
+  <link rel="stylesheet" href="./hero-video-preview.css?v=20261125">
+  <script defer src="./hero-video-preview.js?v=20261125"></script>
+  <script defer src="./hero-hd-art.js?v=20261125-watch-video"></script>
+</head>
+<body class="komi-media-hub komi-video-preview">
+  <header class="komi-preview-header">
+    <a href="/" class="komi-preview-brand" aria-label="KomiAnime — на главную">KomiAnime</a>
+    <span>Видеобаннер KomiAnime · тест</span>
+    <a href="/catalog" class="komi-preview-back">В каталог <span aria-hidden="true">↗</span></a>
+  </header>
+  <main id="mainContainer">
+    <section class="komi-home-hero" aria-label="Пилотный видеобаннер KomiAnime">
+      <div id="heroSlider" class="hero-slider-container">
+        <div class="hero-slides-wrapper">
+          <article class="hero-slide komi-hd-wide active" data-komi-promo="brand-loop" aria-label="KomiAnime — выбери свою историю">
+            <img class="komi-hub-hero-art" src="./assets/hero/komi-promo-first-frame.webp" alt="" width="1280" height="720" loading="eager" decoding="async" fetchpriority="high">
+            <div class="komi-home-hero-content">
+              <div class="komi-hub-title-wrap"><h1 class="komi-hub-title-text">Выбери свою<br>историю.</h1></div>
+              <div class="hero-meta"><span>KomiAnime</span><span>Без звука</span></div>
+              <p class="komi-hub-description">Найди аниме на вечер — и продолжи с того места, где остановился.</p>
+              <div class="hero-buttons">
+                <a class="komi-hub-play" href="/catalog"><span>Открыть каталог</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>
+              </div>
+            </div>
+          </article>
+        </div>
+        <div class="komi-hub-carousel-controls">
+          <span class="komi-preview-motion-label">Фоновое видео</span>
+          <button type="button" class="komi-hero-pause" data-komi-hero-toggle aria-label="Приостановить слайдер" aria-pressed="false" hidden>
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><g data-komi-hero-pause-icon><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></g><path data-komi-hero-play-icon d="M7 4v16l13-8z" hidden/></svg>
+          </button>
+        </div>
+      </div>
+    </section>
+    <section class="komi-preview-note" aria-labelledby="previewNoteTitle">
+      <h2 id="previewNoteTitle">Один баннер, один тест</h2>
+      <p>Шестисекундная заставка KomiAnime из собственного рекламного ролика. На телефонах остаётся первый кадр. На компьютере видео можно поставить на паузу; настройка уменьшения движения тоже учитывается.</p>
+      <a href="/">Вернуться на главную <span aria-hidden="true">↗</span></a>
+    </section>
+  </main>
+</body>
+</html>

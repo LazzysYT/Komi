@@ -64,7 +64,7 @@
             return true;
         } catch { return false; }
     }
-    const api = {preferredFor,recordChoice,globalFavorite,readCounts};
+    const api = {preferredFor,recordChoice,globalFavorite,readCounts,match:bestMatch};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiSourcePrefs = api;
 })(globalThis);

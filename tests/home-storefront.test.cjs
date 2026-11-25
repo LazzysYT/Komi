@@ -60,15 +60,54 @@ test('discovery cards are native detail links with rating-only overlay and metad
  assert.doesNotMatch(card,/<button|komi-card-status|data-komi-quick|Watch Party|role="button"|onerror="alert/);
  assert.equal(f.scope.renderCard({...anime,id:'bad"id'},{variant:'discovery'}),'');
 });
-test('hero has exactly watch/list actions, omits filler description and prioritizes only active artwork',()=>{
+test('anime hero slides retain watch/list actions and only active artwork has priority',()=>{
  const f=fixture(),html=f.render();
  const hero=html.slice(html.indexOf('<section class="komi-home-hero"'),html.indexOf('</section>')+10);
  assert.doesNotMatch(hero,/komi-hub-info|komi-hub-genres|>Аниме<|12 эп\./);
- const actions=hero.match(/<div class="hero-buttons">[\s\S]*?<\/div>/g);
- assert.ok(actions.length>1);
- for(const row of actions) assert.equal((row.match(/<(?:a|button)\b/g)||[]).length,2);
+ const articles=hero.match(/<article\b[\s\S]*?<\/article>/g)||[];
+ const animeSlides=articles.filter(article=>article.includes('data-komi-anime-id='));
+ assert.equal(animeSlides.length,5);
+ for(const article of animeSlides) {
+  const row=article.match(/<div class="hero-buttons">[\s\S]*?<\/div>/)?.[0]||'';
+  assert.equal((row.match(/<(?:a|button)\b/g)||[]).length,2);
+  assert.match(row,/\/anime\/[1-9]\d*#player/);
+  assert.match(row,/toggleHeroAnimeList/);
+ }
  assert.equal((hero.match(/fetchpriority="high"/g)||[]).length,1);
- assert.equal((hero.match(/data-komi-hero-deferred-src/g)||[]).length,actions.length-1);
+ assert.equal((hero.match(/data-komi-hero-deferred-src/g)||[]).length,articles.length-1);
+});
+test('one honest brand slide follows the anime selection and defers its poster until selected',()=>{
+ const f=fixture(),before=JSON.stringify(f.animeList);
+ const heroOf=()=>f.render().match(/<section class="komi-home-hero"[\s\S]*?<\/section>/)?.[0]||'';
+ let hero=heroOf();
+ let slides=hero.match(/<article\b[\s\S]*?<\/article>/g)||[];
+ assert.equal(slides.length,6);
+ assert.equal((hero.match(/data-komi-promo="brand-loop"/g)||[]).length,1);
+ const promo=slides.at(-1);
+ assert.match(promo,/data-komi-promo="brand-loop"/);
+ assert.match(promo,/aria-hidden="true" inert/);
+ assert.match(promo,/\ssrc="\/anime-artwork\.svg"/);
+ assert.match(promo,/data-komi-hero-deferred-src="\/assets\/hero\/komi-promo-first-frame\.webp"/);
+ assert.doesNotMatch(promo,/data-komi-anime-id|data-komi-hero-saved|komi-hub-list|toggleHeroAnimeList|★|\/anime\/|fetchpriority/);
+ assert.match(promo,/<a class="komi-hub-play" href="\/catalog">/);
+ assert.equal((promo.match(/<(?:a|button)\b/g)||[]).length,1);
+ assert.equal((hero.match(/class="hero-dot(?: active)?"/g)||[]).length,6);
+ assert.match(hero,/data-komi-slide-current>01<\/strong><span>\/ 06/);
+ assert.match(slides[0],new RegExp('src="'+f.animeList[0].poster+'"'));
+ const firstPaint=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const staticPromo=firstPaint.match(/<article\b[^>]*data-komi-promo="brand-loop"[\s\S]*?<\/article>/)?.[0]||'';
+ assert.match(staticPromo,/\ssrc="\/anime-artwork\.svg"/);
+ assert.match(staticPromo,/data-komi-hero-deferred-src="\/assets\/hero\/komi-promo-first-frame\.webp"/);
+ assert.doesNotMatch(staticPromo,/<video\b|<source\b|fetchpriority/);
+ assert.doesNotMatch(firstPaint,/<link\b[^>]*rel="preload"[^>]*href="[^\"]*komi-promo/);
+ f.context.currentSlideIndex=5;
+ hero=heroOf();slides=hero.match(/<article\b[\s\S]*?<\/article>/g)||[];
+ assert.match(slides.at(-1),/class="hero-slide komi-hd-wide active"/);
+ assert.match(slides.at(-1),/\ssrc="\/assets\/hero\/komi-promo-first-frame\.webp"/);
+ assert.doesNotMatch(slides.at(-1),/data-komi-hero-deferred-src/);
+ assert.match(hero,/data-komi-slide-current>06<\/strong><span>\/ 06/);
+ assert.equal((hero.match(/fetchpriority="high"/g)||[]).length,1);
+ assert.equal(JSON.stringify(f.animeList),before,'Presentation must not inject a fake anime into the catalog');
 });
 test('home genre native links carry the filter and use no expanded catalogue controls',()=>{
  const f=fixture(),html=f.context.genres();

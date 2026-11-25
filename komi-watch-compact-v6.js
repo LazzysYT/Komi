@@ -37,7 +37,7 @@
     const navigation = controls.querySelector('.komi-episode-navigation');
     if (navigation) {
       navigation.querySelectorAll('.komi-watch-navbtn').forEach((btn, index) => {
-        btn.textContent = index ? '›' : '‹';
+        btn.textContent = index ? 'Следующая' : 'Предыдущая';
         btn.title = index ? 'Следующая серия' : 'Предыдущая серия';
       });
       heading.append(navigation);
@@ -96,14 +96,16 @@
     let mobileDock = controls.querySelector('.komi-mobile-watch-actions');
     if (!mobileDock && root.KomiMobileSheets) {
       mobileDock = create('div','komi-mobile-watch-actions');
-      const dub = create('button','komi-mobile-watch-source','♫ Озвучка');
-      const episodes = create('button','komi-mobile-watch-episodes','☷ Серии');
+      const dub = create('button','komi-mobile-watch-source','Озвучка');
+      const episodes = create('button','komi-mobile-watch-episodes','Серии');
       for (const btn of [dub,episodes]) { btn.type='button'; btn.setAttribute('aria-haspopup','dialog'); btn.setAttribute('aria-controls','komiMobileSheet'); }
       dub.addEventListener('click',()=>void root.KomiMobileSheets.openSource(dub));
       episodes.addEventListener('click',()=>void root.KomiMobileSheets.openEpisodes(episodes));
-      mobileDock.append(dub,episodes);
+      mobileDock.append(episodes,dub);
     }
-    if (mobileDock) actions.prepend(mobileDock);
+    // A separate grid row places the phone's two primary controls directly
+    // below the video, before its title. The original sheet handlers stay intact.
+    if (mobileDock) wrapper.after(mobileDock);
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
     const recovery = content.querySelector('#komiPlayerRecovery');
@@ -218,22 +220,16 @@
 
   if (root.KomiComments && typeof root.KomiComments.mount === 'function') {
     const previousCommentsMount = root.KomiComments.mount;
-    root.KomiComments.mount = function mountInlineComments(animeId) {
-      const result = previousCommentsMount(animeId);
+    root.KomiComments.mount = function mountInlineComments(animeId, episodeContext) {
+      const result = previousCommentsMount(animeId, episodeContext);
       const content = document.getElementById('watchModalContent');
       const stage = content?.querySelector('.komi-watch-stage');
       const section = content?.querySelector('#komiAnimeComments');
       if (!stage || !section) return result;
       stage.append(section);
-      const title = section.querySelector('.komi-comments-heading');
-      if (title && !title.querySelector('.komi-comments-episode-label')) {
-        const number = content.querySelector('.komi-episode-number.active')?.dataset.episodeNumber;
-        if (number) title.append(create('span', 'komi-comments-episode-label', ' · ' + number + ' серия'));
-      }
       const field = section.querySelector('.komi-comments-input');
       if (field) {
-        field.rows = 1;
-        field.placeholder = 'Поделись впечатлениями о серии…';
+        field.rows = 2;
       }
       const form = section.querySelector('.komi-comments-form');
       if (form && !form.querySelector('.komi-comment-compose-avatar')) {

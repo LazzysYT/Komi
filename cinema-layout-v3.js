@@ -12,9 +12,10 @@
   function frameKey(ctx,index) {return String(ctx.animeId)+':'+ctx.season+':'+index;}
   function indexEpisodePreviews(ctx) {
     const urls = ctx.episodeMeta.map(ep => episodePreview(ep?.preview));
+    const titleArtwork = new Set(ctx.episodeFallbacks || []);
     const counts = new Map();
     for (const url of urls) if (url) counts.set(url,(counts.get(url)||0)+1);
-    return urls.map(url => url && counts.get(url) === 1 ? url : '');
+    return urls.map(url => url && counts.get(url) === 1 && !titleArtwork.has(url) ? url : '');
   }
   function uniquePreview(ctx,index) {
     const url=ctx.uniquePreviews?.[index] || '';
@@ -41,7 +42,10 @@
       while(capturedFrames.size>160)capturedFrames.delete(capturedFrames.keys().next().value);
       const btn=ctx.grid.querySelectorAll('.komi-episode-number')[ctx.index];
       const thumbnail=btn?.querySelector('.komi-episode-thumb');
-      if(thumbnail) paintEpisodeImage(thumbnail,[capturedFrames.get(key),...ctx.episodeFallbacks]);
+      if(thumbnail) paintEpisodeImage(thumbnail,[
+        {url:capturedFrames.get(key),kind:'frame'},
+        ...ctx.episodeFallbacks.map(url=>({url,kind:'poster'}))
+      ]);
       return true;
     } catch {return false;} // CORS/DRM restrictions are respected.
   }
@@ -87,25 +91,51 @@
   function paintEpisodeCaption(button) {
     const caption = button.querySelector('.komi-list-label small');
     if (!caption) return;
-    caption.textContent = [button.dataset.episodeDuration, button.classList.contains('active') ? 'Сейчас смотришь' : button.classList.contains('komi-episode-watched') ? 'Просмотрена' : '']
+    const status = button.classList.contains('active') ? 'Сейчас смотришь' : button.classList.contains('komi-episode-watched') ? 'Просмотрена' : '';
+    caption.textContent = [button.dataset.episodeDuration, status]
         .filter(Boolean).join(' · ');
     caption.hidden = !caption.textContent;
+    button.setAttribute('aria-label',[
+      (button.dataset.supplementalLabel ? 'Дополнительный выпуск ' : 'Серия ') + button.dataset.komiEpisodeLabel,
+      button.dataset.supplementalLabel, status, button.dataset.episodeDuration,
+      button.querySelector('.komi-episode-thumb-kind')?.textContent
+    ].filter(Boolean).join('. '));
+  }
+  function setEpisodePreviewKind(frame,kind) {
+    frame.dataset.previewKind = kind;
+    let label=frame.querySelector('.komi-episode-thumb-kind');
+    if(!label) {
+      label=document.createElement('span');
+      label.className='komi-episode-thumb-kind';
+      frame.append(label);
+    }
+    label.textContent=kind==='frame' ? 'Кадр серии' : kind==='poster' ? 'Постер тайтла' : 'Нет изображения';
+    const episodeButton=frame.closest('.komi-episode-number');
+    if(episodeButton) paintEpisodeCaption(episodeButton);
   }
   function paintEpisodeImage(frame, sources, onFailure) {
     frame.querySelector('img')?.remove();
-    const candidates=[...new Set(sources.filter(Boolean))];
+    const seen=new Set();
+    const candidates=sources.filter(candidate=>{
+      if(!candidate?.url || seen.has(candidate.url)) return false;
+      seen.add(candidate.url);
+      return true;
+    });
+    setEpisodePreviewKind(frame,'unavailable');
     if(!candidates.length)return;
     const image=document.createElement('img');
     image.className='komi-episode-thumb-image';
     image.alt='';image.loading='lazy';image.decoding='async';
     let next=0;
     const tryNext=()=>{
-      if(next>=candidates.length){image.remove();return;}
-      image.src=candidates[next++];
+      if(next>=candidates.length){image.remove();setEpisodePreviewKind(frame,'unavailable');return;}
+      const candidate=candidates[next++];
+      setEpisodePreviewKind(frame,candidate.kind==='frame' ? 'frame' : 'poster');
+      image.src=candidate.url;
     };
     image.addEventListener('error',()=>{
       if (!frame.isConnected || image.parentNode !== frame) return;
-      onFailure?.(candidates[next-1]);
+      onFailure?.(candidates[next-1].url);
       tryNext();
     });
     frame.prepend(image);
@@ -119,7 +149,10 @@
     number.className='komi-episode-thumb-badge';
     number.textContent=label;
     frame.append(number);
-    paintEpisodeImage(frame,[actualPreview(context,index),...context.episodeFallbacks], url => {
+    paintEpisodeImage(frame,[
+      {url:actualPreview(context,index),kind:'frame'},
+      ...context.episodeFallbacks.map(url=>({url,kind:'poster'}))
+    ], url => {
       if (url && url === context.uniquePreviews[index]) context.failedPreviews.add(url);
     });
     return frame;
@@ -127,21 +160,35 @@
   function setListMode(context, list) {
     context.grid.classList.toggle('komi-episode-list', list);
     context.grid.querySelectorAll('.komi-episode-number').forEach((episodeButton, index) => {
-      const label = episodeButton.dataset.komiEpisodeLabel || episodeButton.textContent.trim();
+      const label = episodeButton.dataset.komiEpisodeLabel || episodeButton.dataset.episodeNumber || episodeButton.textContent.trim();
       episodeButton.dataset.komiEpisodeLabel = label;
+      const meta = context.episodeMeta?.[index];
+      episodeButton.dataset.supplementalLabel = typeof meta?.supplementalLabel === 'string' ? meta.supplementalLabel : '';
       episodeButton.replaceChildren();
       if (list) {
-        const meta = context.episodeMeta?.[index];
         episodeButton.append(makeEpisodeThumb(context,index,label));
         const caption = document.createElement('span');
         caption.className = 'komi-list-label';
-        caption.textContent = 'Серия ' + label;
+        caption.textContent = (episodeButton.dataset.supplementalLabel ? 'Доп. выпуск ' : 'Серия ') + label;
         const explanation = document.createElement('small');
         episodeButton.dataset.episodeDuration = durationLabel(measuredDurations.get(frameKey(context,index))) || durationLabel(meta?.duration);
         caption.append(explanation);
+        if(episodeButton.dataset.supplementalLabel) {
+          const supplemental=document.createElement('small');
+          supplemental.className='komi-episode-supplemental';
+          supplemental.textContent=episodeButton.dataset.supplementalLabel;
+          caption.append(supplemental);
+        }
         episodeButton.append(caption);
         paintEpisodeCaption(episodeButton);
-      } else episodeButton.textContent = label;
+      } else {
+        episodeButton.textContent = label;
+        episodeButton.setAttribute('aria-label',[
+          (episodeButton.dataset.supplementalLabel ? 'Дополнительный выпуск ' : 'Серия ') + label,
+          episodeButton.dataset.supplementalLabel,
+          episodeButton.classList.contains('active') ? 'Сейчас смотришь' : ''
+        ].filter(Boolean).join('. '));
+      }
     });
     context.viewButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === (list ? 'list' : 'grid'))));
     const activeEpisode = context.grid.querySelector('[aria-current="true"]');
@@ -216,15 +263,15 @@
     context.grid = grid;
     context.title = heading.querySelector('h1')?.textContent || 'KomiAnime';
     context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
+    // A title poster is an honest fallback, never a frame from this episode.
+    // Generic screenshots have no episode identity and are not used here.
+    context.episodeFallbacks = [...new Set([
+      episodePreview(settings.watchPoster),
+      episodePreview(content.querySelector('.crunchy-hero-poster')?.src),
+      episodePreview(settings.watchBanner)
+    ].filter(url=>url && new URL(url).pathname !== '/anime-artwork.svg'))];
     context.uniquePreviews = indexEpisodePreviews(context);
     context.failedPreviews = new Set();
-    // Prefer a real episode frame, then the title's own landscape artwork,
-    // then its poster. Keep the badge even if every image request fails.
-    context.episodeFallbacks = [...new Set([
-      episodePreview(settings.watchStill),
-      episodePreview(settings.watchBanner),
-      episodePreview(content.querySelector('.crunchy-hero-poster')?.src)
-    ].filter(Boolean))];
     const currentEpisode = context.episodeMeta[context.index];
     const poster = episodePreview(currentEpisode?.preview) || episodePreview(settings.watchStill) ||
       content.querySelector('.crunchy-hero-poster')?.src;
@@ -299,6 +346,15 @@
     context.viewButtons = [gridButton,listButton];
     view.append(gridButton,listButton);
     grid.after(view);
+    if(typeof settings.episodeSummary === 'string' && settings.episodeSummary.trim()) {
+      const summary=document.createElement('p');
+      summary.className='komi-episode-summary';
+      summary.id='komiEpisodeSummary';
+      summary.textContent=settings.episodeSummary;
+      grid.before(summary);
+      const describedBy=grid.getAttribute('aria-describedby') || '';
+      grid.setAttribute('aria-describedby',[describedBy,summary.id].filter(Boolean).join(' '));
+    }
     gridButton.addEventListener('click', () => setListMode(context,false));
     listButton.addEventListener('click', () => setListMode(context,true));
     setListMode(context,true);

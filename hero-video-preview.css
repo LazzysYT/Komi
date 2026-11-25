@@ -1,0 +1,32 @@
+/* Pilot framing only. The established hero CSS and media runtime own the banner. */
+html {color-scheme:dark;scrollbar-color:#626268 var(--komi-pill-base);scrollbar-width:thin;}
+body.komi-video-preview {margin:0;background:var(--komi-pill-base);color:var(--komi-pill-white);font:400 16px/1.5 Inter,Manrope,Arial,sans-serif;}
+.komi-video-preview *, .komi-video-preview *::before, .komi-video-preview *::after {box-sizing:border-box;}
+.komi-preview-header {display:flex;align-items:center;gap:24px;max-width:1600px;margin:auto;padding:22px clamp(20px,5vw,72px);border-bottom:1px solid #ffffff16;}
+.komi-preview-header a {color:var(--komi-pill-white);text-decoration:none;min-height:44px;display:inline-flex;align-items:center;}
+.komi-preview-brand {font-size:21px;font-weight:800;letter-spacing:-.04em;}
+.komi-preview-header>span {flex:1;color:#b6b6bf;font-size:13px;}
+.komi-preview-back {gap:10px;font-size:13px;font-weight:700;white-space:nowrap;}
+.komi-video-preview #mainContainer {max-width:1600px;margin:auto;}
+.komi-video-preview .komi-home-hero .hero-slide {flex-direction:column;}
+.komi-video-preview .komi-home-hero .hero-slide .komi-hub-hero-art {animation:none!important;}
+.komi-preview-motion-label {font-size:12px;color:#d4d4d8;}
+.komi-preview-note {max-width:780px;padding:30px clamp(20px,5vw,72px) 64px;}
+.komi-preview-note h2 {margin:0 0 10px;font-size:19px;letter-spacing:-.025em;}
+.komi-preview-note p {margin:0 0 20px;color:#b6b6bf;font-size:14px;line-height:1.7;}
+.komi-preview-note a {display:inline-flex;align-items:center;gap:12px;min-height:44px;color:var(--komi-pill-white);font-size:14px;text-underline-offset:5px;}
+.komi-preview-header a:hover, .komi-preview-note a:hover {color:#d4d4d8;}
+.komi-preview-header a:active, .komi-preview-note a:active {opacity:.75;}
+.komi-preview-header a:focus-visible, .komi-preview-note a:focus-visible {outline:2px solid var(--komi-pill-white);outline-offset:5px;border-radius:4px;}
+@media(max-width:767px) {
+  .komi-preview-header {flex-wrap:wrap;gap:4px 18px;padding-block:14px;}
+  .komi-preview-header>span {flex-basis:100%;order:3;font-size:12px;}
+  .komi-preview-back {margin-left:auto;}
+  .komi-video-preview .komi-home-hero .komi-hub-carousel-controls {display:none;}
+}
+@media(hover:none), (pointer:coarse), (prefers-reduced-motion:reduce) {
+  .komi-video-preview .komi-home-hero .komi-hub-carousel-controls {display:none;}
+}
+@media(forced-colors:active) {
+  html {scrollbar-color:auto;}
+}

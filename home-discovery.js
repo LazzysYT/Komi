@@ -113,13 +113,18 @@
   }
   function hero(slides, context) {
     if (!slides.length) return '';
-    const index = ((Number(context.currentSlideIndex) || 0) % slides.length + slides.length) % slides.length;
-    const total = String(slides.length).padStart(2, '0');
+    // The brand promotion belongs only to this presentation sequence, never to
+    // the anime catalog or the public catalog snapshot.
+    const slideCount = slides.length + 1;
+    const index = ((Number(context.currentSlideIndex) || 0) % slideCount + slideCount) % slideCount;
+    const total = String(slideCount).padStart(2, '0');
+    const promoActive = index === slides.length;
+    const promoPoster = '/assets/hero/komi-promo-first-frame.webp';
     const playSvg = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8a1 1 0 0 1 1.5-.86l11 7.2a1 1 0 0 1 0 1.72l-11 7.2A1 1 0 0 1 7 19.2V4.8Z"/></svg>';
     const bookmarkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z"/></svg>';
 
     return '<section class="komi-home-hero" aria-label="Рекомендуем посмотреть">' +
-      '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка аниме">' +
+      '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка KomiAnime">' +
       '<div class="hero-slides-wrapper">' + slides.map((anime, i) => {
         const animeId = id(anime);
         // Shikimori IDs match MAL IDs; internal routes always use Komi's own ID.
@@ -160,21 +165,36 @@
           ' data-komi-onclick="toggleHeroAnimeList(\'' + animeId + '\')">' +
           bookmarkSvg + '<span class="komi-hub-list-label">' + (saved ? '✓ В списке' : 'В список') + '</span></button>' +
           '</div></div></article>';
-      }).join('') + '</div>' +
+      }).join('') +
+      '<article class="hero-slide komi-hd-wide' + (promoActive ? ' active' : '') + '"' +
+      ' data-komi-promo="brand-loop" data-komi-hero-banner="' + promoPoster + '"' +
+      ' data-komi-hero-video="/assets/hero/komi-promo-loop.mp4"' +
+      ' aria-hidden="' + (promoActive ? 'false' : 'true') + '"' + (promoActive ? '' : ' inert') +
+      ' aria-label="KomiAnime — выбери свою историю">' +
+      '<img class="komi-hub-hero-art" src="' + (promoActive ? promoPoster : '/anime-artwork.svg') + '"' +
+      ' alt="" width="1280" height="720" loading="' + (promoActive ? 'eager' : 'lazy') + '" decoding="async"' +
+      (promoActive ? ' fetchpriority="high"' : ' data-komi-hero-deferred-src="' + promoPoster + '"') + '>' +
+      '<div class="komi-home-hero-content">' +
+      '<div class="komi-hub-title-wrap"><h1 class="komi-hub-title-text">Выбери свою<br>историю.</h1></div>' +
+      '<div class="hero-meta"><span>KomiAnime</span><span>Без звука</span></div>' +
+      '<p class="komi-hub-description">Найди аниме на вечер — и продолжи с того места, где остановился.</p>' +
+      '<div class="hero-buttons"><a class="komi-hub-play" href="/catalog"><span>Открыть каталог</span>' +
+      '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
+      '</a></div></div></article></div>' +
       '<div class="komi-hub-carousel-controls" aria-label="Управление слайдером">' +
       '<span class="komi-hub-slide-count"><strong data-komi-slide-current>' +
       String(index + 1).padStart(2, '0') + '</strong><span>/ ' + total + '</span></span>' +
-      (slides.length > 1 ? '<div class="hero-dots" role="group" aria-label="Выбор слайда">' +
-        slides.map((_, i) =>
+      (slideCount > 1 ? '<div class="hero-dots" role="group" aria-label="Выбор слайда">' +
+        Array.from({length:slideCount}, (_, i) =>
           '<button type="button" class="hero-dot' + (i === index ? ' active' : '') +
-          '" aria-label="Показать тайтл ' + (i + 1) + '" aria-pressed="' +
+          '" aria-label="Показать слайд ' + (i + 1) + '" aria-pressed="' +
           (i === index ? 'true' : 'false') + '" data-komi-onclick="setSlide(' + i + ')"></button>'
         ).join('') + '</div>' : '') +
       '<div class="komi-hub-arrows">' +
       '<button type="button" class="komi-hero-pause" data-komi-hero-toggle aria-label="Приостановить слайдер" aria-pressed="false" title="Приостановить слайдер">' +
         '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path data-komi-hero-pause-icon d="M6 5h4v14H6zM14 5h4v14h-4z"/><path data-komi-hero-play-icon hidden d="M8 5v14l11-7z"/></svg></button>' +
-      (slides.length > 1 ? '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
-        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button>' : '') + '</div>' +
+      (slideCount > 1 ? '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий слайд" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
+        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий слайд" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button>' : '') + '</div>' +
       '</div></div></section>';
   }
 

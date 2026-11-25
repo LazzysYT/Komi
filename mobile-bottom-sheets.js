@@ -76,6 +76,7 @@
         state.layer.querySelector('.komi-mobile-sheet-footer').replaceChildren();
         if (state.bodyOverflow === null) document.body.style.removeProperty('overflow');
         else document.body.style.overflow = state.bodyOverflow;
+        for (const [element, wasInert] of state.inertElements || []) element.inert = wasInert;
         if (restoreFocus && state.origin?.isConnected && !state.origin.disabled) {
             state.origin.focus({preventScroll:true});
         }
@@ -92,7 +93,12 @@
         if (!parent || (scope === 'watch' && !parent.classList.contains('active'))) return null;
         parent.append(layer);
         layer.querySelector('#komiMobileSheetTitle').textContent = label;
-        const state = {kind,origin,layer,bodyOverflow:document.body.style.overflow || null,moved:null};
+        const state = {kind,origin,layer,bodyOverflow:document.body.style.overflow || null,moved:null,inertElements:[]};
+        for (const sibling of parent.children) {
+            if (sibling === layer || !('inert' in sibling)) continue;
+            state.inertElements.push([sibling, sibling.inert]);
+            sibling.inert = true;
+        }
         opened = state;
         layer.hidden = false;
         layer.classList.add('is-open');
@@ -135,7 +141,7 @@
             item.setAttribute('aria-pressed', String(option.value === select.value));
             item.addEventListener('click', () => {
                 const changed = option.value !== select.value;
-                close(false);
+                close(!changed);
                 if (changed && select.isConnected) {
                     select.value = option.value;
                     select.dispatchEvent(new Event('change',{bubbles:true}));
@@ -323,19 +329,24 @@
     function ensureWatchDock() {
         const content=document.getElementById('watchModalContent');
         const sidebar=content?.querySelector('.komi-watch-sidebar');
-        const host=content?.querySelector('.komi-watch-quick-actions') || content?.querySelector('.komi-player-heading') || content?.querySelector('.komi-watch-controls');
+        const stage=content?.querySelector('.komi-watch-stage');
+        const host=stage || content?.querySelector('.komi-player-heading') || content?.querySelector('.komi-watch-controls');
         if (!host || !sidebar || !mobile.matches) return;
         let dock=content.querySelector('.komi-mobile-watch-actions');
         if (!dock) {
             dock=document.createElement('div');
             dock.className='komi-mobile-watch-actions';
-            dock.append(button('♫ Озвучка','komi-mobile-watch-source'),button('☷ Серии','komi-mobile-watch-episodes'));
+            dock.append(button('Серии','komi-mobile-watch-episodes'),button('Озвучка','komi-mobile-watch-source'));
             for(const item of dock.children) {
                 item.setAttribute('aria-haspopup','dialog');
                 item.setAttribute('aria-controls','komiMobileSheet');
             }
         }
-        if(dock.parentElement!==host)host.prepend(dock);
+        if(dock.parentElement!==host) {
+            const wrapper=stage?.querySelector('.player-wrapper');
+            if (wrapper && wrapper.parentElement === stage) wrapper.after(dock);
+            else host.prepend(dock);
+        }
         dock.hidden=false;
     }
     const watchContent=document.getElementById('watchModalContent');

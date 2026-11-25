@@ -25,13 +25,16 @@ function classes(initial = []) {
 const settle = async () => { for (let i=0;i<12;i++) await new Promise(resolve=>setImmediate(resolve)); };
 
 function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,playMode='success',
-  intersectionObserver=true,initialIntersection=true,rect} = {}) {
+  intersectionObserver=true,initialIntersection=true,rect,viewportWidth=1200,
+  initialReduced=false,initialFine=true,initialSaveData=false,effectiveType='4g',
+  pageUrl='https://komianime.online/'} = {}) {
   const timers = new Map(),frames = new Map(),imageRequests = [],apiRequests = [],videos = [],storage = new Map();
   const mutations = [],observers = [];
   let nextTimer = 1,nextFrame = 1,currentSlider,geometryReads=0;
-  const reduced = new Events(); reduced.matches = false;
-  const fine = new Events(); fine.matches = true;
-  const connection = new Events(); connection.saveData = false; connection.effectiveType = '4g';
+  const reduced = new Events(); reduced.matches = initialReduced;
+  const fine = new Events(); fine.matches = initialFine;
+  const narrow = new Events(); narrow.matches = viewportWidth < 768;
+  const connection = new Events(); connection.saveData = initialSaveData; connection.effectiveType = effectiveType;
   const document = new Events(); document.hidden = false; document.activeElement = null;
   const watchModal = {classList:classes()};
   const attributes = new Map();
@@ -129,8 +132,8 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
   document.createElement = tag => { if (tag === 'video') return new Video(); throw new Error('Unexpected element '+tag); };
   const root = new Events();
   Object.assign(root,{
-    navigator:{connection},innerHeight:900,innerWidth:1200,
-    matchMedia:text=>text.includes('prefers-reduced-motion') ? reduced : fine,
+    navigator:{connection},location:new URL(pageUrl),innerHeight:900,innerWidth:viewportWidth,
+    matchMedia:text=>text.includes('prefers-reduced-motion') ? reduced : text.includes('max-width') ? narrow : fine,
     requestAnimationFrame:fn=>{ const id=nextFrame++; frames.set(id,fn); return id; },
     cancelAnimationFrame:id=>frames.delete(id),
     requestIdleCallback:fn=>queueMicrotask(fn),
@@ -157,7 +160,7 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
   if (intersectionObserver && initialIntersection !== null)
     observers[0].callback([{target:slider,isIntersecting:initialIntersection,intersectionRatio:initialIntersection?1:0}]);
   return {
-    root,document,slider,slides:slider.slides,button,pauseIcon,playIcon,attributes,connection,reduced,fine,videos,
+    root,document,slider,slides:slider.slides,button,pauseIcon,playIcon,attributes,connection,reduced,fine,narrow,videos,
     imageRequests,apiRequests,timers,frames,observers,
     get geometryReads() { return geometryReads; },
     runDeferred() { for (const [id,item] of [...timers]) if (item.delay === 1800) { timers.delete(id); item.fn(); } },
@@ -217,10 +220,69 @@ test('first video waits for deferred scan and decoded first image; inactive vide
   assert.equal(video.src,videoUrl);
   assert.equal(video.muted,true); assert.equal(video.defaultMuted,true); assert.equal(video.playsInline,true);
   assert.equal(video.loop,true); assert.equal(video.preload,'none');
+  assert.equal(video.poster,f.slides[0].img.src,'The decoded artwork remains visible until video playback begins');
   for(let i=0;i<6;i++) f.root.KomiHeroArt.scan();
   await settle();
   assert.equal(video.playCount,1);
   assert.equal(f.slides[1].video,undefined);
+});
+
+test('a brand promotion plays through the same runtime without a fabricated anime or metadata request',async()=>{
+  let metadataCalls=0;
+  const f=fixture({slides:[{komiAnimeId:'',komiPromo:'brand-loop',komiHeroVideo:videoUrl}],
+    metadata:async()=>{metadataCalls++;return {};}});
+  assert.equal(f.videos.length,0);
+  f.runDeferred();await settle();
+  assert.equal(f.videos.length,1);
+  assert.equal(f.videos[0].paused,false);
+  assert.equal(metadataCalls,0);
+  assert.equal(f.apiRequests.length,0);
+  f.click();assert.equal(f.videos[0].paused,true);
+});
+
+test('a final local brand video waits for selection and its poster, then releases its source on leaving',async()=>{
+  const path='/assets/hero/komi-promo-loop.mp4';
+  const f=fixture({slides:[{}, {komiAnimeId:'',komiPromo:'brand-loop',komiHeroVideo:path}]});
+  const promo=f.slides[1];
+  promo.img.dataset.komiHeroDeferredSrc='/assets/hero/komi-promo-first-frame.webp';
+  f.runDeferred();await settle();
+  assert.equal(f.videos.length,0,'The inactive promotion must not attach a video source');
+  f.slides[0].classList.remove('active');promo.classList.add('active');
+  f.root.KomiHeroArt.selectedSlide();await settle();
+  assert.equal(f.videos.length,0,'A selected slide still waits for its deferred poster');
+  delete promo.img.dataset.komiHeroDeferredSrc;
+  promo.img.src='https://komianime.online/assets/hero/komi-promo-first-frame.webp';
+  f.root.KomiHeroArt.scan();await settle();
+  const video=f.videos[0];
+  assert.equal(video.src,'https://komianime.online'+path);
+  assert.equal(video.poster,promo.img.src);
+  assert.equal(video.paused,false);
+  promo.classList.remove('active');f.slides[0].classList.add('active');
+  f.root.KomiHeroArt.selectedSlide();await settle();
+  assert.equal(video.src,'');assert.equal(video.detached,true);
+});
+
+test('local video paths stay on the current HTTPS origin and unsafe URL forms remain rejected',async()=>{
+  const path='/assets/hero/komi-promo-loop.mp4';
+  const preview=fixture({pageUrl:'https://preview.example/catalog',
+    slides:[{komiAnimeId:'',komiPromo:'brand-loop',komiHeroVideo:path}]});
+  preview.runDeferred();await settle();
+  assert.equal(preview.videos[0].src,'https://preview.example'+path);
+  for(const [raw,pageUrl] of [
+    ['//media.example/clip.mp4','https://komianime.online/'],
+    ['/\\media.example/clip.mp4','https://komianime.online/'],
+    ['/assets/hero/\tclip.mp4','https://komianime.online/'],
+    [path,'http://komianime.online/'],
+    [path,'https://komianime.online:8443/'],
+    ['https://user:secret@media.example/clip.mp4','https://komianime.online/'],
+    ['https://media.example:8443/clip.mp4','https://komianime.online/'],
+    ['http://media.example/clip.mp4','https://komianime.online/'],
+    ['/assets/hero/not-video.webp','https://komianime.online/']
+  ]) {
+    const f=fixture({pageUrl,slides:[{komiAnimeId:'',komiPromo:'brand-loop',komiHeroVideo:raw}]});
+    f.runDeferred();await settle();
+    assert.equal(f.videos.length,0,raw+' on '+pageUrl);
+  }
 });
 
 test('pause control resumes despite focus/hover on itself, then retains an explicit user pause',async()=>{
@@ -251,6 +313,8 @@ test('slide changes, hidden tab, offscreen hero and route removal stop playback'
   f.root.KomiHeroArt.selectedSlide();await settle();
   const second=f.videos[1];
   assert.equal(first.paused,true);assert.equal(second.paused,false);
+  assert.equal(first.src,'','Leaving a slide cancels any remaining video download');
+  assert.equal(first.detached,true);
   f.document.hidden=true;f.document.emit('visibilitychange');
   assert.equal(second.paused,true);
   f.document.hidden=false;f.document.emit('visibilitychange');await settle();
@@ -264,17 +328,59 @@ test('slide changes, hidden tab, offscreen hero and route removal stop playback'
   assert.equal(f.observers[0].targets.size,0);
 });
 
-test('live reduced-motion and data-saving changes pause media and permit later resume',async()=>{
+test('live reduced-motion and data-saving changes release video downloads and permit later resume',async()=>{
   const f=fixture({slides:[{komiHeroVideo:videoUrl}]});
   f.root.KomiHeroArt.scan();await settle();
-  const video=f.videos[0];
+  let video=f.videos[0];
   f.preference(f.reduced,true);
   assert.equal(video.paused,true);assert.equal(f.root.KomiHeroArt.isPaused(f.slider),true);
+  assert.equal(video.src,'');assert.equal(video.detached,true);
   assert.equal(f.button.disabled,true);
-  f.preference(f.reduced,false);await settle();assert.equal(video.paused,false);
-  f.connection.saveData=true;f.connection.emit('change');assert.equal(video.paused,true);
-  f.connection.saveData=false;f.connection.emit('change');await settle();assert.equal(video.paused,false);
-  f.connection.effectiveType='2g';f.connection.emit('change');assert.equal(video.paused,true);
+  f.preference(f.reduced,false);await settle();video=f.videos.at(-1);assert.equal(video.paused,false);
+  f.connection.saveData=true;f.connection.emit('change');assert.equal(video.paused,true);assert.equal(video.src,'');
+  f.connection.saveData=false;f.connection.emit('change');await settle();video=f.videos.at(-1);assert.equal(video.paused,false);
+  f.connection.effectiveType='2g';f.connection.emit('change');assert.equal(video.paused,true);assert.equal(video.src,'');
+});
+
+test('phones, coarse pointers, reduced motion and constrained connections never attach a video source',async()=>{
+  for (const preferences of [
+    {viewportWidth:390},
+    {viewportWidth:844,initialFine:false},
+    {initialFine:false},
+    {initialReduced:true},
+    {initialSaveData:true},
+    {effectiveType:'slow-2g'}
+  ]) {
+    for(const slide of [
+      {komiHeroVideo:videoUrl},
+      {komiAnimeId:'',komiPromo:'brand-loop',komiHeroVideo:'/assets/hero/komi-promo-loop.mp4'}
+    ]) {
+      const f=fixture({...preferences,slides:[slide]});
+      f.runDeferred();await settle();
+      f.root.KomiHeroArt.scan();await settle();
+      f.root.KomiHeroArt.syncVideos();await settle();
+      assert.equal(f.videos.length,0,JSON.stringify({preferences,slide}));
+      assert.equal(f.slides[0].img.src,'https://images.example/portrait.jpg');
+      if(preferences.viewportWidth===390 || preferences.initialFine===false)
+        assert.equal(f.button.hidden,true,'A single still slide has no playback action');
+    }
+  }
+});
+
+test('resizing to a phone cancels media; returning to desktop preserves an explicit pause',async()=>{
+  const f=fixture({slides:[{komiHeroVideo:videoUrl},{}]});
+  f.root.KomiHeroArt.scan();await settle();
+  const first=f.videos[0];
+  f.click();assert.equal(first.paused,true);
+  f.preference(f.narrow,true);
+  assert.equal(first.src,'');assert.equal(first.detached,true);
+  assert.equal(f.slides[0].img.src,'https://images.example/portrait.jpg');
+  f.preference(f.narrow,false);await settle();
+  assert.equal(f.videos.length,1,'Resize must not override the user pause');
+  f.click();await settle();
+  assert.equal(f.videos.length,2);assert.equal(f.videos[1].paused,false);
+  f.preference(f.fine,false);await settle();
+  assert.equal(f.videos[1].src,'');assert.equal(f.videos[1].detached,true);
 });
 
 test('watch dialog pauses the still-mounted hero immediately and closing respects existing pause preferences',async()=>{
