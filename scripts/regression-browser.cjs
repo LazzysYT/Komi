@@ -152,6 +152,12 @@ async function checkNotifications(page) {
      localStorage.setItem('komi_current_user', JSON.stringify({username:'legacy',authUserId:'forged-id'}));
    });
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+   // The daily hero waits for a decoded wide still before changing frames.
+   // Keep that browser path real while making remote artwork deterministic.
+   await page.route(/^https:\/\/image\.tmdb\.org\/t\/p\/w1280\/[A-Za-z0-9]+\.jpg$/,route=>route.fulfill({
+     status:200,contentType:'image/svg+xml',
+     body:'<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="1280" height="720" fill="#181820"/><path d="M0 600L480 180L940 720H0Z" fill="#394050"/></svg>'
+   }));
    await page.route(/^https:\/\/media\.test\/player\?/,route=>route.fulfill({status:200,contentType:'text/html; charset=utf-8',body:'<button type="button" style="margin:80px">Запустить видео</button><script>document.querySelector("button").onclick = event => { event.target.textContent = "Видео запущено"; };</script>'}));
    await page.goto(process.env.KOMI_TEST_URL || 'http://127.0.0.1:8765');
    await page.waitForFunction(()=>typeof bindKomiPlayer==='function');
@@ -385,10 +391,19 @@ async function checkNotifications(page) {
 
    await page.evaluate(()=>{
     const hostileMetadata = '<img data-komi-injected src=x>';
-    animeList=[{id:'1',title:'Проверка аниме '+hostileMetadata,originalTitle:'Test',poster:'https://media.test/poster.jpg',
+    const watchFixture={id:'1',title:'Проверка аниме '+hostileMetadata,originalTitle:'Test',poster:'https://media.test/poster.jpg',
       genres:[hostileMetadata],year:'2026',shikiRating:8.2,type:'Сериал',episodeCount:3,
-      episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true}];
+      episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true};
+    // The editorial hero only selects curated IDs. Preserve id 1 for the
+    // watch/source/progress checks and exercise the same hostile data in its lead.
+    animeList=[watchFixture,{...watchFixture,id:window.KomiHeroDaily.first}];
+    currentSlideIndex=0;
     catalogInitialLoadComplete=true;komiHomeCatalogReady=true;render();
+   });
+   await page.waitForFunction(()=>{
+     const slide=document.querySelector('.hero-slide.active');
+     return slide?.dataset.komiAnimeId===window.KomiHeroDaily.first &&
+       slide.querySelector('.komi-hub-title-text')?.textContent.startsWith('Проверка аниме ');
    });
    assert.match(await page.locator('.hero-slide.active .komi-hub-title-text').textContent(), /<img data-komi-injected/);
    assert.equal(await page.locator('[data-komi-injected]').count(), 0);

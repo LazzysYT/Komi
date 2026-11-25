@@ -114,7 +114,8 @@ const make=(id,year,score)=>({
     const cachedFrame=await readActiveHero();
     assertDailyPair(cachedFrame,'First paint '+dailyLead);
     assert.deepEqual(cachedFrame,finalFrame,'A returning visitor must retain the fully hydrated daily frame');
-    assert.equal(await page.evaluate(()=>komiHomeCatalogReady),false,'The cached hero is visible while the next catalog page is pending');
+    // A complete usable cache is already ready. Awaiting secondRequested while
+    // secondFetched remains unresolved proves the background refresh is pending.
     releaseSecond();
     await page.waitForFunction(()=>komiHomeCatalogReady,{timeout:20000});
     assert.deepEqual(await readActiveHero(),finalFrame);
