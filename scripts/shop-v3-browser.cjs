@@ -13,17 +13,23 @@ fs.mkdirSync(output,{recursive:true});
  try{
    await page.goto(url,{waitUntil:'domcontentloaded',timeout:45000});
    await shop.waitFor({timeout:20000});
-   assert.equal(await page.locator('#shop .sv3-item').count(),85,'Guest must see all 85 products');
-   assert.equal(await page.locator('#shop .sv5-preview-button').count(),85,'Every product must have a click-to-preview button');
-   assert.ok((await page.locator('#shop .sv3-primary-buy').first().innerText()).includes('Войти'),
-     'Guest buy action must request login');
+   assert.equal(await page.locator('#shop .sv3-item').count(),93,'Guest must see all 93 products');
+   assert.equal(await page.locator('#shop .sv5-preview-button').count(),93,'Every product must have a click-to-preview button');
+   const firstAction=page.locator('#shop .sv3-primary-buy').first();
+   if(new URL(page.url()).hostname==='komianime.online'){
+     assert.match(await firstAction.innerText(),/Войти/,'Guest buy action must request login');
+   }else{
+     assert.match(await firstAction.innerText(),/Только примерка/,'Preview must clearly disable purchases');
+     assert.equal(await firstAction.isDisabled(),true);
+   }
+   assert.match(await page.locator('#shop .sv3-unit-price').first().innerText(),/20 AniCoin/);
    assert.equal(await page.locator('#shop .sv5-weekly').count(),1,'Exactly one weekly collection must appear');
    assert.equal(await page.locator('#shop .sv4-feature-card').count(),0,'Remove the six legacy feature cards');
-   assert.equal(await page.locator('#shop [data-v3-category]').count(),7,'Show seven large pill categories');
+   assert.equal(await page.locator('#shop [data-v3-category]').count(),15,'Give all 13 product categories and 2 views their own pill');
    assert.equal(await page.locator('#shop [data-v3-sort]').count(),4,'Sort is a four-button segment');
-   assert.equal(await page.locator('#shop .sv3-item-actions .komi-shop-gift-button').count(),85,
+   assert.equal(await page.locator('#shop .sv3-item-actions .komi-shop-gift-button').count(),93,
      'The gift integration must inject one filled SVG action per product');
-   assert.ok(await page.locator('#shop .komi-shop-gift-button .komi-sticker-icon').count()>=85,
+   assert.ok(await page.locator('#shop .komi-shop-gift-button .komi-sticker-icon').count()>=93,
      'Gift icons use filled vector graphics');
    const bundleCSS=await page.evaluate(()=>{
      const links=[...document.querySelectorAll('head link[rel="stylesheet"]:not([data-komi-first-paint])')];
@@ -31,7 +37,7 @@ fs.mkdirSync(output,{recursive:true});
    });
    const expectedCSS=['/komi.production.css','/komi-pill-system.css'];
    if(bundleCSS.includes('/komi-icon-rail.css')) expectedCSS.push('/komi-icon-rail.css');
-   expectedCSS.push('/komi-shop-v5.css');
+   expectedCSS.push('/komi-shop-v5.css','/komi-shop-v6-goods.css');
    expectedCSS.push('/button-animations.css','/komi-genre-moods.css','/komi-watch-compact-v6.css','/komi-hero-senku.css');
    assert.deepEqual(bundleCSS,expectedCSS,
      'Production CSS must preserve base, pill, and optional icon-rail cascade order');
@@ -64,6 +70,11 @@ fs.mkdirSync(output,{recursive:true});
    assert.equal(await page.locator('#shop .sv3-item').count(),4,'Shapes category must show four products');
    assert.ok((await page.locator('#shop .sv3-selection-list').innerText()).includes('Лунная рамка'),
      'Selecting another category must not clear the fitting room');
+   await page.locator('#shop [data-v3-category="banner"]').click();
+   assert.equal(await page.locator('#shop .sv3-item').count(),9,'Banners including the new backdrop must be independently discoverable');
+   await page.locator('#shop [data-v3-category="owned"]').click();
+   assert.match(await page.locator('#shop .sv3-no-results').innerText(),/Войди/,'Guests get an explicit owned-item state');
+   await page.locator('#shop [data-v3-category="shape"]').click();
    await page.locator('#shop [data-v3-sort="price-up"]').click();
    const values=await page.locator('#shop [data-shop-item-action]').evaluateAll(nodes=>{
      const catalog=window.KomiShopCatalog.items;
@@ -94,6 +105,6 @@ fs.mkdirSync(output,{recursive:true});
    assert.equal(mobileGeometry.horizontalOverflow,false,
      'Mobile storefront must fit viewport width: '+JSON.stringify(mobileGeometry));
    await page.screenshot({path:path.join(output,'shop-v3-mobile.png'),fullPage:false});
-   console.log('PASS Komi Shop V5 guest desktop + mobile: 85 products, weekly banner, gift SVG, sorting, previews and bottom sheet');
+   console.log('PASS Komi Shop V5 guest desktop + mobile: 93 products, weekly banner, gift SVG, sorting, previews and bottom sheet');
  }finally{await page.close();await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -28,11 +28,13 @@ vm.runInContext(read('komi-shop-catalog.js'),context);
 vm.runInContext(read('komi-shop-icons.js'),context);
 vm.runInContext(js,context);
 // Mirror the SPA's real refresh callback so clicks actually rerender in the unit harness.
-context.renderAniCoinShop=()=>context.window.KomiShopV3.render(container,guest);
+let actor=()=>guest;
+context.renderAniCoinShop=()=>context.window.KomiShopV3.render(container,actor());
 const products=context.window.KomiShopCatalog.items;
 const guest={owner:'',store:null,wallet:null,displayName:'Гость',avatar:''};
 const owned={owner:'uid-one',store:{balance:500,owned:['frame_moon','title_cinema'],frame_id:'frame_moon'},wallet:{balance:500},displayName:'Тестовый зритель',avatar:''};
 function reset(){
+ actor=()=>guest;
  // Keep each test independent: clear persisted filters through the same UI handler.
  if(scripts.click)scripts.click(eventButton('data-v3-reset-filters'));
  context.window.KomiShopV3.reset();
@@ -50,9 +52,10 @@ function eventButton(name,id){
   return {dataset:d,hasAttribute(k){return k===name;}};
  }}};
 }
+const countCards=html=>(html.match(/data-shop-item-action=/g)||[]).length;
 test('shop v3 JavaScript parses without frameworks and is initialized from the catalog',()=>{
  assert.doesNotThrow(()=>new vm.Script(js));
- assert.equal(products.length,85);
+ assert.equal(products.length,93);
  assert.match(html,/src="\.\/komi-shop-v3\.js\?v=/);
  assert.match(html,/komi\.production\.css\?v=/);
  assert.match(core,/window\.KomiShopV3\?\.render/);
@@ -62,10 +65,10 @@ test('shop v3 JavaScript parses without frameworks and is initialized from the c
 test('guest storefront shows all items, rarity, explicit prices and auth button',()=>{
  context.window.KomiShopV3.render(container,guest);
  const count=(container.innerHTML.match(/data-shop-item-action="/g)||[]).length;
- assert.equal(count,85);
+ assert.equal(count,93);
  assert.match(container.innerHTML,/Магазин Komi/);
  assert.match(container.innerHTML,/Войти, чтобы купить/);
- assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,85);
+ assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,93);
   assert.doesNotMatch(container.innerHTML,/Рамка для твоего аватара в профиле/);
  assert.match(container.innerHTML,/data-rarity="legendary"/);
  assert.match(container.innerHTML,/data-v3-sort/);
@@ -181,10 +184,10 @@ test('shop V5 presents one weekly collection and filled icons while preserving p
   assert.equal((output.match(/class="sv5-weekly"/g)||[]).length,1);
   assert.equal((output.match(/data-v3-bundle/g)||[]).length,1);
   assert.doesNotMatch(output,/sv4-feature-grid|sv3-bento|Ещё категории/);
-  assert.equal((output.match(/data-v3-category=/g)||[]).length,7);
+  assert.equal((output.match(/data-v3-category=/g)||[]).length,15);
   assert.equal((output.match(/data-v3-sort=/g)||[]).length,4);
-  assert.equal((output.match(/data-shop-item-action=/g)||[]).length,85);
-  assert.equal((output.match(/data-v3-try=/g)||[]).length,85);
+  assert.equal((output.match(/data-shop-item-action=/g)||[]).length,93);
+  assert.equal((output.match(/data-v3-try=/g)||[]).length,93);
   assert.match(output,/data-v3-hide-owned/);
   assert.match(output,/data-v3-checkout/);
   assert.match(output,/id="komiShopSocialArea"/);
@@ -222,4 +225,69 @@ test('svg sticker icons are predictable, non-interactive and have a fallback',()
    assert.match(markup,/stroke="currentColor"/);
  }
  assert.match(icons.svg('invalid'),/komi-sticker-icon/);
+});
+
+test('all product categories have a dedicated filter and showcase/card cosmetics are visible in the fitting room',async()=>{
+ reset();
+ for(const type of new Set(products.map(row=>row.type))){
+  assert.match(container.innerHTML,new RegExp('data-v3-category="'+type+'"'));
+  await scripts.click(eventButton('data-v3-category',type));
+  assert.equal(countCards(container.innerHTML),products.filter(row=>row.type===type).length,type);
+ }
+ await scripts.click(eventButton('data-v3-try','showcase_film'));
+ await scripts.click(eventButton('data-v3-try','card_glass'));
+ assert.match(container.innerHTML,/Витрина топ-3[\s\S]+Карточка профиля/);
+ assert.match(container.innerHTML,/class="sv3-unit-price">/);
+});
+
+test('hide-owned filter does not blank the owned collection',async()=>{
+ reset();actor=()=>owned;
+ context.window.KomiShopV3.render(container,owned);
+ scripts.change({target:{checked:true,matches:selector=>selector==='[data-v3-hide-owned]'}});
+ assert.equal(countCards(container.innerHTML),products.length-owned.store.owned.length);
+ await scripts.click(eventButton('data-v3-category','owned'));
+ assert.equal(countCards(container.innerHTML),owned.store.owned.length);
+ assert.match(container.innerHTML,/data-v3-hide-owned disabled/);
+ assert.doesNotMatch(container.innerHTML,/пока нет купленных/);
+});
+
+test('migration lowers every existing price, registers eight new goods and keeps all equip ids valid',()=>{
+ const migration=read('supabase/migrations/20261125100500_anicoin_shop_v6_catalog.sql');
+ const parsePrices=t=>Object.fromEntries([...t.matchAll(/\('([a-z0-9_]+)',\s*(\d+),\s*true\)/g)].map(([,id,cost])=>[id,+cost]));
+ const oldPrices=parsePrices(read('supabase/migrations/20261122070000_anicoin_visual_collections.sql'));
+ const newPrices=parsePrices(migration);
+ assert.equal(Object.keys(oldPrices).length,85);
+ assert.deepEqual(newPrices,Object.fromEntries(products.map(row=>[row.id,row.cost])));
+ assert.equal(Object.keys(newPrices).filter(id=>!Object.hasOwn(oldPrices,id)).length,8);
+ for(const [id,price] of Object.entries(oldPrices))assert.ok(newPrices[id]<price,id);
+ const checks=Object.fromEntries([...migration.matchAll(/add constraint (\w+)\s+check \([\s\S]+?\bin \(([\s\S]+?)\n  \)\);/g)]
+  .map(([,constraint,list])=>[constraint,[...list.matchAll(/'([a-z0-9_]+)'/g)].map(match=>match[1])]));
+ assert.deepEqual(checks.premium_store_purchases_item_id_check,[...products.map(row=>row.id)]);
+ for(const type of ['frame','title','banner','icon','plate','xp'])
+  assert.deepEqual(checks['komi_premium_cosmetic_equips_'+type+'_id_check'],[...products.filter(row=>row.type===type).map(row=>row.id)]);
+ assert.match(migration,/security invoker set search_path = ''/);
+ assert.match(migration,new RegExp("select '"+context.window.KomiShopCatalog.revision+"'"));
+ assert.doesNotMatch(migration,/update public\.komi_anicoin_wallets|update komi_private\.premium_store_purchases|security definer/i);
+ const visuals=read('komi-shop-v6-goods.css');
+ for(const row of products.filter(row=>!Object.hasOwn(oldPrices,row.id)&&row.type!=='title'))
+  assert.ok(visuals.includes('komi-store-'+(row.frameClass||row.bannerClass||row.cosmeticClass)),row.id);
+});
+
+test('server revision must match before debiting and preview blocks even with the matching revision',async()=>{
+ reset();
+ const real=context.window.KomiShopCatalog;
+ assert.equal(real.canCheckout(),false);
+ assert.equal(await real.checkPricing({rpc:async()=>({data:'previous'})}),false);
+ assert.equal(await real.checkPricing({rpc:async name=>{
+   assert.equal(name,'komi_shop_catalog_revision');
+   return {data:real.revision};
+ }}),true);
+ assert.equal(real.canCheckout(),true);
+ context.window.location={hostname:'preview.vercel.app'};
+ assert.equal(real.canCheckout(),false);
+ assert.equal(await real.checkPricing({rpc:async()=>{throw Error('preview must not query');}}),false);
+ context.window.KomiShopV3.render(container,guest);
+ assert.match(container.innerHTML,/Предпросмотр: показаны новые цены/);
+ assert.match(container.innerHTML,/aria-label="Купить «Лунная рамка»" disabled>Только примерка/);
+ delete context.window.location;
 });
