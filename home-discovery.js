@@ -271,13 +271,13 @@
     const daily = root.KomiHeroDaily?.lineup(animeList, Array.isArray(root.KomiHomeSeed) ? root.KomiHomeSeed : []);
     const usesDaily = daily?.length >= 2;
     const revision = Number(context.catalogRevision) || 0;
-    let metadata = null;
     if (!cachedPublicHome || cachedPublicHome.source !== source ||
         cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
       const now = Date.now(), recentThreshold = now - 30 * 86400000;
-      metadata = animeList.map(anime => ({
-        anime, score:score(anime), updated:updated(anime),
-        year:context.year(anime), count:count(anime)
+      // Recommendation ranking needs only rating and freshness; avoid
+      // extracting fallback-hero fields for the full catalog on daily renders.
+      const metadata = animeList.map(anime => ({
+        anime, score:score(anime), updated:updated(anime)
       }));
       const popularity = item => (item.updated > recentThreshold && item.updated <= now ? 2 : 0) + item.score / 10;
       const popular = metadata.filter(item => item.score > 0 && id(item.anime))
@@ -290,9 +290,9 @@
     if (!usesDaily && cachedPublicHome.slider === null) {
       cachedPublicHome.slider = typeof root.KomiHomeSnapshot?.featured === 'function'
         ? root.KomiHomeSnapshot.featured(animeList, context.year)
-        : (metadata || animeList.map(anime => ({
+        : animeList.map(anime => ({
             anime, score:score(anime), year:context.year(anime), count:count(anime)
-          }))).filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
+          })).filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
           .sort((a,b) => Number(b.year) - Number(a.year) || b.score - a.score)
           .slice(0,5).map(item => item.anime);
     }
