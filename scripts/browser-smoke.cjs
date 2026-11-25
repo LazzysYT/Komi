@@ -60,6 +60,7 @@ function measureGenreLayout({ selector, withTools }) {
         description: document.querySelector('meta[name="description"]')?.content || '',
         mainText: (() => { const main=document.querySelector('main') || document.getElementById('mainContainer'); return (main?.innerText?.trim() || main?.textContent?.trim() || '').slice(0,300); })(),
         horizontalOverflow: document.documentElement.scrollWidth > window.innerWidth + 2,
+        firstShelfVisible: getComputedStyle(document.querySelector('.komi-home-popular')).contentVisibility === 'visible',
         googleButton: !!document.querySelector('.komi-google-btn'),
         loginForm: !!document.querySelector('#loginFormContainer'),
         registrationForm: !!document.querySelector('#registerFormContainer'),
@@ -104,7 +105,7 @@ function measureGenreLayout({ selector, withTools }) {
         process.exitCode = 1;
       }
       await page.screenshot({ path: path.join(output, 'komi-' + width + '.png'), fullPage: true });
-      if (!response?.ok() || !state.mainText.trim() || state.horizontalOverflow || errors.length) {
+      if (!response?.ok() || !state.mainText.trim() || !state.firstShelfVisible || state.horizontalOverflow || errors.length) {
         console.error('FAIL', result);
         process.exitCode = 1;
       } else console.log('PASS', result);

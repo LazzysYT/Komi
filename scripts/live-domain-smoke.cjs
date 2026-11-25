@@ -8,6 +8,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const base='https://komianime.online/';
 const output=path.join(__dirname,'../browser-test-results');
+const checkedInHtml=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const expectedRevision=checkedInHtml.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
+assert.match(expectedRevision,/^\d{8}-[\w-]+$/,'Checked-in release must declare its UI revision');
 fs.mkdirSync(output,{recursive:true});
 
 (async()=>{
@@ -22,6 +25,12 @@ fs.mkdirSync(output,{recursive:true});
       try {
         const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
         assert.ok(response?.ok(),'Production HTTPS returned '+response?.status());
+        const deployedRevision=await page.locator('meta[name="komi-ui-revision"]').getAttribute('content');
+        assert.match(deployedRevision,/^\d{8}-[\w-]+$/,'Production must declare its exact UI revision');
+        // PR checks visit the currently deployed release, which may still be
+        // the baseline. Each known revision keeps its own strict DOM contract.
+        const homeContract=deployedRevision===expectedRevision?'storefront':
+          deployedRevision==='20261125-v811-cinematic'?'legacy':'shared';
         if(width===1440) {
           const enforced=(response.headers()['content-security-policy']||'');
           assert.ok(enforced.includes("script-src-elem 'self' https://cdn.jsdelivr.net"),
@@ -45,9 +54,7 @@ fs.mkdirSync(output,{recursive:true});
             // A live source check catches stale HTML / wrong alias even if
             // hydrated JavaScript happens to show the right storefront.
             const homepageHtml=await response.text();
-            const checkedInHtml=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
-            const revision=checkedInHtml.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
-            assert.match(revision,/^\d{8}-[\w-]+$/,'Checked-in release must declare its UI revision');
+            const revision=expectedRevision;
             assert.equal(homepageHtml.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1],revision,
               'Main domain must serve the exact checked-in storefront revision');
             assert.equal(homepageHtml.match(/komi\.production\.css\?v=([^"]+)/)?.[1],revision,
@@ -102,23 +109,46 @@ fs.mkdirSync(output,{recursive:true});
           console.log('PASS production security headers, external main JS and enforced inline-script block');
         }
         await page.waitForFunction(()=>typeof catalogInitialLoadComplete!=='undefined' && catalogInitialLoadComplete,null,{timeout:75000});
-        await page.waitForSelector('#mainContainer .komi-home-popular .komi-discovery-card',{timeout:30000});
-        const initial=await page.evaluate(()=>{
+        const homeSelector=homeContract==='storefront'?'#mainContainer .komi-home-popular .komi-discovery-card':
+          homeContract==='legacy'?'#mainContainer .anime-card':'#mainContainer .hero-slide.active .komi-hub-title-text';
+        await page.waitForSelector(homeSelector,{timeout:30000});
+        const initial=await page.evaluate(({homeContract,deployedRevision})=>{
           const canonical=document.querySelector('link[rel=canonical]')?.href||'';
           const domain=location.hostname;
-          const cardCount=document.querySelectorAll('.komi-home-discovery .komi-home-popular .komi-discovery-card').length;
-          return {domain,canonical,cardCount,title:document.title,
+          const cardSelector=homeContract==='storefront'?'.komi-home-discovery .komi-home-popular .komi-discovery-card':
+            '#mainContainer .anime-card';
+          const cardCount=document.querySelectorAll(cardSelector).length;
+          return {domain,canonical,cardCount,homeContract,deployedRevision,title:document.title,
              profileDrawer:!!document.getElementById('komiFriendsDrawer'),
              videoModal:!!document.getElementById('watchModal'),
              logo:!!document.querySelector('.komi-side-logo'),
              overflow:document.documentElement.scrollWidth>innerWidth+2,
              loading:!catalogInitialLoadComplete};
-        });
+        },{homeContract,deployedRevision});
         assert.equal(initial.domain,'komianime.online');
         assert.ok(initial.canonical.startsWith(base),'Canonical URL should match the public domain');
-        assert.ok(initial.cardCount>0&&initial.cardCount<=12,'The recommendation rail must contain real bounded cards');
-        const genres=page.locator('.komi-home-discovery .komi-home-genres-section a[data-komi-mood-genre]');
-        assert.equal(await genres.count(),8,'Hydrated home must preserve the eight native genre links');
+        if(homeContract==='storefront'){
+          assert.ok(initial.cardCount>0&&initial.cardCount<=12,'The recommendation rail must contain real bounded cards');
+          const genres=page.locator('.komi-home-discovery .komi-home-genres-section a[data-komi-mood-genre]');
+          assert.equal(await genres.count(),8,'Hydrated home must preserve the eight native genre links');
+        }else if(homeContract==='legacy'){
+          assert.ok(initial.cardCount>0,'The deployed V8.11 home must contain real anime cards');
+        }else{
+          // A different deployed revision must still expose a real hero and
+          // usable catalog; an empty page never counts as a passing fallback.
+          assert.ok((await page.locator('#mainContainer .hero-slide.active .komi-hub-title-text').innerText()).trim().length>0,
+            'The deployed home hero must name a real title');
+          assert.equal(await page.locator('#mainContainer .hero-slide.active .komi-hub-play').isVisible(),true,
+            'The deployed hero must expose its watch action');
+          await page.evaluate(()=>navigate('catalog'));
+          await page.waitForSelector('#komiCatalogGrid .anime-card',{timeout:30000});
+          initial.cardCount=await page.locator('#komiCatalogGrid .anime-card').count();
+          initial.cardScope='catalog';
+          assert.ok(initial.cardCount>0,'The deployed catalog must contain real anime cards');
+          assert.ok((await page.locator('#komiCatalogGrid .anime-card').first().innerText()).trim().length>0);
+          await page.evaluate(()=>navigate('home'));
+          await page.waitForSelector('#mainContainer .hero-slide.active .komi-hub-title-text');
+        }
         assert.equal(initial.overflow,false,'Page should not overflow horizontally');
         // Verify the actual production asset response, not an assumed Vite/public path.
         const posterResponse=await page.request.get(new URL('anime-artwork.svg',base).href,{timeout:15000});

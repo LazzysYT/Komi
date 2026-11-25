@@ -3761,6 +3761,12 @@ body > header > .header-inner{
   min-width: 0;
 }
 .komi-media-hub .komi-home-storefront > .komi-feature-section { margin: 0 !important; min-width: 0; }
+/* These shelves can be visible immediately below the hero. The legacy watch
+   stylesheet must not hide/unskip them later using an estimated height. */
+.komi-media-hub .komi-home-storefront :is(.komi-home-popular,.komi-home-continue) {
+  content-visibility: visible !important;
+  contain-intrinsic-size: none !important;
+}
 .komi-media-hub .komi-home-storefront .komi-home-heading {
   align-items: flex-start;
   gap: 16px;
@@ -3945,7 +3951,6 @@ body > header > .header-inner{
   .komi-media-hub .komi-home-storefront .komi-home-continue .komi-home-progress-card { flex-basis: min(310px,82vw) !important; }
   .komi-media-hub .komi-home-storefront .komi-home-rail-pending { min-height: 325px; }
   .komi-media-hub .komi-home-storefront .komi-home-release-rail { grid-auto-columns: min(320px,86vw); gap: 12px; }
-  .komi-media-hub .komi-home-storefront .komi-home-popular { content-visibility: visible; contain-intrinsic-size: none; }
   .komi-media-hub .komi-home-storefront .komi-home-genres-section { contain-intrinsic-size: auto 340px; }
 }
 @media (prefers-reduced-motion:reduce) {
