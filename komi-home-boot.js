@@ -1,7 +1,88 @@
+/* Verified, wide episode stills for the editorial front page. The promo is not a daily lead. */
+(function (root) {
+  'use strict';
+  const stills = Object.freeze({
+    61316:'f7StpjhGI5xdIecti2jQkQY38ov',
+    61469:'nVjUqzoZXDGXajjged1ZhUpj1jr',
+    61967:'pn7ZN5POA455AqIVejsL4YiKxiS',
+    60636:'pShnxXXD1CrHyLbbTu8nAaLczHP',
+    59978:'a47oBhPll8SzPJaef1VzG0Yft91'
+  });
+  const order = ['61316','61469','61967','60636','59978'];
+  function dayNumber(now) {
+    try {
+      const parts = new Intl.DateTimeFormat('en-CA',{timeZone:'Europe/Kyiv',year:'numeric',month:'numeric',day:'numeric'})
+        .formatToParts(now);
+      const fields = Object.fromEntries(parts.map(p=>[p.type,Number(p.value)]));
+      return Math.floor(Date.UTC(fields.year,fields.month-1,fields.day)/86400000);
+    } catch {return Math.floor(Number(now)/86400000);}
+  }
+  function lead(now = Date.now()) {
+    const offset = dayNumber(now) - Math.floor(Date.UTC(2026,10,25)/86400000);
+    return order[((offset % order.length) + order.length) % order.length];
+  }
+  const first = lead(); // Fixed for the lifetime of the page, including refreshes of its data.
+  function artwork(id) {
+    const key = stills[id];
+    return Object.prototype.hasOwnProperty.call(stills,id) ? 'https://image.tmdb.org/t/p/w1280/' + key + '.jpg' : '';
+  }
+  function lineup(catalog, seed = []) {
+    const live = new Map(catalog.filter(item=>order.includes(String(item?.id))).map(item=>[String(item.id),item]));
+    const index = order.indexOf(first);
+    return order.slice(index).concat(order.slice(0,index)).map(id=>{
+      const baseline = seed.find(item=>String(item.id)===id);
+      const item = live.get(id);
+      return item ? {...baseline,...item,desc:item.desc || baseline?.desc || ''} : baseline;
+    }).filter(Boolean);
+  }
+  const loads = new WeakMap(), decoded = new WeakSet();
+  function imageIsReal(image) {
+    const src = image?.currentSrc || image?.getAttribute?.('src') || '';
+    return Boolean(image?.complete && image.naturalWidth >= 2 && src && !/\/anime-artwork\.svg(?:[?#]|$)/i.test(src));
+  }
+  function prepare(slide) {
+    const image = slide?.querySelector('.komi-hub-hero-art');
+    if (!image) return Promise.resolve(false);
+    if (decoded.has(image) && imageIsReal(image)) return Promise.resolve(true);
+    if (loads.has(image)) return loads.get(image);
+    const source = image.dataset.komiHeroDeferredSrc || image.getAttribute('src');
+    if (!source || /\/anime-artwork\.svg(?:[?#]|$)/i.test(source)) return Promise.resolve(false);
+    const request = new Promise(resolve=>{
+      let finished = false;
+      const finish = value=>{
+        if (finished) return;
+        finished = true;
+        clearTimeout(timer);
+        image.removeEventListener('load', onLoad);
+        image.removeEventListener('error', onError);
+        resolve(value);
+      };
+      const onError = ()=>finish(false);
+      const onLoad = ()=>{
+        if (!imageIsReal(image)) return;
+        Promise.resolve(typeof image.decode === 'function' ? image.decode() : null)
+          .then(()=>{const ok=imageIsReal(image);if(ok)decoded.add(image);finish(ok);},onError);
+      };
+      const timer = setTimeout(onError,4200);
+      image.addEventListener('load',onLoad);
+      image.addEventListener('error',onError);
+      image.loading = 'eager';
+      image.fetchPriority = 'low';
+      if (image.getAttribute('src') !== source || (image.complete && !image.naturalWidth)) image.src = source;
+      onLoad();
+    }).finally(()=>loads.delete(image));
+    loads.set(image,request);
+    return request;
+  }
+  root.KomiHeroDaily = {first,lead,artwork,lineup,prepare,imageIsReal};
+  if (typeof module === 'object' && module.exports) module.exports = root.KomiHeroDaily;
+})(globalThis);
+
 /* Keep the crawlable SEO fallback in the document, but never flash it to JS visitors.
    CSP-safe external script in <head>; hydrated markup is switched on before paint. */
 (() => {
   'use strict';
+  if (typeof document === 'undefined') return;
   // Start font CSS without making the first screen depend on a remote stylesheet.
   document.addEventListener('load', event => {
     if (event.target?.id === 'komi-font-css' || event.target?.matches?.('link[data-komi-deferred-style]')) {
@@ -50,10 +131,13 @@
   const html = document.documentElement;
   html.classList.add('komi-home-booting');
   if (!sectionRoute) {
-    html.classList.add('komi-home-boot-preview');
-    const src = document.querySelector('meta[name="komi-first-hero"]')?.content;
+    const daily = window.KomiHeroDaily;
+    // A fixed real preview would show yesterday's title briefly. Keep the
+    // neutral shell until the selected daily image has actually decoded.
+    const src = daily?.artwork?.(daily.first) || document.querySelector('meta[name="komi-first-hero"]')?.content;
     const nativeBanner = /^https:\/\/s[34]\.anilist\.co\/file\/anilistcdn\/media\/anime\/banner\/[A-Za-z0-9_-]+\.(?:jpe?g|png|webp|avif)$/i;
-    if (src && (src.startsWith('https://wsrv.nl/?url=') || nativeBanner.test(src))) {
+    if (src && (src.startsWith('https://wsrv.nl/?url=') || nativeBanner.test(src) ||
+        /^https:\/\/image\.tmdb\.org\/t\/p\/w1280\/[A-Za-z0-9_-]+\.jpg$/.test(src))) {
       const preload = document.createElement('link');
       preload.rel = 'preload'; preload.as = 'image'; preload.href = src;
       preload.fetchPriority = 'high'; preload.referrerPolicy = 'no-referrer';

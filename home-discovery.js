@@ -97,6 +97,8 @@
     return typeof url === 'string' && /^https:\/\/[^\s"'<>]+$/i.test(url) ? url : '';
   }
   function heroArtwork(anime) {
+    const dailyArt = root.KomiHeroDaily?.artwork(id(anime));
+    if (dailyArt) return {banner:dailyArt,wide:true,daily:true};
     const valid = url => typeof url === 'string' && /^https:\/\/[^\s"'<>]+$/i.test(url);
     const custom = [anime.banner_url, anime.bannerUrl].find(valid);
     // Public cards omit hero metadata. Reuse the verified seed banner for this
@@ -129,7 +131,7 @@
         const animeId = id(anime);
         // Shikimori IDs match MAL IDs; internal routes always use Komi's own ID.
         const malId = String(anime.shikimoriId || anime.idMal || anime.malId || animeId);
-        const {banner, wide} = heroArtwork(anime);
+        const {banner, wide, daily} = heroArtwork(anime);
         const video = [anime.banner_video_url, anime.bannerVideoUrl, anime.bannerVideo].find(url => typeof url === 'string' && /^https:\/\/[^\s]+\.(?:mp4|webm)(?:\?[^\s]*)?$/i.test(url));
         const still = Array.isArray(anime.screenshots)
           ? anime.screenshots.find(url => typeof url === 'string' && /^https:\/\//i.test(url)) : '';
@@ -145,6 +147,7 @@
           ' data-komi-anime-id="' + escape(malId) + '"' +
           ' data-komi-hero-saved="' + (saved ? 'true' : 'false') + '"' +
           (banner ? ' data-komi-hero-banner="' + escape(banner) + '"' : '') +
+          (daily ? ' data-komi-daily-art="true"' : '') +
           (video ? ' data-komi-hero-video="' + escape(video) + '"' : '') +
           (still ? ' data-komi-hero-still="' + escape(still) + '"' : '') +
           ' aria-hidden="' + (active ? 'false' : 'true') + '"' +
@@ -286,10 +289,12 @@
       cachedPublicHome = {source, revision, length:source.length, slider, popular};
     }
     const {slider, popular} = cachedPublicHome;
+    const daily = root.KomiHeroDaily?.lineup(animeList, Array.isArray(root.KomiHomeSeed) ? root.KomiHomeSeed : []);
+    const lineup = daily?.length >= 2 ? daily : slider;
     const history = recentProgress(context, animeList);
     const genres = typeof context.genres === 'function' ? context.genres() : genreShelf(animeList);
     return '<div class="komi-home-discovery komi-home-storefront">' +
-      hero(slider, context) +
+      hero(lineup, context) +
       continueShelf(history, context) +
       shelf('Рекомендуем', 'По оценкам Shikimori и свежести обновлений', popular, 'all',
         anime => context.renderCard(anime, {variant:'discovery'}), 'komi-home-popular') +
