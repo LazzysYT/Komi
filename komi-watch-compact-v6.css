@@ -1210,3 +1210,27 @@
 }
 #watchModal .komi-episode-link-status > :is(h2,p) {margin:0 0 12px;}
 #watchModal .komi-episode-link-status > div {display:flex;flex-wrap:wrap;gap:8px;}
+
+/* Franchise strip lives above the stage, outside its player/episode grid. */
+#watchModal .komi-franchise-order{order:-30!important;min-width:0;max-width:100%;padding:11px 14px;border:1px solid #2a2a2e;border-radius:15px;background:#101013;color:#f5f5f5;display:grid;gap:9px}
+#watchModal .komi-franchise-order[hidden]{display:none!important}
+#watchModal .komi-franchise-head{display:flex;align-items:center;gap:8px 12px;flex-wrap:wrap}
+#watchModal .komi-franchise-title{font-size:14px;font-weight:750;line-height:1.35}
+#watchModal .komi-franchise-note{font-size:11px;color:#a0a0a8}
+#watchModal .komi-franchise-row{display:flex;align-items:center;gap:7px;overflow-x:auto;max-width:100%;min-width:0;position:relative;padding:2px 2px 5px;scrollbar-width:thin;scrollbar-color:#3c3c42 transparent}
+#watchModal .komi-franchise-row:empty{display:none}
+#watchModal .komi-franchise-card{display:flex;align-items:center;gap:8px;flex:0 0 auto;min-width:0;max-width:min(270px,82vw);min-height:49px;padding:7px 11px;border:1px solid #2b2b30;border-radius:10px;background:#19191d;color:#ededee;text-align:left;text-decoration:none;font:inherit;box-shadow:none}
+#watchModal .komi-franchise-card.is-current,#watchModal .komi-franchise-season.is-current{border-color:#fff;background:#f4f4f5;color:#09090b}
+#watchModal .komi-franchise-card:not(.is-current):hover,#watchModal .komi-franchise-season:not(.is-current):hover{border-color:#777;background:#242429}
+#watchModal .komi-franchise-card:focus-visible,#watchModal .komi-franchise-season:focus-visible,#watchModal .komi-franchise-extra summary:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#watchModal .komi-franchise-num{font-size:12px;font-weight:800;opacity:.7;flex:none;font-variant-numeric:tabular-nums}
+#watchModal .komi-franchise-text{display:grid;min-width:0;gap:3px}
+#watchModal .komi-franchise-name{font-size:12px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#watchModal .komi-franchise-meta{font-size:10px;color:#b5b5bf;white-space:normal;line-height:1.2}
+#watchModal .komi-franchise-card.is-current .komi-franchise-meta{color:#45454b}
+#watchModal .komi-franchise-season{flex:0 0 auto;min-height:34px;padding:6px 13px;font-size:12px;font-weight:700;border-radius:999px;border:1px solid #303035;background:#1b1b20;color:#eee}
+#watchModal .komi-franchise-row-label{font-size:12px;color:#b5b5bf;white-space:nowrap}
+#watchModal .komi-franchise-extra{min-width:0;font-size:12px;color:#c7c7ce}
+#watchModal .komi-franchise-extra summary{cursor:pointer;width:fit-content;padding:3px 0}
+#watchModal .komi-franchise-extra[open] .komi-franchise-row{margin-top:6px}
+@media(max-width:600px){#watchModal .komi-franchise-order{margin-inline:12px;padding:9px 10px;gap:6px}#watchModal .komi-franchise-card{min-height:45px;max-width:min(230px,76vw)}#watchModal .komi-franchise-title{font-size:13px}}
