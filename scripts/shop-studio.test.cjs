@@ -302,7 +302,7 @@ test('collections default closed at every viewport and preserve explicit user pr
  assert.equal(isOpen(short),true);
  short.toggleCollections(false);
  assert.equal(isOpen(short),false,'explicit collapse survives viewport changes');
- assert.match(short.html,/Находи детали, примеряй и собирай свой образ\./);
+ assert.match(short.html,/Рамки, обложки и другие украшения для профиля\./);
 });
 
 test('profile and comment preview modes preserve the trial, and a comment cosmetic reveals its actual result',async()=>{

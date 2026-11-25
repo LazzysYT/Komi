@@ -18,14 +18,14 @@
 #profile.komi-profile-studio.komi-profile-guest{
   position:relative;isolation:isolate;overflow:hidden!important;
   display:grid;justify-items:start;align-content:center;gap:12px;
-  width:min(100% - 28px,860px);min-height:clamp(300px,52vh,476px);
+  width:min(100% - 28px,760px);min-height:clamp(280px,42vh,380px);
   margin:clamp(18px,5vh,55px) auto;padding:clamp(20px,6vw,64px);
-  background:radial-gradient(ellipse at 84% 25%,#2b2b32,#131316 55%,#101013);
+  background:#16161A;
   border:1px solid var(--studio-line);border-radius:26px;
 }
 .komi-profile-guest::before{
   content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:repeating-linear-gradient(120deg,#ffffff18 0 1px,transparent 1px 24px);
+  background:none;
   mask-image:linear-gradient(115deg,transparent 42%,#000);
 }
 .komi-profile-guest-emblem{

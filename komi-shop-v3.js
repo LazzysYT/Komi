@@ -215,10 +215,11 @@ function confirmPurchase(quote){
  const dialog=document.createElement('dialog');dialog.className='sv7-purchase-dialog';
  dialog.setAttribute('aria-labelledby','sv7PurchaseTitle');dialog.setAttribute('aria-describedby','sv7PurchaseNote');
  const focusBefore=document.activeElement,owned=new Set(latestCtx?.store?.owned||[]);
+ const focusSelector=focusBefore?.matches?.('[data-v7-search]')?'[data-v7-search]':'[data-v3-checkout]';
  dialog.innerHTML='<div class="sv7-confirm-heading"><span>'+icon('bag',22)+'</span><h2 id="sv7PurchaseTitle">Подтвердить покупку</h2></div><p id="sv7PurchaseNote">'+(quote.action==='buy'?'Предмет останется в твоей коллекции.':'Предметы останутся в твоей коллекции и будут надеты на профиль.')+'</p><ul class="sv7-confirm-items">'+quote.items.map(p=>'<li><span>'+esc(p.label)+'</span><strong>'+ (owned.has(p.id)?'Куплено':fmt(p.cost)+' AC')+'</strong></li>').join('')+'</ul><div class="sv7-confirm-total"><span>К оплате</span><strong>'+fmt(quote.total)+' AniCoin</strong></div><p class="sv7-confirm-balance">Баланс: '+fmt(quote.balance)+' → '+fmt(quote.balance-quote.total)+' AniCoin</p><div class="sv7-confirm-actions"><button type="button" data-confirm-cancel>Отмена</button><button type="button" data-confirm-accept>Купить за '+fmt(quote.total)+' AniCoin</button></div>';
  return new Promise(resolve=>{
   let settled=false;
-  const finish=answer=>{if(settled)return;answer=!!answer&&inShop()&&quote.owner===latestCtx?.owner;settled=true;pendingConfirmation=null;if(dialog.open)dialog.close();dialog.remove();if(focusBefore?.isConnected&&!focusBefore.disabled&&!focusBefore.hidden&&!focusBefore.closest?.('[hidden]'))focusBefore.focus({preventScroll:true});else focusCurrent('[data-v3-checkout]');resolve(answer);};
+  const finish=answer=>{if(settled)return;answer=!!answer&&inShop()&&quote.owner===latestCtx?.owner;settled=true;pendingConfirmation=null;if(dialog.open)dialog.close();dialog.remove();if(focusBefore?.isConnected&&!focusBefore.disabled&&!focusBefore.hidden&&!focusBefore.closest?.('[hidden]'))focusBefore.focus({preventScroll:true});else if(inShop()&&quote.owner===latestCtx?.owner)focusCurrent(focusSelector);resolve(answer);};
   pendingConfirmation={owner:quote.owner,cancel:()=>finish(false)};
   dialog.addEventListener('cancel',event=>{event.preventDefault();finish(false);});
   dialog.addEventListener('close',()=>finish(false));

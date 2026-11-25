@@ -73,7 +73,7 @@ test('guest storefront shows a bounded first page, explicit prices and auth butt
  assert.match(container.innerHTML,/Показано 24 из 141/);
  assert.match(container.innerHTML,/data-v3-sort/);
  assert.match(container.innerHTML,/data-v3-hide-owned/);
- assert.match(container.innerHTML,/aria-label="Живая примерочная"/);
+ assert.match(container.innerHTML,/aria-label="Примерочная"/);
  assert.doesNotMatch(container.innerHTML,/Рулетка|шансы выигрыша|roulette/i);
 });
 test('current account purchased items cost zero when building a preview cart',()=>{

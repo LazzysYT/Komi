@@ -82,7 +82,7 @@
     background-color: #FFFFFF !important;
     border-color: #FFFFFF !important;
     color: #09090B !important;
-    box-shadow: 0 6px 24px rgba(255,255,255,0.22) !important;
+    box-shadow: none !important;
   }
 
   /* Secondary glass / graphite actions. */
@@ -102,7 +102,7 @@
   :where(.btn-glow, .komi-hub-play, .komi-seo-primary-link, .btn-primary):hover
     :is(svg, .play-icon, .icon-play, .hero-play-icon) {
     translate: 2.5px 0;
-    scale: 1.08;
+    scale: 1.035;
   }
 
   /* Icon buttons and carousel controls. */
@@ -111,7 +111,7 @@
     .slider-arrow, .carousel-arrow, .icon-button, .btn-icon,
     .sv3-gift-btn, .komi-hub-resume-play
   ):not(:disabled):not([aria-disabled="true"]):hover {
-    scale: 1.08;
+    scale: 1.035;
     background-color: rgba(255,255,255,0.18) !important;
     border-color: rgba(255,255,255,0.24) !important;
   }
@@ -123,7 +123,7 @@
     border-color: rgba(255,255,255,0.22) !important;
   }
   .komi-media-hub .komi-hub-resume:hover .komi-hub-resume-play {
-    scale: 1.1;
+    scale: 1.04;
     background: #FFFFFF !important;
     color: #09090B !important;
   }
@@ -173,7 +173,7 @@ body.komi-media-hub .komi-icon-rail .komi-rail-svg {
     box-shadow: 0 6px 18px rgba(0,0,0,.27) !important;
   }
   body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:disabled):hover > .komi-rail-svg {
-    scale: 1.12;
+    scale: 1.04;
     rotate: -4deg;
   }
   /* Existing bell swing in komi-icon-rail.css remains available. */
@@ -332,7 +332,7 @@ body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:
     background: #FFFFFF !important;
     border-color: #FFFFFF !important;
     color: #09090B !important;
-    box-shadow: 0 6px 24px rgba(255,255,255,.22) !important;
+    box-shadow: none !important;
   }
   body.komi-media-hub .komi-home-hero .hero-buttons
     .btn-glow-secondary:not(:disabled):hover,
@@ -346,7 +346,7 @@ body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):not(:
   }
   body.komi-media-hub .komi-home-hero .komi-hub-carousel-controls
     .hero-slider-arrow:not(:disabled):hover {
-    scale: 1.08;
+    scale: 1.035;
     box-shadow: 0 6px 18px rgba(0,0,0,.24) !important;
   }
   body.komi-media-hub :is(.komi-hub-tools-panel,.komi-mobile-more-menu)
