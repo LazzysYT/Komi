@@ -4,6 +4,26 @@
 (function (root) {
   'use strict';
 
+  // The Komi public projection currently has no imported Isekai labels.
+  // Seed a conservative set of exact Shikimori IDs verified in the catalogue.
+  // Series/parts only unless a movie carries the same transported protagonist;
+  // no recaps, unrelated specials, title substrings or all-fantasy fallback.
+  // Classification source for the core series: Crunchyroll's Isekai guide
+  // and Anime Awards category; the IDs below are Komi's own catalogue IDs.
+  const isekaiIds = new Set([
+    31240, 39587, 42203, 54857, 61316, // Re:Zero
+    30831, 32937, 49458, 38040, // KonoSuba
+    37430, 39551, 41487, 53580, 59970, 49877, // That Time I Got Reincarnated as a Slime
+    39535, 45576, 51179, 55888, 59193, // Mushoku Tensei
+    29803, 35073, 37675, 48895, 48896, // Overlord
+    35790, 40356, 40357, 57907, // The Rising of the Shield Hero
+    32615, 49233, 37055, // Saga of Tanya the Evil
+    39468, 40815, 42429, 57466, // Ascendance of a Bookworm
+    37984, // So I'm a Spider, So What?
+    19815, // No Game No Life
+    153 // The Twelve Kingdoms
+  ]);
+
   const MOODS = [
     ['Экшен', 'Драки и погони', ['Экшен', 'Боевые искусства', 'Action']],
     ['Романтика', 'Про любовь', ['Романтика', 'Romance']],
@@ -54,24 +74,40 @@
     return normalized;
   };
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
-  const genresOf = anime => Array.isArray(anime?.genres) ? anime.genres : [anime?.genre].filter(Boolean);
+  function genresOf(anime) {
+    const labels = [anime.genres, anime.genre];
+    return labels.flatMap(value => Array.isArray(value) ? value : [value])
+      .flatMap(value => typeof value === 'string' ? [value]
+        : value && typeof value === 'object'
+          ? [value.russian, value.name, value.title].filter(label => typeof label === 'string')
+          : []);
+  }
   const moodAliases = new Map(MOODS.map(([name, , aliases]) => [norm(name),new Set(aliases.map(norm))]));
+  const isekaiLabels = moodAliases.get('исэкай');
   const normalizedGenres = new WeakMap();
 
   function matches(anime, genre) {
     if (!genre || genre === 'Все') return true;
-    const key=norm(genre);
-    const choices=moodAliases.get(key) || new Set([key]);
     if (!anime || typeof anime!=='object') return false;
-    const source=anime.genres, fallback=anime.genre;
-    let cached=normalizedGenres.get(anime);
+    const key = norm(genre);
+    const isIsekai = isekaiLabels.has(key);
+    if (isIsekai) {
+      // Public card IDs are normalized to Shikimori IDs in the catalogue loader.
+      const id = anime.shikimoriId ?? anime.shikimori_id ?? anime.id;
+      if ((typeof id === 'string' || typeof id === 'number') &&
+          /^[1-9]\d{0,11}$/.test(String(id)) && isekaiIds.has(Number(id))) return true;
+    }
+    const choices = isIsekai ? isekaiLabels : moodAliases.get(key);
+    const source = anime.genres, fallback = anime.genre;
+    let cached = normalizedGenres.get(anime);
     // Catalog rows are replaced on refresh; also detect replaced genre arrays.
-    if (!cached || cached.source!==source || cached.fallback!==fallback ||
-        cached.length!==(source?.length||0)) {
-      cached={source,fallback,length:source?.length||0,values:genresOf(anime).map(norm)};
+    if (!cached || cached.source !== source || cached.fallback !== fallback ||
+        cached.length !== (source?.length || 0) || cached.fallbackLength !== (fallback?.length || 0)) {
+      cached = {source, fallback, length: source?.length || 0, fallbackLength: fallback?.length || 0,
+        values: genresOf(anime).map(norm)};
       normalizedGenres.set(anime,cached);
     }
-    return cached.values.some(item=>choices.has(item));
+    return choices ? cached.values.some(item => choices.has(item)) : cached.values.includes(key);
   }
 
   // Small, stable genre thumbnails should never request 1280px hero art.
@@ -121,7 +157,7 @@
         }
       }
       const selected = norm(genre) === norm(name) ||
-        (name === 'Исэкай' && norm(genre) === 'исекай') ||
+        (name === 'Исэкай' && isekaiLabels.has(norm(genre))) ||
         (name === 'Ужасы' && norm(genre) === 'хоррор');
       if (!art?.src || art.src === '/anime-artwork.svg') {
         const seed = seedArtwork.get(name);

@@ -278,9 +278,12 @@ function komiMaybeOpenSeoAnime() {
     try { sessionStorage.removeItem('komi_watch_deeplink_v1'); } catch {}
     // SEO detail, incoming legacy links and the active player share this URL.
     const query = new URLSearchParams();
-    if (season && episode) { query.set('season',String(season)); query.set('episode',String(episode)); }
+    if (episode) {
+        if (season) query.set('season',String(season));
+        query.set('episode',String(episode));
+    }
     history.replaceState(null, '', '/anime/' + requested + (query.size ? '?' + query.toString() : '') + '#player');
-    void openWatchModal(requested, season && episode ? season : null, 0, null, season && episode ? episode : null);
+    void openWatchModal(requested, episode ? season : null, 0, null, episode);
 }
 
 let komiCatalogLoadPending = null;
@@ -3524,7 +3527,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (!e.target.closest('.search-container')) closeSearchDropdown();
         });
         document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') { closeSearchDropdown(); document.getElementById('searchInput')?.blur(); }
+            if (e.key === 'Escape' && !e.defaultPrevented) { closeSearchDropdown(); document.getElementById('searchInput')?.blur(); }
         });
 
         // Build search suggestions with DOM nodes, never interpolated HTML or
@@ -3604,12 +3607,36 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (field) field.value = catalogSearchQuery;
             komiRefreshCatalogGrid();
         }
-        document.getElementById('searchInput')?.addEventListener('keydown', event => {
-            if (event.key !== 'Enter' || event.isComposing) return;
-            if (window.KomiHybridSearch?.isUsers(event.target.value)) return;
+        function handleKomiHeaderSearchKeys(event) {
+            if (event.defaultPrevented || event.isComposing || event.altKey || event.ctrlKey || event.metaKey) return;
+            const input = document.getElementById('searchInput');
+            const dropdown = document.getElementById('searchDropdown');
+            const inInput = event.target === input;
+            if (!input || !dropdown || (!inInput && !dropdown.contains(event.target))) return;
+            const expanded = dropdown.classList.contains('active');
+            if (event.key === 'Enter' && inInput && !window.KomiHybridSearch?.isUsers(input.value)) {
+                event.preventDefault();
+                submitKomiHeaderSearch();
+                return;
+            }
+            if (!expanded) return;
+            if (event.key === 'Escape') {
+                event.preventDefault();
+                input.focus({preventScroll:true});
+                closeSearchDropdown();
+                return;
+            }
+            if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') return;
+            const results = [...dropdown.querySelectorAll('button:is(.search-dropdown-item,.komi-search-user-result,.komi-search-view-all):not([disabled])')];
+            if (!results.length) return;
+            const here = results.indexOf(event.target);
+            if (!inInput && here < 0) return;
+            const next = event.key === 'ArrowDown' ? Math.min(results.length - 1,here + 1)
+                : inInput ? results.length - 1 : here - 1;
             event.preventDefault();
-            submitKomiHeaderSearch();
-        });
+            (next < 0 ? input : results[next]).focus();
+        }
+        document.querySelector('#searchInput')?.closest('.search-container')?.addEventListener('keydown',handleKomiHeaderSearchKeys);
 
         function handleInstantSearch(q) {
             const dd = document.getElementById('searchDropdown');
@@ -4263,7 +4290,9 @@ async function komiLoadCatalogPages(attempt = 0) {
             });
         }
 
-        function openAuthModal(mode = 'login') {
+        function openAuthModal(mode = 'login', reason = '') {
+            const intro = document.getElementById('komiAuthIntroText');
+            if (intro) intro.textContent = reason || 'Один аккаунт для истории просмотра, списков, AniCoin и достижений.';
             switchAuthTab(mode);
             document.getElementById('authModal').classList.add('active');
         }
@@ -5322,18 +5351,42 @@ async function komiLoadCatalogPages(attempt = 0) {
 
             const seasonNumbers = [...new Set(anime.episodes.map(KomiPlayerCore.episodeSeason))].sort((a,b) => a - b);
             const progressForResume = selectedSeason === null ? getKomiProgress(anime.id) : null;
-            const seasonWanted = selectedSeason === null ? Number(progressForResume?.season) : Number(selectedSeason);
+            let seasonWanted = selectedSeason === null ? Number(progressForResume?.season) : Number(selectedSeason);
+            const playableLinkedEpisode = (ep, season) => Number(ep.number) === requestedEpisodeNumber &&
+                Object.keys(KomiPlayerCore.watchEpisodeSources(ep.sources, {animeId:anime.id,season,number:requestedEpisodeNumber})).length;
+            if (requestedEpisodeNumber !== null) {
+                const linked = seasonNumbers.filter(season => (selectedSeason === null || season === Number(selectedSeason)) &&
+                    KomiPlayerCore.seasonEpisodes(anime.episodes,season).some(ep=>playableLinkedEpisode(ep,season)));
+                if (linked.length !== 1) {
+                    const body = document.getElementById('watchModalContent');
+                    const options = linked.map(season => '<button type="button" class="btn-secondary" id="komiEpisodeLinkSeason'+
+                        season+'">Сезон '+season+'</button>').join(' ');
+                    body.innerHTML = '<button type="button" class="modal-close" aria-label="Закрыть просмотр" data-komi-onclick="closeWatchModal()">×</button>'+
+                        '<section class="komi-episode-link-status" aria-labelledby="komiEpisodeLinkTitle"><h2 id="komiEpisodeLinkTitle">Серия '+requestedEpisodeNumber+'</h2><p role="status">'+
+                        (linked.length ? 'Этот номер есть в нескольких сезонах. Выбери нужный сезон.' : 'По этой ссылке не нашлось доступного источника. Открой список серий, чтобы выбрать другую.')+
+                        '</p><div>'+ (options || '<button type="button" class="btn-secondary" data-komi-onclick="openWatchModal(\''+anime.id+'\')">Открыть список серий</button>')+'</div></section>';
+                    for (const season of linked) document.getElementById('komiEpisodeLinkSeason'+season)
+                        ?.addEventListener('click',()=>openWatchModal(String(anime.id),season,0,null,requestedEpisodeNumber));
+                    presentWatch();
+                    return;
+                }
+                seasonWanted=linked[0];
+            }
             const activeSeason = seasonNumbers.includes(seasonWanted) ? seasonWanted : seasonNumbers[0];
             const currentSeasonEpisodes = KomiPlayerCore.seasonEpisodes(anime.episodes, activeSeason);
             const targetIndex = requestedEpisodeNumber !== null
-                ? currentSeasonEpisodes.findIndex((episode,index) => (Number(episode.number) || index + 1) === requestedEpisodeNumber)
+                ? currentSeasonEpisodes.findIndex(episode=>playableLinkedEpisode(episode,activeSeason))
                 : progressForResume?.season === activeSeason
                     ? currentSeasonEpisodes.findIndex(episode => episode.slots.includes(Number(progressForResume.index)))
                     : Number(selectedEpIdx);
             const activeIndex = Number.isInteger(targetIndex) && targetIndex >= 0 && targetIndex < currentSeasonEpisodes.length ? targetIndex : 0;
             const currentEp = currentSeasonEpisodes[activeIndex];
             if (!currentEp) return;
-            const sources = {...currentEp.sources};
+            const displayNumber = Number(currentEp.number) || activeIndex + 1;
+            const sources = KomiPlayerCore.watchEpisodeSources(currentEp.sources, {
+                animeId: anime.id, season: activeSeason, number: displayNumber
+            });
+            const removedUnavailableSource = Object.keys(sources).length < Object.keys(currentEp.sources).length;
             const adFreeOnly = komiAdFreeOnly();
             let preferredSource = sourceRequest;
             if (preferredSource === null) {
@@ -5345,9 +5398,11 @@ async function komiLoadCatalogPages(attempt = 0) {
             // Respect an explicit source choice. For everyone else, prefer a
             // usable partner iframe where a token for this exact episode exists.
             // Strict ad-free mode NEVER treats an unverified iframe as ad-free.
-            const tryPartner=!adFreeOnly &&
-                (sourceRequest===null || sourceRequest===KOMI_ANIVIBE_LABEL) &&
-                (!preferredSource || preferredSource===KOMI_ANIVIBE_LABEL);
+            const tryPartner = !adFreeOnly && (
+                (removedUnavailableSource && !Object.keys(sources).length) ||
+                ((sourceRequest === null || sourceRequest === KOMI_ANIVIBE_LABEL) &&
+                 (!preferredSource || preferredSource === KOMI_ANIVIBE_LABEL))
+            );
             if (tryPartner) {
                 const pending=document.getElementById('watchModalContent');
                 pending.innerHTML='<button class="modal-close" data-komi-onclick="closeWatchModal()" aria-label="Закрыть">×</button>' +
@@ -5355,7 +5410,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 presentWatch();
                 const signedUrl=await komiAniVibeEpisodeSource(
                     Number(anime.shikimoriId || anime.id),
-                    Number(currentEp.number) || activeIndex + 1
+                    displayNumber
                 );
                 if(requestToken!==komiDetailOpenToken ||
                    !document.getElementById('watchModal').classList.contains('active')) return;
@@ -5401,7 +5456,6 @@ async function komiLoadCatalogPages(attempt = 0) {
                 : komiPlayerHtml(activeUrl);
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
-            const displayNumber = Number(currentEp.number) || activeIndex + 1;
             const episodePresentation = komiWatchEpisodePresentation(anime.id, activeSeason, currentSeasonEpisodes);
             const currentEpisodeLabel = episodePresentation.supplemental[activeIndex]
                 ? 'Дополнительный выпуск ' + displayNumber + ' · STEPonee'
@@ -5452,13 +5506,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                                 </div>
                             </div>
                             <div class="komi-watch-controls">
-                                <div class="komi-mobile-watch-actions">
+                                <div class="komi-mobile-watch-actions komi-player-support" role="group" aria-label="Управление плеером">
                                     <button type="button" class="komi-mobile-watch-episodes" aria-haspopup="dialog" aria-controls="komiMobileSheet">Серии</button>
                                     <button type="button" class="komi-mobile-watch-source" aria-haspopup="dialog" aria-controls="komiMobileSheet">Озвучка</button>
+                                    ${activeUrl ? '<button type="button" id="komiPlayerHelp" class="komi-player-help" aria-controls="komiPlayerRecovery" aria-expanded="false"><span aria-hidden="true">?</span> Видео не работает?</button>' : ''}
                                 </div>
                                 <div class="komi-watch-source">
-                                    <label for="komiWatchSourceSelect">Озвучка / плеер</label>
-                                    <select id="komiWatchSourceSelect" data-komi-onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
+                                    <label for="komiWatchSourceSelect">Озвучка</label>
+                                    <select id="komiWatchSourceSelect" ${sourcePlan.availableNames.length < 2 ? 'disabled' : ''} data-komi-onchange="changePlayerSource('${anime.id}',${activeSeason},${activeIndex},this.value)">
                                         ${sourceNames.map(name => '<option value="' + escapeFriendHtml(name) + '" ' + (name === activePlayerSource ? 'selected' : '') + '>' + escapeFriendHtml(name) + '</option>').join('')}
                                     </select>
                                 </div>
@@ -5468,7 +5523,6 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     </button>
                                     <span class="komi-adfree-caption" role="status">${sourcePlan.approvedCount > 0 ? 'Для этой серии есть одобренный прямой поток' : 'Проверенного источника без рекламы пока нет'}</span>
                                 </div>
-                                ${activeUrl ? '<button type="button" id="komiPlayerHelp" class="komi-player-help" aria-controls="komiPlayerRecovery" aria-expanded="false">Видео не работает?</button>' : ''}
                             </div>
                             ${activeUrl ? `
                                 <div id="komiPlayerRecovery" class="komi-player-notice" hidden>
@@ -5532,6 +5586,14 @@ async function komiLoadCatalogPages(attempt = 0) {
             document.getElementById('komiAlternatePlayer')?.addEventListener('click', () =>
                 changePlayerSource(anime.id, activeSeason, activeIndex, alternateSource));
             document.getElementById('komiPlayerHelp')?.addEventListener('click', () => {
+                const recovery = document.getElementById('komiPlayerRecovery');
+                const help = document.getElementById('komiPlayerHelp');
+                if (!recovery || !help) return;
+                if (!recovery.hidden) {
+                    recovery.hidden = true;
+                    help.setAttribute('aria-expanded', 'false');
+                    return;
+                }
                 revealKomiPlayerRecovery(isExternalPlayer
                     ? 'Если видео не запускается, повторите загрузку, смените озвучку или откройте источник отдельно. У провайдера может быть реклама.'
                     : 'Повторите загрузку видео или выберите другой доступный источник.');
@@ -5582,7 +5644,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 }))
             });
             if (sourceRequest && selectedSource !== matchedSourceRequest && watchContext?.note) {
-                watchContext.note.textContent = 'Озвучка «' + sourceRequest + '» для этой серии недоступна. Выбран источник «' + selectedSource + '».';
+                watchContext.note.textContent = 'Озвучка «' + sourceRequest + '» для этой серии недоступна.' +
+                    (activeUrl ? ' Выбран источник «' + selectedSource + '».' : ' Других доступных источников нет.');
             }
             for (const button of document.querySelectorAll('#watchModalContent [data-komi-folder]'))
                 button.onclick = () => addToCustomFolder(anime.id, button.dataset.komiFolder);
@@ -5772,7 +5835,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const query = new URLSearchParams(location.search);
                 const season = komiPositiveRouteNumber(query.get('season'));
                 const episode = komiPositiveRouteNumber(query.get('episode'));
-                if (animeList.some(item => String(item.id) === watchPath[1])) void openWatchModal(watchPath[1], season && episode ? season : null, 0, null, season && episode ? episode : null);
+                if (animeList.some(item => String(item.id) === watchPath[1])) void openWatchModal(watchPath[1], episode ? season : null, 0, null, episode);
                 return;
             }
             if (document.getElementById('watchModal')?.classList.contains('active')) closeWatchModal();

@@ -19,7 +19,7 @@ test('recent releases require the bot availability contract, not just a timestam
   assert.deepEqual(result.map(item => item.id), ['42']);
   assert.equal(result[0].number, 8);
   assert.equal(result[0].season, null);
-  assert.equal(result[0].href, '/anime/42');
+  assert.equal(result[0].href, '/anime/42?episode=8#player');
 });
 
 test('hydrated episodes resolve the exact season and source without assuming season one', () => {
@@ -57,9 +57,9 @@ test('loaded data that contradicts the public summary must not claim availabilit
   assert.deepEqual(result, []);
 });
 
-test('ambiguous multi-season episode numbers lead to details instead of the wrong episode', () => {
+test('an ambiguous number is passed to the player for explicit season selection', () => {
   const episodes = [1,2].map(season => ({season,number:8,sources:{Source:'https://media.test/s'+season+'/8.mp4'}}));
-  assert.equal(selectRecent([card({episodes})])[0].href, '/anime/42');
+  assert.equal(selectRecent([card({episodes})])[0].href, '/anime/42?episode=8#player');
   assert.equal(selectRecent([card({episodes,lastEpisodeSeason:2})])[0].href,
     '/anime/42?season=2&episode=8#player');
   assert.deepEqual(selectRecent([card({episodes,lastEpisodeSeason:3})]), []);
@@ -107,7 +107,7 @@ test('release markup escapes catalogue content and defers posters', () => {
   assert.ok(html.includes('&lt;img src=x onerror=alert(1)&gt; &amp; тест'));
   assert.ok(html.includes('data-komi-lazy-src="https://media.test/poster.jpg"'));
   assert.ok(html.includes('src="/anime-artwork.svg"'));
-  assert.ok(html.includes('href="/anime/42"'));
+  assert.ok(html.includes('href="/anime/42?episode=8#player"'));
   assert.ok(html.includes('Свежие серии'));
   assert.ok(!html.includes('<img src=x'));
 });

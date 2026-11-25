@@ -136,7 +136,7 @@ function card(p,ctx,avatar,name){
  const locked=previewOnly()||(!owned&&!!owner&&!!store&&!canCheckout());
  const label=locked?'Только примерка':!owner?'Войти':!store?(ctx.failedFor?'Нет данных':'Загрузка…'):ctx.busy||state.busy?'Подождите…':reaction&&owned?'Куплено':equipped?'Снять':owned?'Надеть':affordable?'Купить':'Не хватает '+fmt(diff)+' AC';
  const disabled=locked||!!owner&&(!store||ctx.busy||state.busy||reaction&&owned||!owned&&!affordable);
- const action=equipped?'Снять':owned?'Надеть':'Купить';
+ const action=label+(owner||locked?': ':', чтобы купить: ')+p.label;
  return '<article class="komi-coin-card sv3-item '+(equipped?'is-equipped ':'')+(chosen?'is-trying':'')+'" data-rarity="'+esc(p.rarity||'common')+'" data-item-id="'+esc(p.id)+'">'+
  '<div class="sv3-item-badges"><span class="komi-shop-rarity">'+esc(rarityLabels[p.rarity]||rarityLabels.common)+'</span>'+
  (equipped?'<span class="sv3-owned">Надето</span>':owned?'<span class="sv3-owned">Куплено</span>':p.introducedAt?'<span class="sv7-new">Новое</span>':'')+'</div>'+
@@ -144,7 +144,7 @@ function card(p,ctx,avatar,name){
  '<span class="sv7-try-label">'+icon(chosen?'check':'eye',14)+' '+(chosen?'В примерочной':'Примерить')+'</span></button>'+
  '<div class="sv3-item-copy"><p class="sv7-item-kind">'+esc(categoryName(p.type))+'</p><h3>'+esc(p.label)+'</h3>'+
  '<p class="sv7-item-description">'+esc(p.description||descriptionFor(p.type))+'</p><p class="sv3-unit-price">'+icon('coins',16)+' <strong>'+fmt(p.cost)+'</strong> <span>AniCoin</span></p></div>'+
- '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(action+' «'+p.label+'»')+'"'+(disabled?' disabled':'')+'>'+label+'</button></div></article>';
+ '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(action)+'"'+(disabled?' disabled':'')+'>'+label+'</button></div></article>';
 }
 function descriptionFor(type){return {frame:'Обрамление твоей аватарки.',banner:'Фон шапки твоего профиля.',name:'Оформление имени в профиле.',title:'Небольшая подпись под именем.',shape:'Новый силуэт твоей аватарки.',overlay:'Атмосфера поверх обложки.',plate:'Оформление твоих комментариев.',icon:'Значок рядом с именем.',xp:'Оформление полоски опыта.',mascot:'Компаньон в твоём профиле.',showcase:'Оформление любимой тройки аниме.',card:'Стиль карточки профиля.',reaction:'Реакции для совместного просмотра.'}[type]||'Предмет для твоего профиля.';}
 function collectionCard(collection,store,avatar,name){

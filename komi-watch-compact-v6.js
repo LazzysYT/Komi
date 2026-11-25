@@ -79,20 +79,8 @@
     // A group containing the menu cannot be appended inside that menu.
     actions.append(more);
     const source = controls.querySelector('.komi-watch-source');
-    if (source) {
-      if (wrapper.querySelector('video, iframe')) {
-        source.classList.add('komi-player-source-floating');
-        wrapper.append(source);
-      } else if (menu) menu.append(source);
-      // The HUD already owns the source chooser. Keep the original select in
-      // the DOM for existing source handlers, but do not render it twice.
-      if (wrapper.querySelector('.komi-v4-source-trigger')) {
-        source.classList.add('komi-source-duplicate');
-        source.inert = true;
-        source.setAttribute('aria-hidden','true');
-      }
-    }
-    // Keep mobile source and episode controls outside the hidden legacy deck.
+    // One persistent bar: desktop uses the original select, while phones
+    // keep the existing sheets. Neither relies on a hover-only iframe HUD.
     let mobileDock = controls.querySelector('.komi-mobile-watch-actions');
     if (!mobileDock && root.KomiMobileSheets) {
       mobileDock = create('div','komi-mobile-watch-actions');
@@ -103,9 +91,13 @@
       episodes.addEventListener('click',()=>void root.KomiMobileSheets.openEpisodes(episodes));
       mobileDock.append(episodes,dub);
     }
-    // A separate grid row places the phone's two primary controls directly
-    // below the video, before its title. The original sheet handlers stay intact.
-    if (mobileDock) wrapper.after(mobileDock);
+    if (mobileDock) {
+      mobileDock.classList.add('komi-player-support');
+      if (source) mobileDock.prepend(source);
+      const playerRow = wrapper.parentElement === stage ? wrapper : wrapper.closest('.komi-watch-main');
+      if (playerRow?.parentElement === stage) playerRow.after(mobileDock);
+      else stage.append(mobileDock);
+    } else if (source && menu) menu.append(source);
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
     const recovery = content.querySelector('#komiPlayerRecovery');

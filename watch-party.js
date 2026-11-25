@@ -40,8 +40,7 @@ function partyOptions(anime) {
 
 function partySignedIn() {
     if (currentUser?.authUserId && _supabase) return true;
-    alert('Для совместного просмотра войдите в аккаунт Komi.');
-    openAuthModal('login');
+    openAuthModal('login', 'Войди в аккаунт Komi, чтобы смотреть аниме вместе и присоединяться к комнатам.');
     return false;
 }
 

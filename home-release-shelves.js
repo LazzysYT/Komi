@@ -58,7 +58,9 @@
         if (anime.syncStatus !== 'synced' || !(Number(anime.episodeCount) > 0)) continue;
         season = positive(anime.lastEpisodeSeason);
       }
-      const href = '/anime/' + id + (season ? '?season=' + season + '&episode=' + number + '#player' : '');
+      // If the summary does not know the season, the player resolves the
+      // requested number against the title's full, playable episode data.
+      const href = '/anime/' + id + '?' + (season ? 'season=' + season + '&' : '') + 'episode=' + number + '#player';
       entries.push({anime, id, number, season, date, href});
     }
     return distinct(entries.sort((a, b) => b.date - a.date)).slice(0, boundedLimit(options));
@@ -111,7 +113,7 @@
         '<time datetime="' + new Date(entry.date).toISOString() + '">' +
           (upcoming ? '' : 'Добавлена ') + escape(dateLabel(entry.date, upcoming)) + '</time>' +
         '<strong>' + escape(entry.anime.title) + '</strong><span>' + escape(episode) + '</span>' +
-        '<small>' + (upcoming ? 'По расписанию' : 'В каталоге') + '</small></span></a></li>';
+        '<small>' + (upcoming ? 'По расписанию' : 'Смотреть серию') + '</small></span></a></li>';
     }).join('') + '</ul>';
   }
   function renderRecent(context = {}) {
