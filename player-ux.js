@@ -84,6 +84,7 @@
                 });
             if (error) throw error;
         }
+        root.dispatchEvent?.(new CustomEvent('komi:watch-completed',{detail:context.authId}));
     }
     async function loadCloudWatched(context) {
         if (!activeCloudContext(context)) return;
@@ -128,6 +129,12 @@
     }
     function paintWatched(context) {
         const saved = new Set(readWatched(context.userId, context.animeId));
+        if(context.markButton){
+            const slot=context.episodeSlots?.[context.index]?.[0]??context.index;
+            const marked=saved.has(context.season+':'+slot);
+            context.markButton.disabled=marked;
+            context.markButton.textContent=marked?'Серия отмечена':'Отметить серию просмотренной';
+        }
         const buttons = context.content.querySelectorAll('.komi-episode-number-grid button');
         for (const button of buttons) {
             const idx = Array.prototype.indexOf.call(buttons, button);
@@ -347,10 +354,12 @@
                 if (active !== context) return;
                 updateSkip(context);
                 maybeAutoSkip(context);
-                if (Number.isFinite(video.duration) && video.duration > 60 &&
-                    video.currentTime / video.duration >= 0.92) markCurrentWatched(context);
+                if (Number.isFinite(video.duration) && video.duration > 60 && !video.paused && !video.seeking &&
+                    video.currentTime / video.duration >= 0.92 && root.KomiWatchStats?.completion?.(video)) markCurrentWatched(context);
             }, {passive:true});
-            video.addEventListener('ended', () => markCurrentWatched(context));
+            video.addEventListener('ended', () => {
+                if (root.KomiWatchStats?.completion?.(video)) markCurrentWatched(context);
+            });
             video.addEventListener('ended', () => {
                 if (active !== context || !video.isConnected) return;
                 if (context.autoNext && context.hasNext) nextEpisodeCountdown(context);
@@ -404,6 +413,14 @@
             notice.className = 'komi-cinema-external-note';
             notice.textContent = 'Внешний плеер: пауза, перемотка и горячие клавиши управляются самим провайдером.';
             bar.append(notice);
+            if(context.authId){
+                const mark=makeButton('Отметить серию просмотренной','komi-cinema-mark-watched');
+                context.markButton=mark;
+                mark.addEventListener('click',()=>{
+                    if(activeCloudContext(context))markCurrentWatched(context);
+                });
+                bar.append(mark);
+            }
         }
         const note = document.createElement('p');
         note.className = 'komi-cinema-action-status';

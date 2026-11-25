@@ -51,6 +51,31 @@
       '<span>'+(selectedMore?selectedMore[1]:'Ещё')+'</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'+
       '<div class="profile-more-menu">'+secondary.map(renderButton).join('')+'</div></details></nav>';
   }
+  function watchTime(seconds){
+    if(!Number.isSafeInteger(seconds)||seconds<0)return '—';
+    if(seconds===0)return '0 минут';
+    if(seconds<60)return 'Меньше минуты';
+    var minutes=Math.floor(seconds/60), rest=minutes%60, hours=Math.floor(minutes/60);
+    if(hours)return format(hours)+' ч'+(rest?' '+rest+' мин':'');
+    var end=minutes%100,unit=end>=11&&end<=14?'минут':minutes%10===1?'минута':[2,3,4].includes(minutes%10)?'минуты':'минут';
+    return minutes+' '+unit;
+  }
+  function watchMetrics(profile,state){
+    if(!profile||!profile.querySelector('[data-profile-watch-status]'))return;
+    for(var [field,value] of [['episodes',state.episodes],['hours',state.seconds]]){
+      var target=profile.querySelector('[data-profile-field="'+field+'"]');
+      if(!target)continue;
+      var known=Number.isSafeInteger(value)&&value>=0;
+      target.classList.toggle('is-missing',!known);
+      target.textContent=known?(field==='hours'?watchTime(value):format(value)):'—';
+      if(known)target.removeAttribute('title');
+    }
+    var status=profile.querySelector('[data-profile-watch-status]');
+    status.textContent=state.error?'Не удалось обновить статистику.':state.pending?'Просмотр сохранён на устройстве, ждём синхронизацию.':
+      state.loading&&(state.seconds==null||state.episodes==null)?'Загружаем статистику…':'';
+    var retry=profile.querySelector('[data-profile-watch-retry]');
+    if(retry)retry.hidden=state.loading||!(state.error||state.pending);
+  }
   function summary(ctx){
     var xp=Math.min(499,number(ctx.xp)),level=number(ctx.level),multiplier=Math.max(1,number(ctx.multiplier));
     return '<section class="profile-summary" aria-label="Статистика профиля">'+
@@ -60,9 +85,10 @@
       '<span class="profile-xp-multiplier'+(multiplier>1?' is-premium':'')+'">×'+format(multiplier)+'</span></div>'+
       '<button type="button" class="profile-summary-item" data-profile-jump="anime"><strong>'+format(ctx.titleCount)+'</strong><span>Тайтлов в списках</span></button>'+
       '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="episodes" title="Пока нет проверенных данных">—</strong><span>Серий посмотрено</span></div>'+
-      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="hours" title="Пока нет проверенных данных">—</strong><span>Часов просмотра</span></div>'+
+      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="hours" title="Пока нет проверенных данных">—</strong><span>Время просмотра</span></div>'+
       '<button type="button" class="profile-summary-item" data-profile-jump="friends"><strong data-profile-friends-total>'+
-      (ctx.friendCount==null?'—':format(ctx.friendCount))+'</strong><span>Друзей</span></button></section>';
+      (ctx.friendCount==null?'—':format(ctx.friendCount))+'</strong><span>Друзей</span></button></section>'+
+      (ctx.ownWatchStats?'<div class="profile-watch-stats-note"><small>Время учитывается во встроенном плеере с момента обновления.</small> <small data-profile-watch-status role="status"></small> <button type="button" data-profile-watch-retry hidden>Повторить</button></div>':'');
   }
   function achievementWidget(username,isMe,full=false){
     var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,achievements:[],badges:[]};
@@ -466,6 +492,6 @@
   document.addEventListener('pointerout',event=>{
     var tile=event.target?.closest?.('[data-profile-tilt]');if(tile&&!tile.contains(event.relatedTarget))tile.style.transform='';
   });
-  root.KomiProfileUI={guest,navigation,summary,content,appearance,metrics,syncWallet,refreshFriends,genreCounts,paintOverviewGenres};
+  root.KomiProfileUI={guest,navigation,summary,content,appearance,metrics,syncWallet,refreshFriends,genreCounts,paintOverviewGenres,watchTime,watchMetrics};
   root.KomiProfileUI.fullFriendRows=fullFriendRows;
 })(window);

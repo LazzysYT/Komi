@@ -396,3 +396,7 @@
 }
 
 #profile [data-profile-week-retry][hidden] {display:none!important;}
+
+#profile .profile-watch-stats-note{min-height:1.4em;margin:8px 4px 0;color:var(--studio-muted,#A1A1AA);font-size:12px;line-height:1.4}
+#profile .profile-watch-stats-note button:not([hidden]){color:#fff;text-decoration:underline;text-underline-offset:3px;background:transparent;border:0;padding:2px 6px}
+#profile.komi-profile-studio .profile-summary .profile-summary-item strong[data-profile-field="hours"]{font-size:clamp(16px,2vw,23px);line-height:1.2;overflow-wrap:anywhere}

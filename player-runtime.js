@@ -70,6 +70,7 @@ async function attachKomiMedia(video, raw, onError) {
 }
 function disposeKomiMedia(video) {
     if (!video) return;
+    video.komiWatchStatsDispose?.();
     video.komiControls?.dispose();
     video.komiMediaToken = null;
     clearTimeout(video.komiHlsRetryTimer);
@@ -81,10 +82,11 @@ function disposeKomiMedia(video) {
     video.querySelectorAll('source').forEach(source => source.remove());
     video.load();
 }
-function bindKomiPlayer(animeId, season, index, raw, progressIndex = index) {
+function bindKomiPlayer(animeId, season, index, raw, progressIndex = index, completionIndex = progressIndex) {
     const video = document.getElementById('animeVideoPlayer');
     if (!video) return;
-    Object.assign(video.dataset, {animeId: String(animeId), season: String(season), episode: String(progressIndex), owner: currentUser?.authUserId || currentUser?.username || ''});
+    Object.assign(video.dataset, {animeId: String(animeId), season: String(season), episode: String(progressIndex), completionIndex: String(completionIndex), owner: currentUser?.authUserId || currentUser?.username || ''});
+    window.KomiWatchStats?.bind?.(video);
     video.addEventListener('loadedmetadata', () => {
         video.komiMediaFailed = false;
         restoreKomiVideo(video);

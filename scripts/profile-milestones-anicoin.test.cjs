@@ -63,12 +63,12 @@ test('35 distinct milestones derive only from actual saved lists, favorites, fri
 test('full friends tab displays escaped public nicknames and GIF avatars, keeping original profile route',()=>{
   const name='google_1234567890abcdef1234567890ab';
   const ui=vm.createContext({
-    userProfiles:{[name]:{displayName:'Komi <friend>',avatar:'https://cdn.example.test/avatar.gif'}},
+    userProfiles:{[name]:{displayName:'Komi <friend>',publicAvatarUserId:'00000000-0000-4000-8000-000000000002',avatar:'https://cdn.example.test/avatar.gif'}},
     komiVisibleUsername:(_name,profile)=>profile.displayName,
     safeUrl:url=>url.startsWith('https://')?url:'',
     escapeText
   });
-  vm.runInContext(section(premium,'function fullFriendRows(names) {','function content(ctx){'),ui);
+  vm.runInContext(section(premium,'function friendAvatarMarkup(name,profile,label) {','function genreCounts('),ui);
   ui.names=[name];
   const html=vm.runInContext('fullFriendRows(names)',ui);
   assert.match(html,/Komi &lt;friend&gt;/);

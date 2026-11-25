@@ -1542,6 +1542,9 @@ async function komiLoadCatalogPages(attempt = 0) {
             // Never retain the previous owner's watch cards after signing out
             // or switching authenticated accounts.
             window.KomiResumeCache?.clear(user.authUserId);
+            window.KomiWatchStats?.reset?.(user.authUserId);
+            if(komiProfileLifetimeWatch.owner===user.authUserId)
+                Object.assign(komiProfileLifetimeWatch,{owner:null,episodes:null,seconds:null,inflight:null,loaded:0,error:false,pending:false});
             komiResumeReadyUid = null;
             komiResumeLoadError = null;
             komiResumePreview = [];
@@ -1570,7 +1573,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 await leaveWatchPartyRoom();
                 if (currentUser?.authUserId !== signingOut.authUserId) return;
                 closeWatchModal();
-                await komiProgressWriter.flush();
+                await Promise.all([komiProgressWriter.flush(),window.KomiWatchStats?.flush?.(signingOut.authUserId)]);
                 if (currentUser?.authUserId !== signingOut.authUserId) return;
 
                 const { data, error: sessionError } = await _supabase.auth.getSession();
@@ -2215,6 +2218,53 @@ async function komiLoadCatalogPages(attempt = 0) {
             komiProfileOverviewPaint(uid,animeById);
             return task;
         }
+        const komiProfileLifetimeWatch={owner:null,episodes:null,seconds:null,inflight:null,loaded:0,error:false,pending:false};
+        function komiProfileLifetimeRead(owner,force=false) {
+            if(!owner||!_supabase||currentUser?.authUserId!==owner)return;
+            const state=komiProfileLifetimeWatch;
+            const current=()=>{
+                const profile=document.getElementById('profile');
+                return currentUser?.authUserId===owner&&profile?.dataset?.profileUser===currentUser.username&&
+                    profile.querySelector('[data-profile-watch-status]')?profile:null;
+            };
+            if(!current())return;
+            if(state.owner!==owner)Object.assign(state,{owner,episodes:null,seconds:null,inflight:null,loaded:0,error:false,pending:false});
+            const paint=()=>{if(state.owner===owner)window.KomiProfileUI?.watchMetrics?.(current(),
+                {...state,loading:Boolean(state.inflight)});};
+            if(state.inflight||!force&&state.loaded&&Date.now()-state.loaded<20000){paint();return state.inflight;}
+            let job;
+            job=Promise.resolve().then(async()=>{
+                await window.KomiWatchStats?.flush?.(owner);
+                if(currentUser?.authUserId!==owner||state.owner!==owner||state.inflight!==job)return;
+                const controller=new AbortController();
+                const timeout=setTimeout(()=>controller.abort(),7000);
+                try{
+                    const [count,time]=await Promise.allSettled([
+                        _supabase.from('komi_watched_episodes').select('anime_id',{count:'exact',head:true})
+                            .eq('user_id',owner).abortSignal(controller.signal),
+                        _supabase.rpc('komi_read_profile_watch_seconds',{p_owner:owner}).abortSignal(controller.signal)
+                    ]);
+                    if(currentUser?.authUserId!==owner||state.owner!==owner||state.inflight!==job)return;
+                    const valid=(response,key)=>response.status==='fulfilled'&&!response.value.error&&
+                        response.value[key]!=null&&Number.isSafeInteger(Number(response.value[key]))&&Number(response.value[key])>=0;
+                    const gotCount=valid(count,'count'),gotTime=valid(time,'data');
+                    if(gotCount)state.episodes=Number(count.value.count);
+                    if(gotTime)state.seconds=Number(time.value.data);
+                    state.pending=window.KomiWatchStats?.hasPending?.(owner)===true;
+                    state.error=!(gotCount&&gotTime); state.loaded=Date.now();
+                }finally{clearTimeout(timeout);}
+            }).catch(()=>{if(state.owner===owner&&state.inflight===job&&currentUser?.authUserId===owner)state.error=true;})
+            .finally(()=>{if(state.owner===owner&&state.inflight===job){state.inflight=null;paint();}});
+            state.inflight=job;
+            paint();
+            return job;
+        }
+        for(const event of ['komi:watch-stats-saved','komi:watch-completed'])
+            globalThis.addEventListener?.(event,({detail:owner})=>{
+                if(owner&&komiProfileLifetimeWatch.owner===owner)komiProfileLifetimeWatch.loaded=0;
+                if(document.querySelector('#profile [data-profile-watch-status]'))
+                    void komiProfileLifetimeRead(owner,true);
+            });
         // Quest XP always comes from the authenticated server ledger, never from client counts.
         const komiQuestRewardState = { owner:null, data:null, request:0, busy:false, error:'' };
         function komiQuestRewardPaint() {
@@ -2699,7 +2749,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">Поделиться</span><span class="profile-share-copied" aria-hidden="true">Скопировано</span></button>
                         </div>
                     </div>
-                    ${KomiProfileUI.summary({level:calculatedLevel,xp:xpProgress,multiplier:xpMultiplier,titleCount:Object.keys(userStatuses).length,friendCount:isMe?myFriends.length:null})}
+                    ${KomiProfileUI.summary({level:calculatedLevel,xp:xpProgress,multiplier:xpMultiplier,titleCount:Object.keys(userStatuses).length,friendCount:isMe?myFriends.length:null,ownWatchStats:canSeeProfileActivity})}
                     ${isMe ? `
                             <div class="profile-settings-box" id="profile-settings">
                                 <section class="komi-premium-profile-media" data-komi-premium-editor data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Анимация профиля">
@@ -2917,6 +2967,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                 </section>
             `;
             if (canSeeProfileActivity) {
+                if(container.querySelector('[data-profile-watch-status]')) {
+                    const watchOwner=currentUser.authUserId;
+                    container.querySelector('[data-profile-watch-retry]')?.addEventListener('click',()=>
+                        void komiProfileLifetimeRead(watchOwner,true));
+                    void komiProfileLifetimeRead(watchOwner);
+                }
                 void komiDailyActivityRead();
                 if(profilePageSection==='overview') {
                     const overviewOwner=currentUser.authUserId;
@@ -5705,7 +5761,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 playSound();
                 createWatchPartyFromAnime(anime.id, '', false, sourceOrigin.index, sourceOrigin.name);
             });
-            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl, progressIndex);
+            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl, progressIndex, currentEp.slots[0]);
             const watchedOwner = currentUser?.authUserId || null;
             const watchedLocalOwner = watchedOwner || currentUser?.username || '';
             const watchContext = window.KomiPlayerUX?.mount({
