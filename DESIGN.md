@@ -117,3 +117,5 @@ The cover and personal cosmetics remain on a left-aligned identity card. Primary
 ### Home image first paint
 
 The hero keeps a neutral, correctly sized backdrop before artwork arrives or when all sources fail. Do not render the generic Komi logo as a fullscreen image or use its dimensions to classify the hero. Known portrait fallbacks remain portrait even before decode. Near the viewport, the recommendations rail starts only its first two covers immediately; the rest remain visibility-loaded. Reserve the card geometry without flashing logo thumbnails while images arrive.
+
+A portrait-only slide still needs a banner composition on wide screens. Use a right-hand crop with preserved aspect ratio and feather the left edge into the text field. Do not put the original portrait in a narrow strip or stretch it into a blurred full-width background. Keep landscape art and mobile portrait positioning independent.

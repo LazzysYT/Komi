@@ -705,3 +705,18 @@
     width:100% !important;height:72% !important;object-position:center top !important;
   }
 }
+
+/* Portrait-only titles keep their real artwork, but no longer shrink to a
+   postcard pinned to the right. Crop (don't stretch) the right-hand stage,
+   and feather its left edge into the reserved title area. Mobile stays intact. */
+@media (min-width: 769px) {
+  .komi-media-hub .komi-home-hero .hero-slide:is(.komi-hd-poster,:has(.komi-hub-hero-art:is([src*="/anilistcdn/media/anime/cover/"],[src*="/uploads/poster/animes/"]))) > .komi-hub-hero-art {
+    width: 67% !important;
+    left: auto !important;
+    right: 0 !important;
+    object-fit: cover !important;
+    object-position: 56% 30% !important;
+    -webkit-mask-image: linear-gradient(90deg,transparent 0%,#000 35%);
+    mask-image: linear-gradient(90deg,transparent 0%,#000 35%);
+  }
+}

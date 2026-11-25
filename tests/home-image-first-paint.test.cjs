@@ -36,3 +36,14 @@ test('only the first two recommendation posters start on the first viewport noti
   assert.deepEqual(posters.map(x=>x.src),['/poster0','/poster1','/anime-artwork.svg','/anime-artwork.svg']);
   assert.deepEqual(observed.slice(1),posters.slice(2));
 });
+test('desktop portrait backups fill a feathered stage instead of a hard-edged narrow strip',()=>{
+  const css=read('komi-hero-senku.css');
+  const desktop=css.slice(css.lastIndexOf('@media (min-width: 769px)'));
+  assert.match(desktop,/komi-hd-poster/);
+  assert.match(desktop,/anilistcdn\/media\/anime\/cover/);
+  assert.match(desktop,/width:\s*67%/);
+  assert.match(desktop,/object-fit:\s*cover/);
+  assert.match(desktop,/mask-image:\s*linear-gradient/);
+  assert.doesNotMatch(desktop,/komi-hd-wide|komi-hero-video|filter:\s*blur/);
+  assert.match(read('index.html'),/komi-hero-senku\.css\?v=20261125-watch-v9-portrait-stage/);
+});
