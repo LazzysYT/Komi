@@ -586,7 +586,35 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-thumb').count(),2);
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
    await page.getByRole('searchbox',{name:'Найти серию по номеру',exact:true}).fill('2');
-   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
+   const firstEpisodeVisible=await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible();
+   const filterDiagnostic=firstEpisodeVisible?await page.evaluate(()=>{
+     const input=document.getElementById('komiEpisodeSearch');
+     const modal=document.getElementById('watchModal');
+     const handler=input?.getAttribute('data-komi-oninput');
+     return {
+       url:location.href,handlerFunction:typeof komiFindEpisode,
+       globalHandlerFunction:typeof window.komiFindEpisode,router:typeof window.KomiDynamicEvents?.supports,
+       input:{value:input?.value,handler,connected:input?.isConnected,
+         disabled:input?.disabled,inert:!!input?.closest('[inert]'),
+         visibility:input?getComputedStyle(input).visibility:null,
+         supported:window.KomiDynamicEvents?.supports('input',handler)},
+       modal:{classes:modal?.className,inert:modal?.inert,ariaHidden:modal?.getAttribute('aria-hidden'),
+         display:modal?getComputedStyle(modal).display:null,
+         visibility:modal?getComputedStyle(modal).visibility:null},
+       activeElement:document.activeElement?.id,anime:window.komiActiveAnimeId,
+       rows:[...document.querySelectorAll('#watchModal .komi-episode-number-grid button')].map(button=>({
+         number:button.dataset.episodeNumber,label:button.getAttribute('aria-label'),
+         hidden:button.hidden,display:getComputedStyle(button).display,
+         visibility:getComputedStyle(button).visibility,disabled:button.disabled,inert:!!button.closest('[inert]'),
+         classes:button.className,sidebar:!!button.closest('.komi-watch-sidebar')
+       })),
+       styles:[...document.querySelectorAll('link[rel="stylesheet"]')]
+         .filter(link=>/komi\.production|komi-watch-compact/.test(link.href))
+         .map(link=>({href:link.href,media:link.media,loaded:!!link.sheet}))
+     };
+   }):null;
+   assert.equal(firstEpisodeVisible,false,filterDiagnostic?
+     'Episode filtering failed: '+JSON.stringify({width,...filterDiagnostic,pageErrors:errors}):undefined);
    await page.getByRole('button',{name:'Очистить поиск серии'}).click();
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),true);
    await view.getByRole('button',{name:'Показать серии списком'}).click();

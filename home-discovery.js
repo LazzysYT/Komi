@@ -323,6 +323,10 @@
     const activeImage = before[activeIndex].querySelector('.komi-hub-hero-art');
     const expected = after[activeIndex].querySelector('.komi-hub-hero-art')?.getAttribute('src');
     if (!activeImage || activeImage.getAttribute('src') !== expected || !root.KomiHeroDaily.imageIsReal(activeImage)) return false;
+    // patch() keys parsed sections by browser serialization (for example,
+    // inert becomes inert=""). Register the same representation before moving
+    // the canonical content, rather than the renderer's raw HTML string.
+    const canonicalMarkup = renderedHero.outerHTML;
     // Upgrade text and account actions in place: moving the decoded artwork
     // into a new section would create a second, late largest-contentful paint.
     const focused = existing.contains(document.activeElement) ? document.activeElement : null;
@@ -356,7 +360,7 @@
     existing.dataset.komiOwner = owner;
     current.dataset.komiHomeOwner = owner;
     delete current.dataset.komiBootPreview;
-    sectionMarkup.set(existing, markup);
+    sectionMarkup.set(existing, canonicalMarkup);
     if (focusedHref) [...existing.querySelectorAll('a')]
       .find(link => link.getAttribute('href') === focusedHref)?.focus({preventScroll:true});
     else if (focusedAction && !focused?.isConnected) [...existing.querySelectorAll('button[data-komi-onclick]')]
