@@ -526,6 +526,7 @@ async function checkNotifications(page) {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
+     const support=stage.querySelector(':scope > .komi-player-support').getBoundingClientRect();
      const heading=stage.querySelector(':scope > .komi-player-heading').getBoundingClientRect();
      const sidebarNode=stage.querySelector('.komi-watch-sidebar');
      const sidebar=sidebarNode.getBoundingClientRect();
@@ -535,7 +536,8 @@ async function checkNotifications(page) {
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       titleGap:heading.top-player.bottom,sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
+       supportGap:support.top-player.bottom,titleGap:heading.top-support.bottom,
+       sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
        background:active.backgroundColor,before:getComputedStyle(episode,'::before').content,
@@ -545,6 +547,7 @@ async function checkNotifications(page) {
    assert.ok(cinema.height >= 800, 'Cinema modal should use the full viewport height');
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
+   assert.ok(cinema.supportGap>=-2 && cinema.supportGap<=48,JSON.stringify(cinema));
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
    // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
    assert.ok(width>1050 ? cinema.sidebarBesideVideo : (cinema.sidebarHidden || cinema.sidebarAfterVideo),JSON.stringify(cinema));
@@ -556,7 +559,12 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
    assert.equal(await page.locator('.komi-watch-rail .komi-rail-bell, .komi-watch-rail [aria-label="Уведомления"]').count(),0,'Guest watch rail must not expose notifications');
-   assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),true);
+   assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),false,
+     'The persistent source controls replace the hover-only picker outside fullscreen');
+   assert.equal(await page.locator(width<=767 ? '.komi-mobile-watch-source' : '#komiWatchSourceSelect').isVisible(),true,
+     'Voice selection must remain visible in the desktop support bar or phone sheet control');
+   assert.equal(await page.getByRole('button',{name:'Видео не работает?',exact:true}).isVisible(),true,
+     'Player help must be reachable without opening overflow actions');
    assert.equal(await page.locator('.komi-native-hud').count(),1);
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
@@ -577,7 +585,7 @@ async function checkNotifications(page) {
    assert.equal(await view.count(),1);
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-thumb').count(),2);
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
-   await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
+   await page.getByRole('searchbox',{name:'Найти серию по номеру',exact:true}).fill('2');
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
    await page.getByRole('button',{name:'Очистить поиск серии'}).click();
    assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),true);
@@ -606,7 +614,8 @@ async function checkNotifications(page) {
    });
    assert.equal(state.time,42);assert.equal(state.duration,100);
    assert.equal(state.index,1,'Progress on the old second row still belongs to the combined first episode');
-   await page.getByText('Не удалось загрузить видео.',{exact:true}).waitFor();
+   await page.locator('#komiPlayerRecovery').getByText(
+     'Не удалось загрузить видео. Повторите загрузку или выберите другой источник.',{exact:true}).waitFor();
    assert.equal(await playback.getByRole('slider',{name:'Позиция видео'}).isDisabled(),true);
    const recoveryLayout = await page.evaluate(()=>{
      const recovery=document.querySelector('#komiPlayerRecovery').getBoundingClientRect();
@@ -620,15 +629,21 @@ async function checkNotifications(page) {
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
    await page.evaluate(()=>document.getElementById('animeVideoPlayer').dispatchEvent(new Event('error')));
    await page.getByRole('button',{name:'Сменить источник'}).click();
-   const providerLink = page.getByRole('link',{name:'Открыть у провайдера',exact:false});
-   await providerLink.waitFor();
-   assert.equal(await playback.count(),0);
    const providerFrame = page.locator('#watchModal .player-wrapper iframe');
+   await providerFrame.waitFor();
+   assert.equal(await playback.count(),0);
    assert.equal(await providerFrame.getAttribute('src'),'https://media.test/player?a=1&b=2');
    assert.doesNotMatch(await providerFrame.getAttribute('sandbox'),/allow-popups|allow-top-navigation/);
    const provider = providerFrame.contentFrame();
    await provider.getByRole('button',{name:'Запустить видео'}).click();
    await provider.getByRole('button',{name:'Видео запущено'}).waitFor();
+   assert.equal(await page.locator('#komiPlayerRecovery').isVisible(),false,
+     'A healthy external player must not inherit the failed native source recovery state');
+   const playerHelp = page.getByRole('button',{name:'Видео не работает?',exact:true});
+   await playerHelp.click();
+   assert.equal(await playerHelp.getAttribute('aria-expanded'),'true');
+   const providerLink = page.getByRole('link',{name:'Открыть у провайдера',exact:false});
+   await providerLink.waitFor();
    assert.equal(await providerLink.getAttribute('href'),'https://media.test/player?a=1&b=2');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').duration),100);
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);

@@ -310,6 +310,59 @@
   // Keep equal sections mounted through catalog/session refreshes. Parsing into
   // a template is inert; images and observers only start for genuinely new DOM.
   const sectionMarkup = new WeakMap();
+  function adoptBootHero(container, renderedHero, markup, owner) {
+    const current = container.querySelector(':scope > .komi-home-discovery');
+    const existing = current?.querySelector('.komi-home-hero');
+    if (!existing || !renderedHero || existing !== root.KomiHeroDaily?.preview) return false;
+    const before = [...existing.querySelectorAll('.hero-slide')];
+    const after = [...renderedHero.querySelectorAll('.hero-slide')];
+    const identity = slide => slide.dataset.komiAnimeId || slide.dataset.komiPromo;
+    if (before.length !== after.length || before.some((slide, index) => identity(slide) !== identity(after[index]))) return false;
+    const activeIndex = before.findIndex(slide=>slide.classList.contains('active'));
+    if (activeIndex < 0 || !after[activeIndex].classList.contains('active')) return false;
+    const activeImage = before[activeIndex].querySelector('.komi-hub-hero-art');
+    const expected = after[activeIndex].querySelector('.komi-hub-hero-art')?.getAttribute('src');
+    if (!activeImage || activeImage.getAttribute('src') !== expected || !root.KomiHeroDaily.imageIsReal(activeImage)) return false;
+    // Upgrade text and account actions in place: moving the decoded artwork
+    // into a new section would create a second, late largest-contentful paint.
+    const focused = existing.contains(document.activeElement) ? document.activeElement : null;
+    const focusedHref = focused?.closest('a')?.getAttribute('href');
+    const focusedAction = focused?.closest('button')?.getAttribute('data-komi-onclick');
+    const attributes = (target, source, preserve = []) => {
+      for (const attribute of [...target.attributes])
+        if (!preserve.includes(attribute.name) && !source.hasAttribute(attribute.name)) target.removeAttribute(attribute.name);
+      for (const attribute of source.attributes)
+        if (!preserve.includes(attribute.name) && target.getAttribute(attribute.name) !== attribute.value)
+          target.setAttribute(attribute.name, attribute.value);
+    };
+    before.forEach((slide, index) => {
+      const next = after[index];
+      const image = slide.querySelector('.komi-hub-hero-art');
+      const ready = image && root.KomiHeroDaily.imageIsReal(image);
+      attributes(slide, next);
+      if (ready) slide.classList.add('komi-art-ready');
+      const content = slide.querySelector('.komi-home-hero-content');
+      const nextContent = next.querySelector('.komi-home-hero-content');
+      if (content && nextContent) content.replaceWith(nextContent);
+      const nextImage = next.querySelector('.komi-hub-hero-art');
+      if (image && nextImage) attributes(image, nextImage,
+        ready ? ['src','loading','fetchpriority','data-komi-hero-deferred-src'] : []);
+    });
+    const controls = existing.querySelector('.komi-hub-carousel-controls');
+    const nextControls = renderedHero.querySelector('.komi-hub-carousel-controls');
+    // Once live, keep the carousel's direct event bindings and pause clock too.
+    if (current.hasAttribute('data-komi-boot-preview') && controls && nextControls)
+      controls.replaceWith(nextControls);
+    existing.dataset.komiOwner = owner;
+    current.dataset.komiHomeOwner = owner;
+    delete current.dataset.komiBootPreview;
+    sectionMarkup.set(existing, markup);
+    if (focusedHref) [...existing.querySelectorAll('a')]
+      .find(link => link.getAttribute('href') === focusedHref)?.focus({preventScroll:true});
+    else if (focusedAction && !focused?.isConnected) [...existing.querySelectorAll('button[data-komi-onclick]')]
+      .find(button => button.getAttribute('data-komi-onclick') === focusedAction)?.focus({preventScroll:true});
+    return true;
+  }
   function patch(container, markup, owner) {
     const template = document.createElement('template');
     template.innerHTML = markup;
@@ -406,5 +459,5 @@
   function afterRender(container) {
     observeViewport(container);
   }
-  root.KomiHomeDiscovery = {render,patch,retainSection,afterRender,observeViewport,recentProgress,unfinished};
+  root.KomiHomeDiscovery = {render,patch,adoptBootHero,retainSection,afterRender,observeViewport,recentProgress,unfinished};
 })(globalThis);

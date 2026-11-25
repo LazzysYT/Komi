@@ -1,11 +1,19 @@
 /* Cold and returning-user reload: keep the daily hero paired through hydration. */
 const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
+const fs=require('node:fs');
+const path=require('node:path');
+const vm=require('node:vm');
 const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
 const curatedIds=['61316','61469','61967','60636','59978'];
 const dailyLead=curatedIds[0];
 const dailyArtwork='https://image.tmdb.org/t/p/w1280/f7StpjhGI5xdIecti2jQkQY38ov.jpg';
+const seed={};
+vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../komi-home-seed.js'),'utf8'),seed);
+const dailySeedTitle=seed.KomiHomeSeed.find(anime=>String(anime.id)===dailyLead)?.title;
+assert.ok(dailySeedTitle,'The daily lead must have a bundled seed title');
 const imageFixture='<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720"><rect width="1280" height="720" fill="#43606f"/></svg>';
+const deferred=()=>{let resolve;const promise=new Promise(done=>resolve=done);return {promise,resolve};};
 const make=(id,year,score)=>({
   shikimori_id:id,updated_at:new Date().toISOString(),
   data:{title:'First paint '+id,poster:'https://cdn.example.org/'+id+'.jpg',
@@ -31,6 +39,17 @@ const make=(id,year,score)=>({
   let secondFetched=new Promise(resolve=>releaseSecond=resolve);
   let secondSeen;
   let secondRequested=new Promise(resolve=>secondSeen=resolve);
+  const appMainUrl=/\/app-main\.js(?:\?|$)/;
+  let appMain=deferred();
+  let closing=false;
+  // Match the versioned filename in source and minified deployments alike.
+  // A held deferred script must not prevent the head boot from painting a hero.
+  await page.route(appMainUrl,async route=>{
+    const held=appMain;
+    await held.promise;
+    try{await route.continue();}
+    catch(error){if(!closing&&!route.request().failure())throw error;}
+  });
   // Keep image decoding deterministic while preserving the production artwork URL.
   await page.route('https://image.tmdb.org/**',route=>route.fulfill({
     status:200,contentType:'image/svg+xml',body:imageFixture
@@ -74,8 +93,67 @@ const make=(id,year,score)=>({
     assert.equal(frame.image,dailyArtwork,'The decoded artwork must match the daily lead');
     assert.equal(frame.link,'/anime/'+dailyLead+'#player','The watch link must match the title and artwork');
   };
+  const captureBootPreview=async label=>{
+    const boot=page.locator('#mainContainer .komi-home-discovery[data-komi-boot-preview]');
+    await boot.waitFor({state:'visible',timeout:10000});
+    const state=await boot.evaluate(preview=>{
+      const first=window.KomiHeroDaily?.firstImage;
+      const image=preview.querySelector('.hero-slide.active .komi-hub-hero-art');
+      const watch=preview.querySelector('.hero-slide.active .komi-hub-play');
+      const buttons=[...preview.querySelectorAll('.komi-home-hero button')];
+      return {appStarted:typeof window.render==='function',readyState:document.readyState,
+        id:first?.id,src:first?.src,ready:first?.ready,
+        hasPromise:typeof first?.promise?.then==='function',sameImage:first?.image===image,
+        decoded:!!image?.complete&&image.naturalWidth>=2,
+        nativeWatch:watch?.tagName==='A'&&!watch.closest('[inert]')&&
+          watch.getAttribute('aria-disabled')!=='true'&&!watch.hasAttribute('disabled'),
+        buttons:buttons.length,allDisabled:buttons.every(button=>button.disabled)};
+    });
+    assert.equal(state.appStarted,false,label+': the preview must render before app-main executes');
+    assert.equal(state.readyState,'interactive',label+': the held deferred app must still block DOMContentLoaded');
+    assert.equal(state.id,dailyLead);
+    assert.equal(state.src,dailyArtwork);
+    assert.equal(state.ready,true,label+': the shared first image must have finished decoding');
+    assert.equal(state.hasPromise,true);
+    assert.equal(state.sameImage,true,label+': the decoded boot image must be the visible DOM node');
+    assert.equal(state.decoded,true);
+    assert.equal(state.nativeWatch,true,label+': the watch link must work before JavaScript handlers exist');
+    assert.ok(state.buttons>0,'The preview must retain its pending JavaScript controls');
+    assert.equal(state.allDisabled,true,label+': JavaScript-only hero controls must wait for hydration');
+    const frame=await readActiveHero();
+    assertDailyPair(frame,dailySeedTitle);
+    const image=await activeHero.locator('.komi-hub-hero-art').elementHandle();
+    assert.ok(image,'The early lead image must be retained for identity checks');
+    return {frame,image};
+  };
+  const assertAdoptedImage=async(image,label)=>{
+    await page.waitForFunction(()=>{
+      const home=document.querySelector('#mainContainer .komi-home-discovery');
+      const controls=[...(home?.querySelectorAll('.komi-home-hero button:not([data-komi-hero-toggle])')||[])];
+      // Reduced motion intentionally disables Pause, but manual navigation and
+      // list actions must become available after their real owners initialize.
+      return home&&!home.hasAttribute('data-komi-boot-preview')&&controls.length>0&&
+        controls.every(button=>!button.disabled);
+    },null,{timeout:10000});
+    const retained=await page.evaluate(original=>{
+      const image=document.querySelector('#mainContainer .komi-home-hero .hero-slide.active .komi-hub-hero-art');
+      return {same:original===image,connected:original.isConnected,
+        shared:window.KomiHeroDaily.firstImage.image===original};
+    },image);
+    assert.deepEqual(retained,{same:true,connected:true,shared:true},
+      label+': hydration must adopt the decoded lead image, not replace it with an identical URL');
+  };
+  const openWithAppHeld=async reload=>{
+    await Promise.all([
+      page.waitForRequest(appMainUrl,{timeout:10000}),
+      reload?page.reload({waitUntil:'commit',timeout:45000}):page.goto(base,{waitUntil:'commit',timeout:45000})
+    ]);
+  };
   try{
-    await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+    await openWithAppHeld(false);
+    const coldBoot=await captureBootPreview('Cold load');
+    appMain.resolve();
+    await page.waitForLoadState('domcontentloaded',{timeout:45000});
     await firstFetched;
     await Promise.race([secondRequested,new Promise((_,reject)=>
       setTimeout(()=>reject(new Error('Second catalog page not requested')),5000))]);
@@ -94,12 +172,15 @@ const make=(id,year,score)=>({
     assert.equal(preview.ready,false,'The first 48 records must not be marked as complete');
     assertDailyPair(seedFrame,preview.seedTitle);
     assert.doesNotMatch(seedFrame.title,/^First paint /);
+    await assertAdoptedImage(coldBoot.image,'Cold partial catalog');
     releaseSecond();
     await page.waitForFunction(lead=>komiHomeCatalogReady&&
       document.querySelector('#mainContainer .komi-home-hero .hero-slide.active h1')?.textContent.trim()==='First paint '+lead,
     dailyLead,{timeout:20000});
     const finalFrame=await readActiveHero();
     assertDailyPair(finalFrame,'First paint '+dailyLead);
+    await assertAdoptedImage(coldBoot.image,'Cold complete catalog');
+    await coldBoot.image.dispose();
 
     await page.waitForFunction(ids=>{try{
       const items=JSON.parse(localStorage.getItem('komi.public.home.preview.v2')||'null')?.items;
@@ -109,17 +190,45 @@ const make=(id,year,score)=>({
     // during the next refresh, even while the first 48 IDs are fetched again.
     secondFetched=new Promise(resolve=>releaseSecond=resolve);
     secondRequested=new Promise(resolve=>secondSeen=resolve);
-    await page.reload({waitUntil:'domcontentloaded',timeout:45000});
+    appMain=deferred();
+    await openWithAppHeld(true);
+    const cachedBoot=await captureBootPreview('Cached reload');
+    assert.deepEqual(cachedBoot.frame,coldBoot.frame,'Boot must choose the same daily seed before either app load');
+    appMain.resolve();
+    await page.waitForLoadState('domcontentloaded',{timeout:45000});
     await secondRequested;
+    await page.waitForFunction(lead=>
+      document.querySelector('#mainContainer .komi-home-hero .hero-slide.active h1')?.textContent.trim()==='First paint '+lead,
+    dailyLead,{timeout:10000});
     const cachedFrame=await readActiveHero();
     assertDailyPair(cachedFrame,'First paint '+dailyLead);
     assert.deepEqual(cachedFrame,finalFrame,'A returning visitor must retain the fully hydrated daily frame');
+    await assertAdoptedImage(cachedBoot.image,'Cached partial refresh');
     // A complete usable cache is already ready. Awaiting secondRequested while
     // secondFetched remains unresolved proves the background refresh is pending.
     releaseSecond();
-    await page.waitForFunction(()=>komiHomeCatalogReady,{timeout:20000});
+    await page.waitForFunction(()=>komiHomeCatalogReady&&!komiCatalogLoadPending,null,{timeout:20000});
     assert.deepEqual(await readActiveHero(),finalFrame);
+    await assertAdoptedImage(cachedBoot.image,'Cached complete refresh');
+    await cachedBoot.image.dispose();
+
+    // Exercise the pre-app anchor itself after the retention assertions. A
+    // deterministic local destination proves native navigation without opening
+    // a live provider or relying on an SPA handler that is deliberately held.
+    const watchPath='/anime/'+dailyLead;
+    await page.route(url=>url.pathname===watchPath,route=>route.fulfill({
+      status:200,contentType:'text/html',body:'<!doctype html><title>Native watch fixture</title><h1>Native watch navigation</h1>'
+    }));
+    appMain=deferred();
+    await openWithAppHeld(true);
+    const nativeBoot=await captureBootPreview('Native watch');
+    await nativeBoot.image.dispose();
+    await Promise.all([
+      page.waitForURL(url=>url.pathname===watchPath&&url.hash==='#player',{waitUntil:'domcontentloaded',timeout:10000}),
+      activeHero.locator('.komi-hub-play').click()
+    ]);
+    assert.equal(await page.locator('h1').textContent(),'Native watch navigation');
     assert.equal(errors.length,0,'No page exceptions: '+errors.join('; '));
-    console.log('PASS cold and cached reload: daily title, decoded artwork and watch route stay paired');
-  }finally{await context.close();await browser.close();}
+    console.log('PASS early, cold and cached reload: daily title/art/watch route paired, decoded image node retained, native watch link works before app-main');
+  }finally{closing=true;appMain.resolve();releaseSecond();await context.close();await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});
