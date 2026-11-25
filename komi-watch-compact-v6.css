@@ -105,6 +105,7 @@
 }
 #watchModal .komi-player-heading .komi-watch-navbtn:not(:disabled):hover {
   background:var(--watch-raised)!important;
+  color:var(--watch-text,#fff)!important;
   transform:translateY(-1px);
 }
 #watchModal .komi-watch-quick-actions {
