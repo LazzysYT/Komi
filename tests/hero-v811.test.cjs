@@ -100,7 +100,8 @@ test('leaving the home destroys its timer; one or zero slides need no timer', ()
 });
 
 test('hero descriptions are plain text while HTML callers retain escaping', () => {
-  const context = vm.createContext({escapeFriendHtml:value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;')});
+  const context = vm.createContext({window:{KomiDescription:require('../anime-description.js')},
+    escapeFriendHtml:value => value.replace(/&/g, '&amp;').replace(/</g, '&lt;')});
   const source = app.slice(app.indexOf('function cleanAnimeDescriptionText('), app.indexOf('// Shikimori\'s legacy REST image API'));
   vm.runInContext(source, context);
   const text = '[b]Tom & Jerry[/b] <em>возвращаются</em> [character=1]Рем[/c';
@@ -116,7 +117,7 @@ test('hero metadata uses a small public projection, not full episode payloads', 
     abortSignal:value => {signal = value; return query;},
     maybeSingle:async () => ({data:{description:'Tom & Jerry', banner:'https://example.test/banner.jpg'}, error:null})
   };
-  const context = vm.createContext({window:{}, _supabase:{from:name => {assert.equal(name, 'anime_catalog'); return query;}},
+  const context = vm.createContext({window:{KomiDescription:require('../anime-description.js')}, _supabase:{from:name => {assert.equal(name, 'anime_catalog'); return query;}},
     AbortController, setTimeout:() => 1, clearTimeout:() => {}, cleanAnimeDescriptionText:value => value});
   const source = app.slice(app.indexOf('window.komiFetchHeroMetadata ='), app.indexOf('function startHeroAutoSlide()'));
   vm.runInContext(source, context);

@@ -56,14 +56,16 @@ test('guest navigation and community have readable first-paint fallback before a
   const markup = fs.readFileSync(path.join(__dirname, '../index.html'), 'utf8');
   assert.match(markup, /id="userHeaderArea"><button[^>]+data-komi-onclick="playSound\(\); openAuthModal\('login'\)"/);
   assert.match(markup, /id="komiFriendsDrawerList"[^>]*aria-live="polite"/);
-  assert.match(markup, /Подключаем список пользователей/);
+  assert.match(markup, /Войдите, чтобы видеть друзей и участников сообщества/);
+  assert.match(markup, /data-komi-click="friends-login"/);
+  assert.doesNotMatch(markup, /Подключаем список пользователей/);
   assert.match(html, /function renderHeaderUser\(\)/);
   assert.match(html, /area\.replaceChildren\(pill\)/);
 });
 
 test('friends drawer is inert at rest and accessibility state tracks opening and closing', () => {
   assert.match(html, /<aside id="komiFriendsDrawer"[^>]*\binert>/);
-  assert.doesNotMatch(html, /<aside id="komiFriendsDrawer"[^>]*aria-hidden="true"/);
+  assert.match(html, /<aside id="komiFriendsDrawer"[^>]*aria-hidden="true"/);
   const open = html.match(/function openFriendsDrawer\(\) \{([\s\S]*?)\n        \}/)?.[1];
   const close = html.match(/function closeFriendsDrawer\(\) \{([\s\S]*?)\n        \}/)?.[1];
   assert.ok(open && close);

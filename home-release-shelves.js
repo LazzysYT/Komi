@@ -124,18 +124,43 @@
   }
   function renderUpcoming(context = {}) {
     const entries = selectUpcoming(context.animeList, context);
-    const empty = context.scheduleLoading ? 'Загружаем расписание…'
-      : context.scheduleError ? 'Не удалось обновить расписание. Попробуйте ещё раз.'
-      : 'Пока нет подтверждённых дат на ближайшие 14 дней.';
+    // The storefront only advertises confirmed dates. Empty, pending and failed
+    // first loads leave no calendar widget; the existing loader can insert it
+    // later when its schedule has a matching catalogue entry.
+    if (!entries.length) return '';
     return '<section id="komiHomeUpcoming" class="komi-home-shelf komi-feature-section komi-home-upcoming" aria-labelledby="komiHomeUpcomingTitle">' +
       '<div class="komi-home-heading"><div><h2 id="komiHomeUpcomingTitle">Скоро выйдут</h2>' +
       '<p class="komi-home-subtitle">По расписанию. Озвучка может появиться позже. Время указано в вашем часовом поясе.</p></div>' +
       '<button type="button" class="komi-home-all" data-komi-onclick="loadKomiEpisodeSchedule(true)"' +
       (context.scheduleLoading ? ' disabled aria-busy="true"' : '') + '>Обновить</button></div>' +
-      (entries.length ? cards(entries, context, true) : '<p class="komi-home-release-empty" role="status">' + empty + '</p>') +
+      cards(entries, context, true) +
+      (context.scheduleError ? '<p class="komi-home-subtitle" role="status">Не удалось обновить расписание. Показаны последние подтверждённые даты. Попробуйте ещё раз.</p>' : '') +
       '</section>';
   }
-  const api = {selectRecent, selectUpcoming, renderRecent, renderUpcoming};
+  // Refresh only this shelf, preserving the hero and the rest of the storefront.
+  // The section can be absent initially or disappear as its dates expire.
+  function updateUpcoming(container, context = {}) {
+    if (!container) return null;
+    const document = container.ownerDocument;
+    const previous = container.querySelector('#komiHomeUpcoming');
+    const footer = container.querySelector('.komi-home-browse-footer');
+    const restoreFocus = !!previous?.contains(document.activeElement);
+    const markup = renderUpcoming(context);
+    let next = null;
+    if (markup) {
+      const template = document.createElement('template');
+      template.innerHTML = markup;
+      next = template.content.firstElementChild;
+      if (previous) previous.replaceWith(next);
+      else container.insertBefore(next, footer || null);
+    } else previous?.remove();
+    if (restoreFocus) {
+      const target = next?.querySelector('.komi-home-all') || footer?.querySelector('.komi-home-catalog-link');
+      target?.focus({preventScroll:true});
+    }
+    return next;
+  }
+  const api = {selectRecent, selectUpcoming, renderRecent, renderUpcoming, updateUpcoming};
   if (typeof module === 'object' && module.exports) module.exports = api;
   else root.KomiHomeReleases = api;
 })(globalThis);

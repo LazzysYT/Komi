@@ -36,6 +36,8 @@
         return openAuthModal('login');
       });
       case 'click:friends-close': return closeFriendsDrawer();
+      case 'click:friends-login': closeFriendsDrawer(); return openAuthModal('login');
+      case 'click:friends-retry': return loadKomiCommunityProfiles();
       case 'click:friends-all': return setFriendsDrawerTab('all');
       case 'click:friends-following': return setFriendsDrawerTab('friends');
       case 'click:anime-close': return withSound(() => closeAddModal());

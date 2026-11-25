@@ -481,14 +481,15 @@ async function komiLoadCatalogPages(attempt = 0) {
             else openFriendsDrawer();
         }
         function openFriendsDrawer() {
-            loadKomiCommunityProfiles().then(() => renderFriendsDrawer()).catch(console.warn);
             const drawer = document.getElementById('komiFriendsDrawer');
+            if (!drawer) return;
             drawer.removeAttribute('inert');
             drawer.removeAttribute('aria-hidden');
             drawer.classList.add('open');
             document.getElementById('komiFriendsBackdrop').classList.add('open');
             document.getElementById('sideFriendsBtn')?.setAttribute('aria-expanded','true');
             renderFriendsDrawer();
+            void loadKomiCommunityProfiles();
             document.getElementById('komiFriendsSearch')?.focus();
         }
         function closeFriendsDrawer() {
@@ -516,22 +517,83 @@ async function komiLoadCatalogPages(attempt = 0) {
             renderFriendsDrawer();
         }
         let komiCommunityVerifiedNames = new Set();
-        async function loadKomiCommunityProfiles() {
-            if (!_supabase) return;
-            const { data, error } = await _supabase.from('komi_profiles').select('username,display_name,avatar_url').limit(1000);
-            if (error) { console.warn('Komi profiles:', error.message); return; }
+        let komiCommunityState = { owner:null, status:'idle', request:null };
+        function resetKomiCommunityProfiles(owner = null) {
+            komiCommunityState.request?.controller.abort();
+            komiCommunityState = { owner, status:'idle', request:null };
             komiCommunityVerifiedNames = new Set();
-            for (const profile of data || []) {
-                if (!profile.username) continue;
-                komiCommunityVerifiedNames.add(profile.username);
-                if (!userProfiles[profile.username]) userProfiles[profile.username] = {};
-                if (profile.avatar_url) userProfiles[profile.username].avatar = profile.avatar_url;
-                userProfiles[profile.username].displayName = profile.display_name?.trim() || profile.username;
+        }
+        async function loadKomiCommunityProfiles() {
+            const uid = currentUser?.authUserId || null;
+            if (komiCommunityState.owner !== uid) resetKomiCommunityProfiles(uid);
+            if (!uid) { renderFriendsDrawer(); return; }
+            if (komiCommunityState.request) return komiCommunityState.request.promise;
+            if (!_supabase || !navigator.onLine) {
+                komiCommunityState.status = 'error';
+                renderFriendsDrawer();
+                return;
             }
+            const request = { controller:new AbortController(), promise:null };
+            komiCommunityState.request = request;
+            komiCommunityState.status = 'loading';
+            renderFriendsDrawer();
+            request.promise = (async () => {
+                let timeout, onAbort;
+                try {
+                    // A bounded read always leaves a usable retry state, even
+                    // when a connection stalls or the SDK has pending retries.
+                    const cancelled = new Promise((_, reject) => {
+                        onAbort = () => reject(new Error('Community request cancelled'));
+                        request.controller.signal.addEventListener('abort', onAbort, {once:true});
+                        timeout = setTimeout(() => request.controller.abort(), 8000);
+                    });
+                    const { data, error } = await Promise.race([
+                        _supabase.from('komi_profiles').select('username,display_name,avatar_url')
+                            .limit(1000).abortSignal(request.controller.signal),
+                        cancelled
+                    ]);
+                    if (error) throw error;
+                    if (request.controller.signal.aborted || komiCommunityState.request !== request ||
+                        currentUser?.authUserId !== uid) return;
+                    komiCommunityVerifiedNames = new Set();
+                    for (const profile of data || []) {
+                        if (!profile.username) continue;
+                        komiCommunityVerifiedNames.add(profile.username);
+                        if (!userProfiles[profile.username]) userProfiles[profile.username] = {};
+                        userProfiles[profile.username].avatar = komiSafeAvatarUrl(profile.avatar_url) ||
+                            'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(profile.username);
+                        userProfiles[profile.username].displayName = profile.display_name?.trim() || profile.username;
+                    }
+                    komiCommunityState.status = 'ready';
+                } catch {
+                    if (komiCommunityState.request === request && currentUser?.authUserId === uid)
+                        komiCommunityState.status = 'error';
+                } finally {
+                    clearTimeout(timeout);
+                    if (onAbort) request.controller.signal.removeEventListener('abort', onAbort);
+                    if (komiCommunityState.request === request) {
+                        komiCommunityState.request = null;
+                        renderFriendsDrawer();
+                    }
+                }
+            })();
+            return request.promise;
         }
         function renderFriendsDrawer() {
             const list = document.getElementById('komiFriendsDrawerList');
             if (!list) return;
+            // Keep keyboard users in the drawer when retry/results replace
+            // the focused list control; this search field survives the render.
+            if (list.contains(document.activeElement))
+                document.getElementById('komiFriendsSearch')?.focus({preventScroll:true});
+            const uid = currentUser?.authUserId || null;
+            if (komiCommunityState.owner !== uid) resetKomiCommunityProfiles(uid);
+            list.setAttribute('aria-busy', String(!!uid && komiCommunityState.status === 'loading'));
+            if (!uid) {
+                window.komiFriendNames = [];
+                list.innerHTML = '<div class="komi-friends-empty"><strong>Сообщество KomiAnime</strong><p>Войдите, чтобы видеть друзей и участников сообщества.</p><button type="button" class="btn-glow" data-komi-click="friends-login">Войти</button></div>';
+                return;
+            }
             document.getElementById('komiFriendsAllTab')?.classList.toggle('active', komiFriendsTab === 'all');
             document.getElementById('komiFriendsMyTab')?.classList.toggle('active', komiFriendsTab === 'friends');
             const query = (document.getElementById('komiFriendsSearch')?.value || '').trim().toLocaleLowerCase();
@@ -539,19 +601,29 @@ async function komiLoadCatalogPages(attempt = 0) {
             const friends = me ? friendsFor(me) : [];
             const pendingNames = protectedFriendSent.owner === currentUser?.authUserId
                 ? protectedFriendSent.names : new Set();
-            const names = komiFriendsTab === 'friends' ? friends : [...new Set([...Object.keys(userProfiles), ...komiCommunityVerifiedNames])];
+            const names = komiFriendsTab === 'friends' ? friends : [...komiCommunityVerifiedNames];
             const unique = [...new Set(names)].filter(n => n && n !== me && (
                 n.toLocaleLowerCase().includes(query) || (userProfiles[n]?.displayName || '').toLocaleLowerCase().includes(query)
             )).sort((a,b)=>(userProfiles[a]?.displayName || a).localeCompare(userProfiles[b]?.displayName || b,'ru'));
-            if (komiFriendsTab === 'friends' && !me) {
-                list.innerHTML = '<div class="komi-friends-empty"><strong>Войди в аккаунт</strong><p>Чтобы увидеть друзей, нужно авторизоваться.</p><button class="btn-glow" data-komi-onclick="closeFriendsDrawer();openAuthModal(\'login\')">Войти</button></div>';
+            window.komiFriendNames = unique;
+            if (!unique.length && komiFriendsTab === 'all' && komiCommunityState.status !== 'ready') {
+                const loading = komiCommunityState.status === 'loading';
+                const failed = komiCommunityState.status === 'error';
+                list.innerHTML = '<div class="komi-friends-empty"><strong>' +
+                    (loading ? 'Загружаем участников…' : failed ? 'Не удалось загрузить участников' : 'Участники сообщества') +
+                    '</strong><p>' + (loading ? 'Подождите несколько секунд.' : failed ?
+                        'Проверьте соединение и попробуйте ещё раз.' : 'Откройте список, чтобы найти друзей.') + '</p>' +
+                    (loading ? '' : '<button type="button" class="btn-secondary" data-komi-click="friends-retry">' +
+                        (failed ? 'Попробовать снова' : 'Показать участников') + '</button>') + '</div>';
                 return;
             }
             if (!unique.length) {
                 list.innerHTML = '<div class="komi-friends-empty"><span></span><strong>'+(query ? 'Никого не найдено' : komiFriendsTab === 'friends' ? 'Пока нет друзей' : 'Пользователей пока нет')+'</strong><p>'+(query ? 'Попробуй другой ник.' : 'Пользователи появятся здесь после создания профиля.')+'</p></div>';
                 return;
             }
-            list.innerHTML = '<div class="komi-friends-count">Найдено: '+unique.length+'</div>'+unique.map((name,index)=>{
+            const refreshNotice = komiFriendsTab === 'all' && komiCommunityState.status === 'error'
+                ? '<div class="komi-friends-empty" role="status"><p>Не удалось обновить список. Показаны ранее загруженные участники.</p><button type="button" class="btn-secondary" data-komi-click="friends-retry">Попробовать снова</button></div>' : '';
+            list.innerHTML = refreshNotice+'<div class="komi-friends-count">Найдено: '+unique.length+'</div>'+unique.map((name,index)=>{
                 const profile = userProfiles[name] || {};
                 const safeName = escapeFriendHtml(komiVisibleUsername(name, profile, false));
                 const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
@@ -1331,9 +1403,9 @@ async function komiLoadCatalogPages(attempt = 0) {
                 document.getElementById('notifDropdown')?.classList.remove('active');
                 if (komiFriendsTab === 'friends') {
                     komiFriendsTab = 'all';
-                    if (document.getElementById('komiFriendsDrawer')?.classList.contains('open')) renderFriendsDrawer();
                 }
             }
+            if (document.getElementById('komiFriendsDrawer')?.classList.contains('open')) renderFriendsDrawer();
             const sidebarAvatarIcon = document.getElementById('sidebarAvatarIcon');
             const headerCoin = document.getElementById('komiHeaderAniCoin');
             if (headerCoin) {
@@ -1899,7 +1971,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     .select('description:data->>desc,still:data->screenshots->>0,banner:data->>banner_url,video:data->>banner_video_url')
                     .eq('shikimori_id',Number(id)).abortSignal(controller.signal).maybeSingle();
                 if(error || !data) return null;
-                return {description:cleanAnimeDescriptionText(data.description).slice(0,850),still:data.still,banner:data.banner,video:data.video};
+                return {description:window.KomiDescription?.excerpt(data.description) || '',still:data.still,banner:data.banner,video:data.video};
             } catch { return null; }
             finally { clearTimeout(timeout); }
         };
@@ -3034,14 +3106,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         function cleanAnimeDescriptionText(value) {
-            return String(value || '')
-                .replace(/\[(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)[^\]]*\]/gi, ' ')
-                .replace(/\[\/(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)\]/gi, ' ')
-                .replace(/<[^>]*>/g, ' ')
-                .replace(/(?:https?:\/\/|www\.)\S+/gi, ' ')
-                .replace(/&(?:#?x?[\w]+);/gi, ' ')
-                .replace(/\[\/?[a-z][^\]]*$/gi, ' ')
-                .replace(/[\u0000-\u001f\s]+/g, ' ').trim();
+            return window.KomiDescription?.clean(value) || '';
         }
         function cleanAnimeDescription(value) {
             return escapeFriendHtml(cleanAnimeDescriptionText(value));
@@ -4941,17 +5006,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (currentView === 'home') {
                     const section = document.getElementById('komiCalendarSection');
                     if (section) section.outerHTML = komiReleaseCalendar();
-                    const upcoming = document.getElementById('komiHomeUpcoming');
-                    if (upcoming && window.KomiHomeReleases) {
-                        const restoreFocus = upcoming.contains(document.activeElement);
-                        upcoming.outerHTML = window.KomiHomeReleases.renderUpcoming({
+                    const storefront = document.querySelector('.komi-home-storefront');
+                    if (storefront && window.KomiHomeReleases) {
+                        window.KomiHomeReleases.updateUpcoming(storefront, {
                             animeList, artwork:animeArtwork, schedule:komiExternalCalendar,
                             posterSource:anime => komiCardPosterSource(anime.poster || anime.banner),
                             scheduleLoading:komiCalendarLoading, scheduleError:komiCalendarError
                         });
-                        const refreshed = document.getElementById('komiHomeUpcoming');
-                        window.KomiHomeDiscovery?.observeViewport(refreshed);
-                        if (restoreFocus) refreshed.querySelector('.komi-home-all')?.focus({preventScroll:true});
+                        window.KomiHomeDiscovery?.observeViewport(storefront);
                     }
                 }
             }

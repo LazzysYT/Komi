@@ -12,6 +12,8 @@
   function openMore(open) {
     const enabled = !!open && window.matchMedia('(max-width: 767px)').matches;
     panel.hidden = !enabled;
+    panel.toggleAttribute('inert', !enabled);
+    panel.setAttribute('aria-hidden', String(!enabled));
     toggle.setAttribute('aria-expanded', String(enabled));
   }
   function syncSelectedTabs() {
@@ -29,10 +31,11 @@
   }
   toggle.addEventListener('click', () => openMore(panel.hidden));
   panel.addEventListener('click', event => {
-    const button = event.target.closest?.('[data-komi-mobile-extra]');
+    const button = event.target.closest?.('[data-komi-mobile-extra],[data-komi-click],a[href]');
     if (!button) return;
     const action = button.dataset.komiMobileExtra;
     openMore(false);
+    toggle.focus({preventScroll:true});
     if (action === 'shop' && typeof openAniCoinShop === 'function') openAniCoinShop();
     else if (action === 'party' && typeof openWatchPartyHub === 'function') openWatchPartyHub();
     else if (action === 'partners' && typeof navigate === 'function') navigate('partners');
@@ -53,5 +56,6 @@
   breakpoint.addEventListener?.('change', () => openMore(false));
   const main = document.getElementById('mainContainer');
   if (main) new MutationObserver(syncSelectedTabs).observe(main, {childList:true});
+  openMore(false);
   syncSelectedTabs();
 })();
