@@ -111,6 +111,11 @@ async function run(){
     await page.goto(origin+'/partners',{waitUntil:'domcontentloaded'});
     await page.waitForFunction(()=>typeof currentView!=='undefined'&&currentView==='partners');
     await page.goto(origin+'/profile',{waitUntil:'domcontentloaded'});
+    const guestProfile=page.locator('#profile.komi-profile-guest');
+    await guestProfile.waitFor({state:'visible',timeout:20000});
+    assert.equal(await page.locator('#authModal.active').count(),0,
+      'Guest profile waits for an explicit sign-in choice');
+    await guestProfile.getByRole('button',{name:'Войти в профиль',exact:true}).click();
     await page.locator('#authModal.active').waitFor({state:'visible',timeout:20000});
     assert.deepEqual(errors,[],'uncaught browser errors');
     console.log('PASS '+name+' catalog, routes, episode switching, distinct previews, layout toggles, guest auth');

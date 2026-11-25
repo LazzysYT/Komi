@@ -18,6 +18,7 @@ const categoryName=type=>categories.find(c=>c[0]===type)?.[1]||'Оформлен
 const canCheckout=()=>root.KomiShopCatalog?.canCheckout?.()===true;
 const previewOnly=()=>root.KomiShopCatalog?.isPreview?.()===true;
 const narrow=()=>root.matchMedia?.('(max-width: 980px)')?.matches===true;
+const shortViewport=()=>root.matchMedia?.('(max-height: 800px)')?.matches===true;
 const normalized=text=>String(text||'').normalize('NFKC').toLocaleLowerCase('ru-RU').replace(/ё/g,'е');
 function focusCurrent(selector){document.querySelector?.('#shop '+selector)?.focus({preventScroll:true});}
 function selected(){return Object.values(state.trial).map(find).filter(p=>p&&p.type!=='reaction');}
@@ -165,10 +166,10 @@ function layout(ctx){
  const counts=Object.fromEntries(categories.map(([id])=>[id,catalog().filter(p=>id==='all'||p.type===id).length]));
  const options=categories.map(([id,label])=>'<option value="'+id+'"'+(state.category===id?' selected':'')+'>'+esc(label)+' · '+counts[id]+'</option>').join('');
  const tabs=categories.slice(0,6).map(([id,label])=>'<button type="button" data-v3-category="'+id+'" aria-pressed="'+String(state.category===id)+'">'+esc(label)+'</button>').join('');
- const openCollections=state.collectionsOpen===null?!narrow():state.collectionsOpen;
+ const openCollections=state.collectionsOpen===null?!narrow()&&!shortViewport():state.collectionsOpen;
  const reaction=find(state.reactionPreview);
  return '<section id="shop" class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5 komi-shop-studio" aria-labelledby="anicoin-title">'+
- '<header class="sv3-topbar"><div class="sv3-heading"><p class="sv3-overline">KOMI / МАГАЗИН ОФОРМЛЕНИЯ</p><h1 id="anicoin-title">Твой профиль. Твой стиль.</h1><p>Находи, сочетай и примеряй. Здесь начинается твой образ.</p></div>'+
+ '<header class="sv3-topbar"><div class="sv3-heading"><p class="sv3-overline">KOMI / МАГАЗИН ОФОРМЛЕНИЯ</p><h1 id="anicoin-title">Твой профиль. Твой стиль.</h1><p>Сочетай детали. Собирай свой образ.</p></div>'+
  '<div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin">'+icon('coins',22)+'<span><small>Твой баланс</small><strong class="sv3-tabular">'+balanceText+' <span>AniCoin</span></strong></span></span>'+
  '<details class="sv3-earn"><summary>'+icon('plus',16)+' Как заработать</summary><div class="sv3-earn-pop"><strong>Больше аниме — больше возможностей</strong><p>За каждые 20 минут подтверждённого просмотра — 1 AniCoin. Ежедневные задания тоже приносят награды.</p><p>При активации Premium начисляется разовый бонус 500 AniCoin.</p><a href="/premium.html">Возможности Premium</a><button type="button" data-v3-promo>Есть промокод?</button></div></details></div></header>'+
  (notice?'<p class="sv3-price-notice" role="status">'+esc(notice)+'</p>':'')+
@@ -182,7 +183,7 @@ function layout(ctx){
  '<div class="komi-coin-grid sv3-product-grid">'+(visible.length?visible.map(p=>card(p,ctx,avatar,name)).join(''):'<div class="sv3-no-results">'+icon('palette',28)+'<h3>'+esc(empty)+'</h3><p>'+(state.view==='owned'?'Примеряй понравившееся в каталоге и собирай свой образ.':'Попробуй другое название или убери фильтры.')+'</p><button type="button" '+(state.view==='owned'&&!owner?'data-v7-login':'data-v7-browse')+'>'+(state.view==='owned'&&!owner?'Войти':'Открыть весь каталог')+'</button></div>')+'</div>'+
  (products.length>visible.length?'<div class="sv7-load-more"><button type="button" data-v7-more>Показать ещё '+Math.min(PAGE_SIZE,products.length-visible.length)+'</button><span>Показано '+visible.length+' из '+products.length+'</span></div>':'')+'</div>'+
  '<aside class="sv3-fitting'+(state.sheetOpen?' is-open':'')+'" aria-label="Живая примерочная"><button type="button" class="sv3-sheet-toggle" aria-controls="sv7FittingBody" aria-expanded="'+String(state.sheetOpen)+'" data-v3-sheet><span>'+icon('palette',20)+' Примерочная <small>'+items.length+' выбрано · '+fmt(total)+' AC</small></span><span class="sv3-sheet-chevron">'+icon('chevron',18)+'</span></button>'+
- '<div class="sv3-fitting-body" id="sv7FittingBody"><div class="sv3-fitting-head"><div><span class="sv3-mini-kicker">ТВОЙ ОБРАЗ</span><h2>Примерочная</h2></div><button type="button" class="sv3-reset" data-v3-reset aria-label="Сбросить примерку"'+(!items.length&&!reaction||state.busy||ctx.busy?' disabled':'')+'>'+icon('reset',16)+'</button></div>'+
+ '<div class="sv3-fitting-body" id="sv7FittingBody"><div class="sv3-fitting-head"><div><span class="sv3-mini-kicker">ТВОЙ ОБРАЗ</span><h2 tabindex="-1">Примерочная</h2></div><button type="button" class="sv3-reset" data-v3-reset aria-label="Сбросить примерку"'+(!items.length&&!reaction||state.busy||ctx.busy?' disabled':'')+'>'+icon('reset',16)+'</button></div>'+
  '<p class="sv7-preview-note">Примеряй свободно. Профиль пока не изменён.</p>'+preview(store,avatar,name)+(reaction?'<div class="sv5-reaction-preview"><strong>Реакции Watch Party</strong>'+visual(reaction,avatar,name)+'<small>Покупаются отдельно на карточке.</small></div>':'')+
  '<div class="sv3-selection"><strong>Выбрано для примерки</strong>'+selectedList(store,state.busy||ctx.busy)+'</div><div class="sv7-checkout-footer">'+'<p class="sv3-status" role="status" aria-live="polite">'+esc(state.status||ctx.shopStatus||'')+'</p>'+(ctx.retryApplyItem?'<button type="button" class="sv3-retry" data-shop-item-action="'+esc(ctx.retryApplyItem)+'" data-shop-operation="equip">Применить купленный предмет</button>':'')+'<div class="sv3-checkout-info"><span>Всего<small>Купленные предметы — бесплатно</small></span><strong class="sv3-tabular">'+fmt(total)+' <small>AniCoin</small></strong></div>'+
  '<button class="sv3-checkout" type="button" data-v3-checkout'+(disabled?' disabled':'')+'>'+icon('bag',18)+' '+esc(action)+'</button><p class="sv3-checkout-note">'+(owner&&store&&total<=Number(store.balance)&&items.length?'После покупки: '+fmt(Number(store.balance)-total)+' AniCoin':'Монеты списываются только после подтверждения.')+'</p></div></div></aside></div>'+
@@ -254,7 +255,16 @@ function mount(section,ctx){
   if(t.hasAttribute('data-v3-sort')){if(sorts.some(s=>s[0]===t.dataset.v3Sort))state.sort=t.dataset.v3Sort;filterChanged('[data-v3-sort]');return;}
   if(t.hasAttribute('data-v3-try')){tryItem(t.dataset.v3Try);return;}
   if(t.hasAttribute('data-v7-collection')){state.collection=state.collection===t.dataset.v7Collection?'':t.dataset.v7Collection;state.view='catalog';state.category='all';state.query='';filterChanged('[data-v7-collection="'+t.dataset.v7Collection+'"]');return;}
-  if(t.hasAttribute('data-v7-look')||t.hasAttribute('data-v3-bundle')){const collection=collections().find(c=>c.id===t.dataset.v7Look);const ids=collection?.preview||['frame_moon','title_cinema'];for(const id of ids){const p=find(id);if(p&&p.type!=='reaction')state.trial[p.type]=id;}state.sheetOpen=true;state.status='Образ добавлен в примерочную. Монеты не списаны.';refresh(narrow()?'[data-v3-sheet]':'[data-v7-look="'+t.dataset.v7Look+'"]');return;}
+  if(t.hasAttribute('data-v7-look')||t.hasAttribute('data-v3-bundle')){
+   const collection=collections().find(c=>c.id===t.dataset.v7Look),ids=collection?.preview||['frame_moon','title_cinema'];
+   for(const id of ids){const p=find(id);if(p&&p.type!=='reaction')state.trial[p.type]=id;}
+   state.sheetOpen=true;state.status='Образ добавлен в примерочную. Монеты не списаны.';
+   refresh(narrow()?'[data-v3-sheet]':'.sv3-fitting-head h2');
+   if(!narrow())document.querySelector?.('#shop .sv3-fitting')?.scrollIntoView?.({
+    block:'start',behavior:root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'auto':'smooth'
+   });
+   return;
+  }
   if(t.hasAttribute('data-v3-remove')){delete state.trial[t.dataset.v3Remove];refresh('[data-v3-reset]');return;}
   if(t.hasAttribute('data-v3-reset')){state.trial=Object.create(null);state.reactionPreview=null;state.status='Вернули текущее оформление профиля.';refresh('[data-v3-checkout]');return;}
   if(t.hasAttribute('data-v3-reset-filters')||t.hasAttribute('data-v7-browse')){if(t.hasAttribute('data-v7-browse'))state.view='catalog';resetFilters();route();refresh('[data-v7-search]');return;}

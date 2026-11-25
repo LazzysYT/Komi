@@ -167,6 +167,11 @@ async function checkNotifications(page) {
      await direct.waitForFunction(()=>currentView==='catalog');
      assert.ok(await direct.locator('#mainContainer h1').count());
      await direct.goto(base+'#profile');
+     const guestProfile=direct.locator('#profile.komi-profile-guest');
+     await guestProfile.waitFor({state:'visible'});
+     assert.equal(await direct.locator('#authModal.active').count(),0,
+       'Guest profile waits for an explicit sign-in choice');
+     await guestProfile.getByRole('button',{name:'Войти в профиль',exact:true}).click();
      await direct.waitForSelector('#authModal.active');
      await direct.close();
    }

@@ -11,16 +11,20 @@ const sorted=values=>Array.from(values).sort();
 const escapeRegex=text=>String(text).replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 
 function fixture(options={}){
- const handlers={},windowHandlers={},dialogs=[],focusHistory=[],mutations=[],logins=[];
+ const handlers={},windowHandlers={},dialogs=[],focusHistory=[],scrollHistory=[],mutations=[],logins=[];
+ const viewport={narrow:!!options.narrow,height:options.height??900,reducedMotion:!!options.reducedMotion};
  const collectionRail={scrollLeft:0};
- const disclosures={addEventListener(){}};
+ const disclosureHandlers={};
+ const disclosures={addEventListener(name,listener){disclosureHandlers[name]=listener;}};
  let focusables=new Map(),markup='',renders=0;
  let actor={owner:'',store:null,wallet:null,displayName:'Гость',avatar:'',...options.ctx};
  const location={};
  const setUrl=url=>{const parsed=new URL(url,location.href||'https://komianime.online/shop');
    Object.assign(location,{href:parsed.href,hostname:parsed.hostname,pathname:parsed.pathname,hash:parsed.hash,search:parsed.search});};
  setUrl(options.url||'https://komianime.online/shop');
- const makeFocus=label=>({isConnected:true,focus(){focusHistory.push(label);document.activeElement=this;},setSelectionRange(start,end){this.selection=[start,end];}});
+ const makeFocus=label=>({isConnected:true,focus(){focusHistory.push(label);document.activeElement=this;},
+   scrollIntoView(settings){scrollHistory.push({selector:label,...settings});},
+   setSelectionRange(start,end){this.selection=[start,end];}});
  function selectFocus(selector){
    const attr=selector.match(/\[([^=\]]+)(?:="([^"]*)")?\]/);
    if(attr&&!new RegExp('\\b'+escapeRegex(attr[1])+(attr[2]!==undefined?'="'+escapeRegex(attr[2])+'"':'(?:[\\s=>])')).test(markup))return null;
@@ -63,7 +67,9 @@ function fixture(options={}){
  document.activeElement=makeFocus('original-control');
  const window={location,
    history:{state:null,replaceState(_state,_title,url){setUrl(url);}},
-   matchMedia:()=>({matches:!!options.narrow}),
+   matchMedia:query=>({matches:query==='(max-width: 980px)'?viewport.narrow:
+     query==='(max-height: 800px)'?viewport.height<=800:
+     query==='(prefers-reduced-motion: reduce)'?viewport.reducedMotion:false}),
    addEventListener(name,listener){windowHandlers[name]=listener;},
    confirm(){throw Error('native confirmation must not be used');},
    komiShopCheckoutCart:async(ids,owner)=>{
@@ -79,7 +85,7 @@ function fixture(options={}){
  vm.runInContext(read('komi-shop-catalog.js'),context);
  vm.runInContext(read('komi-shop-icons.js'),context);
  vm.runInContext(read('komi-shop-v3.js'),context);
- const api={context,window,document,container,dialogs,focusHistory,mutations,logins,handlers,
+ const api={context,window,document,container,dialogs,focusHistory,scrollHistory,mutations,logins,handlers,viewport,
    get ctx(){return actor;},get html(){return markup;},get renders(){return renders;},
    get url(){return new URL(location.href);},get products(){return Array.from(window.KomiShopCatalog.items);},
    get collections(){return Array.from(window.KomiShopCatalog.collections);},
@@ -88,6 +94,7 @@ function fixture(options={}){
    get status(){return markup.match(/<p class="sv3-status"[^>]*>([\s\S]*?)<\/p>/)?.[1]||'';},
    product:id=>window.KomiShopCatalog.find(id),
    render(next){if(next)actor={...actor,...next};window.KomiShopV3.render(container,actor);},
+   toggleCollections(open){disclosureHandlers.toggle({currentTarget:{open}});api.render();},
    click(name,value,forced=false){
      const tag=[...markup.matchAll(/<button\b[^>]*>/g)].map(match=>match[0]).find(text=>
        new RegExp('\\b'+escapeRegex(name)+(value===undefined?'(?:[\\s=>])':'="'+escapeRegex(value)+'"')).test(text));
@@ -228,6 +235,39 @@ test('collection browsing selects its eight real products while trying a look ch
  await f.click('data-v7-collection',collection.id);
  assert.equal(f.ids.length,24);
  assert.deepEqual(sorted(f.selected),sorted(collection.preview));
+});
+
+test('collections default closed on short or narrow screens and preserve explicit user preference',()=>{
+ const isOpen=f=>/<details class="sv7-collections" open>/.test(f.html);
+ const tall=fixture({height:900});
+ assert.equal(isOpen(tall),true);
+ const short=fixture({height:800});
+ assert.equal(isOpen(short),false);
+ assert.equal(isOpen(fixture({height:686})),false);
+ assert.equal(isOpen(fixture({narrow:true,height:900})),false);
+ short.toggleCollections(true);
+ assert.equal(isOpen(short),true,'explicit opening must survive rerender on the short viewport');
+ short.viewport.height=900;short.render();
+ assert.equal(isOpen(short),true);
+ short.toggleCollections(false);
+ assert.equal(isOpen(short),false,'explicit collapse wins over the tall-viewport default');
+ assert.match(short.html,/Сочетай детали\. Собирай свой образ\./);
+});
+
+test('desktop collection try-on reveals the fitting room and respects reduced motion without moving single-item trials',async()=>{
+ for(const reducedMotion of [false,true]){
+   const f=fixture({height:686,reducedMotion});
+   f.window.KomiShopV3.tryItem('frame_moon');
+   assert.equal(f.scrollHistory.length,0,'ordinary item previews must not move the page');
+   await f.click('data-v7-look',f.collections[0].id);
+   assert.deepEqual(f.scrollHistory,[{selector:'#shop .sv3-fitting',block:'start',behavior:reducedMotion?'auto':'smooth'}]);
+   assert.equal(f.focusHistory.at(-1),'#shop .sv3-fitting-head h2');
+   assert.match(f.html,/<h2 tabindex="-1">Примерочная<\/h2>/);
+ }
+ const mobile=fixture({narrow:true,height:686});
+ await mobile.click('data-v7-look',mobile.collections[0].id);
+ assert.deepEqual(mobile.scrollHistory,[],'the fixed mobile sheet must not scroll the background page');
+ assert.equal(mobile.focusHistory.at(-1),'#shop [data-v3-sheet]');
 });
 
 test('trying a second item replaces only its own slot and reactions are never added to the equip cart',()=>{
