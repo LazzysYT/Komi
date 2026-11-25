@@ -262,6 +262,26 @@
       }).join('') + '</div></section>';
   }
 
+  // Keep only the twelve visible recommendations, preserving the full sort's
+  // ranking and original order for ties (including a NaN comparator result).
+  function popularTitles(animeList, now) {
+    const recentThreshold = now - 30 * 86400000, best = [];
+    const compare = (a,b) => b.rank - a.rank || b.score - a.score;
+    for (const anime of animeList) {
+      const rating = score(anime);
+      if (!(rating > 0) || !id(anime)) continue;
+      const date = updated(anime);
+      const candidate = {anime, score:rating,
+        rank:(date > recentThreshold && date <= now ? 2 : 0) + rating / 10};
+      if (best.length === 12 && !(compare(candidate,best[11]) < 0)) continue;
+      let at = best.length;
+      while (at > 0 && compare(candidate,best[at-1]) < 0) at--;
+      best.splice(at,0,candidate);
+      if (best.length > 12) best.pop();
+    }
+    return best.map(item => item.anime);
+  }
+
   // Public recommendations reuse the loaded catalog. No view counts are implied.
   let cachedPublicHome = null;
   function render(context) {
@@ -271,18 +291,9 @@
     const daily = root.KomiHeroDaily?.lineup(animeList, Array.isArray(root.KomiHomeSeed) ? root.KomiHomeSeed : []);
     const usesDaily = daily?.length >= 2;
     const revision = Number(context.catalogRevision) || 0;
-    let metadata = null;
     if (!cachedPublicHome || cachedPublicHome.source !== source ||
         cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
-      const now = Date.now(), recentThreshold = now - 30 * 86400000;
-      metadata = animeList.map(anime => ({
-        anime, score:score(anime), updated:updated(anime),
-        year:context.year(anime), count:count(anime)
-      }));
-      const popularity = item => (item.updated > recentThreshold && item.updated <= now ? 2 : 0) + item.score / 10;
-      const popular = metadata.filter(item => item.score > 0 && id(item.anime))
-        .sort((a,b) => popularity(b) - popularity(a) || b.score - a.score)
-        .slice(0,12).map(item => item.anime);
+      const popular = popularTitles(animeList, Date.now());
       cachedPublicHome = {source, revision, length:source.length, slider:null, popular};
     }
     // The daily lineup already selects the hero. Sort the full catalog only
@@ -290,9 +301,9 @@
     if (!usesDaily && cachedPublicHome.slider === null) {
       cachedPublicHome.slider = typeof root.KomiHomeSnapshot?.featured === 'function'
         ? root.KomiHomeSnapshot.featured(animeList, context.year)
-        : (metadata || animeList.map(anime => ({
+        : animeList.map(anime => ({
             anime, score:score(anime), year:context.year(anime), count:count(anime)
-          }))).filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
+          })).filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
           .sort((a,b) => Number(b.year) - Number(a.year) || b.score - a.score)
           .slice(0,5).map(item => item.anime);
     }

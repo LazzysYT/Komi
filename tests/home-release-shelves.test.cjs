@@ -1,6 +1,7 @@
 'use strict';
 const test = require('node:test');
 const assert = require('node:assert/strict');
+const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const releases = require('../home-release-shelves.js');
 const core = require('../player-core.js');
 const now = Date.parse('2026-11-25T12:00:00Z');
@@ -152,6 +153,59 @@ test('upcoming copy distinguishes broadcast schedule from dubbed availability', 
   assert.ok(html.includes('href="/anime/42"'));
   assert.ok(!html.includes('#player'));
   assert.ok(html.includes('<time datetime="'));
+});
+
+function formatterFixture() {
+  const constructions = [];
+  let timezone = 'UTC';
+  const scope = {Date, module:{exports:{}}, Intl:{DateTimeFormat:function(locale, options) {
+    constructions.push({locale, options:{...options}});
+    // Simulate the browser's default timezone without changing the test process.
+    return new Intl.DateTimeFormat(locale, {...options, timeZone:timezone});
+  }}};
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../home-release-shelves.js'),'utf8'),scope);
+  return {api:scope.module.exports, constructions, setTimezone:value=>{timezone=value;}};
+}
+const datedCards = () => Array.from({length:8},(_,index)=>card({id:String(index+1),
+  lastEpisodeAddedAt:ago(index*22+0.5),nextEpisodeAt:later(index*22+0.5),nextEpisodeNumber:9}));
+
+test('release dates match the previous Russian labels and follow timezone changes between renders', () => {
+  const fixture = formatterFixture(), context = {now,core,animeList:datedCards()};
+  for (const timezone of ['UTC','Europe/Kyiv','America/New_York','Pacific/Kiritimati']) {
+    fixture.setTimezone(timezone);
+    for (const upcoming of [false,true]) {
+      const entries = upcoming ? releases.selectUpcoming(context.animeList,context)
+        : releases.selectRecent(context.animeList,context);
+      const html = upcoming ? fixture.api.renderUpcoming(context) : fixture.api.renderRecent(context);
+      const actual = [...html.matchAll(/<time datetime="([^"]+)">([^<]+)<\/time>/g)]
+        .map(match=>({datetime:match[1],label:match[2]}));
+      const expected = entries.map(entry=>{
+        const date = new Date(entry.date);
+        const day = date.toLocaleDateString('ru-RU',{day:'numeric',month:'short',timeZone:timezone});
+        const time = upcoming ? ' · '+date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit',timeZone:timezone}) : '';
+        return {datetime:date.toISOString(),label:(upcoming?'':'Добавлена ')+day+time};
+      });
+      assert.deepEqual(actual,expected,timezone+(upcoming?' upcoming':' recent'));
+    }
+  }
+  assert.ok(fixture.constructions.every(({options})=>!Object.hasOwn(options,'timeZone')),
+    'production must use the viewer’s default timezone');
+});
+
+test('each release shelf creates only its needed formatters and empty shelves create none', () => {
+  const fixture = formatterFixture(), context = {now,core,animeList:datedCards()};
+  fixture.api.renderRecent(context);
+  assert.deepEqual(fixture.constructions,[{locale:'ru-RU',options:{day:'numeric',month:'short'}}]);
+  fixture.constructions.length=0;
+  fixture.api.renderUpcoming(context);
+  assert.deepEqual(fixture.constructions,[
+    {locale:'ru-RU',options:{day:'numeric',month:'short'}},
+    {locale:'ru-RU',options:{hour:'2-digit',minute:'2-digit'}}
+  ]);
+  fixture.constructions.length=0;
+  fixture.api.renderRecent({...context,animeList:[]});
+  fixture.api.renderUpcoming({...context,animeList:[]});
+  assert.equal(fixture.constructions.length,0);
 });
 
 test('unverified recent rows and empty upcoming dates create no storefront widget', () => {
