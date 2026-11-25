@@ -383,3 +383,13 @@ test('episode 2 does not mount a broken iframe if there is no supported alternat
   assert.match(f.note,/Других доступных источников нет/);
   assert.equal(f.storage.size,0);
 });
+
+test('explicit links resolve older catalogue entries whose number comes from “Эпизод 2”',async()=>{
+  const f=watchFixture([{season:1,title:'Эпизод 1',sources:{Voice:embed(1)}},
+    {season:1,title:'Эпизод 2',sources:{Voice:embed(2)}}]);
+  await f.open(1,0,'Voice',2);
+  assert.equal(f.bindings[0][3],embed(2));
+  assert.equal(f.mounts[0].displayNumber,2);
+  assert.equal(f.context.lastUrl,'/anime/5114?season=1&episode=2#player');
+  assert.equal(core.episodeNumber({title:'Тайна 2'}),null,'unrelated numbers in a title are not guessed');
+});

@@ -5352,7 +5352,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const seasonNumbers = [...new Set(anime.episodes.map(KomiPlayerCore.episodeSeason))].sort((a,b) => a - b);
             const progressForResume = selectedSeason === null ? getKomiProgress(anime.id) : null;
             let seasonWanted = selectedSeason === null ? Number(progressForResume?.season) : Number(selectedSeason);
-            const playableLinkedEpisode = (ep, season) => Number(ep.number) === requestedEpisodeNumber &&
+            const playableLinkedEpisode = (ep, season) => KomiPlayerCore.episodeNumber(ep) === requestedEpisodeNumber &&
                 Object.keys(KomiPlayerCore.watchEpisodeSources(ep.sources, {animeId:anime.id,season,number:requestedEpisodeNumber})).length;
             if (requestedEpisodeNumber !== null) {
                 const linked = seasonNumbers.filter(season => (selectedSeason === null || season === Number(selectedSeason)) &&
@@ -5382,7 +5382,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const activeIndex = Number.isInteger(targetIndex) && targetIndex >= 0 && targetIndex < currentSeasonEpisodes.length ? targetIndex : 0;
             const currentEp = currentSeasonEpisodes[activeIndex];
             if (!currentEp) return;
-            const displayNumber = Number(currentEp.number) || activeIndex + 1;
+            const displayNumber = KomiPlayerCore.episodeNumber(currentEp) || activeIndex + 1;
             const sources = KomiPlayerCore.watchEpisodeSources(currentEp.sources, {
                 animeId: anime.id, season: activeSeason, number: displayNumber
             });
@@ -5546,7 +5546,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             ${seasonNumbers.length > 1 ? '<div class="season-tabs" aria-label="Выбор сезона">' + seasonNumbers.map(n => '<button type="button" class="season-tab-btn ' + (n===activeSeason?'active':'') + '" data-komi-onclick="openWatchModal(\'' + anime.id + '\',' + n + ',0)">Сезон ' + n + '</button>').join('') + '</div>' : ''}
                             <p id="komiEpisodeSearchStatus" role="status"></p>
                             <div class="komi-episode-number-grid" role="group" aria-label="Выбрать серию">
-                                ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" data-episode-number="'+(Number(ep.number)||i+1)+'" aria-label="Серия '+(Number(ep.number)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" data-komi-onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(Number(ep.number)||i+1)+'</button>').join('')}
+                                ${currentSeasonEpisodes.map((ep,i) => '<button type="button" class="komi-episode-number ' + (i===activeIndex?'active':'') + '" data-episode-number="'+(KomiPlayerCore.episodeNumber(ep)||i+1)+'" aria-label="Серия '+(KomiPlayerCore.episodeNumber(ep)||i+1)+'" aria-current="'+(i===activeIndex?'true':'false')+'" data-komi-onclick="openWatchModal(\''+anime.id+'\','+activeSeason+','+i+')">'+(KomiPlayerCore.episodeNumber(ep)||i+1)+'</button>').join('')}
                             </div>
                         </aside>
                     </div>
@@ -5632,7 +5632,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 originalSource: sourceOrigin.name,
                 episodeSlots: currentSeasonEpisodes.map(episode => episode.slots),
                 episodeMeta:currentSeasonEpisodes.map((ep,index)=>({
-                    number: /^\d+(?:\.0+)?$/.test(String(ep.number ?? '').trim()) ? Number(ep.number) : null,
+                    number: KomiPlayerCore.episodeNumber(ep),
                     supplementalLabel: episodePresentation.supplemental[index] ? 'Дополнительный выпуск · STEPonee' : '',
                     preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',
                     duration:ep?.duration ?? ep?.durationSeconds ?? null,

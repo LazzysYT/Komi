@@ -45,7 +45,7 @@
         const matches = [];
         for (const value of new Set(episodes.map(episode => episodeNumber(episode?.season) || 1))) {
           for (const episode of core.seasonEpisodes(episodes, value)) {
-            if (episodeNumber(episode.number) === number && Object.keys(episode.sources || {}).length)
+            if ((core.episodeNumber ? core.episodeNumber(episode) : episodeNumber(episode.number)) === number && Object.keys(episode.sources || {}).length)
               matches.push({season:value, episode});
           }
         }

@@ -23,6 +23,13 @@
     }
     function finite(value) { return Number.isFinite(Number(value)) ? Math.max(0, Number(value)) : 0; }
     function episodeSeason(episode) { return Number(episode?.season) || 1; }
+    function episodeNumber(episode) {
+        const raw = String(episode?.number ?? '').trim();
+        const legacy = String(episode?.title ?? '').trim().match(/^(?:Эпизод|Серия|Episode)\s+(\d{1,6})$/iu)?.[1];
+        const value = /^\d{1,6}(?:\.0+)?$/.test(raw) && Number(raw) > 0 ? Number(raw) : Number(legacy);
+        return Number.isSafeInteger(value) && value > 0 ? value : null;
+    }
+
     function seasonEpisodes(episodes, season) {
         const records = episodes.map((episode, index) => ({episode, index}))
             .filter(({episode}) => episode && episodeSeason(episode) === season)
@@ -151,7 +158,7 @@
             flush() { return Promise.all([...entries.values()].map(entry => entry.promise)); }
         };
     }
-    const api = {source, finite, episodeSeason, seasonEpisodes, verifiedAdFree, selectPlaybackSource, watchEpisodeSources, createWriter};
+    const api = {source, finite, episodeSeason, episodeNumber, seasonEpisodes, verifiedAdFree, selectPlaybackSource, watchEpisodeSources, createWriter};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerCore = api;
 })(globalThis);

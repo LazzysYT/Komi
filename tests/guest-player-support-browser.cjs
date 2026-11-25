@@ -26,8 +26,7 @@ const sourceLink = n => 'https://embed.example/episode/' + n;
           animeList:[{id:5114,title:'Стальной алхимик: Братство',poster:'https://image.example/poster.jpg',genres:[],
             komiDetailsLoaded:true,komiDetailsLoadedAt:'ready',komiCardUpdatedAt:'ready',episodes:[
               {season:1,number:1,sources:{AniDUB:alternatives[0]}},
-              {season:1,number:2,sources:{AniDUB:broken}},
-              {season:1,number:2,sources:{'Озвучка A':alternatives[1],'Озвучка Б':alternatives[2]}}
+              {season:1,title:'Эпизод 2',sources:{AniDUB:broken,'Озвучка A':alternatives[1],'Озвучка Б':alternatives[2]}}
             ]}],
           siteStats:{views:0}, saveData(){}, komiDetailOpenToken:0, komiWatchSourceIntent:null,
           currentUser:null,_supabase:null,userWatchHistory:{},userFavorites:{},userAnimeStatuses:{},userCustomFolders:{},
@@ -47,7 +46,7 @@ const sourceLink = n => 'https://embed.example/episode/' + n;
           }}
         });
       },{broken,alternatives:[sourceLink(1),sourceLink('2A'),sourceLink('2B')]});
-      for(const name of ['player-core.js','player-source-preferences.js','mobile-bottom-sheets.js','komi-watch-compact-v6.js'])
+      for(const name of ['player-core.js','player-source-preferences.js','mobile-bottom-sheets.js','cinema-watch-monochrome.js','komi-watch-compact-v6.js'])
         await page.addScriptTag({content:read(name)});
       await page.addScriptTag({content:part('function closeWatchModal(', 'const KOMI_ADFREE_ONLY_KEY')+
         part('function komiPlayerKind(', 'function restoreKomiVideo(')+

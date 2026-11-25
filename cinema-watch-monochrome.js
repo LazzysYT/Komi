@@ -58,7 +58,7 @@
     const menu = make('div', 'komi-deck-menu');
     for (const selector of ['.komi-watch-expand', '.komi-cinema-skip', '.komi-cinema-shortcuts', '.komi-cinema-external-note', '#komiPlayerHelp']) {
       const element = find(selector);
-      if (element) menu.append(element);
+      if (element && !element.closest('.komi-player-support')) menu.append(element);
     }
     if (toolbar) {
       for (const child of [...toolbar.children]) menu.append(child);
