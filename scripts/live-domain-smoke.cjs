@@ -232,6 +232,17 @@ fs.mkdirSync(output,{recursive:true});
           return image?.complete && image.naturalWidth>0;
         },null,{timeout:12000});
         assert.ok((await page.locator('#rouletteImage').getAttribute('src')).endsWith('anime-artwork.svg'));
+        const toolsMenu=page.locator('details.komi-hub-tools-menu');
+        const toolsSummary=toolsMenu.locator('summary[aria-label="Разделы и аккаунт"]');
+        const toolsPanel=toolsMenu.locator('.komi-hub-tools-panel');
+        assert.equal(await toolsMenu.evaluate(menu=>menu.open),false,
+          'Supplementary navigation must start collapsed');
+        assert.equal(await toolsPanel.isVisible(),false,
+          'A closed disclosure must not expose duplicate navigation or social controls');
+        await toolsSummary.click();
+        assert.equal(await toolsMenu.evaluate(menu=>menu.open),true);
+        assert.equal(await toolsPanel.isVisible(),true,
+          'The native summary must reveal the social links before their geometry is measured');
         const socials=await page.evaluate(()=>Array.from(document.querySelectorAll('nav[aria-label="Социальные сети Komi Anime"] a')).map(link=>{
           const svg=link.querySelector('svg');
           const icon=svg?.querySelector('path');
@@ -253,6 +264,10 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(link.svgVisibility,'visible','Social SVG itself must not be CSS-hidden');
           assert.ok(link.pathArea>10,'Social SVG should contain drawable path geometry');
         }
+        await toolsSummary.click();
+        assert.equal(await toolsMenu.evaluate(menu=>menu.open),false);
+        assert.equal(await toolsPanel.isVisible(),false,
+          'Closing the native disclosure must hide the entire supplementary panel');
         const adminDisabled=await page.evaluate(async()=>{
           const originalAlert=window.alert;
           window.alert=()=>{};
@@ -276,9 +291,22 @@ fs.mkdirSync(output,{recursive:true});
         }));
         assert.equal(drawer.visible,'visible');
         assert.equal(drawer.hasSearch,true);
+        assert.equal(drawer.readable,true,'An opened community drawer must contain readable content');
         assert.equal(await page.locator('#komiFriendsDrawer').getAttribute('aria-hidden'),'false',
           'Visible friends drawer must not be hidden from assistive technologies');
         await page.locator('#komiFriendsSearch').fill('CI-AUTOTEST');
+        if(homeContract!=='legacy'){
+          const guestList=page.locator('#komiFriendsDrawerList');
+          assert.equal(await guestList.getByRole('button',{name:'Войти',exact:true}).isVisible(),true,
+            'Guests must receive an immediate visible sign-in action');
+          assert.equal(await guestList.getByText('Войдите, чтобы видеть друзей и участников сообщества.',{exact:true}).isVisible(),true);
+          assert.equal(await guestList.getAttribute('aria-busy'),'false',
+            'Typing in the guest search must not start an endless directory loader');
+          assert.equal(await guestList.locator('.komi-friends-person, .komi-friends-add').count(),0,
+            'An unverified guest must not see cached profiles or friend-request actions');
+          assert.equal(await page.locator('#komiFriendsMyTab').isVisible(),false,
+            'Private friends navigation must stay unavailable to guests');
+        }
         await page.locator('#komiFriendsDrawer .komi-friends-close').count().then(async count=>{
           if(count)await page.locator('#komiFriendsDrawer .komi-friends-close').click();
           else await page.evaluate(()=>closeFriendsDrawer());
