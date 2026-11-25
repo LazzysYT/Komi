@@ -178,7 +178,7 @@ function layout(ctx){
  '<div class="sv7-search"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sv7-sr-only" for="sv7Search">Найти оформление</label><input type="search" id="sv7Search" data-v7-search placeholder="Поиск по названию или настроению" maxlength="100" autocomplete="off" value="'+esc(state.query)+'">'+(state.query?'<button type="button" data-v7-clear-search aria-label="Очистить поиск">×</button>':'')+'</div></div>'+
  '<div class="sv3-filters"><div class="sv7-category-row"><div class="sv3-category-tabs" role="group" aria-label="Категории">'+tabs+'</div><label class="sv7-select sv7-category-select"><span class="sv7-sr-only">Все категории</span><select data-v7-category-select aria-label="Все категории">'+options+'</select>'+icon('chevron',14)+'</label></div>'+
  '<div class="sv3-filter-actions"><div class="sv7-toggles"><label class="sv3-hide-toggle"><input type="checkbox" data-v7-affordable'+(state.affordableOnly?' checked':'')+(!owner||!store?' disabled':'')+'><span>По моему балансу</span></label><label class="sv3-hide-toggle"><input type="checkbox" data-v3-hide-owned'+(state.hideOwned&&state.view!=='owned'?' checked':'')+(!owner||!store||state.view==='owned'?' disabled':'')+'><span>Скрыть купленные</span></label></div><label class="sv7-select"><span class="sv7-sr-only">Сортировка</span><select data-v3-sort aria-label="Сортировка">'+sorts.map(([id,label])=>'<option value="'+id+'"'+(state.sort===id?' selected':'')+'>'+label+'</option>').join('')+'</select>'+icon('chevron',14)+'</label></div></div>'+
- '<div class="sv3-layout"><div class="sv3-market"><div class="sv3-market-caption"><h2>'+(state.view==='owned'?'Твои предметы':collection?esc(collection.label):state.query?'Результаты поиска':state.category==='all'?'Найди свой акцент':esc(categoryName(state.category)))+'</h2><span role="status" aria-live="polite">'+products.length+' '+(state.view==='owned'?'в коллекции':'товаров')+'</span>'+
+ '<div class="sv3-layout"><div class="sv3-market"><div class="sv3-market-caption"><h2>'+(state.view==='owned'?'Твои предметы':collection?esc(collection.label):state.query?'Результаты поиска':state.category==='all'?'Найди свой акцент':esc(categoryName(state.category)))+'</h2><span role="status" aria-live="polite">'+(state.view==='owned'?products.length+' в коллекции':'Товаров: '+products.length)+'</span>'+
  (state.collection||state.query||state.category!=='all'||state.affordableOnly||state.hideOwned?'<button type="button" data-v3-reset-filters>Сбросить фильтры</button>':'')+'</div>'+
  '<div class="komi-coin-grid sv3-product-grid">'+(visible.length?visible.map(p=>card(p,ctx,avatar,name)).join(''):'<div class="sv3-no-results">'+icon('palette',28)+'<h3>'+esc(empty)+'</h3><p>'+(state.view==='owned'?'Примеряй понравившееся в каталоге и собирай свой образ.':'Попробуй другое название или убери фильтры.')+'</p><button type="button" '+(state.view==='owned'&&!owner?'data-v7-login':'data-v7-browse')+'>'+(state.view==='owned'&&!owner?'Войти':'Открыть весь каталог')+'</button></div>')+'</div>'+
  (products.length>visible.length?'<div class="sv7-load-more"><button type="button" data-v7-more>Показать ещё '+Math.min(PAGE_SIZE,products.length-visible.length)+'</button><span>Показано '+visible.length+' из '+products.length+'</span></div>':'')+'</div>'+
@@ -295,10 +295,21 @@ function render(container,ctx){
  if(!container)return;latestCtx=ctx;
  if(!state.routeRead||(root.location?.href&&root.location.href!==state.routeSignature)){route(true);state.routeRead=true;}
  const owner=ctx.owner||'';
+ const previousSearch=container.querySelector?.('#shop [data-v7-search]');
+ const searchFocus=state.owner===owner&&previousSearch&&document.activeElement===previousSearch
+  ?{start:previousSearch.selectionStart,end:previousSearch.selectionEnd,direction:previousSearch.selectionDirection}:null;
  if(state.owner!==owner){if(pendingConfirmation&&pendingConfirmation.owner!==owner)pendingConfirmation.cancel();state.owner=owner;state.trial=Object.create(null);state.reactionPreview=null;state.sheetOpen=false;state.busy=false;state.status='';}
  const scroll=container.querySelector?.('.sv7-collection-rail')?.scrollLeft||0;
  container.innerHTML=layout(ctx);const section=container.querySelector('#shop.komi-shop-v3');
  if(section){mount(section,ctx);const rail=section.querySelector?.('.sv7-collection-rail');if(rail)rail.scrollLeft=scroll;}
+ // Session/catalogue hydration can repaint after an input or clear handler has
+ // already restored focus. Preserve only the current owner's active search.
+ if(searchFocus){
+  const input=container.querySelector?.('#shop [data-v7-search]');
+  input?.focus?.({preventScroll:true});
+  if(Number.isInteger(searchFocus.start)&&Number.isInteger(searchFocus.end))
+   try{input?.setSelectionRange?.(searchFocus.start,searchFocus.end,searchFocus.direction);}catch{}
+ }
  document.title='Магазин оформления — KomiAnime';
 }
 function routeChanged(){if(!inShop()){pendingConfirmation?.cancel();return;}route(true);refresh();}

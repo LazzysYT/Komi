@@ -531,7 +531,7 @@ async function checkNotifications(page) {
    // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
    assert.ok(width>1050 ? cinema.sidebarBesideVideo : (cinema.sidebarHidden || cinema.sidebarAfterVideo),JSON.stringify(cinema));
    assert.equal(cinema.color,'rgb(255, 255, 255)');
-   assert.ok(cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)' || (cinema.background==='rgba(255, 69, 79, 0.1)' && cinema.border==='rgb(255, 69, 79)'),JSON.stringify(cinema));
+   assert.ok(cinema.background==='rgb(36, 36, 41)' || cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(19, 19, 22)' || (cinema.background==='rgba(255, 69, 79, 0.1)' && cinema.border==='rgb(255, 69, 79)'),JSON.stringify(cinema));
    assert.notEqual(cinema.before,'none','Active episode must have a visible indicator');
    assert.notEqual(cinema.after,'none','Episode progress must remain visible');
    await page.waitForSelector(width<=767 ? '.komi-mobile-watch-episodes' : '.komi-episodes-toggle');

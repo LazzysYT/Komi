@@ -24,13 +24,14 @@ function fixture(options={}){
  setUrl(options.url||'https://komianime.online/shop');
  const makeFocus=label=>({isConnected:true,focus(){focusHistory.push(label);document.activeElement=this;},
    scrollIntoView(settings){scrollHistory.push({selector:label,...settings});},
-   setSelectionRange(start,end){this.selection=[start,end];}});
+   setSelectionRange(start,end,direction='none'){this.selection=[start,end];this.selectionStart=start;this.selectionEnd=end;this.selectionDirection=direction;}});
  function selectFocus(selector){
    const attr=selector.match(/\[([^=\]]+)(?:="([^"]*)")?\]/);
    if(attr&&!new RegExp('\\b'+escapeRegex(attr[1])+(attr[2]!==undefined?'="'+escapeRegex(attr[2])+'"':'(?:[\\s=>])')).test(markup))return null;
    if(selector==='#sv7Search'&&!markup.includes('id="sv7Search"'))return null;
-   if(!focusables.has(selector))focusables.set(selector,makeFocus(selector));
-   return focusables.get(selector);
+   const key=selector==='#sv7Search'?'#shop [data-v7-search]':selector;
+   if(!focusables.has(key))focusables.set(key,makeFocus(key));
+   return focusables.get(key);
  }
  function createDialog(){
    const listeners={},controls={};
@@ -56,7 +57,8 @@ function fixture(options={}){
    set innerHTML(value){for(const element of focusables.values())element.isConnected=false;
      if(document.activeElement&&!document.activeElement.isConnected)document.activeElement=document.body;
      focusables=new Map();markup=value;renders++;},
-   querySelector(selector){return selector==='#shop.komi-shop-v3'?section:selector==='.sv7-collection-rail'?collectionRail:null;}
+   querySelector(selector){return selector==='#shop.komi-shop-v3'?section:selector==='.sv7-collection-rail'?collectionRail:
+     selector==='#shop [data-v7-search]'?selectFocus(selector):null;}
  };
  const document={
    title:'',getElementById:id=>id==='mainContainer'?container:null,
@@ -146,6 +148,45 @@ test('local search is case-insensitive, retains fitting choices, and clear resto
  assert.equal(f.url.searchParams.has('shop_q'),false);
  assert.deepEqual(f.selected,['frame_moon']);
  assert.equal(f.focusHistory.at(-1),'#shop [data-v7-search]');
+});
+
+test('late same-owner hydration preserves cleared-search focus and the current input selection',async()=>{
+ const f=fixture();
+ f.input('лУнНаЯ РАМКА');
+ f.window.KomiShopV3.tryItem('frame_moon');
+ await f.click('data-v7-clear-search');
+ const cleared=f.document.querySelector('#shop [data-v7-search]');
+ assert.equal(f.document.activeElement,cleared);
+ await Promise.resolve();
+ f.render(); // A guest session or catalogue load may finish after the clear click.
+ const restored=f.document.querySelector('#shop [data-v7-search]');
+ assert.notEqual(restored,cleared,'the full renderer replaced the old input');
+ assert.equal(f.document.activeElement,restored,'a later rerender must not send focus to body');
+ assert.equal(f.ids.length,24);
+ assert.deepEqual(f.selected,['frame_moon']);
+ f.input('Лунная рамка');
+ f.document.querySelector('#shop [data-v7-search]').setSelectionRange(2,6,'backward');
+ f.render();
+ const selectedInput=f.document.querySelector('#shop [data-v7-search]');
+ assert.equal(f.document.activeElement,selectedInput);
+ assert.deepEqual(selectedInput.selection,[2,6]);
+ assert.equal(selectedInput.selectionDirection,'backward');
+});
+
+test('hydration does not restore search focus across owners or steal it from an open confirmation',async()=>{
+ const f=fixture();
+ f.input('Лунная рамка');
+ f.render({owner:'uid-a',store:{balance:100,owned:[]}});
+ assert.equal(f.document.activeElement,f.document.body,'owner change must not reuse the old focus state');
+ f.document.querySelector('#shop [data-v7-search]').focus();
+ const item=f.product('frame_moon');
+ const pending=f.window.KomiShopV3.confirmPurchase({items:[item],total:item.cost,balance:100,owner:'uid-a',action:'buy_equip'});
+ const cancel=f.document.activeElement;
+ assert.equal(f.focusHistory.at(-1),'[data-confirm-cancel]');
+ f.render();
+ assert.equal(f.document.activeElement,cancel,'body-owned modal keeps focus through shop refresh');
+ f.dialogs[0].choose(false);
+ await pending;
 });
 
 test('search waits for IME composition to finish and escapes the entered query',()=>{
