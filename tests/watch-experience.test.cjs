@@ -333,7 +333,7 @@ test('duplicate numbers across seasons ask the viewer instead of playing an inco
   assert.match(f.markup,/>Сезон 1<\/button>/);
   assert.match(f.markup,/>Сезон 2<\/button>/);
   assert.equal(f.bindings.length,0);
-  await f.open(2,0,'Voice',8);
+  await f.elements.get('komiEpisodeLinkSeason2').fire('click');
   assert.equal(f.context.lastUrl,'/anime/5114?season=2&episode=8#player');
 });
 

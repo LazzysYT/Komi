@@ -5297,12 +5297,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                     KomiPlayerCore.seasonEpisodes(anime.episodes,season).some(ep=>playableLinkedEpisode(ep,season)));
                 if (linked.length !== 1) {
                     const body = document.getElementById('watchModalContent');
-                    const options = linked.map(season => '<button type="button" class="btn-secondary" data-komi-onclick="openWatchModal(\''+
-                        anime.id+'\','+season+',0,null,'+requestedEpisodeNumber+')">Сезон '+season+'</button>').join(' ');
+                    const options = linked.map(season => '<button type="button" class="btn-secondary" id="komiEpisodeLinkSeason'+
+                        season+'">Сезон '+season+'</button>').join(' ');
                     body.innerHTML = '<button type="button" class="modal-close" aria-label="Закрыть просмотр" data-komi-onclick="closeWatchModal()">×</button>'+
                         '<section class="komi-episode-link-status" aria-labelledby="komiEpisodeLinkTitle"><h2 id="komiEpisodeLinkTitle">Серия '+requestedEpisodeNumber+'</h2><p role="status">'+
                         (linked.length ? 'Этот номер есть в нескольких сезонах. Выбери нужный сезон.' : 'По этой ссылке не нашлось доступного источника. Открой список серий, чтобы выбрать другую.')+
                         '</p><div>'+ (options || '<button type="button" class="btn-secondary" data-komi-onclick="openWatchModal(\''+anime.id+'\')">Открыть список серий</button>')+'</div></section>';
+                    for (const season of linked) document.getElementById('komiEpisodeLinkSeason'+season)
+                        ?.addEventListener('click',()=>openWatchModal(String(anime.id),season,0,null,requestedEpisodeNumber));
                     presentWatch();
                     return;
                 }
