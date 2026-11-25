@@ -4,6 +4,81 @@
   if (!root.KomiPlayerUX || typeof root.KomiPlayerUX.mount !== 'function') return;
   const baseMount = root.KomiPlayerUX.mount;
   let drawerPreference = null;
+  let episodeListPreference = true;
+  const episodeArtworkBase = 'https://cdn.jsdelivr.net/gh/anilifecommunity/media-index@main/data';
+  const publicEpisodeFrames = new Map();
+
+  function externalEpisodeFrame(raw) {
+    const match = typeof raw === 'string' &&
+      /^https:\/\/image\.tmdb\.org\/t\/p\/w500\/([a-zA-Z0-9_-]+\.jpg)$/.exec(raw);
+    return match ? 'https://image.tmdb.org/t/p/w300/' + match[1] : '';
+  }
+  function matchedEpisodeFrames(data) {
+    const frames = new Map(), uses = new Map(), numbers = new Map();
+    for (const episode of Array.isArray(data) ? data : []) {
+      const number = Number(episode?.number), url = externalEpisodeFrame(episode?.still);
+      if (!Number.isSafeInteger(number) || number < 1) continue;
+      numbers.set(number,(numbers.get(number) || 0) + 1);
+      if (!url) continue;
+      uses.set(url,(uses.get(url) || 0) + 1);
+      frames.set(number,url);
+    }
+    for (const [number,url] of frames) {
+      if (numbers.get(number) !== 1 || uses.get(url) !== 1) frames.delete(number);
+    }
+    return frames;
+  }
+  function getPublicEpisodeFrames(id) {
+    if (publicEpisodeFrames.has(id)) return publicEpisodeFrames.get(id);
+    const request = (async () => {
+      const abort = new AbortController();
+      const timer = setTimeout(() => abort.abort(),4500);
+      const read = async path => {
+        const response = await root.fetch(episodeArtworkBase + path,{
+          credentials:'omit',referrerPolicy:'no-referrer',signal:abort.signal
+        });
+        if (response.status === 404) return null;
+        if (!response.ok) throw new Error('Episode artwork unavailable');
+        return response.json();
+      };
+      try {
+        const mapping = await read('/mappings/mal/' + Math.floor(id/1000) + '/' + id + '.json');
+        const mapped = Number(mapping?.anilist_id);
+        if (!Number.isSafeInteger(mapped) || mapped < 1 || mapped > 10000000) return new Map();
+        return matchedEpisodeFrames(await read('/anime/' + Math.floor(mapped/1000) + '/' + mapped + '/episodes.json'));
+      } finally {clearTimeout(timer);}
+    })().catch(() => {
+      if (publicEpisodeFrames.get(id) === request) publicEpisodeFrames.delete(id);
+      return new Map();
+    });
+    publicEpisodeFrames.set(id,request);
+    if (publicEpisodeFrames.size > 36) publicEpisodeFrames.delete(publicEpisodeFrames.keys().next().value);
+    return request;
+  }
+  function hydrateEpisodeFrames(ctx) {
+    const id = ctx.episodeArtworkId;
+    if (ctx.episodeArtworkRequested || ctx.season !== 1 || !Number.isSafeInteger(id) ||
+        id < 1 || id > 10000000 || typeof root.fetch !== 'function' ||
+        root.navigator?.connection?.saveData ||
+        !ctx.episodeMeta.some(ep => ep?.number === 1 && !ep.supplementalLabel)) return;
+    if (!ctx.episodeMeta.some((ep,index) => Number.isSafeInteger(ep?.number) && !ep.supplementalLabel && !actualPreview(ctx,index))) return;
+    ctx.episodeArtworkRequested = true;
+    void getPublicEpisodeFrames(id).then(frames => {
+      if (!currentContext(ctx) || ctx.abort.signal.aborted) return;
+      const numbers = new Map();
+      for (const ep of ctx.episodeMeta) numbers.set(ep?.number,(numbers.get(ep?.number)||0)+1);
+      const catalogUrls = new Set([...ctx.uniquePreviews,...ctx.episodeFallbacks].filter(Boolean).map(url => url.replace('/w500/','/w300/')));
+      const buttons = ctx.grid.querySelectorAll('.komi-episode-number');
+      ctx.episodeMeta.forEach((ep,index) => {
+        if (ep?.supplementalLabel || numbers.get(ep?.number) !== 1) return;
+        const url = frames.get(ep?.number);
+        if (!url || catalogUrls.has(url)) return;
+        ctx.externalPreviews[index] = url;
+        const frame = buttons[index]?.querySelector('.komi-episode-thumb');
+        if (frame && !uniquePreview(ctx,index) && !capturedFrames.has(frameKey(ctx,index))) paintWatchEpisodeFrame(ctx,index,frame);
+      });
+    });
+  }
   let current = null;
   // Real per-episode metadata first; cache frames only from already playing,
   // accessible native video. No extra episode downloads or iframe scraping.
@@ -21,7 +96,11 @@
     const url=ctx.uniquePreviews?.[index] || '';
     return ctx.failedPreviews?.has(url) ? '' : url;
   }
-  function actualPreview(ctx,index) {return uniquePreview(ctx,index)||capturedFrames.get(frameKey(ctx,index))||'';}
+  function actualPreview(ctx,index) {
+    const external = ctx.externalPreviews?.[index];
+    return [uniquePreview(ctx,index),capturedFrames.get(frameKey(ctx,index)),external]
+      .find(url => url && !ctx.failedPreviews?.has(url)) || '';
+  }
   function captureCurrentFrame(ctx) {
     const video=ctx.video;
     if(!video || !currentContext(ctx) || video.readyState<2 || video.currentTime<12 ||
@@ -42,10 +121,7 @@
       while(capturedFrames.size>160)capturedFrames.delete(capturedFrames.keys().next().value);
       const btn=ctx.grid.querySelectorAll('.komi-episode-number')[ctx.index];
       const thumbnail=btn?.querySelector('.komi-episode-thumb');
-      if(thumbnail) paintEpisodeImage(thumbnail,[
-        {url:capturedFrames.get(key),kind:'frame'},
-        ...ctx.episodeFallbacks.map(url=>({url,kind:'poster'}))
-      ]);
+      if(thumbnail) paintWatchEpisodeFrame(ctx,ctx.index,thumbnail);
       return true;
     } catch {return false;} // CORS/DRM restrictions are respected.
   }
@@ -125,21 +201,30 @@
     if(!candidates.length)return;
     const image=document.createElement('img');
     image.className='komi-episode-thumb-image';
-    image.alt='';image.loading='lazy';image.decoding='async';
+    image.alt='';image.loading='lazy';image.decoding='async';image.referrerPolicy='no-referrer';
     let next=0;
     const tryNext=()=>{
       if(next>=candidates.length){image.remove();setEpisodePreviewKind(frame,'unavailable');return;}
       const candidate=candidates[next++];
-      setEpisodePreviewKind(frame,candidate.kind==='frame' ? 'frame' : 'poster');
       image.src=candidate.url;
+      if (image.complete && image.naturalWidth > 0) setEpisodePreviewKind(frame,candidate.kind);
     };
+    image.addEventListener('load',()=>{
+      if (image.parentNode === frame) setEpisodePreviewKind(frame,candidates[next-1].kind);
+    });
     image.addEventListener('error',()=>{
       if (!frame.isConnected || image.parentNode !== frame) return;
+      setEpisodePreviewKind(frame,'unavailable');
       onFailure?.(candidates[next-1].url);
       tryNext();
     });
     frame.prepend(image);
     tryNext();
+  }
+  function paintWatchEpisodeFrame(context,index,frame) {
+    const urls = [actualPreview(context,index),context.externalPreviews?.[index]];
+    paintEpisodeImage(frame,urls.filter(url => url && !context.failedPreviews.has(url)).map(url => ({url,kind:'frame'})),
+      url => { context.failedPreviews.add(url); hydrateEpisodeFrames(context); });
   }
   function makeEpisodeThumb(context,index,label) {
     const frame=document.createElement('span');
@@ -149,15 +234,11 @@
     number.className='komi-episode-thumb-badge';
     number.textContent=label;
     frame.append(number);
-    paintEpisodeImage(frame,[
-      {url:actualPreview(context,index),kind:'frame'},
-      ...context.episodeFallbacks.map(url=>({url,kind:'poster'}))
-    ], url => {
-      if (url && url === context.uniquePreviews[index]) context.failedPreviews.add(url);
-    });
+    paintWatchEpisodeFrame(context,index,frame);
     return frame;
   }
   function setListMode(context, list) {
+    episodeListPreference = list;
     context.grid.classList.toggle('komi-episode-list', list);
     context.grid.querySelectorAll('.komi-episode-number').forEach((episodeButton, index) => {
       const label = episodeButton.dataset.komiEpisodeLabel || episodeButton.dataset.episodeNumber || episodeButton.textContent.trim();
@@ -190,6 +271,7 @@
         ].filter(Boolean).join('. '));
       }
     });
+    if (list) hydrateEpisodeFrames(context);
     context.viewButtons.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === (list ? 'list' : 'grid'))));
     const activeEpisode = context.grid.querySelector('[aria-current="true"]');
     if (activeEpisode && !context.sidebar.inert) {
@@ -263,12 +345,14 @@
     context.grid = grid;
     context.title = heading.querySelector('h1')?.textContent || 'KomiAnime';
     context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
-    // A title poster is an honest fallback, never a frame from this episode.
-    // Generic screenshots have no episode identity and are not used here.
+    context.episodeArtworkId = settings.episodeArtworkId;
+    context.externalPreviews = [];
+    // Title art is used only to reject mislabeled episode metadata, never as row artwork.
     context.episodeFallbacks = [...new Set([
       episodePreview(settings.watchPoster),
       episodePreview(content.querySelector('.crunchy-hero-poster')?.src),
-      episodePreview(settings.watchBanner)
+      episodePreview(settings.watchBanner),
+      ...(Array.isArray(settings.watchTitleStills) ? settings.watchTitleStills.map(episodePreview) : [])
     ].filter(url=>url && new URL(url).pathname !== '/anime-artwork.svg'))];
     context.uniquePreviews = indexEpisodePreviews(context);
     context.failedPreviews = new Set();
@@ -357,7 +441,7 @@
     }
     gridButton.addEventListener('click', () => setListMode(context,false));
     listButton.addEventListener('click', () => setListMode(context,true));
-    setListMode(context,true);
+    setListMode(context,episodeListPreference);
     if (context.video) {
       let attempts=0,lastAttempt=-30;
       const takeFrame=()=>{

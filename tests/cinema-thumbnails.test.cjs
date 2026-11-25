@@ -62,11 +62,11 @@ class Element {
 function fixture() {
   const document={createElement:tag=>new Element(tag)};
   const captured=new Map([['5114:1:6','data:image/jpeg;base64,captured']]);
-  const renderer=new Function('document','URL','location','capturedFrames','frameKey','measuredDurations',
-    section('  function indexEpisodePreviews(','  function captureCurrentFrame(')+
+  const renderer=new Function('document','URL','location','capturedFrames','frameKey','measuredDurations','hydrateEpisodeFrames',
+    'let episodeListPreference = true;'+section('  function indexEpisodePreviews(','  function captureCurrentFrame(')+
     section('  function episodePreview(','  function setStatus(')+
     'return {indexEpisodePreviews,setListMode,paintEpisodeImage};')(
-      document,URL,{origin:'https://komianime.online'},captured,(ctx,index)=>ctx.animeId+':'+ctx.season+':'+index,new Map());
+      document,URL,{origin:'https://komianime.online'},captured,(ctx,index)=>ctx.animeId+':'+ctx.season+':'+index,new Map(),()=>{});
   const grid=new Element('div');grid.connected=true;
   const clicked=[];
   const buttons=Array.from({length:68},(_,index)=>{
@@ -89,29 +89,22 @@ function fixture() {
   return {renderer,context,buttons,clicked};
 }
 
-test('truthful thumbnail kinds distinguish episode images, title artwork and captured frames',()=>{
+test('episode images become frames only after load, with no misleading title poster in the list',()=>{
   const {buttons}=fixture();
+  for (const i of [0,6]) buttons[i].querySelector('img').emit('load');
   const kinds=buttons.slice(0,7).map(button=>button.querySelector('.komi-episode-thumb').dataset.previewKind);
-  assert.deepEqual(kinds,['frame','frame','poster','poster','poster','poster','frame']);
+  assert.deepEqual(kinds,['frame','unavailable','unavailable','unavailable','unavailable','unavailable','frame']);
   assert.equal(buttons[0].querySelector('.komi-episode-thumb-kind').textContent,'Кадр серии');
-  assert.equal(buttons[4].querySelector('.komi-episode-thumb-kind').textContent,'Постер тайтла');
   assert.match(buttons[0].getAttribute('aria-label'),/Сейчас смотришь.*Кадр серии/);
-  assert.match(buttons[4].getAttribute('aria-label'),/Постер тайтла/);
+  for(const index of [2,3,4,5]) assert.equal(buttons[index].querySelector('img'),null);
   assert.equal(buttons[6].querySelector('img').src,'data:image/jpeg;base64,captured');
 });
 
-test('failed episode frame falls back to poster, then artwork, then a visible number without an image',()=>{
+test('failed episode frame retains a visible number without recycling title artwork',()=>{
   const {context,buttons}=fixture();
   const row=buttons[1], frame=row.querySelector('.komi-episode-thumb'), image=frame.querySelector('img');
   image.emit('error');
-  assert.equal(frame.dataset.previewKind,'poster');
-  assert.equal(image.src,'https://images.test/poster.png');
   assert.equal(context.failedPreviews.has('https://images.test/missing.png'),true);
-  assert.match(row.getAttribute('aria-label'),/Постер тайтла/);
-  image.emit('error');
-  assert.equal(image.src,'https://images.test/banner.png');
-  assert.equal(frame.querySelector('.komi-episode-thumb-kind').textContent,'Постер тайтла');
-  image.emit('error');
   assert.equal(frame.querySelector('img'),null);
   assert.equal(frame.dataset.previewKind,'unavailable');
   assert.equal(frame.querySelector('.komi-episode-thumb-kind').textContent,'Нет изображения');
@@ -119,11 +112,13 @@ test('failed episode frame falls back to poster, then artwork, then a visible nu
   assert.match(row.getAttribute('aria-label'),/Нет изображения/);
 });
 
-test('late errors from a replaced image cannot overwrite a newly captured frame',()=>{
+test('late load or error from a retired image cannot overwrite a replacement',()=>{
   const {renderer,buttons}=fixture();
-  const frame=buttons[7].querySelector('.komi-episode-thumb'), retired=frame.querySelector('img');
+  const frame=buttons[1].querySelector('.komi-episode-thumb'), retired=frame.querySelector('img');
   renderer.paintEpisodeImage(frame,[{url:'data:image/jpeg;base64,new-frame',kind:'frame'}]);
-  retired.emit('error');
+  retired.emit('error');retired.emit('load');
+  assert.equal(frame.dataset.previewKind,'unavailable');
+  frame.querySelector('img').emit('load');
   assert.equal(frame.dataset.previewKind,'frame');
   assert.equal(frame.querySelector('img').src,'data:image/jpeg;base64,new-frame');
 });
@@ -138,8 +133,54 @@ test('supplementary labels preserve all 68 buttons, original click indices and d
   renderer.setListMode(context,false);
   assert.equal(buttons[64].textContent,'65');
   renderer.setListMode(context,true);
-  assert.equal(buttons[0].querySelector('.komi-episode-thumb-kind').textContent,'Постер тайтла');
+  assert.equal(buttons[0].querySelector('.komi-episode-thumb-kind').textContent,'Нет изображения');
   assert.deepEqual(context.grid.querySelectorAll('.komi-episode-number'),buttons);
   assert.equal(buttons[67].dataset.episodeNumber,'68');
   assert.equal(context.grid.querySelectorAll('.komi-episode-number').length,68);
+});
+
+
+test('public data resolves MAL to AniList, rejects duplicate or untrusted stills, and deduplicates requests',async()=>{
+  const calls=[];
+  const root={fetch:async (url,options)=>{
+    calls.push(url);
+    assert.equal(options.credentials,'omit');
+    assert.equal(options.referrerPolicy,'no-referrer');
+    const data = url.includes('/mal/') ? {anilist_id:171018} : [
+      {number:1,still:'https://image.tmdb.org/t/p/w500/episode-one.jpg'},
+      {number:2,still:'https://other.example/title.jpg'},
+      {number:3,still:'https://image.tmdb.org/t/p/w500/reused.jpg'},
+      {number:4,still:'https://image.tmdb.org/t/p/w500/reused.jpg'},
+      {number:5,still:'https://image.tmdb.org/t/p/w500/a.jpg'},
+      {number:5,still:'https://image.tmdb.org/t/p/w500/b.jpg'},
+      {number:6,still:'https://image.tmdb.org/t/p/w500/./other.jpg'}
+    ];
+    return {ok:true,status:200,json:async()=>data};
+  }};
+  const get=new Function('root',section('  const episodeArtworkBase','  function hydrateEpisodeFrames')+
+    'return getPublicEpisodeFrames;')(root);
+  const first=get(57334);
+  assert.strictEqual(first,get(57334));
+  const frames=await first;
+  assert.deepEqual([...frames],[[1,'https://image.tmdb.org/t/p/w300/episode-one.jpg']]);
+  assert.equal(calls.length,2);
+  assert.match(calls[0],/mappings\/mal\/57\/57334\.json$/);
+  assert.match(calls[1],/anime\/171\/171018\/episodes\.json$/);
+});
+
+test('public data backfills only uniquely numbered season-one rows of the current watch view',async()=>{
+  const want = new Map([[1,'https://image.tmdb.org/t/p/w300/one.jpg'],[2,'two'],[3,'three'],[4,'four']]);
+  let requested=0, isCurrent=true;
+  const load=new Function('root','getPublicEpisodeFrames','actualPreview','currentContext','uniquePreview','capturedFrames','frameKey','paintWatchEpisodeFrame',
+    section('  function hydrateEpisodeFrames','  let current')+'return hydrateEpisodeFrames;')(
+    {fetch(){}},()=>{requested++;return Promise.resolve(want);},()=>'',()=>isCurrent,()=>'',new Map(),()=>'',()=>{});
+  const make=season=>({season,episodeArtworkId:5114,externalPreviews:[],uniquePreviews:[],episodeFallbacks:[],
+    abort:new AbortController(),grid:{querySelectorAll:()=>[]},
+    episodeMeta:[{number:1},{number:2},{number:2},{number:3,supplementalLabel:'extra'},{number:4}]});
+  const later=make(2);load(later);assert.equal(requested,0);
+  const obsolete=make(1);load(obsolete);isCurrent=false;await Promise.resolve();assert.deepEqual(obsolete.externalPreviews,[]);
+  const current=make(1);isCurrent=true;load(current);await Promise.resolve();
+  assert.equal(current.externalPreviews[0],want.get(1));
+  assert.equal(current.externalPreviews[4],want.get(4));
+  assert.deepEqual(Object.keys(current.externalPreviews),['0','4']);
 });

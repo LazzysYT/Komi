@@ -5368,7 +5368,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             <div class="komi-watch-side-heading">
                                 <h3>Серии <span>${currentSeasonEpisodes.length}</span></h3>
                                 <div class="komi-episode-search">
-                                    <input id="komiEpisodeSearch" type="search" inputmode="numeric" aria-label="Номер серии" class="form-control" placeholder="Номер" data-komi-oninput="komiFindEpisode(this.value)">
+                                    <input id="komiEpisodeSearch" type="search" inputmode="numeric" aria-label="Найти серию по номеру" class="form-control" placeholder="Найти серию" data-komi-oninput="komiFindEpisode(this.value)">
                                     <button id="komiClearEpisodeSearch" type="button" aria-label="Очистить поиск серии" hidden>×</button>
                                 </div>
                             </div>
@@ -5444,12 +5444,16 @@ async function komiLoadCatalogPages(attempt = 0) {
                 hasNext,
                 displayNumber,
                 episodeSummary: episodePresentation.summary,
+                // Use the same Shikimori-to-MAL cross-reference as AniList artwork.
+                episodeArtworkId: Number(anime.shikimoriId || 0),
                 watchStill: Array.isArray(anime.screenshots) ? anime.screenshots[0] : '',
+                watchTitleStills: Array.isArray(anime.screenshots) ? anime.screenshots : [],
                 watchBanner: anime.banner || '',
                 originalIndex: sourceOrigin.index,
                 originalSource: sourceOrigin.name,
                 episodeSlots: currentSeasonEpisodes.map(episode => episode.slots),
                 episodeMeta:currentSeasonEpisodes.map((ep,index)=>({
+                    number: /^\d+$/.test(String(ep.number ?? '').trim()) ? Number(ep.number) : null,
                     supplementalLabel: episodePresentation.supplemental[index] ? 'Дополнительный выпуск · STEPonee' : '',
                     preview:ep?.preview || ep?.thumbnail || ep?.screenshot || '',
                     duration:ep?.duration ?? ep?.durationSeconds ?? null,
