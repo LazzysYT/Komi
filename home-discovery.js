@@ -45,21 +45,21 @@
       '<div class="komi-home-rail komi-home-rail-pending" aria-busy="true"><template data-komi-lazy-shelf>' + visible.map(renderCard).join('') + '</template></div></section>';
   }
   const genreOptions = [
-    {name:'Экшен',subtitle:'Драки и погони',symbol:'↗',choices:['Экшен']},
-    {name:'Романтика',subtitle:'Про любовь',symbol:'♡',choices:['Романтика']},
-    {name:'Фэнтези',subtitle:'Магия и миры',symbol:'✧',choices:['Фэнтези']},
-    {name:'Комедия',subtitle:'Посмеяться',symbol:'☺',choices:['Комедия']},
-    {name:'Исэкай',subtitle:'Попал в другой мир',symbol:'◇',choices:['Исэкай','Исекай']},
-    {name:'Детектив',subtitle:'Распутать дело',symbol:'⌕',choices:['Детектив']},
-    {name:'Повседневность',subtitle:'Уютно и спокойно',symbol:'☼',choices:['Повседневность']}
+    {name:'Экшен',subtitle:'Бои и приключения',symbol:'↗',choices:['Экшен']},
+    {name:'Романтика',subtitle:'Любовь и отношения',symbol:'♡',choices:['Романтика']},
+    {name:'Фэнтези',subtitle:'Магия и приключения',symbol:'✧',choices:['Фэнтези']},
+    {name:'Комедия',subtitle:'Юмор и пародии',symbol:'☺',choices:['Комедия']},
+    {name:'Исэкай',subtitle:'Другие миры',symbol:'◇',choices:['Исэкай','Исекай']},
+    {name:'Детектив',subtitle:'Тайны и расследования',symbol:'⌕',choices:['Детектив']},
+    {name:'Повседневность',subtitle:'Обычная жизнь',symbol:'☼',choices:['Повседневность']}
   ];
   function genreShelf(animeList) {
     const genres = new Set();
     for (const anime of animeList) for (const genre of Array.isArray(anime.genres) ? anime.genres : [])
       genres.add(String(genre));
     return '<section class="komi-home-genres komi-feature-section" aria-label="Выбор жанра">' +
-      '<div class="komi-home-heading"><div><h2>Жанры <span class="komi-home-kicker">/ настроение</span></h2>' +
-      '<p class="komi-home-subtitle">Выбери настроение на вечер</p></div></div>' +
+      '<div class="komi-home-heading"><div><h2>Жанры</h2>' +
+      '<p class="komi-home-subtitle">Аниме по жанрам</p></div></div>' +
       '<div class="komi-home-genre-rail">' + genreOptions.map(option => {
         const genre = option.choices.find(name => genres.has(name));
         return '<button type="button" class="komi-home-genre-card"' +
@@ -172,14 +172,14 @@
       ' data-komi-promo="brand-loop" data-komi-hero-banner="' + promoPoster + '"' +
       ' data-komi-hero-video="/assets/hero/komi-promo-loop.mp4"' +
       ' aria-hidden="' + (promoActive ? 'false' : 'true') + '"' + (promoActive ? '' : ' inert') +
-      ' aria-label="KomiAnime — выбери свою историю">' +
+      ' aria-label="Каталог KomiAnime">' +
       '<img class="komi-hub-hero-art" src="' + (promoActive ? promoPoster : '/anime-artwork.svg') + '"' +
       ' alt="" width="1280" height="720" loading="' + (promoActive ? 'eager' : 'lazy') + '" decoding="async"' +
       (promoActive ? ' fetchpriority="high"' : ' data-komi-hero-deferred-src="' + promoPoster + '"') + '>' +
       '<div class="komi-home-hero-content">' +
-      '<div class="komi-hub-title-wrap"><h1 class="komi-hub-title-text">Выбери свою<br>историю.</h1></div>' +
+      '<div class="komi-hub-title-wrap"><h1 class="komi-hub-title-text">Что посмотреть?</h1></div>' +
       '<div class="hero-meta"><span>KomiAnime</span> · <span>Без звука</span></div>' +
-      '<p class="komi-hub-description">Найди аниме на вечер — и продолжи с того места, где остановился.</p>' +
+      '<p class="komi-hub-description">Найди сериал или фильм в каталоге.</p>' +
       '<div class="hero-buttons"><a class="komi-hub-play" href="/catalog"><span>Открыть каталог</span>' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
       '</a></div></div></article></div>' +
@@ -314,7 +314,7 @@
     return '<div class="komi-home-discovery komi-home-storefront">' +
       hero(lineup, context) +
       continueShelf(history, context) +
-      shelf('Рекомендуем', 'По оценкам Shikimori и свежести обновлений', popular, 'all',
+      shelf('Рекомендуем', 'Оценки Shikimori и недавние обновления', popular, 'all',
         anime => context.renderCard(anime, {variant:'discovery'}), 'komi-home-popular') +
       '<div class="komi-home-genres-section komi-feature-section">' + genres + '</div>' +
       (root.KomiHomeReleases?.renderRecent(context) || '') +

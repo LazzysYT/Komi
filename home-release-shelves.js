@@ -123,7 +123,7 @@
     if (!entries.length) return '';
     return '<section class="komi-home-shelf komi-feature-section komi-home-updated" aria-labelledby="komiHomeRecentTitle">' +
       '<div class="komi-home-heading"><div><h2 id="komiHomeRecentTitle">Свежие серии</h2>' +
-      '<p class="komi-home-subtitle">Новые серии с подтверждёнными источниками в каталоге</p></div></div>' +
+      '<p class="komi-home-subtitle">Серии, которые уже можно посмотреть</p></div></div>' +
       cards(entries, context, false) + '</section>';
   }
   function renderUpcoming(context = {}) {
@@ -134,7 +134,7 @@
     if (!entries.length) return '';
     return '<section id="komiHomeUpcoming" class="komi-home-shelf komi-feature-section komi-home-upcoming" aria-labelledby="komiHomeUpcomingTitle">' +
       '<div class="komi-home-heading"><div><h2 id="komiHomeUpcomingTitle">Скоро выйдут</h2>' +
-      '<p class="komi-home-subtitle">По расписанию. Озвучка может появиться позже. Время указано в вашем часовом поясе.</p></div>' +
+      '<p class="komi-home-subtitle">По расписанию. Озвучка может появиться позже. Время местное.</p></div>' +
       '<button type="button" class="komi-home-all" data-komi-onclick="loadKomiEpisodeSchedule(true)"' +
       (context.scheduleLoading ? ' disabled aria-busy="true"' : '') + '>Обновить</button></div>' +
       cards(entries, context, true) +
