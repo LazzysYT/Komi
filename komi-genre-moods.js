@@ -14,6 +14,32 @@
     ['Исэкай', 'Попал в другой мир', ['Исэкай', 'Исекай', 'Isekai']],
     ['Психологическое', 'Игры разума', ['Психологическое', 'Психология', 'Психологический', 'Psychological']]
   ];
+  const artKeys = new Map(Object.entries({
+    'Экшен': 'action', 'Романтика': 'romance', 'Фэнтези': 'fantasy', 'Комедия': 'comedy',
+    'Ужасы': 'horror', 'Спорт': 'sports', 'Исэкай': 'isekai', 'Психологическое': 'mind'
+  }));
+  // The storefront already uses this Re:Zero banner. Provide a real isekai
+  // cover even when the lightweight home catalogue has no tagged isekai.
+  const seedArtwork = new Map([
+    ['Исэкай', 'https://s4.anilist.co/file/anilistcdn/media/anime/banner/189046-MDk2CaVuRWpb.jpg']
+  ]);
+  const localArtwork = name => '/komi-mood-art.svg#' + artKeys.get(name);
+
+  function restoreArtwork(event) {
+    const image = event.target;
+    const fallback = image?.getAttribute?.('data-komi-mood-fallback');
+    if (!fallback || image.getAttribute('src') === fallback) return;
+    const direct = image.getAttribute('data-komi-mood-direct');
+    image.removeAttribute('data-komi-mood-direct');
+    if (direct && image.getAttribute('src') !== direct) {
+      image.src = direct;
+      return;
+    }
+    image.removeAttribute('data-komi-lazy-src');
+    image.src = fallback;
+  }
+  root.document?.addEventListener('error', restoreArtwork, true);
+
   // The same genre labels recur across thousands of catalog rows. Keep locale
   // normalization out of those repeated comparisons without retaining every
   // possible label supplied by a catalog refresh or filter.
@@ -97,17 +123,25 @@
       const selected = norm(genre) === norm(name) ||
         (name === 'Исэкай' && norm(genre) === 'исекай') ||
         (name === 'Ужасы' && norm(genre) === 'хоррор');
-      const fallback = art?.direct
-        ? ' data-poster-direct="' + escape(art.direct) + '" data-komi-onerror="komiCardPosterFallback(this)"'
-        : ' data-komi-onerror="this.style.display=\'none\'"';
+      if (!art?.src || art.src === '/anime-artwork.svg') {
+        const seed = seedArtwork.get(name);
+        art = seed ? compactArtwork({banner: seed}) || {src: seed, direct: seed} : null;
+      }
+      const fallback = localArtwork(name);
+      const src = art && !deferImages ? art.src : fallback;
+      const upgrade = art
+        ? ' data-komi-mood-fallback="' + escape(fallback) + '"' +
+          (art.direct ? ' data-komi-mood-direct="' + escape(art.direct) + '"' : '') +
+          (deferImages ? ' data-komi-lazy-src="' + escape(art.src) + '"' : '')
+        : '';
       const tag = navigation ? 'a' : 'button';
       return '<' + tag + (navigation ? ' href="/catalog?genre=' + encodeURIComponent(name) + '"' : ' type="button"') +
         ' class="komi-mood-card' + (selected ? ' is-selected' : '') + '"' +
         ' data-komi-mood-genre="' + escape(name) + '"' + (navigation ? '' : ' aria-pressed="' + selected + '"') +
         ' aria-label="Жанр ' + escape(name) + ': ' + escape(description) + '">' +
-        (art?.src ? '<img class="komi-mood-art" ' + (deferImages ? 'src="/anime-artwork.svg" data-komi-lazy-src="' : 'src="') + escape(art.src) +
-          '" alt="" width="360" height="160" loading="lazy" decoding="async" fetchpriority="' +
-          (index < 4 ? 'auto' : 'low') + '" referrerpolicy="no-referrer"' + fallback + '>' : '') +
+        '<img class="komi-mood-art" src="' + escape(src) +
+        '" alt="" width="360" height="160" loading="lazy" decoding="async" fetchpriority="' +
+        (index < 4 ? 'auto' : 'low') + '" referrerpolicy="no-referrer"' + upgrade + '>' +
         '<span class="komi-mood-gradient" aria-hidden="true"></span>' +
         '<span class="komi-mood-copy"><strong>' + escape(name) + '</strong><small>' + escape(description) + '</small></span></' + tag + '>';
     }).join('');

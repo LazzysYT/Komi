@@ -1,0 +1,75 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320">
+  <title>KomiAnime monochrome genre illustrations</title>
+  <view id="action" viewBox="0 0 360 160"/>
+  <view id="romance" viewBox="360 0 360 160"/>
+  <view id="fantasy" viewBox="720 0 360 160"/>
+  <view id="comedy" viewBox="1080 0 360 160"/>
+  <view id="horror" viewBox="0 160 360 160"/>
+  <view id="sports" viewBox="360 160 360 160"/>
+  <view id="isekai" viewBox="720 160 360 160"/>
+  <view id="mind" viewBox="1080 160 360 160"/>
+  <defs>
+    <linearGradient id="sky" x2="1" y2=".65"><stop stop-color="#1c1c21"/><stop offset="1" stop-color="#83838c"/></linearGradient>
+    <rect id="panel" width="360" height="160" fill="url(#sky)"/>
+  </defs>
+  <g>
+    <use href="#panel"/>
+    <path fill="#222228" d="M0 156 124 122 142 128 228 76 189 125 360 53v107H0z"/>
+    <path fill="#ececf1" d="m147 146 75-100 18 9 102-41-80 67-20-8zm127-48 63-31-40 45zm-50-51 16-28 9 11z"/>
+    <path fill="none" stroke="#b9b9c0" stroke-width="3" d="m184 43 94-36m-52 127 107-54m-180 39 50-33"/>
+  </g>
+  <g transform="translate(360)">
+    <use href="#panel"/>
+    <circle cx="277" cy="67" r="49" fill="#dadadd"/>
+    <path fill="#515158" d="M0 147q78-42 159-18 83-44 201-31v62H0z"/>
+    <path fill="#25252b" d="M0 153q120-31 183-14 98-36 177-15v36H0z"/>
+    <path fill="#fbfbff" d="M233 58q-14-13-21 0-8 15 21 30 27-15 20-29-7-13-20-1zm79 29q-8-7-12 0-4 8 12 16 15-8 11-16-4-7-11 0z"/>
+  </g>
+  <g transform="translate(720)">
+    <use href="#panel"/>
+    <circle cx="286" cy="52" r="37" fill="#e6e6eb"/>
+    <path fill="#5c5c63" d="m130 140 87-103 55 65 37-47 51 84v21H130z"/>
+    <path fill="#27272d" d="M0 151 106 127l55 16 62-24 54 19 83-27v49H0z"/>
+    <path fill="#dadadf" d="M259 136V87h11V75l11-19 11 19v12h12v49zm-17 0v-25h14v25zm66 0v-31h14v31z"/>
+    <path fill="#64646a" d="M277 136v-19a5 5 0 0 1 10 0v19z"/>
+  </g>
+  <g transform="translate(1080)">
+    <use href="#panel"/>
+    <path fill="#5e5e65" d="m104 160 60-62 24 41 30-57 18 56 41-47-5 69z"/>
+    <path fill="#e8e8eb" d="m258 25 27 16 15-25 9 27 29-6-13 25 27 16-30 10 5 30-27-17-18 25-7-29-31 2 17-23-20-16 29-5z"/>
+    <circle cx="290" cy="67" r="5" fill="#303037"/><circle cx="309" cy="65" r="5" fill="#303037"/>
+    <path d="M287 79q15 19 26-2" fill="none" stroke="#303037" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(0 160)">
+    <use href="#panel"/>
+    <circle cx="275" cy="62" r="42" fill="#d8d8dc"/>
+    <path fill="#424249" d="M0 144 143 110l67 15 79-27 71 19v43H0z"/>
+    <path fill="#1e1e24" d="M0 153 136 140l62-10 7-34 18-11 15 11 19 14 18-25 18 25v28l67 11v11H0z"/>
+    <path fill="none" stroke="#2d2d33" stroke-width="5" d="m317 160 8-124-14-33m11 79 25-29 10-28m-34 68-25-14-8-15"/>
+    <path fill="#b7b7bd" d="m265 123 7-3-2 6zm14-3 7 3-6 3z"/>
+  </g>
+  <g transform="translate(360 160)">
+    <use href="#panel"/>
+    <path fill="none" stroke="#c6c6cc" stroke-width="3" d="M165 143 254 51m-63 108 62-51m10 47 65-72m-24 74 37-34"/>
+    <circle cx="282" cy="63" r="44" fill="#dedee3" stroke="#303037" stroke-width="4"/>
+    <path fill="none" stroke="#494951" stroke-width="3" d="M254 29q34 11 52 67m-67-32q34-16 84 3m-61 35q14-49 45-64"/>
+    <path fill="#27272d" d="M0 160v-18l145-12 58 13 91-6 66 11v12z"/>
+  </g>
+  <g transform="translate(720 160)">
+    <use href="#panel"/>
+    <path fill="#55555e" d="m127 150 76-97 50 56 48-81 59 109v23H127z"/>
+    <path fill="#202027" d="M0 153 158 138l62 11 60-22 80 12v21H0z"/>
+    <path d="M257 136V57a26 26 0 0 1 52 0v79" fill="none" stroke="#dcdce4" stroke-width="8"/>
+    <path d="M270 134V57a13 13 0 0 1 26 0v77" fill="#b0b0ba" opacity=".45"/>
+    <path fill="#f6f6f9" d="m283 57 4 13 12 3-12 4-4 13-4-13-12-4 12-3zm37-34 2 6 7 2-7 2-2 7-2-7-7-2 7-2z"/>
+    <path d="M236 149q34-15 54-13m-12 17 27-13" stroke="#888893" fill="none" stroke-width="2"/>
+  </g>
+  <g transform="translate(1080 160)">
+    <use href="#panel"/>
+    <circle cx="283" cy="76" r="62" fill="#9e9ea7"/>
+    <path fill="none" stroke="#494951" stroke-width="2" d="M220 76h126M283 13v126m-44-107 89 89m0-89-89 89"/>
+    <path fill="#e5e5eb" d="M218 76q63-66 128 0-65 66-128 0z"/>
+    <circle cx="282" cy="76" r="23" fill="#414149"/><circle cx="282" cy="76" r="12" fill="#25252c"/>
+    <circle cx="288" cy="70" r="4" fill="#fafafd"/>
+  </g>
+</svg>

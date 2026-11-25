@@ -85,3 +85,32 @@ test('genre navigation resets stale pagination and old category without dropping
  assert.equal(scope.catalogVisibleCount,24);assert.equal(scope.komiCatalogRestorePending,false);
  assert.equal(scope.catalogFilterYear,'Все');assert.equal(scope.catalogCategory,'all');assert.equal(scope.catalogSearchQuery,'');
 });
+
+test('every static and hydrated genre tile has its own local artwork',()=>{
+ const {scope}=fixture();
+ const staticHome=fs.readFileSync(path.join(root,'index.html'),'utf8');
+ const sprite=fs.readFileSync(path.join(root,'komi-mood-art.svg'),'utf8');
+ const hydrated=scope.KomiGenreMoods.render({navigation:true,deferImages:true});
+ const keys=html=>[...html.matchAll(/class="komi-mood-art" src="\/komi-mood-art\.svg#([a-z]+)"/g)].map(match=>match[1]);
+ const expected=['action','romance','fantasy','comedy','horror','sports','isekai','mind'];
+ assert.deepEqual(keys(staticHome),expected);
+ assert.deepEqual(keys(hydrated),expected);
+ for(const key of expected) assert.match(sprite,new RegExp('<view id="'+key+'" viewBox="[^"]+"/>'));
+ assert.match(hydrated,/data-komi-lazy-src="https:\/\/s4\.anilist\.co\/[^"]+189046[^"]+"/);
+});
+
+test('genre cover retries the origin once and then restores its local illustration',()=>{
+ let onError;
+ const scope={document:{addEventListener(type,listener,capture){assert.equal(type,'error');assert.equal(capture,true);onError=listener;}}};
+ scope.window=scope;
+ vm.runInNewContext(fs.readFileSync(path.join(root,'komi-genre-moods.js'),'utf8'),scope);
+ const fallback='/komi-mood-art.svg#isekai', direct='https://s4.anilist.co/example.jpg';
+ const attrs={'data-komi-mood-fallback':fallback,'data-komi-mood-direct':direct,src:'https://wsrv.nl/image'};
+ const image={getAttribute:key=>attrs[key],removeAttribute:key=>delete attrs[key],set src(value){attrs.src=value;}};
+ onError({target:image});
+ assert.equal(attrs.src,direct);
+ onError({target:image});
+ assert.equal(attrs.src,fallback);
+ onError({target:image});
+ assert.equal(attrs.src,fallback);
+});
