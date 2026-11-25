@@ -56,7 +56,10 @@ const sourceLink = n => 'https://embed.example/episode/' + n;
       // mobile sheets, episode entry point and per-episode filtering run unmodified.
       await page.evaluate(async () => {
         document.addEventListener('change', event=>{
-          if(event.target.id==='komiWatchSourceSelect') void window.changePlayerSource(5114,1,1,event.target.value);
+          if (event.target.id !== 'komiWatchSourceSelect') return;
+          const args = /^changePlayerSource\('([0-9]+)',([0-9]+),([0-9]+),this\.value\)$/
+            .exec(event.target.getAttribute('data-komi-onchange') || '');
+          if (args) void window.changePlayerSource(args[1],Number(args[2]),Number(args[3]),event.target.value);
         });
         await window.openWatchModal(5114, 1, 0, 'AniDUB', 2);
       });
