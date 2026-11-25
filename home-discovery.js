@@ -362,6 +362,11 @@
       if (template) { node.append(template.content); template.remove(); }
       node.classList.remove('komi-home-rail-pending');
       node.removeAttribute('aria-busy');
+      // The rail is already approaching the viewport. Start the first two
+      // card covers now instead of waiting for a second observer delivery.
+      // The rest still load only as they approach the visible shelf.
+      const firstPosters = [...node.querySelectorAll('.komi-discovery-poster img[data-komi-lazy-src]')].slice(0,2);
+      firstPosters.forEach(activate);
       observeViewport(node);
     } else if (node.matches('img[data-komi-lazy-src]')) {
       const source=node.dataset.komiLazySrc;

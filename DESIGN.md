@@ -113,3 +113,7 @@ The shop uses the same matte neutrals and white primary controls as discovery. T
 ### Profile: identity, navigation, then content
 
 The cover and personal cosmetics remain on a left-aligned identity card. Primary profile navigation comes immediately after the identity/settings region. Overview starts with private resume cards for the owner and keeps viewing stats, favorites, achievements, friends and genres. For verified owners, a compact activity shortcut opens a separate tab for daily check-in and server-backed quests. The public profile never renders that tab. Use a high-contrast active pill, a visible horizontal scroll affordance for narrow screens, and restore keyboard focus after switching. A signed-out visitor at the own-profile route gets an explicit sign-in button, not a modal on top of the home page.
+
+### Home image first paint
+
+The hero keeps a neutral, correctly sized backdrop before artwork arrives or when all sources fail. Do not render the generic Komi logo as a fullscreen image or use its dimensions to classify the hero. Known portrait fallbacks remain portrait even before decode. Near the viewport, the recommendations rail starts only its first two covers immediately; the rest remain visibility-loaded. Reserve the card geometry without flashing logo thumbnails while images arrive.

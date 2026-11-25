@@ -223,6 +223,12 @@
 
   function updateLayout(slide, img) {
     if (!img || !img.naturalHeight) return;
+    // The temporary logo can decode before the deferred poster; its dimensions
+    // say nothing about the selected banner and must not trigger its animation.
+    if (/(?:^|\/)anime-artwork\.svg(?:[?#]|$)/i.test(img.currentSrc || img.src || '')) {
+      slide.classList.toggle('komi-art-ready', false);
+      return;
+    }
     const ratio = img.naturalWidth / img.naturalHeight;
     const wide = img.naturalWidth >= 1200 && ratio >= 1.6;
     const softWide = !wide && img.naturalWidth >= 900 && ratio >= 1.55;

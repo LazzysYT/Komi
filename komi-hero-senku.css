@@ -33,7 +33,7 @@
   box-sizing: border-box;
   padding: 120px clamp(24px, 5vw, 72px) 86px !important;
   overflow: hidden;
-  background: #09090B url("/anime-artwork.svg") center / cover no-repeat;
+  background: radial-gradient(ellipse at 74% 34%, #232329 0%, #141418 42%, #09090B 78%);
 }
 .komi-media-hub .komi-home-hero .hero-slide.active {
   display: flex;
@@ -683,5 +683,25 @@
   .komi-media-hub .komi-home-hero .hero-slide:is(.komi-hd-wide,.komi-hd-softwide) .komi-hub-hero-art,
   .komi-media-hub .komi-home-hero .hero-slide .komi-hero-video {
     translate:var(--komi-hero-x,0px) var(--komi-hero-y,0px);
+  }
+}
+
+/* Keep reserved sizes, but never paint the loading logo as hero or poster art. */
+.komi-media-hub .komi-home-hero .komi-hub-hero-art[src="/anime-artwork.svg"],
+.komi-media-hub .komi-home-storefront :is(.komi-discovery-poster img,.komi-home-release-poster)[src="/anime-artwork.svg"] {
+  visibility: hidden !important;
+}
+.komi-media-hub .komi-home-storefront .komi-discovery-poster:has(img[src="/anime-artwork.svg"]) {
+  background: radial-gradient(ellipse at 66% 23%,#25252b,#16161a 58%,#111114);
+}
+/* A known portrait fallback must not fill a landscape frame while decoding.
+   The runtime then measures the real image and keeps the correct class. */
+.komi-media-hub .komi-home-hero .hero-slide:has(.komi-hub-hero-art:is([src*="/anilistcdn/media/anime/cover/"],[src*="/uploads/poster/animes/"])) .komi-hub-hero-art {
+  object-fit:contain !important;object-position:right center !important;
+  width:62% !important;left:auto !important;right:0 !important;
+}
+@media(max-width:768px){
+  .komi-media-hub .komi-home-hero .hero-slide:has(.komi-hub-hero-art:is([src*="/anilistcdn/media/anime/cover/"],[src*="/uploads/poster/animes/"])) .komi-hub-hero-art {
+    width:100% !important;height:72% !important;object-position:center top !important;
   }
 }
