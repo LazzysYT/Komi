@@ -15,8 +15,8 @@
             #komiMobileMoreToggle, #komiMobileMoreMenu { display: none !important; }
         }
     </style>
-    <title>KomiAnime — смотреть аниме онлайн и находить новые истории</title>
-    <meta name="description" content="KomiAnime (Коми Аниме) — аниме онлайн, каталог с поиском по жанрам, новые серии и личные списки. Выбирай историю на вечер и продолжай просмотр с того места, где остановился.">
+    <title>KomiAnime — смотреть аниме онлайн</title>
+    <meta name="description" content="KomiAnime (Коми Аниме) — аниме онлайн, каталог сериалов и фильмов, новые серии, поиск по жанрам и личные списки просмотра.">
     <meta name="robots" content="index, follow, max-image-preview:large">
     <meta name="komi-seo-revision" content="20261125-search-discovery">
     <meta name="google-site-verification" content="Nzv_eECGzk4WUEI3NHG6YX6nwstJ8jVuypU15341JGA">
@@ -27,15 +27,15 @@
     <meta property="og:type" content="website">
     <meta property="og:locale" content="ru_RU">
     <meta property="og:site_name" content="KomiAnime">
-    <meta property="og:title" content="KomiAnime — смотреть аниме онлайн и находить новые истории">
-    <meta property="og:description" content="Находи аниме по жанрам, следи за новыми сериями и сохраняй свой список просмотра в KomiAnime.">
+    <meta property="og:title" content="KomiAnime — смотреть аниме онлайн">
+    <meta property="og:description" content="Каталог аниме, новые серии и списки просмотра в KomiAnime.">
     <meta property="og:url" content="https://komianime.online/">
     <meta property="og:image" content="https://komianime.online/assets/hero/komi-promo-first-frame.webp">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="720">
     <meta property="og:image:alt" content="KomiAnime — komianime.online">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="KomiAnime — смотреть аниме онлайн и находить новые истории">
+    <meta name="twitter:title" content="KomiAnime — смотреть аниме онлайн">
     <meta name="twitter:description" content="Каталог аниме, новые серии, личные списки и сообщество KomiAnime.">
     <meta name="twitter:image" content="https://komianime.online/assets/hero/komi-promo-first-frame.webp">
     <meta name="twitter:image:alt" content="KomiAnime — komianime.online">
@@ -222,7 +222,7 @@
     <div id="komiFriendsBackdrop" class="komi-friends-backdrop" data-komi-click="friends-close"></div>
     <aside id="komiFriendsDrawer" class="komi-friends-drawer" aria-label="Люди и друзья" aria-hidden="true" inert>
         <div class="komi-friends-heading"><h2>Люди и друзья</h2><button class="komi-friends-close" data-komi-click="friends-close" aria-label="Закрыть"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
-        <div class="komi-friends-search"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></span><input id="komiFriendsSearch" type="search" placeholder="Поиск пользователя по нику..." data-komi-input="friends-search" autocomplete="off" aria-label="Поиск по нику"></div>
+        <div class="komi-friends-search"><span aria-hidden="true"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg></span><input id="komiFriendsSearch" type="search" placeholder="Поиск по нику" data-komi-input="friends-search" autocomplete="off" aria-label="Поиск по нику"></div>
         <div class="komi-friends-tabs"><button id="komiFriendsAllTab" class="active" data-komi-click="friends-all">Все пользователи</button><button id="komiFriendsMyTab" hidden style="display:none!important" data-komi-click="friends-following">Мои друзья</button></div>
         <section id="komiFriendRoomsSection" class="komi-friend-rooms-section" aria-label="Комнаты друзей" hidden>
             <div class="komi-friend-rooms-heading"><strong>Смотрят вместе</strong><button type="button" id="komiFriendRoomsRefresh">Обновить</button></div>
@@ -279,7 +279,7 @@
             <div class="search-container">
                 <div class="search-bar">
                     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
-                    <input type="text" id="searchInput" aria-label="Поиск аниме или пользователя" placeholder="Поиск аниме | @поиск пользователя" data-komi-input="search-input" data-komi-focus="search-focus">
+                    <input type="text" id="searchInput" aria-label="Поиск аниме или пользователя" placeholder="Поиск аниме или @ник" data-komi-input="search-input" data-komi-focus="search-focus">
                     <kbd class="komi-search-shortcut" aria-hidden="true">Ctrl K</kbd>
                 </div>
                 <div class="search-dropdown" id="searchDropdown"></div>
@@ -375,30 +375,30 @@
                 </div>
             </section>
             <section class="komi-home-genres-section komi-feature-section" aria-labelledby="komiStaticMoodTitle">
-                <div class="komi-moods"><div class="komi-moods-heading"><div><h2 id="komiStaticMoodTitle">Жанры</h2><p>Выбери настроение на вечер</p></div><a class="komi-home-all" href="/catalog">Все жанры</a></div>
+                <div class="komi-moods"><div class="komi-moods-heading"><div><h2 id="komiStaticMoodTitle">Жанры</h2><p>Аниме по жанрам</p></div><a class="komi-home-all" href="/catalog">Все жанры</a></div>
                 <div class="komi-moods-grid">
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%AD%D0%BA%D1%88%D0%B5%D0%BD" data-komi-mood-genre="Экшен"><img class="komi-mood-art" src="/komi-mood-art.svg#action" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Экшен</strong><small>Драки и погони</small></span></a>
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%A0%D0%BE%D0%BC%D0%B0%D0%BD%D1%82%D0%B8%D0%BA%D0%B0" data-komi-mood-genre="Романтика"><img class="komi-mood-art" src="/komi-mood-art.svg#romance" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Романтика</strong><small>Про любовь</small></span></a>
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%A4%D1%8D%D0%BD%D1%82%D0%B5%D0%B7%D0%B8" data-komi-mood-genre="Фэнтези"><img class="komi-mood-art" src="/komi-mood-art.svg#fantasy" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Фэнтези</strong><small>Магия и миры</small></span></a>
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%9A%D0%BE%D0%BC%D0%B5%D0%B4%D0%B8%D1%8F" data-komi-mood-genre="Комедия"><img class="komi-mood-art" src="/komi-mood-art.svg#comedy" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Комедия</strong><small>Посмеяться</small></span></a>
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%A3%D0%B6%D0%B0%D1%81%D1%8B" data-komi-mood-genre="Ужасы"><img class="komi-mood-art" src="/komi-mood-art.svg#horror" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Ужасы</strong><small>Для смелых</small></span></a>
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%A1%D0%BF%D0%BE%D1%80%D1%82" data-komi-mood-genre="Спорт"><img class="komi-mood-art" src="/komi-mood-art.svg#sports" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Спорт</strong><small>Командный дух</small></span></a>
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%98%D1%81%D1%8D%D0%BA%D0%B0%D0%B9" data-komi-mood-genre="Исэкай"><img class="komi-mood-art" src="/komi-mood-art.svg#isekai" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Исэкай</strong><small>Попал в другой мир</small></span></a>
-                    <a class="komi-mood-card" href="/catalog?genre=%D0%9F%D1%81%D0%B8%D1%85%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5" data-komi-mood-genre="Психологическое"><img class="komi-mood-art" src="/komi-mood-art.svg#mind" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Психологическое</strong><small>Игры разума</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%AD%D0%BA%D1%88%D0%B5%D0%BD" data-komi-mood-genre="Экшен"><img class="komi-mood-art" src="/komi-mood-art.svg#action" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Экшен</strong><small>Бои и приключения</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%A0%D0%BE%D0%BC%D0%B0%D0%BD%D1%82%D0%B8%D0%BA%D0%B0" data-komi-mood-genre="Романтика"><img class="komi-mood-art" src="/komi-mood-art.svg#romance" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Романтика</strong><small>Любовь и отношения</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%A4%D1%8D%D0%BD%D1%82%D0%B5%D0%B7%D0%B8" data-komi-mood-genre="Фэнтези"><img class="komi-mood-art" src="/komi-mood-art.svg#fantasy" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Фэнтези</strong><small>Магия и приключения</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%9A%D0%BE%D0%BC%D0%B5%D0%B4%D0%B8%D1%8F" data-komi-mood-genre="Комедия"><img class="komi-mood-art" src="/komi-mood-art.svg#comedy" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Комедия</strong><small>Юмор и пародии</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%A3%D0%B6%D0%B0%D1%81%D1%8B" data-komi-mood-genre="Ужасы"><img class="komi-mood-art" src="/komi-mood-art.svg#horror" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Ужасы</strong><small>Мистика и хоррор</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%A1%D0%BF%D0%BE%D1%80%D1%82" data-komi-mood-genre="Спорт"><img class="komi-mood-art" src="/komi-mood-art.svg#sports" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Спорт</strong><small>Спорт и соревнования</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%98%D1%81%D1%8D%D0%BA%D0%B0%D0%B9" data-komi-mood-genre="Исэкай"><img class="komi-mood-art" src="/komi-mood-art.svg#isekai" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Исэкай</strong><small>Другие миры</small></span></a>
+                    <a class="komi-mood-card" href="/catalog?genre=%D0%9F%D1%81%D0%B8%D1%85%D0%BE%D0%BB%D0%BE%D0%B3%D0%B8%D1%87%D0%B5%D1%81%D0%BA%D0%BE%D0%B5" data-komi-mood-genre="Психологическое"><img class="komi-mood-art" src="/komi-mood-art.svg#mind" alt="" width="360" height="160" loading="lazy" decoding="async"><span class="komi-mood-gradient" aria-hidden="true"></span><span class="komi-mood-copy"><strong>Психологическое</strong><small>Психология и интриги</small></span></a>
                 </div></div>
             </section>
             <footer class="komi-home-browse-footer"><a class="komi-home-catalog-link" href="/catalog">Весь каталог</a><noscript><p>Для интерактивного поиска и воспроизведения требуется JavaScript. Информация об аниме и ссылки доступны без него.</p></noscript></footer>
             </div>
             <section id="shop" class="komi-static-shop komi-shop-v3 komi-shop-v5 komi-shop-studio" aria-labelledby="komi-static-shop-title">
-              <header class="sv3-topbar"><div class="sv3-heading"><h1 id="komi-static-shop-title">Магазин оформления</h1><p>Находи детали, примеряй и собирай свой образ.</p></div><div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin"><span><small>Твой баланс</small><strong>— <span>AniCoin</span></strong></span></span></div></header>
-              <div class="sv7-static-loading" role="status">Готовим коллекции и примерочную…</div>
+              <header class="sv3-topbar"><div class="sv3-heading"><h1 id="komi-static-shop-title">Магазин оформления</h1><p>Рамки, обложки и другие украшения для профиля.</p></div><div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin"><span><small>Твой баланс</small><strong>— <span>AniCoin</span></strong></span></span></div></header>
+              <div class="sv7-static-loading" role="status">Загружаем магазин…</div>
               <noscript><p>Для примерки и покупки предметов включи JavaScript.</p></noscript>
             </section>
         </main>
     </div>
 
     <footer class="komi-public-footer" aria-label="О сайте KomiAnime">
-        <div class="komi-public-footer-copy"><a class="komi-public-footer-brand" href="/">KomiAnime</a><p>Коми Аниме — каталог, новые серии и твои списки просмотра.</p></div>
+        <div class="komi-public-footer-copy"><a class="komi-public-footer-brand" href="/">KomiAnime</a><p>Каталог аниме и новые серии.</p></div>
         <nav aria-label="Информация о KomiAnime"><a href="/catalog">Каталог аниме</a><a href="/about">О проекте</a><a href="/contacts">Контакты</a></nav>
     </footer>
 
@@ -412,7 +412,7 @@
             <div class="komi-auth-intro">
                 <img class="komi-auth-brand" src="./icon.svg" alt="" width="76" height="76" aria-hidden="true">
                 <h2 id="komiAuthTitle"><span class="komi-auth-login-title">Вход в Komi</span><span class="komi-auth-register-title">Регистрация в Komi</span></h2>
-                <p id="komiAuthIntroText">Один аккаунт для истории просмотра, списков, AniCoin и достижений.</p>
+                <p id="komiAuthIntroText">Войди, чтобы сохранять историю просмотра и списки.</p>
             </div>
             <button type="button" class="komi-google-btn" data-komi-click="auth-google">
                 <span class="komi-google-g" aria-hidden="true">G</span>
@@ -488,10 +488,10 @@
     <script defer src="./poster-cache-client.js?v=20261124-v75"></script>
     <script defer src="./player-core.js?v=20261125-guest-fixes-r4"></script>
     <script defer src="./player-source-preferences.js?v=20261125-watch-v9"></script>
-    <script defer src="./komi-genre-moods.js?v=20261125-guest-fixes"></script>
+    <script defer src="./komi-genre-moods.js?v=20261125-editorial-r1"></script>
     <script defer src="./anime-description.js?v=20261125-home-guest-polish"></script>
-    <script defer src="./home-release-shelves.js?v=20261125-mobile-startup-r7"></script>
-    <script defer src="./home-discovery.js?v=20261125-mobile-startup-r7"></script>
+    <script defer src="./home-release-shelves.js?v=20261125-editorial-r1"></script>
+    <script defer src="./home-discovery.js?v=20261125-editorial-r1"></script>
     <script defer src="./komi-home-snapshot.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-resume-cache.js"></script>
     <script defer src="./profile-premium.js?v=20261125-profile-overview"></script>
@@ -507,8 +507,8 @@
     <script defer src="./komi-premium-store.js?v=20261125-shop-v7-fix1"></script>
     <script defer src="./komi-public-catalog-cache.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-home-seed.js?v=20261125-v811-cinematic"></script>
-    <script defer src="/komi-page-meta.js?v=20261125-search-discovery"></script>
-    <script defer src="./app-main.js?v=20261125-mobile-startup-r7-profile-overview"></script>
+    <script defer src="/komi-page-meta.js?v=20261125-editorial-r1"></script>
+    <script defer src="./app-main.js?v=20261125-editorial-r1"></script>
     <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
     <script defer src="./hero-hd-art.js?v=20261125-mobile-startup-r4"></script>
     <script defer src="./komi-hero-title.js?v=20261124-v7hero"></script>
@@ -527,7 +527,7 @@
     <script defer src="./anime-details.js"></script>
     <script defer src="./watch-party.js?v=20261125-guest-fixes"></script>
     <script defer src="./friend-party.js"></script>
-    <script defer src="./komi-shop-v3.js?v=20261125-guest-fixes"></script>
+    <script defer src="./komi-shop-v3.js?v=20261125-editorial-r1"></script>
     <script defer src="./anicoin.js?v=20261125-shop-v7-fix1"></script>
     <script defer src="./komi-shop-social.js?v=20261125-shop-v7"></script>
     <script defer src="./dynamic-ui-events.js?v=20261125-profile-overview"></script>

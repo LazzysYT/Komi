@@ -1285,7 +1285,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
         function komiIntroMarkup(){
             const currentYearCount=animeList.filter(a=>komiAnimeYear(a)==='2026').length;
-            return '<div class="komi-spotlight-heading"><div><div class="komi-spotlight-eyebrow">KOMI ANIME HUB · ТВОЯ БИБЛИОТЕКА</div><h1>Выбирай историю на сегодня</h1><p>Свежие серии, любимые жанры и подборки для любого настроения — всё в одном месте.</p></div><div class="komi-spotlight-metrics"><span><strong>'+animeList.length.toLocaleString('ru-RU')+'</strong> аниме в каталоге</span><span><strong>'+currentYearCount+'</strong> тайтлов 2026</span></div></div>'+
+            return '<div class="komi-spotlight-heading"><div><div class="komi-spotlight-eyebrow">KomiAnime</div><h1>Каталог аниме</h1><p>Новые серии и аниме по жанрам.</p></div><div class="komi-spotlight-metrics"><span><strong>'+animeList.length.toLocaleString('ru-RU')+'</strong> аниме в каталоге</span><span><strong>'+currentYearCount+'</strong> тайтлов 2026</span></div></div>'+
                 '<nav class="komi-fastnav" aria-label="Быстрые разделы"><button class="is-prominent" data-komi-onclick="showKomiYear(\'2026\')"> Новинки 2026</button><button data-komi-onclick="navigate(\'catalog\')">▦ Весь каталог</button><button data-komi-onclick="document.getElementById(\'komiCalendarSection\')?.scrollIntoView({behavior:\'smooth\',block:\'start\'})"> Новые серии</button><button data-komi-onclick="randomAnimeWithAnimation()">◇ Случайное аниме</button></nav>';
         }
 
@@ -1868,7 +1868,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         </div>
                         <div class="komi-catalog-search">
                           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
-                          <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Найди своё аниме" aria-label="Поиск аниме" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false">
+                          <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Поиск аниме" aria-label="Поиск аниме" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false">
                         </div>
                         <div class="komi-catalog-advanced" id="komiCatalogAdvanced" ${komiShowAdvancedFilters?'':'hidden'}>
                           <div class="catalog-filters-box" role="group" aria-label="Дополнительные фильтры">
@@ -1917,19 +1917,19 @@ async function komiLoadCatalogPages(attempt = 0) {
                 container.innerHTML = `
                     <section class="komi-partners-page" aria-labelledby="komiPartnersTitle">
                         <div class="komi-partners-hero">
-                            <span class="komi-partners-eyebrow">KOMI ANIME HUB · COMMUNITY</span>
+                            <span class="komi-partners-eyebrow">KomiAnime</span>
                             <h1 id="komiPartnersTitle">Партнёры Komi Anime</h1>
-                            <p>Знакомьтесь с партнёрами Komi Anime — авторами, которые поддерживают наше сообщество. Мы открыты к интересным предложениям и новым совместным проектам.</p>
+                            <p>Здесь собраны авторы, с которыми мы сотрудничаем.</p>
                         </div>
                         <div class="komi-partners-grid">
                             <article class="komi-partners-panel">
                                 <span class="komi-partners-symbol" aria-hidden="true">◇</span>
                                 <h2>Наши партнёры</h2>
-                                <p>Наши TikTok-партнёры. Поддержите их и познакомьтесь с их страницами.</p>
+                                <p>Наши партнёры в TikTok.</p>
                                 <ul class="komi-partner-list">
                                     <li>
                                         <a class="komi-partner-card" href="https://www.tiktok.com/@vidciten" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр vidci10, @vidciten — открыть профиль в новой вкладке">
-                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
+                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok</span><span class="komi-partner-status">Партнёр</span></span>
                                             <span class="komi-partner-card-body">
                                                 <img class="komi-partner-avatar-photo" src="/assets/partners/vidci10-verified.jpg" alt="Аватар vidci10 — серый кот" width="76" height="76" loading="lazy" decoding="async">
                                                 <span class="komi-partner-card-name"><strong>vidci10</strong><small>@vidciten</small></span>
@@ -1939,7 +1939,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     </li>
                                     <li>
                                         <a class="komi-partner-card" href="https://www.tiktok.com/@plimbka.ppka" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр Plimbka, @plimbka.ppka — открыть профиль в новой вкладке">
-                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
+                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok</span><span class="komi-partner-status">Партнёр</span></span>
                                             <span class="komi-partner-card-body">
                                                 <img class="komi-partner-avatar-photo" src="/assets/partners/plimbka.jpg" alt="Аватар Plimbka — нарисованный персонаж в капюшоне" width="76" height="76" loading="lazy" decoding="async">
                                                 <span class="komi-partner-card-name"><strong>Plimbka</strong><small>@plimbka.ppka</small></span>
@@ -1949,7 +1949,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     </li>
                                     <li>
                                         <a class="komi-partner-card" href="https://www.tiktok.com/@kirill_sumy11" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр Kirill_Sumy11, @kirill_sumy11 — открыть профиль в новой вкладке">
-                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
+                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok</span><span class="komi-partner-status">Партнёр</span></span>
                                             <span class="komi-partner-card-body">
                                                 <img class="komi-partner-avatar-photo" src="/assets/partners/kirill-sumy11.webp" alt="Аватар Kirill_Sumy11" width="76" height="76" loading="lazy" decoding="async">
                                                 <span class="komi-partner-card-name"><strong>Kirill_Sumy11</strong><small>@kirill_sumy11</small></span>
@@ -1959,7 +1959,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     </li>
                                     <li>
                                         <a class="komi-partner-card" href="https://www.tiktok.com/@killxiv" target="_blank" rel="noopener noreferrer" aria-label="TikTok-партнёр xavier, @killxiv — открыть профиль в новой вкладке">
-                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok Creator</span><span class="komi-partner-status">✦ Партнёр</span></span>
+                                            <span class="komi-partner-card-top"><span class="komi-partner-platform">TikTok</span><span class="komi-partner-status">Партнёр</span></span>
                                             <span class="komi-partner-card-body">
                                                 <img class="komi-partner-avatar-photo" src="/assets/partners/killxiv.jpg" alt="Аватар xavier" width="76" height="76" loading="lazy" decoding="async">
                                                 <span class="komi-partner-card-name"><strong>xavier</strong><small>@killxiv</small></span>
@@ -1972,7 +1972,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             <article class="komi-partners-panel">
                                 <span class="komi-partners-symbol" aria-hidden="true">✧</span>
                                 <h2>Сотрудничество</h2>
-                                <p>Мы рады новым идеям и совместным проектам. Следите за объявлениями в официальном сообществе Komi Anime.</p>
+                                <p>Хочешь предложить сотрудничество? Напиши нам в Telegram.</p>
                                 <div class="komi-partners-actions">
                                     <a href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer">Наш Telegram</a>
                                     <a href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer">Наш TikTok</a>
@@ -4391,7 +4391,7 @@ async function komiLoadCatalogPages(attempt = 0) {
 
         function openAuthModal(mode = 'login', reason = '') {
             const intro = document.getElementById('komiAuthIntroText');
-            if (intro) intro.textContent = reason || 'Один аккаунт для истории просмотра, списков, AniCoin и достижений.';
+            if (intro) intro.textContent = reason || 'Войди, чтобы сохранять историю просмотра и списки.';
             switchAuthTab(mode);
             document.getElementById('authModal').classList.add('active');
         }

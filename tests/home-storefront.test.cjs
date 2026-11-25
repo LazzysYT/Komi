@@ -26,7 +26,7 @@ test('guest home contains one discovery sequence and no catalog grid, filters, a
  assert.ok(offsets.every((value,index)=>value>=0 && (!index || value>offsets[index-1])));
  assert.doesNotMatch(html,/komi-home-upcoming|komi-home-continue|komi-hub-resume|komi-resume-loading|komiLeaderboard|komi-hub-catalog-preview|class="anime-grid"|Все фильтры|Войдите/);
  assert.match(html,/<h2>Рекомендуем<\/h2>/);
- assert.match(html,/По оценкам Shikimori и свежести обновлений/);
+ assert.match(html,/Оценки Shikimori и недавние обновления/);
  assert.doesNotMatch(html,/Популярное прямо сейчас|Топ зрителей|На один вечер/);
 });
 test('a populated upcoming schedule follows genres and precedes the catalogue footer',()=>{
