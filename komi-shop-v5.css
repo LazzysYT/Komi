@@ -64,12 +64,12 @@
 #shop.komi-shop-studio .sv7-view-tabs button:not([aria-pressed="true"]):hover{background:var(--shop-active);color:#fff}
 #shop.komi-shop-studio .sv7-view-tabs button span{font-size:12px;opacity:.65;font-variant-numeric:tabular-nums}
 #shop.komi-shop-studio .sv7-search{display:flex;align-items:center;gap:10px;width:100%;min-width:0;border:1px solid #ffffff25;border-radius:14px;background:var(--shop-raised);min-height:50px;padding:0 16px;color:var(--shop-muted)}
-#shop.komi-shop-studio .sv7-search:focus-within{border-color:#ffffff95;box-shadow:0 0 0 2px #ffffff0d}
+#shop.komi-shop-studio .sv7-search:focus-within{border-color:#ffffff95;outline:2px solid #fff;outline-offset:3px;box-shadow:none}
 #shop.komi-shop-studio .sv7-search > svg{flex:none}
 #shop.komi-shop-studio .sv7-search input{display:block;min-width:0;width:100%;min-height:48px;border:0!important;background:transparent!important;color:var(--shop-fg);font-size:14px;border-radius:0;padding:0;box-shadow:none}
 #shop.komi-shop-studio .sv7-search input::placeholder{color:#a6a6af;opacity:1}
 #shop.komi-shop-studio .sv7-search input::-webkit-search-cancel-button{display:none}
-#shop.komi-shop-studio .sv7-search input:focus{outline:0}
+#shop.komi-shop-studio .sv7-search input:focus,#shop.komi-shop-studio .sv7-search input:focus-visible{outline:0!important}
 #shop.komi-shop-studio .sv7-search button{flex:none;border:0;border-radius:50%;background:var(--shop-active);color:#fff;width:32px;height:32px;padding:0;font-size:22px}
 #shop.komi-shop-studio .sv7-filter-row{display:grid;grid-template-columns:minmax(170px,230px) minmax(170px,210px) minmax(0,1fr);align-items:center;gap:12px;width:100%;min-width:0}
 #shop.komi-shop-studio .sv7-select{position:relative;display:flex;align-items:center;width:100%;max-width:100%;min-width:0;border:1px solid var(--shop-line);border-radius:12px;background:var(--shop-raised)}
@@ -100,6 +100,7 @@
 #shop.komi-shop-studio .sv3-item-scene::before,#shop.komi-shop-studio .sv3-item-scene::after{display:none}
 #shop.komi-shop-studio .sv3-item-scene:hover{background:radial-gradient(ellipse at 50% 30%,#353541,#1e1e27 70%)}
 #shop.komi-shop-studio .sv3-item-scene :is(.komi-coin-frame,.sv3-shape){height:76px!important;width:76px!important;max-width:76px;max-height:76px}
+#shop.komi-shop-studio .sv3-item-scene .sv3-shape{background:linear-gradient(145deg,#656576,#282833)}
 #shop.komi-shop-studio .sv3-item-scene :is(.komi-coin-frame,.sv3-shape)>span{display:grid;place-items:center;width:100%;height:100%;font-size:28px;font-weight:800}
 #shop.komi-shop-studio .sv3-item-scene :is(.store-banner-swatch,.komi-preview-cover){width:100%;height:84px;max-width:230px;font-size:13px;font-weight:800;letter-spacing:.13em}
 #shop.komi-shop-studio .sv3-item-scene .sv3-name-sample{display:block;font-size:20px;text-align:center;max-width:100%;line-height:1.5;overflow-wrap:anywhere}

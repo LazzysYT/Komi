@@ -286,7 +286,7 @@ fs.mkdirSync(output,{recursive:true});
    await page.screenshot({path:path.join(output,'shop-v3-desktop.png'),fullPage:true});
 
    await page.setViewportSize({width:390,height:844});
-   await page.reload({waitUntil:'domcontentloaded'});
+   await page.goto(url,{waitUntil:'domcontentloaded'});
    await waitForShop();
    await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
    const bar=page.locator('#shop [data-v3-sheet]'),fitting=page.locator('#shop .sv3-fitting');
