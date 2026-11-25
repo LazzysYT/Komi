@@ -262,34 +262,53 @@
       }).join('') + '</div></section>';
   }
 
+  // Keep only the twelve visible recommendations, preserving the full sort's
+  // ranking and original order for ties (including a NaN comparator result).
+  function popularTitles(animeList, now) {
+    const recentThreshold = now - 30 * 86400000, best = [];
+    const compare = (a,b) => b.rank - a.rank || b.score - a.score;
+    for (const anime of animeList) {
+      const rating = score(anime);
+      if (!(rating > 0) || !id(anime)) continue;
+      const date = updated(anime);
+      const candidate = {anime, score:rating,
+        rank:(date > recentThreshold && date <= now ? 2 : 0) + rating / 10};
+      if (best.length === 12 && !(compare(candidate,best[11]) < 0)) continue;
+      let at = best.length;
+      while (at > 0 && compare(candidate,best[at-1]) < 0) at--;
+      best.splice(at,0,candidate);
+      if (best.length > 12) best.pop();
+    }
+    return best.map(item => item.anime);
+  }
+
   // Public recommendations reuse the loaded catalog. No view counts are implied.
   let cachedPublicHome = null;
   function render(context) {
     const source = Array.isArray(context.animeList) ? context.animeList : [];
     const animeList = source.filter(Boolean);
     if (!animeList.length) return '<section class="komi-home-empty">Аниме в каталоге пока нет.</section>';
+    const daily = root.KomiHeroDaily?.lineup(animeList, Array.isArray(root.KomiHomeSeed) ? root.KomiHomeSeed : []);
+    const usesDaily = daily?.length >= 2;
     const revision = Number(context.catalogRevision) || 0;
     if (!cachedPublicHome || cachedPublicHome.source !== source ||
         cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
-      const now = Date.now(), recentThreshold = now - 30 * 86400000;
-      const metadata = animeList.map(anime => ({
-        anime, score:score(anime), updated:updated(anime),
-        year:context.year(anime), count:count(anime)
-      }));
-      const popularity = item => (item.updated > recentThreshold && item.updated <= now ? 2 : 0) + item.score / 10;
-      const popular = metadata.filter(item => item.score > 0 && id(item.anime))
-        .sort((a,b) => popularity(b) - popularity(a) || b.score - a.score)
-        .slice(0,12).map(item => item.anime);
-      const slider = typeof root.KomiHomeSnapshot?.featured === 'function'
+      const popular = popularTitles(animeList, Date.now());
+      cachedPublicHome = {source, revision, length:source.length, slider:null, popular};
+    }
+    // The daily lineup already selects the hero. Sort the full catalog only
+    // when that lineup is unavailable, including after an earlier daily render.
+    if (!usesDaily && cachedPublicHome.slider === null) {
+      cachedPublicHome.slider = typeof root.KomiHomeSnapshot?.featured === 'function'
         ? root.KomiHomeSnapshot.featured(animeList, context.year)
-        : metadata.filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
+        : animeList.map(anime => ({
+            anime, score:score(anime), year:context.year(anime), count:count(anime)
+          })).filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
           .sort((a,b) => Number(b.year) - Number(a.year) || b.score - a.score)
           .slice(0,5).map(item => item.anime);
-      cachedPublicHome = {source, revision, length:source.length, slider, popular};
     }
     const {slider, popular} = cachedPublicHome;
-    const daily = root.KomiHeroDaily?.lineup(animeList, Array.isArray(root.KomiHomeSeed) ? root.KomiHomeSeed : []);
-    const lineup = daily?.length >= 2 ? daily : slider;
+    const lineup = usesDaily ? daily : slider;
     const history = recentProgress(context, animeList);
     const genres = typeof context.genres === 'function' ? context.genres() : genreShelf(animeList);
     return '<div class="komi-home-discovery komi-home-storefront">' +
@@ -310,6 +329,63 @@
   // Keep equal sections mounted through catalog/session refreshes. Parsing into
   // a template is inert; images and observers only start for genuinely new DOM.
   const sectionMarkup = new WeakMap();
+  function adoptBootHero(container, renderedHero, markup, owner) {
+    const current = container.querySelector(':scope > .komi-home-discovery');
+    const existing = current?.querySelector('.komi-home-hero');
+    if (!existing || !renderedHero || existing !== root.KomiHeroDaily?.preview) return false;
+    const before = [...existing.querySelectorAll('.hero-slide')];
+    const after = [...renderedHero.querySelectorAll('.hero-slide')];
+    const identity = slide => slide.dataset.komiAnimeId || slide.dataset.komiPromo;
+    if (before.length !== after.length || before.some((slide, index) => identity(slide) !== identity(after[index]))) return false;
+    const activeIndex = before.findIndex(slide=>slide.classList.contains('active'));
+    if (activeIndex < 0 || !after[activeIndex].classList.contains('active')) return false;
+    const activeImage = before[activeIndex].querySelector('.komi-hub-hero-art');
+    const expected = after[activeIndex].querySelector('.komi-hub-hero-art')?.getAttribute('src');
+    if (!activeImage || activeImage.getAttribute('src') !== expected || !root.KomiHeroDaily.imageIsReal(activeImage)) return false;
+    // patch() keys parsed sections by browser serialization (for example,
+    // inert becomes inert=""). Register the same representation before moving
+    // the canonical content, rather than the renderer's raw HTML string.
+    const canonicalMarkup = renderedHero.outerHTML;
+    // Upgrade text and account actions in place: moving the decoded artwork
+    // into a new section would create a second, late largest-contentful paint.
+    const focused = existing.contains(document.activeElement) ? document.activeElement : null;
+    const focusedHref = focused?.closest('a')?.getAttribute('href');
+    const focusedAction = focused?.closest('button')?.getAttribute('data-komi-onclick');
+    const attributes = (target, source, preserve = []) => {
+      for (const attribute of [...target.attributes])
+        if (!preserve.includes(attribute.name) && !source.hasAttribute(attribute.name)) target.removeAttribute(attribute.name);
+      for (const attribute of source.attributes)
+        if (!preserve.includes(attribute.name) && target.getAttribute(attribute.name) !== attribute.value)
+          target.setAttribute(attribute.name, attribute.value);
+    };
+    before.forEach((slide, index) => {
+      const next = after[index];
+      const image = slide.querySelector('.komi-hub-hero-art');
+      const ready = image && root.KomiHeroDaily.imageIsReal(image);
+      attributes(slide, next);
+      if (ready) slide.classList.add('komi-art-ready');
+      const content = slide.querySelector('.komi-home-hero-content');
+      const nextContent = next.querySelector('.komi-home-hero-content');
+      if (content && nextContent) content.replaceWith(nextContent);
+      const nextImage = next.querySelector('.komi-hub-hero-art');
+      if (image && nextImage) attributes(image, nextImage,
+        ready ? ['src','loading','fetchpriority','data-komi-hero-deferred-src'] : []);
+    });
+    const controls = existing.querySelector('.komi-hub-carousel-controls');
+    const nextControls = renderedHero.querySelector('.komi-hub-carousel-controls');
+    // Once live, keep the carousel's direct event bindings and pause clock too.
+    if (current.hasAttribute('data-komi-boot-preview') && controls && nextControls)
+      controls.replaceWith(nextControls);
+    existing.dataset.komiOwner = owner;
+    current.dataset.komiHomeOwner = owner;
+    delete current.dataset.komiBootPreview;
+    sectionMarkup.set(existing, canonicalMarkup);
+    if (focusedHref) [...existing.querySelectorAll('a')]
+      .find(link => link.getAttribute('href') === focusedHref)?.focus({preventScroll:true});
+    else if (focusedAction && !focused?.isConnected) [...existing.querySelectorAll('button[data-komi-onclick]')]
+      .find(button => button.getAttribute('data-komi-onclick') === focusedAction)?.focus({preventScroll:true});
+    return true;
+  }
   function patch(container, markup, owner) {
     const template = document.createElement('template');
     template.innerHTML = markup;
@@ -406,5 +482,5 @@
   function afterRender(container) {
     observeViewport(container);
   }
-  root.KomiHomeDiscovery = {render,patch,retainSection,afterRender,observeViewport,recentProgress,unfinished};
+  root.KomiHomeDiscovery = {render,patch,adoptBootHero,retainSection,afterRender,observeViewport,recentProgress,unfinished};
 })(globalThis);

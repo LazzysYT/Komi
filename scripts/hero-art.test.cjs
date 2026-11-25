@@ -9,6 +9,25 @@ const source = fs.readFileSync(path.join(__dirname, '..', 'hero-hd-art.js'), 'ut
 const home = fs.readFileSync(path.join(__dirname, '..', 'home-discovery.js'), 'utf8');
 const css = fs.readFileSync(path.join(__dirname, '..', 'komi-media-hub.css'), 'utf8');
 
+test('relative hero stills accept only exact bundled daily paths on the current origin',()=>{
+  const daily=require('../komi-home-boot.js');
+  const body=source.slice(source.indexOf('  function safeStill(raw)'),source.indexOf('  function safeVideo(raw)'));
+  const validator=href=>vm.runInNewContext(body+'\nsafeStill;',{URL,root:{KomiHeroDaily:daily,location:{href}}});
+  for(const origin of ['https://komianime.online','http://127.0.0.1:8765']) {
+    const safe=validator(origin+'/catalog');
+    for(const id of ['61316','61469','61967','60636','59978'])
+      assert.equal(safe(daily.artwork(id)),origin+daily.artwork(id));
+    const valid=daily.artwork('61316');
+    for(const raw of ['/other.webp',valid+'?cache=1',valid+'#frame',valid.replace('61316','61469'),
+      valid.replace('f7StpjhGI5xdIecti2jQkQY38ov','unknown'),'//outside.example'+valid,
+      '/assets/hero/daily/../'+valid.split('/').at(-1)])
+      assert.equal(safe(raw),'',raw+' must not broaden the relative-asset allowlist');
+    assert.equal(safe('https://example.test/still.webp'),'https://example.test/still.webp');
+    assert.equal(safe('http://example.test/still.webp'),'');
+  }
+  assert.equal(validator('file:///tmp/index.html')(daily.artwork('61316')),'');
+});
+
 function tick() {
   return new Promise(resolve => setImmediate(resolve));
 }

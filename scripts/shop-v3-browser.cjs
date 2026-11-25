@@ -180,7 +180,8 @@ fs.mkdirSync(output,{recursive:true});
    const expectedCSS=['/komi.production.css','/komi-pill-system.css'];
    if(bundleCSS.includes('/komi-icon-rail.css'))expectedCSS.push('/komi-icon-rail.css');
    expectedCSS.push('/komi-shop-v5.css','/komi-shop-v6-goods.css','/button-animations.css',
-     '/komi-genre-moods.css','/komi-watch-compact-v6.css','/komi-hero-senku.css','/profile-studio.css');
+     '/komi-genre-moods.css','/komi-watch-compact-v6.css','/komi-hero-senku.css','/profile-studio.css',
+     '/public-info.css');
    assert.deepEqual(bundleCSS,expectedCSS,'Production CSS preserves the shared cascade order');
    await page.evaluate(()=>scrollTo({top:0,behavior:'instant'}));
    await checkCatalogueGeometry('Short desktop first viewport',{initial:true});

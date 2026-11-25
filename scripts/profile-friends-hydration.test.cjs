@@ -81,7 +81,7 @@ test('friend mini cards render safe nicknames, actual GIF avatars, and original 
   assert.match(html,/<img src="https:\/\/cdn\.example\.test\/friend\.gif"/);
   assert.match(html,/komiProfileFriendNames\[0\]/);
   assert.doesNotMatch(html,/<friend>|google_1234567890abcdef/);
-  assert.match(premium,/refreshFriends\}/);
+  assert.match(premium,/root\.KomiProfileUI\s*=\s*\{[^}]*\brefreshFriends\s*[,}]/);
   assert.match(app,/KomiProfileUI\.summary/);
   assert.match(premium,/data-profile-friends-total/);
 });

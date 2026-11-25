@@ -80,7 +80,12 @@ test('auth callbacks never point to the SEO-only /anime/:id route', () => {
   assert.ok(main.includes("emailRedirectTo: 'https://komianime.online/'"));
 });
 
-test('episode permalink preserves validated season and episode through handoff',()=>{
+test('episode permalink preserves a validated episode with an optional valid season',()=>{
  assert.deepEqual(simulateBridge('#player','?season=2&episode=5').redirects,['/?anime=52991&season=2&episode=5']);
- assert.deepEqual(simulateBridge('#player','?season=bad&episode=5').redirects,['/?anime=52991']);
+ assert.deepEqual(simulateBridge('#player','?episode=5').redirects,['/?anime=52991&episode=5']);
+ assert.deepEqual(simulateBridge('#player','?season=bad&episode=5').redirects,['/?anime=52991&episode=5']);
+ for (const season of ['0','-1','1.5','1000000'])
+  assert.deepEqual(simulateBridge('#player','?season='+season+'&episode=5').redirects,['/?anime=52991&episode=5']);
+ for (const episode of ['','0','-1','1.5','bad','1000000'])
+  assert.deepEqual(simulateBridge('#player','?season=2&episode='+episode).redirects,['/?anime=52991']);
 });

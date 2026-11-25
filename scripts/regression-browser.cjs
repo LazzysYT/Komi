@@ -154,7 +154,7 @@ async function checkNotifications(page) {
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    // The daily hero waits for a decoded wide still before changing frames.
    // Keep that browser path real while making remote artwork deterministic.
-   await page.route(/^https:\/\/image\.tmdb\.org\/t\/p\/w1280\/[A-Za-z0-9]+\.jpg$/,route=>route.fulfill({
+   await page.route(/\/assets\/hero\/daily\/[1-9]\d{0,11}-[A-Za-z0-9]+\.webp$/,route=>route.fulfill({
      status:200,contentType:'image/svg+xml',
      body:'<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="1280" height="720" fill="#181820"/><path d="M0 600L480 180L940 720H0Z" fill="#394050"/></svg>'
    }));
@@ -526,6 +526,7 @@ async function checkNotifications(page) {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
+     const support=stage.querySelector(':scope > .komi-player-support').getBoundingClientRect();
      const heading=stage.querySelector(':scope > .komi-player-heading').getBoundingClientRect();
      const sidebarNode=stage.querySelector('.komi-watch-sidebar');
      const sidebar=sidebarNode.getBoundingClientRect();
@@ -535,7 +536,8 @@ async function checkNotifications(page) {
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       titleGap:heading.top-player.bottom,sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
+       supportGap:support.top-player.bottom,titleGap:heading.top-support.bottom,
+       sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
        background:active.backgroundColor,before:getComputedStyle(episode,'::before').content,
@@ -545,6 +547,7 @@ async function checkNotifications(page) {
    assert.ok(cinema.height >= 800, 'Cinema modal should use the full viewport height');
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
+   assert.ok(cinema.supportGap>=-2 && cinema.supportGap<=48,JSON.stringify(cinema));
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
    // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
    assert.ok(width>1050 ? cinema.sidebarBesideVideo : (cinema.sidebarHidden || cinema.sidebarAfterVideo),JSON.stringify(cinema));
@@ -556,7 +559,12 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
    assert.equal(await page.locator('.komi-watch-rail .komi-rail-bell, .komi-watch-rail [aria-label="Уведомления"]').count(),0,'Guest watch rail must not expose notifications');
-   assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),true);
+   assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),false,
+     'The persistent source controls replace the hover-only picker outside fullscreen');
+   assert.equal(await page.locator(width<=767 ? '.komi-mobile-watch-source' : '#komiWatchSourceSelect').isVisible(),true,
+     'Voice selection must remain visible in the desktop support bar or phone sheet control');
+   assert.equal(await page.getByRole('button',{name:'Видео не работает?',exact:true}).isVisible(),true,
+     'Player help must be reachable without opening overflow actions');
    assert.equal(await page.locator('.komi-native-hud').count(),1);
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
@@ -573,14 +581,27 @@ async function checkNotifications(page) {
        'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
      await page.locator('.komi-episodes-toggle').click();
    }
-   const view = page.locator('.komi-episode-view-toggle');
+   const episodeSidebar=page.locator('#watchModal .komi-watch-sidebar');
+   const episodeGrid=episodeSidebar.locator('.komi-episode-number-grid');
+   const firstEpisode=episodeGrid.locator('button[data-episode-number="1"]');
+   const secondEpisode=episodeGrid.locator('button[data-episode-number="2"]');
+   const episodeSearch=episodeSidebar.getByRole('searchbox',{name:'Найти серию по номеру',exact:true});
+   const view = episodeSidebar.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
-   assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-thumb').count(),2);
-   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
-   await page.getByRole('searchbox',{name:'Номер серии'}).fill('2');
-   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),false);
-   await page.getByRole('button',{name:'Очистить поиск серии'}).click();
-   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),true);
+   assert.equal(await episodeGrid.locator('.komi-episode-thumb').count(),2);
+   assert.equal(await firstEpisode.count(),1);
+   assert.equal(await secondEpisode.count(),1);
+   // Row labels include current/preview state; identity belongs to the actual
+   // sidebar grid, not another page control whose accessible name is "Серия 1".
+   await episodeSearch.fill('2');
+   assert.equal(await firstEpisode.evaluate(button=>button.hidden),true);
+   assert.equal(await firstEpisode.isVisible(),false);
+   assert.equal(await secondEpisode.isVisible(),true,'Filtering must retain the matching episode');
+   await episodeSidebar.getByRole('button',{name:'Очистить поиск серии',exact:true}).click();
+   assert.equal(await episodeSearch.inputValue(),'');
+   assert.equal(await firstEpisode.evaluate(button=>button.hidden),false);
+   assert.equal(await firstEpisode.isVisible(),true);
+   assert.equal(await secondEpisode.isVisible(),true,'Clearing must restore the full episode list');
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),1);
    await view.getByRole('button',{name:'Показать серии сеткой'}).click();
@@ -606,7 +627,8 @@ async function checkNotifications(page) {
    });
    assert.equal(state.time,42);assert.equal(state.duration,100);
    assert.equal(state.index,1,'Progress on the old second row still belongs to the combined first episode');
-   await page.getByText('Не удалось загрузить видео.',{exact:true}).waitFor();
+   await page.locator('#komiPlayerRecovery').getByText(
+     'Не удалось загрузить видео. Повторите загрузку или выберите другой источник.',{exact:true}).waitFor();
    assert.equal(await playback.getByRole('slider',{name:'Позиция видео'}).isDisabled(),true);
    const recoveryLayout = await page.evaluate(()=>{
      const recovery=document.querySelector('#komiPlayerRecovery').getBoundingClientRect();
@@ -614,21 +636,27 @@ async function checkNotifications(page) {
      return {recoveryTop:recovery.top,actionsBottom:actions.bottom};
    });
    assert.ok(recoveryLayout.recoveryTop>=recoveryLayout.actionsBottom-1,JSON.stringify(recoveryLayout));
-   await page.getByRole('button',{name:'Повторить загрузку'}).click();
+   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Повторить загрузку',exact:true}).click();
    await page.waitForFunction(()=>!window.komiFailedTestVideo.isConnected && !!document.getElementById('animeVideoPlayer'));
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
    await page.evaluate(()=>document.getElementById('animeVideoPlayer').dispatchEvent(new Event('error')));
-   await page.getByRole('button',{name:'Сменить источник'}).click();
-   const providerLink = page.getByRole('link',{name:'Открыть у провайдера',exact:false});
-   await providerLink.waitFor();
-   assert.equal(await playback.count(),0);
+   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Сменить источник',exact:true}).click();
    const providerFrame = page.locator('#watchModal .player-wrapper iframe');
+   await providerFrame.waitFor();
+   assert.equal(await playback.count(),0);
    assert.equal(await providerFrame.getAttribute('src'),'https://media.test/player?a=1&b=2');
    assert.doesNotMatch(await providerFrame.getAttribute('sandbox'),/allow-popups|allow-top-navigation/);
    const provider = providerFrame.contentFrame();
    await provider.getByRole('button',{name:'Запустить видео'}).click();
    await provider.getByRole('button',{name:'Видео запущено'}).waitFor();
+   assert.equal(await page.locator('#komiPlayerRecovery').isVisible(),false,
+     'A healthy external player must not inherit the failed native source recovery state');
+   const playerHelp = page.locator('#watchModal').getByRole('button',{name:'Видео не работает?',exact:true});
+   await playerHelp.click();
+   assert.equal(await playerHelp.getAttribute('aria-expanded'),'true');
+   const providerLink = page.locator('#komiPlayerRecovery').getByRole('link',{name:'Открыть у провайдера',exact:false});
+   await providerLink.waitFor();
    assert.equal(await providerLink.getAttribute('href'),'https://media.test/player?a=1&b=2');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').duration),100);
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);

@@ -1,6 +1,6 @@
 /* Keep the dormant hero template on the shared renderer and bundled seed.
- * The daily boot paints a neutral shell until its selected artwork is decoded;
- * never promote this fixed reference markup back into the rendered DOM. */
+ * Boot reorders these titles and installs the decoded daily artwork before
+ * revealing it; the fixed template must never paint without that preparation. */
 'use strict';
 const fs = require('node:fs'), path = require('node:path'), vm = require('node:vm');
 const {cachedPosterUrl} = require('../poster-cache-client.js');
@@ -22,6 +22,11 @@ function buildHomeShell() {
   });
   const hero = markup.match(/<section class="komi-home-hero"[\s\S]*?<\/section>/)?.[0];
   if (!hero) throw new Error('Rendered first-paint hero missing');
+  const dailyIds = require('../komi-home-boot.js').lineup(scope.KomiHomeSeed).map(item=>String(item.id));
+  const templateIds = [...hero.matchAll(/data-komi-anime-id="([0-9]+)"/g)].map(match=>match[1]);
+  if (dailyIds.length !== 5 || templateIds.length !== 5 ||
+      dailyIds.some(id=>!templateIds.includes(id)))
+    throw new Error('First-paint template must contain all five daily titles');
   const file = path.join(root,'index.html'), html = fs.readFileSync(file,'utf8');
   const marker = /(<template class="komi-boot-real-hero">)[\s\S]*?(<\/template>)/;
   if (!marker.test(html)) throw new Error('Dormant hero template marker missing');
