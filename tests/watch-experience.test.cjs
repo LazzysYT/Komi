@@ -283,3 +283,35 @@ test('selecting the current voice closes the mobile sheet with focus restoration
   await context.openSource({}); body.at(-1).children[1].listeners.click();
   assert.deepEqual(closes, [true, false]); assert.deepEqual(changed, [['change', 'B']]);
 });
+
+test('switch teardown saves and clears playback without hiding the watch surface',async()=>{
+  const f=watchFixture([ep(1,{Voice:embed(1)}),ep(2,{Voice:embed(2)})]);
+  await f.open(1,0,'Voice');
+  let hidden=0;
+  const remove=f.modal.classList.remove;
+  f.modal.classList.remove=value=>{if(value==='active')hidden++;remove(value);};
+  await f.open(1,1,'Voice');
+  assert.equal(hidden,0);
+  assert.equal(f.modal.classList.contains('active'),true);
+  assert.equal(f.context.lastUrl,'/anime/5114?season=1&episode=2#player');
+  f.context.closeWatchModal();
+  assert.equal(hidden,1);
+});
+
+test('cold episode request loads a single title before waiting for catalogue pagination',async()=>{
+  const calls=[], loaded=[];
+  const query=new URLSearchParams({anime:'61469',season:'1',episode:'2'});
+  const context=vm.createContext({
+    URLSearchParams,location:{search:'?'+query},sessionStorage:{getItem:()=>'',removeItem(){}},
+    _supabase:{},animeList:[],
+    history:{replaceState(_state,_name,url){calls.push(['route',url]);}},
+    ensureKomiAnimeDetails:async anime=>{loaded.push(anime.id);anime.title='ДжоДжо';return anime;},
+    openWatchModal:async (...args)=>{calls.push(['watch',...args]);}
+  });
+  vm.runInContext(section(app,'let komiSeoDeepLinkOpened','let komiCatalogLoadPending'),context);
+  context.komiMaybeOpenSeoAnime();
+  context.komiMaybeOpenSeoAnime();
+  await Promise.resolve();await Promise.resolve();
+  assert.deepEqual(loaded,['61469']);
+  assert.deepEqual(calls,[['route','/anime/61469?season=1&episode=2#player'],['watch','61469',1,0,null,2]]);
+});

@@ -26,7 +26,15 @@
     <script src="/premium-entry.js?v=20261121"></script>
     <script src="/shop-first-paint.js?v=20261124-v2"></script>
     <!-- Runs before body parsing: JS visitors never see the SEO fallback flash. -->
-    <script src="/komi-home-boot.js?v=20261125-v811-cinematic"></script>
+    <style>
+    #komiWatchEntry{display:none}
+    html.komi-watch-entry body> :not(#komiWatchEntry):not(script):not(style){visibility:hidden!important}
+    html.komi-watch-entry #komiWatchEntry{position:fixed;inset:0;z-index:99999;display:grid;place-content:center;justify-items:center;gap:12px;padding:24px;background:#09090b;color:#f5f5f5;font:600 16px/1.5 system-ui,sans-serif;text-align:center}
+    html.komi-watch-entry #komiWatchEntry p{margin:0;max-width:32ch}
+    html.komi-watch-entry #komiWatchEntry a{color:#c9c9ce;font-size:14px;padding:8px 12px;border:1px solid #323237;border-radius:9px;text-decoration:none}
+    #komiWatchEntry a:focus-visible{outline:2px solid #fff;outline-offset:2px}
+    </style>
+    <script src="/komi-home-boot.js?v=20261125-watch-entry"></script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
     <link rel="stylesheet" href="/komi.production.css?v=20261125-shop-v7-fix1">
@@ -36,7 +44,7 @@
     <link rel="stylesheet" href="/komi-shop-v6-goods.css?v=20261125-shop-v7-fix1">
     <link rel="stylesheet" href="/button-animations.css?v=20261123a">
     <link rel="stylesheet" href="/komi-genre-moods.css?v=20261123-mobilefix-v4">
-    <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261125-watch-discussion" media="print" data-komi-deferred-style="watch">
+    <link rel="stylesheet" href="/komi-watch-compact-v6.css?v=20261125-watch-entry" media="print" data-komi-deferred-style="watch">
     <link rel="stylesheet" href="/komi-hero-senku.css?v=20261125-watch-v9-portrait-stage">
     <link rel="stylesheet" href="/profile-studio.css?v=20261125-profile-senku-v2">
     
@@ -64,6 +72,7 @@
     
 </head>
 <body class="komi-media-hub">
+<div id="komiWatchEntry"><p id="komiWatchEntryStatus" role="status">Открываем просмотр…</p><a href="/catalog">В каталог</a></div>
     <!-- The fixed interactive sidebar cannot navigate without JavaScript.
          Hide it only for no-JS visitors so it cannot cover SEO links on mobile. -->
     <noscript><style>.komi-media-hub{--hub-rail:0px}.komi-media-hub :is(.komi-side-nav,.komi-hub-overlay,#sideFriendsBtn){display:none!important}</style></noscript>
@@ -467,7 +476,7 @@
     <script defer src="./komi-premium-store.js?v=20261125-shop-v7-fix1"></script>
     <script defer src="./komi-public-catalog-cache.js?v=20261125-v812-storefront"></script>
     <script defer src="./komi-home-seed.js?v=20261125-v811-cinematic"></script>
-    <script defer src="./app-main.js?v=20261125-shop-v7-fix1-profile-senku-v2"></script>
+    <script defer src="./app-main.js?v=20261125-shop-v7-fix1-watch-entry"></script>
     <script defer src="./catalog-quick-actions.js?v=20261121a"></script>
     <script defer src="./hero-hd-art.js?v=20261125-watch-v9-first-paint"></script>
     <script defer src="./komi-hero-title.js?v=20261124-v7hero"></script>

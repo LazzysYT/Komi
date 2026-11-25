@@ -1110,3 +1110,36 @@
   #watchModal #komiAnimeComments .komi-comments-form .komi-comments-actions {grid-column:2!important;flex-wrap:wrap!important;}
   #watchModal #komiAnimeComments .komi-comments-input {font-size:16px!important;}
 }
+
+/* The overflow sheet is anchored to the full action strip, never a narrow end button. */
+#watchModal .komi-watch-stage > .komi-watch-quick-actions {position:relative;z-index:6;}
+#watchModal .komi-watch-quick-actions > .komi-deck-more {position:static!important;}
+#watchModal .komi-watch-quick-actions .komi-deck-more > .komi-deck-menu {
+  inset-inline:auto 7px!important;
+  box-sizing:border-box;
+  width:min(304px,calc(100% - 14px))!important;
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr);
+  align-items:start!important;
+  gap:7px!important;
+  overflow-x:hidden!important;
+}
+#watchModal .komi-watch-quick-actions .komi-deck-menu > *,
+#watchModal .komi-watch-quick-actions .komi-deck-menu :is(.komi-deck-actions,.komi-adfree-option,.komi-cinema-toolbar) > * {min-width:0;max-width:100%;}
+#watchModal .komi-watch-quick-actions .komi-deck-menu .komi-watch-expand {
+  position:static!important;inset:auto!important;
+  transform:none!important;float:none!important;
+  margin:0!important;box-sizing:border-box;
+}
+#watchModal .komi-watch-quick-actions .komi-deck-menu .komi-watch-expand span {
+  display:inline!important;white-space:normal;overflow-wrap:anywhere;
+}
+#watchModal .komi-watch-quick-actions .komi-deck-menu :is(.komi-adfree-option,.komi-deck-actions,.komi-cinema-toolbar) {
+  display:grid!important;gap:7px!important;grid-template-columns:minmax(0,1fr);align-items:start!important;padding:0!important;
+}
+#watchModal .komi-watch-quick-actions .komi-deck-menu :is(.komi-adfree-caption,.komi-cinema-external-note) {
+  position:static!important;inset:auto!important;
+  margin:0!important;padding:2px 4px!important;
+  width:auto!important;max-width:100%!important;line-height:1.4;
+  white-space:normal!important;overflow-wrap:anywhere;
+}

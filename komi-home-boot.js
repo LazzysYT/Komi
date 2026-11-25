@@ -30,6 +30,18 @@
   window.addEventListener('popstate',ensureShopStyle);
   window.addEventListener('hashchange',ensureShopStyle);
   document.addEventListener('DOMContentLoaded',ensureShopStyle,{once:true});
+  const incomingAnime = new URLSearchParams(location.search).get('anime');
+  if (/^\/(?:index\.html)?$/.test(location.pathname) && /^[1-9][0-9]{0,11}$/.test(incomingAnime || '')) {
+    const html = document.documentElement;
+    html.classList.add('komi-watch-entry');
+    // If scripts or the title lookup fail, offer a real exit instead of exposing a flash of home.
+    setTimeout(() => {
+      const pending = document.getElementById('komiWatchEntryStatus');
+      if (html.classList.contains('komi-watch-entry') && pending)
+        pending.textContent = 'Не удалось открыть просмотр. Обновите страницу или вернитесь в каталог.';
+    }, 12000);
+    return;
+  }
   const sectionRoute = /^\/(catalog|shop|partners|profile)$/.test(location.pathname) || /^#(catalog|shop|partners|profile)$/.test(location.hash.toLowerCase());
   if (!sectionRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
       (location.hash && location.hash !== '#home') ||

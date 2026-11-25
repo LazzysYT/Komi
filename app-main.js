@@ -245,6 +245,7 @@ function komiHomeHeroMayPaint(markup, container) {
 // while the full catalog is still loading.
 const komiSeoFirstPaintMarkup = document.getElementById('mainContainer')?.innerHTML || '';
 let komiSeoDeepLinkOpened = false;
+let komiSeoLookupId = '';
 function komiPositiveRouteNumber(value) {
     return /^[1-9][0-9]{0,5}$/.test(String(value || '')) ? Number(value) : null;
 }
@@ -259,14 +260,27 @@ function komiMaybeOpenSeoAnime() {
     try { pendingId = sessionStorage.getItem('komi_watch_deeplink_v1') || ''; } catch {}
     const requested = legacyId || pendingId;
     if (!requested || !/^[1-9][0-9]{0,11}$/.test(requested)) return;
-    if (!animeList.some(anime => String(anime.id) === requested)) return;
+    if (!animeList.some(anime => String(anime.id) === requested)) {
+        // A direct link must not wait for pagination through the whole catalogue.
+        if (_supabase && komiSeoLookupId !== requested) {
+            komiSeoLookupId = requested;
+            const candidate = {id:requested,shikimoriId:Number(requested),komiCardUpdatedAt:null};
+            void ensureKomiAnimeDetails(candidate).then(() => {
+                if (komiSeoDeepLinkOpened || new URLSearchParams(location.search).get('anime') !== requested) return;
+                const existing = animeList.find(anime => String(anime.id) === requested);
+                if (!existing) animeList.push(candidate);
+                komiMaybeOpenSeoAnime();
+            }).catch(() => {}); // The normal catalogue path can still recover.
+        }
+        return;
+    }
     komiSeoDeepLinkOpened = true;
     try { sessionStorage.removeItem('komi_watch_deeplink_v1'); } catch {}
     // SEO detail, incoming legacy links and the active player share this URL.
     const query = new URLSearchParams();
     if (season && episode) { query.set('season',String(season)); query.set('episode',String(episode)); }
     history.replaceState(null, '', '/anime/' + requested + (query.size ? '?' + query.toString() : '') + '#player');
-    setTimeout(() => openWatchModal(requested, season && episode ? season : null, 0, null, season && episode ? episode : null), 0);
+    void openWatchModal(requested, season && episode ? season : null, 0, null, season && episode ? episode : null);
 }
 
 let komiCatalogLoadPending = null;
@@ -5003,7 +5017,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const button=modal?.querySelector('.komi-watch-expand span');
             if(button) button.textContent=document.fullscreenElement === content?'Обычный размер':'На весь экран';
         }
-        function closeWatchModal(keepWatchRoute = false) {
+        function closeWatchModal(keepWatchRoute = false, keepSurface = false) {
             if (keepWatchRoute !== true) komiWatchSourceIntent = null;
             if (keepWatchRoute !== true && /^\/anime\/[1-9][0-9]{0,11}$/.test(location.pathname) && location.hash === '#player') {
                 history.replaceState(null, '', '/');
@@ -5021,7 +5035,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 videoEl.komiRestored = false;
                 disposeKomiMedia(videoEl);
             }
-            document.getElementById('watchModal').classList.remove('active');
+            if (!keepSurface) document.getElementById('watchModal').classList.remove('active');
             document.getElementById('watchModalContent').replaceChildren();
         }
 
@@ -5185,13 +5199,17 @@ async function komiLoadCatalogPages(attempt = 0) {
                 ? (komiWatchSourceIntent?.animeId === String(id) ? komiWatchSourceIntent.name : null) ||
                     document.getElementById('komiWatchSourceSelect')?.value || null : null;
             const sourceRequest = requestedSource ?? continuingSource;
-            closeWatchModal(true);
+            closeWatchModal(true, true);
             const requestToken = komiDetailOpenToken;
+            const presentWatch = () => {
+                document.getElementById('watchModal').classList.add('active');
+                document.documentElement?.classList.remove('komi-watch-entry');
+            };
             if (!anime.komiDetailsLoaded || anime.komiDetailsLoadedAt !== anime.komiCardUpdatedAt) {
                 const modal = document.getElementById('watchModal');
                 const body = document.getElementById('watchModalContent');
                 body.innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button><p role="status" style="padding:35px">Загружаем описание и серии…</p>';
-                modal.classList.add('active');
+                presentWatch();
                 try {
                     await ensureKomiAnimeDetails(anime);
                 } catch (error) {
@@ -5201,7 +5219,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 }
                 if (requestToken !== komiDetailOpenToken || !modal.classList.contains('active')) return;
             }
-            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); window.KomiComments?.mount(anime.id); return; }
+            if (!Array.isArray(anime.episodes) || anime.episodes.length === 0) { presentWatch(); document.getElementById('watchModalContent').innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button>'+animeDetailsMarkup(anime)+'<div class="komi-player-notice" style="margin:35px">Серии для «'+escapeFriendHtml(anime.title)+'» пока не добавлены. Бот проверит источники при следующей синхронизации.</div>'; document.getElementById('watchModal').classList.add('active'); renderAnimeExtras(anime); window.KomiComments?.mount(anime.id); return; }
 
             const seasonNumbers = [...new Set(anime.episodes.map(KomiPlayerCore.episodeSeason))].sort((a,b) => a - b);
             const progressForResume = selectedSeason === null ? getKomiProgress(anime.id) : null;
@@ -5235,7 +5253,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const pending=document.getElementById('watchModalContent');
                 pending.innerHTML='<button class="modal-close" data-komi-onclick="closeWatchModal()" aria-label="Закрыть">×</button>' +
                     '<p role="status" style="padding:35px">Подбираем доступный плеер для серии…</p>';
-                document.getElementById('watchModal').classList.add('active');
+                presentWatch();
                 const signedUrl=await komiAniVibeEpisodeSource(
                     Number(anime.shikimoriId || anime.id),
                     Number(currentEp.number) || activeIndex + 1
@@ -5399,7 +5417,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     ${animeDetailsMarkup(anime)}
                 </div>
             `;
-            document.getElementById('watchModal').classList.add('active');
+            presentWatch();
             document.getElementById('komiClearEpisodeSearch').addEventListener('click', () => {
                 const search = document.getElementById('komiEpisodeSearch');
                 search.value = '';
@@ -5718,6 +5736,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 komiStartupHomeCommitted = true;
             }
         }
+        komiMaybeOpenSeoAnime();
         render();
         // Public preview is interactive immediately; give the visible hero a
         // short head start before downloading the full catalog. User input,
