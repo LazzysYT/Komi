@@ -55,7 +55,7 @@ Hero counter, dots and arrows sit together on larger screens. At widths up to 64
 
 Catalogue gutters and cards retain the existing 16px geometry. Storefront recommendations use vertical 2:3 posters, a single rating overlay, a two-line title and a quiet year/format/episode-count row. The label «Рекомендуем» and subtitle disclose Shikimori score and freshness as the selection principle. Continue-watching uses a separate 16:9 preview, title, season, episode, timecode and a thin white progress bar. Mobile cards are at most 310px or 82vw so a complete card and the next card's edge remain visible. Each rail owns its horizontal scrolling; the document keeps natural vertical scrolling.
 
-Recent/upcoming episodes are compact horizontal rows with a small 2:3 thumbnail, title, episode and date. A confirmed-release rail is omitted when there is no qualifying data. Upcoming dates retain a clear empty/error state and refresh action, with the notice that voice-over availability may be later. Watch Party, shop and Premium remain navigation destinations rather than extra first-screen panels.
+Recent/upcoming episodes are compact horizontal rows with a small 2:3 thumbnail, title, episode and date. Both rails are omitted when there is no qualifying data, including while the initial schedule is loading. Upcoming dates retain a refresh action and the notice that voice-over availability may be later; a failed refresh explains that already confirmed dates remain visible. Watch Party, shop and Premium remain navigation destinations rather than extra first-screen panels.
 
 ## Elevation & Depth
 

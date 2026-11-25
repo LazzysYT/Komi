@@ -7,12 +7,12 @@ const root = path.join(__dirname, '..');
 function buildHomeShell() {
   const scope = {URL, Date}; scope.window = scope;
   vm.createContext(scope);
-  for (const file of ['komi-home-snapshot.js','komi-home-seed.js','home-discovery.js'])
+  for (const file of ['anime-description.js','komi-home-snapshot.js','komi-home-seed.js','home-discovery.js'])
     vm.runInContext(fs.readFileSync(path.join(root,file),'utf8'),scope,{filename:file});
   const markup = scope.KomiHomeDiscovery.render({
     animeList:scope.KomiHomeSeed, currentUser:null, currentSlideIndex:0,
     year:a=>String(a.year || '').match(/(?:19|20)\d{2}/)?.[0] || '',
-    type:a=>a.type, describe:value=>String(value || '').replace(/<[^>]*>|\[[^\]]*\]/g,' ').replace(/\s+/g,' ').trim(),
+    type:a=>a.type,
     // Match animeArtwork's home-sized poster path. Dedicated landscape banners
     // are selected by the shared hero renderer and remain native/high priority.
     artwork:a=>cachedPosterUrl(String(a.banner || a.poster || '/anime-artwork.svg')

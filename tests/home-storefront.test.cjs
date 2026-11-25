@@ -9,7 +9,7 @@ function fixture(){
   komiAnimeYear:a=>String(a.year),komiCatalogType:a=>a.type,
   komiCardPosterSource:raw=>({preferred:raw}),currentView:'home'};
  scope.window=scope;vm.createContext(scope);
- for(const name of ['player-core.js','komi-genre-moods.js','home-release-shelves.js','home-discovery.js'])
+ for(const name of ['anime-description.js','player-core.js','komi-genre-moods.js','home-release-shelves.js','home-discovery.js'])
   vm.runInContext(fs.readFileSync(path.join(root,name),'utf8'),scope,{filename:name});
  vm.runInContext(app.slice(app.indexOf('function renderCard('),app.indexOf('let komiRouletteRun')),scope);
  const animeList=Array.from({length:10},(_,i)=>({id:String(i+1),title:'Название '+(i+1),year:2026,type:'Сериал',
@@ -21,13 +21,21 @@ function fixture(){
 }
 test('guest home contains one discovery sequence and no catalog grid, filters, account prompts or leaderboard',()=>{
  const f=fixture(),html=f.render();
- const order=['komi-home-hero','komi-home-popular','komi-home-genres-section','komi-home-upcoming'];
+ const order=['komi-home-hero','komi-home-popular','komi-home-genres-section','komi-home-browse-footer'];
  const offsets=order.map(value=>html.indexOf(value));
  assert.ok(offsets.every((value,index)=>value>=0 && (!index || value>offsets[index-1])));
- assert.doesNotMatch(html,/komi-home-continue|komi-hub-resume|komi-resume-loading|komiLeaderboard|komi-hub-catalog-preview|class="anime-grid"|Все фильтры|Войдите/);
+ assert.doesNotMatch(html,/komi-home-upcoming|komi-home-continue|komi-hub-resume|komi-resume-loading|komiLeaderboard|komi-hub-catalog-preview|class="anime-grid"|Все фильтры|Войдите/);
  assert.match(html,/<h2>Рекомендуем<\/h2>/);
  assert.match(html,/По оценкам Shikimori и свежести обновлений/);
  assert.doesNotMatch(html,/Популярное прямо сейчас|Топ зрителей|На один вечер/);
+});
+test('a populated upcoming schedule follows genres and precedes the catalogue footer',()=>{
+ const f=fixture();
+ f.context.schedule.set(1,{at:f.context.now+3600000,episode:13});
+ const html=f.render();
+ assert.ok(html.indexOf('komi-home-upcoming')>html.indexOf('komi-home-genres-section'));
+ assert.ok(html.indexOf('komi-home-upcoming')<html.indexOf('komi-home-browse-footer'));
+ assert.match(html,/Серия 13/);
 });
 test('unfinished history uses original owner, slot and time; zero/completed/foreign entries remain hidden',()=>{
  const f=fixture(); f.context.currentUser={username:'owner',authUserId:'uid-a'};

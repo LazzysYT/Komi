@@ -10,7 +10,7 @@ const js = read('komi-home-boot.js');
 const css = read('komi-icon-rail.css');
 
 test('SEO HTML remains indexable, JS shell is isolated and loads before the body', () => {
-  assert.match(html,/komi-home-boot\.js\?v=20261125-v811-cinematic/);
+  assert.match(html,/komi-home-boot\.js\?v=\d{8}-[\w-]+/);
   assert.ok(html.indexOf('komi-home-boot.js') < html.indexOf('<body'));
   const cards=[...html.matchAll(/<a\b[^>]*class="komi-discovery-card komi-seo-card"[^>]*>/g)];
   assert.equal(cards.length,12,'Indexable discovery cards stay available before hydration');

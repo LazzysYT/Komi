@@ -154,12 +154,100 @@ test('upcoming copy distinguishes broadcast schedule from dubbed availability', 
   assert.ok(html.includes('<time datetime="'));
 });
 
-test('unverified recent rows disappear and upcoming has an honest retryable empty state', () => {
+test('unverified recent rows and empty upcoming dates create no storefront widget', () => {
   assert.equal(releases.renderRecent({now,animeList:[card({syncStatus:undefined})]}), '');
-  const empty = releases.renderUpcoming({now,animeList:[]});
-  assert.ok(empty.includes('Пока нет подтверждённых дат'));
-  assert.ok(empty.includes('data-komi-onclick="loadKomiEpisodeSchedule(true)"'));
-  const pending = releases.renderUpcoming({now,animeList:[],scheduleLoading:true});
-  assert.ok(pending.includes('disabled aria-busy="true"'));
-  assert.ok(pending.includes('Загружаем расписание'));
+  for (const state of [{}, {scheduleLoading:true}, {scheduleError:'Upstream unavailable'}]) {
+    assert.equal(releases.renderUpcoming({now,animeList:[],...state}), '');
+    assert.equal(releases.renderUpcoming({now,animeList:[
+      card({nextEpisodeAt:ago(1)}), card({id:'43',nextEpisodeAt:later(24*15)}),
+      card({id:'44',releaseStatus:'ongoing'})
+    ],...state}), '');
+  }
+});
+
+test('a pending refresh keeps confirmed dates and disables only its refresh action', () => {
+  const html = releases.renderUpcoming({now,scheduleLoading:true,
+    animeList:[card({nextEpisodeAt:later(24),nextEpisodeNumber:9})]});
+  assert.match(html,/disabled aria-busy="true"/);
+  assert.match(html,/class="komi-home-release-card"/);
+  assert.doesNotMatch(html,/Загружаем расписание|Пока нет подтверждённых дат/);
+});
+
+test('a failed refresh retains future confirmed dates with recovery beside the data', () => {
+  const html = releases.renderUpcoming({now,scheduleError:'Upstream unavailable',
+    animeList:[card({nextEpisodeAt:later(24),nextEpisodeNumber:9})]});
+  assert.match(html,/class="komi-home-release-card"/);
+  assert.match(html,/role="status">Не удалось обновить расписание/);
+  assert.match(html,/Показаны последние подтверждённые даты/);
+  assert.match(html,/data-komi-onclick="loadKomiEpisodeSchedule\(true\)"/);
+  assert.doesNotMatch(html,/disabled|aria-busy|Upstream unavailable/);
+});
+
+test('upcoming appears after a matching schedule arrives and disappears when the date expires', () => {
+  const animeList = [card({shikimoriId:100})];
+  const schedule = new Map();
+  assert.equal(releases.renderUpcoming({now,animeList,schedule,scheduleLoading:true}), '');
+  schedule.set(100, {at:now+3600000,episode:9});
+  assert.match(releases.renderUpcoming({now,animeList,schedule}),/Серия 9/);
+  assert.equal(releases.renderUpcoming({now:now+3600000,animeList,schedule}), '');
+});
+
+function storefrontFixture() {
+  const document = {activeElement:null};
+  function node(kind) {
+    const element = {kind,children:[],parentNode:null,ownerDocument:document,
+      querySelector(selector) {
+        const kind = {'#komiHomeUpcoming':'upcoming','.komi-home-browse-footer':'footer',
+          '.komi-home-all':'refresh','.komi-home-catalog-link':'catalog'}[selector];
+        return this.children.find(child => child.kind === kind) ||
+          this.children.map(child => child.querySelector(selector)).find(Boolean) || null;
+      },
+      contains(target) { return this === target || this.children.some(child => child.contains(target)); },
+      insertBefore(child, before) {
+        child.remove();
+        const index = before ? this.children.indexOf(before) : this.children.length;
+        assert.notEqual(index,-1);
+        this.children.splice(index,0,child); child.parentNode = this;
+      },
+      remove() {
+        if (!this.parentNode) return;
+        this.parentNode.children.splice(this.parentNode.children.indexOf(this),1);
+        this.parentNode = null;
+      },
+      replaceWith(child) { const parent = this.parentNode; parent.insertBefore(child,this); this.remove(); },
+      focus(options) { document.activeElement = this; this.focusOptions = options; }
+    };
+    return element;
+  }
+  document.createElement = tag => {
+    assert.equal(tag,'template');
+    return {content:{firstElementChild:null},set innerHTML(html) {
+      assert.match(html,/^<section id="komiHomeUpcoming"/);
+      const section = node('upcoming'); section.markup = html;
+      section.insertBefore(node('refresh'),null);
+      this.content.firstElementChild = section;
+    }};
+  };
+  const container = node('storefront'), hero = node('hero'), recent = node('recent'), footer = node('footer');
+  const catalog = node('catalog'); footer.insertBefore(catalog,null);
+  for (const child of [hero,recent,footer]) container.insertBefore(child,null);
+  return {document,container,hero,recent,footer,catalog};
+}
+
+test('schedule refresh inserts, updates and removes only its shelf while preserving focus', () => {
+  const fixture = storefrontFixture();
+  const context = {now,animeList:[card({nextEpisodeAt:later(1),nextEpisodeNumber:9})]};
+  assert.equal(releases.updateUpcoming(fixture.container,{now,animeList:[]}),null);
+  const first = releases.updateUpcoming(fixture.container,context);
+  assert.deepEqual(fixture.container.children.map(child => child.kind),['hero','recent','upcoming','footer']);
+  const firstButton = first.querySelector('.komi-home-all'); firstButton.focus();
+  const second = releases.updateUpcoming(fixture.container,{...context,scheduleError:'Offline'});
+  assert.notEqual(second,first);
+  assert.equal(fixture.document.activeElement,second.querySelector('.komi-home-all'));
+  assert.deepEqual(fixture.document.activeElement.focusOptions,{preventScroll:true});
+  assert.match(second.markup,/Не удалось обновить расписание/);
+  assert.equal(releases.updateUpcoming(fixture.container,{...context,now:now+3600000}),null);
+  assert.deepEqual(fixture.container.children,[fixture.hero,fixture.recent,fixture.footer]);
+  assert.equal(fixture.document.activeElement,fixture.catalog);
+  assert.equal(releases.updateUpcoming(null,context),null);
 });

@@ -113,7 +113,7 @@ function fixture(initialIndex = 0, cachedPreview = false) {
   };
   scope.window = scope;
   vm.createContext(scope);
-  for (const file of ['komi-home-snapshot.js', 'komi-home-seed.js', 'home-discovery.js'])
+  for (const file of ['anime-description.js', 'komi-home-snapshot.js', 'komi-home-seed.js', 'home-discovery.js'])
     vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), scope, {filename:file});
   scope.KomiHomeDiscovery.afterRender = () => {};
   scope.komiHomePreviewCatalog = scope.KomiHomeSnapshot.featured(scope.KomiHomeSeed, scope.komiAnimeYear);

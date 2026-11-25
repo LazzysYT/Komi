@@ -17,7 +17,11 @@ test('generated bundle leads the explicit, versioned mobile override cascade',()
   assert.equal(new Set(local).size,local.length,'Stylesheets must not be loaded twice');
   for(const filename of expected) assert.ok(fs.existsSync(path.join(root,filename.slice(1))),filename+' missing');
   assert.match(head,/href="\/komi\.production\.css\?v=\d+(?:[a-z])?(?:-[a-z0-9-]+)?"/);
-  assert.doesNotMatch(head,/<style(?:\s|>)/i);
+  const criticalStyles=[...head.matchAll(/<style\b([^>]*)>[\s\S]*?<\/style>/gi)];
+  assert.deepEqual(criticalStyles.map(match=>match[1].match(/\bid="([^"]+)"/)?.[1]),
+    ['komi-initial-visibility','komi-watch-entry-visibility'],
+    'Only the named first-paint visibility guards may precede the CSS bundle');
+  for (const style of criticalStyles) assert.ok(style.index<head.indexOf('rel="stylesheet"'));
   assert.match(head,/fonts\.googleapis\.com/);
 });
 test('generated CSS maintains source order and matches committed artifact',()=>{

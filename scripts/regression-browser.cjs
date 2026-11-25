@@ -198,6 +198,7 @@ async function checkNotifications(page) {
      await checkCommentCooldown(page);
      const friends = await page.evaluate(() => {
        const originalUser=currentUser;
+       const origCommunityState=komiCommunityState;
        const origVerified=komiCommunityVerifiedNames;
        const origSent=protectedFriendSent;
        const names=['ci_verified_visitor','ci_legacy_visitor'];
@@ -207,6 +208,7 @@ async function checkNotifications(page) {
        const originalTab=komiFriendsTab;
        try {
          currentUser={username:'ci_test_owner',authUserId:'ci-auth-uid'};
+         komiCommunityState={owner:currentUser.authUserId,status:'ready',request:null};
          userProfiles[names[0]]={displayName:'Проверенный друг',avatar:'https://example.com/ci.jpg'};
          userProfiles[names[1]]={displayName:'Старый профиль',avatar:''};
          komiCommunityVerifiedNames=new Set([names[0]]);
@@ -219,7 +221,7 @@ async function checkNotifications(page) {
          const unverified=[...list.querySelectorAll('.komi-friends-person')].find(el=>el.textContent.includes('Старый профиль'));
          const before={
            addVisible:verified?.textContent.includes('Проверенный друг'),
-           legacyUnavailable:unverified?.querySelector('.komi-friends-unavailable')?.textContent.includes('Недоступно')
+           legacyAbsent:!unverified
          };
          protectedFriendSent.names.add(names[0]);
          renderFriendsDrawer();
@@ -230,6 +232,7 @@ async function checkNotifications(page) {
          return {...before,pending:pending?.textContent.includes('Ожидание'),searched};
        } finally {
          names.forEach((name,i)=>{if(originals[i]===undefined)delete userProfiles[name];else userProfiles[name]=originals[i]});
+         komiCommunityState=origCommunityState;
          komiCommunityVerifiedNames=origVerified;
          protectedFriendSent=origSent;
          currentUser=originalUser;
@@ -239,7 +242,7 @@ async function checkNotifications(page) {
        }
      });
      assert.equal(friends.addVisible,true,'Verified Komi profiles must have Add friend button');
-     assert.equal(friends.legacyUnavailable,true,'Unlinked legacy accounts must not accept friend invites');
+     assert.equal(friends.legacyAbsent,true,'Unverified cached legacy profiles must not appear in the community list');
      assert.equal(friends.pending,true,'Sent friend requests must show pending state');
      assert.equal(friends.searched,true,'Friend search must match display names');
 

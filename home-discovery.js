@@ -134,8 +134,7 @@
         const still = Array.isArray(anime.screenshots)
           ? anime.screenshots.find(url => typeof url === 'string' && /^https:\/\//i.test(url)) : '';
         const year = context.year(anime);
-        const rawDescription = context.describe(anime.desc);
-        const description = /^(?:аниме|anime)$/i.test(rawDescription.trim()) ? '' : rawDescription;
+        const description = root.KomiDescription?.excerpt(anime.desc) || '';
         const logo = i === index ? heroLogo(anime) : '';
         const saved = Boolean(animeId && context.currentUser?.authUserId && context.statuses?.[animeId]);
         const route = '/anime/' + animeId;
@@ -157,7 +156,7 @@
             '" alt="" decoding="async" referrerpolicy="no-referrer">' : '') +
           '<h1 class="komi-hub-title-text">' + escape(anime.title) + '</h1></div>' +
           '<div class="hero-meta"><span>★ ' + escape(rating(anime)) + '</span>' +
-          (year ? '<span>' + escape(year) + '</span>' : '') + '</div>' +
+          (year ? ' · <span>' + escape(year) + '</span>' : '') + '</div>' +
           '<p class="komi-hub-description"' + (description ? '' : ' hidden') + '>' + escape(description) + '</p>' +
           '<div class="hero-buttons">' +
           '<a class="komi-hub-play" href="' + route + '#player">' + playSvg + '<span>Смотреть</span></a>' +
@@ -176,7 +175,7 @@
       (promoActive ? ' fetchpriority="high"' : ' data-komi-hero-deferred-src="' + promoPoster + '"') + '>' +
       '<div class="komi-home-hero-content">' +
       '<div class="komi-hub-title-wrap"><h1 class="komi-hub-title-text">Выбери свою<br>историю.</h1></div>' +
-      '<div class="hero-meta"><span>KomiAnime</span><span>Без звука</span></div>' +
+      '<div class="hero-meta"><span>KomiAnime</span> · <span>Без звука</span></div>' +
       '<p class="komi-hub-description">Найди аниме на вечер — и продолжи с того места, где остановился.</p>' +
       '<div class="hero-buttons"><a class="komi-hub-play" href="/catalog"><span>Открыть каталог</span>' +
       '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>' +
