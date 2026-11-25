@@ -44,15 +44,14 @@ test('first render preserves complete owner history even with partial catalog',(
  assert.deepEqual(full.map(x=>x.anime.id),pending.map(x=>x.anime.id));
  assert.deepEqual(discovery.recentProgress({currentUser:null,resumePreview:entries,resumeReady:false},entries.map(x=>x.anime)),[]);
 });
-test('pending owner history reserves rail and boot blocks anon-to-member flicker',()=>{
+test('unknown or empty history stays absent until owner progress is verified',()=>{
  const context={animeList:[anime(1)],currentUser:{username:'owner',authUserId:uidA},
   progress:{owner_1:progress(1)},resumeReady:false,resumePreview:[],currentSlideIndex:0,
   year:a=>a.year,type:a=>a.type,artwork:a=>a.poster,
   describe:()=>'',renderCard:()=>'<div></div>',recommendations:()=>[],
   calendar:()=>'',years:()=>'',intro:()=>'',quickFilters:()=>''};
  const markup=discovery.render(context);
- assert.match(markup,/komi-resume-loading/);
- assert.equal((markup.match(/komi-resume-placeholder/g)||[]).length,6);
+ assert.doesNotMatch(markup,/komi-resume-loading|komi-resume-placeholder|Продолжить просмотр/);
  assert.match(html,/komi-resume-cache\.js/);
  assert.match(app,/KomiResumeCache\?\.read\(session\.user\.id\)/);
  assert.match(app,/komiHomeCatalogReady && komiResumeReadyUid === currentUser\.authUserId/);

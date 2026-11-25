@@ -375,14 +375,20 @@
       else delete slide.dataset[field];
     }
     const content = slide.querySelector('.komi-home-hero-content');
-    if (content && typeof item?.description === 'string' && item.description) {
+    const descriptionText = typeof item?.description === 'string' ? item.description.trim() : '';
+    if (content && typeof item?.description === 'string') {
+      const hasDescription = Boolean(descriptionText && !/^(?:аниме|anime)$/i.test(descriptionText));
       let description = content.querySelector('p');
-      if (!description) {
+      if (!description && hasDescription) {
         description = document.createElement('p');
         description.className = 'komi-hub-description';
         content.insertBefore(description,content.querySelector('.hero-buttons') || null);
       }
-      if (description.textContent !== item.description) description.textContent = item.description;
+      if (description) {
+        const text = hasDescription ? descriptionText : '';
+        if (description.textContent !== text) description.textContent = text;
+        description.hidden = !hasDescription;
+      }
     }
     void applyArtwork(slide,getCached(slide.dataset.komiAnimeId) || {});
     syncVideos();

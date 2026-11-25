@@ -89,6 +89,7 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
       querySelector(selector) {
         if (selector === 'img.komi-hub-hero-art') return this.img;
         if (selector === 'video.komi-hero-video') return this.video || null;
+        if (selector === '.komi-home-hero-content') return this.content;
         return null;
       }
     });
@@ -105,6 +106,8 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
       set(url) { this._src = url; const size=imageSizes[url]; if (size) [this.naturalWidth,this.naturalHeight]=size; this.complete=true; queueMicrotask(()=>this.emit('load')); }
     });
     slide.img = img;
+    slide.description = {textContent:'',hidden:true};
+    slide.content = {querySelector:selector => selector === 'p' ? slide.description : null};
     return slide;
   });
   class Image {
@@ -364,6 +367,21 @@ test('late admin metadata replaces an already-wide first slide and changing vide
   f.root.KomiHeroArt.syncVideos();await settle();
   assert.equal(f.videos[0].paused,true);assert.equal(f.videos[0].src,'');
   assert.equal(f.videos[1].src,'https://media.example/replacement.webm');
+});
+
+test('late real descriptions reveal the reserved paragraph; empty metadata keeps it hidden',async()=>{
+  let description = 'История друзей, которые отправились в путешествие.';
+  const f=fixture({metadata:async()=>({description})});
+  assert.equal(f.slides[0].description.hidden,true);
+  f.root.KomiHeroArt.scan();await settle();
+  assert.equal(f.slides[0].description.textContent,description);
+  assert.equal(f.slides[0].description.hidden,false);
+  for (const missing of ['', 'Аниме', 'anime']) {
+    description=missing;
+    f.root.KomiHeroArt.invalidateMetadata('52991');await settle();
+    assert.equal(f.slides[0].description.textContent,'');
+    assert.equal(f.slides[0].description.hidden,true);
+  }
 });
 
 test('pointer updates are coalesced into one animation frame and reduced motion clears parallax',async()=>{

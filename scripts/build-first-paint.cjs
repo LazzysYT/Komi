@@ -38,7 +38,8 @@ function buildFirstPaint(root){
   if(!match)throw Error('Expected source stylesheet link missing');
   if(first.length>=full.length||first.length<50000)throw Error('Unexpected first-paint CSS size');
   const href=match[0].match(/href="([^"]+)"/)[1];
-  const tag='<link rel="stylesheet" href="/komi.first-paint.css?v=20261125-v811-cinematic" data-komi-first-paint>\n    '+match[0].replace('>',' media="print" data-komi-deferred-style="base">')+'\n    <noscript><link rel="stylesheet" href="'+href+'"></noscript>';
+  const firstHref=href.replace('/komi.production.css','/komi.first-paint.css');
+  const tag='<link rel="stylesheet" href="'+firstHref+'" data-komi-first-paint>\n    '+match[0].replace('>',' media="print" data-komi-deferred-style="base">')+'\n    <noscript><link rel="stylesheet" href="'+href+'"></noscript>';
   fs.writeFileSync(path.join(root,'komi.first-paint.css'),first);
   fs.writeFileSync(path.join(root,'index.html'),original.replace(match[0],tag));
   console.log('First-paint stylesheet: '+Buffer.byteLength(first)+' / '+Buffer.byteLength(full)+' bytes; original full cascade retained');

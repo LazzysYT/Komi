@@ -67,7 +67,10 @@ test('Monthly promo discount never silently continues or charges a different tot
  assert.match(js,/selectedPlan=id/);
  assert.match(js,/window\.location\.assign\(CHECKOUT\)/);
  assert.match(css,/\.komi-checkout-invoice\[hidden\]/);
- assert.match(read('index.html'),/komi\.production\.css\?v=20261125-v811-cinematic/);
+ const home=read('index.html');
+ const revision=home.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
+ assert.match(revision,/^\d{8}-[\w-]+$/);
+ assert.equal(home.match(/komi\.production\.css\?v=([^"]+)/)?.[1],revision);
  assert.match(read('premium.html'),/komi-checkout\.css\?v=20261122e/);
 });
 

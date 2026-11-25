@@ -19,12 +19,19 @@ test('Legacy Shikimori card images use preview without changing saved URLs',()=>
  const result=vm.runInContext('komiCardPosterSource('+JSON.stringify(input)+')',context);
  assert.equal(result.preferred,'https://shikimori.one/system/animes/preview/39894.jpg?1718615729');
  assert.equal(result.original,input);
- const staticCard=html.match(/<a class="anime-card komi-seo-card" href="\/anime\/39894"[\s\S]*?<\/a>/)?.[0];
- assert.ok(staticCard,'Static SEO card 39894 is missing');
- assert.match(staticCard,/\/system\/animes\/preview\/39894\.jpg/);
- assert.match(staticCard,/data-poster-original="https:\/\/shikimori\.one\/system\/animes\/original\/39894\.jpg/);
- assert.match(staticCard,/data-komi-error="poster-error"/);
  assert.match(app,/data-poster-original/);
+});
+
+test('static recommendations keep real poster URLs and lazy 2:3 image geometry',()=>{
+ const posters=[...html.matchAll(/<span class="komi-discovery-poster">(<img[^>]+>)/g)].map(match=>match[1]);
+ assert.ok(posters.length>0&&posters.length<=12);
+ for(const poster of posters){
+  assert.match(poster,/data-komi-error="poster-error"/);
+  assert.match(poster,/width="240" height="360" loading="lazy"/);
+  const direct=poster.match(/data-poster-direct="([^"]+)"/)[1].replace(/&amp;/g,'&');
+  const proxy=poster.match(/src="([^"]+)"/)[1].replace(/&amp;/g,'&');
+  assert.equal(new URL(proxy).searchParams.get('url'),direct);
+ }
 });
 
 test('Modern poster URLs and unsafe schemes are not converted into guessed variants',()=>{

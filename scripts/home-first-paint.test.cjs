@@ -75,8 +75,48 @@ test('public preview cache can be read immediately but expires and fails closed'
     assert.equal(snapshot.read(),null);
   }finally{if(original===undefined)delete globalThis.localStorage;else globalThis.localStorage=original;}
 });
+test('home preview round-trip retains public release dates and episode identity only',()=>{
+  const original=globalThis.localStorage;
+  const map=new Map();
+  globalThis.localStorage={getItem:key=>map.get(key)||null,setItem:(key,value)=>map.set(key,String(value))};
+  try{
+    const catalog=Array.from({length:48},(_,i)=>({...make(i+1,2026,8),
+      syncStatus:'synced',lastEpisodeNumber:i%2?'8':8,lastEpisodeSeason:'2',nextEpisodeNumber:9,
+      nextEpisodeAt:'2026-11-26T10:00:00Z',scheduleSource:'AniList',
+      time:140,duration:1400,source:'https://media.test/private.m3u8',
+      episodes:[{number:8,sources:{Private:'https://media.test/private.m3u8'}}]}));
+    snapshot.write(catalog,year,type);
+    const restored=snapshot.read();
+    assert.ok(restored.length>=5);
+    for(const card of restored){
+      assert.equal(card.lastEpisodeNumber,8);
+      assert.equal(card.lastEpisodeSeason,2);
+      assert.equal(card.nextEpisodeNumber,9);
+      assert.equal(card.nextEpisodeAt,'2026-11-26T10:00:00Z');
+      assert.equal(card.syncStatus,'synced');
+      assert.equal(card.scheduleSource,'AniList');
+      assert.equal(card.episodes.length,0);
+      for(const field of ['time','duration','source','user_id','privateProgress'])assert.equal(card[field],undefined);
+    }
+    assert.ok(!map.get(snapshot.KEY).includes('private.m3u8'));
+    const invalid=snapshot.sample([{...make(1,2026,8),lastEpisodeNumber:'8<script>',
+      lastEpisodeSeason:-1,nextEpisodeNumber:Infinity}],year,type)[0];
+    for(const field of ['lastEpisodeNumber','lastEpisodeSeason','nextEpisodeNumber'])assert.equal(invalid[field],undefined);
+  }finally{if(original===undefined)delete globalThis.localStorage;else globalThis.localStorage=original;}
+});
 test('home never paints the first catalog batch and keeps SEO first paint without JS',()=>{
-  assert.match(html,/class="anime-card komi-seo-card"/);
+  const cards=[...html.matchAll(/<a\b[^>]*class="komi-discovery-card komi-seo-card"[^>]*>[\s\S]*?<\/a>/g)];
+  assert.equal(cards.length,12,'The first paint retains twelve native recommendation links');
+  const destinations=new Set();
+  for(const [card] of cards){
+    const href=card.match(/\bhref="(\/anime\/[1-9][0-9]{0,11})"/)?.[1];
+    assert.ok(href,'A static recommendation must reach its anime without JavaScript');
+    destinations.add(href);
+    assert.match(card,/aria-label="Подробнее: [^"]+"/);
+    assert.match(card,/<strong>[^<]+<\/strong>/);
+    assert.doesNotMatch(card,/<button\b|data-komi-onclick/);
+  }
+  assert.equal(destinations.size,12,'Static recommendations must not duplicate the same title');
   assert.match(html,/src="\.\/komi-home-snapshot\.js(?:\?v=[\w.-]+)?"/);
   assert.match(app,/if \(currentView !== 'home'\) render\(\)/);
   assert.match(app,/if \(!komiHomeCatalogReady && !komiHomePreviewCatalog\)/);

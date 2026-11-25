@@ -64,7 +64,9 @@ test('V4 sticker styles are retained in the same one-file production cascade',()
  assert.ok(css.includes(shop.trimEnd()));
  assert.match(css,/\.sv4-feature-grid/);
  assert.match(css,/\.sv4-perk-badge/);
- assert.match(html,/komi\.production\.css\?v=20261125-v811-cinematic/);
+ const revision=html.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
+ assert.match(revision,/^\d{8}-[\w-]+$/);
+ assert.equal(html.match(/komi\.production\.css\?v=([^"]+)/)?.[1],revision);
  assert.doesNotMatch(html,/komi-shop-v3\.css\?v=/);
  assert.match(html,/class="komi-static-shop komi-shop-v3 komi-shop-v4 komi-shop-v5"/);
   assert.match(html,/komi-shop-v5\.css\?v=/);

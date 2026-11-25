@@ -7,7 +7,7 @@ const path=require('node:path');
 const cp=require('node:child_process');
 const vm=require('node:vm');
 const root=path.join(__dirname,'..');
-const names=['komi.production.css','app-main.js','komi-watch-compact-v6.css','komi-hero-senku.css','komi-icon-rail.css','komi-pill-system.css','home-discovery.js','komi-home-seed.js'];
+const names=['komi.production.css','app-main.js','komi-watch-compact-v6.css','komi-hero-senku.css','komi-icon-rail.css','komi-pill-system.css','home-discovery.js','home-release-shelves.js','komi-home-seed.js'];
 const pending=[];
 try {
   for(const name of names){

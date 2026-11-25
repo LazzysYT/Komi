@@ -20,7 +20,9 @@ jobs:
           node --version
           node --check app-main.js
           node --check komi-home-boot.js
+          node scripts/build-home-shell.cjs --check
           node --test tests/v8-stability.test.cjs
           node --test tests/navigation-player-v72.test.cjs
           node --test tests/hero-*.test.cjs
+          node --test tests/home-*.test.cjs
           node --test scripts/hero-art.test.cjs

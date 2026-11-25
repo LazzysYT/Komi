@@ -16,9 +16,10 @@
   const episodeCount = a => Math.max(0, Number(a?.episodeCount) || 0);
   const year = (a, yearFn) => Number(yearFn(a)) || 0;
   const type = (a, typeFn) => typeFn(a);
+  const releaseNumberFields = ['lastEpisodeNumber','lastEpisodeSeason','nextEpisodeNumber'];
   function safeCard(a) {
     if (!validId(a)) return null;
-    return {
+    const card = {
       id: id(a), shikimoriId: Number(a.shikimoriId || a.id),
       title: cleanText(a.title, 240), originalTitle: cleanText(a.originalTitle, 240),
       poster: safeUrl(a.poster), banner: safeUrl(a.banner),
@@ -27,11 +28,20 @@
       shikiRating: Number.isFinite(Number(a.shikiRating)) ? Number(a.shikiRating) : 0,
       episodeCount: episodeCount(a),
       lastEpisodeAddedAt: cleanText(a.lastEpisodeAddedAt, 50),
+      nextEpisodeAt: cleanText(a.nextEpisodeAt, 50),
+      syncStatus: cleanText(a.syncStatus, 24),
+      scheduleSource: cleanText(a.scheduleSource, 80),
       komiCardUpdatedAt: cleanText(a.komiCardUpdatedAt, 50),
       desc: cleanText(a.desc, 850),
       screenshots: (Array.isArray(a.screenshots) ? a.screenshots : []).slice(0, 2).map(safeUrl).filter(Boolean),
       episodes: []
     };
+    for (const key of releaseNumberFields) {
+      const value = a[key];
+      if ((typeof value === 'number' || typeof value === 'string') &&
+          /^[1-9][0-9]{0,4}$/.test(String(value))) card[key] = Number(value);
+    }
+    return card;
   }
   // Keep the homepage and cached preview on the same featured selection.
   // Upcoming, unrated titles without episodes were producing an empty hero.

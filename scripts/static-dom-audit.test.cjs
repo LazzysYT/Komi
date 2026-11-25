@@ -15,12 +15,15 @@ test('social links have inline icons and accessible names', () => {
   }
 });
 
-test('initial main DOM has a populated, accessible static catalog and functional anchors', () => {
+test('initial main DOM has a compact, accessible storefront and functional anchors', () => {
   const main = html.match(/<main id="mainContainer">([\s\S]*?)<\/main>/)?.[1];
   assert.ok(main);
-  assert.match(main, /<section id="catalog"[^>]*aria-label="Каталог аниме"/);
-  assert.match(main, /<div id="anime-grid" class="anime-grid" aria-busy="false"/);
-  assert.ok((main.match(/class="anime-card komi-seo-card"/g) || []).length >= 36);
+  assert.match(main, /komi-home-storefront komi-static-storefront/);
+  assert.match(main, /aria-labelledby="komiStaticRecommendationsTitle"/);
+  assert.match(main, /<div class="komi-home-rail" aria-label="Рекомендуемое аниме"/);
+  const cards = main.match(/class="komi-discovery-card komi-seo-card"/g) || [];
+  assert.ok(cards.length > 0 && cards.length <= 12);
+  assert.doesNotMatch(main, /id="anime-grid"|komiHomeQuickFilters|data-komi-more-filters/);
   assert.doesNotMatch(main, /Загружаем каталог аниме/);
   assert.doesNotMatch(main, /class="komi-catalog-skeleton-card"/);
   assert.match(main, /<section id="shop"[^>]*aria-labelledby="komi-static-shop-title"/);
@@ -74,11 +77,12 @@ test('friends drawer is inert at rest and accessibility state tracks opening and
 test('SEO posters have safe delegated fallback and presence starts hidden', () => {
   const seo = html.match(/<main id="mainContainer">([\s\S]*?)<\/main>/)?.[1];
   assert.ok(seo);
-  const posterTags = [...seo.matchAll(/<img class="anime-poster"[^>]*>/g)].map(m => m[0]);
-  assert.ok(posterTags.length >= 36);
+  const posterTags = [...seo.matchAll(/<span class="komi-discovery-poster">(<img[^>]*>)/g)].map(m => m[1]);
+  assert.ok(posterTags.length > 0 && posterTags.length <= 12);
   for (const poster of posterTags) {
     assert.match(poster, /data-komi-error="poster-error"/);
     assert.match(poster, /referrerpolicy="no-referrer"/);
+    assert.match(poster, /width="240" height="360" loading="lazy"/);
   }
   assert.match(seo, /data-komi-error="poster-error"\s+width="360"/);
   assert.match(html, /class="online-counter" hidden/);

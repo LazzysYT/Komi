@@ -61,7 +61,7 @@
     return null;
   }
 
-  function render({ animeList = [], genre = 'Все', availableGenres = [], artwork, deferImages = false }) {
+  function render({ animeList = [], genre = 'Все', availableGenres = [], artwork, deferImages = false, navigation = false }) {
     const items = Array.isArray(animeList) ? animeList : [];
     const genres = [...new Set([...availableGenres, ...MOODS.map(item => item[0])])];
     const cards = MOODS.map(([name, description], index) => {
@@ -100,23 +100,26 @@
       const fallback = art?.direct
         ? ' data-poster-direct="' + escape(art.direct) + '" data-komi-onerror="komiCardPosterFallback(this)"'
         : ' data-komi-onerror="this.style.display=\'none\'"';
-      return '<button type="button" class="komi-mood-card' + (selected ? ' is-selected' : '') + '"' +
-        ' data-komi-mood-genre="' + escape(name) + '" aria-pressed="' + selected + '"' +
+      const tag = navigation ? 'a' : 'button';
+      return '<' + tag + (navigation ? ' href="/catalog?genre=' + encodeURIComponent(name) + '"' : ' type="button"') +
+        ' class="komi-mood-card' + (selected ? ' is-selected' : '') + '"' +
+        ' data-komi-mood-genre="' + escape(name) + '"' + (navigation ? '' : ' aria-pressed="' + selected + '"') +
         ' aria-label="Жанр ' + escape(name) + ': ' + escape(description) + '">' +
         (art?.src ? '<img class="komi-mood-art" ' + (deferImages ? 'src="/anime-artwork.svg" data-komi-lazy-src="' : 'src="') + escape(art.src) +
           '" alt="" width="360" height="160" loading="lazy" decoding="async" fetchpriority="' +
           (index < 4 ? 'auto' : 'low') + '" referrerpolicy="no-referrer"' + fallback + '>' : '') +
         '<span class="komi-mood-gradient" aria-hidden="true"></span>' +
-        '<span class="komi-mood-copy"><strong>' + escape(name) + '</strong><small>' + escape(description) + '</small></span></button>';
+        '<span class="komi-mood-copy"><strong>' + escape(name) + '</strong><small>' + escape(description) + '</small></span></' + tag + '>';
     }).join('');
     const choices = genres.map(name => '<button type="button" data-komi-mood-genre="' + escape(name) + '"' +
       ' aria-pressed="' + (norm(genre) === norm(name)) + '">' + escape(name) + '</button>').join('');
     return '<section class="komi-moods" aria-labelledby="komiMoodTitle">' +
       '<div class="komi-moods-heading"><div><h2 id="komiMoodTitle">Жанры</h2>' +
       '<p>Выбери настроение на вечер</p></div>' +
+      (navigation ? '<a class="komi-home-all" href="/catalog">Все жанры</a>' :
       '<details class="komi-moods-all"><summary>Все жанры</summary>' +
       '<div class="komi-moods-dropdown" role="group" aria-label="Все жанры">' +
-      '<button type="button" data-komi-mood-genre="Все">Сбросить жанр</button>' + choices + '</div></details></div>' +
+      '<button type="button" data-komi-mood-genre="Все">Сбросить жанр</button>' + choices + '</div></details>') + '</div>' +
       '<div class="komi-moods-grid">' + cards + '</div></section>';
   }
 
