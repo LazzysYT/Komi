@@ -35,6 +35,8 @@ function fixture({owner=true,user='Komi',section='overview',resumeReady=true,res
  komiSavedCardsOwner:null,komiSavedAnimeCards:new Map(),komiAchievements:()=>({level:2,xp:30,badges:[],achievements:[]}),
  komiQuestRewardState:{owner:null,data:null},komiPrivacyState:{owner:null},
  komiPrivacyRequest:()=>{},komiDailyActivityRead:()=>{},komiVerifiedXpRead:()=>{},komiDailyQuestRewardRead:()=>{},
+ komiProfileOverviewWatch:{owner:null},komiProfileOverviewWeek:()=>'',komiProfileOverviewRead:()=>{},
+ komiProfileOverviewGenres:(statuses,items)=>globals.KomiProfileUI.genreCounts(Object.keys(statuses),items),
  komiProfileQuests:()=>[],komiSafeUrl:x=>x,komiVisibleUsername:(n,p)=>p.displayName||n,
  safeProfileText:escape,escapeFriendHtml:escape,komiFolderImportableCount:()=>1,renderCard:a=>a.title,
  render:()=>{renders++;globals.renderProfileView(container);},openAuthModal:x=>{auth=x}

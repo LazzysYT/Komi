@@ -54,6 +54,7 @@ jobs:
             scripts/resume-hydration-browser.cjs \
             scripts/profile-collection-browser.cjs \
             scripts/mobile-profile-browser.cjs \
+            scripts/profile-overview-browser.cjs \
             scripts/saved-card-hydration-browser.cjs \
             scripts/auth-oauth-browser.cjs \
             scripts/search-suggestions-browser.cjs \
