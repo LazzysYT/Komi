@@ -262,6 +262,26 @@
       }).join('') + '</div></section>';
   }
 
+  // Keep only the twelve visible recommendations, preserving the full sort's
+  // ranking and original order for ties (including a NaN comparator result).
+  function popularTitles(animeList, now) {
+    const recentThreshold = now - 30 * 86400000, best = [];
+    const compare = (a,b) => b.rank - a.rank || b.score - a.score;
+    for (const anime of animeList) {
+      const rating = score(anime);
+      if (!(rating > 0) || !id(anime)) continue;
+      const date = updated(anime);
+      const candidate = {anime, score:rating,
+        rank:(date > recentThreshold && date <= now ? 2 : 0) + rating / 10};
+      if (best.length === 12 && !(compare(candidate,best[11]) < 0)) continue;
+      let at = best.length;
+      while (at > 0 && compare(candidate,best[at-1]) < 0) at--;
+      best.splice(at,0,candidate);
+      if (best.length > 12) best.pop();
+    }
+    return best.map(item => item.anime);
+  }
+
   // Public recommendations reuse the loaded catalog. No view counts are implied.
   let cachedPublicHome = null;
   function render(context) {
@@ -273,16 +293,7 @@
     const revision = Number(context.catalogRevision) || 0;
     if (!cachedPublicHome || cachedPublicHome.source !== source ||
         cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
-      const now = Date.now(), recentThreshold = now - 30 * 86400000;
-      // Recommendation ranking needs only rating and freshness; avoid
-      // extracting fallback-hero fields for the full catalog on daily renders.
-      const metadata = animeList.map(anime => ({
-        anime, score:score(anime), updated:updated(anime)
-      }));
-      const popularity = item => (item.updated > recentThreshold && item.updated <= now ? 2 : 0) + item.score / 10;
-      const popular = metadata.filter(item => item.score > 0 && id(item.anime))
-        .sort((a,b) => popularity(b) - popularity(a) || b.score - a.score)
-        .slice(0,12).map(item => item.anime);
+      const popular = popularTitles(animeList, Date.now());
       cachedPublicHome = {source, revision, length:source.length, slider:null, popular};
     }
     // The daily lineup already selects the hero. Sort the full catalog only
