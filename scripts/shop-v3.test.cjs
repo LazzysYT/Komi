@@ -25,6 +25,7 @@ context.window={setInterval:()=>1,confirm:()=>true};
 vm.createContext(context);
 vm.runInContext(read('komi-shop-catalog.js'),context);
 vm.runInContext(read('komi-shop-icons.js'),context);
+vm.runInContext(read('komi-shop-reactions.js'),context);
 vm.runInContext(js,context);
 // Mirror the SPA's real refresh callback so clicks actually rerender in the unit harness.
 let actor=()=>guest;
@@ -64,7 +65,7 @@ test('guest storefront shows a bounded first page, explicit prices and auth butt
  context.window.KomiShopV3.render(container,guest);
  const count=(container.innerHTML.match(/data-shop-item-action="/g)||[]).length;
  assert.equal(count,24);
- assert.match(container.innerHTML,/Твой профиль\. Твой стиль\./);
+ assert.match(container.innerHTML,/id="anicoin-title">Магазин оформления<\/h1>/);
  assert.match(container.innerHTML,/Войти, чтобы купить/);
  assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,24);
   assert.doesNotMatch(container.innerHTML,/Рамка для твоего аватара в профиле/);
@@ -88,11 +89,11 @@ test('category switch preserves trials and guest can trial without buying',async
  const frame=products.find(x=>x.id==='frame_moon');
  await scripts.click(eventButton('data-v3-try','frame_moon'));
  assert.deepEqual([...context.window.KomiShopV3.selected()],['frame_moon']);
- await scripts.click(eventButton('data-v3-category','shape'));
+ scripts.change({target:{value:'shape',matches:selector=>selector==='[data-v7-category-select]'}});
  assert.match(container.innerHTML,/<option value="shape" selected>/);
  assert.equal((container.innerHTML.match(/data-shop-item-action=/g)||[]).length,8);
  assert.equal(context.window.KomiShopV3.selected().length,1);
- assert.match(container.innerHTML,/Выбрано для примерки/);
+ assert.match(container.innerHTML,/<strong>В образе <span>1<\/span><\/strong>/);
  context.window.KomiShopV3.reset();
 });
 test('fitting room exposes labelled controls, free-preview explanation and an accessible result status',()=>{
@@ -101,7 +102,7 @@ test('fitting room exposes labelled controls, free-preview explanation and an ac
  assert.match(container.innerHTML,/aria-controls="sv7FittingBody" aria-expanded="false"/);
  assert.match(container.innerHTML,/data-v3-checkout/);
  assert.match(container.innerHTML,/data-v3-promo/);
- assert.match(container.innerHTML,/Примеряй свободно\. Профиль пока не изменён/);
+ assert.match(container.innerHTML,/Примерка не меняет твой профиль/);
  assert.match(container.innerHTML,/<select data-v3-sort aria-label="Сортировка">/);
  assert.match(container.innerHTML,/<label class="sv7-sr-only" for="sv7Search">Найти оформление/);
 });
@@ -171,11 +172,12 @@ test('shop studio presents six permanent collections and filled icons while pres
   reset();
   const output=container.innerHTML;
   assert.match(output,/class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5 komi-shop-studio"/);
-  assert.match(output,/Твой профиль\. Твой стиль\./);
+  assert.match(output,/id="anicoin-title">Магазин оформления<\/h1>/);
   assert.equal((output.match(/data-v7-collection=/g)||[]).length,6);
   assert.equal((output.match(/data-v7-look=/g)||[]).length,6);
   assert.doesNotMatch(output,/sv4-feature-grid|sv3-bento|Ещё категории/);
-  assert.equal((output.match(/data-v3-category=/g)||[]).length,6);
+  assert.equal((output.match(/data-v3-category=/g)||[]).length,0,'One complete category selector replaces the clipped quick-filter rail');
+  assert.match(output,/class="sv7-toolbar" role="search" aria-label="Поиск товаров"/);
   const categorySelect=output.match(/<select data-v7-category-select[^>]*>([\s\S]*?)<\/select>/)?.[1];
   const sortSelect=output.match(/<select data-v3-sort[^>]*>([\s\S]*?)<\/select>/)?.[1];
   assert.equal((categorySelect.match(/<option /g)||[]).length,14);

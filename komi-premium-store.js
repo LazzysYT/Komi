@@ -180,7 +180,13 @@ function mount(container,id,active){
    const badge=document.createElement('span');badge.className='komi-shop-icon-swatch komi-store-'+product.cosmeticClass;badge.textContent=product.symbol;sample.append(badge);
   }else if(product.type==='reaction'){
    const row=document.createElement('span');row.className='komi-shop-reaction-swatch';
-   for(const reaction of product.reactions){const emoji=document.createElement('span');emoji.textContent=reaction.emoji;row.append(emoji);}
+   for(const reaction of product.reactions){
+    const preview=document.createElement('span');
+    preview.setAttribute('role','img');preview.setAttribute('aria-label',reaction.label||reaction.id);
+    if(root.KomiShopReactions)preview.innerHTML=root.KomiShopReactions.render(reaction.emoji);
+    else preview.textContent=reaction.label||reaction.id;
+    row.append(preview);
+   }
    sample.append(row);
   }else if(['shape','plate','mascot','xp','name'].includes(product.type)){
    const preview=document.createElement('span');preview.className='komi-shop-visual-sample komi-store-'+product.cosmeticClass;

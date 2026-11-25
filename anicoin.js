@@ -477,9 +477,12 @@ async function aniCoinRunStoreAction(itemId,requestedOperation) {
         if(currentView==='shop'){
             renderAniCoinShop(document.getElementById('mainContainer'));
             if(currentUser?.authUserId===owner&&/^[a-z0-9_]+$/.test(itemId)){
-                const focusSelector=window.matchMedia?.('(max-width: 980px)')?.matches
+                const narrowViewport=window.matchMedia?.('(max-width: 980px)')?.matches;
+                const focusSelector=narrowViewport
                     ?'#shop [data-v3-sheet]':'#shop [data-shop-item-action="'+itemId+'"]';
-                document.querySelector?.(focusSelector)?.focus?.({preventScroll:true});
+                const focusTarget=document.querySelector?.(focusSelector)||
+                    (!narrowViewport&&document.querySelector?.('#shop .sv3-fitting-head h2'));
+                focusTarget?.focus?.({preventScroll:true});
             }
         }
     }
