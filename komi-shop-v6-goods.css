@@ -25,3 +25,203 @@
 .komi-store-xp-perforation.komi-shop-xp-swatch::after{
  background:repeating-linear-gradient(90deg,#efeff3 0 6px,#6d6d76 6px 9px)!important;
 }
+
+/* Six permanent V7 collections. These same selectors are used by the public
+   profile, comments, Premium studio and shop; swatches are not separate mocks. */
+:is(.komi-store-frame-velvet,.frame-velvet),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-velvet{
+ box-shadow:0 0 0 3px #252735,0 0 0 4px #bdc6df,0 0 0 7px #13151f!important;
+}
+:is(.komi-store-frame-ink,.frame-ink),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-ink{
+ box-shadow:-5px -2px 0 1px #f4f4f0,4px 4px 0 1px #8e8e98,0 0 0 2px #f4f4f0!important;
+ outline:1px solid #6c6c76;outline-offset:7px;
+}
+:is(.komi-store-frame-scanline,.frame-scanline),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-scanline{
+ box-shadow:-3px 0 0 2px #8ed9e8,3px 0 0 2px #c0a3ed,0 0 0 6px #252136,0 0 20px #a7b5ee55!important;
+}
+:is(.komi-store-frame-constellation,.frame-constellation),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-constellation{
+ box-shadow:0 0 0 2px #e0e6f9,0 0 0 5px #1d2333,0 0 16px #ccd5ff55!important;
+ outline:3px dotted #bdc8f0;outline-offset:7px;
+}
+:is(.komi-store-frame-aperture,.frame-aperture),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-aperture{
+ box-shadow:0 0 0 3px #15151b,0 0 0 5px #bcbcc6!important;
+ outline:4px dashed #f0f0f3;outline-offset:6px;
+}
+:is(.komi-store-frame-letterbox,.frame-letterbox),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-letterbox{
+ box-shadow:0 -6px 0 -2px #f2f2f5,0 6px 0 -2px #b7b7c1,0 0 0 2px #51515c,0 -11px 0 -6px #92929c,0 11px 0 -6px #92929c!important;
+}
+:is(.komi-store-frame-ivy,.frame-ivy),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-ivy{
+ box-shadow:0 0 0 3px #96b6a2,0 0 0 5px #1b2c26!important;
+ outline:2px dashed #c9dcc5;outline-offset:6px;
+}
+:is(.komi-store-frame-dewdrop,.frame-dewdrop),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-dewdrop{
+ box-shadow:0 0 0 2px #f0ffffcc,0 0 0 5px #a4d0d76b,0 0 0 7px #49747c66,0 0 19px #bdeaf35c,inset 0 0 8px #fff6!important;
+}
+
+/* Original CSS cover artwork: no remote image download, no layout shift. */
+:is(.komi-store-banner-citylight,.banner-citylight){
+ --komi-banner-pattern:linear-gradient(180deg,#111827 0%,#202b46 50%,transparent 51%),repeating-linear-gradient(90deg,#0a1121 0 22px,transparent 23px 39px,#101827 40px 63px,transparent 64px 80px),repeating-linear-gradient(0deg,#101b30 0 13px,#d4bd8b88 14px 16px,#17243d 17px 27px);
+}
+:is(.komi-store-banner-panels,.banner-panels){
+ --komi-banner-pattern:linear-gradient(112deg,transparent 0 32%,#c7c7cf 32% 33%,transparent 33% 72%,#c7c7cf 72% 73%,transparent 73%),linear-gradient(8deg,transparent 0 48%,#d9d9de 48% 50%,transparent 50%),repeating-linear-gradient(130deg,#17171e 0 5px,#23232d 5px 6px);
+}
+:is(.komi-store-banner-synthwave,.banner-synthwave){
+ --komi-banner-pattern:linear-gradient(180deg,transparent 0 57%,#131527 58% 61%,transparent 62%),repeating-linear-gradient(0deg,transparent 0 15px,#d0b1f129 16px 17px),radial-gradient(ellipse at 68% 48%,#cd8ab6 0%,#6c4b8d 21%,#252c56 43%,#101421 72%);
+}
+:is(.komi-store-banner-orbit,.banner-orbit){
+ --komi-banner-pattern:radial-gradient(ellipse at 75% 69%,#101421 0 24%,#adb8e2 24.5% 25%,#647199 25.5% 26%,transparent 27%),radial-gradient(circle at 18% 22%,#f0eaffcc 1px,transparent 2px),radial-gradient(circle at 40% 54%,#fff9 1px,transparent 2px),linear-gradient(130deg,#121521,#29334b 72%,#111321);
+}
+:is(.komi-store-banner-silverscreen,.banner-silverscreen){
+ --komi-banner-pattern:linear-gradient(180deg,#08090d 0 12%,transparent 13% 86%,#08090d 87%),radial-gradient(ellipse at 50% 44%,#a5a6ae 0%,#666875 27%,#262832 55%,#0d0e15 86%);
+}
+:is(.komi-store-banner-contactsheet,.banner-contactsheet){
+ --komi-banner-pattern:repeating-linear-gradient(90deg,transparent 0 12%,#a3a3af55 12.2% 13%,transparent 13.2% 25%),repeating-linear-gradient(0deg,#181920 0 8%,#bcbcc877 8% 9%,#2f313d 9% 45%,#bcbcc877 45% 46%,#181920 46% 50%);
+}
+:is(.komi-store-banner-botanical,.banner-botanical){
+ --komi-banner-pattern:radial-gradient(ellipse 22% 38% at 83% 45%,#85a58e88 0 47%,transparent 49%),radial-gradient(ellipse 18% 42% at 62% 84%,#567764cc 0 48%,transparent 50%),radial-gradient(ellipse 16% 36% at 39% 21%,#6c8a6f77 0 48%,transparent 50%),linear-gradient(140deg,#101b1a,#21372f 60%,#15241e);
+}
+:is(.komi-store-banner-petal,.banner-petal){
+ --komi-banner-pattern:radial-gradient(ellipse 12% 24% at 78% 25%,#ddbad488 0 49%,transparent 52%),radial-gradient(ellipse 14% 18% at 61% 68%,#b693ad88 0 49%,transparent 52%),radial-gradient(ellipse 10% 27% at 32% 38%,#d3b4c877 0 49%,transparent 52%),linear-gradient(125deg,#1b1722,#453246 65%,#211c2a);
+}
+
+/* Shape masks change the inner image only. The equipped frame remains separate. */
+:is(.komi-store-shape-arch,.shape-arch),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-box.komi-store-shape-arch{
+ border-radius:50% 50% 12% 12%!important;
+ clip-path:inset(0 round 50% 50% 12% 12%)!important;
+}
+:is(.komi-store-shape-stamp,.shape-stamp),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-box.komi-store-shape-stamp{
+ border-radius:0!important;
+ clip-path:polygon(0 8%,8% 8%,8% 0,24% 0,24% 8%,40% 8%,40% 0,60% 0,60% 8%,76% 8%,76% 0,92% 0,92% 8%,100% 8%,100% 24%,92% 24%,92% 40%,100% 40%,100% 60%,92% 60%,92% 76%,100% 76%,100% 92%,92% 92%,92% 100%,76% 100%,76% 92%,60% 92%,60% 100%,40% 100%,40% 92%,24% 92%,24% 100%,8% 100%,8% 92%,0 92%,0 76%,8% 76%,8% 60%,0 60%,0 40%,8% 40%,8% 24%,0 24%)!important;
+}
+:is(.komi-store-shape-pixelcut,.shape-pixelcut),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-box.komi-store-shape-pixelcut{
+ border-radius:0!important;
+ clip-path:polygon(18% 0,82% 0,82% 9%,91% 9%,91% 18%,100% 18%,100% 82%,91% 82%,91% 91%,82% 91%,82% 100%,18% 100%,18% 91%,9% 91%,9% 82%,0 82%,0 18%,9% 18%,9% 9%,18% 9%)!important;
+}
+:is(.komi-store-shape-comet,.shape-comet),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-box.komi-store-shape-comet{
+ border-radius:0!important;
+ clip-path:polygon(24% 0,100% 0,100% 76%,76% 100%,0 100%,0 24%)!important;
+}
+
+/* Pale lettering stays readable on the profile's dark identity surface. */
+:is(.komi-store-name-moonstone,.name-moonstone),
+#profile.komi-profile-premium-mono .profile-name-row [data-profile-field="display-name"].komi-store-name-moonstone{
+ background-image:linear-gradient(110deg,#cbd7f6,#f7fcff 45%,#a6b9e2)!important;
+ background-clip:text;-webkit-background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important;
+}
+:is(.komi-store-name-inklight,.name-inklight),
+#profile.komi-profile-premium-mono .profile-name-row [data-profile-field="display-name"].komi-store-name-inklight{
+ background-image:none!important;color:#f7f7fa!important;-webkit-text-fill-color:currentColor!important;
+ text-shadow:2px 2px 0 #181821,3px 3px 0 #8f8f9b!important;
+}
+:is(.komi-store-name-pixelbeam,.name-pixelbeam),
+#profile.komi-profile-premium-mono .profile-name-row [data-profile-field="display-name"].komi-store-name-pixelbeam{
+ background-image:linear-gradient(100deg,#b8edff 5%,#eef1ff 47%,#cfb6f5 92%)!important;
+ background-clip:text;-webkit-background-clip:text;color:transparent!important;-webkit-text-fill-color:transparent!important;
+}
+:is(.komi-store-name-stardust,.name-stardust),
+#profile.komi-profile-premium-mono .profile-name-row [data-profile-field="display-name"].komi-store-name-stardust{
+ background-image:none!important;color:#f2eafa!important;-webkit-text-fill-color:currentColor!important;
+ text-shadow:0 0 6px #d5c4ec8c,0 0 16px #baa7dc44!important;
+}
+
+/* Comment backgrounds retain contrast and wrap at the owning comment's width. */
+.komi-store-plate-window{
+ background:linear-gradient(90deg,transparent 49%,#a7b9dc22 49% 50%,transparent 50%),linear-gradient(0deg,transparent 49%,#a7b9dc22 49% 50%,transparent 50%),#182130!important;
+}
+.komi-store-plate-speech{
+ background:#19191f!important;box-shadow:inset 0 0 0 2px #a5a5b366,inset 0 0 0 5px #19191f,inset 0 0 0 6px #a5a5b333!important;
+}
+.komi-store-plate-terminal{
+ background:repeating-linear-gradient(0deg,#121b24 0 4px,#192630 4px 5px)!important;
+ box-shadow:inset 3px 0 0 #a5d6dc!important;
+}
+.komi-store-plate-constellation{
+ background:radial-gradient(circle at 18% 20%,#d8dcf580 1px,transparent 2px),radial-gradient(circle at 86% 66%,#d8dcf570 1px,transparent 2px),radial-gradient(circle at 67% 14%,#d8dcf550 1px,transparent 2px),#191d2e!important;
+}
+
+/* XP skins cover native progress in Chromium/Firefox and studio-only swatches. */
+.komi-store-xp-panels{--komi-v7-xp:repeating-linear-gradient(90deg,#e2e2eb 0 16px,#737380 16px 18px,#fafaff 18px 34px,#31313c 34px 37px)}
+.komi-store-xp-combo{--komi-v7-xp:repeating-linear-gradient(90deg,transparent 0 12px,#171321 12px 15px),linear-gradient(90deg,#a4deec,#c2b2ed)}
+.komi-store-xp-constellation{--komi-v7-xp:radial-gradient(circle,#f2eaff 3px,transparent 4px) 0 50%/20px 10px repeat-x,linear-gradient(0deg,transparent 35%,#a6abd4 35% 65%,transparent 65%)}
+.komi-store-xp-cue{--komi-v7-xp:repeating-linear-gradient(90deg,#dedee6 0 20px,#676777 20px 22px,#dedee6 22px 28px,#9696a2 28px 30px)}
+:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress,
+#profile.komi-profile-premium-mono .profile-xp-capsule:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress{
+ background:#25252f!important;
+}
+:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress::-webkit-progress-bar,
+#profile.komi-profile-premium-mono .profile-xp-capsule:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress::-webkit-progress-bar{
+ background:#25252f!important;
+}
+:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress::-webkit-progress-value,
+#profile.komi-profile-premium-mono .profile-xp-capsule:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress::-webkit-progress-value{
+ background:var(--komi-v7-xp)!important;
+}
+:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress::-moz-progress-bar,
+#profile.komi-profile-premium-mono .profile-xp-capsule:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue) progress::-moz-progress-bar{
+ background:var(--komi-v7-xp)!important;
+}
+:is(.komi-store-xp-panels,.komi-store-xp-combo,.komi-store-xp-constellation,.komi-store-xp-cue).komi-shop-xp-swatch::after{
+ background:var(--komi-v7-xp)!important;
+}
+
+/* Existing shared overlay motion owns timing, visibility and reduced motion. */
+:is(.komi-store-overlay-fireflies,.overlay-fireflies){
+ --komi-overlay-pattern:radial-gradient(circle at 20% 25%,#f2d9a1 0 1px,#efd08d66 2px,transparent 5px),radial-gradient(circle at 74% 68%,#fff0bb 0 1px,transparent 4px);
+ --komi-overlay-size:128px 112px;--komi-overlay-speed:32s;--komi-overlay-opacity:.75;
+}
+:is(.komi-store-overlay-datastream,.overlay-datastream){
+ --komi-overlay-pattern:radial-gradient(ellipse 1px 17px at 76% 28%,#b8deed99 94%,transparent 100%),radial-gradient(ellipse 1px 10px at 22% 76%,#c8b4ea88 94%,transparent 100%);
+ --komi-overlay-size:27px 107px;--komi-overlay-speed:13s;--komi-overlay-opacity:.45;
+}
+:is(.komi-store-overlay-meteor,.overlay-meteor){
+ --komi-overlay-pattern:linear-gradient(135deg,transparent 47%,#e7eaff99 48% 49%,transparent 50%),linear-gradient(135deg,transparent 78%,#c7d5f166 79% 80%,transparent 81%);
+ --komi-overlay-size:160px 137px;--komi-overlay-speed:17s;--komi-overlay-opacity:.5;
+}
+:is(.komi-store-overlay-pollen,.overlay-pollen){
+ --komi-overlay-pattern:radial-gradient(circle at 27% 36%,#e6d3a0 1px,transparent 2px),radial-gradient(circle at 79% 81%,#d3c39199 1px,transparent 2px);
+ --komi-overlay-size:81px 93px;--komi-overlay-speed:38s;--komi-overlay-opacity:.68;
+}
+.komi-store-icon-moonrise{color:#cad5f4;text-shadow:0 0 7px #b7c8ef55}
+.komi-store-icon-inkpen{color:#ededf2;text-shadow:1px 1px 0 #787887}
+.komi-store-icon-clapper{color:#eeeeef;background:repeating-linear-gradient(135deg,#ffffff20 0 4px,transparent 4px 8px)}
+.komi-store-icon-leaf{color:#c0d5bb;text-shadow:0 0 7px #a3c5a444}
+
+/* The profile shell has ID-scoped defaults. Explicitly preserve V7 cosmetics
+   above those defaults without changing an unequipped or older profile. */
+#profile.komi-profile-premium-mono .profile-header-card .profile-cover:is(.komi-store-banner-citylight,.komi-store-banner-panels,.komi-store-banner-synthwave,.komi-store-banner-orbit,.komi-store-banner-silverscreen,.komi-store-banner-contactsheet,.komi-store-banner-botanical,.komi-store-banner-petal)::after{
+ content:"";position:absolute;inset:0;z-index:3;opacity:.62;
+ background:var(--komi-banner-pattern);pointer-events:none;
+}
+#profile.komi-profile-premium-mono .profile-header-card .profile-cover:is(.komi-store-overlay-fireflies,.komi-store-overlay-datastream,.komi-store-overlay-meteor,.komi-store-overlay-pollen)::before{
+ content:"";display:block;position:absolute;inset:-35% 0;z-index:4;
+ background-image:var(--komi-overlay-pattern);background-color:transparent;
+ background-size:var(--komi-overlay-size);background-position:0 0;
+ opacity:var(--komi-overlay-opacity);pointer-events:none;
+ animation:komi-shop-fall var(--komi-overlay-speed) linear infinite;
+}
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-inner:has(> .profile-avatar-box:is(.komi-store-shape-arch,.komi-store-shape-stamp,.komi-store-shape-pixelcut,.komi-store-shape-comet)){
+ border-radius:0;overflow:visible;background:transparent;box-shadow:none;
+}
+@media(prefers-reduced-motion:reduce){
+ #profile.komi-profile-premium-mono .profile-header-card .profile-cover:is(.komi-store-overlay-fireflies,.komi-store-overlay-datastream,.komi-store-overlay-meteor,.komi-store-overlay-pollen)::before{
+  animation:none!important;
+ }
+}
+
+@media(forced-colors:active){
+ :is(.komi-store-name-moonstone,.name-moonstone,.komi-store-name-pixelbeam,.name-pixelbeam),
+ #profile.komi-profile-premium-mono .profile-name-row [data-profile-field="display-name"]:is(.komi-store-name-moonstone,.komi-store-name-pixelbeam){
+  background-image:none!important;color:CanvasText!important;-webkit-text-fill-color:CanvasText!important;
+ }
+}

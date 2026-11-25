@@ -1,544 +1,323 @@
-/* KomiAnime Shop V5 — complete layout skin; cosmetic frame/shape/overlay effects
-   remain provided by the existing komi-shop-cosmetics.css bundle.
-   Load after komi.production.css and komi-pill-system.css. */
-#shop.komi-shop-v5{
-  --shop-bg:#09090B;
-  --shop-card:#131316;
-  --shop-muted-card:#16161A;
-  --shop-active:#242429;
-  --shop-track:#101013;
-  --shop-fg:#FFFFFF;
-  --shop-muted:#8E8E93;
-  --shop-stroke:rgba(255,255,255,.10);
-  --shop-white-glow:0 4px 20px rgba(255,255,255,.14);
-  box-sizing:border-box;
-  min-width:0;
-  background:var(--shop-bg);
-  color:var(--shop-fg);
-  padding:20px clamp(12px,2.2vw,30px) max(96px,env(safe-area-inset-bottom,0px));
-  font-family:Manrope,Inter,system-ui,sans-serif;
-  font-weight:600;
+/* Shop studio: one layout owner, shared monochrome tokens, real cosmetic previews. */
+#shop.komi-shop-studio{
+ --shop-bg:var(--komi-pill-base,#09090B);--shop-card:#131316;--shop-raised:var(--komi-pill-matte,#16161A);--shop-active:var(--komi-pill-graphite,#242429);--shop-fg:var(--komi-pill-white,#fff);--shop-muted:#a6a6af;--shop-line:rgba(255,255,255,.1);--shop-scroll:#62626d;
+ box-sizing:border-box;min-width:0;width:100%;max-width:1680px;margin:0 auto;background:var(--shop-bg);color:var(--shop-fg);padding:24px clamp(16px,2.1vw,36px) 100px;font:400 16px/1.5 Inter,Manrope,system-ui,sans-serif;
 }
-#shop.komi-shop-v5 *,#shop.komi-shop-v5 *::before,#shop.komi-shop-v5 *::after{box-sizing:border-box}
-#shop.komi-shop-v5 button,#shop.komi-shop-v5 summary{font-family:inherit}
-#shop.komi-shop-v5 button{cursor:pointer;touch-action:manipulation}
-#shop.komi-shop-v5 button:disabled{cursor:not-allowed}
-#shop.komi-shop-v5 :is(button,summary,input,a):focus-visible{outline:2px solid #fff;outline-offset:3px}
-#shop.komi-shop-v5 :is(.sv3-overline,.sv3-mini-kicker){font-size:10px;letter-spacing:.13em;font-weight:800;color:#A4A4AA}
-#shop.komi-shop-v5 .sv3-tabular{font-variant-numeric:tabular-nums}
+#shop.komi-shop-studio *,#shop.komi-shop-studio *::before,#shop.komi-shop-studio *::after{box-sizing:border-box}
+#shop.komi-shop-studio :where(button,input,select,summary){font-family:Manrope,Inter,system-ui,sans-serif}
+#shop.komi-shop-studio :where(button,a,summary,select){cursor:pointer;touch-action:manipulation}
+#shop.komi-shop-studio button{transition:background .18s,border-color .18s,transform .22s var(--ease-spring,ease);text-transform:none;letter-spacing:normal}
+#shop.komi-shop-studio button:active:not(:disabled){transform:scale(.97)}
+#shop.komi-shop-studio button:disabled{cursor:default;transform:none;opacity:.5}
+#shop.komi-shop-studio :is(button,summary,input,select,a):focus-visible,.sv7-purchase-dialog :is(button,a):focus-visible{outline:2px solid #fff;outline-offset:4px}
+#shop.komi-shop-studio :where(*){scrollbar-width:thin;scrollbar-color:var(--shop-scroll) var(--shop-raised)}
+#shop.komi-shop-studio ::-webkit-scrollbar{display:block!important;width:7px;height:5px}
+#shop.komi-shop-studio ::-webkit-scrollbar-track{background:var(--shop-raised)}
+#shop.komi-shop-studio ::-webkit-scrollbar-thumb{background:var(--shop-scroll);border-radius:999px}
+#shop.komi-shop-studio ::-webkit-scrollbar-thumb:hover{background:#8e8e98}
+#shop.komi-shop-studio ::-webkit-scrollbar-thumb:active{background:#b8b8c2}
+.sv7-sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
+#shop.komi-shop-studio .sv3-tabular{font-variant-numeric:tabular-nums}
+#mainContainer > #shop.komi-shop-studio > header.sv3-topbar{position:relative!important;inset:auto!important;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:20px;height:auto!important;max-height:none!important;margin:0 0 28px!important;padding:0!important;border:0!important;background:none!important;box-shadow:none!important;overflow:visible!important;transform:none!important;z-index:15}
+#shop.komi-shop-studio .sv3-heading{min-width:0;flex:1 1 330px}
+#shop.komi-shop-studio .sv3-overline{margin:0 0 9px;color:var(--shop-muted);font-size:12px;letter-spacing:.13em;font-weight:700}
+#shop.komi-shop-studio .sv3-heading h1{margin:0;font:800 clamp(28px,2.6vw,42px)/1.16 Manrope,Inter,sans-serif;letter-spacing:-.045em}
+#shop.komi-shop-studio .sv3-heading > p:last-child{margin:10px 0 0;color:var(--shop-muted);font-size:16px;line-height:1.5;max-width:640px}
+#shop.komi-shop-studio .sv3-top-actions{display:flex;align-items:center;gap:12px;min-width:0;flex-wrap:wrap;margin:0}
+#shop.komi-shop-studio .sv3-balance{display:flex;align-items:center;gap:12px;padding:11px 18px;border:1px solid var(--shop-line);background:var(--shop-raised);border-radius:18px;white-space:nowrap}
+#shop.komi-shop-studio .sv3-balance small{display:block;font-size:12px;color:var(--shop-muted);font-weight:500}
+#shop.komi-shop-studio .sv3-balance strong{font-size:20px;line-height:1.4;letter-spacing:-.03em}
+#shop.komi-shop-studio .sv3-balance strong span{font-size:13px;letter-spacing:0;font-weight:600}
+#shop.komi-shop-studio .sv3-earn{position:relative}
+#shop.komi-shop-studio .sv3-earn summary{display:flex;align-items:center;gap:8px;min-height:44px;padding:10px 16px;font-size:14px;font-weight:700;border:1px solid var(--shop-line);border-radius:999px;list-style:none;background:transparent}
+#shop.komi-shop-studio summary::-webkit-details-marker{display:none}
+#shop.komi-shop-studio .sv3-earn summary:hover{background:var(--shop-active)}
+#shop.komi-shop-studio .sv3-earn-pop{position:absolute;z-index:80;top:calc(100% + 10px);right:0;width:min(330px,calc(100vw - 32px));padding:20px;background:var(--shop-raised);border:1px solid #ffffff30;border-radius:20px;box-shadow:0 18px 50px #0009;font-size:14px}
+#shop.komi-shop-studio .sv3-earn-pop p{font-size:14px;color:var(--shop-muted);line-height:1.6;margin:12px 0}
+#shop.komi-shop-studio .sv3-earn-pop a{display:block;color:#fff;text-underline-offset:4px}
+#shop.komi-shop-studio .sv3-earn-pop button{border:0;background:none;color:var(--shop-muted);padding:14px 0 0;font-size:14px;text-decoration:underline;text-underline-offset:4px}
+#shop.komi-shop-studio .sv3-price-notice{padding:12px 16px;background:var(--shop-raised);border:1px solid var(--shop-line);border-radius:14px;color:var(--shop-muted);font-size:14px;margin:0 0 20px}
+/* The collections are actual sets of items, with their exact frame and cover. */
+#shop.komi-shop-studio .sv7-collections{margin:0 0 26px;min-width:0}
+#shop.komi-shop-studio .sv7-collections > summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:44px;list-style:none;font-size:18px;font-weight:800}
+#shop.komi-shop-studio .sv7-collections > summary > span{display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+#shop.komi-shop-studio .sv7-collections summary small{font-size:13px;font-weight:500;color:var(--shop-muted);margin-left:8px}
+#shop.komi-shop-studio .sv7-collections[open] > summary > svg{transform:rotate(180deg)}
+#shop.komi-shop-studio .sv7-collection-rail{display:grid;grid-template-columns:repeat(6,minmax(165px,1fr));gap:12px;overflow-x:auto;scrollbar-gutter:stable;padding:10px 1px 8px}
+#shop.komi-shop-studio .sv7-collection{min-width:0;border:1px solid var(--shop-line);border-radius:18px;overflow:hidden;background:var(--shop-card);transition:border-color .2s}
+#shop.komi-shop-studio .sv7-collection:hover,#shop.komi-shop-studio .sv7-collection.is-selected{border-color:#ffffff65}
+#shop.komi-shop-studio .sv7-collection-browse{display:grid;grid-template-columns:1fr auto;gap:3px 8px;background:none;color:var(--shop-fg);border:0;padding:0 12px 11px;width:100%;text-align:left;border-radius:0}
+#shop.komi-shop-studio .sv7-collection-art{grid-column:1/-1;display:grid;place-items:center;position:relative;height:79px;margin:0 -12px 8px;isolation:isolate;background:var(--komi-banner-pattern,linear-gradient(130deg,#292933,#121217))}
+#shop.komi-shop-studio .sv7-collection-avatar{display:grid;place-items:center;position:relative;width:44px;height:44px;border-radius:50%;background:#28282f;color:white;font-weight:800;z-index:1}
+#shop.komi-shop-studio .sv7-collection-avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+#shop.komi-shop-studio .sv7-collection-name{font-size:14px;font-weight:800;grid-column:1/-1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#shop.komi-shop-studio .sv7-collection-browse small{font-size:12px;color:var(--shop-muted);grid-column:1/-1}
+#shop.komi-shop-studio .sv7-collection-try{display:flex;justify-content:center;align-items:center;gap:7px;width:100%;min-height:38px;background:var(--shop-raised);color:#dddde3;border:0;border-top:1px solid var(--shop-line);border-radius:0;font-size:12px;font-weight:700;padding:9px 8px}
+#shop.komi-shop-studio .sv7-collection-try:hover{background:var(--shop-active);color:#fff}
+/* Inventory, search, categories, and the price toolbar have separate jobs. */
+#shop.komi-shop-studio .sv7-browse-head{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px}
+#shop.komi-shop-studio .sv7-view-tabs{display:flex;align-items:center;gap:6px;padding:4px;background:var(--shop-raised);border:1px solid var(--shop-line);border-radius:999px;max-width:100%}
+#shop.komi-shop-studio .sv7-view-tabs button{display:flex;align-items:center;justify-content:center;gap:9px;min-height:44px;padding:10px 20px;border:0;background:transparent;color:var(--shop-muted);border-radius:999px;font-size:14px;font-weight:800;white-space:nowrap}
+#shop.komi-shop-studio .sv7-view-tabs button[aria-pressed="true"]{background:var(--shop-fg);color:var(--shop-bg)}
+#shop.komi-shop-studio .sv7-view-tabs button:not([aria-pressed="true"]):hover{background:var(--shop-active);color:#fff}
+#shop.komi-shop-studio .sv7-view-tabs button span{font-size:12px;opacity:.65;font-variant-numeric:tabular-nums}
+#shop.komi-shop-studio .sv7-search{display:flex;align-items:center;gap:10px;flex:1 1 280px;max-width:440px;border:1px solid var(--shop-line);border-radius:999px;background:var(--shop-raised);min-height:48px;padding:0 16px;color:var(--shop-muted)}
+#shop.komi-shop-studio .sv7-search:focus-within{border-color:#ffffff95}
+#shop.komi-shop-studio .sv7-search > svg{flex:none}
+#shop.komi-shop-studio .sv7-search input{display:block;min-width:0;width:100%;min-height:46px;border:0!important;background:transparent!important;color:var(--shop-fg);font-size:14px;border-radius:0;padding:0;box-shadow:none}
+#shop.komi-shop-studio .sv7-search input::placeholder{color:#92929d;opacity:1}
+#shop.komi-shop-studio .sv7-search input::-webkit-search-cancel-button{display:none}
+#shop.komi-shop-studio .sv7-search input:focus{outline:0}
+#shop.komi-shop-studio .sv7-search button{flex:none;border:0;border-radius:50%;background:var(--shop-active);color:#fff;width:32px;height:32px;padding:0;font-size:22px}
+#shop.komi-shop-studio .sv3-filters{display:grid;gap:14px;position:relative;top:auto;z-index:10;margin:0 0 22px;padding:0 0 20px;border:0;border-bottom:1px solid var(--shop-line);border-radius:0;background:none;backdrop-filter:none;box-shadow:none}
+#shop.komi-shop-studio .sv7-category-row{display:flex;align-items:center;gap:12px;min-width:0}
+#shop.komi-shop-studio .sv3-category-tabs{display:flex;flex:1;gap:6px;min-width:0;width:auto;overflow-x:auto;flex-wrap:nowrap!important;padding:3px 0 7px!important;scrollbar-width:thin;-ms-overflow-style:auto;background:none}
+#shop.komi-shop-studio .sv3-category-tabs button{flex:none;min-height:42px;padding:10px 18px;font-size:14px;line-height:1.35;font-weight:700;background:var(--shop-raised);color:var(--shop-muted);border:1px solid transparent;border-radius:999px;box-shadow:none;white-space:nowrap}
+#shop.komi-shop-studio .sv3-category-tabs button[aria-pressed="true"]{background:var(--shop-active)!important;color:#fff!important;border-color:#ffffff40!important;box-shadow:none!important}
+#shop.komi-shop-studio .sv3-category-tabs button:hover{background:#2b2b32;color:#fff}
+#shop.komi-shop-studio .sv7-select{position:relative;display:flex;align-items:center;max-width:100%;min-width:0;border:1px solid var(--shop-line);border-radius:999px;background:var(--shop-raised)}
+#shop.komi-shop-studio .sv7-select select{appearance:none;-webkit-appearance:none;width:100%;min-height:42px;min-width:0;background:transparent;color:#d4d4dd;border:0;border-radius:999px;padding:9px 38px 9px 16px;font-size:14px;line-height:1.4;font-weight:600;color-scheme:dark}
+#shop.komi-shop-studio .sv7-select > svg{position:absolute;right:14px;pointer-events:none;color:var(--shop-muted)}
+#shop.komi-shop-studio .sv7-category-select{flex:0 1 210px}
+#shop.komi-shop-studio .sv3-filter-actions{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;width:100%}
+#shop.komi-shop-studio .sv7-toggles{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+#shop.komi-shop-studio .sv3-hide-toggle{display:flex;align-items:center;gap:8px;color:var(--shop-muted);font-size:14px;line-height:1.4;font-weight:500;min-height:36px;padding:0;border:0;background:none;border-radius:0}
+#shop.komi-shop-studio .sv3-hide-toggle input{appearance:auto;-webkit-appearance:checkbox;accent-color:#fff;position:static;width:17px;height:17px;min-width:17px;border:1px solid #aaa;border-radius:4px;cursor:pointer;opacity:1}
+#shop.komi-shop-studio .sv3-hide-toggle:has(input:disabled){opacity:.5;cursor:default}
+#shop.komi-shop-studio .sv3-hide-toggle input:disabled{cursor:default}
+#shop.komi-shop-studio .sv3-hide-toggle span::before,#shop.komi-shop-studio .sv3-hide-toggle span::after{display:none}
+/* Cards reserve media space and animate only the item being inspected. */
+#shop.komi-shop-studio .sv3-layout{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:24px;align-items:start}
+#shop.komi-shop-studio .sv3-market{min-width:0}
+#shop.komi-shop-studio .sv3-market-caption{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:0 0 16px;min-height:30px;color:var(--shop-muted);font-size:13px}
+#shop.komi-shop-studio .sv3-market-caption h2{font:800 20px/1.3 Manrope,Inter,sans-serif;letter-spacing:-.03em;color:#fff;margin:0;flex:1}
+#shop.komi-shop-studio .sv3-market-caption button{background:none;border:0;color:#d3d3dd;text-decoration:underline;text-underline-offset:4px;font-size:13px;padding:6px 0}
+#shop.komi-shop-studio .sv3-product-grid{display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px;margin:0;width:100%;min-width:0}
+#shop.komi-shop-studio .sv3-item{position:relative;display:flex;flex-direction:column;min-width:0;min-height:0;padding:12px;gap:0;border:1px solid var(--shop-line);border-radius:22px;background:var(--shop-card);box-shadow:none;overflow:hidden;transform:none;transition:border-color .2s,background .2s}
+#shop.komi-shop-studio .sv3-item:hover{transform:none;background:#17171c;border-color:#ffffff38}
+#shop.komi-shop-studio .sv3-item[data-rarity]{border-color:var(--shop-line);box-shadow:none}
+#shop.komi-shop-studio .sv3-item.is-trying{border-color:#ffffffa8;box-shadow:inset 0 0 0 1px #ffffff25}
+#shop.komi-shop-studio .sv3-item-badges{position:absolute;z-index:2;top:20px;left:20px;right:20px;display:flex;justify-content:space-between;gap:4px;pointer-events:none}
+#shop.komi-shop-studio :is(.komi-shop-rarity,.sv3-owned,.sv7-new){font:700 10px/1.3 Manrope,Inter,sans-serif;letter-spacing:.015em;text-transform:none;background:#0b0b10a8;color:#c5c5d0;padding:4px 7px;border-radius:999px;border:1px solid #ffffff12;white-space:nowrap}
+#shop.komi-shop-studio .sv7-new{background:#e8e8ee;color:#18181c;border-color:transparent}
+#shop.komi-shop-studio .sv3-owned{background:#23232acc;color:#fff}
+#shop.komi-shop-studio .sv3-item-scene{position:relative;display:flex;align-items:center;justify-content:center;isolation:isolate;width:100%;height:174px;min-height:174px;padding:36px 12px 40px;background:radial-gradient(ellipse at 50% 30%,#2a2a34,#19191f 70%);border:0;border-radius:14px;overflow:hidden;color:#fff;cursor:pointer;box-shadow:none}
+#shop.komi-shop-studio .sv3-item-scene::before,#shop.komi-shop-studio .sv3-item-scene::after{display:none}
+#shop.komi-shop-studio .sv3-item-scene:hover{background:radial-gradient(ellipse at 50% 30%,#353541,#1e1e27 70%)}
+#shop.komi-shop-studio .sv3-item-scene :is(.komi-coin-frame,.sv3-shape){height:76px!important;width:76px!important;max-width:76px;max-height:76px}
+#shop.komi-shop-studio .sv3-item-scene :is(.komi-coin-frame,.sv3-shape)>span{display:grid;place-items:center;width:100%;height:100%;font-size:28px;font-weight:800}
+#shop.komi-shop-studio .sv3-item-scene :is(.store-banner-swatch,.komi-preview-cover){width:100%;height:84px;max-width:230px;font-size:13px;font-weight:800;letter-spacing:.13em}
+#shop.komi-shop-studio .sv3-item-scene .sv3-name-sample{font-size:21px;text-align:center;max-width:100%;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv3-title-sample{font-size:14px;text-align:center;max-width:100%;line-height:1.4;border:1px solid #ffffff55;background:#14141a;color:#fff;border-radius:999px;padding:9px 12px;font-weight:700;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv3-plate-sample{font-size:13px;width:100%;max-width:100%;min-height:50px;display:grid;place-items:center;padding:10px;text-align:center}
+#shop.komi-shop-studio .sv3-xp-sample{width:90%}
+#shop.komi-shop-studio .sv7-try-label{position:absolute;bottom:11px;left:0;right:0;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:700;color:#c6c6d1;letter-spacing:0}
+#shop.komi-shop-studio .is-trying .sv7-try-label{color:#fff}
+#shop.komi-shop-studio .sv3-item-scene *,#shop.komi-shop-studio .sv3-item-scene *::before,#shop.komi-shop-studio .sv3-item-scene *::after{animation-play-state:paused!important}
+#shop.komi-shop-studio .sv3-item-scene:is(:hover,:focus-visible) *,#shop.komi-shop-studio .sv3-item-scene:is(:hover,:focus-visible) *::before,#shop.komi-shop-studio .sv3-item-scene:is(:hover,:focus-visible) *::after{animation-play-state:running!important}
+#shop.komi-shop-studio .sv3-item-copy{display:flex;flex-direction:column;gap:0;padding:13px 3px 12px;min-width:0;min-height:0;flex:1}
+#shop.komi-shop-studio .sv3-item-copy .sv7-item-kind{font-size:12px;font-weight:500;color:#9595a2;margin:0 0 5px}
+#shop.komi-shop-studio .sv3-item-copy h3{font:800 15px/1.4 Manrope,Inter,sans-serif;color:#f2f2f5;min-height:42px;margin:0;letter-spacing:-.015em;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv3-item-copy .sv7-item-description{font-size:13px;font-weight:400;line-height:1.5;color:#aaaab6;min-height:39px;margin:7px 0 12px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+#shop.komi-shop-studio .sv3-item-copy .sv3-unit-price{display:flex;align-items:center;gap:6px;color:#fff;margin:auto 0 0;font-size:13px;font-weight:500}
+#shop.komi-shop-studio .sv3-unit-price strong{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+#shop.komi-shop-studio .sv3-unit-price>span{color:var(--shop-muted)}
+#shop.komi-shop-studio .sv3-item-actions{display:flex;gap:8px;align-items:stretch;margin:0;padding:0}
+#shop.komi-shop-studio .sv3-primary-buy{min-height:42px;min-width:0;flex:1;padding:9px 10px;border-radius:999px!important;border:1px solid #fff!important;background:#fff!important;color:#101014!important;font-size:13px;font-weight:800;line-height:1.35;box-shadow:none!important}
+#shop.komi-shop-studio .sv3-primary-buy:hover:not(:disabled){background:#dcdce5!important;border-color:#dcdce5!important}
+#shop.komi-shop-studio .sv3-primary-buy.is-insufficient,#shop.komi-shop-studio .is-equipped .sv3-primary-buy{background:var(--shop-active)!important;color:#bbbcc7!important;border-color:#ffffff10!important;opacity:1}
+#shop.komi-shop-studio .komi-shop-gift-button{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;min-height:42px;border:1px solid var(--shop-line);border-radius:50%;background:var(--shop-raised);color:#cccdd7;padding:0;box-shadow:none}
+#shop.komi-shop-studio .komi-shop-gift-button:hover:not(:disabled){background:var(--shop-active);color:#fff}
+#shop.komi-shop-studio .sv7-load-more{display:grid;justify-items:center;gap:10px;margin:26px 0 8px;color:var(--shop-muted);font-size:13px}
+#shop.komi-shop-studio .sv7-load-more button,#shop.komi-shop-studio .sv3-no-results button,#shop.komi-shop-studio .sv3-retry{min-height:44px;padding:11px 25px;border:1px solid var(--shop-line);background:var(--shop-raised);color:#fff;border-radius:999px;font-size:14px;font-weight:700}
+#shop.komi-shop-studio .sv7-load-more button:hover{background:var(--shop-active)}
+#shop.komi-shop-studio .sv3-no-results{grid-column:1/-1;min-height:340px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:35px;border:1px dashed #ffffff25;border-radius:22px;background:var(--shop-card)}
+#shop.komi-shop-studio .sv3-no-results h3{margin:0;font-size:20px}
+#shop.komi-shop-studio .sv3-no-results p{margin:0;max-width:400px;color:var(--shop-muted);font-size:15px}
+/* Fitting room is persistent and non-modal; its mobile header remains reachable. */
+#shop.komi-shop-studio .sv3-fitting{position:sticky;top:90px;align-self:start;min-width:0;border:1px solid #ffffff20;border-radius:24px;background:var(--shop-card);box-shadow:none;overflow:hidden;max-height:calc(100svh - 110px);scrollbar-gutter:stable;scroll-margin-top:96px}
+#shop.komi-shop-studio .sv3-sheet-toggle{display:none}
+#shop.komi-shop-studio .sv3-fitting-body{display:flex;flex-direction:column;gap:16px;padding:20px;max-height:calc(100svh - 112px);overflow-y:auto;overscroll-behavior:contain}
+#shop.komi-shop-studio .sv3-fitting-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
+#shop.komi-shop-studio .sv3-mini-kicker{font-size:11px;font-weight:700;letter-spacing:.12em;color:var(--shop-muted)}
+#shop.komi-shop-studio .sv3-fitting-head h2{font:800 24px/1.2 Manrope,Inter,sans-serif;letter-spacing:-.035em;margin:5px 0 0}
+#shop.komi-shop-studio .sv3-reset{display:grid;place-items:center;flex:none;width:36px;height:36px;min-height:36px;border-radius:50%;background:var(--shop-raised);color:#fff;border:1px solid var(--shop-line);padding:0}
+#shop.komi-shop-studio .sv7-preview-note{color:var(--shop-muted);font-size:13px;line-height:1.5;margin:-5px 0 0}
+#shop.komi-shop-studio .sv3-profile{flex-shrink:0;background:#1b1b22;border:1px solid #ffffff1a;border-radius:18px;overflow:hidden;position:relative}
+#shop.komi-shop-studio .sv3-profile-cover{height:100px;background:var(--komi-banner-pattern,radial-gradient(ellipse at 70% 20%,#454555,#191920));position:relative;overflow:hidden}
+#shop.komi-shop-studio .sv3-cover-word{font-size:12px;letter-spacing:.2em;font-weight:800;opacity:.35;position:absolute;right:14px;top:15px;bottom:auto;left:auto}
+#shop.komi-shop-studio .sv3-profile-details{position:relative;padding:43px 18px 18px;display:block;min-height:122px}
+#shop.komi-shop-studio .sv3-profile-avatar{position:absolute;top:-30px;left:18px;right:auto;width:60px;height:60px;display:grid;place-items:center;border-radius:50%;background:#292932;box-shadow:0 0 0 4px #1b1b22}
+#shop.komi-shop-studio .sv3-avatar-cut{display:grid;place-items:center;width:100%;height:100%;border-radius:inherit;overflow:hidden;font-size:25px;font-weight:800}
+#shop.komi-shop-studio .sv3-avatar-cut img{width:100%;height:100%;object-fit:cover}
+#shop.komi-shop-studio .sv3-profile-name{max-width:100%;font-size:18px;line-height:1.4;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv3-profile-title{font-size:13px;color:#c2c2d0;margin:5px 0 0;line-height:1.5}
+#shop.komi-shop-studio .sv3-profile-level{margin-top:12px;min-width:0;font-size:11px;flex-wrap:wrap;gap:6px}
+#shop.komi-shop-studio .sv3-profile-level progress{width:100%;max-width:100%;height:8px;display:block;flex:1 1 100%}
+#shop.komi-shop-studio .sv3-profile-mascot{right:25px;top:-21px}
+#shop.komi-shop-studio .sv3-comment{flex-shrink:0;background:#1a1a21;border:1px solid #ffffff15;border-radius:16px;padding:13px}
+#shop.komi-shop-studio .sv3-comment-label{display:flex;align-items:center;gap:6px;font-size:10px;letter-spacing:.06em;color:#a5a5b2}
+#shop.komi-shop-studio .sv3-comment-row{display:flex;align-items:center;gap:9px;margin-top:10px;min-width:0}
+#shop.komi-shop-studio .sv3-comment-row > span:last-child{min-width:0;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv3-comment-row strong{font-size:13px}
+#shop.komi-shop-studio .sv3-comment-row small{font-size:12px;color:#bfbfcc}
+#shop.komi-shop-studio .sv3-selection{gap:10px}
+#shop.komi-shop-studio .sv3-selection>strong{font-size:14px;font-weight:700;letter-spacing:0}
+#shop.komi-shop-studio .sv3-empty-selection{color:var(--shop-muted);font-size:13px;line-height:1.6;margin:0}
+#shop.komi-shop-studio .sv3-selection-list{display:grid;gap:7px}
+#shop.komi-shop-studio .sv3-selection-chip{display:flex;align-items:center;gap:8px;padding:9px 10px;width:100%;border:1px solid var(--shop-line);border-radius:12px;background:var(--shop-raised);font-size:12px;line-height:1.4;color:#eeeef5}
+#shop.komi-shop-studio .sv3-selection-chip>span:first-child{flex:1;min-width:0}
+#shop.komi-shop-studio .sv3-selection-chip small{display:block;color:var(--shop-muted);font-size:10px;margin-bottom:2px}
+#shop.komi-shop-studio .sv3-selection-chip>span:nth-child(2){white-space:nowrap;color:var(--shop-muted);font-variant-numeric:tabular-nums}
+#shop.komi-shop-studio .sv3-selection-chip button{display:grid;place-items:center;flex:none;width:30px;height:30px;min-height:30px;background:var(--shop-active);border:0;border-radius:50%;font-size:20px;color:#e1e1e9;padding:0}
+#shop.komi-shop-studio .sv7-checkout-footer{display:grid;gap:12px;position:sticky;bottom:-20px;padding:14px 0 8px;margin-top:auto;background:var(--shop-card);z-index:2;border-top:1px solid var(--shop-line)}
+#shop.komi-shop-studio .sv3-checkout-info{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:0;border:0;font-size:14px}
+#shop.komi-shop-studio .sv3-checkout-info>span small{display:block;font-size:11px;line-height:1.4;margin-top:3px;color:var(--shop-muted);max-width:150px}
+#shop.komi-shop-studio .sv3-checkout-info>strong{font-size:24px;text-align:right;line-height:1.1}
+#shop.komi-shop-studio .sv3-checkout-info>strong small{display:block;font-size:11px;color:var(--shop-muted);font-weight:500;margin-top:5px}
+#shop.komi-shop-studio .sv3-checkout{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;width:100%;background:#fff;color:#111116;border:0;border-radius:999px;padding:12px 13px;font:800 14px/1.4 Manrope,Inter,sans-serif;box-shadow:none}
+#shop.komi-shop-studio .sv3-checkout:hover:not(:disabled){background:#dfdfe7}
+#shop.komi-shop-studio .sv3-checkout-note{font-size:11px;color:var(--shop-muted);line-height:1.5;margin:0;text-align:center}
+#shop.komi-shop-studio .sv5-reaction-preview{display:grid;gap:8px;font-size:13px}
+#shop.komi-shop-studio .sv5-reaction-preview small{color:var(--shop-muted)}
+#shop.komi-shop-studio .sv3-status{font-size:14px;line-height:1.6;color:#dedee6;margin:20px 0 0;min-height:0}
+#shop.komi-shop-studio .sv3-status:empty{display:none}
+#shop.komi-shop-studio .sv7-extras{border-top:1px solid var(--shop-line);margin-top:32px;padding-top:18px}
+#shop.komi-shop-studio .sv7-extras>summary{display:flex;align-items:center;gap:10px;list-style:none;min-height:44px;color:#d5d5df;font-size:14px;font-weight:700}
+#shop.komi-shop-studio .sv7-extras>summary>svg:last-child{margin-left:auto}
+#shop.komi-shop-studio .sv3-shop-extras{margin-top:18px}
+#shop.komi-shop-studio .komi-shop-extra-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+#shop.komi-shop-studio :is(.komi-shop-extra-card,.komi-shop-gifts-panel){background:var(--shop-card);border:1px solid var(--shop-line);border-radius:18px;padding:20px}
+#shop.komi-shop-studio .komi-shop-extra-card p{font-size:14px;line-height:1.6}
+#shop.komi-shop-studio .komi-shop-gift-dialog textarea{resize:none}
+/* A native modal owns focus/inert background/Escape, not a browser confirm. */
+.sv7-purchase-dialog,#shop.komi-shop-studio .sv3-promo-dialog{color-scheme:dark;box-sizing:border-box;width:min(480px,calc(100vw - 32px));max-height:calc(100dvh - 48px);overflow-y:auto;padding:28px;border:1px solid #ffffff30;border-radius:26px;background:#16161a;color:#fff;box-shadow:0 30px 100px #000b;font:400 15px/1.6 Inter,Manrope,sans-serif;margin:auto}
+.sv7-purchase-dialog::backdrop,#shop.komi-shop-studio .sv3-promo-dialog::backdrop{background:#000b;backdrop-filter:blur(8px)}
+.sv7-confirm-heading{display:flex;align-items:center;gap:12px}
+.sv7-confirm-heading>span{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:#242429}
+.sv7-confirm-heading h2{font:800 23px/1.25 Manrope,Inter,sans-serif;letter-spacing:-.03em;margin:0}
+.sv7-purchase-dialog>p{font-size:14px;color:#b2b2be;margin:16px 0}
+.sv7-confirm-items{list-style:none;padding:0;margin:20px 0;border-top:1px solid #ffffff15;max-height:35svh;overflow:auto}
+.sv7-confirm-items li{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid #ffffff15;font-size:14px;overflow-wrap:anywhere}
+.sv7-confirm-items strong{white-space:nowrap;font-size:13px;color:#cdced8}
+.sv7-confirm-total{display:flex;justify-content:space-between;gap:12px;font-size:16px}
+.sv7-confirm-total strong{font-size:20px;font-variant-numeric:tabular-nums}
+.sv7-confirm-actions{display:flex;gap:10px;margin-top:22px}
+.sv7-confirm-actions button{cursor:pointer;flex:1;min-height:46px;padding:12px 15px;border:1px solid #ffffff25;border-radius:999px;background:#242429;color:#fff;font:800 14px/1.4 Manrope,Inter,sans-serif}
+.sv7-confirm-actions [data-confirm-accept]{background:#fff;color:#101014;border-color:#fff}
+.sv7-confirm-actions button:hover{filter:brightness(.88)}
+.sv7-confirm-actions button:active{transform:scale(.98)}
+#shop.komi-shop-studio .sv3-promo-content{display:grid;gap:14px;padding:0}
+#shop.komi-shop-studio .sv3-promo-content h2{margin:0;font-size:24px}
+#shop.komi-shop-studio .sv3-promo-content p{margin:0;color:var(--shop-muted);font-size:15px}
+#shop.komi-shop-studio .sv3-promo-content a{color:#fff;text-decoration:underline}
+#shop.komi-shop-studio .sv3-promo-content button{min-height:44px;border:0;border-radius:999px;background:#fff;color:#111;font-weight:800;font-size:14px}
+#shop.komi-shop-studio .sv7-static-loading{display:flex;align-items:center;justify-content:center;min-height:320px;color:var(--shop-muted);font-size:15px;border:1px solid var(--shop-line);border-radius:22px;background:var(--shop-card)}
+/* Keep the existing community entry reachable without covering the fitting room. */
+body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn{width:44px!important;min-width:44px!important;height:44px!important;min-height:44px!important;padding:0!important;justify-content:center}
+body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-community-label,.online-counter){display:none!important}
+@media(min-width:981px){body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn{left:calc(var(--hub-rail,72px) + 16px);right:auto!important}}
+@media(min-width:1500px){#shop.komi-shop-studio .sv3-product-grid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+@media(max-width:1190px) and (min-width:981px){#shop.komi-shop-studio .sv3-layout{grid-template-columns:minmax(0,1fr) 290px;gap:18px}#shop.komi-shop-studio .sv3-product-grid{grid-template-columns:repeat(2,minmax(0,1fr))}#shop.komi-shop-studio .sv3-fitting-body{padding:16px}}
+@media(max-width:980px){
+ #shop.komi-shop-studio{padding-bottom:190px}
+ #shop.komi-shop-studio .sv3-layout{display:block}
+ #shop.komi-shop-studio .sv3-product-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ #shop.komi-shop-studio .sv3-fitting{position:fixed;top:auto;left:calc(72px + 16px);right:16px;bottom:16px;z-index:70;border:1px solid #ffffff40;box-shadow:0 14px 60px #000c;border-radius:23px;max-height:min(78svh,680px);overflow:hidden;scrollbar-gutter:auto}
+ #shop.komi-shop-studio .sv3-sheet-toggle{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:60px;width:100%;padding:12px 18px;border:0;border-radius:0;background:#202026;color:#fff;text-align:left;font-size:15px;font-weight:800}
+ #shop.komi-shop-studio .sv3-sheet-toggle>span:first-child{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+ #shop.komi-shop-studio .sv3-sheet-toggle small{display:inline;margin:0 0 0 4px;color:#b5b5c1;font-size:12px;font-weight:500}
+ #shop.komi-shop-studio .sv3-sheet-chevron{display:flex;transition:transform .2s}
+ #shop.komi-shop-studio .sv3-fitting.is-open .sv3-sheet-chevron{transform:rotate(180deg)}
+ #shop.komi-shop-studio .sv3-fitting:not(.is-open) .sv3-fitting-body{display:none}
+ #shop.komi-shop-studio .sv3-fitting:not(.is-open){right:76px}
+ body.komi-media-hub:has(#shop.komi-shop-studio .sv3-fitting.is-open) #sideFriendsBtn{visibility:hidden;pointer-events:none}
+ #shop.komi-shop-studio .sv3-fitting-body{max-height:calc(min(78svh,680px) - 60px);overflow-y:auto;padding:18px;gap:15px}
+ #shop.komi-shop-studio .sv7-checkout-footer{bottom:-18px}
+ #shop.komi-shop-studio .sv3-fitting-head{display:flex}
+ #shop.komi-shop-studio .sv3-fitting-head h2{display:none}
+ #shop.komi-shop-studio .sv7-preview-note{margin:0}
+ #shop.komi-shop-studio .sv3-profile{max-width:440px;width:100%;margin:0 auto}
+ #shop.komi-shop-studio .sv3-comment{display:block}
+}
+@media(max-width:767px){
+ #shop.komi-shop-studio{padding:16px 16px 185px}
+ #mainContainer > #shop.komi-shop-studio > header.sv3-topbar{gap:12px;margin-bottom:15px!important}
+ #shop.komi-shop-studio .sv3-heading{flex-basis:100%}
+ #shop.komi-shop-studio .sv3-overline{font-size:10px;margin-bottom:8px;letter-spacing:.12em}
+ #shop.komi-shop-studio .sv3-heading h1{font-size:clamp(26px,6.5vw,34px);line-height:1.2}
+ #shop.komi-shop-studio .sv3-heading>p:last-child{font-size:14px;margin-top:8px;line-height:1.5}
+ #shop.komi-shop-studio .sv3-top-actions{width:100%;justify-content:space-between;gap:10px}
+ #shop.komi-shop-studio .sv3-balance{padding:9px 13px;border-radius:15px;gap:9px}
+ #shop.komi-shop-studio .sv3-balance small{display:none}
+ #shop.komi-shop-studio .sv3-balance strong{font-size:18px}
+ #shop.komi-shop-studio .sv3-balance strong span{font-size:12px}
+ #shop.komi-shop-studio .sv3-earn summary{font-size:13px;padding:10px 13px;min-height:44px}
+ #shop.komi-shop-studio .sv3-earn-pop{right:0}
+ #shop.komi-shop-studio .sv3-price-notice{padding:10px 14px;font-size:13px;margin-bottom:14px}
+ #shop.komi-shop-studio .sv7-collections{padding:0 0 8px;margin:0 0 10px;border-bottom:1px solid var(--shop-line)}
+ #shop.komi-shop-studio .sv7-collections>summary{font-size:15px;min-height:40px}
+ #shop.komi-shop-studio .sv7-collections summary small{display:none}
+ #shop.komi-shop-studio .sv7-collection-rail{grid-template-columns:repeat(6,155px)}
+ #shop.komi-shop-studio .sv7-browse-head{gap:10px;margin-bottom:12px}
+ #shop.komi-shop-studio .sv7-view-tabs{width:100%;gap:4px}
+ #shop.komi-shop-studio .sv7-view-tabs button{flex:1;padding:10px 12px;font-size:14px;min-height:42px}
+ #shop.komi-shop-studio .sv7-search{flex-basis:100%;max-width:100%;min-height:44px;padding:0 14px}
+ #shop.komi-shop-studio .sv7-search input{min-height:44px;font-size:14px}
+ #shop.komi-shop-studio .sv3-category-tabs{display:none!important}
+ #shop.komi-shop-studio .sv7-category-select{flex:1;width:100%}
+ #shop.komi-shop-studio .sv3-filters{grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;padding-bottom:12px}
+ #shop.komi-shop-studio .sv7-category-row{grid-column:1;grid-row:1;min-width:0}
+ #shop.komi-shop-studio .sv3-filter-actions{display:contents}
+ #shop.komi-shop-studio .sv3-filter-actions>.sv7-select{grid-column:2;grid-row:1;min-width:0}
+ #shop.komi-shop-studio .sv7-select select{font-size:12px;min-height:40px;padding:9px 29px 9px 12px}
+ #shop.komi-shop-studio .sv7-select>svg{right:11px;width:12px}
+ #shop.komi-shop-studio .sv7-toggles{grid-column:1/-1;grid-row:2;gap:9px 14px;justify-content:space-between}
+ #shop.komi-shop-studio .sv3-hide-toggle{font-size:12px;gap:6px;min-height:30px}
+ #shop.komi-shop-studio .sv3-hide-toggle input{width:16px;height:16px;min-width:16px}
+ #shop.komi-shop-studio .sv3-market-caption{margin-bottom:13px;gap:8px}
+ #shop.komi-shop-studio .sv3-market-caption h2{font-size:19px}
+ #shop.komi-shop-studio .sv3-market-caption>span{font-size:12px}
+ #shop.komi-shop-studio .sv3-market-caption button{font-size:12px}
+ #shop.komi-shop-studio .sv3-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+ #shop.komi-shop-studio .sv3-item{padding:8px;border-radius:18px}
+ #shop.komi-shop-studio .sv3-item-badges{top:14px;left:14px;right:14px}
+ #shop.komi-shop-studio :is(.komi-shop-rarity,.sv3-owned,.sv7-new){font-size:9px;padding:3px 5px}
+ #shop.komi-shop-studio .sv3-item-scene{height:145px;min-height:145px;border-radius:11px;padding:32px 8px 36px}
+ #shop.komi-shop-studio .sv3-item-scene :is(.komi-coin-frame,.sv3-shape){width:60px!important;height:60px!important}
+ #shop.komi-shop-studio .sv3-item-scene :is(.store-banner-swatch,.komi-preview-cover){height:68px;font-size:11px}
+ #shop.komi-shop-studio .sv3-title-sample{font-size:12px;padding:8px}
+ #shop.komi-shop-studio .sv3-item-scene .sv3-name-sample{font-size:18px}
+ #shop.komi-shop-studio .sv7-try-label{font-size:11px;bottom:9px}
+ #shop.komi-shop-studio .sv3-item-copy{padding:11px 2px 10px}
+ #shop.komi-shop-studio .sv3-item-copy h3{font-size:14px;line-height:1.4;min-height:40px}
+ #shop.komi-shop-studio .sv3-item-copy .sv7-item-kind{font-size:11px}
+ #shop.komi-shop-studio .sv3-item-copy .sv7-item-description{font-size:12px;min-height:36px;margin:6px 0 10px}
+ #shop.komi-shop-studio .sv3-item-copy .sv3-unit-price{font-size:11px;gap:5px}
+ #shop.komi-shop-studio .sv3-unit-price strong{font-size:17px}
+ #shop.komi-shop-studio .sv3-item-actions{gap:5px}
+ #shop.komi-shop-studio .sv3-primary-buy{font-size:12px;min-height:40px;padding:8px 5px}
+ #shop.komi-shop-studio .komi-shop-gift-button{flex-basis:36px;width:36px;height:40px;min-height:40px}
+ #shop.komi-shop-studio .sv3-fitting{left:12px;right:12px;bottom:calc(76px + env(safe-area-inset-bottom,0px));max-height:calc(100svh - 150px);border-radius:22px}
+ #shop.komi-shop-studio .sv3-fitting:not(.is-open){right:68px}
+ #shop.komi-shop-studio .sv3-fitting-body{max-height:calc(100svh - 212px);padding:16px}
+ #shop.komi-shop-studio .sv3-sheet-toggle{min-height:62px;padding:12px 16px;font-size:14px}
+ #shop.komi-shop-studio .sv3-sheet-toggle>span:first-child{gap:8px}
+ #shop.komi-shop-studio .sv3-sheet-toggle small{font-size:11px;margin-left:0}
+ #shop.komi-shop-studio .sv7-checkout-footer{bottom:-16px}
+ #shop.komi-shop-studio .sv3-profile-cover{height:88px}
+ #shop.komi-shop-studio .sv3-profile-details{min-height:110px;padding-top:38px}
+ #shop.komi-shop-studio .sv3-profile-avatar{width:56px;height:56px;top:-28px}
+ #shop.komi-shop-studio .sv3-profile-name{font-size:17px}
+ #shop.komi-shop-studio .komi-shop-extra-grid{grid-template-columns:1fr}
+ #shop.komi-shop-studio .sv7-extras>summary{font-size:13px;gap:8px}
+ .sv7-purchase-dialog{padding:22px;width:calc(100vw - 24px);border-radius:22px}
+ .sv7-confirm-heading h2{font-size:21px}
+ .sv7-confirm-actions{flex-direction:column-reverse}
+ .sv7-confirm-actions button{flex:auto;min-height:46px}
+}
+@media(max-width:359px){#shop.komi-shop-studio{padding-inline:12px}#shop.komi-shop-studio .sv3-top-actions{gap:7px}#shop.komi-shop-studio .sv3-earn summary{font-size:12px;padding:10px}#shop.komi-shop-studio .sv3-item-copy .sv3-unit-price>span{font-size:10px}#shop.komi-shop-studio .sv3-primary-buy{font-size:11px}#shop.komi-shop-studio .komi-shop-gift-button{flex-basis:30px;width:30px}}
+@media(prefers-reduced-motion:reduce){#shop.komi-shop-studio *,#shop.komi-shop-studio *::before,#shop.komi-shop-studio *::after{animation:none!important;transition:none!important;transform:none}#shop.komi-shop-studio button:active{transform:none!important}}
+@media(forced-colors:active){#shop.komi-shop-studio :where(*){scrollbar-color:auto}#shop.komi-shop-studio :is(button,input,select){border:1px solid ButtonText}#shop.komi-shop-studio .sv3-item-scene{background:Canvas}}
 
-/* Minimal header — no six benefit cards, hero gradients, or duplicate tiles. */
-#shop.komi-shop-v5 .sv4-hero{background:none!important;border:0!important;box-shadow:none!important;padding:0!important;margin:0!important;isolation:auto}
-#shop.komi-shop-v5 .sv4-feature-grid,#shop.komi-shop-v5 .sv3-bento{display:none!important}
-#shop.komi-shop-v5 .sv3-topbar,
-#shop.komi-shop-v5 .sv4-hero > .sv3-topbar,
-#shop.komi-shop-v5 .sv4-hero > header.sv3-topbar{
-  position:relative!important;inset:auto!important;top:auto!important;
-  display:flex;align-items:center;justify-content:space-between;
-  gap:16px;flex-wrap:wrap;min-width:0;
-  height:auto!important;max-height:none!important;
-  background:transparent!important;border:0!important;
-  box-shadow:none!important;padding:0!important;margin:0 0 19px!important;
-  overflow:visible!important;transform:none!important;
-}
-#shop.komi-shop-v5 .sv3-heading{min-width:min(100%,260px);flex:1 1 320px}
-#shop.komi-shop-v5 .sv3-heading .sv3-overline{display:block;margin:0 0 7px}
-#shop.komi-shop-v5 .sv3-heading h1{
-  font-family:Manrope,Inter,system-ui,sans-serif;
-  font-size:clamp(27px,2.7vw,38px);
-  font-weight:800;line-height:1.14;letter-spacing:-.05em;
-  color:#fff;margin:0 0 6px;
-}
-#shop.komi-shop-v5 .sv3-heading > p:last-of-type{
-  max-width:570px;margin:0;color:#A0A0A8;
-  font-size:13px;line-height:1.55;font-weight:600;
-}
-#shop.komi-shop-v5 .sv4-hero-caption{display:none}
-#shop.komi-shop-v5 .sv3-top-actions{
-  display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;
-  gap:8px;min-width:0;align-self:center;
-}
-#shop.komi-shop-v5 .sv3-top-actions .sv3-balance,
-#shop.komi-shop-v5 .sv3-top-actions .sv3-outline-btn,
-#shop.komi-shop-v5 .sv3-top-actions .sv3-earn summary{
-  min-height:44px;display:inline-flex;align-items:center;justify-content:center;gap:7px;
-  padding:11px 17px;border-radius:999px;
-  border:1px solid var(--shop-stroke);
-  background:var(--shop-muted-card);
-  color:#fff;box-shadow:none;
-  font-size:12px;font-weight:800;line-height:1.2;white-space:nowrap;
-  text-decoration:none;
-}
-#shop.komi-shop-v5 .sv3-top-actions .sv3-balance{background:#242429;border-color:rgba(255,255,255,.15)}
-#shop.komi-shop-v5 .sv3-balance strong{font-size:14px;letter-spacing:-.02em}
-#shop.komi-shop-v5 .sv3-top-actions .sv3-earn summary:hover,
-#shop.komi-shop-v5 .sv3-top-actions .sv3-outline-btn:hover{background:#303037;border-color:#ffffff50}
-#shop.komi-shop-v5 .sv3-earn{position:relative}
-#shop.komi-shop-v5 .sv3-earn summary{list-style:none}
-#shop.komi-shop-v5 .sv3-earn summary::-webkit-details-marker{display:none}
-#shop.komi-shop-v5 .sv3-earn-pop{
-  position:absolute;z-index:65;top:calc(100% + 9px);right:0;
-  width:min(320px,calc(100vw - 32px));
-  background:#1A1A1E;border:1px solid #ffffff24;border-radius:20px;
-  padding:16px;box-shadow:0 20px 48px #000a;line-height:1.55;
-}
-#shop.komi-shop-v5 .sv3-earn-pop strong{font-size:14px}
-#shop.komi-shop-v5 .sv3-earn-pop p{color:#BBBCC3;font-size:12px;margin:9px 0}
-#shop.komi-shop-v5 .sv3-earn-pop a{font-size:12px;color:#fff;text-underline-offset:3px}
-
-/* One weekly collection card. */
-#shop.komi-shop-v5 .sv5-weekly{
-  display:grid;grid-template-columns:minmax(0,1fr) auto auto;
-  align-items:center;gap:clamp(14px,2vw,28px);
-  min-height:142px;padding:20px clamp(17px,2.5vw,26px);
-  background:linear-gradient(110deg,#17171B 0%,#131316 64%,#1D1D22 100%);
-  border:1px solid var(--shop-stroke);border-radius:25px;
-  margin-bottom:18px;box-shadow:inset 0 1px #ffffff08;
-  overflow:hidden;
-}
-#shop.komi-shop-v5 .sv5-weekly-copy{min-width:0}
-#shop.komi-shop-v5 .sv5-weekly-overline{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-#shop.komi-shop-v5 .sv3-countdown{
-  display:inline-flex;align-items:center;gap:5px;
-  padding:6px 10px;background:#242429;
-  border:1px solid #ffffff24;border-radius:999px;
-  color:#DBDBDF;font-size:10px;font-weight:800;white-space:nowrap;
-}
-#shop.komi-shop-v5 .sv5-weekly h2{margin:10px 0 5px;font-size:clamp(17px,1.75vw,23px);letter-spacing:-.035em;font-weight:800}
-#shop.komi-shop-v5 .sv5-weekly p{margin:0;color:#A0A0A8;font-size:12px;line-height:1.5}
-#shop.komi-shop-v5 .sv5-weekly-items{display:flex;align-items:center;justify-content:center;gap:9px}
-#shop.komi-shop-v5 .sv5-weekly-item{
-  width:78px;height:82px;display:grid;place-items:center;
-  flex:0 0 78px;position:relative;
-  background:#242429;border:1px solid #ffffff18;border-radius:19px;
-  overflow:hidden;
-}
-#shop.komi-shop-v5 .sv5-weekly-item :is(.komi-coin-frame,.sv3-shape){
-  width:57px!important;height:57px!important;display:grid;place-items:center
-}
-#shop.komi-shop-v5 .sv5-weekly-item img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
-#shop.komi-shop-v5 .sv5-weekly-item .sv3-title-sample{max-width:95%;font-size:10px;text-align:center;line-height:1.25;padding:9px}
-#shop.komi-shop-v5 .sv5-bundle-btn{
-  display:inline-flex!important;align-items:center;justify-content:center;gap:8px;
-  background:#fff!important;color:#09090B!important;
-  min-height:46px;padding:12px 20px;margin:0!important;
-  border:1px solid #fff!important;border-radius:999px!important;
-  box-shadow:var(--shop-white-glow);font-size:12px;font-weight:800;
-  white-space:nowrap;flex-shrink:0;
-}
-#shop.komi-shop-v5 .sv5-bundle-btn:hover{background:#ECECEF!important;box-shadow:0 6px 25px #ffffff35}
-
-/* Two stacked filter tiers; no native selects or "More categories". */
-#shop.komi-shop-v5 .sv3-filters{
-  position:relative;top:auto;z-index:12;
-  display:flex;flex-direction:column;align-items:stretch;gap:13px;
-  background:transparent;backdrop-filter:none;-webkit-backdrop-filter:none;
-  border:0;border-radius:0;box-shadow:none;
-  padding:0;margin:0 0 20px;
-}
-#shop.komi-shop-v5 .sv3-category-tabs{
-  width:100%;max-width:100%;display:flex;gap:8px;align-items:center;
-  flex-wrap:nowrap!important;overflow-x:auto;overflow-y:hidden;
-  padding:3px 0 7px!important;
-  scrollbar-width:none;-ms-overflow-style:none;
-  -webkit-overflow-scrolling:touch;
-}
-#shop.komi-shop-v5 .sv3-category-tabs::-webkit-scrollbar{display:none!important;width:0;height:0}
-#shop.komi-shop-v5 .sv3-category-tabs button{
-  min-height:46px;flex:0 0 auto;
-  background:#16161A;color:#8E8E93;border:1px solid transparent;
-  border-radius:999px;padding:12px 22px;
-  font:800 12px/1.25 Manrope,Inter,system-ui,sans-serif;
-  letter-spacing:0;white-space:nowrap;box-shadow:none;
-}
-#shop.komi-shop-v5 .sv3-category-tabs button:hover:not([aria-pressed="true"]){background:#242429;color:#fff;border-color:#ffffff12}
-#shop.komi-shop-v5 .sv3-category-tabs button[aria-pressed="true"]{
-  color:#09090B!important;background:#FFFFFF!important;border-color:#FFFFFF!important;
-  box-shadow:var(--shop-white-glow);
-}
-#shop.komi-shop-v5 .sv3-category-tabs select{display:none!important}
-#shop.komi-shop-v5 .sv3-filter-actions{
-  width:100%;display:flex;justify-content:space-between;
-  align-items:center;flex-wrap:wrap;gap:10px;
-}
-#shop.komi-shop-v5 .sv5-sort-segments{
-  display:flex;align-items:center;gap:3px;
-  max-width:100%;padding:4px;
-  border:1px solid #ffffff10;
-  background:#101013;border-radius:999px;
-  overflow-x:auto;scrollbar-width:none;
-}
-#shop.komi-shop-v5 .sv5-sort-segments::-webkit-scrollbar{display:none}
-#shop.komi-shop-v5 .sv5-sort-segments button{
-  flex:0 0 auto;min-height:34px;
-  background:transparent;color:#8E8E93;
-  border:0;border-radius:999px;
-  padding:9px 15px;box-shadow:none;
-  font-size:11px;font-weight:800;white-space:nowrap;
-}
-#shop.komi-shop-v5 .sv5-sort-segments button[aria-pressed="true"]{
-  color:#FFFFFF;background:#242429;box-shadow:inset 0 1px #ffffff15;
-}
-#shop.komi-shop-v5 .sv5-sort-segments button:hover:not([aria-pressed="true"]){color:#fff}
-#shop.komi-shop-v5 .sv3-hide-toggle{
-  cursor:pointer;display:inline-flex;align-items:center;gap:9px;
-  min-height:42px;padding:9px 14px;border-radius:999px;
-  border:1px solid #ffffff17;background:#16161A;
-  color:#D5D5D9;font-size:11px;font-weight:800;white-space:nowrap;
-}
-#shop.komi-shop-v5 .sv3-hide-toggle:has(input:checked){background:#242429;color:#fff;border-color:#ffffff60}
-#shop.komi-shop-v5 .sv3-hide-toggle input{appearance:none;-webkit-appearance:none;position:relative;width:27px;height:16px;flex:0 0 27px;margin:0;border-radius:999px;background:#44444C;border:0}
-#shop.komi-shop-v5 .sv3-hide-toggle input::after{content:"";position:absolute;left:2px;top:2px;width:12px;height:12px;border-radius:50%;background:#fff;transition:transform .16s}
-#shop.komi-shop-v5 .sv3-hide-toggle input:checked{background:#FFFFFF}
-#shop.komi-shop-v5 .sv3-hide-toggle input:checked::after{background:#09090B;transform:translateX(11px)}
-#shop.komi-shop-v5 .sv3-hide-toggle input:focus-visible{outline:2px solid #fff;outline-offset:4px}
-
-/* Shop grid and the existing Supabase-powered card operations. */
-#shop.komi-shop-v5 .sv3-layout{
-  display:grid;grid-template-columns:minmax(0,1fr) minmax(300px,340px);
-  gap:18px;align-items:start;
-}
-#shop.komi-shop-v5 .sv3-market{min-width:0}
-#shop.komi-shop-v5 .sv3-market-caption{font-size:12px;color:#9B9BA3;font-weight:700;margin:0 0 12px}
-#shop.komi-shop-v5 .sv3-product-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(min(100%,210px),1fr));
-  gap:13px;min-width:0;
-}
-#shop.komi-shop-v5 .sv3-item{
-  display:flex;flex-direction:column;gap:12px;
-  min-height:255px;padding:13px;
-  border:1px solid var(--shop-stroke);
-  background:#131316;border-radius:23px;
-  box-shadow:none;transform:none;overflow:hidden;
-  transition:border-color .17s,box-shadow .17s,transform .17s;
-}
-#shop.komi-shop-v5 .sv3-item:hover{transform:translateY(-2px);border-color:#ffffff60;box-shadow:0 12px 28px #0006}
-#shop.komi-shop-v5 .sv3-item.is-trying,
-#shop.komi-shop-v5 .sv3-item.is-trying[data-rarity]{
-  border-color:#fff!important;box-shadow:inset 0 0 0 1px #fff,0 0 18px #ffffff22!important;
-}
-#shop.komi-shop-v5 .sv3-item-badges{display:flex;align-items:center;justify-content:space-between;gap:5px;min-height:22px}
-#shop.komi-shop-v5 :is(.komi-shop-rarity,.sv3-owned){
-  background:#242429;color:#DFDFE3;border:1px solid #ffffff20;
-  border-radius:999px;padding:5px 9px;
-  font-size:9px;font-weight:800;line-height:1.2;letter-spacing:.04em;white-space:nowrap;
-}
-#shop.komi-shop-v5 [data-rarity="epic"] .komi-shop-rarity{background:#CFCFD4;color:#111;border-color:#CFCFD4}
-#shop.komi-shop-v5 [data-rarity="legendary"] .komi-shop-rarity{background:#FFFFFF;color:#09090B;border-color:#FFFFFF}
-#shop.komi-shop-v5 .sv5-preview-button.sv3-item-scene{
-  position:relative;width:100%;min-height:112px;height:112px;
-  display:flex;align-items:center;justify-content:center;
-  padding:9px;border:1px solid #ffffff13;
-  background:radial-gradient(circle at 50% 30%,#2C2C32,#16161A 72%);
-  border-radius:18px;overflow:hidden;color:#fff;
-  cursor:pointer;box-shadow:none;
-}
-#shop.komi-shop-v5 .sv5-preview-button:hover{border-color:#ffffff55;background:radial-gradient(circle at 50% 30%,#383840,#1C1C22 72%)}
-#shop.komi-shop-v5 .sv5-preview-button[aria-pressed="true"]{border-color:#FFFFFF80}
-#shop.komi-shop-v5 .sv5-preview-button > :not(.sv4-scene-halo){z-index:1}
-#shop.komi-shop-v5 .sv3-item-scene .komi-coin-frame,
-#shop.komi-shop-v5 .sv3-item-scene .sv3-shape{width:66px!important;height:66px!important;display:flex;align-items:center;justify-content:center}
-#shop.komi-shop-v5 .sv3-item-scene img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
-#shop.komi-shop-v5 .sv3-item-copy{min-height:0;display:block;flex:1}
-#shop.komi-shop-v5 .sv3-item-copy h3{
-  margin:0;font-size:13px;font-weight:800;line-height:1.32;
-  letter-spacing:-.018em;color:#fff;overflow-wrap:anywhere;
-}
-#shop.komi-shop-v5 .sv3-item-copy p,
-#shop.komi-shop-v5 .sv3-unit-price{display:none!important}
-#shop.komi-shop-v5 .sv3-item-actions{
-  display:flex;align-items:center;flex-wrap:nowrap!important;
-  width:100%;gap:7px;margin-top:auto;min-width:0;
-}
-#shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy{
-  min-width:0;width:auto;max-width:none;flex:1 1 0;
-  min-height:40px;padding:10px 8px;
-  border:1px solid #FFFFFF;border-radius:999px;
-  background:#FFFFFF;color:#09090B;
-  font-size:clamp(10px,.8vw,11px);font-weight:800;
-  line-height:1.15;white-space:nowrap!important;
-  overflow:visible;text-overflow:clip;
-  box-shadow:none;
-}
-#shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy.is-insufficient,
-#shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy:disabled{
-  color:#A7A7AE;background:#242429;border-color:#ffffff16;opacity:1;
-}
-#shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy:not(:disabled):hover{background:#ECECEF;box-shadow:var(--shop-white-glow)}
-#shop.komi-shop-v5 .sv3-item-actions .komi-shop-gift-button{
-  flex:0 0 38px!important;width:38px!important;height:38px!important;min-width:38px;
-  display:inline-flex;align-items:center;justify-content:center;
-  background:#242429;color:#FFFFFF;
-  border:1px solid #ffffff24;border-radius:14px!important;
-  padding:0;box-shadow:none;
-}
-#shop.komi-shop-v5 .sv3-item-actions .komi-shop-gift-button:hover{background:#35353B;border-color:#ffffff75}
-#shop.komi-shop-v5 .komi-shop-gift-button svg{width:19px;height:19px;stroke-width:1.6}
-#shop.komi-shop-v5 .sv3-item-actions .sv3-try-btn{display:none!important}
-#shop.komi-shop-v5 .sv3-no-results{grid-column:1/-1;border:1px dashed #ffffff35;border-radius:20px;padding:26px;color:#AAAAB2;font-size:13px}
-#shop.komi-shop-v5 .sv3-no-results button{background:#242429;color:#fff;border:1px solid #ffffff25;border-radius:999px;padding:9px 14px}
-
-/* Keep the fitting room, avatar visuals, purchases and cart RPC untouched. */
-#shop.komi-shop-v5 .sv3-fitting{
-  position:sticky;top:82px;min-width:0;overflow:hidden;
-  background:#131316;border:1px solid var(--shop-stroke);
-  border-radius:25px;box-shadow:none;
-}
-#shop.komi-shop-v5 .sv3-fitting-body{display:grid;gap:14px;padding:19px 19px 96px!important}
-#shop.komi-shop-v5 .sv3-fitting-head{display:flex;align-items:center;justify-content:space-between;gap:10px}
-#shop.komi-shop-v5 .sv3-fitting-head h2{font-family:Manrope,Inter,sans-serif;font-size:19px;font-weight:800;line-height:1.2;letter-spacing:-.03em;margin:4px 0 0}
-#shop.komi-shop-v5 .sv3-reset{
-  display:inline-flex;gap:6px;align-items:center;
-  background:#242429;color:#fff;border:1px solid #ffffff24;
-  padding:9px 12px;border-radius:999px;font-size:11px;font-weight:800;white-space:nowrap;
-}
-#shop.komi-shop-v5 .sv3-profile{border-radius:20px;background:#16161A;border-color:#ffffff1c}
-#shop.komi-shop-v5 .sv3-profile-cover{height:88px;background:linear-gradient(125deg,#303036,#17171C)}
-#shop.komi-shop-v5 .sv3-profile-details{padding:20px 13px 16px 91px;min-height:107px}
-#shop.komi-shop-v5 .sv3-profile-avatar{left:14px;right:auto;top:-33px;width:63px;height:63px}
-#shop.komi-shop-v5 .sv3-comment{border-radius:19px;background:#16161A;border-color:#ffffff1c}
-#shop.komi-shop-v5 .sv3-selection{display:grid;gap:9px}
-#shop.komi-shop-v5 .sv3-selection>strong{font-size:12px;font-weight:800}
-#shop.komi-shop-v5 .sv3-empty-selection{font-size:11px;color:#9999A2;margin:0}
-#shop.komi-shop-v5 .sv3-selection-chip{background:#242429;border:1px solid #ffffff24;border-radius:999px;padding:7px 9px;font-size:10px}
-#shop.komi-shop-v5 .sv3-checkout-info{border-top:1px solid #ffffff19;padding-top:15px}
-#shop.komi-shop-v5 .sv3-checkout-info strong{font-size:21px}
-#shop.komi-shop-v5 .sv3-checkout{
-  display:flex;align-items:center;justify-content:center;gap:9px;
-  width:100%;min-height:46px;padding:12px 16px;
-  border:0;border-radius:999px;background:#FFFFFF;color:#09090B;
-  font-size:12px;font-weight:800;line-height:1.25;
-}
-#shop.komi-shop-v5 .sv3-checkout:disabled{background:#242429;color:#9999A2;opacity:1}
-#shop.komi-shop-v5 .sv3-checkout-note{font-size:10px;color:#9696A0;line-height:1.55;margin:0}
-#shop.komi-shop-v5 .sv5-reaction-preview{background:#16161A;border:1px solid #ffffff22;border-radius:18px;padding:12px;display:grid;gap:10px}
-#shop.komi-shop-v5 .sv5-reaction-preview > strong{font-size:11px}
-#shop.komi-shop-v5 .sv5-reaction-preview .komi-shop-reaction-swatch{display:flex;gap:7px;font-size:20px}
-#shop.komi-shop-v5 .sv3-shop-extras{background:#131316;border:1px solid var(--shop-stroke);border-radius:23px;padding:16px;margin-top:18px}
-#shop.komi-shop-v5 .komi-shop-extra-card,
-#shop.komi-shop-v5 .komi-shop-gifts-panel{background:#16161A!important;border-color:#ffffff1c!important;border-radius:19px!important}
-#shop.komi-shop-v5 .sv3-status{color:#E1E1E5;font-size:12px;margin:12px 0 0;min-height:15px}
-#shop.komi-shop-v5 .sv3-retry{background:#fff;color:#09090B;border:0;border-radius:999px;padding:10px 17px;font-weight:800}
-#shop.komi-shop-v5 .sv3-promo-dialog{border-radius:22px;background:#16161A;color:#fff}
-#shop.komi-shop-v5 .sv3-promo-content{padding:22px}
-#shop.komi-shop-v5 .sv3-promo-content button{border-radius:999px;background:#fff;color:#09090B;padding:10px 16px}
-
-/* Static HTML first-paint skeleton matches the dynamic design. */
-#shop.komi-shop-v5.komi-static-shop .sv5-static-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:13px}
-#shop.komi-shop-v5.komi-static-shop .sv5-static-card{min-height:226px;display:flex;flex-direction:column;gap:12px;background:#131316;border:1px solid #ffffff18;border-radius:23px;padding:13px}
-#shop.komi-shop-v5.komi-static-shop .sv5-static-card .sv5-static-visual{display:grid;place-items:center;min-height:113px;background:#242429;border-radius:17px;font-size:33px}
-#shop.komi-shop-v5.komi-static-shop .sv5-static-card h3{font-size:13px;margin:0;font-weight:800}
-#shop.komi-shop-v5.komi-static-shop .sv5-static-price{margin-top:auto;font-size:11px;font-weight:800;background:#fff;color:#09090B;border-radius:999px;padding:11px;text-align:center}
-#shop.komi-shop-v5.komi-static-shop .sv5-static-hint{font-size:11px;color:#9C9CA5;margin:9px 0 0}
-#shop.komi-shop-v5.komi-static-shop .sv5-weekly-items .sv5-weekly-item{font-size:23px;font-weight:800}
-
-/* Responsive wrapping is preferred to clipped buy and gift buttons. */
-@media(min-width:1550px){
- #shop.komi-shop-v5 .sv3-layout{grid-template-columns:minmax(0,1fr) minmax(320px,355px)}
-}
-@media(max-width:1150px){
- #shop.komi-shop-v5 .sv3-layout{grid-template-columns:minmax(0,1fr) minmax(285px,310px);gap:13px}
- #shop.komi-shop-v5 .sv5-weekly{grid-template-columns:minmax(0,1fr) auto;gap:15px}
- #shop.komi-shop-v5 .sv5-weekly-items{display:flex;grid-column:1;grid-row:2;justify-content:flex-start}
- #shop.komi-shop-v5 .sv5-bundle-btn{grid-column:2;grid-row:1 / 3}
-}
-@media(max-width:960px){
- #shop.komi-shop-v5{padding-bottom:205px}
- #shop.komi-shop-v5 .sv3-layout{display:block}
- #shop.komi-shop-v5 .sv3-fitting{
-  position:fixed;top:auto;left:12px;right:12px;
-  bottom:calc(73px + env(safe-area-inset-bottom,0px));
-  z-index:58;max-height:min(73dvh,650px);overflow:auto;
-  border-radius:23px;border-color:#ffffff44;
-  box-shadow:0 14px 40px #000b;
- }
- #shop.komi-shop-v5 .sv3-sheet-toggle{
-  display:flex;align-items:center;justify-content:space-between;
-  width:100%;min-height:56px;padding:12px 17px;
-  border:0;border-radius:0;
-  background:#242429;color:#fff;font-size:13px;font-weight:800;text-align:left
- }
- #shop.komi-shop-v5 .sv3-sheet-toggle small{font-size:10px;color:#B5B5BD}
- #shop.komi-shop-v5 .sv3-fitting:not(.is-open) .sv3-fitting-body{display:none}
- #shop.komi-shop-v5 .sv3-fitting-body{padding:15px 15px 96px!important}
-}
-@media(max-width:680px){
- #shop.komi-shop-v5{padding:13px 12px 220px}
- #shop.komi-shop-v5 .sv3-topbar{margin-bottom:16px!important}
- #shop.komi-shop-v5 .sv3-top-actions{justify-content:flex-start;gap:7px}
- #shop.komi-shop-v5 .sv3-top-actions :is(.sv3-balance,.sv3-outline-btn,.sv3-earn summary){min-height:40px;padding:9px 13px;font-size:11px}
- #shop.komi-shop-v5 .sv5-weekly{grid-template-columns:1fr;padding:17px;border-radius:22px;min-height:0}
- #shop.komi-shop-v5 .sv5-weekly-items{grid-column:auto;grid-row:auto}
- #shop.komi-shop-v5 .sv5-bundle-btn{grid-column:auto;grid-row:auto}
- #shop.komi-shop-v5 .sv5-bundle-btn{justify-self:start;min-height:43px}
- #shop.komi-shop-v5 .sv3-filter-actions{gap:9px}
- #shop.komi-shop-v5 .sv5-sort-segments{width:100%;justify-content:space-between}
- #shop.komi-shop-v5 .sv5-sort-segments button{padding:9px 12px}
- #shop.komi-shop-v5 .sv3-product-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
- #shop.komi-shop-v5 .sv3-item{min-height:249px;padding:11px;gap:9px}
- #shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy{font-size:10px;padding:9px 5px}
-}
-@media(max-width:520px){
- #shop.komi-shop-v5 .sv3-product-grid{grid-template-columns:1fr}
- #shop.komi-shop-v5 .sv3-item{min-height:233px}
- #shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy{font-size:12px}
- #shop.komi-shop-v5 .sv3-hide-toggle{margin-left:auto}
- #shop.komi-shop-v5 .sv5-sort-segments button{font-size:10px;padding:9px 10px}
-}
-@media(prefers-reduced-motion:reduce){
- #shop.komi-shop-v5 :is(button,.sv3-item,.sv3-hide-toggle input::after){animation:none!important;transition:none!important}
- #shop.komi-shop-v5 .sv3-item:hover{transform:none}
-}
-
-/* Avoid a dim-to-bright flash before dynamic shop hydration. */
-#shop.komi-shop-v5.komi-static-shop button:disabled{opacity:1;cursor:default}
-@media(max-width:960px){#shop.komi-shop-v5.komi-static-shop .sv3-fitting{display:none}}
-
-/* Komi Shop: editorial collection, product photography and a quiet fitting room.
-   Cosmetics keep their own colors; the surfaces and purchase controls stay monochrome. */
-#shop.komi-shop-v5{
-  --shop-muted:#adaeb6;
-  --shop-stroke:#ffffff19;
-  --shop-ease:cubic-bezier(.22,1,.36,1);
-  --shop-white-glow:0 7px 22px #ffffff13;
-}
-#shop.komi-shop-v5 .sv3-topbar{align-items:flex-end;margin-bottom:24px!important}
-#shop.komi-shop-v5 .sv3-heading h1{
-  font-size:clamp(31px,3.25vw,48px);
-  line-height:1.02;
-  margin-bottom:10px;
-}
-#shop.komi-shop-v5 .sv3-heading > p:last-of-type{font-size:14px;color:var(--shop-muted)}
-#shop.komi-shop-v5 .sv3-top-actions .sv3-balance{background:#1e1e23;color:#fff}
-#shop.komi-shop-v5 .sv3-top-actions .sv3-outline-btn{background:#111114}
-
-#shop.komi-shop-v5 .sv5-weekly{
-  position:relative;isolation:isolate;
-  grid-template-columns:minmax(0,1fr) minmax(130px,auto) auto;
-  gap:clamp(14px,2.4vw,34px);
-  min-height:186px;padding:clamp(19px,3vw,35px);
-  margin-bottom:21px;
-  background:radial-gradient(ellipse at 78% 48%,#323239 0%,#1b1b20 33%,#101013 76%);
-  border-color:#ffffff26;
-}
-#shop.komi-shop-v5 .sv5-weekly::before{
-  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
-  background:repeating-linear-gradient(118deg,#ffffff12 0 1px,transparent 1px 18px);
-  mask-image:linear-gradient(90deg,transparent 46%,#000);
-}
-#shop.komi-shop-v5 .sv5-weekly h2{font-size:clamp(24px,2.75vw,43px);line-height:1.07;margin:12px 0 8px}
-#shop.komi-shop-v5 .sv5-weekly p{font-size:13px;color:#c0c0c7;max-width:43ch}
-#shop.komi-shop-v5 .sv3-countdown{background:#ffffff0d}
-#shop.komi-shop-v5 .sv5-weekly-item{
-  width:clamp(70px,7vw,100px);height:clamp(72px,7vw,100px);flex-basis:auto;
-  background:radial-gradient(circle at 50% 28%,#45454e,#252529 60%,#17171a);
-  box-shadow:0 8px 22px #0004;
-  border-color:#ffffff26;
-}
-#shop.komi-shop-v5 .sv5-bundle-btn{min-height:47px;box-shadow:none;font-size:13px}
-
-#shop.komi-shop-v5 .sv3-filters{margin-bottom:15px;gap:10px}
-#shop.komi-shop-v5 .sv3-category-tabs{gap:7px;padding-block:4px 8px!important;scroll-padding-inline:8px}
-#shop.komi-shop-v5 .sv3-category-tabs button{min-height:42px;padding:9px 16px;color:#b3b3ba}
-#shop.komi-shop-v5 .sv3-category-tabs button:focus-visible{outline-offset:-3px}
-#shop.komi-shop-v5 .sv5-sort-segments button{color:#b3b3ba}
-#shop.komi-shop-v5 .sv3-filter-actions{padding-bottom:13px;border-bottom:1px solid var(--shop-stroke)}
-#shop.komi-shop-v5 .sv3-market-caption{font-size:12px;line-height:1.5;color:var(--shop-muted)}
-
-#shop.komi-shop-v5 .sv3-item{
-  gap:10px;min-height:0;padding:11px;border-radius:21px;
-  background:linear-gradient(145deg,#19191d,#131316 60%);
-  transition:transform .2s var(--shop-ease),border-color .2s,box-shadow .2s;
-}
-#shop.komi-shop-v5 .sv3-item-badges{min-height:24px}
-#shop.komi-shop-v5 :is(.komi-shop-rarity,.sv3-owned){font-size:10px}
-#shop.komi-shop-v5 .sv5-preview-button.sv3-item-scene{
-  height:clamp(110px,10vw,151px);min-height:110px;
-  border-radius:15px;
-  background:radial-gradient(ellipse at 50% 46%,#34343b,#1b1b20 68%,#151517);
-}
-#shop.komi-shop-v5 .sv5-preview-button.sv3-item-scene::before{
-  content:"";position:absolute;inset:0;
-  background:repeating-linear-gradient(135deg,#ffffff12 0 1px,transparent 1px 11px);
-  mask-image:radial-gradient(ellipse at 50% 50%,transparent 26%,#000);
-  pointer-events:none;opacity:.42;
-}
-#shop.komi-shop-v5 .sv5-preview-button.sv3-item-scene::after{
-  content:"";position:absolute;top:9px;right:9px;width:18px;height:18px;pointer-events:none;
-  background:linear-gradient(#e7e7ec,#e7e7ec) right top/8px 1px no-repeat,
-    linear-gradient(#e7e7ec,#e7e7ec) right top/1px 8px no-repeat,
-    linear-gradient(#e7e7ec,#e7e7ec) left bottom/8px 1px no-repeat,
-    linear-gradient(#e7e7ec,#e7e7ec) left bottom/1px 8px no-repeat;
-  opacity:.7;
-}
-#shop.komi-shop-v5 .sv5-preview-button.sv3-item-scene:hover{border-color:#ffffff70}
-#shop.komi-shop-v5 .sv3-item-copy h3{font-size:14px;line-height:1.3}
-#shop.komi-shop-v5 .sv3-item-copy .sv3-unit-price{display:block!important;margin:4px 0 0;font-size:12px;color:#bfc0c7}
-#shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy{
-  min-height:44px;padding:8px 10px;font-size:12px;white-space:normal!important;overflow-wrap:anywhere;
-}
-#shop.komi-shop-v5 .sv3-item-actions .komi-shop-gift-button{
-  flex-basis:44px!important;width:44px!important;height:44px!important;min-width:44px;
-}
-#shop.komi-shop-v5 .sv3-fitting{background:linear-gradient(160deg,#1c1c20,#131316 50%);border-color:#ffffff26}
-#shop.komi-shop-v5 .sv3-fitting-body{gap:13px}
-#shop.komi-shop-v5 .sv3-fitting-head h2{font-size:clamp(18px,1.7vw,24px)}
-#shop.komi-shop-v5 .sv3-empty-selection,#shop.komi-shop-v5 .sv3-checkout-note{color:#ababB4;font-size:12px}
-#shop.komi-shop-v5 .sv3-checkout{font-size:13px}
-#shop.komi-shop-v5 .sv3-shop-extras:has(.komi-shop-social:empty){display:none}
-#shop.komi-shop-v5 .sv3-status:empty{margin:0;min-height:0}
-@media(max-width:1150px){
-  #shop.komi-shop-v5 .sv5-weekly{grid-template-columns:minmax(0,1fr) auto}
-  #shop.komi-shop-v5 .sv5-weekly-items{grid-row:auto;grid-column:2}
-  #shop.komi-shop-v5 .sv5-bundle-btn{grid-row:2;grid-column:1/-1;justify-self:start}
-}
-@media(max-width:960px){
-  #shop.komi-shop-v5 .sv3-fitting{bottom:calc(76px + env(safe-area-inset-bottom,0px));scrollbar-gutter:stable}
-  #shop.komi-shop-v5 .sv3-product-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,186px),1fr))}
-}
-@media(max-width:680px){
-  #shop.komi-shop-v5 .sv3-topbar{align-items:flex-start;margin-bottom:17px!important}
-  #shop.komi-shop-v5 .sv3-heading > p:last-of-type{font-size:13px}
-  #shop.komi-shop-v5 .sv5-weekly{gap:10px;grid-template-columns:minmax(0,1fr) auto;min-height:0;padding:16px}
-  #shop.komi-shop-v5 .sv5-weekly-items{gap:5px}
-  #shop.komi-shop-v5 .sv5-weekly-item{width:54px;height:57px;border-radius:13px}
-  #shop.komi-shop-v5 .sv5-weekly-item :is(.komi-coin-frame,.sv3-shape){height:37px!important;width:37px!important}
-  #shop.komi-shop-v5 .sv5-weekly-item .sv3-title-sample{font-size:8px;padding:3px}
-  #shop.komi-shop-v5 .sv5-sort-segments{width:auto;max-width:100%;justify-content:flex-start;flex-wrap:wrap;border-radius:18px}
-  #shop.komi-shop-v5 :is(.sv3-product-grid,.sv5-static-grid){grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-  #shop.komi-shop-v5 .sv3-item{border-radius:17px;padding:8px;gap:8px}
-  #shop.komi-shop-v5 .sv3-item-copy h3{font-size:13px}
-  #shop.komi-shop-v5 .sv3-item-badges{flex-wrap:wrap}
-  #shop.komi-shop-v5 .sv3-item-actions .sv3-primary-buy{font-size:11px;padding-inline:5px}
-  #shop.komi-shop-v5 .sv3-item-actions{gap:4px}
-  #shop.komi-shop-v5 .sv3-item-actions .komi-shop-gift-button{
-    width:38px!important;min-width:38px;flex-basis:38px!important;
-  }
-}
-@media(max-width:360px){
-  #shop.komi-shop-v5 .sv5-weekly-items{display:none}
-  #shop.komi-shop-v5 .sv5-weekly{grid-template-columns:1fr}
-  #shop.komi-shop-v5 :is(.sv3-product-grid,.sv5-static-grid){grid-template-columns:1fr}
-}
-@media(min-width:961px){
-  #shop.komi-shop-v5 .sv3-category-tabs{flex-wrap:wrap!important;overflow:visible;}
-}
-@media(max-width:960px){
-  #shop.komi-shop-v5 .sv3-category-tabs{scrollbar-width:thin;scrollbar-color:#55555e #16161a}
-  #shop.komi-shop-v5 .sv3-category-tabs::-webkit-scrollbar{display:block!important;height:5px}
-  #shop.komi-shop-v5 .sv3-category-tabs::-webkit-scrollbar-thumb{background:#55555e;border-radius:999px}
-}
-#shop.komi-shop-v5 .sv3-item:focus-within{border-color:#ffffff72}
-#shop.komi-shop-v5 .sv3-price-notice{
-  margin:0 0 14px;padding:11px 15px;border:1px solid var(--shop-stroke);
-  border-radius:14px;background:#16161a;color:#d5d5dc;font-size:13px;line-height:1.5;
-}
-#shop.komi-shop-v5 .sv3-extra-samples{
-  display:flex;align-items:center;flex-wrap:wrap;gap:10px;min-width:0;
-  padding:10px;border:1px solid var(--shop-stroke);border-radius:14px;background:#16161a;
-}
-#shop.komi-shop-v5 .sv5-weekly .sv5-weekly-price{
-  width:fit-content;margin-top:9px;padding:4px 9px;border-radius:999px;
-  color:#ececef;background:#ffffff0d;font-size:12px;font-variant-numeric:tabular-nums;
-}
+#shop.komi-shop-studio .sv7-checkout-footer .sv3-status{margin:0;padding:10px 12px;border-radius:12px;background:var(--shop-active);font-size:13px;line-height:1.5}

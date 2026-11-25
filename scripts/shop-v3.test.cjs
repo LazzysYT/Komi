@@ -6,7 +6,6 @@ const vm=require('node:vm');
 const root=path.join(__dirname,'..');
 const read=name=>fs.readFileSync(path.join(root,name),'utf8');
 const js=read('komi-shop-v3.js');
-const css=read('komi-shop-v3.css');
 const html=read('index.html');
 const core=read('anicoin.js');
 const social=read('komi-shop-social.js');
@@ -36,41 +35,41 @@ const owned={owner:'uid-one',store:{balance:500,owned:['frame_moon','title_cinem
 function reset(){
  actor=()=>guest;
  // Keep each test independent: clear persisted filters through the same UI handler.
- if(scripts.click)scripts.click(eventButton('data-v3-reset-filters'));
+ if(scripts.click)scripts.click(eventButton('data-v7-view','catalog'));
  context.window.KomiShopV3.reset();
+ if(/aria-controls="sv7FittingBody" aria-expanded="true"/.test(container.innerHTML))
+   scripts.click(eventButton('data-v3-sheet'));
  context.window.KomiShopV3.render(container,guest);
 }
 function eventButton(name,id){
  return {target:{closest(selector){
   if(selector!=='button')return null;
-  const d={};
-  if(name==='data-v3-try')d.v3Try=id;
-  if(name==='data-v3-category')d.v3Category=id;
-   if(name==='data-v3-sort')d.v3Sort=id;
-  if(name==='data-v3-reset')d.v3Reset='';
-  if(name==='data-v3-reset-filters')d.v3ResetFilters='';
+  const key=name.replace(/^data-/,'').replace(/-([a-z])/g,(_,letter)=>letter.toUpperCase());
+  const d={[key]:id??''};
   return {dataset:d,hasAttribute(k){return k===name;}};
  }}};
 }
 const countCards=html=>(html.match(/data-shop-item-action=/g)||[]).length;
 test('shop v3 JavaScript parses without frameworks and is initialized from the catalog',()=>{
  assert.doesNotThrow(()=>new vm.Script(js));
- assert.equal(products.length,93);
+ assert.equal(products.length,141);
  assert.match(html,/src="\.\/komi-shop-v3\.js\?v=/);
  assert.match(html,/komi\.production\.css\?v=/);
  assert.match(core,/window\.KomiShopV3\?\.render/);
  assert.match(core,/window\.komiShopCheckoutCart/);
  assert.match(social,/section\.classList\.contains\('komi-shop-v3'\)/);
 });
-test('guest storefront shows all items, rarity, explicit prices and auth button',()=>{
+test('guest storefront shows a bounded first page, explicit prices and auth button',()=>{
+ reset();
  context.window.KomiShopV3.render(container,guest);
  const count=(container.innerHTML.match(/data-shop-item-action="/g)||[]).length;
- assert.equal(count,93);
- assert.match(container.innerHTML,/Магазин Komi/);
+ assert.equal(count,24);
+ assert.match(container.innerHTML,/Твой профиль\. Твой стиль\./);
  assert.match(container.innerHTML,/Войти, чтобы купить/);
- assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,93);
+ assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,24);
   assert.doesNotMatch(container.innerHTML,/Рамка для твоего аватара в профиле/);
- assert.match(container.innerHTML,/data-rarity="legendary"/);
+ assert.equal((container.innerHTML.match(/data-rarity="(?:common|rare|epic|legendary)"/g)||[]).length,24);
+ assert.match(container.innerHTML,/Показано 24 из 141/);
  assert.match(container.innerHTML,/data-v3-sort/);
  assert.match(container.innerHTML,/data-v3-hide-owned/);
  assert.match(container.innerHTML,/aria-label="Живая примерочная"/);
@@ -90,24 +89,21 @@ test('category switch preserves trials and guest can trial without buying',async
  await scripts.click(eventButton('data-v3-try','frame_moon'));
  assert.deepEqual([...context.window.KomiShopV3.selected()],['frame_moon']);
  await scripts.click(eventButton('data-v3-category','shape'));
- assert.match(container.innerHTML,/data-v3-category="shape" aria-pressed="true"/);
- assert.equal((container.innerHTML.match(/data-shop-item-action=/g)||[]).length,4);
+ assert.match(container.innerHTML,/<option value="shape" selected>/);
+ assert.equal((container.innerHTML.match(/data-shop-item-action=/g)||[]).length,8);
  assert.equal(context.window.KomiShopV3.selected().length,1);
  assert.match(container.innerHTML,/Выбрано для примерки/);
  context.window.KomiShopV3.reset();
 });
-test('bento fitting room and sorting are responsive and accessible',()=>{
- for(const required of ['#09090B','#131316','#1A1A1F','rgba(255,255,255,.08)',
- 'grid-template-columns:repeat(2,minmax(0,1fr))','grid-template-columns:repeat(auto-fill,minmax(200px,1fr))',
- 'position:sticky','backdrop-filter:blur(14px)','@media(max-width:960px)','position:fixed',
- 'padding-bottom:190px','@media(prefers-reduced-motion:reduce)']){
- assert.ok(css.includes(required),'missing '+required);
- }
- assert.match(js,/role="status"/);
- assert.match(js,/aria-expanded/);
- assert.match(js,/data-v3-checkout/);
- assert.match(js,/data-v3-promo/);
- assert.match(js,/purchased|owned/);
+test('fitting room exposes labelled controls, free-preview explanation and an accessible result status',()=>{
+ reset();
+ assert.match(container.innerHTML,/role="status" aria-live="polite"/);
+ assert.match(container.innerHTML,/aria-controls="sv7FittingBody" aria-expanded="false"/);
+ assert.match(container.innerHTML,/data-v3-checkout/);
+ assert.match(container.innerHTML,/data-v3-promo/);
+ assert.match(container.innerHTML,/Примеряй свободно\. Профиль пока не изменён/);
+ assert.match(container.innerHTML,/<select data-v3-sort aria-label="Сортировка">/);
+ assert.match(container.innerHTML,/<label class="sv7-sr-only" for="sv7Search">Найти оформление/);
 });
 test('atomic server-side cart is authenticated, row-locked and rejects dupes',()=>{
  assert.match(sql,/auth\.uid\(\)/);
@@ -132,11 +128,7 @@ test('cart only charges purchases successfully inserted, even when a gift arrive
  assert.match(racePatch,/v_wallet\.balance<v_total/);
 });
 
-test('shop layout overrides the site-wide sticky header and keeps categories in one row',()=>{
- assert.match(css,/#mainContainer > #shop\.komi-shop-v3 > header\.sv3-topbar/);
- assert.match(css,/position:relative!important/);
- assert.match(css,/\.sv3-category-tabs\{[\s\S]*?flex-wrap:nowrap/);
- assert.match(css,/\.sv3-product-grid\{[\s\S]*?grid-template-columns:repeat\(auto-fit/);
+test('shop release keeps shared stylesheet revision synchronized with the page',()=>{
  const revision=html.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
  assert.match(revision,/^\d{8}-[\w-]+$/);
  assert.equal(html.match(/komi\.production\.css\?v=([^"]+)/)?.[1],revision);
@@ -173,21 +165,23 @@ test('shop avatars match verified Premium GIF rather than stale normal photo',()
  assert.match(html,/komi-premium\.js\?v=20261122h/);
 });
 
-test('shop V5 presents one weekly collection and filled icons while preserving purchase and gift hooks',()=>{
+test('shop studio presents six permanent collections and filled icons while preserving purchase and gift hooks',()=>{
   const icons=read('komi-shop-icons.js');
-  const v5css=read('komi-shop-v5.css');
   const premium=read('komi-premium.js');
   reset();
   const output=container.innerHTML;
-  assert.match(output,/class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5"/);
-  assert.match(output,/Магазин KomiAnime/);
-  assert.equal((output.match(/class="sv5-weekly"/g)||[]).length,1);
-  assert.equal((output.match(/data-v3-bundle/g)||[]).length,1);
+  assert.match(output,/class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5 komi-shop-studio"/);
+  assert.match(output,/Твой профиль\. Твой стиль\./);
+  assert.equal((output.match(/data-v7-collection=/g)||[]).length,6);
+  assert.equal((output.match(/data-v7-look=/g)||[]).length,6);
   assert.doesNotMatch(output,/sv4-feature-grid|sv3-bento|Ещё категории/);
-  assert.equal((output.match(/data-v3-category=/g)||[]).length,15);
-  assert.equal((output.match(/data-v3-sort=/g)||[]).length,4);
-  assert.equal((output.match(/data-shop-item-action=/g)||[]).length,93);
-  assert.equal((output.match(/data-v3-try=/g)||[]).length,93);
+  assert.equal((output.match(/data-v3-category=/g)||[]).length,6);
+  const categorySelect=output.match(/<select data-v7-category-select[^>]*>([\s\S]*?)<\/select>/)?.[1];
+  const sortSelect=output.match(/<select data-v3-sort[^>]*>([\s\S]*?)<\/select>/)?.[1];
+  assert.equal((categorySelect.match(/<option /g)||[]).length,14);
+  assert.equal((sortSelect.match(/<option /g)||[]).length,5);
+  assert.equal((output.match(/data-shop-item-action=/g)||[]).length,24);
+  assert.equal((output.match(/data-v3-try=/g)||[]).length,24);
   assert.match(output,/data-v3-hide-owned/);
   assert.match(output,/data-v3-checkout/);
   assert.match(output,/id="komiShopSocialArea"/);
@@ -201,18 +195,18 @@ test('shop V5 presents one weekly collection and filled icons while preserving p
   assert.match(social,/KomiShopIcons\?\.solid\?\.\('gift'/);
   assert.doesNotMatch(social,/komi-shop-gift-button','🎁'/);
   assert.match(premium,/sv4-perk-badge/);
-  assert.match(v5css,/\.sv5-sort-segments/);
-  assert.match(v5css,/border-radius:999px/);
-  assert.match(v5css,/padding:19px 19px 96px/);
-  assert.match(v5css,/prefers-reduced-motion:reduce/);
   assert.doesNotMatch(output,/случайн(?:ые|ая) наград|рулетк[ау]|шанс выпадения/i);
 });
-test('shop V5 segmented sorting and visual preview preserve selected products',async()=>{
+test('shop studio price sorting and visual preview preserve selected products',async()=>{
   reset();
-  await scripts.click(eventButton('data-v3-sort','price-down'));
-  assert.match(container.innerHTML,/data-v3-sort="price-down" aria-pressed="true"/);
+  scripts.change({target:{value:'price-down',matches:selector=>selector==='[data-v3-sort]'}});
+  assert.match(container.innerHTML,/<option value="price-down" selected>/);
+  const ids=[...container.innerHTML.matchAll(/data-item-id="([^"]+)"/g)].map(match=>match[1]);
+  assert.deepEqual(ids,Array.from(products).sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru')).slice(0,24).map(item=>item.id));
   await scripts.click(eventButton('data-v3-try','frame_moon'));
   assert.deepEqual([...context.window.KomiShopV3.selected()],['frame_moon']);
+  scripts.change({target:{value:'frame',matches:selector=>selector==='[data-v7-category-select]'}});
+  await scripts.click(eventButton('data-v7-more'));
   assert.match(container.innerHTML,/class="komi-coin-card sv3-item is-trying"/);
   context.window.KomiShopV3.reset();
 });
@@ -230,9 +224,12 @@ test('svg sticker icons are predictable, non-interactive and have a fallback',()
 test('all product categories have a dedicated filter and showcase/card cosmetics are visible in the fitting room',async()=>{
  reset();
  for(const type of new Set(products.map(row=>row.type))){
-  assert.match(container.innerHTML,new RegExp('data-v3-category="'+type+'"'));
-  await scripts.click(eventButton('data-v3-category',type));
-  assert.equal(countCards(container.innerHTML),products.filter(row=>row.type===type).length,type);
+  assert.match(container.innerHTML,new RegExp('<option value="'+type+'"'));
+  scripts.change({target:{value:type,matches:selector=>selector==='[data-v7-category-select]'}});
+  const expected=products.filter(row=>row.type===type);
+  assert.equal(countCards(container.innerHTML),Math.min(24,expected.length),type);
+  if(expected.length>24)await scripts.click(eventButton('data-v7-more'));
+  assert.equal(countCards(container.innerHTML),expected.length,type);
  }
  await scripts.click(eventButton('data-v3-try','showcase_film'));
  await scripts.click(eventButton('data-v3-try','card_glass'));
@@ -244,32 +241,35 @@ test('hide-owned filter does not blank the owned collection',async()=>{
  reset();actor=()=>owned;
  context.window.KomiShopV3.render(container,owned);
  scripts.change({target:{checked:true,matches:selector=>selector==='[data-v3-hide-owned]'}});
- assert.equal(countCards(container.innerHTML),products.length-owned.store.owned.length);
- await scripts.click(eventButton('data-v3-category','owned'));
+ assert.equal(countCards(container.innerHTML),24);
+ assert.doesNotMatch(container.innerHTML,/data-item-id="(?:frame_moon|title_cinema)"/);
+ await scripts.click(eventButton('data-v7-view','owned'));
  assert.equal(countCards(container.innerHTML),owned.store.owned.length);
  assert.match(container.innerHTML,/data-v3-hide-owned disabled/);
  assert.doesNotMatch(container.innerHTML,/пока нет купленных/);
 });
 
-test('migration lowers every existing price, registers eight new goods and keeps all equip ids valid',()=>{
+test('V6 migration retains its original price cut and eight goods without redefining V7 additions',()=>{
  const migration=read('supabase/migrations/20261125100500_anicoin_shop_v6_catalog.sql');
  const parsePrices=t=>Object.fromEntries([...t.matchAll(/\('([a-z0-9_]+)',\s*(\d+),\s*true\)/g)].map(([,id,cost])=>[id,+cost]));
  const oldPrices=parsePrices(read('supabase/migrations/20261122070000_anicoin_visual_collections.sql'));
  const newPrices=parsePrices(migration);
+ const v6Products=products.filter(row=>Object.hasOwn(newPrices,row.id));
  assert.equal(Object.keys(oldPrices).length,85);
- assert.deepEqual(newPrices,Object.fromEntries(products.map(row=>[row.id,row.cost])));
+ assert.equal(v6Products.length,93);
+ assert.deepEqual(newPrices,Object.fromEntries(v6Products.map(row=>[row.id,row.cost])));
  assert.equal(Object.keys(newPrices).filter(id=>!Object.hasOwn(oldPrices,id)).length,8);
  for(const [id,price] of Object.entries(oldPrices))assert.ok(newPrices[id]<price,id);
  const checks=Object.fromEntries([...migration.matchAll(/add constraint (\w+)\s+check \([\s\S]+?\bin \(([\s\S]+?)\n  \)\);/g)]
   .map(([,constraint,list])=>[constraint,[...list.matchAll(/'([a-z0-9_]+)'/g)].map(match=>match[1])]));
- assert.deepEqual(checks.premium_store_purchases_item_id_check,[...products.map(row=>row.id)]);
+ assert.deepEqual(checks.premium_store_purchases_item_id_check,[...v6Products.map(row=>row.id)]);
  for(const type of ['frame','title','banner','icon','plate','xp'])
-  assert.deepEqual(checks['komi_premium_cosmetic_equips_'+type+'_id_check'],[...products.filter(row=>row.type===type).map(row=>row.id)]);
+  assert.deepEqual(checks['komi_premium_cosmetic_equips_'+type+'_id_check'],[...v6Products.filter(row=>row.type===type).map(row=>row.id)]);
  assert.match(migration,/security invoker set search_path = ''/);
- assert.match(migration,new RegExp("select '"+context.window.KomiShopCatalog.revision+"'"));
+ assert.match(migration,/select '20261125-shop-v6'/);
  assert.doesNotMatch(migration,/update public\.komi_anicoin_wallets|update komi_private\.premium_store_purchases|security definer/i);
  const visuals=read('komi-shop-v6-goods.css');
- for(const row of products.filter(row=>!Object.hasOwn(oldPrices,row.id)&&row.type!=='title'))
+ for(const row of v6Products.filter(row=>!Object.hasOwn(oldPrices,row.id)&&row.type!=='title'))
   assert.ok(visuals.includes('komi-store-'+(row.frameClass||row.bannerClass||row.cosmeticClass)),row.id);
 });
 
@@ -287,7 +287,7 @@ test('server revision must match before debiting and preview blocks even with th
  assert.equal(real.canCheckout(),false);
  assert.equal(await real.checkPricing({rpc:async()=>{throw Error('preview must not query');}}),false);
  context.window.KomiShopV3.render(container,guest);
- assert.match(container.innerHTML,/Предпросмотр: показаны новые цены/);
- assert.match(container.innerHTML,/aria-label="Купить «Лунная рамка»" disabled>Только примерка/);
+ assert.match(container.innerHTML,/Предпросмотр оформления\. Покупки и подарки здесь отключены/);
+ assert.equal((container.innerHTML.match(/disabled>Только примерка<\/button>/g)||[]).length,24);
  delete context.window.location;
 });

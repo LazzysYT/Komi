@@ -68,8 +68,9 @@ test('V4 sticker styles are retained in the same one-file production cascade',()
  assert.match(revision,/^\d{8}-[\w-]+$/);
  assert.equal(html.match(/komi\.production\.css\?v=([^"]+)/)?.[1],revision);
  assert.doesNotMatch(html,/komi-shop-v3\.css\?v=/);
- assert.match(html,/class="komi-static-shop komi-shop-v3 komi-shop-v4 komi-shop-v5"/);
+ assert.match(html,/class="komi-static-shop komi-shop-v3 komi-shop-v5 komi-shop-studio"/);
   assert.match(html,/komi-shop-v5\.css\?v=/);
-  assert.match(html,/class="sv5-weekly"/);
+  assert.match(html,/class="sv7-static-loading" role="status"/);
+  assert.doesNotMatch(html,/class="sv5-weekly"/);
   assert.doesNotMatch(html,/sv4-feature-grid/);
 });

@@ -803,10 +803,664 @@ const items=Object.freeze([
     "type": "xp",
     "cosmeticClass": "xp-perforation",
     "rarity": "rare"
+  },
+  {
+    "id": "frame_velvet",
+    "label": "Рамка «Ночной бархат»",
+    "cost": 35,
+    "type": "frame",
+    "rarity": "common",
+    "collection": "nocturne",
+    "description": "Тёмный ободок с тонкой серебряной окантовкой.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-velvet"
+  },
+  {
+    "id": "banner_citylight",
+    "label": "Обложка «Город после полуночи»",
+    "cost": 45,
+    "type": "banner",
+    "rarity": "rare",
+    "collection": "nocturne",
+    "description": "Силуэты города и мягкий свет ночных окон.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-citylight"
+  },
+  {
+    "id": "title_midnight",
+    "label": "Титул «Ещё одну серию»",
+    "cost": 15,
+    "type": "title",
+    "rarity": "common",
+    "collection": "nocturne",
+    "description": "Для тех, кто всегда остаётся ещё на одну серию.",
+    "introducedAt": "2026-11-25",
+    "title": "☾ Ещё одну серию"
+  },
+  {
+    "id": "name_moonstone",
+    "label": "Ник «Лунный камень»",
+    "cost": 60,
+    "type": "name",
+    "rarity": "rare",
+    "collection": "nocturne",
+    "description": "Холодный серебряно-голубой перелив букв.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "name-moonstone"
+  },
+  {
+    "id": "shape_arch",
+    "label": "Форма «Арка»",
+    "cost": 25,
+    "type": "shape",
+    "rarity": "common",
+    "collection": "nocturne",
+    "description": "Закруглённый верх и ровное основание аватара.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "shape-arch"
+  },
+  {
+    "id": "plate_window",
+    "label": "Комментарий «Ночное окно»",
+    "cost": 35,
+    "type": "plate",
+    "rarity": "common",
+    "collection": "nocturne",
+    "description": "Тонкая оконная сетка на тёмной плашке.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "plate-window"
+  },
+  {
+    "id": "overlay_fireflies",
+    "label": "Эффект «Светлячки»",
+    "cost": 55,
+    "type": "overlay",
+    "rarity": "rare",
+    "collection": "nocturne",
+    "description": "Редкие тёплые огоньки поверх обложки.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "overlay-fireflies"
+  },
+  {
+    "id": "icon_moonrise",
+    "label": "Статус «Полумесяц»",
+    "cost": 20,
+    "type": "icon",
+    "rarity": "common",
+    "collection": "nocturne",
+    "description": "Маленькая луна рядом с именем.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "icon-moonrise",
+    "symbol": "☾"
+  },
+  {
+    "id": "frame_ink",
+    "label": "Рамка «Чернильный штрих»",
+    "cost": 40,
+    "type": "frame",
+    "rarity": "rare",
+    "collection": "manga",
+    "description": "Асимметричные светлые штрихи вокруг аватара.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-ink"
+  },
+  {
+    "id": "banner_panels",
+    "label": "Обложка «Страница манги»",
+    "cost": 40,
+    "type": "banner",
+    "rarity": "rare",
+    "collection": "manga",
+    "description": "Контрастные панели и диагональная штриховка.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-panels"
+  },
+  {
+    "id": "title_pagekeeper",
+    "label": "Титул «Между страниц»",
+    "cost": 15,
+    "type": "title",
+    "rarity": "common",
+    "collection": "manga",
+    "description": "История продолжается за пределами экрана.",
+    "introducedAt": "2026-11-25",
+    "title": "▤ Между страниц"
+  },
+  {
+    "id": "name_inklight",
+    "label": "Ник «Белая тушь»",
+    "cost": 45,
+    "type": "name",
+    "rarity": "rare",
+    "collection": "manga",
+    "description": "Чёткие белые буквы с двойной графичной тенью.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "name-inklight"
+  },
+  {
+    "id": "shape_stamp",
+    "label": "Форма «Почтовая марка»",
+    "cost": 30,
+    "type": "shape",
+    "rarity": "common",
+    "collection": "manga",
+    "description": "Ступенчатый край, как у коллекционной марки.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "shape-stamp"
+  },
+  {
+    "id": "plate_speech",
+    "label": "Комментарий «Реплика манги»",
+    "cost": 30,
+    "type": "plate",
+    "rarity": "common",
+    "collection": "manga",
+    "description": "Светлый двойной контур и спокойная тёмная заливка.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "plate-speech"
+  },
+  {
+    "id": "xp_panels",
+    "label": "XP «Панели манги»",
+    "cost": 35,
+    "type": "xp",
+    "rarity": "common",
+    "collection": "manga",
+    "description": "Контрастные сегменты на полоске прогресса.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "xp-panels"
+  },
+  {
+    "id": "icon_inkpen",
+    "label": "Статус «Перо»",
+    "cost": 15,
+    "type": "icon",
+    "rarity": "common",
+    "collection": "manga",
+    "description": "Небольшой знак пера рядом с ником.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "icon-inkpen",
+    "symbol": "✎"
+  },
+  {
+    "id": "frame_scanline",
+    "label": "Рамка «Аркадный контур»",
+    "cost": 55,
+    "type": "frame",
+    "rarity": "rare",
+    "collection": "arcade",
+    "description": "Голубой и сиреневый ободки в духе аркад.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-scanline"
+  },
+  {
+    "id": "banner_synthwave",
+    "label": "Обложка «Неоновый горизонт»",
+    "cost": 60,
+    "type": "banner",
+    "rarity": "epic",
+    "collection": "arcade",
+    "description": "Сиреневый закат и линии аркадной сетки.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-synthwave"
+  },
+  {
+    "id": "title_playerone",
+    "label": "Титул «Первый игрок»",
+    "cost": 20,
+    "type": "title",
+    "rarity": "common",
+    "collection": "arcade",
+    "description": "Твой следующий уровень — новая история.",
+    "introducedAt": "2026-11-25",
+    "title": "▸ Первый игрок"
+  },
+  {
+    "id": "name_pixelbeam",
+    "label": "Ник «Пиксельный луч»",
+    "cost": 65,
+    "type": "name",
+    "rarity": "epic",
+    "collection": "arcade",
+    "description": "Светлый градиент от голубого к сиреневому.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "name-pixelbeam"
+  },
+  {
+    "id": "shape_pixelcut",
+    "label": "Форма «Пиксельный срез»",
+    "cost": 35,
+    "type": "shape",
+    "rarity": "rare",
+    "collection": "arcade",
+    "description": "Крупные пиксельные ступени по углам аватара.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "shape-pixelcut"
+  },
+  {
+    "id": "plate_terminal",
+    "label": "Комментарий «Терминал»",
+    "cost": 40,
+    "type": "plate",
+    "rarity": "rare",
+    "collection": "arcade",
+    "description": "Тонкие экранные строки и светлая боковая линия.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "plate-terminal"
+  },
+  {
+    "id": "xp_combo",
+    "label": "XP «Комбо»",
+    "cost": 45,
+    "type": "xp",
+    "rarity": "rare",
+    "collection": "arcade",
+    "description": "Сегменты от голубого к фиолетовому. Меняет только вид.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "xp-combo"
+  },
+  {
+    "id": "overlay_datastream",
+    "label": "Эффект «Поток данных»",
+    "cost": 60,
+    "type": "overlay",
+    "rarity": "epic",
+    "collection": "arcade",
+    "description": "Светлые вертикальные штрихи проходят по обложке.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "overlay-datastream"
+  },
+  {
+    "id": "frame_constellation",
+    "label": "Рамка «Созвездие»",
+    "cost": 65,
+    "type": "frame",
+    "rarity": "epic",
+    "collection": "celestial",
+    "description": "Серебряный контур с точечной звёздной орбитой.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-constellation"
+  },
+  {
+    "id": "banner_orbit",
+    "label": "Обложка «Далёкая орбита»",
+    "cost": 60,
+    "type": "banner",
+    "rarity": "epic",
+    "collection": "celestial",
+    "description": "Тёмная планета, светлая дуга и звёздная глубина.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-orbit"
+  },
+  {
+    "id": "title_stargazer",
+    "label": "Титул «Ловец созвездий»",
+    "cost": 25,
+    "type": "title",
+    "rarity": "rare",
+    "collection": "celestial",
+    "description": "Для любителей историй о далёких мирах.",
+    "introducedAt": "2026-11-25",
+    "title": "✧ Ловец созвездий"
+  },
+  {
+    "id": "name_stardust",
+    "label": "Ник «Звёздная пыль»",
+    "cost": 70,
+    "type": "name",
+    "rarity": "epic",
+    "collection": "celestial",
+    "description": "Жемчужные буквы с мягким светлым сиянием.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "name-stardust"
+  },
+  {
+    "id": "shape_comet",
+    "label": "Форма «Комета»",
+    "cost": 40,
+    "type": "shape",
+    "rarity": "rare",
+    "collection": "celestial",
+    "description": "Скошенный силуэт со светлым, стремительным характером.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "shape-comet"
+  },
+  {
+    "id": "plate_constellation",
+    "label": "Комментарий «Звёздная карта»",
+    "cost": 45,
+    "type": "plate",
+    "rarity": "rare",
+    "collection": "celestial",
+    "description": "Редкие звёзды на тёмном поле комментария.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "plate-constellation"
+  },
+  {
+    "id": "xp_constellation",
+    "label": "XP «Звёздный маршрут»",
+    "cost": 45,
+    "type": "xp",
+    "rarity": "rare",
+    "collection": "celestial",
+    "description": "Светлые точки соединены тонкой линией прогресса.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "xp-constellation"
+  },
+  {
+    "id": "overlay_meteor",
+    "label": "Эффект «Метеорный дождь»",
+    "cost": 70,
+    "type": "overlay",
+    "rarity": "epic",
+    "collection": "celestial",
+    "description": "Тонкие диагональные следы пересекают обложку.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "overlay-meteor"
+  },
+  {
+    "id": "frame_aperture",
+    "label": "Рамка «Диафрагма»",
+    "cost": 45,
+    "type": "frame",
+    "rarity": "rare",
+    "collection": "cinema",
+    "description": "Сегментированный ободок, вдохновлённый объективом.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-aperture"
+  },
+  {
+    "id": "banner_silverscreen",
+    "label": "Обложка «Серебряный экран»",
+    "cost": 35,
+    "type": "banner",
+    "rarity": "common",
+    "collection": "cinema",
+    "description": "Мягкий свет киноэкрана на тёмной сцене.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-silverscreen"
+  },
+  {
+    "id": "title_lastrow",
+    "label": "Титул «Последний ряд»",
+    "cost": 10,
+    "type": "title",
+    "rarity": "common",
+    "collection": "cinema",
+    "description": "Уютное место для большого кино.",
+    "introducedAt": "2026-11-25",
+    "title": "▰ Последний ряд"
+  },
+  {
+    "id": "frame_letterbox",
+    "label": "Рамка «Широкий кадр»",
+    "cost": 40,
+    "type": "frame",
+    "rarity": "rare",
+    "collection": "cinema",
+    "description": "Светлые горизонтальные штрихи вокруг круглого аватара.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-letterbox"
+  },
+  {
+    "id": "banner_contactsheet",
+    "label": "Обложка «Контактный лист»",
+    "cost": 45,
+    "type": "banner",
+    "rarity": "rare",
+    "collection": "cinema",
+    "description": "Геометрия кадров и перфорация фотоплёнки.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-contactsheet"
+  },
+  {
+    "id": "title_director",
+    "label": "Титул «Режиссёр вечера»",
+    "cost": 25,
+    "type": "title",
+    "rarity": "rare",
+    "collection": "cinema",
+    "description": "Тот, кто выбирает, что мы смотрим сегодня.",
+    "introducedAt": "2026-11-25",
+    "title": "▣ Режиссёр вечера"
+  },
+  {
+    "id": "xp_cue",
+    "label": "XP «Монтажная дорожка»",
+    "cost": 35,
+    "type": "xp",
+    "rarity": "common",
+    "collection": "cinema",
+    "description": "Светлая шкала с короткими монтажными метками.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "xp-cue"
+  },
+  {
+    "id": "icon_clapper",
+    "label": "Статус «Кинохлопушка»",
+    "cost": 20,
+    "type": "icon",
+    "rarity": "common",
+    "collection": "cinema",
+    "description": "Небольшой кинознак у имени.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "icon-clapper",
+    "symbol": "▰"
+  },
+  {
+    "id": "frame_ivy",
+    "label": "Рамка «Серебряный плющ»",
+    "cost": 50,
+    "type": "frame",
+    "rarity": "rare",
+    "collection": "botanical",
+    "description": "Оливковый ободок с тонким пунктиром по краю.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-ivy"
+  },
+  {
+    "id": "banner_botanical",
+    "label": "Обложка «Тихий сад»",
+    "cost": 50,
+    "type": "banner",
+    "rarity": "rare",
+    "collection": "botanical",
+    "description": "Мягкие силуэты листьев на тёмном зелёном фоне.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-botanical"
+  },
+  {
+    "id": "title_gardenkeeper",
+    "label": "Титул «Хранитель сада»",
+    "cost": 15,
+    "type": "title",
+    "rarity": "common",
+    "collection": "botanical",
+    "description": "Спокойный уголок среди любимых историй.",
+    "introducedAt": "2026-11-25",
+    "title": "❧ Хранитель сада"
+  },
+  {
+    "id": "frame_dewdrop",
+    "label": "Рамка «Утренняя роса»",
+    "cost": 60,
+    "type": "frame",
+    "rarity": "epic",
+    "collection": "botanical",
+    "description": "Прозрачный голубой блик и двойной светлый контур.",
+    "introducedAt": "2026-11-25",
+    "frameClass": "frame-dewdrop"
+  },
+  {
+    "id": "banner_petal",
+    "label": "Обложка «Лепестки в сумерках»",
+    "cost": 55,
+    "type": "banner",
+    "rarity": "rare",
+    "collection": "botanical",
+    "description": "Нежные лепестки на глубоком сливовом фоне.",
+    "introducedAt": "2026-11-25",
+    "bannerClass": "banner-petal"
+  },
+  {
+    "id": "title_bloom",
+    "label": "Титул «Время расцветать»",
+    "cost": 20,
+    "type": "title",
+    "rarity": "common",
+    "collection": "botanical",
+    "description": "Для новой главы твоей коллекции.",
+    "introducedAt": "2026-11-25",
+    "title": "❀ Время расцветать"
+  },
+  {
+    "id": "overlay_pollen",
+    "label": "Эффект «Золотая пыльца»",
+    "cost": 50,
+    "type": "overlay",
+    "rarity": "rare",
+    "collection": "botanical",
+    "description": "Мелкие золотистые частицы медленно проходят по обложке.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "overlay-pollen"
+  },
+  {
+    "id": "icon_leaf",
+    "label": "Статус «Листок»",
+    "cost": 15,
+    "type": "icon",
+    "rarity": "common",
+    "collection": "botanical",
+    "description": "Миниатюрный лист рядом с ником.",
+    "introducedAt": "2026-11-25",
+    "cosmeticClass": "icon-leaf",
+    "symbol": "❧"
   }
 ].map(Object.freeze));
 const sets=Object.freeze([{"id":"eclipse","label":"Ночное затмение","items":["frame_eclipse","shape_octagon","title_nightmarathon"],"className":"komi-set-eclipse"},{"id":"film","label":"Кинолегенда","items":["frame_film35","plate_manga","title_critic"],"className":"komi-set-film"},{"id":"sakura","label":"Сад сакуры","items":["frame_sakura","shape_drop","mascot_spirit"],"className":"komi-set-sakura"}].map(Object.freeze));
-const revision='20261125-shop-v6';
+const collections=Object.freeze([
+  {
+    "id": "nocturne",
+    "label": "После полуночи",
+    "description": "Лунный свет, ночные окна и ещё одна серия.",
+    "items": [
+      "frame_velvet",
+      "banner_citylight",
+      "title_midnight",
+      "name_moonstone",
+      "shape_arch",
+      "plate_window",
+      "overlay_fireflies",
+      "icon_moonrise"
+    ],
+    "preview": [
+      "frame_velvet",
+      "banner_citylight",
+      "title_midnight"
+    ]
+  },
+  {
+    "id": "manga",
+    "label": "На полях манги",
+    "description": "Чернильные штрихи и истории между страниц.",
+    "items": [
+      "frame_ink",
+      "banner_panels",
+      "title_pagekeeper",
+      "name_inklight",
+      "shape_stamp",
+      "plate_speech",
+      "xp_panels",
+      "icon_inkpen"
+    ],
+    "preview": [
+      "frame_ink",
+      "banner_panels",
+      "title_pagekeeper"
+    ]
+  },
+  {
+    "id": "arcade",
+    "label": "Новая игра",
+    "description": "Пиксели, неоновый горизонт и любимые аркады.",
+    "items": [
+      "frame_scanline",
+      "banner_synthwave",
+      "title_playerone",
+      "name_pixelbeam",
+      "shape_pixelcut",
+      "plate_terminal",
+      "xp_combo",
+      "overlay_datastream"
+    ],
+    "preview": [
+      "frame_scanline",
+      "banner_synthwave",
+      "title_playerone"
+    ]
+  },
+  {
+    "id": "celestial",
+    "label": "За созвездиями",
+    "description": "Орбиты, метеоры и холодный свет далёких звёзд.",
+    "items": [
+      "frame_constellation",
+      "banner_orbit",
+      "title_stargazer",
+      "name_stardust",
+      "shape_comet",
+      "plate_constellation",
+      "xp_constellation",
+      "overlay_meteor"
+    ],
+    "preview": [
+      "frame_constellation",
+      "banner_orbit",
+      "title_stargazer"
+    ]
+  },
+  {
+    "id": "cinema",
+    "label": "Киноклуб",
+    "description": "Тихий зал, монтажная плёнка и место в последнем ряду.",
+    "items": [
+      "frame_aperture",
+      "banner_silverscreen",
+      "title_lastrow",
+      "frame_letterbox",
+      "banner_contactsheet",
+      "title_director",
+      "xp_cue",
+      "icon_clapper"
+    ],
+    "preview": [
+      "frame_aperture",
+      "banner_silverscreen",
+      "title_lastrow"
+    ]
+  },
+  {
+    "id": "botanical",
+    "label": "Тихий сад",
+    "description": "Листья, лепестки и мягкий свет среди историй.",
+    "items": [
+      "frame_ivy",
+      "banner_botanical",
+      "title_gardenkeeper",
+      "frame_dewdrop",
+      "banner_petal",
+      "title_bloom",
+      "overlay_pollen",
+      "icon_leaf"
+    ],
+    "preview": [
+      "frame_ivy",
+      "banner_botanical",
+      "title_gardenkeeper"
+    ]
+  }
+].map(collection=>Object.freeze({...collection,items:Object.freeze(collection.items),preview:Object.freeze(collection.preview)})));
+const revision='20261125-shop-v7';
 const preview=()=>Boolean(root.location?.hostname&&root.location.hostname!=='komianime.online');
 let pricingConfirmed=false,checking=null;
 function checkPricing(client){
@@ -820,5 +1474,5 @@ function checkPricing(client){
  return checking;
 }
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,revision,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);

@@ -6,6 +6,7 @@ const migration=fs.readFileSync(path.join(root,'supabase/migrations/202611220500
 const socialMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261122060000_anicoin_social_gifts_highlights_reactions_boosters.sql'),'utf8');
 const visualMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261122070000_anicoin_visual_collections.sql'),'utf8');
 const catalogMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261125100500_anicoin_shop_v6_catalog.sql'),'utf8');
+const collectionsMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261125122924_anicoin_shop_v7_collections.sql'),'utf8');
 const catalog=fs.readFileSync(path.join(root,'komi-shop-catalog.js'),'utf8');
 const profile=fs.readFileSync(path.join(root,'komi-premium-store.js'),'utf8');
 const coin=fs.readFileSync(path.join(root,'anicoin.js'),'utf8');
@@ -16,17 +17,18 @@ const premium=fs.readFileSync(path.join(root,'komi-premium.js'),'utf8');
 const context={window:{}};
 vm.runInNewContext(catalog,context);
 const products=context.window.KomiShopCatalog.items;
-test('93 fixed-price cosmetic items stay consistent between client catalog and protected server',()=>{
- assert.equal(products.length,93);
- assert.equal(new Set(products.map(x=>x.id)).size,93);
+test('141 fixed-price cosmetic items stay consistent between client catalog and protected server',()=>{
+ assert.equal(products.length,141);
+ assert.equal(new Set(products.map(x=>x.id)).size,141);
  assert.deepEqual([...new Set(products.map(x=>x.type))].sort(),['banner','card','frame','icon','mascot','name','overlay','plate','reaction','shape','showcase','title','xp']);
- const prices=[...catalogMigration.matchAll(/\('([a-z0-9_]+)',\s*(\d+),\s*true\)/g)];
- const allowed=catalogMigration.match(/check \(item_id in \(([\s\S]*?)\)\)/)?.[1];
- assert.equal(prices.length,93);
+ const pricesSource=catalogMigration+'\n'+collectionsMigration;
+ const prices=[...pricesSource.matchAll(/\('([a-z0-9_]+)',\s*(\d+),\s*true\)/g)];
+ const allowed=collectionsMigration.match(/check \(item_id in \(([\s\S]*?)\)\)/)?.[1];
+ assert.equal(prices.length,141);
  assert.deepEqual(prices.map(([,id])=>id).sort(),Array.from(products,item=>item.id).sort());
  for(const item of products){
    assert.ok(Number.isInteger(item.cost)&&item.cost>0);
-   assert.match(catalogMigration,new RegExp("\\('"+item.id+"',"+item.cost+",true\\)"));
+   assert.match(pricesSource,new RegExp("\\('"+item.id+"',"+item.cost+",true\\)"));
    assert.match(allowed,new RegExp("'"+item.id+"'"));
  }
  assert.match(original,/primary key\(user_id,item_id\)/);
@@ -65,9 +67,11 @@ test('shared cosmetics are integrated into both shops and public profile',()=>{
 
 test('guest shop first paint and real preview have no auth dependency',()=>{
  const initial=fs.readFileSync(path.join(root,'shop-first-paint.js'),'utf8');
- assert.match(html,/class="komi-static-shop komi-shop-v3 komi-shop-v4 komi-shop-v5"/);
- assert.match(html,/class="sv5-static-card"/);
-  assert.match(html,/class="sv5-weekly"/);
+ const firstPaint=html.match(/<section id="shop" class="komi-static-shop[\s\S]*?<\/section>/)?.[0];
+ assert.match(firstPaint,/komi-shop-studio/);
+ assert.match(firstPaint,/Твой профиль\. Твой стиль\./);
+ assert.match(firstPaint,/class="sv7-static-loading" role="status">Готовим коллекции и примерочную/);
+ assert.doesNotMatch(firstPaint,/sv5-static-card|sv5-weekly|data-shop-item-action/);
  assert.match(html,/src="\/shop-first-paint\.js\?/);
  assert.match(initial,/location\.hash\.toLowerCase\(\)==='#shop'/);
  assert.match(initial,/location\.pathname==='\/shop'/);
