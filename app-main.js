@@ -243,7 +243,8 @@ function komiHomeHeroMayPaint(markup, container) {
 }
 // Preserve the original SSR homepage if someone navigates away and back
 // while the full catalog is still loading.
-const komiSeoFirstPaintMarkup = document.getElementById('mainContainer')?.innerHTML || '';
+const komiSeoFirstPaintMarkup = /^\/(?:index\.html)?$/.test(location.pathname)
+    ? (document.getElementById('mainContainer')?.innerHTML || '') : '';
 let komiSeoDeepLinkOpened = false;
 let komiSeoLookupId = '';
 function komiPositiveRouteNumber(value) {
@@ -887,6 +888,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const route = komiCatalogRoute();
             if (location.pathname + location.search + location.hash !== route)
                 history.replaceState(history.state, '', route);
+            window.KomiPageMeta?.sync('catalog');
         }
         function komiCatalogSavedPosition() {
             try {
@@ -1610,6 +1612,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         function render() {
+            window.KomiPageMeta?.sync(currentView);
             renderHeaderUser();
             const container = document.getElementById('mainContainer');
             if (!container) return;
@@ -1620,6 +1623,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 // paint. Do not briefly render an anonymous home that is then
                 // replaced with the user's authenticated watch history.
                 if (_supabase && !komiSessionResolved && !komiHomePreviewCatalog && !komiHomeCatalogReady) {
+                    if (container.querySelector('[data-komi-ssr-catalog]'))
+                        container.innerHTML = komiCatalogLoadingMarkup();
                     if (!container.querySelector('.komi-seo-card') &&
                         komiSeoFirstPaintMarkup.includes('komi-seo-card'))
                         container.innerHTML = komiSeoFirstPaintMarkup;
@@ -1627,7 +1632,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 }
                 if (!komiHomeCatalogReady && !komiHomePreviewCatalog) {
                     // Keep crawlable, real card links visible until the live catalog is ready.
-                    if (container.querySelector('.komi-seo-card')) return;
+                    if (container.querySelector('.komi-seo-card') &&
+                        !container.querySelector('[data-komi-ssr-catalog]')) return;
                     if (komiSeoFirstPaintMarkup.includes('komi-seo-card')) {
                         container.innerHTML = komiSeoFirstPaintMarkup;
                         return;
@@ -1817,6 +1823,10 @@ async function komiLoadCatalogPages(attempt = 0) {
             } else if (currentView === 'catalog') {
                 if (slideInterval) clearInterval(slideInterval);
                 if (!catalogInitialLoadComplete) {
+                    // Keep usable server-rendered links until the same public
+                    // catalog has loaded. Filtered routes need their own state.
+                    if (!catalogInitialLoadFailed && !location.search &&
+                        container.querySelector('[data-komi-ssr-catalog]')) return;
                     container.innerHTML = catalogInitialLoadFailed
                       ? '<section class="komi-catalog-empty" role="status"><h1>Не удалось загрузить каталог</h1><button class="komi-catalog-clear" data-komi-onclick="loadDataFromCloud()">Повторить загрузку</button></section>'
                       : komiCatalogLoadingMarkup();

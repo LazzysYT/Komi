@@ -66,7 +66,8 @@ async function run() {
   next.emit('error',{fatal:true,type:'other'});
   assert.equal(video.komiHls,null);assert.ok(next.destroyed);assert.equal(errors,1);assert.equal(events.length,4);
   const config=JSON.parse(read('vercel.json'));
-  for(const view of ['catalog','shop','partners','profile']) assert.ok(config.rewrites.some(x=>x.source==='/'+view&&x.destination==='/index.html'));
+  for(const view of ['shop','partners','profile']) assert.ok(config.rewrites.some(x=>x.source==='/'+view&&x.destination==='/index.html'));
+  assert.ok(config.rewrites.some(x=>x.source==='/catalog'&&x.destination==='/api/catalog'), 'Catalog keeps the SPA shell through its indexable server entry point');
   assert.ok(config.rewrites.some(x=>x.source==='/anime/:id'));
   assert.ok(config.rewrites.some(x=>x.source==='/sitemap.xml'));
   assert.ok(app.includes('if (komiCatalogLoadPending) return komiCatalogLoadPending;'));

@@ -27,7 +27,7 @@ test('fixed hero reference stays inside a template while the daily boot remains 
 test('first-paint hero is content-led but keeps readable SEO metadata',()=>{
   const intro=main.split('aria-labelledby="komiStaticRecommendationsTitle"')[0];
   assert.match(intro,/komi-seo-fallback komi-seo-spotlight/);
-  assert.match(intro,/<h1>Komi Anime Hub — каталог аниме<\/h1>/);
+  assert.match(intro,/<h1>KomiAnime — каталог аниме<\/h1>/);
   assert.match(intro,/<h2>Провожающая в последний путь Фрирен<\/h2>/);
   const links = intro.match(/<div class="komi-seo-spotlight-actions">([\s\S]*?)<\/div>/)?.[1] || '';
   assert.equal((links.match(/<a\b/g) || []).length, 2);
