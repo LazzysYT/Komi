@@ -6,9 +6,9 @@ const read=file=>fs.readFileSync(path.join(__dirname,'..',file),'utf8');
 const html=read('index.html'), app=read('app-main.js');
 const css=read('mono-ui.css'), hubCss=read('komi-media-hub.css'), poster=read('api/poster.js');
 
-test('guest first paint includes indexable catalog and never ships admin editor UI',()=>{
-  const cards=html.match(/class="anime-card komi-seo-card"/g)||[];
-  assert.ok(cards.length>=20,'expected at least 20 static cards, got '+cards.length);
+test('guest first paint includes compact indexable recommendations and never ships admin editor UI',()=>{
+  const cards=html.match(/class="komi-discovery-card komi-seo-card"/g)||[];
+  assert.ok(cards.length>0&&cards.length<=12,'expected 1–12 static recommendation cards, got '+cards.length);
   assert.doesNotMatch(html,/id="(?:addAnimeBtn|adminPanelBtn|addModal|adminModal)"/);
   assert.match(app,/const isAdmin = Boolean\(currentUser\?\.authUserId && komiAdminVerified\)/);
   assert.match(html,/id="komiHeaderAniCoin"[^>]*\bhidden\b/);
@@ -22,5 +22,7 @@ test('roulette first paint is a quiet monochrome skeleton, not old placeholder c
   assert.match(section,/id="rouletteTitle"[^>]*><\/div>/);
   assert.doesNotMatch(section,/Загрузка\.\.\.|◇ Выбираем аниме/);
   assert.match(css,/\.is-loading::after\s*\{\s*content:'';/);
-  assert.match(html,/komi\.production\.css\?v=20261125-v811-cinematic/);
+  const revision=html.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
+  assert.match(revision,/^\d{8}-[\w-]+$/);
+  assert.equal(html.match(/komi\.production\.css\?v=([^"]+)/)?.[1],revision);
 });

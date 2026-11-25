@@ -9,8 +9,8 @@ const editor = fs.readFileSync(path.join(root, 'komi-admin-ui.js'), 'utf8');
 
 test('guest HTML contains no admin editor or admin action buttons', () => {
   assert.doesNotMatch(html, /id="(?:animeForm|addAnimeBtn|adminPanelBtn|adminModal|addModal|komiAdminAnimeModalTemplate)"/);
-  assert.match(html, /id="anime-grid"/);
-  assert.match(html, /id="komiHomeQuickFiltersTitle"/);
+  assert.match(html, /id="komiStaticRecommendationsTitle"/);
+  assert.match(html, /class="komi-home-catalog-link" href="\/catalog"/);
 });
 test('admin controls and editor are mounted only behind the checked Supabase role', () => {
   assert.match(app, /_supabase\.rpc\('komi_is_admin'\)/);

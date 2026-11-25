@@ -155,6 +155,9 @@
   color: #D4D4D8 !important;
   font: 400 14px/1.5 Inter, sans-serif !important;
 }
+.komi-media-hub .komi-home-hero .hero-slide p.komi-hub-description[hidden] {
+  display: none !important;
+}
 .komi-media-hub .komi-home-hero .hero-buttons {
   display: flex;
   flex-wrap: wrap;
@@ -339,12 +342,57 @@
   border-color: rgba(255,255,255,.12);
 }
 @media (max-width: 768px) {
+  .komi-media-hub {
+    --komi-home-hero-height: clamp(430px, 62svh, 470px);
+  }
   .komi-media-hub .komi-home-hero #heroSlider {
-    height: clamp(540px, 76svh, 690px) !important;
-    min-height: 540px !important;
+    height: auto !important;
+    min-height: var(--komi-home-hero-height) !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-slides-wrapper {
+    position: relative;
+    display: grid;
+    height: auto;
+    min-height: inherit;
   }
   .komi-media-hub .komi-home-hero .hero-slide {
-    padding: 160px 22px 96px !important;
+    /* All slides share one grid cell. The longest title sets a stable height
+       before images or metadata arrive; selecting a slide cannot move a shelf. */
+    position: relative;
+    inset: auto;
+    grid-area: 1 / 1;
+    min-width: 0;
+    min-height: inherit;
+    padding: 100px 22px 116px !important;
+  }
+  .komi-media-hub .komi-home-hero .komi-home-hero-content {
+    display: grid;
+    grid-template-rows: minmax(3.875rem, auto) auto 2.625rem auto;
+    gap: 12px;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-title-wrap {
+    grid-row: 1;
+    align-items: flex-end;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-title-logo {
+    max-height: 3.875rem;
+  }
+  .komi-media-hub .komi-home-hero .hero-slide h1.komi-hub-title-text {
+    font-size: clamp(26px, 7.5vw, 30px) !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-meta {
+    grid-row: 2;
+    margin: 0;
+  }
+  .komi-media-hub .komi-home-hero .hero-slide p.komi-hub-description {
+    grid-row: 3;
+    margin: 0 !important;
+    font-size: 14px !important;
+    -webkit-line-clamp: 2;
+  }
+  .komi-media-hub .komi-home-hero .hero-buttons {
+    grid-row: 4;
+    margin-top: 0;
   }
   .komi-media-hub .komi-home-hero .hero-slide::before {
     background:
@@ -364,31 +412,31 @@
   }
 }
 @media (max-width: 480px) {
-  .komi-media-hub .komi-home-hero .hero-slide { padding: 158px 17px 85px !important; }
+  .komi-media-hub .komi-home-hero .hero-slide { padding-inline: 17px !important; }
   .komi-media-hub .komi-home-hero .hero-slide h1.komi-hub-title-text {
-    font-size: clamp(28px, 8vw, 38px) !important;
+    font-size: clamp(26px, 7.5vw, 30px) !important;
   }
   .komi-media-hub .komi-home-hero .hero-meta { gap: 6px; }
   .komi-media-hub .komi-home-hero .hero-meta span,
   .komi-media-hub .komi-home-hero .hero-meta span:first-child {
-    font-size: 11px !important;
+    font-size: 13px !important;
     padding: 5px 9px !important;
   }
   .komi-media-hub .komi-home-hero .komi-hub-genres { font-size: 12px; }
   .komi-media-hub .komi-home-hero .hero-slide p.komi-hub-description {
-    font-size: 12px !important;
+    font-size: 14px !important;
     -webkit-line-clamp: 2;
   }
-  .komi-media-hub .komi-home-hero .hero-buttons { gap: 8px; margin-top: 16px; }
+  .komi-media-hub .komi-home-hero .hero-buttons { gap: 8px; margin-top: 0; }
   .komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-play {
     padding: 12px 16px !important;
     min-height: 44px;
-    font-size: 13px;
+    font-size: 14px;
   }
   .komi-media-hub .komi-home-hero .hero-buttons button.komi-hub-list {
     padding: 12px 13px !important;
     min-height: 44px;
-    font-size: 13px;
+    font-size: 14px;
   }
   .komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-info {
     width: 44px; height: 44px; min-width: 44px; min-height: 44px;
@@ -435,6 +483,13 @@
 .komi-media-hub .komi-seo-spotlight-art img {
   object-fit: cover !important;
   object-position: center 20% !important;
+}
+.komi-media-hub .komi-seo-poster-fallback .komi-seo-spotlight-art img {
+  width: 62% !important;
+  margin-left: auto;
+  object-fit: contain !important;
+  object-position: right center !important;
+  filter: none !important;
 }
 .komi-media-hub .komi-seo-fallback.komi-seo-spotlight .komi-seo-spotlight-copy { width: min(560px, 100%); }
 .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 {
@@ -496,10 +551,17 @@
 @media (max-width: 768px) {
   .komi-media-hub .komi-boot-hero,
   .komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
-    height: clamp(540px, 76svh, 690px) !important;
-    min-height: 540px !important;
+    height: var(--komi-home-hero-height) !important;
+    min-height: var(--komi-home-hero-height) !important;
   }
-  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding: 160px 22px 96px !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding: 100px 22px 116px !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 { font-size: clamp(26px, 7.5vw, 30px) !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight p:not(.komi-seo-spotlight-genres) { -webkit-line-clamp: 2; }
+  .komi-media-hub .komi-seo-poster-fallback .komi-seo-spotlight-art img {
+    width: 100% !important;
+    height: 72% !important;
+    object-position: center top !important;
+  }
   .komi-media-hub .komi-seo-fallback.komi-seo-spotlight::after {
     background:
       linear-gradient(90deg, rgba(9,9,11,.88),rgba(9,9,11,.12)),
@@ -507,8 +569,7 @@
   }
 }
 @media (max-width: 480px) {
-  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding: 158px 17px 85px !important; }
-  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight h2 { font-size: clamp(28px, 8vw, 38px) !important; }
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight { padding-inline: 17px !important; }
 }
 
 /* V8.11: cinematic artwork, without stretching and blurring portrait covers. */
@@ -574,13 +635,8 @@
   .komi-media-hub .komi-home-hero .hero-slide.active.komi-art-ready .komi-hub-hero-art {
     animation:komiHeroKenBurns 7s ease-out both !important;
   }
-  .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > * {
-    animation:komiHeroReveal .5s cubic-bezier(.22,1,.36,1) both;
-  }
-  .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > :nth-child(2){animation-delay:.07s}
-  .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > :nth-child(3){animation-delay:.12s}
-  .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > :nth-child(4){animation-delay:.17s}
-  .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > :nth-child(5){animation-delay:.22s}
+  /* Text and Watch are usable at first paint, independent of artwork timing. */
+  .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > * { animation:none; }
   .komi-media-hub .komi-home-hero #heroSlider:is([data-komi-hero-paused="true"],[data-komi-hero-visible="false"]) .hero-slide.active .komi-hub-hero-art {animation-play-state:paused !important;}
 }
 @media(max-width:768px){
@@ -604,8 +660,7 @@
   }
 }
 
-/* Keep actions above the two-row controller and let long mobile copy grow.
-   The active slide owns height; inactive slides remain layered for the fade. */
+/* Keep actions above the two-row controller. All slides share their height. */
 @media(max-width:640px){
   /* Eight slide targets stay usable at 320px instead of shrinking to 17px. */
   .komi-media-hub .komi-home-hero .komi-hub-carousel-controls {
@@ -621,23 +676,6 @@
   .komi-media-hub .komi-home-hero .komi-hub-arrows {grid-area:arrows;}
   .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-dots {
     grid-area:dots;justify-content:center;flex-wrap:wrap;
-  }
-  .komi-media-hub .komi-home-hero #heroSlider {
-    height:auto !important;
-    min-height:clamp(600px,80svh,720px) !important;
-  }
-  .komi-media-hub .komi-home-hero .hero-slides-wrapper {
-    position:relative;height:auto;min-height:inherit;
-  }
-  .komi-media-hub .komi-home-hero .hero-slide {
-    min-height:100%;padding-bottom:126px !important;
-  }
-  .komi-media-hub .komi-home-hero .hero-slide.active {
-    position:relative;min-height:inherit;
-  }
-  .komi-media-hub .komi-boot-hero,
-  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
-    height:auto !important;min-height:clamp(600px,80svh,720px) !important;
   }
 }
 

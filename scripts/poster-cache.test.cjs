@@ -49,27 +49,43 @@ test('only allowlisted public posters are sent to wsrv.nl, other URLs stay direc
     'https://cdn.myanimelist.net/images/anime/1/a.jpg');
 });
 test('pre-rendered covers use the cache while the first hero loads its native banner directly',()=>{
+  const attribute=(tag,name)=>(tag.match(new RegExp('(?:^|\\s)'+name+'="([^"]*)"'))?.[1]||'').replace(/&amp;/g,'&');
   const images=[...html.matchAll(/<img\b[^>]*data-poster-direct="https:\/\/(?:shikimori\.io|shikimori\.one|s4\.anilist\.co)[^"]+"[^>]*>/g)];
-  assert.ok(images.length>=37,'Initial static poster cache is not attached');
-  let nativeHeroes=0;
+  const recommendations=[...html.matchAll(/<a\b[^>]*class="komi-discovery-card komi-seo-card"[^>]*>[\s\S]*?<\/a>/g)];
+  assert.equal(recommendations.length,12,'Keep the twelve intentional static recommendation cards');
+  for(const [card]of recommendations)assert.equal((card.match(/<img\b/g)||[]).length,1);
+  assert.equal(images.length,18,'Expected five carousel arts, one SEO hero cover and twelve recommendation covers');
+  let nativeHeroes=0,deferredHeroes=0,staticCovers=0;
   for(const [tag] of images) {
+    const direct=attribute(tag,'data-poster-direct');
+    assert.equal(validatePosterSource(direct),direct,'Fallback must remain an allowlisted public cover');
     const deferred = tag.includes('data-komi-hero-deferred-src=');
-    const nativeHero = tag.includes('komi-hub-hero-art') && !deferred;
+    const hero=tag.includes('komi-hub-hero-art');
+    const nativeHero = hero && !deferred;
     if (nativeHero) {
       nativeHeroes++;
       assert.match(tag,/\ssrc="https:\/\/s4\.anilist\.co\/file\/anilistcdn\/media\/anime\/banner\/189046-MDk2CaVuRWpb\.jpg"/);
       assert.match(tag,/loading="eager"/);
       assert.match(tag,/fetchpriority="high"/);
-      assert.ok(tag.includes('data-poster-direct="'+validAniList+'"'));
+      assert.equal(direct,validAniList);
     } else if (deferred) {
+      deferredHeroes++;
+      assert.ok(hero,'Only inactive carousel art uses the deferred hero attribute');
       assert.match(tag,/\ssrc="\/anime-artwork\.svg"/);
-      assert.match(tag,/data-komi-hero-deferred-src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
+      assert.equal(attribute(tag,'data-komi-hero-deferred-src'),cachedPosterUrl(direct,768));
       assert.match(tag,/loading="lazy"/);
-    } else assert.match(tag,/\ssrc="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
-    if (!nativeHero) assert.match(tag,tag.includes('komi-hub-hero-art') ? /&amp;w=768&amp;output=webp/ : /&amp;w=360&amp;output=webp/);
-    assert.match(tag,/data-komi-error="poster-error"/);
+      assert.doesNotMatch(tag,/fetchpriority="high"/);
+    } else {
+      staticCovers++;
+      assert.equal(attribute(tag,'src'),cachedPosterUrl(direct,360));
+      assert.match(tag,/loading="lazy"/);
+    }
+    assert.equal(attribute(tag,hero?'data-komi-onerror':'data-komi-error'),
+      hero?'komiCardPosterFallback(this)':'poster-error');
   }
   assert.equal(nativeHeroes,1,'Only the first hero should eagerly request the native landscape');
+  assert.equal(deferredHeroes,4,'Other carousel slides must defer their resized artwork');
+  assert.equal(staticCovers,13,'The SEO hero and twelve recommendations retain compact CDN covers');
   assert.doesNotMatch(html,/\/api\/poster\?src=/,'Static HTML should not invoke Vercel poster functions');
   assert.ok(html.indexOf('poster-cache-client.js') < html.indexOf('app-main.js'));
 });

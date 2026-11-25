@@ -34,7 +34,7 @@ const UID='00000000-0000-4000-8000-000000000001';
     komiHomePreviewCatalog=null;
     komiEpisodeProgress=Object.fromEntries(full.map(a=>[
        'fixtureOwner_'+a.id,
-       {season:1,index:0,time:0,duration:90,updated:10000+Number(a.id)}
+       {season:1,index:0,time:22,duration:90,updated:10000+Number(a.id)}
     ]));
     komiResumeReadyUid=uid;
     komiStoreReadyResume();
@@ -64,7 +64,7 @@ const UID='00000000-0000-4000-8000-000000000001';
     komiHomePreviewCatalog=animeList.slice(0,2);
     animeList=komiHomePreviewCatalog;
     komiResumeReadyUid=null;
-    komiEpisodeProgress={fixtureOwner_1:{season:1,index:0,time:0,duration:90,updated:10001}};
+    komiEpisodeProgress={fixtureOwner_1:{season:1,index:0,time:22,duration:90,updated:10001}};
     komiResumePreview=window.KomiResumeCache.read(uid);
     render();
   },UID);
@@ -79,6 +79,8 @@ const UID='00000000-0000-4000-8000-000000000001';
   });
   assert.equal(await page.locator('.komi-home-continue .komi-home-progress-card:not(.komi-resume-placeholder)').count(),0,
     'Other account must not inherit resume cards');
+  assert.equal(await page.locator('.komi-home-continue').count(),0,
+    'An account without known unfinished progress must not show an empty history row');
   assert.equal(errors.length,0,'Page errors: '+errors.join(';'));
   console.log('PASS resume row is stable through partial preview and owner changes');
  } finally{await context.close();await browser.close();}

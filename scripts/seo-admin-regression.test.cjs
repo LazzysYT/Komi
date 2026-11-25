@@ -11,10 +11,13 @@ function mockResponse(){
 }
 test('initial DOM exposes real crawlable anime card links without JS',()=>{
   const main=html.split('<main id="mainContainer">')[1].split('</main>')[0];
-  const cards=[...main.matchAll(/<a class="anime-card komi-seo-card" href="\/anime\/([0-9]+)"/g)];
-  assert.ok(cards.length>=24,'SEO cards missing from original HTML');
+  const cards=[...main.matchAll(/<a class="komi-discovery-card komi-seo-card" href="\/anime\/([0-9]+)"/g)];
+  assert.ok(cards.length>0&&cards.length<=12,'Compact SEO recommendations missing from original HTML');
   assert.equal(new Set(cards.map(x=>x[1])).size,cards.length,'duplicate anime IDs');
-  assert.match(main,/id="anime-grid"/);
+  assert.match(main,/href="\/catalog"/);
+  const genres=[...main.matchAll(/<a class="komi-mood-card" href="([^"]+)" data-komi-mood-genre="([^"]+)"/g)];
+  assert.ok(genres.length>0,'Genre navigation must work as native links');
+  for(const [,href,genre] of genres) assert.equal(new URL(href,'https://komianime.online').searchParams.get('genre'),genre);
   assert.match(html,/function komiMaybeOpenSeoAnime\(\)/);
 });
 test('Vercel rewrites and sitemap discovery are defined',()=>{

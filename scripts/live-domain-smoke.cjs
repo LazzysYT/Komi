@@ -8,6 +8,9 @@ const fs=require('node:fs');
 const path=require('node:path');
 const base='https://komianime.online/';
 const output=path.join(__dirname,'../browser-test-results');
+const checkedInHtml=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8');
+const expectedRevision=checkedInHtml.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
+assert.match(expectedRevision,/^\d{8}-[\w-]+$/,'Checked-in release must declare its UI revision');
 fs.mkdirSync(output,{recursive:true});
 
 (async()=>{
@@ -22,6 +25,12 @@ fs.mkdirSync(output,{recursive:true});
       try {
         const response=await page.goto(base,{waitUntil:'domcontentloaded',timeout:60000});
         assert.ok(response?.ok(),'Production HTTPS returned '+response?.status());
+        const deployedRevision=await page.locator('meta[name="komi-ui-revision"]').getAttribute('content');
+        assert.match(deployedRevision,/^\d{8}-[\w-]+$/,'Production must declare its exact UI revision');
+        // PR checks visit the currently deployed release, which may still be
+        // the baseline. Each known revision keeps its own strict DOM contract.
+        const homeContract=deployedRevision===expectedRevision?'storefront':
+          deployedRevision==='20261125-v811-cinematic'?'legacy':'shared';
         if(width===1440) {
           const enforced=(response.headers()['content-security-policy']||'');
           assert.ok(enforced.includes("script-src-elem 'self' https://cdn.jsdelivr.net"),
@@ -43,22 +52,26 @@ fs.mkdirSync(output,{recursive:true});
           assert.ok((await appResponse.body()).length>100000,'Main app script appears truncated');
           if (process.env.GITHUB_EVENT_NAME === 'push' && process.env.GITHUB_REF === 'refs/heads/main') {
             // A live source check catches stale HTML / wrong alias even if
-            // hydrated JavaScript happens to show the right filter controls.
+            // hydrated JavaScript happens to show the right storefront.
             const homepageHtml=await response.text();
-            // Production now uses the standalone monochrome genre section.
-            // Check its actual first-paint structure, not a removed 2026-11-20
-            // filter toolbar or obsolete build revision string.
-            assert.match(homepageHtml,/name="komi-ui-revision" content="20261123-stable-reload-v1"/,
-              'Main domain must serve the current Media Hub homepage');
-            assert.match(homepageHtml,/id="komiHomeQuickFilters"/,
-              'First-paint catalog controls must be present');
-            assert.match(homepageHtml,/id="komiMoodTitle">Жанры</,
-              'First-paint genre selection must be present');
-            assert.match(homepageHtml,/data-komi-more-filters="home"/,
-              'All-filters must stay reachable through the current home action');
-            assert.match(homepageHtml,/data-komi-home-category="all"/,
-              'All-category button must be available in first paint');
-            console.log('PASS production first-paint genres, catalog categories and navigation');
+            const revision=expectedRevision;
+            assert.equal(homepageHtml.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1],revision,
+              'Main domain must serve the exact checked-in storefront revision');
+            assert.equal(homepageHtml.match(/komi\.production\.css\?v=([^"]+)/)?.[1],revision,
+              'The deployed HTML and stylesheet must belong to the same release');
+            const staticCards=[...homepageHtml.matchAll(/<a\b[^>]*class="komi-discovery-card komi-seo-card"[^>]*>/g)];
+            assert.equal(staticCards.length,12,'First paint must expose twelve native recommendations');
+            for(const [card]of staticCards)assert.match(card,/href="\/anime\/[1-9][0-9]{0,11}"/);
+            const staticGenres=[...homepageHtml.matchAll(/<a\b[^>]*class="komi-mood-card"[^>]*href="([^\"]+)"[^>]*data-komi-mood-genre="([^\"]+)"[^>]*>/g)];
+            assert.equal(staticGenres.length,8,'First paint must expose all eight native genre links');
+            for(const [,href,genre]of staticGenres){
+              const destination=new URL(href.replace(/&amp;/g,'&'),base);
+              assert.equal(destination.pathname,'/catalog');
+              assert.equal(destination.searchParams.get('genre'),genre);
+            }
+            assert.doesNotMatch(homepageHtml,/id="komiHomeQuickFilters"|data-komi-more-filters="home"|data-komi-home-category=/,
+              'Expanded filters and catalog categories belong in the catalog');
+            console.log('PASS production first-paint recommendations, genre filters and catalog navigation');
             const cssHref=homepageHtml.match(/href="(\/komi\.production\.css\?v=[^"]+)"/)?.[1]
               || '/komi.production.css';
             const css=await page.request.get(new URL(cssHref,base).href,{timeout:20000});
@@ -96,21 +109,46 @@ fs.mkdirSync(output,{recursive:true});
           console.log('PASS production security headers, external main JS and enforced inline-script block');
         }
         await page.waitForFunction(()=>typeof catalogInitialLoadComplete!=='undefined' && catalogInitialLoadComplete,null,{timeout:75000});
-        await page.waitForSelector('#mainContainer .anime-card',{timeout:30000});
-        const initial=await page.evaluate(()=>{
+        const homeSelector=homeContract==='storefront'?'#mainContainer .komi-home-popular .komi-discovery-card':
+          homeContract==='legacy'?'#mainContainer .anime-card':'#mainContainer .hero-slide.active .komi-hub-title-text';
+        await page.waitForSelector(homeSelector,{timeout:30000});
+        const initial=await page.evaluate(({homeContract,deployedRevision})=>{
           const canonical=document.querySelector('link[rel=canonical]')?.href||'';
           const domain=location.hostname;
-          const cardCount=document.querySelectorAll('.anime-card').length;
-          return {domain,canonical,cardCount,title:document.title,
+          const cardSelector=homeContract==='storefront'?'.komi-home-discovery .komi-home-popular .komi-discovery-card':
+            '#mainContainer .anime-card';
+          const cardCount=document.querySelectorAll(cardSelector).length;
+          return {domain,canonical,cardCount,homeContract,deployedRevision,title:document.title,
              profileDrawer:!!document.getElementById('komiFriendsDrawer'),
              videoModal:!!document.getElementById('watchModal'),
              logo:!!document.querySelector('.komi-side-logo'),
              overflow:document.documentElement.scrollWidth>innerWidth+2,
              loading:!catalogInitialLoadComplete};
-        });
+        },{homeContract,deployedRevision});
         assert.equal(initial.domain,'komianime.online');
         assert.ok(initial.canonical.startsWith(base),'Canonical URL should match the public domain');
-        assert.ok(initial.cardCount>0,'Anime catalog should contain real cards');
+        if(homeContract==='storefront'){
+          assert.ok(initial.cardCount>0&&initial.cardCount<=12,'The recommendation rail must contain real bounded cards');
+          const genres=page.locator('.komi-home-discovery .komi-home-genres-section a[data-komi-mood-genre]');
+          assert.equal(await genres.count(),8,'Hydrated home must preserve the eight native genre links');
+        }else if(homeContract==='legacy'){
+          assert.ok(initial.cardCount>0,'The deployed V8.11 home must contain real anime cards');
+        }else{
+          // A different deployed revision must still expose a real hero and
+          // usable catalog; an empty page never counts as a passing fallback.
+          assert.ok((await page.locator('#mainContainer .hero-slide.active .komi-hub-title-text').innerText()).trim().length>0,
+            'The deployed home hero must name a real title');
+          assert.equal(await page.locator('#mainContainer .hero-slide.active .komi-hub-play').isVisible(),true,
+            'The deployed hero must expose its watch action');
+          await page.evaluate(()=>navigate('catalog'));
+          await page.waitForSelector('#komiCatalogGrid .anime-card',{timeout:30000});
+          initial.cardCount=await page.locator('#komiCatalogGrid .anime-card').count();
+          initial.cardScope='catalog';
+          assert.ok(initial.cardCount>0,'The deployed catalog must contain real anime cards');
+          assert.ok((await page.locator('#komiCatalogGrid .anime-card').first().innerText()).trim().length>0);
+          await page.evaluate(()=>navigate('home'));
+          await page.waitForSelector('#mainContainer .hero-slide.active .komi-hub-title-text');
+        }
         assert.equal(initial.overflow,false,'Page should not overflow horizontally');
         // Verify the actual production asset response, not an assumed Vite/public path.
         const posterResponse=await page.request.get(new URL('anime-artwork.svg',base).href,{timeout:15000});

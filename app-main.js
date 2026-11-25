@@ -945,13 +945,21 @@ async function komiLoadCatalogPages(attempt = 0) {
                 catalogSearchQuery = '';
             }
             catalogFilterGenre = value;
+            catalogVisibleCount = komiCatalogPageSize();
+            komiCatalogRestorePending = false;
             if (currentView === 'catalog') komiCatalogStateChanged();
             else navigate('catalog');
             komiSmoothToCatalog();
         }
         document.addEventListener('click', event => {
             const mood = event.target.closest?.('[data-komi-mood-genre]');
-            if (mood) { komiApplyMoodGenre(mood.dataset.komiMoodGenre); return; }
+            if (mood) {
+                if (mood.tagName === 'A') {
+                    if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+                    event.preventDefault();
+                }
+                komiApplyMoodGenre(mood.dataset.komiMoodGenre); return;
+            }
             const quickSort = event.target.closest?.('[data-komi-quick-sort]');
             const quickYear = event.target.closest?.('[data-komi-quick-year]');
             if (quickSort || quickYear) {
@@ -1561,10 +1569,16 @@ async function komiLoadCatalogPages(attempt = 0) {
                         resumePreview:komiResumePreview,
                         currentSlideIndex, renderCard, year:komiAnimeYear,
                         type:komiCatalogType, artwork:animeArtwork,
+                        posterSource:anime => komiCardPosterSource(anime.poster || anime.banner),
                         describe:cleanAnimeDescriptionText,
-                        recommendations:komiRecommendations,
-                        calendar:komiReleaseCalendar, years:komiYearSections,
-                        intro:komiIntroMarkup, quickFilters:komiHomeQuickFiltersMarkup
+                        genres:() => window.KomiGenreMoods.render({
+                            animeList:komiHomeCatalogReady ? animeList : komiHomePreviewCatalog,
+                            availableGenres:availableGenresList, artwork:animeArtwork,
+                            deferImages:true, navigation:true
+                        }),
+                        schedule:komiExternalCalendar,
+                        scheduleLoading:komiCalendarLoading,
+                        scheduleError:komiCalendarError
                     });
                     // Repeated session/folder/notification refreshes must not destroy
                     // loaded images, carousel focus or the user's scroll position.
@@ -3007,7 +3021,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             img.onerror = null;
             img.src = '/anime-artwork.svg';
         }
-        function renderCard(anime) {
+        function renderCard(anime, options = {}) {
             const year=komiAnimeYear(anime);
             const type=komiCatalogType(anime);
             const score=Number(anime.shikiRating);
@@ -3016,6 +3030,22 @@ async function komiLoadCatalogPages(attempt = 0) {
             const genreText=escapeFriendHtml(genres.slice(0,2).join(', '));
             const name=escapeFriendHtml(anime.title||anime.originalTitle||'Без названия');
             const id=String(anime.id);
+            // The discovery shelf is a simple native link. Catalogue cards keep
+            // their established status/quick-action controls in the catalogue.
+            if (options.variant === 'discovery') {
+                if (!/^[1-9][0-9]{0,14}$/.test(id)) return '';
+                const source = komiCardPosterSource(anime.poster || anime.banner);
+                const total = Math.max(0, Number(anime.episodeCount) || (Array.isArray(anime.episodes) ? anime.episodes.length : 0));
+                const metadata = [year, type, total ? total + ' сер.' : ''].filter(Boolean).map(escapeFriendHtml).join(' · ');
+                return '<a class="komi-discovery-card" href="/anime/' + id + '" aria-label="Подробнее: ' + name + '">' +
+                    '<span class="komi-discovery-poster"><img src="/anime-artwork.svg" data-komi-lazy-src="' + escapeFriendHtml(source.preferred) +
+                    '" width="240" height="360" alt="" loading="lazy" decoding="async" referrerpolicy="no-referrer"' +
+                    (source.direct ? ' data-poster-direct="' + escapeFriendHtml(source.direct) + '"' : '') +
+                    (source.original ? ' data-poster-original="' + escapeFriendHtml(source.original) + '"' : '') +
+                    ' data-komi-onerror="komiCardPosterFallback(this)">' +
+                    (rating !== '—' ? '<span class="komi-discovery-rating" aria-label="Оценка Shikimori: ' + rating + '">★ ' + rating + '</span>' : '') +
+                    '</span><span class="komi-discovery-copy"><strong>' + name + '</strong><small>' + metadata + '</small></span></a>';
+            }
             const status = currentUser?.authUserId ? userAnimeStatuses[currentUser.username]?.[id] : '';
             const safeStatus = ['Просмотрено','В планах','Смотрю','Отложено','Брошено','Любимые'].includes(status) ? status : '';
             const progress = currentUser?.authUserId ? komiEpisodeProgress[currentUser.username + '_' + id] : null;
@@ -4545,8 +4575,45 @@ async function komiLoadCatalogPages(attempt = 0) {
 
         function komiProgressKey(animeId) { return currentUser ? currentUser.username + '_' + animeId : ''; }
         function getKomiProgress(animeId) { return komiEpisodeProgress[komiProgressKey(animeId)] || null; }
-        function resumeKomiAnime(animeId) {
-            openWatchModal(String(animeId));
+        async function resumeKomiAnime(animeId) {
+            const id = String(animeId);
+            const uid = currentUser?.authUserId;
+            if (!uid) return openWatchModal(id);
+            const username = currentUser.username;
+            const sameOwner = () => currentUser?.authUserId === uid && currentUser?.username === username;
+            try {
+                if (komiResumeReadyUid !== uid) {
+                    // Cached cards can appear before the account's server progress.
+                    // Join the existing restore queue; only retry a missing load
+                    // after it settles, without copying an older preview snapshot.
+                    komiSessionRestoreQueue = komiSessionRestoreQueue.catch(() => {}).then(async () => {
+                        if (sameOwner() && komiResumeReadyUid !== uid) await loadAuthenticatedAnimeData();
+                    });
+                    await komiSessionRestoreQueue;
+                }
+                if (!sameOwner()) return;
+                if (komiResumeReadyUid !== uid) {
+                    komiStatusFeedback('Не удалось восстановить просмотр. Проверьте соединение и попробуйте снова.');
+                    return;
+                }
+                // An owner snapshot may also refer to a later public catalog page.
+                // Reuse that in-flight load instead of opening a missing title.
+                if (!animeList.some(anime => String(anime.id) === id) && komiCatalogLoadPending)
+                    await komiCatalogLoadPending;
+                if (!sameOwner()) return;
+                if (komiResumeReadyUid !== uid) {
+                    komiStatusFeedback('Не удалось восстановить просмотр. Проверьте соединение и попробуйте снова.');
+                    return;
+                }
+                if (!animeList.some(anime => String(anime.id) === id)) {
+                    komiStatusFeedback('Не удалось загрузить аниме. Попробуйте продолжить просмотр ещё раз.');
+                    return;
+                }
+            } catch {
+                if (sameOwner()) komiStatusFeedback('Не удалось восстановить просмотр. Проверьте соединение и попробуйте снова.');
+                return;
+            }
+            return openWatchModal(id);
         }
         function saveKomiEpisode(animeId, season, index, time=0, duration=0) {
             if (!currentUser) return;
@@ -4727,6 +4794,11 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (!force && now - komiCalendarLastFetch < 25 * 60 * 1000) return;
             komiCalendarLoading = true;
             komiCalendarError = '';
+            const refreshButton = document.querySelector('#komiHomeUpcoming .komi-home-all');
+            if (refreshButton) {
+                refreshButton.disabled = true;
+                refreshButton.setAttribute('aria-busy','true');
+            }
             // Store public airing dates independently of catalog loading progress.
             const query = 'query ($page:Int,$from:Int,$to:Int) { Page(page:$page,perPage:50) { pageInfo { hasNextPage } airingSchedules(airingAt_greater:$from,airingAt_lesser:$to,sort:TIME) { airingAt episode media { idMal isAdult } } } }';
             try {
@@ -4770,6 +4842,18 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (currentView === 'home') {
                     const section = document.getElementById('komiCalendarSection');
                     if (section) section.outerHTML = komiReleaseCalendar();
+                    const upcoming = document.getElementById('komiHomeUpcoming');
+                    if (upcoming && window.KomiHomeReleases) {
+                        const restoreFocus = upcoming.contains(document.activeElement);
+                        upcoming.outerHTML = window.KomiHomeReleases.renderUpcoming({
+                            animeList, artwork:animeArtwork, schedule:komiExternalCalendar,
+                            posterSource:anime => komiCardPosterSource(anime.poster || anime.banner),
+                            scheduleLoading:komiCalendarLoading, scheduleError:komiCalendarError
+                        });
+                        const refreshed = document.getElementById('komiHomeUpcoming');
+                        window.KomiHomeDiscovery?.observeViewport(refreshed);
+                        if (restoreFocus) refreshed.querySelector('.komi-home-all')?.focus({preventScroll:true});
+                    }
                 }
             }
         }

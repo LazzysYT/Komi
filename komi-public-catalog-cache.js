@@ -10,10 +10,11 @@
   const STRING_FIELDS=[
     'id','title','originalTitle','english','japanese','poster','banner',
     'year','type','genre','status','releaseStatus','animeStatus',
-    'nextEpisodeAt','lastEpisodeAddedAt','lastEpisodeNumber',
+    'nextEpisodeAt','lastEpisodeAddedAt',
     'komiCardUpdatedAt','syncStatus','scheduleSource'
   ];
   const NUMBER_FIELDS=['shikimoriId','shikiRating','episodeCount'];
+  const RELEASE_NUMBER_FIELDS=['lastEpisodeNumber','lastEpisodeSeason','nextEpisodeNumber'];
   const ARRAY_FIELDS=['genres','synonyms'];
   let opening=null;
   function project(cards) {
@@ -30,6 +31,13 @@
         const number=Number(card[key]);
         if(card[key]!==undefined&&card[key]!==null&&Number.isFinite(number))
           item[key]=number;
+      }
+      // The bot writes numbers; older public snapshots may contain strings.
+      // Keep only a bounded positive episode identity, never playback state.
+      for(const key of RELEASE_NUMBER_FIELDS) {
+        const value=card[key];
+        if ((typeof value==='number'||typeof value==='string') &&
+            /^[1-9][0-9]{0,4}$/.test(String(value))) item[key]=Number(value);
       }
       for(const key of ARRAY_FIELDS) {
         if(Array.isArray(card[key]))

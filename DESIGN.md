@@ -35,7 +35,7 @@ components:
 
 Komi Anime is a Russian-language anime catalogue and viewing application. Discovery should feel like browsing a cinema programme: a readable title on the left, clear anime artwork on the right, then compact shelves and familiar controls. The requested reference is the composition of `senku.one`; Komi's own monochrome controls, routing and personal lists remain its product identity.
 
-The home page combines an expressive hero with functional catalogue navigation. Text, controls and badges use white and neutral greys. Artwork keeps its original colours. Avoid coloured UI accents, a blurred portrait stretched across the viewport, or motion that interferes with choosing a title. Russian interface copy and Cyrillic-capable font fallbacks are required; anime subject matter does not imply a Japanese UI locale or target market.
+The home page is a storefront for choosing what to watch; the catalogue owns the full grid and precise search filters. A guest sees the hero, recommendations, genres, confirmed recent episodes and upcoming dates. A viewer with unfinished progress sees one compact continue-watching rail immediately after the hero. Empty history creates no section and no sign-in prompt. Text, controls and badges use white and neutral greys. Artwork keeps its original colours. Avoid coloured UI accents, a blurred portrait stretched across the viewport, or motion that interferes with choosing a title. Russian interface copy and Cyrillic-capable font fallbacks are required; anime subject matter does not imply a Japanese UI locale or target market.
 
 ## Colors
 
@@ -49,11 +49,13 @@ Inter carries body copy and hero titles; Manrope/Inter at weight 700–800 carri
 
 ## Layout
 
-The desktop navigation rail is 72px and becomes the existing mobile bottom navigation below 768px. The hero spans its content area without a frame or rounded outer edge. Desktop height is `clamp(500px, 68vh, 660px)`; mobile content may grow naturally when long titles or wrapped metadata need more room. Search and resume surfaces keep their established overlay positions.
+The desktop navigation rail is 72px and becomes the existing mobile bottom navigation below 768px. The hero spans its content area without a frame or rounded outer edge. Desktop height is `clamp(500px, 68vh, 660px)`; mobile height is `clamp(430px, 62svh, 470px)`, shared by the boot, static and hydrated surfaces. Title and description rows reserve their space to prevent a late artwork or metadata response from shifting the next shelf. Search keeps its established overlay position; continue-watching appears below the hero instead of adding another overlay.
 
-Hero counter, dots and arrows sit together on larger screens. At widths up to 640px, counter and playback controls occupy the first row and slide dots occupy a second row. Dots retain at least 24px-wide targets, and arrow/pause controls are 44px square. Extra bottom space keeps these controls clear of the watch/list/details actions.
+Hero counter, dots and arrows sit together on larger screens. At widths up to 640px, counter and playback controls occupy the first row and slide dots occupy a second row. Dots retain at least 24px-wide targets, and arrow/pause controls are 44px square. Extra bottom space keeps these controls clear of the two hero actions: a white «Смотреть» link and a secondary «В список» button. Missing descriptions remain empty, with no «Аниме» filler.
 
-Catalogue gutters and cards retain the existing 16px geometry. Continue-watching cards grow with their text; their image wrappers keep a 16:9 ratio and clipped rounded corners. Do not change generic catalogue card overflow to fix this shelf.
+Catalogue gutters and cards retain the existing 16px geometry. Storefront recommendations use vertical 2:3 posters, a single rating overlay, a two-line title and a quiet year/format/episode-count row. The label «Рекомендуем» and subtitle disclose Shikimori score and freshness as the selection principle. Continue-watching uses a separate 16:9 preview, title, season, episode, timecode and a thin white progress bar. Mobile cards are at most 310px or 82vw so a complete card and the next card's edge remain visible. Each rail owns its horizontal scrolling; the document keeps natural vertical scrolling.
+
+Recent/upcoming episodes are compact horizontal rows with a small 2:3 thumbnail, title, episode and date. A confirmed-release rail is omitted when there is no qualifying data. Upcoming dates retain a clear empty/error state and refresh action, with the notice that voice-over availability may be later. Watch Party, shop and Premium remain navigation destinations rather than extra first-screen panels.
 
 ## Elevation & Depth
 
@@ -72,14 +74,17 @@ Primary and secondary actions are pills with a 999px radius. Carousel arrows and
 | Hero composition and artwork treatment | `komi-hero-senku.css`, loaded after the production bundle | Carousel and matching first-paint surfaces |
 | Hover/press easing | `button-animations.css` (`--ease-spring`, `--ease-press`) | Existing interactive controls |
 | Catalogue geometry | `komi-media-hub.css` (`--hub-grid-gap`, `--hub-card-radius`) | Catalogue and continue-watching shelves |
+| Storefront shelves and card variants | `home-discovery.css`, scoped to `.komi-home-storefront` | Recommendations, continue-watching and release rails |
+| Storefront rendering | `home-discovery.js`; `app-main.js` `renderCard(..., { variant: 'discovery' })` | Native detail links and the existing catalogue card owner |
+| Release selection and markup | `home-release-shelves.js` | Recent confirmed episodes and existing upcoming schedule |
 
-Hero controls have explicit hover, pressed, disabled and visible keyboard-focus states. The pause button shows the current rotation action through its icon and accessible label. Motion uses a seven-second Ken Burns cycle, a short slide fade and a staggered text reveal. Runtime pause/visibility state pauses ambient movement; reduced motion removes autoplay, zoom, parallax and reveal animation while manual navigation remains available. Actual video playback belongs to the media runtime described in `UX-CONTRACT.md`.
+Hero controls have explicit hover, pressed, disabled and visible keyboard-focus states. The pause button shows the current rotation action through its icon and accessible label. Motion uses a seven-second Ken Burns cycle and a short slide fade; text and the watch action are visible immediately without a staged reveal. Runtime pause/visibility state pauses ambient movement; reduced motion removes autoplay, zoom and parallax while manual navigation remains available. Actual video playback belongs to the media runtime described in `UX-CONTRACT.md`.
 
 The 16:9 watch player, source selector, central play action and episode navigation retain their existing runtime owners: `cinema-layout-v3.css`, `cinema-hud-v4.css` and the later compact-watch layer. Episode thumbnails use available frames; manual quality appears when the stream has multiple variants. External sources retain their embedded-player recovery link and advertising notice.
 
 ## Do's and Don'ts
 
-- Keep watch, list and details actions tied to the current real catalogue record.
+- Keep watch/list actions and detail-card links tied to the current real catalogue record.
 - Use one pause state for progress, autoplay and ambient media; respect reduced motion.
 - Keep landscape media unblurred and fall back to a contained portrait when needed.
 - Do not restore the old red palette or give the rating a gold accent.
@@ -93,4 +98,4 @@ The earlier document described a red palette, 68px rail and 24px-radius hero. Th
 Source URLs are parsed once by player-core.js. player-runtime.js owns media initialization and disposal, HLS loading, saved position and form validation. player-controls.js binds the solo playback bar to the same video element. Watch Party reuses the media runtime and external embeds synchronize episode/source only. Existing komiStatusFeedback owns transient notices and player and form errors appear inline.
 
 ## Verification
-scripts/player-core.test.cjs checks source parsing and ordered persistence. scripts/regression-browser.cjs covers four viewport widths and deterministic failure/race scenarios. Real provider playback, two authenticated accounts and cross-device synchronization require separate live verification. See AUDIT-2026-11-09.md.
+`tests/home-storefront.test.cjs`, `tests/home-release-shelves.test.cjs` and `scripts/resume-open-hydration.test.cjs` cover storefront order, ownership of unfinished history, native links, truthful releases and the early-click resume guard. `scripts/build-home-shell.cjs --check` verifies the first-paint hero matches the live renderer. The hero suites retain motion, artwork and hydration checks; `scripts/player-core.test.cjs` retains source parsing and ordered persistence checks. Browser verification covers guest/history layouts on desktop and 375/390px, keyboard controls and filtered genre navigation. A layout fixture does not establish live provider seeking, real two-account or cross-device synchronization; those still require separate live verification. See AUDIT-2026-11-09.md for older runtime limitations.

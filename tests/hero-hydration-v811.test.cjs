@@ -98,6 +98,8 @@ function fixture(initialIndex = 0, cachedPreview = false) {
       set innerHTML(markup) {this.content = parse(markup);}})},
     currentUser:null, currentSlideIndex:initialIndex, komiHomeCatalogReady:false,
     komiCatalogRevision:1, komiEpisodeProgress:{}, userAnimeStatuses:{},
+    komiExternalCalendar:new Map(), komiCalendarLoading:false, komiCalendarError:'',
+    availableGenresList:[], KomiGenreMoods:{render:() => ''},
     komiResumeReadyUid:null, komiResumePreview:[], komiLastHomeMarkup:'',
     komiStartupHomeCommitted:false, komiHomeHeroMayPaint:() => true,
     startHeroAutoSlide:() => timerStarts++,

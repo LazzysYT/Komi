@@ -13,9 +13,12 @@ for (const id of ['notifBellBtn', 'komiFriendsMyTab', 'notifDropdown']) {
   assert.match(html, new RegExp('id="' + id + '"[^>]*hidden'));
 }
 assert.match(html, /data-komi-mobile-extra="notifications" hidden/);
-assert.match(html, /app-main\.js\?v=20261125-v811-cinematic/);
-assert.match(html, /komi-home-boot\.js\?v=20261125-v811-cinematic/);
-assert.equal((html.match(/class="anime-card komi-seo-card"/g) || []).length, 36);
+const revision=html.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1];
+assert.match(revision,/^\d{8}-[\w-]+$/);
+assert.equal(html.match(/app-main\.js\?v=([^"]+)/)?.[1],revision);
+assert.match(html, /komi-home-boot\.js\?v=\d{8}[-\w]+/);
+const staticCards=html.match(/class="komi-discovery-card komi-seo-card"/g) || [];
+assert.ok(staticCards.length>0&&staticCards.length<=12);
 assert.doesNotMatch(html, /Добавить \/ Редактировать аниме/);
 assert.match(boot, /setTimeout\(finish, 5000\)/);
 assert.match(app, /limit\(pageSize\)\.abortSignal\(controller.signal\)/);

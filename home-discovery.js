@@ -41,7 +41,7 @@
       '<div class="komi-home-heading"><div><h2>' + escape(title) + '</h2>' +
       '<p class="komi-home-subtitle">' + escape(subtitle) + '</p></div>' +
       '<button type="button" class="komi-home-all" ' + collectionAction(kind) +
-      '>Смотреть все <span aria-hidden="true">↗</span></button></div>' +
+      '>Открыть каталог</button></div>' +
       '<div class="komi-home-rail komi-home-rail-pending" aria-busy="true"><template data-komi-lazy-shelf>' + visible.map(renderCard).join('') + '</template></div></section>';
   }
   const genreOptions = [
@@ -92,16 +92,6 @@
       ' data-komi-onerror="komiCardPosterFallback(this)">';
   }
 
-  function heroReleaseStatus(anime) {
-    const raw = anime && (anime.releaseStatus || anime.status || anime.animeStatus);
-    if (typeof raw !== 'string' || !raw.trim()) return '';
-    const value = raw.trim();
-    const aliases = {
-      ongoing: 'Онгоинг', releasing: 'Онгоинг', anons: 'Анонс',
-      announced: 'Анонс', released: 'Завершено', finished: 'Завершено'
-    };
-    return aliases[value.toLowerCase()] || value.slice(0, 40);
-  }
   function heroLogo(anime) {
     const url = anime && (anime.logo_url || anime.logoUrl);
     return typeof url === 'string' && /^https:\/\/[^\s"'<>]+$/i.test(url) ? url : '';
@@ -127,7 +117,6 @@
     const total = String(slides.length).padStart(2, '0');
     const playSvg = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.8a1 1 0 0 1 1.5-.86l11 7.2a1 1 0 0 1 0 1.72l-11 7.2A1 1 0 0 1 7 19.2V4.8Z"/></svg>';
     const bookmarkSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 4.5A1.5 1.5 0 0 1 7.5 3h9A1.5 1.5 0 0 1 18 4.5V21l-6-4-6 4V4.5Z"/></svg>';
-    const infoSvg = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 7.5h.01"/></svg>';
 
     return '<section class="komi-home-hero" aria-label="Рекомендуем посмотреть">' +
       '<div class="hero-slider-container" id="heroSlider" role="group" aria-roledescription="карусель" aria-label="Подборка аниме">' +
@@ -140,12 +129,8 @@
         const still = Array.isArray(anime.screenshots)
           ? anime.screenshots.find(url => typeof url === 'string' && /^https:\/\//i.test(url)) : '';
         const year = context.year(anime);
-        const description = context.describe(anime.desc);
-        const animeType = context.type(anime);
-        const releaseStatus = heroReleaseStatus(anime);
-        const episodes = count(anime);
-        const genres = (Array.isArray(anime.genres) ? anime.genres : [anime.genre])
-          .filter(value => typeof value === 'string' && value.trim()).slice(0, 4);
+        const rawDescription = context.describe(anime.desc);
+        const description = /^(?:аниме|anime)$/i.test(rawDescription.trim()) ? '' : rawDescription;
         const logo = i === index ? heroLogo(anime) : '';
         const saved = Boolean(animeId && context.currentUser?.authUserId && context.statuses?.[animeId]);
         const route = '/anime/' + animeId;
@@ -167,19 +152,14 @@
             '" alt="" decoding="async" referrerpolicy="no-referrer">' : '') +
           '<h1 class="komi-hub-title-text">' + escape(anime.title) + '</h1></div>' +
           '<div class="hero-meta"><span>★ ' + escape(rating(anime)) + '</span>' +
-          (animeType ? '<span>' + escape(animeType) + '</span>' : '') +
-          (year ? '<span>' + escape(year) + '</span>' : '') +
-          (episodes ? '<span>' + episodes + ' эп.</span>' : '') +
-          (releaseStatus ? '<span>' + escape(releaseStatus) + '</span>' : '') + '</div>' +
-          (genres.length ? '<div class="komi-hub-genres">' + genres.map(escape).join(' · ') + '</div>' : '') +
-          (description ? '<p class="komi-hub-description">' + escape(description) + '</p>' : '') +
+          (year ? '<span>' + escape(year) + '</span>' : '') + '</div>' +
+          '<p class="komi-hub-description"' + (description ? '' : ' hidden') + '>' + escape(description) + '</p>' +
           '<div class="hero-buttons">' +
           '<a class="komi-hub-play" href="' + route + '#player">' + playSvg + '<span>Смотреть</span></a>' +
           '<button type="button" class="komi-hub-list" aria-pressed="' + (saved ? 'true' : 'false') + '"' +
           ' data-komi-onclick="toggleHeroAnimeList(\'' + animeId + '\')">' +
           bookmarkSvg + '<span class="komi-hub-list-label">' + (saved ? '✓ В списке' : 'В список') + '</span></button>' +
-          '<a class="komi-hub-info" href="' + route + '" aria-label="Подробнее: ' + escape(anime.title) + '" title="Подробнее">' +
-          infoSvg + '</a></div></div></article>';
+          '</div></div></article>';
       }).join('') + '</div>' +
       '<div class="komi-hub-carousel-controls" aria-label="Управление слайдером">' +
       '<span class="komi-hub-slide-count"><strong data-komi-slide-current>' +
@@ -198,17 +178,25 @@
       '</div></div></section>';
   }
 
+  function unfinished(progress) {
+    const time = Number(progress?.time), duration = Number(progress?.duration);
+    const index = Number(progress?.index), season = Number(progress?.season);
+    return Number.isFinite(time) && time > 0 && Number.isFinite(Number(progress?.updated)) &&
+      Number.isSafeInteger(index) && index >= 0 && Number.isSafeInteger(season) && season > 0 &&
+      (!Number.isFinite(duration) || duration <= 0 || time < duration - 5);
+  }
   function recentProgress(context, animeList) {
     if (!context.currentUser?.authUserId) return [];
     // During initial hydration the 150-card public preview cannot resolve the
     // owner's whole watch list. Show only the last COMPLETE verified snapshot,
     // never a misleading partial row which reorders a moment later.
     if (!context.resumeReady)
-      return Array.isArray(context.resumePreview) ? context.resumePreview.slice(0, 8) : [];
+      return Array.isArray(context.resumePreview)
+        ? context.resumePreview.filter(item => id(item?.anime) && unfinished(item?.p)).slice(0, 8) : [];
     const prefix = context.currentUser.username + '_';
     const lookup = new Map(animeList.map(anime => [String(anime.id), anime]));
     return Object.entries(context.progress || {})
-      .filter(([key, progress]) => key.startsWith(prefix) && progress && Number.isFinite(Number(progress.updated)))
+      .filter(([key, progress]) => key.startsWith(prefix) && unfinished(progress))
       .sort((a, b) => Number(b[1].updated) - Number(a[1].updated)).slice(0, 16)
       .map(([key, p]) => ({anime: lookup.get(key.slice(prefix.length)), p}))
       .filter(({anime}) => id(anime)).slice(0, 8);
@@ -231,28 +219,8 @@
     return minutes + ':' + remainder;
   }
 
-  function resumeCapsule(item, context) {
-    if (!item) return '';
-    const {anime, p} = item;
-    const {number} = progressEpisode(anime, p);
-    return '<button type="button" class="komi-hub-resume" data-komi-onclick="resumeKomiAnime(\'' + id(anime) + '\')">' +
-      artworkImage({poster: anime.poster || anime.banner}, context, 'eager') +
-      '<span class="komi-hub-resume-copy"><small>Продолжить просмотр</small>' +
-      '<strong>' + escape(anime.title) + '</strong><small>Серия ' + number + '</small></span>' +
-      '<span class="komi-hub-resume-play" aria-hidden="true">▶</span></button>';
-  }
-
   function continueShelf(recent, context) {
-    if (!recent.length) {
-      if (!context.currentUser?.authUserId || context.resumeReady) return '';
-      // Same geometry as real cards; placeholders avoid an empty-to-full shift.
-      return '<section class="komi-home-shelf komi-home-continue komi-feature-section komi-resume-loading" aria-busy="true">' +
-        '<div class="komi-home-heading"><h2>Продолжить просмотр</h2></div>' +
-        '<div class="komi-home-progress-rail">' +
-        ('<div class="komi-home-progress-card komi-resume-placeholder" aria-hidden="true">' +
-        '<span class="komi-home-progress-art"></span><span class="komi-home-progress-details"></span></div>').repeat(6) +
-        '</div></section>';
-    }
+    if (!recent.length) return '';
     return '<section class="komi-home-shelf komi-home-continue komi-feature-section">' +
       '<div class="komi-home-heading"><h2>Продолжить просмотр</h2></div>' +
       '<div class="komi-home-progress-rail">' + recent.map(({anime, p}, index) => {
@@ -265,30 +233,14 @@
           .find(url => typeof url === 'string' && /^https:\/\//i.test(url));
         return '<button type="button" class="komi-home-progress-card" data-komi-onclick="resumeKomiAnime(\'' + id(anime) + '\')">' +
           '<span class="komi-home-progress-art">' + artworkImage(preview ? {banner: preview} : anime, context, index < 3 ? 'eager' : 'lazy') +
-          '<span class="komi-home-progress-track"><span style="width:' + percent.toFixed(2) + '%"></span></span></span>' +
+          '<span class="komi-home-progress-track" aria-hidden="true"><span style="width:' + percent.toFixed(2) + '%"></span></span></span>' +
           '<span class="komi-home-progress-details"><strong>' + escape(anime.title) + '</strong>' +
           '<small>Сезон ' + season + ' · Серия ' + number + ' · ' + elapsedTime(position) +
           '</small></span></button>';
       }).join('') + '</div></section>';
   }
 
-  function leaderboard() {
-    return '<section class="komi-home-leaderboard komi-feature-section" id="komiLeaderboard">' +
-      '<div class="komi-home-heading"><div><h2>Топ зрителей Komi</h2>' +
-      '<p class="komi-home-subtitle">Подтверждённая активность участников, которые согласились войти в рейтинг</p></div></div>' +
-      '<div class="komi-home-community-panel">' +
-      '<div class="komi-home-leaderboard-tabs" role="group" aria-label="Показатель рейтинга">' +
-      '<button type="button" data-komi-rank="hours" aria-pressed="true">Часы</button>' +
-      '<button type="button" data-komi-rank="episodes" aria-pressed="false">Серии</button>' +
-      '<button type="button" data-komi-rank="level" aria-pressed="false">Уровень</button>' +
-      '</div><div id="komiLeaderboardDetails" class="komi-leaderboard-list" role="status" aria-live="polite">' +
-      '<p class="komi-leaderboard-status">Загружаем рейтинг…</p></div>' +
-      '<div class="komi-leaderboard-optin"><span>Часы — подтверждённые 20-минутные интервалы просмотра. Участие добровольное.</span>' +
-      '<button type="button" data-komi-rank-consent hidden>Участвовать</button></div>' +
-      '</div></section>';
-  }
-  // Only public, catalog-derived selections are memoized. Account-owned
-  // recommendations, watch progress and UI state are always read fresh.
+  // Public recommendations reuse the loaded catalog. No view counts are implied.
   let cachedPublicHome = null;
   function render(context) {
     const source = Array.isArray(context.animeList) ? context.animeList : [];
@@ -297,76 +249,43 @@
     const revision = Number(context.catalogRevision) || 0;
     if (!cachedPublicHome || cachedPublicHome.source !== source ||
         cachedPublicHome.revision !== revision || cachedPublicHome.length !== source.length) {
-      // Cache normalized sort keys once per catalog revision. Date parsing and
-      // year/type normalization must never happen inside thousands of comparisons.
-      const now = Date.now(), recentThreshold = now - 30*86400000;
-      const latestYear = String(new Date(now).getFullYear());
+      const now = Date.now(), recentThreshold = now - 30 * 86400000;
       const metadata = animeList.map(anime => ({
         anime, score:score(anime), updated:updated(anime),
-        year:context.year(anime), type:context.type(anime), count:count(anime)
+        year:context.year(anime), count:count(anime)
       }));
-      const best = (items,compare,limit) => items.sort(compare).slice(0,limit).map(item=>item.anime);
-      const byScore=(a,b)=>b.score-a.score;
-      const byRecent=(a,b)=>b.updated-a.updated;
-      const ranked = best(metadata.filter(item=>item.score>0),byScore,12);
+      const popularity = item => (item.updated > recentThreshold && item.updated <= now ? 2 : 0) + item.score / 10;
+      const popular = metadata.filter(item => item.score > 0 && id(item.anime))
+        .sort((a,b) => popularity(b) - popularity(a) || b.score - a.score)
+        .slice(0,12).map(item => item.anime);
       const slider = typeof root.KomiHomeSnapshot?.featured === 'function'
         ? root.KomiHomeSnapshot.featured(animeList, context.year)
-        : best(metadata.filter(item=>/^https:\/\//i.test(item.anime.poster||'') && item.score>=7 && item.count>0),
-            (a,b)=>Number(b.year)-Number(a.year)||byScore(a,b),5);
-      const recent = best(metadata.filter(item=>item.updated>0),byRecent,12);
-      const season = best(metadata.filter(item=>item.year===latestYear),(a,b)=>byRecent(a,b)||byScore(a,b),12);
-      const short = best(metadata.filter(item=>item.type==='Сериал'&&item.count>0&&item.count<=13&&item.score>=7),byScore,12);
-      const popularity = item => (item.updated>recentThreshold?2:0)+item.score/10;
-      const popular = best(metadata.filter(item=>item.score>0),(a,b)=>popularity(b)-popularity(a),12);
-      const catalogPreview = [...new Set([...popular, ...animeList])].slice(0,12);
-      const films = best(metadata.filter(item=>item.type==='Фильм'),byScore,10);
-      cachedPublicHome = {
-        source, revision, length:source.length, ranked, slider, latestYear,
-        recent, season, short, popular, catalogPreview, films
-      };
+        : metadata.filter(item => /^https:\/\//i.test(item.anime.poster || '') && item.score >= 7 && item.count > 0)
+          .sort((a,b) => Number(b.year) - Number(a.year) || b.score - a.score)
+          .slice(0,5).map(item => item.anime);
+      cachedPublicHome = {source, revision, length:source.length, slider, popular};
     }
-    const {ranked, slider, latestYear, recent, season, short, popular,
-      catalogPreview, films} = cachedPublicHome;
-    const recommended = context.recommendations();
+    const {slider, popular} = cachedPublicHome;
     const history = recentProgress(context, animeList);
-    // The same title may appear in several shelves. Build its card once per
-    // render; this cache never survives an account or catalog state change.
-    const cardMarkup = new Map();
-    const originalCard = context.renderCard;
-    context = {...context, renderCard(anime) {
-      const key = id(anime);
-      if (!key) return originalCard(anime);
-      if (!cardMarkup.has(key)) cardMarkup.set(key,originalCard(anime));
-      return cardMarkup.get(key);
-    }};
-    return '<div class="komi-home-discovery">' +
-      hero(slider,context) +
-      (slider.length ? resumeCapsule(history[0], context) : '') +
+    const genres = typeof context.genres === 'function' ? context.genres() : genreShelf(animeList);
+    return '<div class="komi-home-discovery komi-home-storefront">' +
+      hero(slider, context) +
       continueShelf(history, context) +
-      '<section class="komi-hub-catalog-preview" aria-label="Каталог аниме">' +
-      (typeof context.quickFilters === 'function' ? context.quickFilters() : '') +
-      '<div class="anime-grid">' + (typeof root.matchMedia === 'function' && root.matchMedia('(max-width: 767px)').matches ? catalogPreview.slice(0, 7) : catalogPreview).map(context.renderCard).join('') + '</div></section>' +
-      shelf('Популярное прямо сейчас','Высокие оценки Shikimori и недавно обновлённые серии',popular,'all',context.renderCard,'komi-home-popular') +
-      shelf('Новинки сезона','Релизы '+latestYear+' года из каталога',season,'all',context.renderCard,'komi-home-season') +
-      shelf('На один вечер','Сериалы продолжительностью до 13 серий',short,'short',context.renderCard,'komi-home-evening') +
-      shelf('Топ по рейтингу','Самые высоко оценённые тайтлы Shikimori',ranked.slice(0,12),'best',context.renderCard,'komi-home-top') +
-      (recent.length ? shelf('Свежие серии','Последние добавления и обновления каталога',recent,'recent',context.renderCard,'komi-home-updated') : '') +
-      leaderboard() +
-      (recommended.length?shelf('Тебе понравится','Подборка на основе твоих списков и интересов',recommended,'all',context.renderCard,'komi-home-personal'):'') +
-      context.calendar() +
-      (films.length?shelf('Лучшие фильмы','Истории, которые помещаются в один сеанс',films,'movies',context.renderCard,'komi-home-films'):'') +
-      context.years() +
-      '<div class="komi-home-browse-footer">'+context.intro()+
-      '<nav class="komi-home-support-links" aria-label="Дополнительные разделы Komi">'+
-      '<button type="button" data-komi-onclick="navigate(\'partners\')">Партнёры</button>'+
-      '<a href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer">TikTok</a>'+
-      '<a href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer">Telegram</a></nav></div>' +
+      shelf('Рекомендуем', 'По оценкам Shikimori и свежести обновлений', popular, 'all',
+        anime => context.renderCard(anime, {variant:'discovery'}), 'komi-home-popular') +
+      '<div class="komi-home-genres-section komi-feature-section">' + genres + '</div>' +
+      (root.KomiHomeReleases?.renderRecent(context) || '') +
+      (root.KomiHomeReleases?.renderUpcoming(context) || '') +
+      '<footer class="komi-home-browse-footer"><a class="komi-home-catalog-link" href="/catalog">Весь каталог</a>' +
+      '<nav class="komi-home-support-links" aria-label="Дополнительные разделы Komi">' +
+      '<a href="/partners">Партнёры</a>' +
+      '<a href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer">TikTok</a>' +
+      '<a href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer">Telegram</a></nav></footer>' +
       '</div>';
   }
   // Keep equal sections mounted through catalog/session refreshes. Parsing into
   // a template is inert; images and observers only start for genuinely new DOM.
   const sectionMarkup = new WeakMap();
-  const leaderboardObservers = new WeakMap();
   function patch(container, markup, owner) {
     const template = document.createElement('template');
     template.innerHTML = markup;
@@ -404,8 +323,6 @@
     }
     for (const node of [...current.children]) {
       if (keep.has(node)) continue;
-      const observer=leaderboardObservers.get(node);
-      if (observer) observer.disconnect();
       node.remove();
     }
   }
@@ -459,33 +376,6 @@
   });
   function afterRender(container) {
     observeViewport(container);
-    const labels = new Map([
-      ['Календарь серий','Актуальное расписание выхода эпизодов'],
-      ['Аниме 2026','Тайтлы этого года в нашей библиотеке'],
-      ['Аниме 2025','Релизы прошлого года'],
-      ['Аниме 2024','Что выходило ранее']
-    ]);
-    for (const header of container.querySelectorAll('.komi-feature-section .section-header')) {
-      const heading = header.querySelector('.section-title');
-      if (!heading || header.querySelector('.komi-home-subtitle')) continue;
-      const description = labels.get(heading.textContent.trim());
-      if (!description) continue;
-      const p = document.createElement('p');
-      p.className = 'komi-home-subtitle';
-      p.textContent = description;
-      heading.insertAdjacentElement('afterend',p);
-    }
-    const community = container.querySelector('#komiLeaderboard');
-    if (community && !community.dataset.komiRankMounted && !leaderboardObservers.has(community) && typeof IntersectionObserver === 'function') {
-      const observer = new IntersectionObserver(entries => {
-        if (!community.isConnected) { observer.disconnect(); return; }
-        if (entries.some(entry => entry.isIntersecting)) {
-          observer.disconnect(); root.KomiPublicLeaderboard?.mount(community);
-        }
-      }, {rootMargin:'300px'});
-      leaderboardObservers.set(community,observer);
-      observer.observe(community);
-    } else if (community && typeof IntersectionObserver !== 'function') root.KomiPublicLeaderboard?.mount(community);
   }
-  root.KomiHomeDiscovery = {render,patch,retainSection,afterRender,observeViewport,recentProgress};
+  root.KomiHomeDiscovery = {render,patch,retainSection,afterRender,observeViewport,recentProgress,unfinished};
 })(globalThis);
