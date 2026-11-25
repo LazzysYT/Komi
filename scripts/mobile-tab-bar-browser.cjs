@@ -2,6 +2,13 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
 
+async function assertCanonicalRoute(page,pathname,view){
+  const url=new URL(page.url());
+  assert.equal(url.pathname,pathname,'Navigation should use the canonical pathname');
+  assert.equal(url.hash,'','Interactive navigation should not leave a legacy route hash');
+  assert.equal(await page.evaluate(()=>currentView),view);
+}
+
 (async()=>{
   const browser=await chromium.launch({headless:true,...(process.env.KOMI_CHROME?{executablePath:process.env.KOMI_CHROME}:{})});
   try{
@@ -60,10 +67,16 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
           document.getElementById('notifBellBtn').style.removeProperty('display');
         });
         assert.equal(state.navCount,4,'Guest navigation exposes four personal-safe tabs at '+width+': '+JSON.stringify(state));
-        assert.deepEqual(state.labels,['Главная','Каталог','Мои списки','Профиль']);
+        assert.deepEqual(state.labels,['Главная','Каталог','Мои списки','Войти']);
         assert.equal(state.moreVisible,true);
         assert.ok(state.railWidth<=width+2,'Mobile bar overflows the viewport');
         assert.ok(state.railTop>650,'Mobile navigation must stay at the bottom of the screen');
+        await page.locator('.komi-side-bottom > .komi-side-account').click();
+        assert.equal(await page.locator('#authModal').evaluate(el=>el.classList.contains('active')),true,
+          'Guest account entry must open authentication');
+        assert.equal(await page.locator('#loginFormContainer').isVisible(),true);
+        await page.locator('#authModal .modal-close').click();
+        assert.equal(await page.locator('#authModal').evaluate(el=>el.classList.contains('active')),false);
         await page.locator('#komiMobileMoreToggle').click();
         assert.equal(await page.locator('#komiMobileMoreToggle').getAttribute('aria-expanded'),'true');
         assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),5);
@@ -79,12 +92,12 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
         assert.equal(await page.evaluate(()=>document.activeElement.id),'komiMobileMoreToggle');
         await page.locator('#komiMobileMoreToggle').click();
         await page.locator('[data-komi-mobile-extra="partners"]').click();
-        assert.equal(new URL(page.url()).hash,'#partners');
+        await assertCanonicalRoute(page,'/partners','partners');
         assert.equal(await page.locator('#komiMobileMoreMenu').evaluate(el=>el.hidden),true);
         await page.locator('#sideCatalogBtn').click();
-        assert.equal(new URL(page.url()).hash,'#catalog');
+        await assertCanonicalRoute(page,'/catalog','catalog');
         await page.locator('#sideHomeBtn').click();
-        assert.equal(new URL(page.url()).hash,'');
+        await assertCanonicalRoute(page,'/','home');
       }else{
         assert.equal(state.moreVisible,false,'Desktop should not show mobile More menu');
         assert.ok(state.navCount>=7,'Desktop hub rail retains all core controls; community stays in its own overlay button');

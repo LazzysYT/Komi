@@ -1537,12 +1537,20 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (window.KomiHomeDiscovery) {
                     const previousHero = container.querySelector('.komi-home-hero');
                     const previousOwner = previousHero?.dataset.komiOwner || '';
-                    const heroSignature = hero => [...hero.querySelectorAll('.hero-slide')].map(slide =>
-                        [slide.dataset.komiAnimeId, slide.dataset.komiHeroSaved, slide.classList.contains('active'),
-                         slide.querySelector('img')?.dataset.posterDirect || '',
-                         slide.querySelector('.komi-home-hero-content')?.textContent || '',
-                         slide.querySelector('.komi-hub-list')?.dataset.komiOnclick || ''].join('|')).join('::');
-                    const oldHeroSignature = previousHero ? heroSignature(previousHero) : '';
+                    // Compare render inputs, not the live DOM: artwork and descriptions
+                    // are enriched asynchronously, and carousel selection is local state.
+                    const heroSignature = hero => JSON.stringify([...hero.querySelectorAll('.hero-slide')].map(slide => [
+                        slide.dataset.komiAnimeId, slide.dataset.komiHeroSaved,
+                        slide.dataset.komiHeroBanner || '', slide.dataset.komiHeroVideo || '',
+                        slide.dataset.komiHeroStill || '',
+                        slide.querySelector('.komi-hub-hero-art')?.dataset.posterDirect || '',
+                        slide.querySelector('.komi-hub-title-text')?.textContent || '',
+                        slide.querySelector('.hero-meta')?.textContent || '',
+                        slide.querySelector('.komi-hub-genres')?.textContent || '',
+                        slide.querySelector('.komi-hub-play')?.getAttribute('href') || '',
+                        slide.querySelector('.komi-hub-info')?.getAttribute('href') || '',
+                        slide.querySelector('.komi-hub-list')?.dataset.komiOnclick || ''
+                    ]));
                     const homeMarkup = window.KomiHomeDiscovery.render({
                         animeList: komiHomeCatalogReady ? animeList : komiHomePreviewCatalog,
                         catalogRevision: komiCatalogRevision,
@@ -1553,7 +1561,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         resumePreview:komiResumePreview,
                         currentSlideIndex, renderCard, year:komiAnimeYear,
                         type:komiCatalogType, artwork:animeArtwork,
-                        describe:cleanAnimeDescription,
+                        describe:cleanAnimeDescriptionText,
                         recommendations:komiRecommendations,
                         calendar:komiReleaseCalendar, years:komiYearSections,
                         intro:komiIntroMarkup, quickFilters:komiHomeQuickFiltersMarkup
@@ -1566,22 +1574,31 @@ async function komiLoadCatalogPages(attempt = 0) {
                     komiStartupHomeCommitted = true;
                     komiLastHomeMarkup = homeMarkup;
                     const heroOwner = currentUser?.authUserId || '';
+                    const heroMarkup = homeMarkup.match(/<section class="komi-home-hero"[\s\S]*?<\/section>/)?.[0] || '';
+                    const template = document.createElement('template');
+                    template.innerHTML = heroMarkup;
+                    const renderedHero = template.content.firstElementChild;
+                    const signature = renderedHero ? heroSignature(renderedHero) : '';
+                    const previousRender = previousHero?.komiHomeHeroRender;
+                    const retainHero = Boolean(window.KomiHomeDiscovery.patch && previousRender &&
+                        previousOwner === heroOwner && signature && previousRender.signature === signature);
+                    // Keep the original section input so patch() reuses its mounted node.
+                    // Replacing then reinserting the image still causes a late LCP and
+                    // restarts media. Public card hydration also omits full descriptions;
+                    // it must not discard text already loaded by the hero metadata layer.
+                    const patchMarkup = retainHero
+                        ? homeMarkup.replace(heroMarkup, () => previousRender.markup) : homeMarkup;
                     if (window.KomiHomeDiscovery.patch)
-                        window.KomiHomeDiscovery.patch(container, homeMarkup, heroOwner);
+                        window.KomiHomeDiscovery.patch(container, patchMarkup, heroOwner);
                     else container.innerHTML = homeMarkup;
                     const nextHero = container.querySelector('.komi-home-hero');
-                    if (nextHero && previousHero && previousOwner === heroOwner &&
-                        oldHeroSignature === heroSignature(nextHero)) {
-                        // A network/account refresh should not reset an already loaded
-                        // hero image, its fade animation or the current carousel slide.
-                        if (nextHero !== previousHero) {
-                            if (window.KomiHomeDiscovery.retainSection) window.KomiHomeDiscovery.retainSection(nextHero, previousHero);
-                            else nextHero.replaceWith(previousHero);
-                        }
-                        previousHero.dataset.komiOwner = heroOwner;
-                    } else if (nextHero) nextHero.dataset.komiOwner = heroOwner;
+                    if (nextHero) {
+                        nextHero.dataset.komiOwner = heroOwner;
+                        nextHero.komiHomeHeroRender = retainHero && nextHero === previousHero
+                            ? previousRender : {signature, markup:heroMarkup};
+                    }
                     window.KomiHomeDiscovery.afterRender(container);
-                    startHeroAutoSlide();
+                    if (!nextHero || nextHero !== previousHero) startHeroAutoSlide();
                     return;
                 }
                 const sliderItems = [...animeList].filter(a=>a.poster && /^https:\/\//i.test(String(a.poster)))
@@ -1835,26 +1852,61 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
         }
 
+        // Fetch only public hero metadata on demand; never download episodes for the carousel.
+        window.komiFetchHeroMetadata = async function(id) {
+            if (!_supabase || !/^[1-9][0-9]{0,11}$/.test(String(id))) return null;
+            const controller = new AbortController();
+            const timeout = setTimeout(() => controller.abort(), 4500);
+            try {
+                const {data,error} = await _supabase.from('anime_catalog')
+                    .select('description:data->>desc,still:data->screenshots->>0,banner:data->>banner_url,video:data->>banner_video_url')
+                    .eq('shikimori_id',Number(id)).abortSignal(controller.signal).maybeSingle();
+                if(error || !data) return null;
+                return {description:cleanAnimeDescriptionText(data.description).slice(0,850),still:data.still,banner:data.banner,video:data.video};
+            } catch { return null; }
+            finally { clearTimeout(timeout); }
+        };
+
         function startHeroAutoSlide() {
             if (slideInterval) clearInterval(slideInterval);
             slideInterval = null;
             const slider = document.getElementById('heroSlider');
+            window.KomiHeroArt?.syncVideos?.();
             if (!slider || slider.querySelectorAll('.hero-slide').length < 2) return;
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+            slider.style.setProperty('--komi-hero-progress', '0%');
+            let elapsed = 0, last = performance.now();
+            const duration = 7000;
             slideInterval = setInterval(() => {
-                if (!slider.isConnected || document.hidden || slider.matches(':hover, :focus-within')) return;
+                const now = performance.now();
+                const delta = Math.min(250, Math.max(0, now - last));
+                last = now;
+                if (!slider.isConnected) {
+                    clearInterval(slideInterval);
+                    slideInterval = null;
+                    window.KomiHeroArt?.syncVideos?.();
+                    return;
+                }
+                const paused = window.KomiHeroArt?.isPaused
+                    ? window.KomiHeroArt.isPaused(slider)
+                    : document.hidden || slider.matches(':hover, :focus-within') ||
+                      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+                if (paused) return;
                 // Never compete with first paint or load extra artwork on a constrained link.
                 if (document.readyState !== 'complete' || !komiHomeCatalogReady) return;
                 const connection = navigator.connection;
                 if (connection?.saveData || /(^|-)2g$/.test(connection?.effectiveType || '')) return;
                 const image = slider.querySelector('.hero-slide.active .komi-hub-hero-art');
-                if (image && (!image.complete || !image.naturalWidth)) return;
+                if (image && !image.complete) return;
+                elapsed += delta;
+                slider.style.setProperty('--komi-hero-progress', Math.min(100,elapsed/duration*100).toFixed(1)+'%');
                 const maxSlides = slider.querySelectorAll('.hero-slide').length;
-                if (maxSlides > 1) {
+                if (elapsed >= duration && maxSlides > 1) {
                     currentSlideIndex = (currentSlideIndex + 1) % maxSlides;
+                    elapsed = 0;
+                    slider.style.setProperty('--komi-hero-progress','0%');
                     updateHeroSlideView();
                 }
-            }, 10000);
+            }, 100);
         }
 
         function changeSlide(direction) {
@@ -2902,14 +2954,18 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
         }
 
-        function cleanAnimeDescription(value) {
-            return escapeFriendHtml(String(value || '')
+        function cleanAnimeDescriptionText(value) {
+            return String(value || '')
                 .replace(/\[(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)[^\]]*\]/gi, ' ')
                 .replace(/\[\/(?:character|anime|manga|person|user|url|b|i|s|spoiler|quote|code|size|color|center|left|right|poster|image|video|audio|youtube|html)\]/gi, ' ')
                 .replace(/<[^>]*>/g, ' ')
                 .replace(/(?:https?:\/\/|www\.)\S+/gi, ' ')
                 .replace(/&(?:#?x?[\w]+);/gi, ' ')
-                .replace(/[\u0000-\u001f\s]+/g, ' ').trim());
+                .replace(/\[\/?[a-z][^\]]*$/gi, ' ')
+                .replace(/[\u0000-\u001f\s]+/g, ' ').trim();
+        }
+        function cleanAnimeDescription(value) {
+            return escapeFriendHtml(cleanAnimeDescriptionText(value));
         }
         // Shikimori's legacy REST image API exposes original and preview sizes.
         // Prefer the smaller size in cards without rewriting saved anime metadata.
@@ -3554,7 +3610,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (!komiAdminUiLoader) {
                     komiAdminUiLoader = new Promise((resolve, reject) => {
                         const script = document.createElement('script');
-                        script.src = '/komi-admin-ui.js?v=20261122-premium';
+                        script.src = '/komi-admin-ui.js?v=20261125-v811-cinematic';
                         script.async = true;
                         script.onload = resolve;
                         script.onerror = () => reject(new Error('Admin UI could not load'));
@@ -3662,12 +3718,42 @@ async function komiLoadCatalogPages(attempt = 0) {
             `).join('');
         }
 
+        function komiAnimeFormError(message, field = null) {
+            const form = document.getElementById('animeForm');
+            if (!form) return;
+            let error = form.querySelector('[data-komi-anime-form-error]');
+            if (!error) {
+                error = document.createElement('p');
+                error.id = 'komiAnimeFormError';
+                error.dataset.komiAnimeFormError = '';
+                error.setAttribute('role', 'alert');
+                form.prepend(error);
+            }
+            error.textContent = message;
+            error.hidden = false;
+            if (field) {
+                field.setAttribute('aria-invalid', 'true');
+                field.setAttribute('aria-describedby', error.id);
+                field.focus();
+            }
+        }
+
+        function komiResetAnimeFormErrors(form) {
+            const error = form.querySelector('[data-komi-anime-form-error]');
+            if (error) { error.textContent = ''; error.hidden = true; }
+            form.querySelectorAll('[aria-describedby="komiAnimeFormError"]').forEach(field => {
+                field.removeAttribute('aria-invalid');
+                field.removeAttribute('aria-describedby');
+            });
+        }
+
         async function openAddModal(editId = null) {
             if (!(await requireServerAdmin()) || !(await komiEnsureAdminUI())) return;
             const modal=document.getElementById('addModal');
             if (!modal) return;
             const form=document.getElementById('animeForm');
             form.reset();
+            komiResetAnimeFormErrors(form);
             const animeId=document.getElementById('animeShikimoriId');
             animeId.readOnly=false;
             document.getElementById('editAnimeId').value='';
@@ -3688,6 +3774,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 animeId.readOnly=true;
                 document.getElementById('animeTitle').value=a.title||'';
                 document.getElementById('animePoster').value=a.poster||'';
+                document.getElementById('animeHeroBanner').value=a.banner_url||a.bannerUrl||'';
+                document.getElementById('animeHeroVideo').value=a.banner_video_url||a.bannerVideoUrl||a.bannerVideo||'';
                 document.getElementById('animeShikiRating').value=a.shikiRating||'';
                 document.getElementById('animeScreenshots').value=(a.screenshots||[]).join(', ');
                 document.getElementById('animeTrailer').value=a.trailer||'';
@@ -3731,11 +3819,17 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (!(await requireServerAdmin())) return;
             const uid=currentUser?.authUserId;
             const form=document.getElementById('animeForm');
-            if (!form.reportValidity()) return;
+            if (!form || form.dataset.komiSaving === 'true') return;
+            komiResetAnimeFormErrors(form);
+            const invalid = form.querySelector(':invalid');
+            if (invalid) {
+                komiAnimeFormError('Проверьте обязательное поле и формат введённого значения.', invalid);
+                return;
+            }
             const editId=String(document.getElementById('editAnimeId').value||'');
             const rawId=String(document.getElementById('animeShikimoriId').value||'');
             if (!/^[1-9][0-9]{0,11}$/.test(rawId)) {
-                alert('Укажите действительный числовой Shikimori ID.');
+                komiAnimeFormError('Укажите действительный числовой Shikimori ID.', document.getElementById('animeShikimoriId'));
                 return;
             }
             const id=Number(rawId);
@@ -3743,7 +3837,21 @@ async function komiLoadCatalogPages(attempt = 0) {
             const title=document.getElementById('animeTitle').value.trim().slice(0,200);
             const poster=document.getElementById('animePoster').value.trim().slice(0,2000);
             if (!title || !poster.startsWith('https://')) {
-                alert('Введите название и безопасную HTTPS-ссылку на постер.');
+                komiAnimeFormError('Введите название и безопасную HTTPS-ссылку на постер.', document.getElementById(!title ? 'animeTitle' : 'animePoster'));
+                return;
+            }
+            const bannerUrl = String(document.getElementById('animeHeroBanner')?.value||'').trim();
+            const videoUrl = String(document.getElementById('animeHeroVideo')?.value||'').trim();
+            const validMedia = (raw, video=false) => {
+                if(!raw) return true;
+                if(raw.length>2000) return false;
+                try {
+                    const url = new URL(raw);
+                    return url.protocol==='https:'&&!url.username&&!url.password&&!url.port&&(!video||/\.(mp4|webm)$/i.test(url.pathname));
+                } catch { return false; }
+            };
+            if(!validMedia(bannerUrl)||!validMedia(videoUrl,true)) {
+                komiAnimeFormError('Баннер должен быть HTTPS-ссылкой, видео — прямой HTTPS-ссылкой на MP4 или WebM.', document.getElementById(!validMedia(bannerUrl) ? 'animeHeroBanner' : 'animeHeroVideo'));
                 return;
             }
             const episodesByKey=new Map();
@@ -3754,7 +3862,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const url=String(group.querySelector('.ep-url')?.value||'').trim();
                 if(!url)continue;
                 if(!Number.isInteger(season)||season<1||season>100||!epTitle||url.length>4096) {
-                    alert('Проверьте номер сезона, название и адрес серии.');
+                    komiAnimeFormError('Проверьте номер сезона, название и адрес серии.', group.querySelector('.ep-season'));
                     return;
                 }
                 const key=season+'_'+epTitle;
@@ -3762,10 +3870,15 @@ async function komiLoadCatalogPages(attempt = 0) {
                 episodesByKey.get(key).sources[source]=url;
             }
             const episodes=[...episodesByKey.values()];
+            const submit = form.querySelector('[type="submit"]');
+            form.dataset.komiSaving = 'true';
+            form.setAttribute('aria-busy', 'true');
+            if (submit) submit.disabled = true;
+            try {
             const {data:old,error:readError}=await _supabase.from('anime_catalog')
                 .select('data').eq('shikimori_id',id).maybeSingle();
             if (readError || (editId && !old) || (!editId && old)) {
-                alert(readError?.message || (editId?'Аниме больше не найдено.':'Такое аниме уже существует. Откройте редактирование.'));
+                komiAnimeFormError(readError ? 'Не удалось прочитать тайтл. Повторите сохранение.' : (editId?'Аниме больше не найдено.':'Такое аниме уже существует. Откройте редактирование.'));
                 return;
             }
             if (uid!==currentUser?.authUserId || !(await requireServerAdmin(true))) return;
@@ -3774,6 +3887,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const screenshots=document.getElementById('animeScreenshots').value.split(',').map(x=>x.trim()).filter(x=>x.startsWith('https://')).slice(0,20);
             const rating=Number(document.getElementById('animeShikiRating').value);
             const data={...previous,id:String(id),shikimoriId:id,title,poster,
+                banner_url:bannerUrl,banner_video_url:videoUrl,
                 shikiRating:Number.isFinite(rating)&&rating>=0&&rating<=10?rating:0,
                 year:document.getElementById('animeYear').value.trim().slice(0,10),
                 type:document.getElementById('animeType').value.trim().slice(0,32)||'Сериал',
@@ -3789,18 +3903,27 @@ async function komiLoadCatalogPages(attempt = 0) {
             else result=await _supabase.from('anime_catalog')
                 .insert({shikimori_id:id,data,updated_at:now}).select('shikimori_id').single();
             if (result.error || !result.data || Number(result.data.shikimori_id)!==id) {
-                alert('Ошибка сохранения в Supabase: '+(result.error?.message||'изменение не подтверждено'));
+                komiAnimeFormError('Не удалось сохранить аниме. Введённые данные сохранены в форме — повторите попытку.');
                 return;
             }
             if (uid!==currentUser?.authUserId) return;
             const episodeCount=Array.isArray(data.episodes)?data.episodes.length:Number(data.episodeCount)||0;
             const card={...data,episodeCount,episodes:[]};
+            window.KomiHeroArt?.invalidateMetadata?.(String(id));
             const index=animeList.findIndex(item=>String(item.id)===rawId);
             if(index>=0)animeList[index]=card;
             else animeList.push(card);
+            ++komiCatalogRevision;
             closeAddModal();
             render();
-            alert('Аниме сохранено в защищённом каталоге.');
+            komiStatusFeedback('Аниме сохранено.');
+            } catch {
+                if (uid === currentUser?.authUserId) komiAnimeFormError('Связь с каталогом прервалась. Проверьте подключение и повторите сохранение.');
+            } finally {
+                delete form.dataset.komiSaving;
+                form.removeAttribute('aria-busy');
+                if (submit) submit.disabled = false;
+            }
         }
 
         async function showGoogleAuthInfo() {

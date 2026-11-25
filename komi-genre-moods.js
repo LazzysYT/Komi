@@ -14,7 +14,19 @@
     ['Исэкай', 'Попал в другой мир', ['Исэкай', 'Исекай', 'Isekai']],
     ['Психологическое', 'Игры разума', ['Психологическое', 'Психология', 'Психологический', 'Psychological']]
   ];
-  const norm = value => String(value || '').trim().toLocaleLowerCase('ru-RU');
+  // The same genre labels recur across thousands of catalog rows. Keep locale
+  // normalization out of those repeated comparisons without retaining every
+  // possible label supplied by a catalog refresh or filter.
+  const normalizedLabels = new Map();
+  const norm = value => {
+    const text = String(value || '').trim();
+    const cached = normalizedLabels.get(text);
+    if (cached !== undefined) return cached;
+    const normalized = text.toLocaleLowerCase('ru-RU');
+    if (normalizedLabels.size >= 256) normalizedLabels.clear();
+    normalizedLabels.set(text, normalized);
+    return normalized;
+  };
   const escape = value => String(value ?? '').replace(/[&<>"']/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
   const genresOf = anime => Array.isArray(anime?.genres) ? anime.genres : [anime?.genre].filter(Boolean);
   const moodAliases = new Map(MOODS.map(([name, , aliases]) => [norm(name),new Set(aliases.map(norm))]));

@@ -51,7 +51,7 @@ jobs:
           args=(--only-categories=performance --output=json --chrome-flags="--headless=new --no-sandbox" --max-wait-for-load=45000 --quiet)
           if [ "$DEVICE" = desktop ]; then args+=(--preset=desktop); fi
           "$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse" https://komianime.online/ "${args[@]}" --output-path=./lighthouse-results/production.json
-          "$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse" http://127.0.0.1:8765/ "${args[@]}" --output-path=./lighthouse-results/candidate.json
+          "$RUNNER_TEMP/komi-lh/node_modules/.bin/lighthouse" http://127.0.0.1:8765/ "${args[@]}" --save-assets --output-path=./lighthouse-results/candidate.json
           node <<'NODE'
           const fs=require('node:fs');
           const out=['## Lighthouse '+process.env.DEVICE,'','Local candidate uses minification and gzip like typical production delivery; hosting latency and headers differ. Scores are not directly comparable with prior uncompressed local runs.','', '| Target | Performance | LCP (ms) | TBT (ms) | CLS |','| --- | ---: | ---: | ---: | ---: |'];

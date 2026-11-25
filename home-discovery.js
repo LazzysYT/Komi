@@ -76,14 +76,14 @@
       'stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       '<path d="' + path + '"></path></svg>';
   }
-  function artworkImage(anime, context, loading, className = '', deferHero = false) {
+  function artworkImage(anime, context, loading, className = '', deferHero = false, heroSource = '') {
     const source = anime.banner || anime.poster;
     const directSource = className === 'komi-hub-hero-art' && typeof source === 'string'
       ? source.replace(/(https:\/\/shikimori\.(?:io|one)\/system\/animes\/)preview(\/[1-9]\d*\.jpe?g(?:\?\d+)?)/i, '$1original$2')
       : source;
     const direct = typeof directSource === 'string' && /^https:\/\//i.test(directSource)
       ? ' data-poster-direct="' + escape(directSource) + '"' : '';
-    const actualSrc = context.artwork(anime);
+    const actualSrc = heroSource || context.artwork(anime);
     const deferred = className === 'komi-hub-hero-art' && deferHero;
     return '<img class="' + className + '" src="' + (deferred ? '/anime-artwork.svg' : escape(actualSrc)) +
       '" alt="" loading="' + loading + '" decoding="async" referrerpolicy="no-referrer"' +
@@ -106,6 +106,21 @@
     const url = anime && (anime.logo_url || anime.logoUrl);
     return typeof url === 'string' && /^https:\/\/[^\s"'<>]+$/i.test(url) ? url : '';
   }
+  function heroArtwork(anime) {
+    const valid = url => typeof url === 'string' && /^https:\/\/[^\s"'<>]+$/i.test(url);
+    const custom = [anime.banner_url, anime.bannerUrl].find(valid);
+    // Public cards omit hero metadata. Reuse the verified seed banner for this
+    // exact ID/cover through hydration, without changing catalog posters or
+    // overriding a different live cover or legacy custom banner.
+    const seed = Array.isArray(root.KomiHomeSeed)
+      ? root.KomiHomeSeed.find(item => id(item) === id(anime)) : null;
+    const seeded = seed && anime.poster === seed.poster &&
+      (anime.banner || anime.poster) === (seed.banner || seed.poster) && valid(seed.banner_url)
+      ? seed.banner_url : '';
+    const banner = custom || seeded;
+    // Only the checked seed asset has known landscape dimensions before load.
+    return {banner, wide:Boolean(seeded && banner === seeded)};
+  }
   function hero(slides, context) {
     if (!slides.length) return '';
     const index = ((Number(context.currentSlideIndex) || 0) % slides.length + slides.length) % slides.length;
@@ -120,6 +135,8 @@
         const animeId = id(anime);
         // Shikimori IDs match MAL IDs; internal routes always use Komi's own ID.
         const malId = String(anime.shikimoriId || anime.idMal || anime.malId || animeId);
+        const {banner, wide} = heroArtwork(anime);
+        const video = [anime.banner_video_url, anime.bannerVideoUrl, anime.bannerVideo].find(url => typeof url === 'string' && /^https:\/\/[^\s]+\.(?:mp4|webm)(?:\?[^\s]*)?$/i.test(url));
         const still = Array.isArray(anime.screenshots)
           ? anime.screenshots.find(url => typeof url === 'string' && /^https:\/\//i.test(url)) : '';
         const year = context.year(anime);
@@ -133,14 +150,17 @@
         const saved = Boolean(animeId && context.currentUser?.authUserId && context.statuses?.[animeId]);
         const route = '/anime/' + animeId;
         const active = i === index;
-        return '<article class="hero-slide komi-hd-poster' + (active ? ' active' : '') + '"' +
+        return '<article class="' + (wide ? 'hero-slide komi-hd-wide' : 'hero-slide komi-hd-poster') +
+          (active ? ' active' : '') + '"' +
           ' data-komi-anime-id="' + escape(malId) + '"' +
           ' data-komi-hero-saved="' + (saved ? 'true' : 'false') + '"' +
+          (banner ? ' data-komi-hero-banner="' + escape(banner) + '"' : '') +
+          (video ? ' data-komi-hero-video="' + escape(video) + '"' : '') +
           (still ? ' data-komi-hero-still="' + escape(still) + '"' : '') +
           ' aria-hidden="' + (active ? 'false' : 'true') + '"' +
           (active ? '' : ' inert') +
           ' aria-label="' + escape(anime.title) + '">' +
-          artworkImage(anime, context, active ? 'eager' : 'lazy', 'komi-hub-hero-art', !active) +
+          artworkImage(anime, context, active ? 'eager' : 'lazy', 'komi-hub-hero-art', !active, banner) +
           '<div class="komi-home-hero-content">' +
           '<div class="komi-hub-title-wrap' + (logo ? ' has-logo' : '') + '">' +
           (logo ? '<img class="komi-hub-title-logo" src="' + escape(logo) +
@@ -169,10 +189,12 @@
           '<button type="button" class="hero-dot' + (i === index ? ' active' : '') +
           '" aria-label="Показать тайтл ' + (i + 1) + '" aria-pressed="' +
           (i === index ? 'true' : 'false') + '" data-komi-onclick="setSlide(' + i + ')"></button>'
-        ).join('') + '</div>' +
-        '<div class="komi-hub-arrows">' +
-        '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
-        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button></div>' : '') +
+        ).join('') + '</div>' : '') +
+      '<div class="komi-hub-arrows">' +
+      '<button type="button" class="komi-hero-pause" data-komi-hero-toggle aria-label="Приостановить слайдер" aria-pressed="false" title="Приостановить слайдер">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path data-komi-hero-pause-icon d="M6 5h4v14H6zM14 5h4v14h-4z"/><path data-komi-hero-play-icon hidden d="M8 5v14l11-7z"/></svg></button>' +
+      (slides.length > 1 ? '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
+        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button>' : '') + '</div>' +
       '</div></div></section>';
   }
 
