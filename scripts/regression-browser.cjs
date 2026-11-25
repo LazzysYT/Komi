@@ -154,7 +154,7 @@ async function checkNotifications(page) {
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
    // The daily hero waits for a decoded wide still before changing frames.
    // Keep that browser path real while making remote artwork deterministic.
-   await page.route(/^https:\/\/image\.tmdb\.org\/t\/p\/w1280\/[A-Za-z0-9]+\.jpg$/,route=>route.fulfill({
+   await page.route(/\/assets\/hero\/daily\/[1-9]\d{0,11}-[A-Za-z0-9]+\.webp$/,route=>route.fulfill({
      status:200,contentType:'image/svg+xml',
      body:'<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720"><rect width="1280" height="720" fill="#181820"/><path d="M0 600L480 180L940 720H0Z" fill="#394050"/></svg>'
    }));

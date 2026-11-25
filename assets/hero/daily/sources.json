@@ -1,0 +1,55 @@
+{
+  "note": "Exact content-negotiated WebP responses already used by the daily hero; copied without resizing, recompression or visual edits.",
+  "images": [
+    {
+      "anime_id": "61316",
+      "file": "61316-f7StpjhGI5xdIecti2jQkQY38ov.webp",
+      "source": "https://image.tmdb.org/t/p/w1280/f7StpjhGI5xdIecti2jQkQY38ov.jpg",
+      "content_type": "image/webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 32608,
+      "sha256": "f94db2f6557a42932e662eb61af996917fb894e5561589020dc2c3cd6d3f0003"
+    },
+    {
+      "anime_id": "61469",
+      "file": "61469-nVjUqzoZXDGXajjged1ZhUpj1jr.webp",
+      "source": "https://image.tmdb.org/t/p/w1280/nVjUqzoZXDGXajjged1ZhUpj1jr.jpg",
+      "content_type": "image/webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 79044,
+      "sha256": "91c29474ea545059306cab2ff9845de4ef3ff77badfc8fd408f914cecdaba325"
+    },
+    {
+      "anime_id": "61967",
+      "file": "61967-pn7ZN5POA455AqIVejsL4YiKxiS.webp",
+      "source": "https://image.tmdb.org/t/p/w1280/pn7ZN5POA455AqIVejsL4YiKxiS.jpg",
+      "content_type": "image/webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 79186,
+      "sha256": "b3b09263fd1b231e3b5df9a59656ab61a243a0acc0642ec7ac0dec2b3184503f"
+    },
+    {
+      "anime_id": "60636",
+      "file": "60636-pShnxXXD1CrHyLbbTu8nAaLczHP.webp",
+      "source": "https://image.tmdb.org/t/p/w1280/pShnxXXD1CrHyLbbTu8nAaLczHP.jpg",
+      "content_type": "image/webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 60014,
+      "sha256": "7e1a854b4846830ff88c79b2fedb6637aa7a8c3ad2824b76826657f7bc11f403"
+    },
+    {
+      "anime_id": "59978",
+      "file": "59978-a47oBhPll8SzPJaef1VzG0Yft91.webp",
+      "source": "https://image.tmdb.org/t/p/w1280/a47oBhPll8SzPJaef1VzG0Yft91.jpg",
+      "content_type": "image/webp",
+      "width": 1280,
+      "height": 720,
+      "bytes": 65116,
+      "sha256": "b7ad35c63a58db90947c38f0e586fa0a80466d9cd777907189bcc49ecc667447"
+    }
+  ]
+}

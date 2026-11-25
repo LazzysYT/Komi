@@ -14,7 +14,9 @@ test('curated art stays paired with the same ID during catalogue hydration',()=>
  const normalized=lineup(seed.map(item=>({id:item.id,title:'live '+item.id})).reverse(),seed);
  assert.equal(normalized[0].id,first);
  assert.equal(normalized.length,5);
- assert.ok(normalized.every(item=>item.title==='live '+item.id&&item.desc==='Ready'&&artwork(item.id).startsWith('https://image.tmdb.org/t/p/w1280/')));
+ assert.ok(normalized.every(item=>item.title==='live '+item.id&&item.desc==='Ready'&&
+  new RegExp('^/assets/hero/daily/'+item.id+'-[A-Za-z0-9]+\\.webp$').test(artwork(item.id))));
+ assert.ok(normalized.every(item=>fs.existsSync(path.join(__dirname,'..',artwork(item.id)))));
  assert.equal(artwork('brand-loop'),'');
 });
 test('placeholder never becomes transition-ready and an actual image is decoded once',async()=>{
@@ -123,6 +125,7 @@ function bootFixture({date='2026-11-25T12:00:00Z',pathname='/',hash='',search=''
 test('daily hero paints before application scripts only after parsing and image decoding',async()=>{
  const f=bootFixture(),daily=f.scope.KomiHeroDaily,initial=daily.firstImage;
  assert.equal(initial.src,artwork('61316'));
+ assert.equal(f.head.children.find(link=>link.rel==='preload')?.href,initial.src);
  assert.equal(initial.image.fetchPriority,'high');
  assert.equal(f.main.querySelector('.komi-home-discovery'),null);
  f.interactive();f.loaded();

@@ -24,7 +24,7 @@
   const first = lead(); // Fixed for the lifetime of the page, including refreshes of its data.
   function artwork(id) {
     const key = stills[id];
-    return Object.prototype.hasOwnProperty.call(stills,id) ? 'https://image.tmdb.org/t/p/w1280/' + key + '.jpg' : '';
+    return Object.prototype.hasOwnProperty.call(stills,id) ? '/assets/hero/daily/' + id + '-' + key + '.webp' : '';
   }
   function lineup(catalog, seed = []) {
     const live = new Map(catalog.filter(item=>order.includes(String(item?.id))).map(item=>[String(item.id),item]));
@@ -180,8 +180,10 @@
     // neutral shell until the selected daily image has actually decoded.
     const src = daily?.artwork?.(daily.first) || document.querySelector('meta[name="komi-first-hero"]')?.content;
     const nativeBanner = /^https:\/\/s[34]\.anilist\.co\/file\/anilistcdn\/media\/anime\/banner\/[A-Za-z0-9_-]+\.(?:jpe?g|png|webp|avif)$/i;
+    const bundledDaily = daily && src === daily.artwork(daily.first) &&
+      /^\/assets\/hero\/daily\/[1-9]\d{0,11}-[A-Za-z0-9]+\.webp$/.test(src);
     if (src && (src.startsWith('https://wsrv.nl/?url=') || nativeBanner.test(src) ||
-        /^https:\/\/image\.tmdb\.org\/t\/p\/w1280\/[A-Za-z0-9_-]+\.jpg$/.test(src))) {
+        bundledDaily)) {
       const preload = document.createElement('link');
       preload.rel = 'preload'; preload.as = 'image'; preload.href = src;
       preload.fetchPriority = 'high'; preload.referrerPolicy = 'no-referrer';

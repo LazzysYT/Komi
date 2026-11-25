@@ -2,6 +2,15 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "headers": [
     {
+      "source": "/assets/hero/daily/:image([0-9]+-[A-Za-z0-9_-]+\\.webp)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
       "source": "/(.*)",
       "headers": [
         {
@@ -64,19 +73,6 @@
         {
           "key": "Cache-Control",
           "value": "no-cache, max-age=0, must-revalidate"
-        }
-      ]
-    },
-    {
-      "source": "/catalog",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, max-age=0, must-revalidate"
-        },
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, follow"
         }
       ]
     },
@@ -156,7 +152,7 @@
     },
     {
       "source": "/catalog",
-      "destination": "/index.html"
+      "destination": "/api/catalog"
     },
     {
       "source": "/anime/:id",
@@ -165,6 +161,14 @@
     {
       "source": "/sitemap.xml",
       "destination": "/api/sitemap"
+    },
+    {
+      "source": "/about",
+      "destination": "/about.html"
+    },
+    {
+      "source": "/contacts",
+      "destination": "/contacts.html"
     }
   ],
   "redirects": [
@@ -189,8 +193,23 @@
       ],
       "destination": "https://komianime.online/:path*",
       "permanent": true
+    },
+    {
+      "source": "/about.html",
+      "destination": "/about",
+      "permanent": true
+    },
+    {
+      "source": "/contacts.html",
+      "destination": "/contacts",
+      "permanent": true
     }
   ],
   "buildCommand": "npx --yes --package=esbuild@0.25.12 --package=postcss@8.5.6 -- node scripts/minify-static.cjs",
-  "outputDirectory": "."
+  "outputDirectory": ".",
+  "functions": {
+    "api/catalog.js": {
+      "includeFiles": "index.html"
+    }
+  }
 }

@@ -1,12 +1,15 @@
 'use strict';
-const {CANONICAL,html,read,send} = require('./_seo');
+const {CANONICAL,read,send} = require('./_seo');
+const PUBLIC_PAGES = ['/', '/catalog', '/about', '/contacts'];
 module.exports = async function sitemap(req,res) {
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     res.setHeader('Allow','GET, HEAD');
     return send(res,405,'text/plain; charset=utf-8','Method Not Allowed');
   }
   try {
-    const entries=[];
+    // Static pages have no invented current-date lastmod. Catalog record dates
+    // below come from the stored update timestamp, not from sitemap requests.
+    const entries=PUBLIC_PAGES.map(path=>'<url><loc>'+CANONICAL+path+'</loc></url>');
     const limit=1000;
     for(let offset=0;offset<50000;offset+=limit) {
       const batch=await read('komi_catalog_cards',{
@@ -24,7 +27,7 @@ module.exports = async function sitemap(req,res) {
     }
     const xml='<?xml version="1.0" encoding="UTF-8"?>'
      +'<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">'
-     +'<url><loc>'+CANONICAL+'/</loc></url>'+entries.join('')+'</urlset>';
+     +entries.join('')+'</urlset>';
     return send(res,200,'application/xml; charset=utf-8',req.method==='HEAD'?'':xml);
   } catch(e) {
     console.error('SEO sitemap:',e.message);

@@ -7,7 +7,8 @@ const vm=require('node:vm');
 const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
 const curatedIds=['61316','61469','61967','60636','59978'];
 const dailyLead=curatedIds[0];
-const dailyArtwork='https://image.tmdb.org/t/p/w1280/f7StpjhGI5xdIecti2jQkQY38ov.jpg';
+const dailyArtworkPath='/assets/hero/daily/61316-f7StpjhGI5xdIecti2jQkQY38ov.webp';
+const dailyArtwork=new URL(dailyArtworkPath,base).href;
 const seed={};
 vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../komi-home-seed.js'),'utf8'),seed);
 const dailySeedTitle=seed.KomiHomeSeed.find(anime=>String(anime.id)===dailyLead)?.title;
@@ -51,7 +52,7 @@ const make=(id,year,score)=>({
     catch(error){if(!closing&&!route.request().failure())throw error;}
   });
   // Keep image decoding deterministic while preserving the production artwork URL.
-  await page.route('https://image.tmdb.org/**',route=>route.fulfill({
+  await page.route('**/assets/hero/daily/*.webp',route=>route.fulfill({
     status:200,contentType:'image/svg+xml',body:imageFixture
   }));
   await page.route('**/rest/v1/komi_catalog_cards*',async route=>{
@@ -112,7 +113,7 @@ const make=(id,year,score)=>({
     assert.equal(state.appStarted,false,label+': the preview must render before app-main executes');
     assert.equal(state.readyState,'interactive',label+': the held deferred app must still block DOMContentLoaded');
     assert.equal(state.id,dailyLead);
-    assert.equal(state.src,dailyArtwork);
+    assert.equal(state.src,dailyArtworkPath);
     assert.equal(state.ready,true,label+': the shared first image must have finished decoding');
     assert.equal(state.hasPromise,true);
     assert.equal(state.sameImage,true,label+': the decoded boot image must be the visible DOM node');

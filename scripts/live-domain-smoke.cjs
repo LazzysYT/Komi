@@ -162,7 +162,7 @@ fs.mkdirSync(output,{recursive:true});
           assert.match(detail.headers()['content-type']||'',/text\/html/,
             'Anime detail must be real HTML');
           const seoHtml=await detail.text();
-          assert.match(seoHtml,/<title>[^<]+Komi Anime<\/title>/);
+          assert.match(seoHtml,/<title>[^<]+(?:KomiAnime|Komi Anime)<\/title>/);
           assert.match(seoHtml,/href="https:\/\/komianime\.online\/anime\/52991"/);
           assert.match(seoHtml,/application\/ld\+json/);
           const sitemap=await page.request.get(base+'sitemap.xml',{timeout:60000});
@@ -219,7 +219,7 @@ fs.mkdirSync(output,{recursive:true});
           if(process.env.GITHUB_EVENT_NAME === 'push' && process.env.GITHUB_REF === 'refs/heads/main'){
             assert.match(seoHtml,/<meta name="twitter:image" content="https:\/\/komianime\.online\/api\/poster\?src=/);
             assert.match(seoHtml,/<meta property="og:image:alt" content="Постер аниме/);
-            assert.match(seoHtml,/<meta property="og:site_name" content="Komi Anime">/);
+            assert.match(seoHtml,/<meta property="og:site_name" content="(?:KomiAnime|Komi Anime)">/);
             console.log('PASS production per-anime OpenGraph and Twitter metadata');
           }
           console.log('PASS public mirror /anime/52991, canonical SEO, noindex and production routing');
