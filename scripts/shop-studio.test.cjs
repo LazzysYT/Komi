@@ -14,6 +14,7 @@ function fixture(options={}){
  const handlers={},windowHandlers={},dialogs=[],focusHistory=[],scrollHistory=[],mutations=[],logins=[];
  const viewport={narrow:!!options.narrow,height:options.height??900,reducedMotion:!!options.reducedMotion};
  const collectionRail={scrollLeft:0};
+ let previewRegion={scrollTop:0};
  const disclosureHandlers={};
  const disclosures={addEventListener(name,listener){disclosureHandlers[name]=listener;}};
  let focusables=new Map(),markup='',renders=0;
@@ -22,7 +23,7 @@ function fixture(options={}){
  const setUrl=url=>{const parsed=new URL(url,location.href||'https://komianime.online/shop');
    Object.assign(location,{href:parsed.href,hostname:parsed.hostname,pathname:parsed.pathname,hash:parsed.hash,search:parsed.search});};
  setUrl(options.url||'https://komianime.online/shop');
- const makeFocus=label=>({isConnected:true,focus(){focusHistory.push(label);document.activeElement=this;},
+ const makeFocus=label=>({isConnected:true,focus(){if(this.disabled||this.hidden)return;focusHistory.push(label);document.activeElement=this;},
    scrollIntoView(settings){scrollHistory.push({selector:label,...settings});},
    setSelectionRange(start,end,direction='none'){this.selection=[start,end];this.selectionStart=start;this.selectionEnd=end;this.selectionDirection=direction;}});
  function selectFocus(selector){
@@ -31,7 +32,13 @@ function fixture(options={}){
    if(selector==='#sv7Search'&&!markup.includes('id="sv7Search"'))return null;
    const key=selector==='#sv7Search'?'#shop [data-v7-search]':selector;
    if(!focusables.has(key))focusables.set(key,makeFocus(key));
-   return focusables.get(key);
+   const node=focusables.get(key);
+   if(attr){
+     const attribute=new RegExp('\\b'+escapeRegex(attr[1])+(attr[2]!==undefined?'="'+escapeRegex(attr[2])+'"':'(?:[\\s=>])'));
+     const tag=[...markup.matchAll(/<(?:button|input|select)\b[^>]*>/g)].find(match=>attribute.test(match[0]))?.[0]||'';
+     node.disabled=/\sdisabled(?:[\s>])/.test(tag);node.hidden=/\shidden(?:[\s>])/.test(tag);
+   }
+   return node;
  }
  function createDialog(){
    const listeners={},controls={};
@@ -50,14 +57,14 @@ function fixture(options={}){
  }
  const section={
    addEventListener(name,listener){handlers[name]=listener;},querySelectorAll:()=>[],
-   querySelector(selector){return selector==='.sv7-collection-rail'?collectionRail:selector==='.sv7-collections'?disclosures:null;}
+   querySelector(selector){return selector==='.sv7-collection-rail'?collectionRail:selector==='.sv7-fitting-scroll'?previewRegion:selector==='.sv7-collections'?disclosures:null;}
  };
  const container={
    get innerHTML(){return markup;},
    set innerHTML(value){for(const element of focusables.values())element.isConnected=false;
      if(document.activeElement&&!document.activeElement.isConnected)document.activeElement=document.body;
-     focusables=new Map();markup=value;renders++;},
-   querySelector(selector){return selector==='#shop.komi-shop-v3'?section:selector==='.sv7-collection-rail'?collectionRail:
+     focusables=new Map();previewRegion={scrollTop:0};markup=value;renders++;},
+   querySelector(selector){return selector==='#shop.komi-shop-v3'?section:selector==='.sv7-collection-rail'?collectionRail:selector==='.sv7-fitting-scroll'?previewRegion:
      selector==='#shop [data-v7-search]'?selectFocus(selector):null;}
  };
  const document={
@@ -86,6 +93,7 @@ function fixture(options={}){
  });
  vm.runInContext(read('komi-shop-catalog.js'),context);
  vm.runInContext(read('komi-shop-icons.js'),context);
+ vm.runInContext(read('komi-shop-reactions.js'),context);
  vm.runInContext(read('komi-shop-v3.js'),context);
  const api={context,window,document,container,dialogs,focusHistory,scrollHistory,mutations,logins,handlers,viewport,
    get ctx(){return actor;},get html(){return markup;},get renders(){return renders;},
@@ -93,6 +101,7 @@ function fixture(options={}){
    get collections(){return Array.from(window.KomiShopCatalog.collections);},
    get ids(){return [...markup.matchAll(/data-item-id="([^"]+)"/g)].map(match=>match[1]);},
    get selected(){return Array.from(window.KomiShopV3.selected());},
+   get previewScroll(){return previewRegion.scrollTop;},set previewScroll(value){previewRegion.scrollTop=value;},
    get status(){return markup.match(/<p class="sv3-status"[^>]*>([\s\S]*?)<\/p>/)?.[1]||'';},
    product:id=>window.KomiShopCatalog.find(id),
    render(next){if(next)actor={...actor,...next};window.KomiShopV3.render(container,actor);},
@@ -272,16 +281,17 @@ test('collection browsing selects its eight real products while trying a look ch
  await f.click('data-v7-look',collection.id);
  assert.deepEqual(sorted(f.selected),sorted(collection.preview));
  assert.equal(f.mutations.length,0);
- assert.match(f.status,/Монеты не списаны/);
+ assert.equal(f.status,'','a free preview does not fill checkout with a redundant success message');
+ assert.deepEqual(f.mutations,[]);
  await f.click('data-v7-collection',collection.id);
  assert.equal(f.ids.length,24);
  assert.deepEqual(sorted(f.selected),sorted(collection.preview));
 });
 
-test('collections default closed on short or narrow screens and preserve explicit user preference',()=>{
+test('collections default closed at every viewport and preserve explicit user preference',()=>{
  const isOpen=f=>/<details class="sv7-collections" open>/.test(f.html);
  const tall=fixture({height:900});
- assert.equal(isOpen(tall),true);
+ assert.equal(isOpen(tall),false,'the first visit leads with products, including on a tall desktop');
  const short=fixture({height:800});
  assert.equal(isOpen(short),false);
  assert.equal(isOpen(fixture({height:686})),false);
@@ -291,8 +301,61 @@ test('collections default closed on short or narrow screens and preserve explici
  short.viewport.height=900;short.render();
  assert.equal(isOpen(short),true);
  short.toggleCollections(false);
- assert.equal(isOpen(short),false,'explicit collapse wins over the tall-viewport default');
- assert.match(short.html,/Сочетай детали\. Собирай свой образ\./);
+ assert.equal(isOpen(short),false,'explicit collapse survives viewport changes');
+ assert.match(short.html,/Находи детали, примеряй и собирай свой образ\./);
+});
+
+test('profile and comment preview modes preserve the trial, and a comment cosmetic reveals its actual result',async()=>{
+ const f=fixture();
+ const panelTag=id=>f.html.match(new RegExp('<div[^>]*id="'+id+'"[^>]*>'))?.[0];
+ assert.doesNotMatch(panelTag('sv7ProfilePreview'),/\shidden/);
+ assert.match(panelTag('sv7CommentPreview'),/\shidden/);
+ f.window.KomiShopV3.tryItem('frame_moon');
+ await f.click('data-v7-preview','comment');
+ assert.match(panelTag('sv7ProfilePreview'),/\shidden/);
+ assert.doesNotMatch(panelTag('sv7CommentPreview'),/\shidden/);
+ assert.deepEqual(f.selected,['frame_moon']);
+ const plate=f.products.find(item=>item.type==='plate');
+ await f.click('data-v7-preview','profile');
+ f.window.KomiShopV3.tryItem(plate.id);
+ assert.doesNotMatch(panelTag('sv7CommentPreview'),/\shidden/,'trying a comment plate reveals the comment, not an unrelated profile');
+ assert.match(f.html,new RegExp('sv3-comment komi-store-'+escapeRegex(plate.cosmeticClass)));
+ f.change('data-v7-category-select','name');
+ assert.doesNotMatch(panelTag('sv7CommentPreview'),/\shidden/,'filtering does not reset the selected preview');
+ assert.deepEqual(sorted(f.selected),sorted(['frame_moon',plate.id]));
+ f.window.KomiShopV3.tryItem('title_cinema');
+ assert.doesNotMatch(panelTag('sv7ProfilePreview'),/\shidden/,'a profile cosmetic returns to the profile example');
+ assert.deepEqual(f.mutations,[]);
+ assert.deepEqual(f.logins,[]);
+});
+
+test('catalogue refresh preserves preview scroll while a new example and account change reset it',async()=>{
+ const f=fixture();
+ f.window.KomiShopV3.tryItem('frame_moon');
+ f.previewScroll=160;f.input('Рамка');
+ assert.equal(f.previewScroll,160,'search must not jump the independent preview scrollport');
+ await f.click('data-v7-preview','comment');
+ assert.equal(f.previewScroll,0);
+ f.previewScroll=90;f.window.KomiShopV3.tryItem('title_cinema');
+ assert.equal(f.previewScroll,0,'the newly selected example starts in view');
+ f.previewScroll=80;f.render({owner:'uid-other',store:{balance:100,owned:[]}});
+ assert.equal(f.previewScroll,0);
+});
+
+test('removing the last trial and reset never send focus to disabled or hidden checkout controls',async()=>{
+ for(const narrow of [false,true]){
+   const f=fixture({narrow});
+   f.window.KomiShopV3.tryItem('frame_moon');
+   await f.click('data-v3-remove','frame');
+   assert.deepEqual(f.selected,[]);
+   assert.equal(f.focusHistory.at(-1),narrow?'#shop [data-v3-sheet]':'#shop .sv3-fitting-head h2');
+   assert.match(f.html,/data-v3-checkout hidden/);
+   f.window.KomiShopV3.tryItem('frame_moon');
+   await f.click('data-v3-reset');
+   assert.equal(f.focusHistory.at(-1),'#shop [data-v7-preview="profile"]');
+   assert.equal(f.document.activeElement.hidden,false);
+   assert.equal(f.document.activeElement.disabled,false);
+ }
 });
 
 test('desktop collection try-on reveals the fitting room and respects reduced motion without moving single-item trials',async()=>{
@@ -487,12 +550,12 @@ test('an inflight cart freezes trial controls and submits only its confirmed sna
  assert.match(f.status,/Списано 20 AniCoin/);
 });
 
-test('direct-item results are visible after a preview instead of being masked by its previous hint',async()=>{
+test('direct-item results remain visible after a free preview',async()=>{
  const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}}});
  await f.enablePricing();
  const id=f.ids[0];
  f.window.KomiShopV3.tryItem(id);
- assert.match(f.status,/Примеряем/);
+ assert.equal(f.status,'');
  await f.click('data-shop-item-action',id);
  f.render({shopStatus:'Не удалось выполнить покупку. Проверь соединение.'});
  assert.equal(f.status,'Не удалось выполнить покупку. Проверь соединение.');

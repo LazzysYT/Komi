@@ -92,6 +92,34 @@ test('direct purchase confirms the verified quote and sends one authoritative bu
  assert.equal(x.ctx.aniCoinShopPendingAction,null);
 });
 
+test('direct purchase restores a visible fitting target when hide-owned removes its card',async()=>{
+ for(const {narrow,hideOwned,expected} of [
+   {narrow:false,hideOwned:false,expected:'card'},
+   {narrow:false,hideOwned:true,expected:'heading'},
+   {narrow:true,hideOwned:true,expected:'sheet'}
+ ]){
+   const x=fixture(),focused=[];
+   let cardVisible=true;
+   const target=name=>({focus:options=>focused.push({name,preventScroll:options?.preventScroll})});
+   const card=target('card'),heading=target('heading'),sheet=target('sheet');
+   x.ctx.window.matchMedia=query=>({matches:query==='(max-width: 980px)'&&narrow});
+   x.ctx.document.querySelector=selector=>{
+     if(selector==='#shop [data-shop-item-action="frame_moon"]')return cardVisible?card:null;
+     if(selector==='#shop .sv3-fitting-head h2')return heading;
+     if(selector==='#shop [data-v3-sheet]')return sheet;
+     return null;
+   };
+   x.ctx.renderAniCoinShop=()=>{
+     cardVisible=!hideOwned||!x.ctx.aniCoinShopWallet.owned.includes('frame_moon');
+   };
+   await x.run();
+   assert.equal(cardVisible,!hideOwned,'the final verified ownership determines the filtered card');
+   assert.deepEqual(focused,[{name:expected,preventScroll:true}],expected);
+   assert.deepEqual(x.mutations,[{p_action:'buy_equip',p_item:'frame_moon'}]);
+   assert.equal(x.ctx.aniCoinShopWallet.balance,80);
+ }
+});
+
 test('cancelling confirmation preserves the previous durable message and does not mutate',async()=>{
  const x=fixture({confirm:()=>false});
  x.ctx.aniCoinShopStatus='Предыдущий результат';

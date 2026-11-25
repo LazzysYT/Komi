@@ -197,8 +197,8 @@
 .komi-store-icon-clapper{color:#eeeeef;background:repeating-linear-gradient(135deg,#ffffff20 0 4px,transparent 4px 8px)}
 .komi-store-icon-leaf{color:#c0d5bb;text-shadow:0 0 7px #a3c5a444}
 
-/* The profile shell has ID-scoped defaults. Explicitly preserve V7 cosmetics
-   above those defaults without changing an unequipped or older profile. */
+/* The profile shell has ID-scoped defaults. Preserve equipped cosmetics above
+   those defaults without changing an unequipped profile. */
 #profile.komi-profile-premium-mono .profile-header-card .profile-cover:is(.komi-store-banner-citylight,.komi-store-banner-panels,.komi-store-banner-synthwave,.komi-store-banner-orbit,.komi-store-banner-silverscreen,.komi-store-banner-contactsheet,.komi-store-banner-botanical,.komi-store-banner-petal)::after{
  content:"";position:absolute;inset:0;z-index:3;opacity:.62;
  background:var(--komi-banner-pattern);pointer-events:none;
@@ -210,7 +210,12 @@
  opacity:var(--komi-overlay-opacity);pointer-events:none;
  animation:komi-shop-fall var(--komi-overlay-speed) linear infinite;
 }
-#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-inner:has(> .profile-avatar-box:is(.komi-store-shape-arch,.komi-store-shape-stamp,.komi-store-shape-pixelcut,.komi-store-shape-comet)){
+/* Older polygon masks need the same square image surface as the new masks.
+   The decorative frame stays on its separate, unchanged outer element. */
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-box:is(.komi-store-shape-cyber,.komi-store-shape-octagon,.komi-store-shape-diamond,.komi-store-shape-drop){
+ border-radius:0!important;
+}
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-inner:has(> .profile-avatar-box:is(.komi-store-shape-arch,.komi-store-shape-stamp,.komi-store-shape-pixelcut,.komi-store-shape-comet,.komi-store-shape-cyber,.komi-store-shape-octagon,.komi-store-shape-diamond,.komi-store-shape-drop)){
  border-radius:0;overflow:visible;background:transparent;box-shadow:none;
 }
 @media(prefers-reduced-motion:reduce){

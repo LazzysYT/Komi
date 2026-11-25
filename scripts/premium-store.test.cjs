@@ -69,7 +69,7 @@ test('guest shop first paint and real preview have no auth dependency',()=>{
  const initial=fs.readFileSync(path.join(root,'shop-first-paint.js'),'utf8');
  const firstPaint=html.match(/<section id="shop" class="komi-static-shop[\s\S]*?<\/section>/)?.[0];
  assert.match(firstPaint,/komi-shop-studio/);
- assert.match(firstPaint,/Твой профиль\. Твой стиль\./);
+ assert.match(firstPaint,/Магазин оформления/);
  assert.match(firstPaint,/class="sv7-static-loading" role="status">Готовим коллекции и примерочную/);
  assert.doesNotMatch(firstPaint,/sv5-static-card|sv5-weekly|data-shop-item-action/);
  assert.match(html,/src="\/shop-first-paint\.js\?/);

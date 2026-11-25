@@ -57,8 +57,12 @@ html:not([data-komi-shop-route="true"]) #mainContainer:has(> .komi-static-shop) 
 .komi-coin-card{overflow:hidden;transition:border-color .2s ease,transform .2s ease}
 .komi-coin-card:hover{border-color:#ffffff66;transform:translateY(-2px)}
 .komi-coin-card .komi-coin-sample{min-height:83px;width:100%;justify-content:center;border:1px solid #ffffff18;border-radius:12px;background:radial-gradient(circle at 48% 12%,#34343b,#131318 65%)}
-.komi-coin-frame{width:58px!important;height:58px!important;overflow:hidden;position:relative}
-.komi-coin-frame img{width:100%;height:100%;object-fit:cover;border-radius:50%}
+.komi-coin-frame{width:58px!important;height:58px!important;overflow:visible;position:relative}
+.komi-coin-frame img{display:block;width:100%;height:100%;flex:none;object-fit:cover;border-radius:inherit}
+/* An avatar is either its image or its fallback. Layout display rules must not
+   unhide the fallback, or a failed image, and squeeze both into the same frame. */
+:is(.komi-coin-frame,.sv3-shape,.sv3-avatar-cut,.sv3-comment-avatar,.sv7-collection-avatar,.sv7-card-avatar)>[hidden]{display:none!important}
+.sv3-shape>img,.sv7-card-avatar>img{display:block;width:100%;height:100%;flex:none;object-fit:cover;border-radius:inherit}
 .komi-coin-card .komi-coin-title{max-width:100%;white-space:normal;overflow-wrap:anywhere}
 .komi-coin-card .komi-coin-actions{display:grid;grid-template-columns:1fr auto;align-items:stretch}
 .komi-coin-card .komi-coin-actions button{min-width:0}
@@ -155,6 +159,7 @@ html:not([data-komi-shop-route="true"]) #mainContainer:has(> .komi-static-shop) 
 .komi-shop-gift-controls button{padding:11px 15px;background:#28282b;border:1px solid #ffffff33;color:#fff;border-radius:9px;cursor:pointer}
 .komi-shop-gift-controls .komi-shop-primary{color:#111}
 .komi-shop-reaction-swatch{display:flex;align-items:center;justify-content:center;gap:11px;width:100%;font-size:26px;min-height:45px}
+.komi-reaction-art{display:block;flex:none;width:var(--komi-reaction-size,32px);height:var(--komi-reaction-size,32px);overflow:visible}
 .komi-party-paid-pack{border:1px solid #ffffff22;border-radius:10px;padding:9px;margin:6px 0;display:flex;flex-wrap:wrap;gap:6px}
 .komi-party-paid-pack small{flex-basis:100%;color:#bebec3;font-size:11px}
 .komi-party-paid-reaction{font-size:12px!important;border-radius:9px}

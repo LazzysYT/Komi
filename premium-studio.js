@@ -416,7 +416,11 @@
       } else if(product.type==='reaction'){
         top.className='komi-shop-reaction-swatch';
         for(const reaction of product.reactions){
-            const emoji=document.createElement('span');emoji.textContent=reaction.emoji;top.append(emoji);
+          const preview=document.createElement('span');
+          preview.setAttribute('role','img');preview.setAttribute('aria-label',reaction.label||reaction.id);
+          if(window.KomiShopReactions)preview.innerHTML=window.KomiShopReactions.render(reaction.emoji);
+          else preview.textContent=reaction.label||reaction.id;
+          top.append(preview);
         }
       } else if(['shape','plate','mascot','xp','name'].includes(product.type)){
         top.className='komi-shop-visual-sample komi-store-'+product.cosmeticClass;
