@@ -52,6 +52,7 @@ test('friend lookup hydrates saved nicknames and avatars without exposing Google
   assert.equal(selectedFields,'user_id,username,display_name,avatar_url');
   assert.equal(ctx.userProfiles[technicalFriend].displayName,'Komi Friend');
   assert.equal(ctx.userProfiles[technicalFriend].avatar,avatar);
+  assert.equal(ctx.userProfiles[technicalFriend].publicAvatarUserId,friend);
   assert.deepEqual(refreshNames,[technicalFriend]);
   assert.equal(notifications,1);
   assert.deepEqual(Array.from(vm.runInContext('friendsFor(currentUser.username)',ctx)),[technicalFriend]);
@@ -60,7 +61,7 @@ test('friend lookup hydrates saved nicknames and avatars without exposing Google
 });
 
 test('friend mini cards render safe nicknames, actual GIF avatars, and original account targets',()=>{
-  const first=premium.indexOf('function friendRows(names)');
+  const first=premium.indexOf('function friendAvatarMarkup(name,profile,label)');
   const last=premium.indexOf('function content(ctx)',first);
   assert.ok(first>0 && last>first);
   const escapeText=value=>String(value??'').replace(/[&<>"']/g,c=>({
@@ -68,7 +69,7 @@ test('friend mini cards render safe nicknames, actual GIF avatars, and original 
   }[c]));
   const ctx=vm.createContext({
     userProfiles:{
-      [technicalFriend]:{displayName:'Test <friend>',avatar}
+      [technicalFriend]:{displayName:'Test <friend>',avatar,publicAvatarUserId:friend}
     },
     komiVisibleUsername:(name,p)=>p.displayName||name,
     safeUrl:url=>/^https:\/\//.test(url)?url:'',
@@ -99,4 +100,46 @@ test('hydrating friends updates the compact summary without changing another pro
   profile.dataset.profileUser='other_user';
   sandbox.KomiProfileUI.refreshFriends(['third']);
   assert.equal(total.textContent,'2','a late owner response must not repaint a public profile');
+});
+
+test('all profile friend cards keep a local placeholder slot for a GIF with no static avatar',()=>{
+  const sandbox={document:{addEventListener(){}},URL,location:{origin:'https://komianime.online'},
+    userProfiles:{[technicalFriend]:{displayName:'Коми',publicAvatarUserId:friend,avatar:'javascript:alert(1)'}}};
+  sandbox.window=sandbox;
+  vm.runInNewContext(premium,sandbox);
+  const markup=sandbox.KomiProfileUI.fullFriendRows([technicalFriend]);
+  assert.match(markup,/>К<img data-komi-friend-avatar="" data-komi-friend-avatar-id="00000000-0000-4000-8000-000000000002"/);
+  assert.match(markup,/visibility:hidden/);
+  assert.doesNotMatch(markup,/javascript:|google_1234567890abcdef/);
+});
+
+test('friend media chooses the verified ID, falls back after image errors, and accepts changed GIFs',()=>{
+  const scripts=fs.readFileSync(path.join(root,'komi-premium.js'),'utf8');
+  const a=scripts.indexOf('function applyFriendAvatar('),b=scripts.indexOf('function badge(',a);
+  assert.ok(a>0&&b>a);
+  const attrs=new Map([['data-komi-friend-avatar-id',friend],['src',avatar]]);
+  const img={getAttribute:key=>attrs.get(key)||null,hasAttribute:key=>attrs.has(key),
+    setAttribute:(key,val)=>attrs.set(key,val),removeAttribute:key=>attrs.delete(key),style:{},matches:()=>true};
+  let entitled=true;
+  const media=new Map([[friend,{avatar_path:'live.gif'}]]);
+  const context=vm.createContext({img,media,friendAvatarStates:new WeakMap(),
+    friendAvatarSelector:'img[data-komi-friend-avatar]',uid:()=>{throw Error('Directory lookup must not be necessary');},
+    isActiveId:id=>entitled&&id===friend,imageUrl:(bucket,path)=>path?'https://safe.example/'+bucket+'/'+path:''});
+  vm.runInContext(scripts.slice(a,b),context);
+  context.applyFriendAvatar(img);
+  assert.equal(attrs.get('src'),'https://safe.example/avatars/live.gif');
+  context.onFriendAvatarError({target:img});
+  assert.equal(attrs.get('src'),avatar);
+  context.applyFriendAvatar(img);
+  assert.equal(attrs.get('src'),avatar,'the same failing GIF should not loop on refresh');
+  context.onFriendAvatarError({target:img});
+  assert.equal(attrs.has('src'),false);
+  assert.equal(img.style.visibility,'hidden');
+  media.set(friend,{avatar_path:'replacement.gif'});
+  context.applyFriendAvatar(img);
+  assert.equal(attrs.get('src'),'https://safe.example/avatars/replacement.gif');
+  assert.equal(img.style.visibility,'');
+  entitled=false;
+  context.applyFriendAvatar(img);
+  assert.equal(attrs.has('src'),false,'inactive Premium must not grant custom GIF');
 });

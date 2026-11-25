@@ -140,16 +140,21 @@
         '<span class="profile-watch-action" aria-hidden="true">'+action+'</span></a>';
     }).join('');
   }
+  function friendAvatarMarkup(name,profile,label) {
+    var avatar=typeof komiSafeAvatarUrl==='function'?komiSafeAvatarUrl(profile.avatar):safeUrl(profile.avatar);
+    var id=profile.publicAvatarUserId||'';
+    return '<span class="profile-friend-avatar" style="position:relative;overflow:hidden" aria-hidden="true">'+escapeText(label.slice(0,1))+
+      '<img'+(avatar?' src="'+escapeText(avatar)+'"':'')+
+      ' data-komi-friend-avatar="'+escapeText(id?'':name)+'" data-komi-friend-avatar-id="'+escapeText(id)+'"'+' alt="" loading="lazy" decoding="async"'+
+      ' style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit'+(avatar?'':';visibility:hidden')+'"></span>';
+  }
   function friendRows(names) {
     return names.slice(0,3).map((name,i)=>{
       var p=userProfiles[name]||{};
       var label=typeof komiVisibleUsername==='function'
         ? komiVisibleUsername(name,p,false) : String(p.displayName||name);
-      var avatar=safeUrl(p.avatar);
       return '<button type="button" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
-        '<span class="profile-friend-avatar" style="position:relative;overflow:hidden">'+escapeText(label.slice(0,1))+
-        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.style.display=\'none\'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
-        '</span><span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
+        friendAvatarMarkup(name,p,label)+'<span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
     }).join('');
   }
   function fullFriendRows(names) {
@@ -157,11 +162,8 @@
       var profile=userProfiles[name]||{};
       var label=typeof komiVisibleUsername==='function'
         ? komiVisibleUsername(name,profile,false) : String(profile.displayName||name);
-      var avatar=safeUrl(profile.avatar);
       return '<button type="button" class="komi-profile-friend" style="display:inline-flex;align-items:center;gap:10px;min-width:185px;max-width:100%;text-align:left;margin:4px" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
-        '<span class="profile-friend-avatar" style="position:relative;overflow:hidden">'+escapeText(label.slice(0,1))+
-        (avatar?'<img src="'+escapeText(avatar)+'" alt="" loading="lazy" decoding="async" data-komi-onerror="this.style.display=\'none\'" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit">':'')+
-        '</span><span style="min-width:0"><strong style="display:block;overflow-wrap:anywhere">'+escapeText(label)+'</strong>'+
+        friendAvatarMarkup(name,profile,label)+'<span style="min-width:0"><strong style="display:block;overflow-wrap:anywhere">'+escapeText(label)+'</strong>'+
         '<small style="display:block;color:#999;font-size:10px">Открыть профиль</small></span></button>';
     }).join('');
   }

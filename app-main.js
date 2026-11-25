@@ -566,8 +566,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         if (!profile.username) continue;
                         komiCommunityVerifiedNames.add(profile.username);
                         if (!userProfiles[profile.username]) userProfiles[profile.username] = {};
-                        userProfiles[profile.username].avatar = komiSafeAvatarUrl(profile.avatar_url) ||
-                            'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(profile.username);
+                        userProfiles[profile.username].avatar = komiSafeAvatarUrl(profile.avatar_url);
                         userProfiles[profile.username].displayName = profile.display_name?.trim() || profile.username;
                     }
                     komiCommunityState.status = 'ready';
@@ -632,11 +631,11 @@ async function komiLoadCatalogPages(attempt = 0) {
             list.innerHTML = refreshNotice+'<div class="komi-friends-count">Найдено: '+unique.length+'</div>'+unique.map((name,index)=>{
                 const profile = userProfiles[name] || {};
                 const safeName = escapeFriendHtml(komiVisibleUsername(name, profile, false));
-                const avatar = escapeFriendHtml(profile.avatar || 'https://api.dicebear.com/7.x/bottts/svg?seed='+encodeURIComponent(name));
+                const avatar = escapeFriendHtml(profile.avatar || '/icon.svg');
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.has(name);
                 const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name) && name !== me);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-onerror="this.onerror=null;this.src=\'https://api.dicebear.com/7.x/bottts/svg?seed=Komi\'"><span><strong data-komi-premium-username="'+escapeFriendHtml(name)+'">'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
+                return '<div class="komi-friends-person"><button class="komi-friends-identity" data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-friend-avatar="'+escapeFriendHtml(profile.publicAvatarUserId?'':name)+'" data-komi-friend-avatar-id="'+escapeFriendHtml(profile.publicAvatarUserId||'')+'" data-komi-friend-avatar-placeholder><span><strong data-komi-premium-username="'+escapeFriendHtml(name)+'">'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
         }
@@ -670,15 +669,14 @@ async function komiLoadCatalogPages(attempt = 0) {
             listEl.innerHTML = foundResults.map((name,index) => {
                 const profile = userProfiles[name] || {};
                 const safeName = escapeFriendHtml(name);
-                const safeAvatar = escapeFriendHtml(profile.avatar ||
-                    'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
+                const safeAvatar = escapeFriendHtml(profile.avatar || '/icon.svg');
                 const friend = myFriends.includes(name);
                 return `
                     <div class="sidebar-friend-item" style="justify-content:space-between;margin-bottom:4px;">
                         <button type="button" class="komi-friends-identity"
                             data-komi-onclick="playSound();openProfile(window.komiSidebarSearchNames[${index}])">
                             <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
-                                data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                data-komi-friend-avatar="${escapeFriendHtml(profile.publicAvatarUserId?'':name)}" data-komi-friend-avatar-id="${escapeFriendHtml(profile.publicAvatarUserId||'')}" data-komi-friend-avatar-placeholder>
                             <span>${safeName}</span>
                         </button>
                         ${friend ? '<span style="font-size:9px;color:var(--success);">В друзьях</span>' :
@@ -713,13 +711,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                 friendsHtml += myFriends.map((name,index) => {
                     const profile = userProfiles[name] || {};
                     const safeName = escapeFriendHtml(typeof komiVisibleUsername === 'function' ? komiVisibleUsername(name, profile, false) : (profile.displayName || name));
-                    const safeAvatar = escapeFriendHtml(profile.avatar ||
-                        'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(name));
+                    const safeAvatar = escapeFriendHtml(profile.avatar || '/icon.svg');
                     return `
                         <button type="button" class="sidebar-friend-item"
                             data-komi-onclick="playSound();openProfile(window.komiSidebarFriendNames[${index}])">
                             <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
-                                data-komi-onerror="this.onerror=null;this.src='https://api.dicebear.com/7.x/bottts/svg?seed=fallback'">
+                                data-komi-friend-avatar="${escapeFriendHtml(profile.publicAvatarUserId?'':name)}" data-komi-friend-avatar-id="${escapeFriendHtml(profile.publicAvatarUserId||'')}" data-komi-friend-avatar-placeholder>
                             <span style="flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeName}</span>
                             <span style="width:6px;height:6px;border-radius:50%;background:var(--success);"></span>
                         </button>`;
@@ -3549,8 +3546,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const profile = userProfiles[row.username] || (userProfiles[row.username] = {});
                 const displayName = typeof row.display_name === 'string' ? row.display_name.trim() : '';
                 profile.displayName = displayName.slice(0, 40);
-                profile.avatar = komiSafeAvatarUrl(row.avatar_url) ||
-                    'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent(row.username);
+                profile.publicAvatarUserId = row.user_id;
+                profile.avatar = komiSafeAvatarUrl(row.avatar_url);
             }
             protectedFriendList = {
                 owner: uid,

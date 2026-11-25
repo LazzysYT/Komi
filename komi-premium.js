@@ -2,6 +2,8 @@
 (function(window){
 'use strict';
 const selector='[data-komi-premium-id],[data-komi-premium-username],[data-komi-premium-panel],[data-komi-premium-editor]';
+const friendAvatarSelector='img[data-komi-friend-avatar]';
+const friendAvatarStates=new WeakMap();
 const checkout='https://app.lava.top/products/b37a75ab-e500-4431-b61e-5c2a7e3edd8a/f1b11818-74d5-4e94-a013-15d89a545cdd?currency=USD';
 let client=null,pending=null,last=0,loaded=false;
 let activeIds=new Set(),names=new Map(),rewards=new Map(),media=new Map();
@@ -27,6 +29,38 @@ function swapImage(img,url){
   if(old)img.setAttribute('src',old);
  }
 }
+function applyFriendAvatar(img){
+ const id=img.getAttribute('data-komi-friend-avatar-id')||
+   uid(img.getAttribute('data-komi-friend-avatar'));
+ const premium=isActiveId(id)?imageUrl('avatars',media.get(id)?.avatar_path):'';
+ let state=friendAvatarStates.get(img);
+ if(!state){
+  state={base:img.getAttribute('src')||'',failed:new Set(),current:null};
+  if(state.base&&img.complete&&img.naturalWidth===0)state.failed.add(state.base);
+  friendAvatarStates.set(img,state);
+ }
+ const fallback=img.hasAttribute('data-komi-friend-avatar-placeholder')?'/icon.svg':'';
+ const next=[premium,state.base,fallback].find(src=>src&&!state.failed.has(src))||'';
+ if(state.current!==next){
+  state.current=next;
+  if(next&&img.getAttribute('src')!==next)img.setAttribute('src',next);
+  if(!next)img.removeAttribute('src');
+  img.style.visibility=next?'':'hidden';
+ }
+}
+function onFriendAvatarError(event){
+ const img=event.target;
+ if(!img?.matches?.(friendAvatarSelector))return;
+ const src=img.getAttribute('src');
+ if(!src)return;
+ let state=friendAvatarStates.get(img);
+ if(!state){
+  state={base:src,failed:new Set(),current:null};
+  friendAvatarStates.set(img,state);
+ }
+ state.failed.add(src);
+ applyFriendAvatar(img);
+}
 function badge(node){
  const id=node.getAttribute('data-komi-premium-id')||
    uid(node.getAttribute('data-komi-premium-username'));
@@ -46,6 +80,8 @@ function apply(root){
  if(!root)return;
  if(root.nodeType===1&&root.matches?.(selector))badge(root);
  root.querySelectorAll?.(selector).forEach(badge);
+ if(root.nodeType===1&&root.matches?.(friendAvatarSelector))applyFriendAvatar(root);
+ root.querySelectorAll?.(friendAvatarSelector).forEach(applyFriendAvatar);
  const profile=document.querySelector('#profile[data-profile-user]');
  if(profile){
   const id=uid(profile.getAttribute('data-profile-user'));
@@ -70,8 +106,9 @@ function apply(root){
  for(const el of document.querySelectorAll('[data-komi-premium-username]')){
   const id=uid(el.getAttribute('data-komi-premium-username'));
   const image=isActiveId(id)?imageUrl('avatars',media.get(id)?.avatar_path):'';
-  swapImage(el.closest('.komi-friends-identity')?.querySelector('img')||
-    el.closest('.sidebar-friend-item')?.querySelector('img'),image);
+  const avatar=el.closest('.komi-friends-identity')?.querySelector('img')||
+    el.closest('.sidebar-friend-item')?.querySelector('img');
+  if(avatar&&!avatar.matches(friendAvatarSelector))swapImage(avatar,image);
  }
  let owner='';
  try{owner=typeof currentUser==='undefined'?'':currentUser?.authUserId||'';}catch{}
@@ -159,9 +196,12 @@ function setClient(c){
  if(client){refresh(true);client.auth.onAuthStateChange(()=>Promise.resolve().then(()=>refresh(true)));}
 }
 function start(){
+ const watchedSelector=selector+','+friendAvatarSelector;
+ document.addEventListener('error',onFriendAvatarError,true);
+ apply(document);
  const observer=new MutationObserver(changes=>{
   for(const change of changes)for(const node of change.addedNodes){
-   if(node.nodeType===1&&(node.matches?.(selector)||node.querySelector?.(selector)||
+   if(node.nodeType===1&&(node.matches?.(watchedSelector)||node.querySelector?.(watchedSelector)||
      node.matches?.('#profile')))apply(node);
   }
  });
