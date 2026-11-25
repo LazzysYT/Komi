@@ -581,42 +581,27 @@ async function checkNotifications(page) {
        'Theater mode must keep episodes reachable instead of hiding them from accessibility tools');
      await page.locator('.komi-episodes-toggle').click();
    }
-   const view = page.locator('.komi-episode-view-toggle');
+   const episodeSidebar=page.locator('#watchModal .komi-watch-sidebar');
+   const episodeGrid=episodeSidebar.locator('.komi-episode-number-grid');
+   const firstEpisode=episodeGrid.locator('button[data-episode-number="1"]');
+   const secondEpisode=episodeGrid.locator('button[data-episode-number="2"]');
+   const episodeSearch=episodeSidebar.getByRole('searchbox',{name:'Найти серию по номеру',exact:true});
+   const view = episodeSidebar.locator('.komi-episode-view-toggle');
    assert.equal(await view.count(),1);
-   assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list .komi-episode-thumb').count(),2);
-   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).count(),1);
-   await page.getByRole('searchbox',{name:'Найти серию по номеру',exact:true}).fill('2');
-   const firstEpisodeVisible=await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible();
-   const filterDiagnostic=firstEpisodeVisible?await page.evaluate(()=>{
-     const input=document.getElementById('komiEpisodeSearch');
-     const modal=document.getElementById('watchModal');
-     const handler=input?.getAttribute('data-komi-oninput');
-     return {
-       url:location.href,handlerFunction:typeof komiFindEpisode,
-       globalHandlerFunction:typeof window.komiFindEpisode,router:typeof window.KomiDynamicEvents?.supports,
-       input:{value:input?.value,handler,connected:input?.isConnected,
-         disabled:input?.disabled,inert:!!input?.closest('[inert]'),
-         visibility:input?getComputedStyle(input).visibility:null,
-         supported:window.KomiDynamicEvents?.supports('input',handler)},
-       modal:{classes:modal?.className,inert:modal?.inert,ariaHidden:modal?.getAttribute('aria-hidden'),
-         display:modal?getComputedStyle(modal).display:null,
-         visibility:modal?getComputedStyle(modal).visibility:null},
-       activeElement:document.activeElement?.id,anime:window.komiActiveAnimeId,
-       rows:[...document.querySelectorAll('#watchModal .komi-episode-number-grid button')].map(button=>({
-         number:button.dataset.episodeNumber,label:button.getAttribute('aria-label'),
-         hidden:button.hidden,display:getComputedStyle(button).display,
-         visibility:getComputedStyle(button).visibility,disabled:button.disabled,inert:!!button.closest('[inert]'),
-         classes:button.className,sidebar:!!button.closest('.komi-watch-sidebar')
-       })),
-       styles:[...document.querySelectorAll('link[rel="stylesheet"]')]
-         .filter(link=>/komi\.production|komi-watch-compact/.test(link.href))
-         .map(link=>({href:link.href,media:link.media,loaded:!!link.sheet}))
-     };
-   }):null;
-   assert.equal(firstEpisodeVisible,false,filterDiagnostic?
-     'Episode filtering failed: '+JSON.stringify({width,...filterDiagnostic,pageErrors:errors}):undefined);
-   await page.getByRole('button',{name:'Очистить поиск серии'}).click();
-   assert.equal(await page.getByRole('button',{name:'Серия 1',exact:true}).isVisible(),true);
+   assert.equal(await episodeGrid.locator('.komi-episode-thumb').count(),2);
+   assert.equal(await firstEpisode.count(),1);
+   assert.equal(await secondEpisode.count(),1);
+   // Row labels include current/preview state; identity belongs to the actual
+   // sidebar grid, not another page control whose accessible name is "Серия 1".
+   await episodeSearch.fill('2');
+   assert.equal(await firstEpisode.evaluate(button=>button.hidden),true);
+   assert.equal(await firstEpisode.isVisible(),false);
+   assert.equal(await secondEpisode.isVisible(),true,'Filtering must retain the matching episode');
+   await episodeSidebar.getByRole('button',{name:'Очистить поиск серии',exact:true}).click();
+   assert.equal(await episodeSearch.inputValue(),'');
+   assert.equal(await firstEpisode.evaluate(button=>button.hidden),false);
+   assert.equal(await firstEpisode.isVisible(),true);
+   assert.equal(await secondEpisode.isVisible(),true,'Clearing must restore the full episode list');
    await view.getByRole('button',{name:'Показать серии списком'}).click();
    assert.equal(await page.locator('.komi-episode-number-grid.komi-episode-list').count(),1);
    await view.getByRole('button',{name:'Показать серии сеткой'}).click();
@@ -651,12 +636,12 @@ async function checkNotifications(page) {
      return {recoveryTop:recovery.top,actionsBottom:actions.bottom};
    });
    assert.ok(recoveryLayout.recoveryTop>=recoveryLayout.actionsBottom-1,JSON.stringify(recoveryLayout));
-   await page.getByRole('button',{name:'Повторить загрузку'}).click();
+   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Повторить загрузку',exact:true}).click();
    await page.waitForFunction(()=>!window.komiFailedTestVideo.isConnected && !!document.getElementById('animeVideoPlayer'));
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
    await page.evaluate(()=>document.getElementById('animeVideoPlayer').dispatchEvent(new Event('error')));
-   await page.getByRole('button',{name:'Сменить источник'}).click();
+   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Сменить источник',exact:true}).click();
    const providerFrame = page.locator('#watchModal .player-wrapper iframe');
    await providerFrame.waitFor();
    assert.equal(await playback.count(),0);
@@ -667,10 +652,10 @@ async function checkNotifications(page) {
    await provider.getByRole('button',{name:'Видео запущено'}).waitFor();
    assert.equal(await page.locator('#komiPlayerRecovery').isVisible(),false,
      'A healthy external player must not inherit the failed native source recovery state');
-   const playerHelp = page.getByRole('button',{name:'Видео не работает?',exact:true});
+   const playerHelp = page.locator('#watchModal').getByRole('button',{name:'Видео не работает?',exact:true});
    await playerHelp.click();
    assert.equal(await playerHelp.getAttribute('aria-expanded'),'true');
-   const providerLink = page.getByRole('link',{name:'Открыть у провайдера',exact:false});
+   const providerLink = page.locator('#komiPlayerRecovery').getByRole('link',{name:'Открыть у провайдера',exact:false});
    await providerLink.waitFor();
    assert.equal(await providerLink.getAttribute('href'),'https://media.test/player?a=1&b=2');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').duration),100);

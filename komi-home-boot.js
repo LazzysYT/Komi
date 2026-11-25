@@ -83,9 +83,39 @@
 (() => {
   'use strict';
   if (typeof document === 'undefined') return;
+  const isHomeEntry = () => /^\/(?:index\.html)?$/.test(location.pathname) &&
+    (!location.hash || location.hash === '#home') &&
+    !new URLSearchParams(location.search).has('anime');
+  let fontLink = null;
+  let fontsMayActivate = !isHomeEntry();
+  let fontFramesScheduled = false;
+  let fontDeadline = null;
+  function activateFonts() {
+    fontsMayActivate = true;
+    if (fontDeadline !== null) { clearTimeout(fontDeadline); fontDeadline = null; }
+    if (fontLink) fontLink.media = 'all';
+  }
+  function activateFontsAfterPaint() {
+    if (fontsMayActivate || fontFramesScheduled) return;
+    fontFramesScheduled = true;
+    const frame = typeof window.requestAnimationFrame === 'function'
+      ? callback => window.requestAnimationFrame(callback) : callback => setTimeout(callback,0);
+    frame(() => frame(activateFonts));
+  }
+  // Use the same bounded deadline as the first image. A failed image or route
+  // change releases fonts earlier; every page keeps the original font family.
+  if (!fontsMayActivate) fontDeadline = setTimeout(activateFonts,4200);
+  const fontsForRoute = () => { if (!isHomeEntry()) activateFonts(); };
+  window.addEventListener('popstate',fontsForRoute);
+  window.addEventListener('hashchange',fontsForRoute);
   // Start font CSS without making the first screen depend on a remote stylesheet.
   document.addEventListener('load', event => {
-    if (event.target?.id === 'komi-font-css' || event.target?.matches?.('link[data-komi-deferred-style]')) {
+    if (event.target?.id === 'komi-font-css') {
+      fontLink = event.target;
+      if (fontsMayActivate) fontLink.media = 'all';
+      return;
+    }
+    if (event.target?.matches?.('link[data-komi-deferred-style]')) {
       event.target.media = 'all';
       if (event.target.dataset?.komiDeferredStyle === 'base') {
         // Full stylesheet includes the same rules in their original order.
@@ -109,11 +139,16 @@
       const link=document.querySelector('link[data-komi-deferred-style="profile"]');
       if (link) link.media='all';
     }
+    if (/^\/(?:shop|profile)$/.test(location.pathname)||/^#(?:shop|profile)$/.test(location.hash.toLowerCase())) {
+      const link=document.querySelector('link[data-komi-deferred-style="cosmetics"]');
+      if (link) link.media='all';
+    }
   };
   const styleObserver=new MutationObserver(()=>{
     ensureShopStyle();
     if(document.querySelector('link[data-komi-deferred-style="shop"]')&&
-       document.querySelector('link[data-komi-deferred-style="profile"]'))styleObserver.disconnect();
+       document.querySelector('link[data-komi-deferred-style="profile"]')&&
+       document.querySelector('link[data-komi-deferred-style="cosmetics"]'))styleObserver.disconnect();
   });
   styleObserver.observe(document.head,{childList:true});
   window.addEventListener('popstate',ensureShopStyle);
@@ -181,6 +216,7 @@
       daily.firstImage = firstImage;
     }
   }
+  if (!firstImage) activateFonts();
   let observer = null;
   let timer = null;
   let done = false;
@@ -192,6 +228,8 @@
     if (observer) observer.disconnect();
     if (timer !== null) clearTimeout(timer);
     document.removeEventListener?.('readystatechange',paintDailyPreview);
+    if (isHomeEntry()) activateFontsAfterPaint();
+    else activateFonts();
   }
 
   function paintDailyPreview() {
@@ -297,7 +335,10 @@
   }
   if (firstImage) {
     document.addEventListener('readystatechange',paintDailyPreview);
-    firstImage.promise.then(paintDailyPreview);
+    firstImage.promise.then(ready => {
+      if (ready) paintDailyPreview();
+      else activateFonts();
+    });
     paintDailyPreview();
   }
   // If a script or network request fails, restore the navigable SEO fallback.

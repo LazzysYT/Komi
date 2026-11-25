@@ -68,10 +68,10 @@ class BootNode {
  replaceWith(node){const parent=this.parentNode,index=parent.children.indexOf(this);node.remove();parent.children[index]=node;node.parentNode=parent;this.parentNode=null;}
  cloneNode(deep){const clone=new BootNode(this.tag,this.attrs);clone.textContent=this.textContent;if(deep)clone.append(...this.children.map(child=>child.cloneNode(true)));return clone;}
 }
-function bootFixture({date='2026-11-25T12:00:00Z',pathname='/',hash='',search=''}={}) {
- const timestamp=Date.parse(date),timers=new Map(),events=new Map(),windowEvents=new Map();
+function bootFixture({date='2026-11-25T12:00:00Z',pathname='/',hash='',search='',withImage=true}={}) {
+ const timestamp=Date.parse(date),timers=new Map(),events=new Map(),windowEvents=new Map(),frames=[];
  const register=(map,name,fn)=>{if(!map.has(name))map.set(name,[]);map.get(name).push(fn);};
- const emit=(map,name)=>{for(const fn of map.get(name)||[])fn();};
+ const emit=(map,name,event)=>{for(const fn of map.get(name)||[])fn(event);};
  const main=new BootNode('main'),head=new BootNode('head'),html=new BootNode('html');
  const template=new BootNode('template',{class:'komi-boot-real-hero'}),hero=new BootNode('section',{class:'komi-home-hero'});
  const wrapper=new BootNode('div',{class:'hero-slides-wrapper'});
@@ -101,10 +101,11 @@ function bootFixture({date='2026-11-25T12:00:00Z',pathname='/',hash='',search=''
   querySelector:selector=>head.querySelector(selector),
   addEventListener:(name,fn)=>register(events,name,fn),
   removeEventListener:(name,fn)=>events.set(name,(events.get(name)||[]).filter(item=>item!==fn))};
- const scope={document,location:{pathname,hash,search},Image,URLSearchParams,
+ const scope={document,location:{pathname,hash,search},Image:withImage?Image:undefined,URLSearchParams,
   Date:class extends Date{constructor(...args){super(...(args.length?args:[timestamp]));}static now(){return timestamp;}},
   MutationObserver:class{constructor(fn){this.callback=fn;observers.push(this);}observe(){}disconnect(){this.disconnected=true;}},
   addEventListener:(name,fn)=>register(windowEvents,name,fn),
+  requestAnimationFrame:fn=>{frames.push(fn);return frames.length;},
   setTimeout:(fn,delay)=>{const key={delay};timers.set(key,fn);return key;},clearTimeout:key=>timers.delete(key)};
  scope.window=scope;
  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../komi-home-boot.js'),'utf8'),scope);
@@ -112,6 +113,9 @@ function bootFixture({date='2026-11-25T12:00:00Z',pathname='/',hash='',search=''
   interactive(){document.readyState='interactive';emit(events,'readystatechange');},
   loaded(){const image=images[0];image.complete=true;image.naturalWidth=1280;image.naturalHeight=720;image.currentSrc=image.src;image.onload();},
   decodeResolve,decodeReject,
+  paintFrame(){for(const fn of frames.splice(0))fn();},
+  fontLoaded(){const font=new BootNode('link');font.id='komi-font-css';font.media='print';emit(events,'load',{target:font});return font;},
+  stylesheetLoaded(link){emit(events,'load',{target:link});},
   expire(delay){for(const [key,fn] of [...timers])if(key.delay===delay)fn();},
   navigate(next){Object.assign(scope.location,next);emit(windowEvents,'hashchange');}
  };
@@ -202,5 +206,65 @@ test('non-home and direct watch routes skip daily preview and profile CSS activa
  const profile=new BootNode('link',{'data-komi-deferred-style':'profile'});profile.media='print';
  f.head.append(profile);styles.callback();
  assert.equal(profile.media,'all');
+ assert.ok(!styles.disconnected,'Profile stylesheet must not stop watching for cosmetic styles');
+ const cosmetics=new BootNode('link',{'data-komi-deferred-style':'cosmetics'});cosmetics.media='print';
+ f.head.append(cosmetics);styles.callback();
+ assert.equal(cosmetics.media,'all');
  assert.equal(styles.disconnected,true);
+});
+test('fonts loaded before the daily preview wait until its second animation frame',async()=>{
+ const f=bootFixture(),font=f.fontLoaded();
+ assert.equal(font.media,'print');
+ f.interactive();f.loaded();f.decodeResolve();await f.scope.KomiHeroDaily.firstImage.promise;
+ assert.ok(f.scope.KomiHeroDaily.preview);
+ assert.equal(font.media,'print','Image decoding alone must not trigger competing font downloads');
+ f.paintFrame();assert.equal(font.media,'print');
+ f.paintFrame();assert.equal(font.media,'all');
+});
+test('fonts loaded after the preview respect the pending paint or activate immediately afterward',async()=>{
+ for(const afterPaint of [false,true]) {
+  const f=bootFixture();
+  f.interactive();f.loaded();f.decodeResolve();await f.scope.KomiHeroDaily.firstImage.promise;
+  f.paintFrame();
+  if(afterPaint)f.paintFrame();
+  const font=f.fontLoaded();
+  assert.equal(font.media,afterPaint?'all':'print');
+  f.paintFrame();assert.equal(font.media,'all');
+ }
+});
+test('font deadline still releases a successfully decoded hero when animation frames are suspended',async()=>{
+ const f=bootFixture(),font=f.fontLoaded();
+ f.interactive();f.loaded();f.decodeResolve();await f.scope.KomiHeroDaily.firstImage.promise;
+ assert.ok(f.scope.KomiHeroDaily.preview);
+ assert.equal(font.media,'print');
+ // Background documents may never deliver either requested animation frame.
+ f.expire(4200);
+ assert.equal(font.media,'all','Font release keeps its own deadline after the image deadline is cleared');
+});
+test('font activation remains bounded on image failure, decode failure, missing image support or route exit',async()=>{
+ for(const failure of ['load','decode','deadline','route']) {
+  const f=bootFixture(),font=f.fontLoaded();
+  assert.equal(font.media,'print');
+  if(failure==='load')f.images[0].onerror();
+  else if(failure==='decode'){f.loaded();f.decodeReject(new Error('decode failed'));}
+  else if(failure==='deadline')f.expire(4200);
+  else f.navigate({hash:'#catalog'});
+  if(failure!=='route')await f.scope.KomiHeroDaily.firstImage.promise;
+  assert.equal(font.media,'all',failure+' releases font activation without waiting for a successful hero');
+ }
+ assert.equal(bootFixture({withImage:false}).fontLoaded().media,'all');
+ for(const route of [{pathname:'/catalog'},{pathname:'/profile'},{pathname:'/anime/61316'},{hash:'#shop'},{search:'?anime=61316'}])
+  assert.equal(bootFixture(route).fontLoaded().media,'all','Other routes keep their normal font activation');
+});
+test('cosmetics promote for both shop and profile routes and other deferred styles activate on load',()=>{
+ for(const route of [{pathname:'/shop'},{pathname:'/profile'},{hash:'#shop'},{hash:'#profile'}]) {
+  const f=bootFixture(route),cosmetics=new BootNode('link',{'data-komi-deferred-style':'cosmetics'});
+  cosmetics.media='print';f.head.append(cosmetics);f.observers[0].callback();
+  assert.equal(cosmetics.media,'all');
+ }
+ const f=bootFixture();
+ for(const kind of ['motion','cosmetics']) {
+  const link=new BootNode('link',{'data-komi-deferred-style':kind});link.media='print';
+  f.stylesheetLoaded(link);assert.equal(link.media,'all','Non-font styles are not gated by hero paint');
+ }
 });
