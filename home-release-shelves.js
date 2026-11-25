@@ -99,10 +99,13 @@
       (typeof compact?.original === 'string' && /^https:\/\//i.test(compact.original) ? ' data-poster-original="' + escape(compact.original) + '"' : '') +
       ' referrerpolicy="no-referrer" data-komi-onerror="komiCardPosterFallback(this)">';
   }
+  // Reuse local-time formatters rather than constructing them per card.
+  let dayFormatter, clockFormatter;
   function dateLabel(value, withTime) {
     const date = new Date(value);
-    const day = date.toLocaleDateString('ru-RU', {day:'numeric', month:'short'});
-    return withTime ? day + ' · ' + date.toLocaleTimeString('ru-RU', {hour:'2-digit', minute:'2-digit'}) : day;
+    const day = (dayFormatter ||= new Intl.DateTimeFormat('ru-RU', {day:'numeric', month:'short'})).format(date);
+    return withTime ? day + ' · ' +
+      (clockFormatter ||= new Intl.DateTimeFormat('ru-RU', {hour:'2-digit', minute:'2-digit'})).format(date) : day;
   }
   function cards(entries, context, upcoming) {
     return '<ul class="komi-home-release-rail">' + entries.map(entry => {
