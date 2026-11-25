@@ -34,8 +34,7 @@ const fixture = `<!doctype html><html lang="ru"><meta charset="utf-8"><body>
       requests.push(url);
       if (url === 'https://komi.test/fixture') return route.fulfill({status:200,contentType:'text/html',body:fixture});
       if (url.includes('missing-frame')) return route.fulfill({status:404,body:'Missing episode image'});
-      if (url.includes('/mappings/mal/')) return route.fulfill({json:{anilist_id:5114},headers:{'Access-Control-Allow-Origin':'*'}});
-      if (url.includes('/5114/episodes.json')) return route.fulfill({json:[
+      if (url.includes('/episode-stills/5114.json')) return route.fulfill({json:[
         {number:2,still:'https://image.tmdb.org/t/p/w500/two.jpg'},
         {number:3,still:'https://image.tmdb.org/t/p/w500/three.jpg'},
         {number:65,still:'https://image.tmdb.org/t/p/w500/wrong-special.jpg'}

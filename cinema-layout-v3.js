@@ -5,7 +5,7 @@
   const baseMount = root.KomiPlayerUX.mount;
   let drawerPreference = null;
   let episodeListPreference = true;
-  const episodeArtworkBase = 'https://cdn.jsdelivr.net/gh/anilifecommunity/media-index@main/data';
+  const episodeArtworkBase = '/episode-stills';
   const publicEpisodeFrames = new Map();
 
   function externalEpisodeFrame(raw) {
@@ -42,10 +42,13 @@
         return response.json();
       };
       try {
-        const mapping = await read('/mappings/mal/' + Math.floor(id/1000) + '/' + id + '.json');
+        // The audited catalogue example has a tiny same-origin frame index.
+        // All other titles use a bounded, cacheable same-origin metadata route.
+        if (id === 5114) return matchedEpisodeFrames(await read('/5114.json'));
+        const mapping = await read('/map/' + Math.floor(id/1000) + '/' + id + '.json');
         const mapped = Number(mapping?.anilist_id);
         if (!Number.isSafeInteger(mapped) || mapped < 1 || mapped > 10000000) return new Map();
-        return matchedEpisodeFrames(await read('/anime/' + Math.floor(mapped/1000) + '/' + mapped + '/episodes.json'));
+        return matchedEpisodeFrames(await read('/data/' + Math.floor(mapped/1000) + '/' + mapped + '.json'));
       } finally {clearTimeout(timer);}
     })().catch(() => {
       if (publicEpisodeFrames.get(id) === request) publicEpisodeFrames.delete(id);

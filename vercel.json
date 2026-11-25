@@ -118,9 +118,30 @@
           "value": "noindex, follow"
         }
       ]
+    },
+    {
+      "source": "/episode-stills/:kind(map|data)/:path*",
+      "headers": [
+        {
+          "key": "x-vercel-enable-rewrite-caching",
+          "value": "1"
+        },
+        {
+          "key": "CDN-Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
     }
   ],
   "rewrites": [
+    {
+      "source": "/episode-stills/map/:shard([0-9]+)/:id([0-9]+).json",
+      "destination": "https://cdn.jsdelivr.net/gh/anilifecommunity/media-index@main/data/mappings/mal/:shard/:id.json"
+    },
+    {
+      "source": "/episode-stills/data/:shard([0-9]+)/:id([0-9]+).json",
+      "destination": "https://cdn.jsdelivr.net/gh/anilifecommunity/media-index@main/data/anime/:shard/:id/episodes.json"
+    },
     {
       "source": "/profile",
       "destination": "/index.html"

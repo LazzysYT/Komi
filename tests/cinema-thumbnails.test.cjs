@@ -146,7 +146,7 @@ test('public data resolves MAL to AniList, rejects duplicate or untrusted stills
     calls.push(url);
     assert.equal(options.credentials,'omit');
     assert.equal(options.referrerPolicy,'no-referrer');
-    const data = url.includes('/mal/') ? {anilist_id:171018} : [
+    const data = url.includes('/map/') ? {anilist_id:171018} : [
       {number:1,still:'https://image.tmdb.org/t/p/w500/episode-one.jpg'},
       {number:2,still:'https://other.example/title.jpg'},
       {number:3,still:'https://image.tmdb.org/t/p/w500/reused.jpg'},
@@ -164,8 +164,8 @@ test('public data resolves MAL to AniList, rejects duplicate or untrusted stills
   const frames=await first;
   assert.deepEqual([...frames],[[1,'https://image.tmdb.org/t/p/w300/episode-one.jpg']]);
   assert.equal(calls.length,2);
-  assert.match(calls[0],/mappings\/mal\/57\/57334\.json$/);
-  assert.match(calls[1],/anime\/171\/171018\/episodes\.json$/);
+  assert.match(calls[0],/map\/57\/57334\.json$/);
+  assert.match(calls[1],/data\/171\/171018\.json$/);
 });
 
 test('public data backfills only uniquely numbered season-one rows of the current watch view',async()=>{
@@ -183,4 +183,11 @@ test('public data backfills only uniquely numbered season-one rows of the curren
   assert.equal(current.externalPreviews[0],want.get(1));
   assert.equal(current.externalPreviews[4],want.get(4));
   assert.deepEqual(Object.keys(current.externalPreviews),['0','4']);
+});
+
+
+test('Fullmetal Alchemist example carries exactly 64 distinct episode still links, never the supplemental releases',()=>{
+  const data=JSON.parse(fs.readFileSync(path.join(__dirname,'..','episode-stills','5114.json'),'utf8'));
+  assert.deepEqual(data.map(x=>x.number),Array.from({length:64},(_,i)=>i+1));
+  assert.equal(new Set(data.map(x=>x.still)).size,64);
 });
