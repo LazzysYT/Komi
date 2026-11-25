@@ -22,5 +22,5 @@ jobs:
           node --check komi-home-boot.js
           node --test tests/v8-stability.test.cjs
           node --test tests/navigation-player-v72.test.cjs
-          node --test tests/hero-v811.test.cjs
+          node --test tests/hero-*.test.cjs
           node --test scripts/hero-art.test.cjs

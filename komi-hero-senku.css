@@ -172,6 +172,7 @@
   padding: 15px 26px;
   border-radius: 999px !important;
   text-decoration: none;
+  white-space: nowrap;
   cursor: pointer;
   transition: transform .18s ease, background-color .18s ease, box-shadow .18s ease;
 }
@@ -230,6 +231,7 @@
   display: flex;
   align-items: center;
   gap: 14px;
+  max-width: calc(100% - 40px);
 }
 .komi-media-hub .komi-home-hero .komi-hub-slide-count {
   position: static !important;
@@ -247,7 +249,7 @@
 }
 .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-dots {
   position: static !important;
-  display: flex;
+  display: flex !important;
   align-items: center;
   gap: 6px;
   margin: 0;
@@ -259,6 +261,8 @@
 }
 .komi-media-hub .komi-home-hero .hero-dot,
 .komi-media-hub .komi-home-hero .hero-dot.active {
+  position: relative;
+  flex: 0 0 auto;
   display: grid;
   place-items: center;
   width: 24px !important;
@@ -286,15 +290,16 @@
 }
 .komi-media-hub .komi-home-hero .hero-dot:hover::before { background: rgba(255,255,255,.75); }
 .komi-media-hub .komi-home-hero .komi-hub-arrows { display: flex; align-items: center; gap: 8px; }
-.komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow {
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls :is(.hero-slider-arrow,.komi-hero-pause) {
   position: static !important;
   display: grid;
   place-items: center;
   transform: none !important;
-  width: 40px !important;
-  min-width: 40px !important;
-  height: 40px !important;
-  min-height: 40px !important;
+  flex: 0 0 44px;
+  width: 44px !important;
+  min-width: 44px !important;
+  height: 44px !important;
+  min-height: 44px !important;
   padding: 0;
   border: 1px solid rgba(255,255,255,.08) !important;
   border-radius: 50% !important;
@@ -306,12 +311,19 @@
   cursor: pointer;
   transition: background-color .18s ease, scale .18s ease;
 }
-.komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow:is(:hover,:focus-visible) {
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls :is(.hero-slider-arrow,.komi-hero-pause):is(:hover,:focus-visible) {
   background: rgba(255,255,255,.2) !important;
   scale: 1.05;
 }
-.komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow:active { scale: .96; }
-.komi-media-hub .komi-home-hero :is(.hero-slider-arrow, .hero-dot, .hero-buttons a, .hero-buttons button):focus-visible {
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls :is(.hero-slider-arrow,.komi-hero-pause):active { scale: .96; }
+.komi-media-hub .komi-home-hero .komi-hub-carousel-controls :is(.hero-slider-arrow,.komi-hero-pause):disabled {
+  opacity: .45;
+  cursor: default;
+  scale: 1;
+}
+.komi-media-hub .komi-home-hero .komi-hero-pause svg { width: 20px; height: 20px; pointer-events: none; }
+.komi-media-hub .komi-home-hero .komi-hero-pause svg [hidden] { display: none; }
+.komi-media-hub .komi-home-hero :is(.hero-slider-arrow, .komi-hero-pause, .hero-dot, .hero-buttons a, .hero-buttons button):focus-visible {
   outline: 2px solid #FFFFFF !important;
   outline-offset: 3px;
 }
@@ -366,31 +378,30 @@
   }
   .komi-media-hub .komi-home-hero .hero-buttons { gap: 8px; margin-top: 16px; }
   .komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-play {
-    padding: 12px 18px !important;
+    padding: 12px 16px !important;
     min-height: 44px;
     font-size: 13px;
   }
   .komi-media-hub .komi-home-hero .hero-buttons button.komi-hub-list {
-    padding: 12px 15px !important;
+    padding: 12px 13px !important;
     min-height: 44px;
     font-size: 13px;
   }
   .komi-media-hub .komi-home-hero .hero-buttons a.komi-hub-info {
     width: 44px; height: 44px; min-width: 44px; min-height: 44px;
   }
-  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls { gap: 7px; right: 12px; bottom: 18px; }
   .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-dots { gap: 2px; }
   .komi-media-hub .komi-home-hero .hero-dot,
-  .komi-media-hub .komi-home-hero .hero-dot.active { width: 17px !important; min-width: 17px !important; }
+  .komi-media-hub .komi-home-hero .hero-dot.active { width: 24px !important; min-width: 24px !important; }
   .komi-media-hub .komi-home-hero .hero-dot::before,
-  .komi-media-hub .komi-home-hero .hero-dot.active::before { width: 17px; }
+  .komi-media-hub .komi-home-hero .hero-dot.active::before { width: 24px; }
   .komi-media-hub .komi-home-hero .komi-hub-arrows { gap: 5px; }
   .komi-media-hub .komi-hub-resume { width: min(220px, calc(100% - 24px)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .komi-media-hub .komi-home-hero .hero-buttons :is(a, button),
   .komi-media-hub .komi-home-hero .hero-dot::before,
-  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-slider-arrow { transition: none !important; }
+  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls :is(.hero-slider-arrow,.komi-hero-pause) { transition: none !important; }
 }
 
 /* Keep first paint/no-JS SEO hero and loading skeleton visually consistent. */
@@ -498,6 +509,7 @@
 }
 
 /* V8.11: cinematic artwork, without stretching and blurring portrait covers. */
+.komi-media-hub .komi-home-hero .komi-hero-pause[hidden] { display:none !important; }
 .komi-media-hub .komi-home-hero .hero-slide {
   display:flex !important;
   opacity:0 !important;
@@ -508,7 +520,8 @@
 .komi-media-hub .komi-home-hero .hero-slide.active {
   opacity:1 !important;visibility:visible;pointer-events:auto;z-index:1;
 }
-.komi-media-hub .komi-home-hero .hero-slide .komi-hub-hero-art {
+.komi-media-hub .komi-home-hero .hero-slide:is(.komi-hd-wide,.komi-hd-softwide,.komi-hd-poster) .komi-hub-hero-art {
+  inset:0 !important;
   filter:none !important;transform:none !important;
   object-position:72% center !important;
 }
@@ -544,12 +557,19 @@
 .komi-media-hub .komi-home-continue .komi-home-progress-details strong {
   display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;
   white-space:normal !important;line-height:1.35 !important;overflow:hidden;
+  max-height:none;min-height:2.7em;padding-bottom:2px;overflow-wrap:anywhere;
 }
+.komi-media-hub .komi-home-continue .komi-home-progress-art {
+  flex-shrink:0;
+  overflow:hidden;
+  border-radius:var(--hub-card-radius,16px) var(--hub-card-radius,16px) 0 0;
+}
+.komi-media-hub .komi-home-continue .komi-home-progress-rail { padding-bottom:10px; }
 @keyframes komiHeroKenBurns {from{scale:1}to{scale:1.045}}
 @keyframes komiHeroReveal {from{opacity:0;translate:0 10px}to{opacity:1;translate:0 0}}
 @media (prefers-reduced-motion:no-preference) {
   .komi-media-hub .komi-home-hero .hero-slide.active.komi-art-ready .komi-hub-hero-art {
-    animation:komiHeroKenBurns 10s ease-out both !important;
+    animation:komiHeroKenBurns 7s ease-out both !important;
   }
   .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > * {
     animation:komiHeroReveal .5s cubic-bezier(.22,1,.36,1) both;
@@ -558,7 +578,7 @@
   .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > :nth-child(3){animation-delay:.12s}
   .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > :nth-child(4){animation-delay:.17s}
   .komi-media-hub .komi-home-hero .hero-slide.active .komi-home-hero-content > :nth-child(5){animation-delay:.22s}
-  .komi-media-hub .komi-home-hero #heroSlider:is(:hover,:focus-within) .hero-slide.active .komi-hub-hero-art {animation-play-state:paused !important;}
+  .komi-media-hub .komi-home-hero #heroSlider:is([data-komi-hero-paused="true"],[data-komi-hero-visible="false"]) .hero-slide.active .komi-hub-hero-art {animation-play-state:paused !important;}
 }
 @media(max-width:768px){
   .komi-media-hub .komi-home-hero .hero-slide.komi-hd-poster .komi-hub-hero-art{
@@ -573,6 +593,47 @@
   .komi-media-hub .komi-home-hero .hero-slide,
   .komi-media-hub .komi-home-hero .komi-hero-video {transition:none !important;}
   .komi-media-hub .komi-home-hero .hero-dot.active::before{background:#fff !important;}
+  .komi-media-hub .komi-home-hero :is(.komi-hub-hero-art,.komi-hero-video,.komi-home-hero-content > *) {
+    animation:none !important;transition:none !important;transform:none !important;scale:none !important;translate:none !important;
+  }
+  .komi-media-hub .komi-home-hero :is(.hero-slider-arrow,.komi-hero-pause,.hero-buttons a,.hero-buttons button) {
+    transform:none !important;scale:none !important;
+  }
+}
+
+/* Keep actions above the two-row controller and let long mobile copy grow.
+   The active slide owns height; inactive slides remain layered for the fade. */
+@media(max-width:640px){
+  /* Eight slide targets stay usable at 320px instead of shrinking to 17px. */
+  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls {
+    display:grid;
+    grid-template-columns:minmax(0,1fr) max-content;
+    grid-template-areas:"counter arrows" "dots dots";
+    gap:6px 12px;
+    left:17px;right:17px;bottom:18px;max-width:none;
+  }
+  .komi-media-hub .komi-home-hero .komi-hub-slide-count {grid-area:counter;}
+  .komi-media-hub .komi-home-hero .komi-hub-arrows {grid-area:arrows;}
+  .komi-media-hub .komi-home-hero .komi-hub-carousel-controls .hero-dots {
+    grid-area:dots;justify-content:center;flex-wrap:wrap;
+  }
+  .komi-media-hub .komi-home-hero #heroSlider {
+    height:auto !important;
+    min-height:clamp(600px,80svh,720px) !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-slides-wrapper {
+    position:relative;height:auto;min-height:inherit;
+  }
+  .komi-media-hub .komi-home-hero .hero-slide {
+    min-height:100%;padding-bottom:126px !important;
+  }
+  .komi-media-hub .komi-home-hero .hero-slide.active {
+    position:relative;min-height:inherit;
+  }
+  .komi-media-hub .komi-boot-hero,
+  .komi-media-hub .komi-seo-fallback.komi-seo-spotlight {
+    height:auto !important;min-height:clamp(600px,80svh,720px) !important;
+  }
 }
 
 @media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference) {

@@ -50,7 +50,8 @@ test('avatar redraw is stable and rejects asynchronous images from prior account
 test('home re-render preserves already loaded hero only for the same owner and slide',()=>{
   assert.match(app,/const previousOwner = previousHero\?\.dataset\.komiOwner/);
   assert.match(app,/previousOwner === heroOwner/);
-  assert.match(app,/oldHeroSignature === heroSignature\(nextHero\)/);
-  assert.match(app,/nextHero\.replaceWith\(previousHero\)/);
+  assert.match(app,/previousRender\.signature === signature/);
+  assert.match(app,/homeMarkup\.replace\(heroMarkup, \(\) => previousRender\.markup\)/);
+  assert.doesNotMatch(app,/nextHero\.replaceWith\(previousHero\)/);
   assert.match(css,/\.komi-media-hub \.komi-home-hero \.hero-slide\.active\s*\{\s*animation: none !important;/);
 });

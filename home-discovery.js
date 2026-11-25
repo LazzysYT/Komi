@@ -173,10 +173,12 @@
           '<button type="button" class="hero-dot' + (i === index ? ' active' : '') +
           '" aria-label="Показать тайтл ' + (i + 1) + '" aria-pressed="' +
           (i === index ? 'true' : 'false') + '" data-komi-onclick="setSlide(' + i + ')"></button>'
-        ).join('') + '</div>' +
-        '<div class="komi-hub-arrows">' +
-        '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
-        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button></div>' : '') +
+        ).join('') + '</div>' : '') +
+      '<div class="komi-hub-arrows">' +
+      '<button type="button" class="komi-hero-pause" data-komi-hero-toggle aria-label="Приостановить слайдер" aria-pressed="false" title="Приостановить слайдер">' +
+        '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path data-komi-hero-pause-icon d="M6 5h4v14H6zM14 5h4v14h-4z"/><path data-komi-hero-play-icon hidden d="M8 5v14l11-7z"/></svg></button>' +
+      (slides.length > 1 ? '<button type="button" class="hero-slider-arrow hero-arrow-prev" aria-label="Предыдущий тайтл" data-komi-onclick="changeSlide(-1)">' + heroChevron('left') + '</button>' +
+        '<button type="button" class="hero-slider-arrow hero-arrow-next" aria-label="Следующий тайтл" data-komi-onclick="changeSlide(1)">' + heroChevron('right') + '</button>' : '') + '</div>' +
       '</div></div></section>';
   }
 
