@@ -165,6 +165,35 @@ test('unverified recent rows and empty upcoming dates create no storefront widge
   }
 });
 
+test('release date formatters are reused and retain the viewer timezone', () => {
+  const vm = require('node:vm'), fs = require('node:fs'), path = require('node:path');
+  let constructors = 0;
+  class SpyFormatter {
+    constructor(locale, options) {
+      constructors++;
+      this.formatter = new Intl.DateTimeFormat(locale, options);
+    }
+    format(value) { return this.formatter.format(value); }
+  }
+  const scope = {Intl:{DateTimeFormat:SpyFormatter}};
+  scope.globalThis = scope;
+  vm.runInNewContext(fs.readFileSync(path.join(__dirname,'../home-release-shelves.js'),'utf8'), scope);
+  const shown = [card({id:'41'}),card({id:'42',lastEpisodeAddedAt:ago(5)})];
+  const rendered = scope.KomiHomeReleases.renderRecent({now,animeList:shown});
+  assert.ok(rendered.includes('Добавлена '+new Date(now-2*3600000).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})));
+  assert.equal(constructors,1);
+  const next = scope.KomiHomeReleases.renderUpcoming({now,animeList:[
+    card({id:'43',nextEpisodeAt:later(24),nextEpisodeNumber:9}),
+    card({id:'44',nextEpisodeAt:later(48),nextEpisodeNumber:10})
+  ]});
+  const date = new Date(now+24*3600000);
+  const expected = date.toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+' · '+
+    date.toLocaleTimeString('ru-RU',{hour:'2-digit',minute:'2-digit'});
+  assert.ok(next.includes(expected));
+  assert.equal(constructors,2);
+  scope.KomiHomeReleases.renderRecent({now,animeList:shown});
+  assert.equal(constructors,2);
+});
 test('a pending refresh keeps confirmed dates and disables only its refresh action', () => {
   const html = releases.renderUpcoming({now,scheduleLoading:true,
     animeList:[card({nextEpisodeAt:later(24),nextEpisodeNumber:9})]});
