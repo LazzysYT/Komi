@@ -320,3 +320,79 @@
   #profile.komi-profile-studio .profile-more-menu{border-color:ButtonText}
   #profile.komi-profile-studio :is(.komi-profile-tab.active,.profile-more>summary.active){outline:1px solid ButtonText}
 }
+
+/* Profile overview: a compact monochrome shelf, not five large dashboard tiles. */
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library {
+  display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:14px;align-items:stretch;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library > .profile-widget {
+  min-width:0;min-height:0;padding:clamp(14px,1.6vw,21px)!important;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library .profile-widget-heading {
+  flex-wrap:wrap;column-gap:12px;row-gap:4px;margin-bottom:10px!important;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library .profile-distribution {
+  height:5px;margin:2px 0 9px!important;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library .profile-list-shortcuts {
+  display:grid;grid-template-columns:minmax(0,1fr)!important;gap:2px;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library .profile-list-shortcut {
+  grid-template-columns:8px minmax(0,1fr) auto 3.2em;
+  align-items:center;justify-items:stretch;align-content:center;gap:7px;min-height:39px;
+  padding:7px 8px!important;border-color:transparent!important;border-radius:8px!important;background:transparent!important;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library .profile-list-shortcut:hover {
+  background:var(--studio-panel)!important;border-color:#ffffff20!important;transform:none;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-list-marker {
+  width:7px;height:7px;background:var(--profile-segment,#888);border-radius:2px;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library .profile-list-shortcut strong {
+  font-size:14px;text-align:right;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library .profile-list-shortcut small {
+  text-align:right;font-variant-numeric:tabular-nums;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-genre-hint {
+  margin:0 0 9px;color:var(--studio-muted);font-size:12px;line-height:1.45;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-genres {
+  display:grid;grid-template-columns:minmax(0,1fr);gap:4px;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-genres .profile-genre {
+  display:grid;grid-template-columns:minmax(0,1fr) auto;width:100%;min-height:40px;gap:5px 12px;
+  padding:7px 8px;text-align:left;border-radius:8px;min-width:0;background:transparent;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-genre-name {min-width:0;overflow-wrap:anywhere;}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-genres strong {color:var(--studio-ink);font-variant-numeric:tabular-nums;}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-genres i {
+  grid-column:1/-1;display:block;height:3px;border-radius:999px;
+  background:linear-gradient(to right,#b6b6be var(--profile-genre-meter),#333338 var(--profile-genre-meter));
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-genres .profile-empty {
+  padding:11px 0;text-align:left;font-size:13px;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-metrics {margin:0;display:grid;gap:0;}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-metrics > div {
+  display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;
+  border-bottom:1px solid #ffffff13;padding:9px 0;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-metrics dt {font-size:13px;color:var(--studio-muted);line-height:1.4;}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-metrics dt small {font-size:10px;color:inherit;white-space:nowrap;}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-metrics dd {
+  margin:0;color:var(--studio-ink);font-weight:800;font-variant-numeric:tabular-nums;
+}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-activity-state:empty {display:none;}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-activity-state:not(:empty) {padding-top:7px;font-size:12px;}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library :is(.profile-list-shortcut,.profile-genre):focus-visible {
+  outline:2px solid #fff;outline-offset:-2px;
+}
+@media(max-width:1050px) {
+  #profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library {grid-template-columns:minmax(0,1fr);}
+}
+@media(max-width:767px) {
+  #profile.komi-profile-studio.komi-profile-premium-mono .profile-overview-library :is(.profile-list-shortcut,.profile-genre){min-height:44px;}
+}
+
+#profile [data-profile-week-retry][hidden] {display:none!important;}

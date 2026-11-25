@@ -165,6 +165,49 @@
         '<small style="display:block;color:#999;font-size:10px">Открыть профиль</small></span></button>';
     }).join('');
   }
+  function genreCounts(ids, animeById){
+    var totals=new Map();
+    for(var id of new Set(Array.from(ids||[],String))){
+      var item=animeById?.get(id);
+      var raw=Array.isArray(item?.genres)?item.genres:[item?.genre];
+      var used=new Set();
+      for(var genre of raw){
+        var name=typeof genre==='string'?genre.trim():String(genre?.russian||genre?.name||'').trim();
+        var key=name.toLocaleLowerCase('ru-RU');
+        if(!name||name.length>60||used.has(key))continue;
+        used.add(key);
+        var entry=totals.get(key)||{name,count:0};
+        entry.count++;
+        totals.set(key,entry);
+      }
+    }
+    return [...totals.values()].sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ru')).slice(0,5)
+      .map(item=>[item.name,item.count]);
+  }
+  function overviewGenres(topGenres,isMe){
+    var peak=number(topGenres?.[0]?.[1])||1;
+    return (Array.isArray(topGenres)?topGenres:[]).map(([name,count])=>
+      '<button class="profile-genre" type="button" data-profile-genre="'+escapeText(name)+'">'+
+      '<span class="profile-overview-genre-name">'+escapeText(name)+'</span><strong>'+format(count)+'</strong>'+
+      '<i aria-hidden="true" style="--profile-genre-meter:'+Math.min(100,100*number(count)/peak).toFixed(1)+'%"></i></button>'
+    ).join('')||blank(isMe?'Появятся после первых просмотренных серий.':'Пока нет данных о просмотренных жанрах.');
+  }
+  function paintOverviewGenres(node,topGenres,isMe){
+    if(!node||node.contains(document.activeElement))return;
+    var markup=overviewGenres(topGenres,isMe);
+    if(node.komiGenreMarkup===markup)return;
+    node.komiGenreMarkup=markup;
+    node.innerHTML=markup;
+  }
+  function overviewActivity(ctx){
+    if(!ctx.isMe||!ctx.canSeeProfileActivity)return '';
+    var owner=escapeText(ctx.activityOwner||'');
+    return '<section class="profile-widget profile-activity-shortcut" data-profile-week-owner="'+owner+'">'+header('Активность')+
+      '<dl class="profile-overview-metrics"><div><dt>Серий отмечено с понедельника <small>UTC</small></dt><dd data-profile-week-episodes>—</dd></div>'+
+      '<div><dt>Дней подряд с отметкой</dt><dd data-profile-week-streak>—</dd></div></dl>'+
+      '<p class="profile-overview-activity-state" data-profile-week-status aria-live="polite"></p><button class="profile-text-button" type="button" data-profile-week-retry hidden>Повторить</button>'+
+      '<button type="button" class="profile-shop-link" data-profile-jump="activity">Задания и награды</button></section>';
+  }
   function content(ctx){
     var fullCounts=statusNames.reduce((total,key)=>total+number(ctx.statsCounts[key]),0);
     var history=watchHistory(ctx);
@@ -188,7 +231,8 @@
     ).join('');
     var legend=segmentNames.map(([name,count,color])=>
       '<button type="button" class="profile-list-shortcut" data-profile-list="'+name+'" aria-label="'+name+': '+count+' — открыть список">'+
-      '<span>'+name+'</span><strong>'+format(count)+'</strong><small>'+(fullCounts?Math.round(count/fullCounts*100):0)+'% коллекции</small></button>'
+      '<i class="profile-list-marker" style="--profile-segment:'+color+'" aria-hidden="true"></i>'+
+      '<span>'+name+'</span><strong>'+format(count)+'</strong><small>'+(fullCounts?Math.round(count/fullCounts*100)+'%':'—')+'</small></button>'
     ).join('');
     var stats='<section class="profile-widget profile-stats-widget">'+header(ctx.isMe?'Мои списки':'Списки аниме',
       '<button type="button" class="profile-text-button" data-profile-jump="anime">Все списки</button>')+
@@ -215,17 +259,12 @@
       '<div class="profile-friends-mini">'+(friendRows(ctx.myFriends)||blank(ctx.isMe?'Список друзей пока пуст.':'Список друзей этого пользователя недоступен.'))+'</div>'+
       '<button type="button" class="profile-shop-link" data-profile-jump="friends">Все друзья</button>'+
       (ctx.isMe?'<button type="button" class="profile-shop-link" data-profile-rooms>Заявки и совместный просмотр</button>':'')+'</section>';
-    var genres=ctx.topGenres.map(([name,count])=>
-      '<button class="profile-genre" type="button" data-profile-genre="'+escapeText(name)+'">'+escapeText(name)+' <span>'+count+'</span></button>'
-    ).join('');
-    var favoritesOrGenres='<section class="profile-widget profile-genres-widget">'+header('Любимые жанры')+
-      '<div class="profile-genres">'+(genres||blank('Жанры появятся после добавления тайтлов в списки.'))+'</div></section>';
-    return '<div class="profile-bento profile-enter">'+
-      '<div class="profile-bento-main">'+watching+stats+favourite+'</div>'+
-      '<aside class="profile-bento-side">'+(ctx.canSeeProfileActivity?
-        '<section class="profile-widget profile-activity-shortcut">'+header('Активность')+
-        '<p>Отметка дня и награды за просмотр.</p><button type="button" class="profile-shop-link" data-profile-jump="activity">Задания и награды</button></section>':'')+
-        achievementWidget(ctx.username,ctx.isMe)+friends+favoritesOrGenres+'</aside>'+
+    var genres='<section class="profile-widget profile-genres-widget">'+header('Любимые жанры')+
+      '<p class="profile-overview-genre-hint">'+(ctx.isMe?'По просмотренным тайтлам и недавним отметкам.':'По тайтлам со статусом «Просмотрено».')+'</p>'+
+      '<div class="profile-genres profile-overview-genres" data-profile-overview-genres>'+overviewGenres(ctx.topGenres,ctx.isMe)+'</div></section>';
+    return '<div class="profile-bento profile-overview-bento profile-enter">'+
+      '<div class="profile-bento-main">'+watching+'<div class="profile-overview-library">'+stats+genres+'</div>'+favourite+'</div>'+
+      '<aside class="profile-bento-side">'+overviewActivity(ctx)+achievementWidget(ctx.username,ctx.isMe)+friends+'</aside>'+
       '</div>';
   }
   function syncWallet(){
@@ -425,6 +464,6 @@
   document.addEventListener('pointerout',event=>{
     var tile=event.target?.closest?.('[data-profile-tilt]');if(tile&&!tile.contains(event.relatedTarget))tile.style.transform='';
   });
-  root.KomiProfileUI={guest,navigation,summary,content,appearance,metrics,syncWallet,refreshFriends};
+  root.KomiProfileUI={guest,navigation,summary,content,appearance,metrics,syncWallet,refreshFriends,genreCounts,paintOverviewGenres};
   root.KomiProfileUI.fullFriendRows=fullFriendRows;
 })(window);
