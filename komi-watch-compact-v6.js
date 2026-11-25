@@ -141,7 +141,12 @@
 
     const sideHead = sidebar.querySelector('.komi-watch-side-heading');
     const search = sidebar.querySelector('.komi-episode-search');
-    if (sideHead && search) sideHead.append(search);
+    if (sideHead && search) {
+      const filters = create('div','komi-episode-filters');
+      sideHead.after(filters);
+      filters.append(search);
+      if (views) filters.append(views);
+    }
 
     // Mirror the verified, account-scoped sidebar avatar as it loads or changes.
     const account = content.querySelector('.komi-watch-rail-avatar');
