@@ -32,6 +32,7 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
   const fine = new Events(); fine.matches = true;
   const connection = new Events(); connection.saveData = false; connection.effectiveType = '4g';
   const document = new Events(); document.hidden = false; document.activeElement = null;
+  const watchModal = {classList:classes()};
   const attributes = new Map();
   const icon = () => ({hidden:false,toggleAttribute(_name,value) { this.hidden = value; }});
   const pauseIcon = icon(),playIcon = icon();
@@ -116,7 +117,7 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
     }
     removeAttribute() {}
   }
-  document.getElementById = id => id === 'heroSlider' ? currentSlider : id === 'mainContainer' ? main : null;
+  document.getElementById = id => id === 'heroSlider' ? currentSlider : id === 'mainContainer' ? main : id === 'watchModal' ? watchModal : null;
   document.querySelectorAll = selector => {
     const all = currentSlider?.isConnected ? currentSlider.slides : [];
     return selector.endsWith('.active') ? all.filter(s=>s.classList.contains('active')) : all;
@@ -141,7 +142,10 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
     setTimeout:(fn,delay)=>{const id=nextTimer++;timers.set(id,{fn,delay});return id;},
     clearTimeout:id=>timers.delete(id),
     sessionStorage:{getItem:key=>storage.get(key)||null,setItem:(key,value)=>storage.set(key,value)},
-    MutationObserver:class { constructor(fn) { mutations.push(fn); } observe() {} },
+    MutationObserver:class {
+      constructor(fn) { this.callback=fn; }
+      observe(target,options) { mutations.push({target,options,callback:this.callback}); }
+    },
     fetch:async(_url,options)=>{ apiRequests.push(JSON.parse(options.body)); return {ok:true,json:async()=>({data:{Page:{media}}})}; }
   };
   vm.runInNewContext(source,context,{filename:'hero-hd-art.js'});
@@ -149,7 +153,13 @@ function fixture({slides:input=[{}],imageSizes={},media=[],metadata,ready=true,p
     root,document,slider,slides:slider.slides,button,pauseIcon,playIcon,attributes,connection,reduced,fine,videos,
     imageRequests,apiRequests,timers,frames,observers,
     runDeferred() { for (const [id,item] of [...timers]) if (item.delay === 1800) { timers.delete(id); item.fn(); } },
-    mutate() { for (const fn of mutations) fn(); },
+    mutate() { for (const observer of mutations) if(observer.target===main) observer.callback(); },
+    watch(open) {
+      watchModal.classList.toggle('active',open);
+      for(const observer of mutations) if(observer.target===watchModal && observer.options.attributes &&
+          observer.options.attributeFilter?.includes('class'))
+        observer.callback([{target:watchModal,type:'attributes',attributeName:'class'}]);
+    },
     detach() { slider.isConnected=false; currentSlider=null; this.mutate(); },
     intersect(visible) { observers[0].callback([{target:slider,isIntersecting:visible,intersectionRatio:visible?1:0}]); },
     preference(media,value) { media.matches=value; media.emit('change'); },
@@ -229,6 +239,35 @@ test('live reduced-motion and data-saving changes pause media and permit later r
   f.connection.saveData=true;f.connection.emit('change');assert.equal(video.paused,true);
   f.connection.saveData=false;f.connection.emit('change');await settle();assert.equal(video.paused,false);
   f.connection.effectiveType='2g';f.connection.emit('change');assert.equal(video.paused,true);
+});
+
+test('watch dialog pauses the still-mounted hero immediately and closing respects existing pause preferences',async()=>{
+  const f=fixture({slides:[{komiHeroVideo:videoUrl},{}]});
+  f.root.KomiHeroArt.scan();await settle();
+  const video=f.videos[0];
+  assert.equal(video.paused,false);
+  assert.equal(f.slider.dataset.komiHeroPaused,'false');
+  f.watch(true);
+  assert.equal(f.slider.isConnected,true);
+  assert.equal(f.slider.dataset.komiHeroVisible,'true');
+  assert.equal(video.paused,true,'The modal observer must stop media without waiting for a scan or timer tick');
+  assert.equal(f.slider.dataset.komiHeroPaused,'true');
+  assert.equal(f.root.KomiHeroArt.isPaused(f.slider),true);
+  f.watch(false);await settle();
+  assert.equal(video.paused,false);
+  assert.equal(f.root.KomiHeroArt.isPaused(f.slider),false);
+  f.click();
+  assert.equal(video.paused,true);
+  const attempts=video.playCount;
+  f.watch(true);f.watch(false);await settle();
+  assert.equal(video.paused,true,'Closing the player must preserve an explicit hero pause');
+  assert.equal(f.root.KomiHeroArt.isPaused(f.slider),true);
+  assert.equal(video.playCount,attempts);
+  f.click();await settle();
+  assert.equal(video.paused,false);
+  f.watch(true);f.preference(f.reduced,true);f.watch(false);await settle();
+  assert.equal(video.paused,true,'Closing the player must respect reduced motion');
+  assert.equal(f.root.KomiHeroArt.isPaused(f.slider),true);
 });
 
 test('unsupported video URLs are ignored and rejected playback does not retry on every scan',async()=>{

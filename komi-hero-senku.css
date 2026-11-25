@@ -236,6 +236,8 @@
 .komi-media-hub .komi-home-hero .komi-hub-slide-count {
   position: static !important;
   display: inline-flex;
+  width: max-content;
+  justify-self: start;
   align-items: baseline;
   gap: 4px;
   color: #FFFFFF;
@@ -309,6 +311,7 @@
   -webkit-backdrop-filter: blur(12px);
   box-shadow: none !important;
   cursor: pointer;
+  touch-action: manipulation;
   transition: background-color .18s ease, scale .18s ease;
 }
 .komi-media-hub .komi-home-hero .komi-hub-carousel-controls :is(.hero-slider-arrow,.komi-hero-pause):is(:hover,:focus-visible) {
@@ -350,7 +353,7 @@
   }
   .komi-media-hub .komi-home-hero .komi-hub-slide-count { font-size: 12px; }
   .komi-media-hub .komi-home-hero .komi-hub-carousel-controls {
-    right: 18px;
+    right: max(18px, calc(env(safe-area-inset-right, 0px) + 16px));
     bottom: 22px;
     gap: 10px;
   }
@@ -610,7 +613,9 @@
     grid-template-columns:minmax(0,1fr) max-content;
     grid-template-areas:"counter arrows" "dots dots";
     gap:6px 12px;
-    left:17px;right:17px;bottom:18px;max-width:none;
+    left:max(17px,calc(env(safe-area-inset-left,0px) + 16px));
+    right:max(17px,calc(env(safe-area-inset-right,0px) + 16px));
+    bottom:18px;max-width:none;
   }
   .komi-media-hub .komi-home-hero .komi-hub-slide-count {grid-area:counter;}
   .komi-media-hub .komi-home-hero .komi-hub-arrows {grid-area:arrows;}

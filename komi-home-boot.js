@@ -40,7 +40,8 @@
   if (!sectionRoute) {
     html.classList.add('komi-home-boot-preview');
     const src = document.querySelector('meta[name="komi-first-hero"]')?.content;
-    if (src && src.startsWith('https://wsrv.nl/?url=')) {
+    const nativeBanner = /^https:\/\/s[34]\.anilist\.co\/file\/anilistcdn\/media\/anime\/banner\/[A-Za-z0-9_-]+\.(?:jpe?g|png|webp|avif)$/i;
+    if (src && (src.startsWith('https://wsrv.nl/?url=') || nativeBanner.test(src))) {
       const preload = document.createElement('link');
       preload.rel = 'preload'; preload.as = 'image'; preload.href = src;
       preload.fetchPriority = 'high'; preload.referrerPolicy = 'no-referrer';

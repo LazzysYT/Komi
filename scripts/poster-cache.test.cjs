@@ -48,19 +48,28 @@ test('only allowlisted public posters are sent to wsrv.nl, other URLs stay direc
   assert.equal(posterApiUrl('https://cdn.myanimelist.net/images/anime/1/a.jpg'),
     'https://cdn.myanimelist.net/images/anime/1/a.jpg');
 });
-test('all pre-rendered public posters use external CDN with direct fallback',()=>{
+test('pre-rendered covers use the cache while the first hero loads its native banner directly',()=>{
   const images=[...html.matchAll(/<img\b[^>]*data-poster-direct="https:\/\/(?:shikimori\.io|shikimori\.one|s4\.anilist\.co)[^"]+"[^>]*>/g)];
   assert.ok(images.length>=37,'Initial static poster cache is not attached');
+  let nativeHeroes=0;
   for(const [tag] of images) {
     const deferred = tag.includes('data-komi-hero-deferred-src=');
-    if (deferred) {
+    const nativeHero = tag.includes('komi-hub-hero-art') && !deferred;
+    if (nativeHero) {
+      nativeHeroes++;
+      assert.match(tag,/\ssrc="https:\/\/s4\.anilist\.co\/file\/anilistcdn\/media\/anime\/banner\/189046-MDk2CaVuRWpb\.jpg"/);
+      assert.match(tag,/loading="eager"/);
+      assert.match(tag,/fetchpriority="high"/);
+      assert.ok(tag.includes('data-poster-direct="'+validAniList+'"'));
+    } else if (deferred) {
       assert.match(tag,/\ssrc="\/anime-artwork\.svg"/);
       assert.match(tag,/data-komi-hero-deferred-src="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
       assert.match(tag,/loading="lazy"/);
     } else assert.match(tag,/\ssrc="https:\/\/wsrv\.nl\/\?url=https%3A%2F%2F/);
-    assert.match(tag,tag.includes('komi-hub-hero-art') ? /&amp;w=768&amp;output=webp/ : /&amp;w=360&amp;output=webp/);
+    if (!nativeHero) assert.match(tag,tag.includes('komi-hub-hero-art') ? /&amp;w=768&amp;output=webp/ : /&amp;w=360&amp;output=webp/);
     assert.match(tag,/data-komi-error="poster-error"/);
   }
+  assert.equal(nativeHeroes,1,'Only the first hero should eagerly request the native landscape');
   assert.doesNotMatch(html,/\/api\/poster\?src=/,'Static HTML should not invoke Vercel poster functions');
   assert.ok(html.indexOf('poster-cache-client.js') < html.indexOf('app-main.js'));
 });

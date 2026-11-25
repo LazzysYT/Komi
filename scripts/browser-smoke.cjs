@@ -42,15 +42,25 @@ fs.mkdirSync(output, { recursive: true });
         const pillsBox = pills.getBoundingClientRect();
         const boxes = cards.map(card => card.getBoundingClientRect());
         const columns = innerWidth >= 1024 ? 4 : 2;
-        const fullWidth = moodsBox.width >= sectionBox.width * 0.95;
+        // Width:100% fills the parent's content box, not its padded border box.
+        // Keep the coverage requirement and verify both content edges as well.
+        const sectionStyle = getComputedStyle(section);
+        const pixels = property => parseFloat(sectionStyle.getPropertyValue(property)) || 0;
+        const contentLeft = sectionBox.left + pixels('border-left-width') + pixels('padding-left');
+        const contentRight = sectionBox.right - pixels('border-right-width') - pixels('padding-right');
+        const contentWidth = contentRight - contentLeft;
+        const fullWidth = contentWidth > 0 && moodsBox.width >= contentWidth * 0.95;
+        const alignedEdges = Math.abs(moodsBox.left - contentLeft) <= 2 &&
+          Math.abs(moodsBox.right - contentRight) <= 2;
         const wideCards = boxes.every(box => box.width >= sectionBox.width / columns * 0.7);
         const sameRow = boxes.slice(0, columns).every(box => Math.abs(box.top - boxes[0].top) <= 3);
         const secondRow = boxes[columns].top >= boxes[0].bottom - 3;
         const belowGenres = headingBox.top >= Math.max(...boxes.map(box => box.bottom)) - 3;
         const pillsBelow = pillsBox.top >= headingBox.bottom - 3;
-        return {ok:fullWidth && wideCards && sameRow && secondRow && belowGenres && pillsBelow,
-          cards:cards.length,columns,fullWidth,wideCards,sameRow,secondRow,belowGenres,pillsBelow,
-          firstCardWidth:Math.round(boxes[0].width),sectionWidth:Math.round(sectionBox.width)};
+        return {ok:fullWidth && alignedEdges && wideCards && sameRow && secondRow && belowGenres && pillsBelow,
+          cards:cards.length,columns,fullWidth,alignedEdges,wideCards,sameRow,secondRow,belowGenres,pillsBelow,
+          firstCardWidth:Math.round(boxes[0].width),sectionWidth:Math.round(sectionBox.width),
+          contentWidth:Math.round(contentWidth),moodsWidth:Math.round(moodsBox.width)};
       });
       const result = { width, status: response?.status(), ...state, genreLayout, errors };
       results.push(result);

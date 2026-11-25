@@ -27,6 +27,7 @@
   const query = value => { try { return root.matchMedia?.(value) || {matches:false}; } catch { return {matches:false}; } };
   const reducedMotion = query('(prefers-reduced-motion: reduce)');
   const finePointer = query('(hover:hover) and (pointer:fine)');
+  const watchModal = document.getElementById('watchModal');
   let viewportObserver = null;
   let pointerFrame = null;
   let pointerPosition = null;
@@ -119,11 +120,12 @@
 
   function isPaused(slider) {
     const state = mountSlider(slider);
-    if (!state) return Boolean(document.hidden || reducedMotion.matches || constrainedConnection());
+    const watching = Boolean(watchModal?.classList?.contains('active'));
+    if (!state) return Boolean(document.hidden || watching || reducedMotion.matches || constrainedConnection());
     const focused = matches(slider,':focus-within');
     const focusPaused = focused && !(state.resumeFocus && buttonFocused(slider));
     const hoverPaused = finePointer.matches && matches(slider,':hover') && !state.ignoreHover;
-    const restricted = Boolean(document.hidden || slider.isConnected === false || !state.visible || reducedMotion.matches || constrainedConnection());
+    const restricted = Boolean(document.hidden || watching || slider.isConnected === false || !state.visible || reducedMotion.matches || constrainedConnection());
     const paused = Boolean(restricted || state.userPaused || focusPaused || hoverPaused);
     if (slider.dataset) {
       slider.dataset.komiHeroVisible = String(state.visible);
@@ -588,4 +590,10 @@
     mountSlider(document.getElementById('heroSlider'));
     scheduleScan();
   }
+  // The player is outside mainContainer; opening it leaves the hero mounted
+  // and geometrically visible. Observe only the known dialog's class state.
+  if (watchModal?.classList) new MutationObserver(() => {
+    syncVideos();
+    if (!watchModal.classList.contains('active')) scheduleScan();
+  }).observe(watchModal,{attributes:true,attributeFilter:['class']});
 })(window);

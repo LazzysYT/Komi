@@ -90,13 +90,13 @@ function parse(markup) {
   }
   return fragment;
 }
-function fixture() {
+function fixture(initialIndex = 0, cachedPreview = false) {
   const container = new Node('main'); container.connected = true;
   let timerStarts = 0;
   const scope = {
     container, document:{createElement:() => ({content:new Node('#fragment'),
       set innerHTML(markup) {this.content = parse(markup);}})},
-    currentUser:null, currentSlideIndex:0, komiHomeCatalogReady:false,
+    currentUser:null, currentSlideIndex:initialIndex, komiHomeCatalogReady:false,
     komiCatalogRevision:1, komiEpisodeProgress:{}, userAnimeStatuses:{},
     komiResumeReadyUid:null, komiResumePreview:[], komiLastHomeMarkup:'',
     komiStartupHomeCommitted:false, komiHomeHeroMayPaint:() => true,
@@ -115,16 +115,19 @@ function fixture() {
     vm.runInContext(fs.readFileSync(path.join(root, file), 'utf8'), scope, {filename:file});
   scope.KomiHomeDiscovery.afterRender = () => {};
   scope.komiHomePreviewCatalog = scope.KomiHomeSnapshot.featured(scope.KomiHomeSeed, scope.komiAnimeYear);
+  if (cachedPreview) scope.komiHomePreviewCatalog = scope.komiHomePreviewCatalog
+    .map(anime => ({...anime, banner_url:undefined, bannerUrl:undefined}));
   const start = app.indexOf('if (window.KomiHomeDiscovery) {', app.indexOf('function render()'));
   const end = app.indexOf('const sliderItems =', start);
   vm.runInContext('function renderHome() {' + app.slice(start, end) + '}', scope);
   scope.renderHome();
   return {scope, container, get timerStarts() {return timerStarts;},
     hydrate(change = () => {}) {
-      // The live public projection normalizes IDs and has no full description.
+      // The live public projection normalizes IDs and omits hero metadata.
       scope.animeList = scope.komiHomePreviewCatalog.map(anime => ({...anime,
         id:String(anime.shikimoriId), year:Number(anime.year),
-        shikiRating:String(anime.shikiRating), desc:undefined}));
+        shikiRating:String(anime.shikiRating), desc:undefined,
+        banner_url:undefined, bannerUrl:undefined}));
       scope.animeList.push({id:'999999', title:'New catalog card', year:2020,
         poster:'https://example.test/extra.jpg', episodeCount:1, shikiRating:7});
       change(scope.animeList);
@@ -188,4 +191,88 @@ test('account changes do not retain another owner’s hero or bookmark state', (
   assert.equal(next.dataset.komiOwner, 'owner-2');
   assert.equal(next.querySelector('.hero-slide').dataset.komiHeroSaved, 'true');
   assert.equal(f.timerStarts, 2);
+});
+
+test('verified landscape is the eager first source across seed, cached preview and live hydration', () => {
+  const banner = 'https://s4.anilist.co/file/anilistcdn/media/anime/banner/189046-MDk2CaVuRWpb.jpg';
+  for (const cached of [false, true]) {
+    const f = fixture(0, cached), hero = f.container.querySelector('.komi-home-hero');
+    const slide = hero.querySelector('.hero-slide'), image = slide.querySelector('.komi-hub-hero-art');
+    const seed = f.scope.KomiHomeSeed.find(anime => anime.id === '61316');
+    assert.equal(slide.dataset.komiAnimeId, '61316');
+    assert.equal(slide.dataset.komiHeroBanner, banner);
+    assert.equal(slide.classList.contains('komi-hd-wide'), true, 'verified landscape fills the hero before media scanning');
+    assert.equal(slide.classList.contains('komi-hd-poster'), false);
+    assert.equal(image.getAttribute('src'), banner);
+    assert.equal(image.getAttribute('fetchpriority'), 'high');
+    assert.equal(image.getAttribute('loading'), 'eager');
+    assert.equal(image.dataset.posterDirect, seed.poster, 'original cover remains the failure fallback');
+    assert.equal(seed.banner, seed.poster, 'seed catalog artwork stays a cover');
+    f.hydrate();
+    assert.equal(f.container.querySelector('.komi-home-hero'), hero);
+    assert.equal(image.removals, 0);
+    assert.equal(image.getAttribute('src'), banner);
+  }
+});
+
+test('seed banner is scoped to its ID and cover, while explicit custom banners win', () => {
+  for (const change of [
+    anime => {anime.id = '237'; anime.shikimoriId = 237; anime.title = 'Eureka';
+      anime.poster = anime.banner = 'https://example.test/eureka-cover.jpg';},
+    anime => {anime.poster = anime.banner = 'https://example.test/revised-cover.jpg';},
+    anime => {anime.poster = 'https://example.test/revised-poster.jpg';},
+    anime => {anime.banner = 'https://example.test/legacy-custom-banner.jpg';},
+    anime => {anime.banner_url = 'https://example.test/custom-banner.jpg';},
+    anime => {anime.bannerUrl = 'https://example.test/camel-case-banner.jpg';}
+  ]) {
+    const f = fixture();
+    f.hydrate(items => change(items[0]));
+    const anime = f.scope.animeList[0], image = f.container.querySelector('.komi-hub-hero-art');
+    assert.equal(image.getAttribute('src'), anime.banner_url || anime.bannerUrl || anime.banner || anime.poster);
+    assert.equal(image.dataset.posterDirect, anime.banner || anime.poster);
+    assert.equal(f.container.querySelector('.hero-slide').classList.contains('komi-hd-wide'), false,
+      'unverified custom sources still wait for dimension validation');
+  }
+  const inactive = fixture(1).container.querySelector('.komi-hub-hero-art');
+  assert.equal(inactive.getAttribute('src'), '/anime-artwork.svg');
+  assert.match(inactive.dataset.komiHeroDeferredSrc, /\/banner\/189046-/);
+  assert.equal(inactive.getAttribute('fetchpriority'), null, 'inactive slides do not request the landscape early');
+});
+
+test('failed initial landscape falls back to the original cover and then the local artwork', () => {
+  const f = fixture(), rendered = f.container.querySelector('.komi-hub-hero-art');
+  const image = {src:rendered.getAttribute('src'), dataset:{posterDirect:rendered.dataset.posterDirect}};
+  const scope = {};
+  vm.runInNewContext(app.slice(app.indexOf('function komiCardPosterFallback('),
+    app.indexOf('function renderCard(')), scope);
+  scope.komiCardPosterFallback(image);
+  assert.equal(image.src, rendered.dataset.posterDirect);
+  assert.equal(image.dataset.posterTriedDirect, '1');
+  scope.komiCardPosterFallback(image);
+  assert.equal(image.src, '/anime-artwork.svg');
+});
+
+test('home boot preloads only the configured trusted banner and skips anime routes', () => {
+  const banner = 'https://s4.anilist.co/file/anilistcdn/media/anime/banner/189046-MDk2CaVuRWpb.jpg';
+  const boot = fs.readFileSync(path.join(root, 'komi-home-boot.js'), 'utf8');
+  function preload(src, pathname = '/') {
+    const links = [];
+    vm.runInNewContext(boot, {
+      document:{readyState:'loading', documentElement:{classList:{add() {}, remove() {}}},
+        head:{append:link => links.push(link)}, createElement:() => ({}), addEventListener() {},
+        querySelector:selector => selector === 'meta[name="komi-first-hero"]' ? {content:src} : null},
+      window:{addEventListener() {}}, location:{pathname, hash:'', search:''}, URLSearchParams,
+      MutationObserver:class {observe() {} disconnect() {}}, setTimeout:() => 1, clearTimeout() {}
+    });
+    return links;
+  }
+  const [link] = preload(banner);
+  assert.equal(link.href, banner);
+  assert.equal(link.rel, 'preload');
+  assert.equal(link.as, 'image');
+  assert.equal(link.fetchPriority, 'high');
+  assert.equal(link.referrerPolicy, 'no-referrer');
+  assert.equal(preload(banner, '/anime/237').length, 0);
+  assert.equal(preload(banner.replace('https:', 'http:')).length, 0);
+  assert.equal(preload(banner.replace('s4.anilist.co', 'example.test')).length, 0);
 });

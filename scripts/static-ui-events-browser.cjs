@@ -7,6 +7,13 @@ const config=JSON.parse(fs.readFileSync(path.join(__dirname,'../vercel.json'),'u
 const csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').value
     .replace("script-src-attr 'unsafe-inline'","script-src-attr 'none'");
 
+async function assertCanonicalRoute(page,pathname,view){
+ const url=new URL(page.url());
+ assert.equal(url.pathname,pathname,'Navigation should use the canonical pathname');
+ assert.equal(url.hash,'','Interactive navigation should not leave a legacy route hash');
+ assert.equal(await page.evaluate(()=>currentView),view);
+}
+
 (async()=>{
  const browser=await chromium.launch({headless:true,...(process.env.KOMI_CHROME?{executablePath:process.env.KOMI_CHROME}:{})});
  try{
@@ -27,9 +34,9 @@ const csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').v
     !!document.querySelector('#sideHomeBtn[data-komi-click]') &&
     !!document.querySelector('#sideFriendsBtn[data-komi-click]'),null,{timeout:15000});
   await page.locator('#sideCatalogBtn').click();
-  assert.equal(await page.evaluate(()=>currentView),'catalog');
+  await assertCanonicalRoute(page,'/catalog','catalog');
   await page.locator('#sideHomeBtn').click();
-  assert.equal(await page.evaluate(()=>currentView),'home');
+  await assertCanonicalRoute(page,'/','home');
   // Simulate clicking the server-delivered first-paint link before Home Discovery
   // replaces it; JS navigation should open full controls, not just scroll a hash.
   await page.evaluate(() => {
@@ -43,17 +50,21 @@ const csp=config.headers[0].headers.find(x=>x.key==='Content-Security-Policy').v
   await page.evaluate(()=>document.querySelector('#komiStaticQuickFilterLinkFixture a').click());
   assert.equal(await page.evaluate(()=>currentView),'catalog',
     'Static first-paint all-filters action must open the interactive catalog');
-  assert.equal(new URL(page.url()).hash,'#catalog');
+  await assertCanonicalRoute(page,'/catalog','catalog');
   const catalogSearch=await page.locator('#komiCatalogSearchInput').count();
   if(catalogSearch) assert.equal(await page.evaluate(()=>document.activeElement?.id),'komiCatalogSearchInput');
   await page.evaluate(()=>document.getElementById('komiStaticQuickFilterLinkFixture').remove());
   await page.locator('#sideHomeBtn').click();
-  assert.equal(await page.evaluate(()=>currentView),'home');
+  await assertCanonicalRoute(page,'/','home');
   await page.locator('#sideFriendsBtn').click();
   assert.equal(await page.locator('#komiFriendsDrawer').evaluate(el=>el.classList.contains('open')),true);
-  await page.locator('#komiFriendsMyTab').click();
+  assert.equal(await page.locator('#komiFriendsMyTab').isVisible(),false,
+    'Anonymous visitors should not see the personal friends tab');
+  await page.locator('#komiFriendsAllTab').click();
+  assert.equal(await page.locator('#komiFriendsAllTab').evaluate(el=>el.classList.contains('active')),true);
   await page.locator('.komi-friends-close').click();
   assert.equal(await page.locator('#komiFriendsDrawer').evaluate(el=>el.classList.contains('open')),false);
+  assert.equal(await page.locator('.komi-side-account').getAttribute('aria-label'),'Войти');
   await page.locator('.komi-side-account').click();
   assert.equal(await page.locator('#authModal').evaluate(el=>el.classList.contains('active')),true);
   await page.locator('#tabRegisterBtn').click();
