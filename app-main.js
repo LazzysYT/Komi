@@ -1164,7 +1164,48 @@ async function komiLoadCatalogPages(attempt = 0) {
         // matches ahead of words/genres when the default catalogue sort is used.
         function komiNormalizeCatalogSearch(value) {
             return String(value || '').normalize('NFKC').toLowerCase()
+                .normalize('NFD').replace(/(\p{Script=Latin})\p{M}+/gu,'$1').normalize('NFC')
                 .replace(/ё/g,'е').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+        }
+        // Explicit localized aliases supplement only titles that already exist.
+        const komiTitleAliasGroups = [
+            ['атака титанов','атака титанів','attack on titan','shingeki no kyojin','aot','snk'],
+            ['наруто','naruto'],['наруто ураганные хроники','наруто шіппуден','naruto shippuden'],
+            ['ван пис','ван піс','one piece','ванпис'],
+            ['магическая битва','магічна битва','jujutsu kaisen','джуджуцу кайсен','jjk'],
+            ['клинок рассекающий демонов','клинок що знищує демонів','demon slayer','kimetsu no yaiba'],
+            ['тетрадь смерти','зошит смерті','death note','deathnote'],
+            ['стальной алхимик братство','сталевий алхімік братерство','fullmetal alchemist brotherhood','fmab'],
+            ['стальной алхимик','сталевий алхімік','fullmetal alchemist'],
+            ['черный клевер','чорна конюшина','black clover'],
+            ['провожающая в последний путь фрирен','фрирен','фрірен','frieren beyond journeys end','sousou no frieren'],
+            ['человек бензопила','людина бензопила','chainsaw man'],
+            ['моя геройская академия','моя геройська академія','my hero academia','boku no hero academia','mha'],
+            ['поднятие уровня в одиночку','підняття рівня наодинці','solo leveling','ore dake level up'],
+            ['блич','бліч','bleach'],['ре зеро','ре зеро жизнь с нуля','re zero','re zero starting life in another world'],
+            ['семья шпиона','сім я шпигуна','spy x family','spy family'],
+            ['коми не может общаться','комі не може спілкуватися','komi cant communicate','komi san wa comyushou desu']
+        ].map(group=>group.map(komiNormalizeCatalogSearch));
+        const komiCyrillicLatin={а:'a',б:'b',в:'v',г:'g',ґ:'g',д:'d',е:'e',є:'ye',ж:'zh',з:'z',и:'i',і:'i',ї:'yi',й:'y',к:'k',л:'l',м:'m',н:'n',о:'o',п:'p',р:'r',с:'s',т:'t',у:'u',ф:'f',х:'kh',ц:'ts',ч:'ch',ш:'sh',щ:'shch',ъ:'',ы:'y',ь:'',э:'e',ю:'yu',я:'ya'};
+        function komiRomanizeCatalogTitle(value) {
+            return Array.from(value,char=>komiCyrillicLatin[char]??char).join('');
+        }
+        function komiCatalogTitleNames(anime) {
+            const values=[anime.title,anime.originalTitle,anime.english,anime.japanese,
+                anime.russian,anime.englishTitle,anime.japaneseTitle,anime.romaji,anime.titleEnglish,
+                anime.titleJapanese,anime.titleRomaji,anime.titleRussian,anime.titleUkrainian,
+                ...(Array.isArray(anime.synonyms)?anime.synonyms:[]),
+                ...(Array.isArray(anime.altTitles)?anime.altTitles:[]),
+                ...(Array.isArray(anime.alternativeTitles)?anime.alternativeTitles:[])];
+            const names=[...new Set(values.filter(v=>typeof v==='string').map(komiNormalizeCatalogSearch).filter(Boolean))];
+            const expanded=new Set(names);
+            for(const name of names){
+                let best=null;
+                for(const group of komiTitleAliasGroups)for(const alias of group)
+                    if((name===alias||name.startsWith(alias+' '))&&(!best||alias.length>best.alias.length))best={group,alias};
+                if(best)for(const alias of best.group)expanded.add(alias+name.slice(best.alias.length));
+            }
+            return [...expanded];
         }
         let komiCatalogSearchIndex = null;
         function komiGetCatalogSearchIndex() {
@@ -1174,35 +1215,108 @@ async function komiLoadCatalogPages(attempt = 0) {
             const items = new Map();
             for (const anime of animeList) {
                 if (!anime || typeof anime !== 'object') continue;
-                const names = [anime.title,anime.originalTitle,anime.english,anime.japanese,
-                    ...(Array.isArray(anime.synonyms) ? anime.synonyms : [])]
-                    .map(komiNormalizeCatalogSearch).filter(Boolean);
+                const names=komiCatalogTitleNames(anime);
+                const latinNames=[...new Set(names.filter(name=>/[а-яёіїєґ]/u.test(name))
+                    .map(komiRomanizeCatalogTitle).filter(name=>!names.includes(name)))];
                 const genres = (Array.isArray(anime.genres) ? anime.genres : [anime.genre])
                     .flatMap(g=>g && typeof g === 'object' ? [g.name,g.russian,g.title] : [g])
                     .map(komiNormalizeCatalogSearch).filter(Boolean);
-                items.set(anime,{names,genres});
+                items.set(anime,{names,latinNames,genres});
             }
             komiCatalogSearchIndex = {source:animeList,revision:komiCatalogRevision,length:animeList.length,items};
             return items;
         }
-        function komiCatalogSearchScore(entry, queries) {
+        function komiCatalogDirectTitleScore(name,query,tokens) {
+            if(name===query)return 100;
+            if(name.startsWith(query+' '))return 90;
+            if(name.startsWith(query))return 80;
+            if(name.includes(query))return 65;
+            if(tokens.length>1&&tokens.every(token=>name.includes(token)))return 50;
+            return 0;
+        }
+        // Bounded insertion/deletion/substitution/adjacent transposition.
+        function komiCatalogEditDistance(left,right,limit) {
+            if(left===right)return 0;
+            if(Math.abs(left.length-right.length)>limit)return limit+1;
+            const n=right.length;
+            let older=new Int16Array(n+1),prev=new Int16Array(n+1),curr=new Int16Array(n+1);
+            for(let j=0;j<=n;j++)prev[j]=j;
+            for(let i=1;i<=left.length;i++){
+                curr.fill(limit+1);curr[0]=i;
+                let best=curr[0];
+                for(let j=Math.max(1,i-limit);j<=Math.min(n,i+limit);j++){
+                    curr[j]=Math.min(prev[j]+1,curr[j-1]+1,prev[j-1]+(left[i-1]===right[j-1]?0:1));
+                    if(i>1&&j>1&&left[i-1]===right[j-2]&&left[i-2]===right[j-1])curr[j]=Math.min(curr[j],older[j-2]+1);
+                    best=Math.min(best,curr[j]);
+                }
+                if(best>limit)return limit+1;
+                [older,prev,curr]=[prev,curr,older];
+            }
+            return prev[n];
+        }
+        function komiCatalogFuzzyScore(entry,queries) {
+            let score=0;
+            if(!entry)return score;
+            for(const query of queries){
+                if(query.length<4||query.length>80||(query.match(/\p{L}/gu)||[]).length<4)continue;
+                const limit=query.length>=8?2:1, parts=query.split(' '), digits=(query.match(/\d+/g)||[]).join('|');
+                const cyrillic=/[а-яёіїєґ]/u.test(query);
+                const names=cyrillic?entry.names:[...entry.names,...(entry.latinNames||[])];
+                for(const name of names){
+                    if(cyrillic!==/[а-яёіїєґ]/u.test(name))continue;
+                    const words=name.split(' ');
+                    const candidates=parts.length===1?[name,...words]:[name,words.slice(0,parts.length).join(' ')];
+                    for(const candidate of candidates){
+                        if(Math.abs(candidate.length-query.length)>limit||(candidate.match(/\d+/g)||[]).join('|')!==digits)continue;
+                        const distance=komiCatalogEditDistance(query,candidate,limit);
+                        if(distance<=limit)score=Math.max(score,48-distance*4-(candidate===name?0:3));
+                    }
+                }
+            }
+            return score;
+        }
+        function komiCatalogSearchScore(entry, queries, allowFuzzy=true) {
             if (!entry) return 0;
             let score = 0;
             for (const query of queries) {
                 const tokens = query.split(' ');
-                for (const name of entry.names) {
-                    if (name === query) score = Math.max(score,100);
-                    else if (name.startsWith(query+' ')) score = Math.max(score,90);
-                    else if (name.startsWith(query)) score = Math.max(score,80);
-                    else if (name.includes(query)) score = Math.max(score,65);
-                    else if (tokens.length > 1 && tokens.every(token=>name.includes(token))) score = Math.max(score,50);
+                for (const name of entry.names)score=Math.max(score,komiCatalogDirectTitleScore(name,query,tokens));
+                for (const name of entry.latinNames||[]) {
+                    const direct=komiCatalogDirectTitleScore(name,query,tokens);
+                    if(direct)score=Math.max(score,direct-2);
                 }
                 if (entry.genres.some(genre=>genre.includes(query))) score = Math.max(score,20);
             }
-            return score;
+            return allowFuzzy&&score<50?Math.max(score,komiCatalogFuzzyScore(entry,queries)):score;
         }
         function komiCatalogSearchTerms(value) {
-            return [...new Set(komiSearchVariants(value).map(komiNormalizeCatalogSearch).filter(Boolean))];
+            return [...new Set(komiSearchVariants(String(value||'').slice(0,120)).map(komiNormalizeCatalogSearch).filter(Boolean))];
+        }
+        let komiCatalogScoreCache=null;
+        function komiCatalogSearchScores(queries){
+            const index=komiGetCatalogSearchIndex(),key=queries.join('\u0000');
+            if(komiCatalogScoreCache?.index===index&&komiCatalogScoreCache.key===key)return komiCatalogScoreCache.scores;
+            const scores=new Map();
+            let strong=0,exact=false;
+            for(const [anime,entry] of index){
+                const score=komiCatalogSearchScore(entry,queries,false);
+                if(score)scores.set(anime,score);
+                if(score>=50)strong++;
+                if(score>=98)exact=true;
+            }
+            // Limit approximate matches and skip fuzzy work for common or exact queries.
+            if(!exact&&strong<12&&queries.some(q=>q.length>=4&&q.length<=80)){
+                const fuzzy=[];
+                for(const [anime,entry] of index){
+                    if((scores.get(anime)||0)>=50)continue;
+                    const score=komiCatalogFuzzyScore(entry,queries);
+                    if(score)fuzzy.push({anime,score});
+                }
+                fuzzy.sort((a,b)=>b.score-a.score||(Number(b.anime.shikiRating)||0)-(Number(a.anime.shikiRating)||0));
+                for(const {anime,score} of fuzzy.slice(0,80))scores.set(anime,Math.max(scores.get(anime)||0,score));
+            }
+            komiCatalogScoreCache={index,key,scores};
+            return scores;
         }
         // Returning to an unchanged, unfiltered catalog should never re-sort
         // thousands of titles. Private watched-status filters bypass this cache.
@@ -1234,8 +1348,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 return sorted;
             }
             const queries=komiCatalogSearchTerms(catalogSearchQuery);
-            const searchIndex=queries.length ? komiGetCatalogSearchIndex() : null;
-            const searchScores=new Map();
+            const searchScores=queries.length ? komiCatalogSearchScores(queries) : null;
             const top100 = catalogCategory === 'top100' ? new Set([...animeList].filter(a=>Number(a.shikiRating)>0)
                 .sort((a,b)=>Number(b.shikiRating)-Number(a.shikiRating)||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id))
                 .slice(0,100).map(a=>String(a.id))) : null;
@@ -1251,9 +1364,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if(catalogFilterYear!=='Все'&&komiAnimeYear(a)!==String(catalogFilterYear))return false;
                 if(catalogFilterType!=='Все'&&komiCatalogType(a)!==catalogFilterType)return false;
                 if(queries.length){
-                    const score=komiCatalogSearchScore(searchIndex.get(a),queries);
-                    if(!score)return false;
-                    searchScores.set(a,score);
+                    if(!searchScores.has(a))return false;
                 }
                 return true;
             });
@@ -3722,6 +3833,8 @@ async function komiLoadCatalogPages(attempt = 0) {
             const poster = document.createElement('img');
             poster.src = komiSafeUrl(anime.poster) || '/anime-artwork.svg';
             poster.alt = '';
+            poster.loading = 'lazy';
+            poster.decoding = 'async';
             poster.style.cssText = compact
                 ? 'width:26px;height:36px;object-fit:cover;border-radius:6px;background:#222'
                 : 'width:38px;height:53px;object-fit:cover;border-radius:8px;background:#222';
@@ -3815,7 +3928,15 @@ async function komiLoadCatalogPages(attempt = 0) {
             const next = event.key === 'ArrowDown' ? Math.min(results.length - 1,here + 1)
                 : inInput ? results.length - 1 : here - 1;
             event.preventDefault();
-            (next < 0 ? input : results[next]).focus();
+            const target=next<0?input:results[next];
+            target.focus({preventScroll:true});
+            if(next>=0){
+                const item=target.getBoundingClientRect(),panel=dropdown.getBoundingClientRect();
+                const tabs=dropdown.querySelector('.komi-search-mode-tabs');
+                const top=Math.max(panel.top,tabs?.getBoundingClientRect().bottom||panel.top)+4;
+                if(item.top<top)dropdown.scrollTop-=top-item.top;
+                else if(item.bottom>panel.bottom-4)dropdown.scrollTop+=item.bottom-panel.bottom+4;
+            }
         }
         document.querySelector('#searchInput')?.closest('.search-container')?.addEventListener('keydown',handleKomiHeaderSearchKeys);
 
@@ -3836,10 +3957,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                 dd.classList.remove('active');
                 return;
             }
-            const searchIndex = komiGetCatalogSearchIndex();
-            const matches = animeList.map(anime=>({anime,score:komiCatalogSearchScore(searchIndex.get(anime),queries)}))
-                .filter(item=>item.score>0).sort((a,b)=>b.score-a.score).map(item=>item.anime);
-            const results = matches.slice(0,8);
+            const scores = komiCatalogSearchScores(queries);
+            const matches = [...scores.entries()].sort((a,b)=>b[1]-a[1]||
+                (Number(b[0].shikiRating)||0)-(Number(a[0].shikiRating)||0)).map(([anime])=>anime);
+            const results = matches.slice(0,24);
             if (results.length) {
                 dd.replaceChildren(...results.map(a=>komiSearchSuggestion(a)));
             } else {
@@ -3856,6 +3977,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             dd.append(viewAll);
             window.KomiHybridSearch?.decorate(dd);
             dd.classList.add('active');
+            dd.scrollTop=0;
         }
 
         function selectAnimeFromSearch(id) {

@@ -45,3 +45,27 @@ test('search index caches metadata and invalidates for new data and revisions',(
  f.replace(fresh);
  assert.equal(f.index().get(fresh[0]).names[0],'наруто');
 });
+
+test('localized aliases, romanization, bounded typos and preserved season numbers',()=>{
+ const fixture=[
+   {id:'16498',title:'Атака титанов',originalTitle:'Shingeki no Kyojin',shikiRating:9},
+   {id:'20',title:'Наруто',shikiRating:8},
+   {id:'21',title:'Наруто: Ураганные хроники',shikiRating:8.5},
+   {id:'40028',title:'Магическая битва',shikiRating:8.8},
+   {id:'5',title:'Ковбой Бибоп',japanese:'カウボーイビバップ',synonyms:['Cowboy Bebop']},
+   {id:'6',title:'Тест сезона 2'},{id:'7',title:'Тест сезона 3'}
+ ];
+ const f=new Function('animeList','komiCatalogRevision',app.slice(variantsStart,variantsEnd)+app.slice(start,end)+'return {scores:komiCatalogSearchScores,terms:komiCatalogSearchTerms,distance:komiCatalogEditDistance};')(fixture,1);
+ const ranked=q=>[...f.scores(f.terms(q))].sort((a,b)=>b[1]-a[1]).map(([a])=>a.id);
+ for(const q of ['атака титанов','Атака титанів','Attack on Titan','Shingeki no Kyojin','aot','ataka titanov','атка титанов','атака титанво','Atack on Titan'])assert.equal(ranked(q)[0],'16498',q);
+ for(const q of ['наруто','naruto','нартуо','нарут','Nrauto','yfhenj'])assert.equal(ranked(q)[0],'20',q);
+ for(const q of ['магічна битва','Jujutsu Kaisen','jjk'])assert.equal(ranked(q)[0],'40028',q);
+ assert.equal(ranked('カウボーイビバップ')[0],'5');
+ assert.equal(ranked('Cowboy Bebop')[0],'5');
+ assert.equal(ranked('тест сезна 2')[0],'6');
+ assert.ok(!ranked('тест сезна 2').includes('7'));
+ assert.equal(f.distance('nrauto','naruto',1),1);
+ assert.equal(f.distance('narutooo','naruto',2),2);
+ assert.ok(!ranked('zx').length);
+ assert.equal(f.scores(f.terms('атака титанов')),f.scores(f.terms('атака титанов')));
+});

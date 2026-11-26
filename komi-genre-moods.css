@@ -695,3 +695,24 @@ body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-sear
 @media (forced-colors: active) {
   body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search:focus-within { outline: 2px solid Highlight !important; outline-offset: 2px; }
 }
+
+/* Header suggestions scroll independently, including on touch devices. */
+body.komi-media-hub .komi-hub-overlay #searchDropdown.active {
+  max-height: min(62vh,520px) !important; max-height: min(62dvh,520px) !important;
+  overflow-y: auto !important; overflow-x: hidden !important;
+  overscroll-behavior-y: contain; touch-action: pan-y;
+  -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+  scrollbar-color: #626262 #161616; scroll-padding-block: 68px 8px;
+  pointer-events: auto;
+}
+body.komi-media-hub .komi-hub-overlay #searchDropdown .komi-search-mode-tabs {
+  position: sticky; top: 0; z-index: 2; background: #161616; margin-bottom: 8px;
+}
+body.komi-media-hub .komi-hub-overlay #searchDropdown :is(.search-dropdown-item,.komi-search-user-result,.komi-search-view-all):focus-visible { outline-offset: -2px !important; }
+body.komi-media-hub .komi-hub-overlay #searchDropdown::-webkit-scrollbar { width: 7px; }
+body.komi-media-hub .komi-hub-overlay #searchDropdown::-webkit-scrollbar-thumb { background: #626262; border-radius: 9px; }
+@media (max-width: 620px) {
+  body.komi-media-hub .komi-hub-overlay #searchDropdown.active {
+    max-height: min(60vh,450px) !important; max-height: min(60dvh,450px) !important;
+  }
+}
