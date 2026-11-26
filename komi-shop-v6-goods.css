@@ -396,3 +396,65 @@
 @media(prefers-reduced-motion:reduce){
  [data-komi-title-id]::after{animation:none!important;transform:none!important;opacity:.35!important;background-position:75% 54%,92% 70%,0 0!important}
 }
+
+/* Character studies: original signs, restrained highlights, no franchise artwork. */
+[data-komi-title-id="title_gojo_infinity"]{
+ --foil-paper:#251b52;--foil-ink:#131326;--foil-edge:#b09af3;--foil-type:#f0e6ff;--foil-glint:#d4bdff;
+ --foil-emblem:url('/assets/shop-title-cast/gojo.svg');--foil-speed:6.7s;
+}
+[data-komi-title-id="title_levi_captain"]{
+ --foil-paper:#26382e;--foil-ink:#131e18;--foil-edge:#99b7a2;--foil-type:#e6f5eb;--foil-glint:#d2e9db;
+ --foil-emblem:url('/assets/shop-title-cast/levi.svg');--foil-speed:6.4s;
+}
+[data-komi-title-id="title_frieren_bloom"]{
+ --foil-paper:#1a433b;--foil-ink:#102620;--foil-edge:#8adbbe;--foil-type:#e2fbef;--foil-glint:#b3eed2;
+ --foil-emblem:url('/assets/shop-title-cast/frieren.svg');--foil-speed:8s;
+}
+[data-komi-title-id="title_luffy_dawn"]{
+ --foil-paper:#493126;--foil-ink:#251b1c;--foil-edge:#ecad73;--foil-type:#fff2d4;--foil-glint:#ffc17b;
+ --foil-emblem:url('/assets/shop-title-cast/luffy.svg');--foil-speed:7.5s;
+}
+[data-komi-title-id="title_tanjiro_current"]{
+ --foil-paper:#1a4255;--foil-ink:#112431;--foil-edge:#88cbeb;--foil-type:#e6f8ff;--foil-glint:#b2ecff;
+ --foil-emblem:url('/assets/shop-title-cast/tanjiro.svg');--foil-speed:7.1s;
+}
+[data-komi-title-id="title_anya_signal"]{
+ --foil-paper:#553045;--foil-ink:#2c1727;--foil-edge:#ecadd0;--foil-type:#ffeaf7;--foil-glint:#f0b8e6;
+ --foil-emblem:url('/assets/shop-title-cast/anya.svg');--foil-speed:7s;
+}
+[data-komi-title-id]:is([data-komi-title-id="title_gojo_infinity"],[data-komi-title-id="title_cosmic"])::after{
+ background:radial-gradient(ellipse,#7aaaffb5,transparent 69%) no-repeat,radial-gradient(ellipse,#ff72a1a1,transparent 69%) no-repeat,radial-gradient(ellipse,#a46af4cc,transparent 70%) no-repeat;
+ background-size:35% 95%,35% 95%,45% 96%;animation-name:komi-cast-convergence;
+}
+@keyframes komi-cast-convergence{
+ 0%,17%{background-position:-40% center,140% center,50% 220%;opacity:.31}
+ 43%{background-position:46% center,54% center,50% 72%;opacity:.88}
+ 69%{background-position:70% center,30% center,50% 50%;opacity:.5}
+ 100%{background-position:123% center,-31% center,50% -120%;opacity:.25}
+}
+[data-komi-title-id]:is([data-komi-title-id="title_levi_captain"],[data-komi-title-id="title_pioneer"])::after{
+ background:linear-gradient(129deg,transparent 44%,#e4fff0b7 47%,#b4ebcf60 50%,transparent 54%) no-repeat,linear-gradient(54deg,transparent 43%,#e0f7ff99 46%,transparent 51%) no-repeat;
+ background-size:63% 100%,49% 100%;animation-name:komi-cast-crosscut;
+}
+@keyframes komi-cast-crosscut{0%,16%{background-position:-180% center,220% center;opacity:.22}45%{background-position:57% center,44% center;opacity:.82}75%,100%{background-position:275% center,-168% center;opacity:.18}}
+[data-komi-title-id]:is([data-komi-title-id="title_frieren_bloom"],[data-komi-title-id="title_gardenkeeper"])::after{
+ background:repeating-radial-gradient(ellipse at center,transparent 0 12%,#b5f8c170 16% 18%,transparent 21% 24%) no-repeat,radial-gradient(circle,#edffd3b0 1px,transparent 5px) no-repeat;
+ background-size:75% 210%,18px 18px;animation-name:komi-cast-bloom;
+}
+@keyframes komi-cast-bloom{0%,12%{background-position:17% center,84% 75%;transform:scale(.48);opacity:.24}48%{background-position:53% center,71% 35%;transform:scale(1.01);opacity:.80}100%{background-position:94% center,64% -85%;transform:scale(1.42);opacity:.10}}
+[data-komi-title-id]:is([data-komi-title-id="title_luffy_dawn"],[data-komi-title-id="title_explorer"])::after{
+ background:radial-gradient(circle at 50% 50%,#ffe5a2c0 15%,#ed916e8c 29%,transparent 56%) no-repeat,linear-gradient(90deg,transparent,#89cde661,transparent) no-repeat;
+ background-size:77% 220%,100% 2px;animation-name:komi-cast-sunrise;
+}
+@keyframes komi-cast-sunrise{0%,10%{background-position:50% -160%,0 88%;opacity:.23}48%{background-position:49% 58%,0 79%;opacity:.82}81%,100%{background-position:44% 104%,0 78%;opacity:.24}}
+[data-komi-title-id]:is([data-komi-title-id="title_tanjiro_current"],[data-komi-title-id="title_ongoing"])::after{
+ background:radial-gradient(ellipse at 50% 90%,transparent 34%,#70c4ffc9 47%,#b4f0fdb3 51%,transparent 62%) no-repeat,radial-gradient(ellipse at 50% 90%,transparent 42%,#79dff9a1 48%,transparent 61%) no-repeat;
+ background-size:89% 135%,70% 120%;animation-name:komi-cast-wave;
+}
+@keyframes komi-cast-wave{0%,12%{background-position:-530% 25%,-190% 11%;opacity:.26}44%{background-position:44% 18%,25% 9%;opacity:.89}72%,100%{background-position:550% 2%,319% 8%;opacity:.16}}
+[data-komi-title-id]:is([data-komi-title-id="title_anya_signal"],[data-komi-title-id="title_collector"])::after{
+ background:repeating-radial-gradient(circle,transparent 0 14%,#f4afd07a 17% 18%,transparent 20% 26%) no-repeat,radial-gradient(circle,#ffe7baa8 0 2px,transparent 5px) no-repeat;
+ background-size:62px 62px,15px 15px;animation-name:komi-cast-thought;
+}
+@keyframes komi-cast-thought{0%,16%{background-position:17% 50%,19% 50%;transform:scale(.74);opacity:.28}45%{background-position:54% 50%,68% 36%;transform:scale(1.18);opacity:.83}78%,100%{background-position:87% 50%,93% 23%;transform:scale(1.43);opacity:.13}}
+/* Existing reduced-motion and forced-colors rules continue to override these effects. */

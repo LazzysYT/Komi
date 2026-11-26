@@ -60,7 +60,7 @@ function currentItems(ctx){
   (state.view==='owned'?owned.has(p.id):onSale(p))&&
   (state.view==='owned'||!state.hideOwned||!owned.has(p.id))&&
   (!state.affordableOnly||(!!ctx.owner&&!!ctx.store&&(owned.has(p.id)||Number(p.cost)<=Number(ctx.store.balance))))&&
-  (!query||normalized([p.label,p.title,p.description,categoryName(p.type)].join(' ')).includes(query)));
+  (!query||normalized([p.label,p.title,p.description,p.character,p.anime,categoryName(p.type)].join(' ')).includes(query)));
  if(state.sort==='price-up')return items.sort((a,b)=>a.cost-b.cost||a.label.localeCompare(b.label,'ru'));
  if(state.sort==='price-down')return items.sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru'));
  if(state.sort==='rarity')return items.sort((a,b)=>(rarityOrder[a.rarity]??4)-(rarityOrder[b.rarity]??4)||a.cost-b.cost);
@@ -195,14 +195,15 @@ function card(p,ctx,avatar,name){
  '<button type="button" class="komi-coin-sample sv3-item-scene sv5-preview-button" data-v3-try="'+esc(p.id)+'" aria-pressed="'+String(chosen)+'" aria-label="Примерить '+esc(p.label)+'"'+(state.busy||ctx.busy?' disabled':'')+'>'+cardArtwork(p,avatar,name)+
  '<span class="sv7-try-label">'+icon(chosen?'check':'eye',14)+' '+(chosen?'В примерочной':'Примерить')+'</span></button>'+
  '<div class="sv3-item-copy"><h3>'+esc(p.label)+'</h3><p class="sv7-item-kind">'+esc(context)+'</p>'+
+ (p.character&&p.anime?'<p class="sv13-title-origin">'+esc(p.character)+' <span>· '+esc(p.anime)+'</span></p>':'')+
  '<p class="sv7-item-description">'+esc(p.description||descriptionFor(p.type))+'</p><p class="sv3-unit-price">'+icon('coins',16)+' <strong>'+fmt(p.cost)+'</strong> <span>AniCoin</span></p></div>'+
  '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+(owned?' is-owned-action':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(action)+'"'+(disabled?' disabled':'')+'>'+esc(label)+'</button></div></article>';
 }
 function descriptionFor(type){return {frame:'Обрамление твоей аватарки.',banner:'Фон шапки твоего профиля.',name:'Оформление имени в профиле.',title:'Небольшая подпись под именем.',shape:'Новый силуэт твоей аватарки.',overlay:'Атмосфера поверх обложки.',plate:'Оформление твоих комментариев.',icon:'Значок рядом с именем.',xp:'Оформление полоски опыта.',mascot:'Компаньон в твоём профиле.',showcase:'Оформление любимой тройки аниме.',card:'Стиль карточки профиля.',reaction:'Реакции для совместного просмотра.'}[type]||'Предмет для твоего профиля.';}
 function titleGallery(busy){
- const picks=['title_crimson_hunter','title_moon_ronin','title_yokai_whisper'].map(find).filter(onSale);
+ const picks=['title_gojo_infinity','title_tanjiro_current','title_frieren_bloom'].map(find).filter(onSale);
  if(!picks.length)return '';
- return '<section class="sv12-gallery" aria-label="Три титула для примерки"><div class="sv12-gallery-copy"><p>KOMI / АНИМЕ-ТИТУЛЫ</p><h2>Выбери свой знак</h2><span>От алой капли до холодного следа клинка. Нажми на титул, чтобы увидеть эффект в профиле.</span></div>'+
+ return '<section class="sv12-gallery" aria-label="Три титула для примерки"><div class="sv12-gallery-copy"><p>KOMI / АНИМЕ-ТИТУЛЫ</p><h2>Выбери свой знак</h2><span>Фанатские титулы по мотивам любимых персонажей. Нажми на знак, чтобы увидеть эффект в профиле.</span></div>'+
  '<div class="sv12-gallery-marks">'+picks.map(p=>'<button type="button" data-v3-try="'+esc(p.id)+'" aria-pressed="'+String(state.trial.title===p.id)+'" aria-label="Примерить '+esc(foilTitle(p))+'"'+(busy?' disabled':'')+'>'+visual(p,'','')+'</button>').join('')+'</div></section>';
 }
 function layout(ctx){
