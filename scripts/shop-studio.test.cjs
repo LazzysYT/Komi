@@ -348,11 +348,13 @@ test('removing the last trial and reset never send focus to disabled or hidden c
    f.window.KomiShopV3.tryItem('frame_moon');
    await f.click('data-v3-remove','frame');
    assert.deepEqual(f.selected,[]);
-   assert.equal(f.focusHistory.at(-1),narrow?'#shop [data-v3-sheet]':'#shop .sv3-fitting-head h2');
+   assert.equal(f.focusHistory.at(-1),narrow?'#shop [data-v7-search]':'#shop .sv3-fitting-head h2');
+   assert.match(f.html,/data-fitting-active="false"/);
    assert.match(f.html,/data-v3-checkout hidden/);
    f.window.KomiShopV3.tryItem('frame_moon');
    await f.click('data-v3-reset');
-   assert.equal(f.focusHistory.at(-1),'#shop [data-v7-preview="profile"]');
+   assert.equal(f.focusHistory.at(-1),narrow?'#shop [data-v7-search]':'#shop [data-v7-preview="profile"]');
+   assert.match(f.html,/data-fitting-active="false"/);
    assert.equal(f.document.activeElement.hidden,false);
    assert.equal(f.document.activeElement.disabled,false);
  }
@@ -573,7 +575,7 @@ test('direct mobile action exposes operation errors and retry without requiring 
  assert.match(f.html,new RegExp('data-shop-item-action="'+id+'" data-shop-operation="equip">Применить купленный предмет'));
 });
 
-test('cancelling a direct purchase restores the card on desktop and the visible fitting toggle on mobile',async()=>{
+test('cancelling a direct purchase restores the card when the fitting room is empty',async()=>{
  for(const narrow of [false,true]){
  const f=fixture({narrow,ctx:{owner:'uid-a',store:{balance:100,owned:[]}}});
  await f.enablePricing();
@@ -600,9 +602,9 @@ test('cancelling a direct purchase restores the card on desktop and the visible 
  f.dialogs[0].cancel();
  await pending;
  assert.equal(f.dialogs.length,0);
- assert.equal(f.focusHistory.at(-1),narrow?'#shop [data-v3-sheet]':selector);
+ assert.equal(f.focusHistory.at(-1),selector);
  assert.equal(f.document.activeElement.isConnected,true);
- if(narrow)assert.match(f.html,/aria-controls="sv7FittingBody" aria-expanded="true"/);
+ if(narrow){assert.match(f.html,/aria-controls="sv7FittingBody" aria-expanded="false"/);assert.match(f.html,/data-fitting-active="false"/);}
  }
 });
 

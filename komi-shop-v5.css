@@ -392,3 +392,10 @@ body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-co
  #shop.komi-shop-studio .sv7-starter-action button{min-height:30px;padding:5px 9px;font-size:11px}
  #shop.komi-shop-studio .sv7-preview-tabs button{padding-inline:5px;font-size:11px}
 }
+
+/* Use the existing collections row on desktop rather than displacing the product grid. */
+@media(min-width:981px){
+ #shop.komi-shop-studio .sv7-shop-discovery.has-starter:not(:has(.sv7-collections[open])){display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);align-items:center;gap:16px;margin-bottom:12px}
+ #shop.komi-shop-studio .sv7-shop-discovery.has-starter:not(:has(.sv7-collections[open])) > :is(.sv7-starter,.sv7-collections){margin-bottom:0}
+ #shop.komi-shop-studio .sv7-shop-discovery.has-starter:not(:has(.sv7-collections[open])) .sv7-starter{padding-block:6px}
+}

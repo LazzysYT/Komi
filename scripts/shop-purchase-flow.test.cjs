@@ -106,7 +106,7 @@ test('direct purchase restores a visible fitting target when hide-owned removes 
    x.ctx.document.querySelector=selector=>{
      if(selector==='#shop [data-shop-item-action="frame_moon"]')return cardVisible?card:null;
      if(selector==='#shop .sv3-fitting-head h2')return heading;
-     if(selector==='#shop [data-v3-sheet]')return sheet;
+     if(selector==='#shop[data-fitting-active="true"] [data-v3-sheet]')return sheet;
      return null;
    };
    x.ctx.renderAniCoinShop=()=>{
