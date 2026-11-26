@@ -53,15 +53,13 @@ function historyLoader({ready=false,replies=[],queue=Promise.resolve()}={}){
 const progressRows=id=>({data:[{anime_id:id,season:1,episode_index:0,position_seconds:45,duration_seconds:100,updated_at:'2026-11-25T00:00:00Z'}],error:null});
 const ownerError=()=>({owner:'owner-id',username:'owner'});
 
-test('primary profile navigation stays short and secondary destinations remain discoverable',()=>{
+test('all profile destinations remain visible and private owner tabs remain private',()=>{
   const {ui}=adapter();
   const owner=ui.navigation('overview',5,12,3,true,true);
-  const [primary,secondary]=owner.split('<details class="profile-more">');
-  assert.deepEqual(Array.from(primary.matchAll(/data-profile-tab="([^"]+)"/g),match=>match[1]),['overview','anime','history','friends']);
-  assert.deepEqual(Array.from(secondary.matchAll(/data-profile-tab="([^"]+)"/g),match=>match[1]),['activity','achievements','comments']);
-  assert.match(secondary,/<summary[^>]*>[\s\S]*Ещё/);
+  assert.deepEqual(Array.from(owner.matchAll(/data-profile-tab="([^"]+)"/g),match=>match[1]),['overview','anime','history','friends','achievements','activity','comments']);
+  assert.doesNotMatch(owner,/profile-more/);
   const active=ui.navigation('achievements',5,12,3,true,true);
-  assert.match(active,/<summary class="active"[^>]*>[\s\S]*<span>Достижения<\/span>/);
+  assert.match(active,/<button[^>]*class="komi-profile-tab active"[^>]*data-profile-tab="achievements"[^>]*aria-pressed="true"[^>]*>/);
   const publicProfile=ui.navigation('overview',null,12,3,false,false);
   assert.doesNotMatch(publicProfile,/data-profile-tab="(?:history|activity)"/);
   assert.match(publicProfile,/data-profile-tab="friends"/);

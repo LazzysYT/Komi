@@ -34,35 +34,92 @@
       ['overview','Обзор',null],
       ['anime','Списки',listCount],
       ...(isMe?[['history','История',null]]:[]),
-      ['friends','Друзья',friendCount]
-    ];
-    var secondary=[
-      ...(canSeeActivity?[['activity','Активность',null]]:[]),
+      ['friends','Друзья',friendCount],
       ['achievements','Достижения',awardCount],
+      ...(canSeeActivity?[['activity','Активность',null]]:[]),
       ['comments','Стена',null]
     ];
     var renderButton=([id,name,count])=>
       '<button type="button" class="komi-profile-tab'+(id===active?' active':'')+'" data-profile-tab="'+id+'" aria-pressed="'+(id===active)+'" aria-controls="komiProfilePanel">'+
       '<span>'+name+'</span>'+(count===null?'':'<small class="profile-tab-counter">'+format(count)+'</small>')+'</button>';
-    var selectedMore=secondary.find(([id])=>id===active);
-    return '<nav class="profile-navigation-shell" aria-label="Разделы профиля">'+
-      '<div class="komi-profile-tabs profile-premium-tabs" data-profile-active="'+escapeText(active)+'">'+pages.map(renderButton).join('')+'</div>'+
-      '<details class="profile-more"><summary'+(selectedMore?' class="active"':'')+' aria-label="Дополнительные разделы профиля'+(selectedMore?': '+selectedMore[1]:'')+'">'+
-      '<span>'+(selectedMore?selectedMore[1]:'Ещё')+'</span><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></summary>'+
-      '<div class="profile-more-menu">'+secondary.map(renderButton).join('')+'</div></details></nav>';
+    return '<nav class="profile-navigation-shell" aria-label="Разделы профиля"><h3 class="profile-navigation-title">Разделы профиля</h3>'+
+      '<div class="komi-profile-tabs profile-premium-tabs" data-profile-active="'+escapeText(active)+'">'+pages.map(renderButton).join('')+'</div></nav>';
+  }
+  function viewingTime(seconds){
+    if(!Number.isSafeInteger(seconds)||seconds<0)return null;
+    if(seconds===0)return '0 мин';
+    if(seconds<60)return '< 1 мин';
+    var mins=Math.floor(seconds/60),h=Math.floor(mins/60),m=mins%60;
+    return h?format(h)+' ч'+(m?' '+m+' мин':''):m+' мин';
   }
   function summary(ctx){
-    var xp=Math.min(499,number(ctx.xp)),level=number(ctx.level),multiplier=Math.max(1,number(ctx.multiplier));
+    var xp=Math.min(499,number(ctx.xp)),level=Math.max(1,number(ctx.level)),multiplier=Math.max(1,number(ctx.multiplier));
+    var initial=ctx.canReadMetrics?'Загрузка…':'Недоступно';
+    var reason=ctx.canReadMetrics?'Загружаем подтверждённую статистику':'Нет доступной статистики для этого профиля';
+    if(ctx.preview)return '<section class="profile-widget profile-preview-summary" aria-label="Статистика профиля">Личная статистика доступна только владельцу.</section>';
     return '<section class="profile-summary" aria-label="Статистика профиля">'+
       '<div class="komi-level-progress profile-xp-capsule" aria-label="Уровень '+level+', '+xp+' из 500 XP, множитель '+multiplier+'x">'+
       '<span class="profile-xp-level">Уровень <strong>'+format(level)+'</strong></span>'+
-      '<span class="profile-xp-bar"><span>'+format(xp)+' / 500 XP</span><span class="profile-xp-progress-track" style="--komi-xp-percent:'+(xp/5).toFixed(2)+'%"><progress max="500" value="'+xp+'">'+xp+' из 500</progress></span></span>'+
+      '<span class="profile-xp-bar"><span>'+format(xp)+' / 500 XP</span><span class="profile-xp-progress-track" style="--komi-xp-percent:'+(xp/5).toFixed(2)+'%"><progress max="500" value="'+xp+'">'+xp+' из 500</progress></span><small class="profile-xp-remaining">До уровня '+format(level+1)+': '+format(500-xp)+' XP</small></span>'+
       '<span class="profile-xp-multiplier'+(multiplier>1?' is-premium':'')+'">×'+format(multiplier)+'</span></div>'+
       '<button type="button" class="profile-summary-item" data-profile-jump="anime"><strong>'+format(ctx.titleCount)+'</strong><span>Тайтлов в списках</span></button>'+
-      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="episodes" title="Пока нет проверенных данных">—</strong><span>Серий посмотрено</span></div>'+
-      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="hours" title="Пока нет проверенных данных">—</strong><span>Часов просмотра</span></div>'+
+      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="episodes" aria-live="polite" title="'+reason+'">'+initial+'</strong><span>Серий посмотрено</span></div>'+
+      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="hours" aria-live="polite" title="'+reason+'">'+initial+'</strong><span>Время просмотра</span>'+(ctx.canReadMetrics?'<small class="profile-time-note">По учёту AniCoin</small><button type="button" class="profile-stat-retry" data-profile-stat-retry hidden>Повторить</button>':'')+'</div>'+
       '<button type="button" class="profile-summary-item" data-profile-jump="friends"><strong data-profile-friends-total>'+
       (ctx.friendCount==null?'—':format(ctx.friendCount))+'</strong><span>Друзей</span></button></section>';
+  }
+  // Read only the authenticated owner's server-marked episodes and active time.
+  // The AniCoin ledger is not a reconstruction of playback before it existed.
+  var viewingStats={owner:null,at:0,loading:false,episodes:null,seconds:null,failed:false};
+  function profileStatsOwner(profile){
+    if(!profile||profile.dataset.profileOwner!=='true'||profile.dataset.profilePreview==='true'||typeof currentUser==='undefined')return null;
+    return currentUser?.username===profile.dataset.profileUser?currentUser.authUserId||null:null;
+  }
+  function paintViewingStats(profile,state){
+    if(!state.owner||profileStatsOwner(profile)!==state.owner)return;
+    var values={episodes:state.episodes,hours:state.seconds};
+    for(var key of Object.keys(values)){
+      var el=profile.querySelector('[data-profile-field="'+key+'"]'),value=values[key];
+      if(!el)continue;
+      var known=Number.isSafeInteger(value)&&value>=0;
+      el.classList.toggle('is-missing',!known);
+      el.removeAttribute('data-profile-count');
+      el.textContent=known?(key==='hours'?viewingTime(value):format(value)):state.loading?'Загрузка…':'Недоступно';
+      el.title=known?(key==='hours'?'Учтённое активное время по журналу AniCoin; просмотры до появления журнала не восстановлены.':'Количество серий, отмеченных просмотренными на сервере.')+(state.failed?' Последние подтверждённые данные.':''):state.loading?'Загрузка статистики':'Не удалось получить проверенные данные';
+    }
+    var retry=profile.querySelector('[data-profile-stat-retry]');
+    if(retry)retry.hidden=state.loading||!state.failed;
+  }
+  async function readViewingStats(profile,force=false){
+    var uid=profileStatsOwner(profile);
+    if(!uid||typeof _supabase==='undefined'||!_supabase)return;
+    if(viewingStats.owner!==uid)viewingStats={owner:uid,at:0,loading:false,episodes:null,seconds:null,failed:false};
+    var state=viewingStats;
+    if(state.loading||(!force&&state.at&&Date.now()-state.at<45000)){paintViewingStats(profile,state);return;}
+    state.loading=true;state.failed=false;paintViewingStats(profile,state);
+    var abort=new AbortController(),timer=setTimeout(()=>abort.abort(),8000);
+    try{
+      var results=await Promise.allSettled([
+        _supabase.from('komi_watched_episodes').select('anime_id',{count:'exact',head:true}).eq('user_id',uid).abortSignal(abort.signal),
+        _supabase.from('komi_anicoin_ledger').select('id',{count:'exact',head:true}).eq('user_id',uid).eq('reason','watch').eq('delta',1).abortSignal(abort.signal),
+        _supabase.rpc('komi_anicoin',{p_action:'read'}).abortSignal(abort.signal)
+      ]);
+      if(viewingStats!==state||typeof currentUser==='undefined'||currentUser?.authUserId!==uid)return;
+      var countOf=result=>result.status==='fulfilled'&&!result.value.error&&Number.isSafeInteger(result.value.count)&&result.value.count>=0?result.value.count:null;
+      var episodes=countOf(results[0]), rewards=countOf(results[1]);
+      var remainder=results[2].status==='fulfilled'&&!results[2].value.error?results[2].value.data?.seconds:null;
+      var seconds=rewards!==null&&Number.isSafeInteger(remainder)&&remainder>=0&&remainder<1200&&Number.isSafeInteger(rewards*1200+remainder)?rewards*1200+remainder:null;
+      // Recheck the ledger after reading the remainder: a coin may have been earned mid-request.
+      var recheck=await _supabase.from('komi_anicoin_ledger').select('id',{count:'exact',head:true}).eq('user_id',uid).eq('reason','watch').eq('delta',1).abortSignal(abort.signal).then(value=>countOf({status:'fulfilled',value}),()=>null);
+      if(viewingStats!==state||currentUser?.authUserId!==uid)return;
+      if(episodes!==null)state.episodes=episodes;
+      if(seconds!==null&&recheck===rewards)state.seconds=seconds;
+      state.failed=episodes===null||seconds===null||recheck!==rewards;
+    }catch(error){state.failed=true;}
+    finally{
+      clearTimeout(timer);state.loading=false;state.at=Date.now();
+      if(viewingStats===state)paintViewingStats(document.getElementById('profile'),state);
+    }
   }
   function achievementWidget(username,isMe,full=false){
     var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,achievements:[],badges:[]};
@@ -211,6 +268,11 @@
       '<button type="button" class="profile-shop-link" data-profile-jump="activity">Задания и награды</button></section>';
   }
   function content(ctx){
+    if(ctx.preview){
+      if(ctx.section==='achievements')return '<section class="profile-widget">'+header('Достижения')+blank('Личные достижения недоступны в публичном просмотре.')+'</section>';
+      if(ctx.section==='overview')return '<div class="profile-preview-widgets">'+['Списки аниме','Любимые жанры','Топ избранного','Друзья','Достижения'].map(name=>'<section class="profile-widget">'+header(name)+blank('Личные данные недоступны в публичном просмотре.')+'</section>').join('')+'</div>';
+      return '';
+    }
     var fullCounts=statusNames.reduce((total,key)=>total+number(ctx.statsCounts[key]),0);
     var history=watchHistory(ctx);
     var historyFailure=ctx.isMe&&ctx.resumeFailed?'<div class="profile-history-error" role="status">'+
@@ -300,7 +362,7 @@
     if(!data||typeof data!=='object')return;
     metricOverrides.set(username,data);
     var profile=document.getElementById('profile');
-    if(!profile||profile.dataset.profileUser!==username)return;
+    if(!profile||profile.dataset.profileUser!==username||profile.dataset.profilePreview==='true')return;
     for(var key of ['episodes','hours','meanScore']){
       var element=profile.querySelector('[data-profile-field="'+key+'"]'),value=data[key];
       if(!element)continue;
@@ -314,7 +376,7 @@
   function refreshFriends(names) {
     var profile=document.getElementById('profile');
     if(!profile||!Array.isArray(names)||typeof currentUser==='undefined'||
-       profile.dataset.profileUser!==currentUser?.username)return;
+       profile.dataset.profileUser!==currentUser?.username||profile.dataset.profilePreview==='true')return;
     root.komiProfileFriendNames=names.slice();
     var widget=profile.querySelector('.profile-friends-widget');
     if(widget){
@@ -344,6 +406,7 @@
     if(appearances.has(profile.dataset.profileUser))appearance(profile.dataset.profileUser,appearances.get(profile.dataset.profileUser));
     if(metricOverrides.has(profile.dataset.profileUser))metrics(profile.dataset.profileUser,metricOverrides.get(profile.dataset.profileUser));
     syncWallet();
+    if(profileStatsOwner(profile))void readViewingStats(profile);
     var nav=profile.querySelector('.profile-premium-tabs');
     if(nav&&root.requestAnimationFrame){
       var current=nav.querySelector('.komi-profile-tab.active');
@@ -391,6 +454,8 @@
     if(!button)return;
     if(button.matches('[data-profile-guest-login]')){openAuthModal('login');return;}
     if(button.matches('[data-profile-history-retry]')){void retryKomiProfileHistory();return;}
+    if(button.matches('[data-profile-stat-retry]')){void readViewingStats(button.closest('#profile'),true);return;}
+    if(button.matches('[data-profile-preview-toggle]')){void toggleKomiProfilePreview();return;}
     if(button.matches('[data-profile-search-clear]')){
       var search=document.querySelector('#profile input[data-komi-oninput="updateProfileCollectionSearch(this)"]');
       if(search){search.value='';updateProfileCollectionSearch(search);}
@@ -455,7 +520,7 @@
     }
     var button=event.target?.closest?.('[data-profile-tab]');if(!button)return;
     var tabs=Array.from(button.parentElement.querySelectorAll('[data-profile-tab]')),idx=tabs.indexOf(button);
-    var next=event.key==='ArrowRight'?tabs[(idx+1)%tabs.length]:event.key==='ArrowLeft'?tabs[(idx+tabs.length-1)%tabs.length]:event.key==='Home'?tabs[0]:event.key==='End'?tabs[tabs.length-1]:null;
+    var next=(event.key==='ArrowRight'||event.key==='ArrowDown')?tabs[(idx+1)%tabs.length]:(event.key==='ArrowLeft'||event.key==='ArrowUp')?tabs[(idx+tabs.length-1)%tabs.length]:event.key==='Home'?tabs[0]:event.key==='End'?tabs[tabs.length-1]:null;
     if(next){event.preventDefault();next.focus();next.scrollIntoView?.({block:'nearest',inline:'nearest'})}
   });
   document.addEventListener('pointermove',event=>{
@@ -466,6 +531,6 @@
   document.addEventListener('pointerout',event=>{
     var tile=event.target?.closest?.('[data-profile-tilt]');if(tile&&!tile.contains(event.relatedTarget))tile.style.transform='';
   });
-  root.KomiProfileUI={guest,navigation,summary,content,appearance,metrics,syncWallet,refreshFriends,genreCounts,paintOverviewGenres};
+  root.KomiProfileUI={guest,navigation,summary,content,appearance,metrics,syncWallet,refreshFriends,genreCounts,paintOverviewGenres,viewingTime};
   root.KomiProfileUI.fullFriendRows=fullFriendRows;
 })(window);

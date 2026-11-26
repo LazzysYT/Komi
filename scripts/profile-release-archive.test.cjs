@@ -58,9 +58,9 @@ test('overview exposes truthful statistics, favorite preview, friends and achiev
   const html=ui.content({...base,section:'overview'});
   for(const phrase of ['Мои списки','Продолжить просмотр','Любимые жанры','Витрина достижений','Топ избранного','Друзья','Anime test'])
     assert.ok(html.includes(phrase),phrase);
-  const summary=ui.summary({level:1,xp:150,multiplier:1,titleCount:2,friendCount:1});
-  assert.match(summary,/data-profile-field="episodes"[^>]*>—/);
-  assert.match(summary,/data-profile-field="hours"[^>]*>—/);
+  const summary=ui.summary({level:1,xp:150,multiplier:1,titleCount:2,friendCount:1,canReadMetrics:true});
+  assert.match(summary,/data-profile-field="episodes"[^>]*>Загрузка…/);
+  assert.match(summary,/data-profile-field="hours"[^>]*>Загрузка…/);
   assert.match(html,/--profile-segment:#F1F1F1/);
 });
 

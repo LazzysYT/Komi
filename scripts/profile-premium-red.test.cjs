@@ -61,7 +61,7 @@ test('overview uses real saved data and the summary leaves unverified metrics un
    assert.ok(html.includes(phrase),phrase);
  assert.ok(html.includes('/api/poster?src='));
  const summary=ui.summary({level:1,xp:100,multiplier:1,titleCount:1,friendCount:1});
- for(const k of ['episodes','hours'])assert.match(summary,new RegExp('data-profile-field="'+k+'"[^>]*>—'));
+ for(const k of ['episodes','hours'])assert.match(summary,new RegExp('data-profile-field="'+k+'"[^>]*>Недоступно'));
  assert.doesNotMatch(summary,/data-profile-field="meanScore"/);
  assert.match(html,/data-profile-list="Просмотрено" aria-label="Просмотрено: 1 — открыть список"/);
  assert.match(html,/<span>Просмотрено<\/span><strong>1<\/strong><small>100%<\/small>/);
