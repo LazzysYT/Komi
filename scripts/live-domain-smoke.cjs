@@ -141,11 +141,11 @@ fs.mkdirSync(output,{recursive:true});
           assert.equal(await page.locator('#mainContainer .hero-slide.active .komi-hub-play').isVisible(),true,
             'The deployed hero must expose its watch action');
           await page.evaluate(()=>navigate('catalog'));
-          await page.waitForSelector('#komiCatalogGrid .anime-card',{timeout:30000});
-          initial.cardCount=await page.locator('#komiCatalogGrid .anime-card').count();
+          await page.waitForSelector('#komiCatalogGrid :is(.anime-card,.komi-catalog-card)',{timeout:30000});
+          initial.cardCount=await page.locator('#komiCatalogGrid :is(.anime-card,.komi-catalog-card)').count();
           initial.cardScope='catalog';
           assert.ok(initial.cardCount>0,'The deployed catalog must contain real anime cards');
-          assert.ok((await page.locator('#komiCatalogGrid .anime-card').first().innerText()).trim().length>0);
+          assert.ok((await page.locator('#komiCatalogGrid :is(.anime-card,.komi-catalog-card)').first().innerText()).trim().length>0);
           await page.evaluate(()=>navigate('home'));
           await page.waitForSelector('#mainContainer .hero-slide.active .komi-hub-title-text');
         }
@@ -340,7 +340,7 @@ fs.mkdirSync(output,{recursive:true});
         await page.waitForSelector('#anicoin-title',{timeout:15000});
         await page.evaluate(()=>{location.hash='#catalog'});
         await page.waitForFunction(()=>currentView==='catalog');
-        await page.waitForSelector('#komiCatalogGrid .anime-card',{timeout:30000});
+        await page.waitForSelector('#komiCatalogGrid :is(.anime-card,.komi-catalog-card)',{timeout:30000});
         const finish=await page.evaluate(()=>({overflow:document.documentElement.scrollWidth>innerWidth+2,route:location.hash}));
         assert.equal(finish.overflow,false,'Catalog must not overflow horizontally');
         assert.equal(finish.route,'#catalog');
