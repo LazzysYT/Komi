@@ -321,7 +321,7 @@ async function checkNotifications(page) {
    // Precise year, sort, category and advanced controls belong to that catalog.
    await page.evaluate(() => {
      animeList=[
-       {id:'101',title:'Сериал 2026',poster:'',genres:['Экшен'],year:'2026',type:'Сериал',shikiRating:8.4,episodeCount:2},
+       {id:'101',title:'Сериал 2026',originalTitle:'Series 2026',poster:'',genres:['Экшен'],year:'2026',type:'Сериал',shikiRating:8.4,episodeCount:2},
        {id:'102',title:'Фильм 2025',poster:'',genres:['Драма'],year:'2025',type:'Фильм',shikiRating:8.8,episodeCount:1}
      ];
      catalogInitialLoadComplete=true;komiHomeCatalogReady=true;
@@ -354,11 +354,47 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),2,
      'Clearing the genre must restore both catalog records');
 
+   // Test the real search, URL state, keyboard layout, and clearing without losing filters.
+   const catalogSearch=page.locator('#komiCatalogSearchInput');
+   const clearSearch=page.locator('#komiCatalogClearSearch');
+   await catalogSearch.fill('series');
+   await page.waitForFunction(()=>document.querySelectorAll('#komiCatalogGrid .komi-catalog-card').length===1);
+   assert.match(await page.locator('#komiCatalogGrid').textContent(),/Сериал 2026/);
+   assert.equal(new URL(page.url()).searchParams.get('q'),'series');
+   assert.equal(await page.locator('#komiCatalogSearchStatus').textContent(),'Найдено: 1');
+   await catalogSearch.fill('abkmv');
+   await page.waitForFunction(()=>document.querySelector('#komiCatalogGrid .komi-catalog-card')?.textContent.includes('Фильм 2025'));
+   await clearSearch.click();
+   assert.equal(await catalogSearch.inputValue(),'');
+   assert.equal(await clearSearch.isVisible(),false);
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),2);
+   assert.equal(new URL(page.url()).searchParams.has('q'),false);
+   assert.equal(await catalogSearch.evaluate(el=>document.activeElement===el),true);
+   if (width>=768) {
+     const menu=page.locator('.komi-side-nav.komi-icon-rail');
+     const item=page.locator('#sideCatalogBtn');
+     const label=item.locator('.komi-rail-tooltip');
+     await page.mouse.move(width-5,5);
+     assert.ok(Math.abs((await menu.boundingBox()).width-72)<=1,'Desktop navigation stays 72px wide');
+     await page.waitForFunction(()=>getComputedStyle(document.querySelector('#sideCatalogBtn .komi-rail-tooltip')).visibility==='hidden');
+     await item.hover();
+     await page.waitForFunction(()=>getComputedStyle(document.querySelector('#sideCatalogBtn .komi-rail-tooltip')).visibility==='visible');
+     assert.ok((await label.boundingBox()).x >= (await menu.boundingBox()).width-1,'Tooltip opens outside the rail');
+     await page.mouse.move(width-5,5);
+     await page.waitForFunction(()=>getComputedStyle(document.querySelector('#sideCatalogBtn .komi-rail-tooltip')).visibility==='hidden');
+   }
+
    await page.locator('#catalog .komi-tool-menu').nth(1).locator('summary').click();
    await page.locator('#catalog [data-komi-quick-year="2026"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogFilterYear==='2026');
    assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1);
    assert.equal(new URL(page.url()).searchParams.get('year'),'2026');
+   await catalogSearch.fill('Фильм—2025');
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),0);
+   await catalogSearch.press('Escape');
+   assert.equal(await catalogSearch.inputValue(),'');
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1);
+   assert.equal(new URL(page.url()).searchParams.get('year'),'2026','Clearing text must preserve the year filter');
 
    await page.locator('#catalog .komi-tool-menu').first().locator('summary').click();
    await page.locator('#catalog [data-komi-quick-sort="rating"]').click();
@@ -444,8 +480,8 @@ async function checkNotifications(page) {
        hasCommunity:!!document.querySelector('#sideFriendsBtn[aria-controls="komiFriendsDrawer"]')
      };
    });
-   assert.ok((width >= 1200 ? ['rgba(0, 0, 0, 0)'] : ['rgb(5, 5, 5)','rgb(20, 20, 23)']).includes(shell.logoBackground),
-     'Wide wordmark uses the rail surface; compact emblem keeps its dark tile');
+   assert.ok(['rgb(5, 5, 5)','rgb(20, 20, 23)'].includes(shell.logoBackground),
+     'The compact emblem retains its monochrome dark tile at every width');
    assert.equal(shell.logoInk,'rgb(255, 255, 255)','Media hub sidebar emblem has white K');
    assert.ok(shell.hasOverlay && shell.hasSearch && shell.hasCommunity,'New hub shell must expose search and community controls');
 

@@ -10,7 +10,7 @@ const css=fs.readFileSync(path.join(root,'komi-genre-moods.css'),'utf8');
 const home=fs.readFileSync(path.join(root,'home-discovery.js'),'utf8');
 const moods=fs.readFileSync(path.join(root,'komi-genre-moods.js'),'utf8');
 test('mobile four-column dock wins final cascade and preserves destinations',()=>{
-  assert.match(html,/komi-genre-moods\.css\?v=20261126-comfort/);
+  assert.match(html,/komi-genre-moods\.css\?v=20261126-icon-search/);
   assert.doesNotMatch(html,/komi-mobile-stable\.css/);
   assert.ok(css.includes('Final post-bundle layer'), 'The last stylesheet must contain stable mobile rules');
   assert.match(css,/grid-template-columns: repeat\(4, minmax\(0, 1fr\)\)/);

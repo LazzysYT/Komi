@@ -33,8 +33,8 @@ components:
 
 ## Comfort refinement, 26 November 2026
 
-This revision supersedes the earlier all-pill and icon-only guidance for discovery
-and catalogue. The brief is a comfortable monochrome anime library. References:
+This revision supersedes the earlier all-pill guidance for discovery
+and catalogue; the compact icon-only desktop navigation is retained. The brief is a comfortable monochrome anime library. References:
 Senku's image-led discovery, AnimeOn's explicit catalogue controls and Yanima's
 direct watch actions; do not copy their colour accents or upsells.
 
@@ -51,11 +51,11 @@ Plan comparison: another decorative catalogue banner would repeat the home hero
 and delay browsing. Choose the working-library composition with actual posters
 visible sooner and one compact scrolling row of genres. All copy is left aligned.
 
-    Wide (1200px+)                  Tablet / phone
-    KomiAnime | Search             Search / More
-    Home      | Title / tools      Catalogue title
-    Catalogue | Categories         Sort / year
-    Lists*    | Search             Categories / search
+    Desktop (768px+)               Phone
+    K icon    | Global search      Search / More
+    Home icon | Title / tools      Catalogue title / tools
+    Catalog   | Title search       Title search / feedback
+    Partners  | Categories         Categories
     Shop      | Genres             Genres / filter sheet
     Party     | Poster grid        Two-column poster grid
     Account   |                    Bottom navigation

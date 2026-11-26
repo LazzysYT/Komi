@@ -1173,6 +1173,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 komiCatalogSearchIndex.length === animeList.length) return komiCatalogSearchIndex.items;
             const items = new Map();
             for (const anime of animeList) {
+                if (!anime || typeof anime !== 'object') continue;
                 const names = [anime.title,anime.originalTitle,anime.english,anime.japanese,
                     ...(Array.isArray(anime.synonyms) ? anime.synonyms : [])]
                     .map(komiNormalizeCatalogSearch).filter(Boolean);
@@ -1916,7 +1917,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         </div>
                         <div class="komi-catalog-search">
                           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
-                          <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме" aria-label="Поиск аниме по названию" aria-describedby="komiCatalogSearchStatus" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false" maxlength="120">
+                          <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме" aria-label="Поиск аниме" aria-describedby="komiCatalogSearchStatus" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false" maxlength="120">
                           <button type="button" id="komiCatalogClearSearch" class="komi-catalog-search-clear" aria-label="Очистить поиск" ${catalogSearchQuery?'':'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button>
                         </div>
                         <div class="komi-catalog-search-feedback" id="komiCatalogSearchStatus" role="status" aria-live="polite">${catalogSearchQuery.trim()?'Найдено: '+filtered.length.toLocaleString('ru-RU'):'Русское или оригинальное название'}</div>

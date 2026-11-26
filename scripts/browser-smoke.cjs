@@ -41,8 +41,8 @@ function measureGenreLayout({ selector, withTools }) {
     const search = section.querySelector(':scope > .komi-catalog-search');
     const grid = moods.querySelector('.komi-moods-grid');
     const searchBox = search?.getBoundingClientRect();
-    const searchFirst = !!searchBox && headingBox.bottom <= pillsBox.top + 3 &&
-      pillsBox.bottom <= searchBox.top + 3 && searchBox.bottom <= moodsBox.top + 3;
+    const searchFirst = !!searchBox && headingBox.bottom <= searchBox.top + 3 &&
+      searchBox.bottom <= pillsBox.top + 3 && pillsBox.bottom <= moodsBox.top + 3;
     const compactTargets = boxes.every(box => box.height >= 44 && box.height <= 64 && box.width >= 44);
     const singleRow = boxes.every(box => Math.abs(box.top - boxes[0].top) <= 3);
     const scrollable = !!grid && getComputedStyle(grid).overflowX === 'auto' && grid.clientWidth <= contentWidth + 2;

@@ -133,6 +133,8 @@ sheet and inline advanced filters; the operating system owns popup geometry.
 komi-genre-moods.js keeps quick sort/year disclosures and genre selection. Catalogue
 genres follow search in the DOM; no CSS ordering changes keyboard traversal.
 On phones the duplicate inline advanced-filter action is hidden, while the same
-sheet trigger, fields and Apply/Reset actions remain available. Wide navigation
-reveals existing aria-hidden visual labels, retaining the buttons' accessible names
-and authenticated visibility. The player, purchases and persistence are unchanged.
+sheet trigger, fields and Apply/Reset actions remain available. Desktop navigation
+keeps a 72px icon rail; visual labels appear on hover and keyboard focus while
+accessible names and authenticated visibility are unchanged. Catalogue search
+uses the existing route state, prioritises exact title matches with the default
+sort, and clears text without resetting other filters. The player, purchases and persistence are unchanged.
