@@ -343,7 +343,7 @@ async function checkNotifications(page) {
    await actionMood.focus();
    await actionMood.press('Enter');
    await page.waitForFunction(()=>currentView==='catalog' && catalogFilterGenre==='Экшен');
-   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1,
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1,
      'Selecting a mood must filter using the existing catalog records');
    assert.equal(new URL(page.url()).searchParams.get('genre'),'Экшен',
      'Mood filter must persist in the catalog URL');
@@ -351,13 +351,13 @@ async function checkNotifications(page) {
      'Selected mood must show a clearable chip');
    await page.locator('.komi-catalog-selected-genre button').click();
    await page.waitForFunction(()=>catalogFilterGenre==='Все');
-   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),2,
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),2,
      'Clearing the genre must restore both catalog records');
 
    await page.locator('#catalog .komi-tool-menu').nth(1).locator('summary').click();
    await page.locator('#catalog [data-komi-quick-year="2026"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogFilterYear==='2026');
-   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1);
    assert.equal(new URL(page.url()).searchParams.get('year'),'2026');
 
    await page.locator('#catalog .komi-tool-menu').first().locator('summary').click();
@@ -365,23 +365,31 @@ async function checkNotifications(page) {
    await page.waitForFunction(()=>currentView==='catalog' && catalogSort==='rating');
    assert.equal(await page.evaluate(()=>catalogFilterYear),'2026',
      'Sorting must preserve the previously chosen year');
-   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1);
    assert.equal(new URL(page.url()).searchParams.get('sort'),'rating');
 
    await page.locator('#catalog [data-komi-category="movies"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogCategory==='movies');
-   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),0,
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),0,
      'Catalog category must combine with the chosen year rather than discard it');
    assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-empty').isVisible(),true);
    await page.locator('#catalog .komi-tool-menu').nth(1).locator('summary').click();
    await page.locator('#catalog [data-komi-quick-year="Все"]').click();
    await page.waitForFunction(()=>catalogFilterYear==='Все' && catalogCategory==='movies');
-   assert.equal(await page.locator('#komiCatalogGrid .anime-card').count(),1);
-   assert.match(await page.locator('#komiCatalogGrid .anime-card').textContent(),/Фильм 2025/);
+   assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1);
+   assert.match(await page.locator('#komiCatalogGrid .komi-catalog-card').textContent(),/Фильм 2025/);
 
-   await page.locator('#catalog [data-komi-more-filters="catalog"]').click();
-   assert.equal(await page.locator('#komiCatalogAdvanced').isVisible(),true,
-     'All filters must reveal the real catalog filter panel');
+   if(width <= 767) {
+     await page.locator('.komi-mobile-filter-trigger').click();
+     await page.locator('#komiMobileSheet .komi-mobile-sheet-panel').waitFor({state:'visible'});
+     assert.equal(await page.locator('#komiMobileSheet select').count(),4,
+       'Phone sheet must expose the four canonical filter dimensions');
+     await page.locator('.komi-mobile-sheet-apply').click();
+   } else {
+     await page.locator('#catalog [data-komi-more-filters="catalog"]').click();
+     assert.equal(await page.locator('#komiCatalogAdvanced').isVisible(),true,
+       'All filters must reveal the real catalog filter panel');
+   }
    assert.equal(await page.locator('#komiCatalogGenre, #komiCatalogYear, #komiCatalogType, #komiCatalogSort').count(),4,
      'Advanced filters must retain all original filtering dimensions');
    assert.equal(new URL(page.url()).pathname,'/catalog');
@@ -672,7 +680,7 @@ async function checkNotifications(page) {
    assert.equal(await page.evaluate(()=>currentView),viewBeforeQuickSearch,
      'Quick search must not remount catalog/hero while typing');
    await page.locator('#searchInput').press('Enter');
-   await page.waitForSelector('#komiCatalogGrid .anime-card');
+   await page.waitForSelector('#komiCatalogGrid .komi-catalog-card');
    await page.evaluate(()=>openAuthModal('register'));
    await page.evaluate(()=>switchAuthTab('login'));
    assert.equal(await page.locator('#loginFormContainer').isVisible(),true);

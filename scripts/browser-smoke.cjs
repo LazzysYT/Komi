@@ -37,6 +37,20 @@ function measureGenreLayout({ selector, withTools }) {
         new URL(card.href).searchParams.get('genre') === card.dataset.komiMoodGenre) &&
       !document.querySelector('.komi-home-storefront .komi-catalog-tools, #komiCatalogGrid');
   const horizontalOverflow = document.documentElement.scrollWidth > innerWidth + 2;
+  if (withTools) {
+    const search = section.querySelector(':scope > .komi-catalog-search');
+    const grid = moods.querySelector('.komi-moods-grid');
+    const searchBox = search?.getBoundingClientRect();
+    const searchFirst = !!searchBox && headingBox.bottom <= pillsBox.top + 3 &&
+      pillsBox.bottom <= searchBox.top + 3 && searchBox.bottom <= moodsBox.top + 3;
+    const compactTargets = boxes.every(box => box.height >= 44 && box.height <= 64 && box.width >= 44);
+    const singleRow = boxes.every(box => Math.abs(box.top - boxes[0].top) <= 3);
+    const scrollable = !!grid && getComputedStyle(grid).overflowX === 'auto' && grid.clientWidth <= contentWidth + 2;
+    const genreActions = cards.every(card => card.tagName === 'BUTTON' && card.dataset.komiMoodGenre);
+    return {ok:fullWidth && alignedEdges && searchFirst && compactTargets && singleRow && scrollable &&
+      genreActions && routeControls && !horizontalOverflow,
+      cards:cards.length,fullWidth,alignedEdges,searchFirst,compactTargets,singleRow,scrollable,genreActions,routeControls,horizontalOverflow};
+  }
   return {ok:fullWidth && alignedEdges && wideCards && sameRow && secondRow && belowGenres && pillsBelow && routeControls && !horizontalOverflow,
     cards:cards.length,columns,fullWidth,alignedEdges,wideCards,sameRow,secondRow,belowGenres,pillsBelow,routeControls,horizontalOverflow,
     firstCardWidth:Math.round(boxes[0].width),sectionWidth:Math.round(sectionBox.width),
