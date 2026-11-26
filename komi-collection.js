@@ -19,7 +19,9 @@ const pictures=new Map();
 function active(){return typeof currentView==='string'&&currentView==='collection'&&host?.isConnected;}
 function owner(){const id=typeof currentUser==='undefined'?'':currentUser?.authUserId||'';return observedOwner===undefined||observedOwner===id?id:'';}
 function fresh(id){return {owner:id,status:id?'idle':'guest',owned:[],canOpen:false,next:null,result:null};}
-function current(s){return active()&&state===s&&owner()===s.owner;}
+// A request may finish after navigating away; keep the same account's result,
+// but paint() only touches the DOM when collection is the active route.
+function current(s){return !!s&&state===s&&owner()===s.owner;}
 function authChanged(id){observedOwner=id||'';if(state&&state.owner!==observedOwner){state=fresh(owner());if(active())paint();}}
 const aliases={juuzou:['Juzou Suzuya','Juzo Suzuya'],eto:['Eto','Sen Takatsuki'],yoshimura:['Yoshimura','Kuzen'],arima:['Kisho Arima'],tsukiyama:['Shu Tsukiyama'],amon:['Kotaro Amon'],takizawa:['Seido Takizawa'],hide:['Hide Nagachika']};
 function normalizedName(n){return String(n||'').normalize('NFKD').toLowerCase().replace(/[^a-z ]/g,' ').trim().split(/\s+/).sort().join(' ');}
@@ -74,7 +76,7 @@ function paint(){
 }
 async function request(action){
  const s=state;
- if(!current(s)||!s.owner||s.status==='loading'||s.status==='opening')return;
+ if(!active()||!current(s)||!s.owner||s.status==='loading'||s.status==='opening')return;
  if(action==='open'&&(s.status!=='ready'||!s.canOpen))return;
  s.status=action==='open'?'opening':'loading';paint();
  try{
