@@ -1,0 +1,71 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 720" role="img" aria-label="Tokyo Ghoul case" width="1000" height="720">
+<defs>
+<radialGradient id="bg"><stop stop-color="#5b1524"/><stop offset=".52" stop-color="#221219"/><stop offset="1" stop-color="#101014"/></radialGradient>
+<radialGradient id="ground"><stop stop-color="#b51f37" stop-opacity=".55"/><stop offset="1" stop-color="#190e14" stop-opacity="0"/></radialGradient>
+<linearGradient id="top" x1=".2" y1="0" x2=".8" y2="1" gradientUnits="objectBoundingBox"><stop stop-color="#55565e"/><stop offset=".22" stop-color="#2c2d33"/><stop offset=".64" stop-color="#18191e"/><stop offset="1" stop-color="#090a0d"/></linearGradient>
+<linearGradient id="front" x2=".1" y2="1"><stop stop-color="#36373e"/><stop offset=".32" stop-color="#18191e"/><stop offset="1" stop-color="#0a0a0e"/></linearGradient>
+<linearGradient id="side" x1="0" x2="1" y1=".1" y2=".9"><stop stop-color="#23242b"/><stop offset="1" stop-color="#0b0b0f"/></linearGradient>
+<linearGradient id="steel" x2=".6" y2="1"><stop stop-color="#8b8990"/><stop offset=".24" stop-color="#3a3b41"/><stop offset=".58" stop-color="#131318"/><stop offset="1" stop-color="#4b4b52"/></linearGradient>
+<linearGradient id="mask" x2=".2" y2="1"><stop stop-color="#42414a"/><stop offset=".48" stop-color="#121319"/><stop offset="1" stop-color="#060609"/></linearGradient>
+<linearGradient id="kagune" x1="0" x2="1" y1="1" y2="0"><stop stop-color="#5e0b1b"/><stop offset=".55" stop-color="#b91d38"/><stop offset="1" stop-color="#ef6070"/></linearGradient>
+<linearGradient id="red" x2="1" y2=".7"><stop stop-color="#ff7380"/><stop offset="1" stop-color="#7b1129"/></linearGradient>
+<radialGradient id="eye"><stop stop-color="#fff0e4"/><stop offset=".25" stop-color="#ff6265"/><stop offset=".65" stop-color="#be0e2b"/><stop offset="1" stop-color="#40040e"/></radialGradient>
+<filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+<filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="28" stdDeviation="25" flood-color="#000" flood-opacity=".82"/></filter>
+<pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M30 0H0V30" fill="none" stroke="#c45160" stroke-opacity=".055"/></pattern>
+<g id="link"><rect x="-13" y="-22" width="26" height="44" rx="12" fill="none" stroke="#08090c" stroke-width="10"/><rect x="-13" y="-22" width="26" height="44" rx="12" fill="none" stroke="url(#steel)" stroke-width="7"/><path d="M-10-13V6" stroke="#99949a" stroke-width="1.5" opacity=".6"/></g>
+<g id="tooth"><path d="M0 0Q9-3 18 0L17 20Q10 25 2 19Z" fill="#d9d4d2" stroke="#6f666c" stroke-width="1.6"/></g>
+</defs>
+<path fill="url(#bg)" d="M0 0h1000v720H0z"/><path fill="url(#grid)" d="M0 0h1000v720H0z"/>
+<circle cx="542" cy="330" r="266" fill="none" stroke="#ad3446" stroke-opacity=".19" stroke-dasharray="2 10"/><circle cx="542" cy="330" r="231" fill="none" stroke="#b94352" stroke-opacity=".13"/>
+<g fill="none" stroke-linecap="round">
+<path d="M716 497Q935 369 924 131Q911 73 973 34Q892 56 847 159Q829 309 665 376" stroke="#3b0d19" stroke-width="43"/>
+<path d="M716 497Q935 369 924 131Q911 73 973 34Q892 56 847 159Q829 309 665 376" stroke="url(#kagune)" stroke-width="15" opacity=".8"/>
+<path d="M727 518Q982 439 957 272Q926 210 985 178Q902 193 890 282Q902 414 727 443" stroke="#74142a" stroke-width="24"/>
+<path d="M727 518Q982 439 957 272Q926 210 985 178Q902 193 890 282Q902 414 727 443" stroke="#dc3a52" stroke-width="5" opacity=".8"/>
+<path d="M310 500Q91 438 94 308Q105 239 32 200Q120 227 150 324Q151 396 331 421" stroke="#641425" stroke-width="23"/>
+<path d="M310 500Q91 438 94 308Q105 239 32 200Q120 227 150 324Q151 396 331 421" stroke="#c3324a" stroke-width="5"/>
+</g>
+<ellipse cx="510" cy="593" rx="451" ry="95" fill="url(#ground)"/><ellipse cx="515" cy="584" rx="382" ry="30" fill="#050509" opacity=".68"/>
+<g filter="url(#shadow)" stroke-linejoin="round">
+<!-- reinforced, three-dimensional travel chest -->
+<path d="M180 254 293 171 750 171 850 242 850 503 755 581 180 559Z" fill="#07080b" stroke="#6b545d" stroke-width="3"/>
+<path d="M180 254 293 171H750L850 242 755 322 180 310Z" fill="url(#top)" stroke="#77727a" stroke-width="2"/>
+<path d="m204 251 98-67h434l84 60-72 58-544-13Z" fill="#17181d" stroke="#55545d" stroke-width="2"/>
+<path d="m230 243 86-44h406l70 44-55 34-507-10Z" fill="url(#top)" stroke="#3e3e45" stroke-width="2"/>
+<path d="M180 310 755 322 755 581 180 559Z" fill="url(#front)" stroke="#57535c" stroke-width="2"/>
+<path d="M755 322 850 242V503L755 581Z" fill="url(#side)" stroke="#55535b" stroke-width="2"/>
+<path d="M195 328 739 340 739 560 195 540Z" fill="#121217" stroke="#404047" stroke-width="2"/>
+<path d="M769 335 834 280V489L769 541Z" fill="#111216" stroke="#36363c" stroke-width="2"/>
+<path d="M181 309 755 321 850 242" fill="none" stroke="#ad384a" stroke-width="3" filter="url(#glow)"/>
+<path d="M181 351 755 363 850 282" fill="none" stroke="#33343a" stroke-width="9"/>
+<!-- industrial armour corners and steel bands -->
+<path d="m181 254 48-35 35-1-44 40v64l-39-10Z M713 174l35-3 102 71-31 25-90-64Z M180 508l38 14v37l-38-2Z M715 546l40-4v39l-40-2Z M807 491l43-32v44l-43 34Z" fill="url(#steel)" stroke="#65636b" stroke-width="2"/>
+<path d="M255 224 286 202l29 1-40 32v321l-38-2V249Z M666 185l35-1 68 55v315l-39 14V259Z" fill="url(#steel)" stroke="#55545e" stroke-width="2"/>
+<path d="M246 259v276M740 271v266" stroke="#8c858d" stroke-opacity=".5" stroke-width="2"/>
+<path d="M193 400 231 401M277 405 330 407M676 413 730 414M765 420l70-57" stroke="#414149" stroke-width="7"/>
+<path d="M196 527 231 528M278 533 728 549" stroke="#52515a" stroke-width="2"/>
+<path d="M312 195h70l13 10-12 9h-92M554 195h83l14 13-17 7h-84" fill="none" stroke="#77737d" stroke-width="3"/>
+<!-- raised signature badge -->
+<path d="M317 373 398 375 398 497 317 494Z" fill="#1b1b20" stroke="#5d4651" stroke-width="2"/>
+<path d="M328 387h56M328 480h56" stroke="#c13a51" stroke-width="2"/>
+<text x="357" y="411" fill="#b8b1b9" font-family="sans-serif" font-size="20" text-anchor="middle">東京</text><text x="357" y="439" fill="#b8b1b9" font-family="sans-serif" font-size="20" text-anchor="middle">喰種</text><text x="357" y="466" fill="#867e87" font-family="sans-serif" font-size="9" text-anchor="middle" letter-spacing="2">01 / TG</text>
+<!-- iconic ghoul mask built into the case face -->
+<path d="M425 372Q511 341 630 365L695 390 686 484Q649 527 558 529 464 523 426 480Z" fill="url(#mask)" stroke="#65616c" stroke-width="3"/>
+<path d="M441 389Q492 370 537 385L546 426 484 428 437 412Z" fill="#08090d" stroke="#53515a" stroke-width="2"/>
+<path d="M574 387Q632 375 675 399L668 422Q619 436 575 419Z" fill="#07070a" stroke="#7b263b" stroke-width="2"/>
+<path d="M583 408Q619 383 660 403Q630 429 583 408Z" fill="#5c071b"/>
+<ellipse cx="623" cy="405" rx="18" ry="15" fill="url(#eye)" filter="url(#glow)"/><ellipse cx="623" cy="405" rx="4" ry="12" fill="#07070b"/><circle cx="617" cy="400" r="3" fill="#fff"/>
+<path d="M453 454Q552 476 667 450L657 492Q563 519 466 490Z" fill="#07070a" stroke="#766a72" stroke-width="2"/>
+<g transform="translate(470 460)"><use href="#tooth"/><use href="#tooth" x="20" y="4"/><use href="#tooth" x="40" y="7"/><use href="#tooth" x="60" y="9"/><use href="#tooth" x="80" y="10"/><use href="#tooth" x="100" y="9"/><use href="#tooth" x="120" y="6"/><use href="#tooth" x="140" y="2"/><use href="#tooth" x="160" y="-3"/></g>
+<path d="M465 487Q558 505 657 483" fill="none" stroke="#c0b7b7" stroke-width="4" stroke-dasharray="9 3"/>
+<path d="M552 426v28M459 438l-12 12M674 437l11 10" stroke="#74727b" stroke-width="2"/>
+<!-- physical clasp and chain -->
+<path d="M463 308h61v42h-61Z" fill="url(#steel)" stroke="#88838a" stroke-width="2"/><rect x="479" y="326" width="29" height="33" rx="6" fill="#15151a" stroke="#777078" stroke-width="2"/><path d="M493 334v13" stroke="#bcb5ba" stroke-width="3"/>
+<g transform="translate(0 0)"><use href="#link" transform="translate(460 197) rotate(82)"/><use href="#link" transform="translate(425 201) rotate(77)"/><use href="#link" transform="translate(392 214) rotate(64)"/><use href="#link" transform="translate(364 234) rotate(48)"/><use href="#link" transform="translate(342 265) rotate(32)"/><use href="#link" transform="translate(325 299) rotate(23)"/><use href="#link" transform="translate(311 336) rotate(16)"/><use href="#link" transform="translate(301 374) rotate(12)"/><use href="#link" transform="translate(294 412) rotate(9)"/><use href="#link" transform="translate(288 450) rotate(10)"/><use href="#link" transform="translate(279 488) rotate(17)"/><use href="#link" transform="translate(263 522) rotate(28)"/><use href="#link" transform="translate(240 551) rotate(47)"/><use href="#link" transform="translate(210 575) rotate(57)"/><use href="#link" transform="translate(176 590) rotate(73)"/></g>
+<!-- subtle engraved cracks and bolts -->
+<g fill="none" stroke="url(#red)" stroke-width="2" opacity=".85" filter="url(#glow)"><path d="m602 184-11 25 19 18-25 35 12 31-19 28"/><path d="m610 227 27-5 14 11"/><path d="m688 355-20 25 14 14-15 25 18 11"/><path d="m205 449 19-15-11-16 11-15"/><path d="m790 335 13 18-14 20 18 28"/></g>
+<g fill="#17171c" stroke="#747079" stroke-width="1.6"><circle cx="208" cy="342" r="5"/><circle cx="208" cy="515" r="5"/><circle cx="720" cy="352" r="5"/><circle cx="720" cy="543" r="5"/><circle cx="819" cy="310" r="5"/><circle cx="819" cy="485" r="5"/></g>
+</g>
+<g fill="#ef5b70" opacity=".72"><circle cx="123" cy="505" r="2"/><circle cx="846" cy="579" r="2"/><circle cx="904" cy="529" r="3"/><circle cx="794" cy="127" r="2"/><circle cx="157" cy="182" r="2"/><circle cx="92" cy="393" r="1.5"/><circle cx="390" cy="119" r="1.5"/><circle cx="895" cy="191" r="1.5"/><path d="m143 563 3-6 3 6-3 6Z M906 462l2-6 2 6-2 6Z M775 105l2-5 2 5-2 5Z"/></g>
+</svg>
