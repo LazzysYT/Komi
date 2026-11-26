@@ -357,11 +357,29 @@ async function checkNotifications(page) {
    // Test the real search, URL state, keyboard layout, and clearing without losing filters.
    const catalogSearch=page.locator('#komiCatalogSearchInput');
    const clearSearch=page.locator('#komiCatalogClearSearch');
+   await catalogSearch.focus();
+   const searchGeometry=()=>page.locator('#komiCatalogSearchInput').evaluate(el=>{
+     const wrapper=el.parentElement, icon=wrapper.querySelector(':scope > svg'), clear=wrapper.querySelector('button'), clearIcon=clear.querySelector('svg');
+     const field=el.getBoundingClientRect(), glass=wrapper.getBoundingClientRect(), left=icon.getBoundingClientRect(), right=clear.getBoundingClientRect();
+     const style=getComputedStyle(el), shell=getComputedStyle(wrapper), clearStyle=getComputedStyle(clear);
+     return {
+       noInnerFrame:style.borderTopWidth==='0px'&&style.outlineStyle==='none'&&style.boxShadow==='none'&&style.backgroundColor==='rgba(0, 0, 0, 0)',
+       focused:shell.borderTopColor==='rgb(229, 229, 229)',
+       iconInline:getComputedStyle(icon).position==='static'&&left.right+6<=field.left,
+       fieldInside:field.left>=glass.left&&field.right<=glass.right+1,
+       clearSeparated:clearStyle.display==='none'||(right.left>=field.right+6&&right.right<=glass.right+1&&getComputedStyle(clearIcon).position==='static'&&Math.abs(clearIcon.getBoundingClientRect().left+clearIcon.getBoundingClientRect().width/2-right.left-right.width/2)<=2),
+       fieldWidth:field.width
+     };
+   });
+   let geometry=await searchGeometry();
+   assert.ok(geometry.noInnerFrame&&geometry.focused&&geometry.iconInline&&geometry.fieldInside&&geometry.clearSeparated&&geometry.fieldWidth>100,JSON.stringify(geometry));
    await catalogSearch.fill('series');
    await page.waitForFunction(()=>document.querySelectorAll('#komiCatalogGrid .komi-catalog-card').length===1);
    assert.match(await page.locator('#komiCatalogGrid').textContent(),/Сериал 2026/);
    assert.equal(new URL(page.url()).searchParams.get('q'),'series');
    assert.equal(await page.locator('#komiCatalogSearchStatus').textContent(),'Найдено: 1');
+   geometry=await searchGeometry();
+   assert.ok(geometry.noInnerFrame&&geometry.iconInline&&geometry.fieldInside&&geometry.clearSeparated&&geometry.fieldWidth>100,JSON.stringify(geometry));
    await catalogSearch.fill('abkmv');
    await page.waitForFunction(()=>document.querySelector('#komiCatalogGrid .komi-catalog-card')?.textContent.includes('Фильм 2025'));
    await clearSearch.click();
@@ -438,6 +456,26 @@ async function checkNotifications(page) {
    await page.evaluate(()=>navigate('home'));
    await page.waitForSelector('.komi-home-storefront .komi-home-genres-section');
    assert.equal(await page.locator('#komiCatalogAdvanced, #komiCatalogGrid').count(),0);
+   const footer=page.locator('body > .komi-public-footer');
+   await footer.scrollIntoViewIfNeeded();
+   await page.evaluate(()=>window.scrollTo(0,document.scrollingElement.scrollHeight));
+   await page.waitForFunction(()=>{
+     const f=document.querySelector('body > .komi-public-footer');
+     return f&&f.getBoundingClientRect().bottom<=innerHeight+2;
+   });
+   const footerGeometry=await footer.evaluate(el=>{
+     const fab=document.querySelector('#sideFriendsBtn'), fr=fab.getBoundingClientRect();
+     const overlaps=(r,s)=>r.width>0&&r.height>0&&s.width>0&&s.height>0&&r.left<s.right&&r.right>s.left&&r.top<s.bottom&&r.bottom>s.top;
+     const links=[...el.querySelectorAll('a')];
+     return {links:links.map(a=>a.getAttribute('href')),
+       clipped:links.some(a=>{const r=a.getBoundingClientRect();return r.left<0||r.right>innerWidth+1||r.bottom>innerHeight+1;}),
+       overlap:[...links,el.querySelector('p')].some(a=>overlaps(a.getBoundingClientRect(),fr)),
+       duplicateNav:document.querySelectorAll('.komi-home-storefront .komi-home-support-links').length,
+       horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2};
+   });
+   assert.equal(footerGeometry.links.length,7,JSON.stringify(footerGeometry));
+   assert.ok(!footerGeometry.clipped&&!footerGeometry.overlap&&!footerGeometry.duplicateNav&&!footerGeometry.horizontalOverflow,JSON.stringify(footerGeometry));
+   await page.evaluate(()=>window.scrollTo(0,0));
 
    await page.evaluate(()=>{
     const hostileMetadata = '<img data-komi-injected src=x>';

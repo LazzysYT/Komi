@@ -109,7 +109,7 @@ const make=(id,year,score)=>({
         assert.ok(footer.visible&&footer.height>0,label+': the native public footer must remain available');
         assert.ok(footer.top>=footer.viewport-1,
           label+': public footer must stay below the first '+viewport.width+'px viewport while app-main is held');
-        assert.deepEqual(footer.links,['/','/catalog','/about','/contacts']);
+        assert.deepEqual(footer.links,['/','/catalog','/about','/contacts','/partners','https://www.tiktok.com/@komi_animeofficial','https://t.me/+X9yUQPEBldo2MzNi']);
       }
     }finally{await page.setViewportSize(original);}
   };

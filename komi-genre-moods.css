@@ -640,33 +640,58 @@ body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search
   .komi-media-hub .komi-tool-dropdown { left: 0; right: auto; max-width: calc(100vw - 40px); }
 }
 
-/* Catalogue search: prominent but compact, with explicit clear and live feedback. */
+/* Catalogue v5 owns the search field: only the wrapper paints a border and
+   focus indicator. Both icons participate in flex layout, not the v4 absolute
+   positioning rules inherited from catalog-discovery-v4 and inline-tail. */
 body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search {
-  max-width: 100% !important; min-height: 52px; margin: 0 !important;
-  padding-inline: 14px; gap: 12px; border-radius: 12px !important;
-  background: #161616; border-color: #303030; box-sizing: border-box;
+  display: flex !important; align-items: center !important;
+  max-width: 100% !important; min-height: 52px !important; height: auto !important;
+  margin: 0 !important; padding: 0 14px !important; gap: 12px;
+  border: 1px solid #303030 !important; border-radius: 12px !important;
+  background: #161616 !important; box-sizing: border-box;
+  box-shadow: none !important;
 }
 body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search:focus-within {
-  border-color: #a3a3a3; box-shadow: 0 0 0 2px rgba(255,255,255,.07);
+  border-color: #e5e5e5 !important;
 }
 body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 #komiCatalogSearchInput {
-  width: 0; min-width: 0; flex: 1; padding: 0 !important; color: #fff;
-  min-height: 48px; outline: none; font-size: 16px !important;
+  appearance: none; -webkit-appearance: none; display: block !important;
+  box-sizing: border-box !important; flex: 1 1 0% !important;
+  width: 0 !important; min-width: 0 !important; max-width: 100% !important;
+  min-height: 48px !important; height: 48px !important;
+  margin: 0 !important; padding: 0 !important; color: #fff !important;
+  border: 0 !important; border-radius: 0 !important; background: transparent !important;
+  outline: none !important; outline-offset: 0 !important; box-shadow: none !important;
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+  font: 500 16px/1.4 Inter,system-ui,sans-serif !important;
+  transition: none !important;
 }
 #komiCatalogSearchInput::-webkit-search-cancel-button { -webkit-appearance: none; }
-#komiCatalogSearchInput::placeholder { color: #a3a3a3; opacity: 1; }
+#komiCatalogSearchInput::placeholder { color: #a3a3a3 !important; opacity: 1; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search > svg,
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear > svg {
+  display: block !important; position: static !important; inset: auto !important;
+  transform: none !important; flex: 0 0 20px; width: 20px !important;
+  height: 20px !important; margin: 0 !important; fill: none; stroke: currentColor;
+  stroke-width: 1.8; stroke-linecap: round; pointer-events: none;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search > svg { color: #a3a3a3; }
 body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear {
-  flex: 0 0 40px; width: 40px; height: 40px; padding: 0 !important;
-  display: grid; place-items: center; border: 0; border-radius: 9px;
-  background: transparent; color: #a3a3a3; cursor: pointer;
+  flex: 0 0 40px; width: 40px; height: 40px; min-height: 40px !important;
+  padding: 0 !important; margin: 0 !important; display: grid; place-items: center;
+  border: 0 !important; border-radius: 9px !important; background: transparent !important;
+  color: #a3a3a3; cursor: pointer; box-shadow: none !important;
 }
 body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear[hidden] { display: none !important; }
-body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear:hover { background: #242424; color: white; }
-body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear svg { width: 18px; height: 18px; stroke: currentColor; stroke-linecap: round; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear:hover { background: #242424 !important; color: white; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear:focus-visible { outline: 1px solid #fff !important; outline-offset: -2px !important; }
 body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search-feedback {
   font: 400 12px/1.4 Inter,sans-serif; color: #a3a3a3; margin: 6px 0 14px;
 }
 @media (max-width: 767px) {
-  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search { min-height: 48px; padding-inline: 12px; }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search { min-height: 48px !important; padding-inline: 12px !important; gap: 10px; }
   body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search-feedback { margin-bottom: 9px; }
+}
+@media (forced-colors: active) {
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search:focus-within { outline: 2px solid Highlight !important; outline-offset: 2px; }
 }

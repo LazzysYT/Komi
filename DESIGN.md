@@ -197,3 +197,6 @@ A portrait-only slide still needs a banner composition on wide screens. Use a ri
 ### Header quick menu
 
 The native header disclosure keeps the navigation, sound, sign-in and dynamic account controls. Its matte graphite popover pairs the two social links above the site sections, then separates settings and account actions with a hairline. Rows use a common 44 px target and consistent 17 px outline icons; the sound switch mirrors the existing pressed state and AniCoin uses tabular numerals. Open and close share a short opacity and position transition on supporting browsers; reduced motion opens and closes immediately. The mobile dock's separate «Ещё» menu is unchanged.
+
+### Search and footer correction (26 November 2026)
+The v5 catalogue search is a single outlined flex surface: search icon, transparent borderless text input, and conditional clear button. Its wrapper owns keyboard focus feedback. The home browse link is a compact end-of-list action; all site and social links live in the native shared footer. The footer reserves clearance for the community launcher and mobile dock without duplicating navigation.

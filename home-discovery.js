@@ -319,11 +319,7 @@
       '<div class="komi-home-genres-section komi-feature-section">' + genres + '</div>' +
       (root.KomiHomeReleases?.renderRecent(context) || '') +
       (root.KomiHomeReleases?.renderUpcoming(context) || '') +
-      '<footer class="komi-home-browse-footer"><a class="komi-home-catalog-link" href="/catalog">Весь каталог</a>' +
-      '<nav class="komi-home-support-links" aria-label="Дополнительные разделы Komi">' +
-      '<a href="/partners">Партнёры</a>' +
-      '<a href="https://www.tiktok.com/@komi_animeofficial" target="_blank" rel="noopener noreferrer">TikTok</a>' +
-      '<a href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer">Telegram</a></nav></footer>' +
+      '<footer class="komi-home-browse-footer"><a class="komi-home-catalog-link" href="/catalog">Весь каталог</a></footer>' +
       '</div>';
   }
   // Keep equal sections mounted through catalog/session refreshes. Parsing into
