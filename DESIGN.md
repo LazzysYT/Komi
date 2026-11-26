@@ -215,3 +215,11 @@ rain. Let warm train windows be the only amber focal point. No third-party
 art, remote asset dependencies, auto-playing video, or background redraw
 effects. Respect reduced motion. Archiving a card changes store discovery
 only; owners keep item IDs, fitting, visibility in inventory and equipment.
+
+### Anime foil titles
+Centered enamel badge over a dark scene, a single emblem and a narrow traveling
+reflection. Color belongs to the title, not the rest of the shop. Real title
+IDs pick the same emblem and palette in cards, fitting, Premium studio and
+public profile. Idle shop cards stay still; user hover or keyboard focus plays
+the sheen. Reduced motion has a static highlight and high-contrast mode keeps
+the text readable. Old names, prices, inventory and equipment remain intact.

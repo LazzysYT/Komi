@@ -27,13 +27,13 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
     if(artwork.includes(name))read.add(name);
     return route.fulfill({contentType:name.endsWith('.svg')?'image/svg+xml':name.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(__dirname,'..',name),'utf8')});
    });
-   await page.goto(origin+'/shop?shop_page=6');
+   await page.goto(origin+'/shop?shop_page=7');
    await page.evaluate(({retired})=>{
      window.currentView='shop';
      const render=()=>window.KomiShopV3.render(document.getElementById('mainContainer'),{owner:'demo',store:{owned:retired,balance:150,frame_id:'frame_pixel'},displayName:'Гость'});
      window.renderAniCoinShop=render;render();
    },{retired});
-   assert.equal(await page.locator('.sv3-item').count(),142);
+   assert.equal(await page.locator('.sv3-item').count(),148);
    const poster=page.locator('.sv10-station');
    assert.equal(await poster.isVisible(),true);
    if(output&&width===1440)await poster.screenshot({path:path.join(output,'KomiAnime-Station-0017.png')});

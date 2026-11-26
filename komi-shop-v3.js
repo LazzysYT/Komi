@@ -11,6 +11,7 @@ const collections=()=>root.KomiShopCatalog?.collections||[];
 const isArchived=id=>root.KomiShopCatalog?.isArchived?.(id)===true;
 const forSale=()=>catalog().filter(p=>!isArchived(p.id));
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const foilTitle=p=>root.KomiShopCatalog?.titleText?.(p)||p?.title||p?.label||'';
 const fmt=x=>Number(x||0).toLocaleString('ru-RU');
 const icon=(name,size=18)=>root.KomiShopIcons?.solid?.(name,size)||root.KomiShopIcons?.svg(name,size)||'';
 const rarityLabels={common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'};
@@ -88,7 +89,7 @@ function visual(product,avatar,name){
  const cls=esc(product.cosmeticClass||'');
  if(product.type==='frame')return '<span class="komi-coin-frame komi-store-'+esc(product.frameClass)+'">'+initialAvatar(avatar,name)+'</span>';
  if(product.type==='shape')return '<span class="sv3-shape komi-store-'+cls+'">'+initialAvatar(avatar,name)+'</span>';
- if(product.type==='title')return '<span class="sv3-title-sample">'+esc(product.title||product.label)+'</span>';
+ if(product.type==='title')return '<span class="sv3-title-sample" data-komi-title-id="'+esc(product.id)+'">'+esc(foilTitle(product))+'</span>';
  if(product.type==='banner')return '<span class="sv8-banner-context"><span class="store-banner-swatch '+esc(product.bannerClass)+'">KOMI</span><span class="sv8-banner-profile"><span class="sv7-card-avatar">'+initialAvatar(avatar,name)+'</span><span>Твой профиль</span></span></span>';
  if(product.type==='overlay')return '<span class="sv3-overlay-sample komi-preview-cover'+(product.id==='overlay_station_rain'?' sv10-station-rain-sample':'')+'"><span class="sv7-cover-motif" aria-hidden="true"></span><span class="komi-shop-overlay-layer '+cls+'"></span><span class="sv7-cover-title">KOMI ANIME</span></span>';
  if(product.type==='reaction')return '<span class="komi-shop-reaction-swatch">'+(product.reactions||[]).map(x=>'<span role="img" aria-label="'+esc(x.label||x.id||'Реакция')+'">'+(root.KomiShopReactions?.render(x.emoji)||esc(x.label||'Реакция'))+'</span>').join('')+'</span>';
@@ -127,7 +128,7 @@ function cardArtwork(p,avatar,name){
   case 'overlay':
    content='<span class="sv9-cover-shot">'+artwork+contextStrip(avatar,name,'Обложка с эффектом')+'</span>';break;
   case 'title':
-   content='<span class="sv9-profile-panel">'+contextStrip(avatar,name,'Титул под ником')+artwork+'</span>';break;
+   content='<span class="sv11-title-stage">'+artwork+'</span>';break;
   case 'name':
    content='<span class="sv9-name-shot">'+portrait(avatar,name)+artwork+'</span>';break;
   case 'icon':
@@ -168,7 +169,7 @@ function preview(store,avatar,name){
  (mascot?'<span class="sv3-profile-mascot komi-profile-mascot komi-store-'+esc(mascot.cosmeticClass)+'"></span>':'')+
  '<div class="sv3-profile-name"><strong class="'+(nameStyle?'komi-store-'+esc(nameStyle.cosmeticClass):'')+'">'+esc(name)+'</strong>'+
  (selectedIcon?' <span class="komi-store-'+esc(selectedIcon.cosmeticClass)+'">'+esc(selectedIcon.symbol||'✧')+'</span>':'')+'</div>'+
- '<div class="sv3-profile-title">'+(title?esc(title.title||title.label):'Участник сообщества Komi')+'</div>'+
+ '<div class="sv3-profile-title">'+(title?'<span class="sv3-title-sample" data-komi-title-id="'+esc(title.id)+'">'+esc(foilTitle(title))+'</span>':'Участник сообщества Komi')+'</div>'+
  (xp?'<div class="sv3-profile-level komi-store-'+esc(xp.cosmeticClass)+'"><span>Пример полоски опыта</span><progress aria-label="Пример оформления XP" value="65" max="100">65%</progress></div>':'')+
  (sets.length?'<p class="sv3-set-active">✦ Сет: '+sets.map(x=>esc(x.label)).join(', ')+'</p>':'')+
  ((showcase||cardStyle)?'<div class="sv3-extra-samples">'+(showcase?'<div><small>Витрина топ-3</small>'+visual(showcase,avatar,name)+'</div>':'')+

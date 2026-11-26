@@ -3,6 +3,67 @@
 'use strict';
 const items=Object.freeze([
   {
+    "id": "title_crimson_hunter",
+    "label": "Алый охотник",
+    "title": "Алый охотник",
+    "cost": 30,
+    "type": "title",
+    "rarity": "rare",
+    "description": "Бордовая эмаль, алый контур и знак прицела.",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_moon_ronin",
+    "label": "Лунный ронин",
+    "title": "Лунный ронин",
+    "cost": 25,
+    "type": "title",
+    "rarity": "rare",
+    "description": "Стальной полумесяц на холодной синей фольге.",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_yokai_whisper",
+    "label": "Шёпот ёкая",
+    "title": "Шёпот ёкая",
+    "cost": 30,
+    "type": "title",
+    "rarity": "rare",
+    "description": "Фиолетовая маска и мягкий призрачный блик.",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_awakening_mode",
+    "label": "Режим: пробуждение",
+    "title": "Режим: пробуждение",
+    "cost": 35,
+    "type": "title",
+    "rarity": "epic",
+    "description": "Янтарный разлом и диагональная искра.",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_sakura_vow",
+    "label": "Клятва сакуры",
+    "title": "Клятва сакуры",
+    "cost": 20,
+    "type": "title",
+    "rarity": "rare",
+    "description": "Розовое золото и эмблема из лепестков.",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_last_cut",
+    "label": "Последний кадр",
+    "title": "Последний кадр",
+    "cost": 15,
+    "type": "title",
+    "rarity": "common",
+    "description": "Серебряная рамка киноплёнки и короткий белый блик.",
+    "introducedAt": "2026-11-26"
+  },
+
+  {
     "id": "banner_last_train",
     "label": "Последний поезд",
     "cost": 45,
@@ -1536,7 +1597,8 @@ const collections=Object.freeze([
     ]
   }
 ].map(collection=>Object.freeze({...collection,items:Object.freeze(collection.items),preview:Object.freeze(collection.preview)})));
-const revision='20261126-station-0017';
+const revision='20261126-anime-title-foil';
+const titleText=p=>String(p?.title||p?.label||'').replace(/^[✧✦◇✳⌁☾✶▣↗◈◆✎▰▤▸❧❀]+\s+/u,'');
 // Hide from new discovery only. IDs and ownership continue to resolve.
 const archived=new Set(['banner_grid','frame_pixel','xp_hatch','xp_dots']);
 const isArchived=id=>archived.has(id);
@@ -1546,12 +1608,12 @@ function checkPricing(client){
  if(preview()||!client?.rpc)return Promise.resolve(false);
  if(pricingConfirmed)return Promise.resolve(true);
  if(checking)return checking;
- checking=Promise.resolve().then(()=>client.rpc('komi_shop_station_revision')).then(result=>{
+ checking=Promise.resolve().then(()=>client.rpc('komi_shop_titles_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;
   return pricingConfirmed;
  },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});
  return checking;
 }
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,isArchived,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,titleText,isArchived,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);

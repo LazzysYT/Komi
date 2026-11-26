@@ -149,11 +149,11 @@ fs.mkdirSync(output,{recursive:true});
      items:window.KomiShopCatalog.items.map(({id,type,cost,label,cosmeticClass})=>({id,type,cost,label,cosmeticClass})),
      collections:window.KomiShopCatalog.collections.map(({id,items,preview})=>({id,items,preview}))
    }));
-   assert.equal(metadata.items.length,146,'The product registry retains 146 products, including archived items');
+   assert.equal(metadata.items.length,152,'The product registry retains 152 products, including archived items');
    assert.equal(metadata.collections.length,7,'Seven permanent collections are available');
    assert.equal(await cards.count(),24,'Guest browsing starts with a bounded 24-item page');
    assert.equal(await page.locator('#shop .sv5-preview-button').count(),24,'Every visible product can be tried on');
-   assert.match(await page.locator('#shop .sv7-load-more').innerText(),/Показано 24 из 142/);
+   assert.match(await page.locator('#shop .sv7-load-more').innerText(),/Показано 24 из 148/);
    const firstAction=page.locator('#shop .sv3-primary-buy').first();
    if(new URL(page.url()).hostname==='komianime.online'){
      assert.match(await firstAction.innerText(),/Войти/,'Guest buy action must request login');
@@ -205,8 +205,8 @@ fs.mkdirSync(output,{recursive:true});
    for(let loadedPages=2;loadedPages<6&&await page.locator('#shop [data-v7-more]').count();loadedPages++)
      await page.locator('#shop [data-v7-more]').click();
    const allIds=await cards.evaluateAll(nodes=>nodes.map(node=>node.dataset.itemId));
-   assert.equal(allIds.length,142);
-   assert.equal(new Set(allIds).size,142,'Pagination neither duplicates nor hides products');
+   assert.equal(allIds.length,148);
+   assert.equal(new Set(allIds).size,148,'Pagination neither duplicates nor hides products');
    assert.deepEqual([...allIds].sort(),metadata.items.map(item=>item.id).sort());
    await checkCatalogueGeometry('Complete desktop catalogue');
    await checkAvatarStates();
@@ -334,6 +334,6 @@ fs.mkdirSync(output,{recursive:true});
    assert.equal(await fitting.isVisible(),false);
    assert.deepEqual(attemptedMutations,[],'The guest smoke test never attempts a paid or inventory mutation');
    assert.deepEqual(nativeDialogs,[],'Product UI must not use browser alert/confirm/prompt');
-   console.log('PASS Komi Shop V7 guest desktop + mobile: 142 discoverable products, 24-item pages, seven collections, full-width filters, visible first products, unclipped cards, exclusive avatar fallback, nine SVG reactions, unobscured fitting scrollport, search, URL restoration, sorting and native confirmation cancellation; no purchase attempted');
+   console.log('PASS Komi Shop V7 guest desktop + mobile: 148 discoverable products, 24-item pages, seven collections, full-width filters, visible first products, unclipped cards, exclusive avatar fallback, nine SVG reactions, unobscured fitting scrollport, search, URL restoration, sorting and native confirmation cancellation; no purchase attempted');
  }finally{await context.close();await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});

@@ -260,3 +260,89 @@
  #profile.komi-profile-premium-mono .profile-header-card .profile-cover.komi-store-overlay-station-rain::before,
  .komi-shop-overlay-layer.overlay-station-rain::before{animation:none!important}
 }
+
+/* BEGIN TITLE FOIL — per-ID shared design, used by owned titles and every fitting surface. */
+[data-komi-title-id]{
+ --foil-paper:#22232e;--foil-ink:#0d101a;--foil-edge:#8fa5bd;--foil-type:#e2ecff;--foil-glint:#dcecff;
+ --foil-emblem:url('/assets/shop-title-foil/star.svg');
+ position:relative;isolation:isolate;box-sizing:border-box;display:inline-flex!important;align-items:center;justify-content:center;flex-wrap:nowrap;
+ padding:5px 9px!important;gap:5px;min-width:0;max-width:100%;border:1px solid var(--foil-edge)!important;
+ border-radius:999px!important;color:var(--foil-type)!important;overflow:hidden;
+ background:linear-gradient(125deg,var(--foil-ink),var(--foil-paper) 45%,var(--foil-ink) 90%)!important;
+ box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--foil-edge) 26%,transparent),0 0 14px color-mix(in srgb,var(--foil-edge) 28%,transparent)!important;
+ font:800 .69rem/1.2 Manrope,Inter,sans-serif;letter-spacing:.025em;text-align:center;overflow-wrap:anywhere;
+}
+[data-komi-title-id]::before{
+ content:"";display:block;flex:0 0 14px;width:14px;height:14px;background:var(--foil-type);
+ mask:var(--foil-emblem) center/contain no-repeat;
+}
+[data-komi-title-id]::after{
+ content:"";position:absolute;inset:1px;border-radius:inherit;pointer-events:none;
+ background:linear-gradient(111deg,transparent 33%,color-mix(in srgb,var(--foil-glint) 20%,transparent) 47%,color-mix(in srgb,var(--foil-glint) 56%,transparent) 50%,transparent 60%);
+ background-size:240% 100%;background-position:115% 0;opacity:.78;z-index:-1;
+ animation:komi-foil-sweep var(--foil-speed,6s) ease-in-out infinite;animation-delay:var(--foil-delay,0s);
+}
+@keyframes komi-foil-sweep{0%,12%{background-position:115% 0}48%,100%{background-position:-45% 0}}
+#shop.komi-shop-studio .sv3-item [data-komi-title-id]::after{animation-play-state:paused!important;background-position:46% 0}
+#shop.komi-shop-studio .sv3-item :is(:hover,:focus-visible) [data-komi-title-id]::after{animation-play-state:running!important}
+#shop.komi-shop-studio .sv3-title-sample[data-komi-title-id]{color:var(--foil-type)!important;border-color:var(--foil-edge)!important;background:linear-gradient(125deg,var(--foil-ink),var(--foil-paper) 45%,var(--foil-ink) 90%)!important}
+#shop.komi-shop-studio .sv9-plate[data-sv9-kind="title"]{background:radial-gradient(ellipse at 50% 55%,#29243390,#111116 73%)}
+#shop.komi-shop-studio .sv11-title-stage{width:100%;height:100%;box-sizing:border-box;display:grid;place-items:center;position:relative;isolation:isolate}
+#shop.komi-shop-studio .sv11-title-stage::before{content:"";position:absolute;inset:3px 0;z-index:-1;pointer-events:none;background:linear-gradient(133deg,transparent 28%,#cab9d610 48%,transparent 55%);filter:blur(2px)}
+#shop.komi-shop-studio .sv11-title-stage .sv3-title-sample{font-size:clamp(.6rem,1vw,.81rem);padding:5px 8px!important}
+@media(max-width:400px){
+ #shop.komi-shop-studio .sv11-title-stage .sv3-title-sample{font-size:.58rem;padding:5px 6px!important}
+ #shop.komi-shop-studio .sv11-title-stage [data-komi-title-id]::before{width:11px;height:11px;flex-basis:11px}
+}
+@media(prefers-reduced-motion:reduce){
+ [data-komi-title-id]::after{animation:none!important;background-position:48% 0!important}
+}
+@media(forced-colors:active){
+ [data-komi-title-id],#shop.komi-shop-studio .sv3-title-sample[data-komi-title-id]{color:CanvasText!important;background:Canvas!important;border-color:CanvasText!important;box-shadow:none!important}
+ [data-komi-title-id]::before{background:CanvasText}
+ [data-komi-title-id]::after{display:none}
+}
+[data-komi-title-id="title_crimson_hunter"],[data-komi-title-id="title_spoiler"],[data-komi-title-id="title_nightmarathon"]{--foil-paper:#572030;--foil-ink:#190911;--foil-edge:#f35878;--foil-type:#ffe2e9;--foil-glint:#ff9ab1;--foil-emblem:url('/assets/shop-title-foil/aim.svg')}
+[data-komi-title-id="title_crimson_hunter"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_spoiler"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_nightmarathon"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_moon_ronin"],[data-komi-title-id="title_nocturne"],[data-komi-title-id="title_midnight"],[data-komi-title-id="title_last_departure"]{--foil-paper:#233650;--foil-ink:#101827;--foil-edge:#a9cdf5;--foil-type:#e5f4ff;--foil-glint:#a3cfff;--foil-emblem:url('/assets/shop-title-foil/moon.svg')}
+[data-komi-title-id="title_moon_ronin"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_nocturne"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_midnight"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_last_departure"]{--foil-speed:7.2s;--foil-delay:-1.64s}
+[data-komi-title-id="title_yokai_whisper"],[data-komi-title-id="title_otaku"]{--foil-paper:#43264d;--foil-ink:#1a1027;--foil-edge:#cc9eef;--foil-type:#f4ddfc;--foil-glint:#eacaed;--foil-emblem:url('/assets/shop-title-foil/mask.svg')}
+[data-komi-title-id="title_yokai_whisper"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_otaku"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_awakening_mode"],[data-komi-title-id="title_marathon"],[data-komi-title-id="title_ongoing"]{--foil-paper:#573a24;--foil-ink:#22130d;--foil-edge:#edad66;--foil-type:#ffe6be;--foil-glint:#ffdc86;--foil-emblem:url('/assets/shop-title-foil/spark.svg')}
+[data-komi-title-id="title_awakening_mode"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_marathon"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_ongoing"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_sakura_vow"],[data-komi-title-id="title_bloom"],[data-komi-title-id="title_gardenkeeper"]{--foil-paper:#48283a;--foil-ink:#201523;--foil-edge:#e4abc1;--foil-type:#ffe8f1;--foil-glint:#f7c9df;--foil-emblem:url('/assets/shop-title-foil/petal.svg')}
+[data-komi-title-id="title_sakura_vow"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_bloom"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_gardenkeeper"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_last_cut"],[data-komi-title-id="title_cinema"],[data-komi-title-id="title_titres"],[data-komi-title-id="title_doublefeature"],[data-komi-title-id="title_lastrow"],[data-komi-title-id="title_director"]{--foil-paper:#353841;--foil-ink:#111218;--foil-edge:#afb6c1;--foil-type:#f6f7fa;--foil-glint:#f4f4fa;--foil-emblem:url('/assets/shop-title-foil/film.svg')}
+[data-komi-title-id="title_last_cut"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_cinema"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_titres"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_doublefeature"]{--foil-speed:7.2s;--foil-delay:-1.64s}
+[data-komi-title-id="title_lastrow"]{--foil-speed:5.4s;--foil-delay:-2.05s}
+[data-komi-title-id="title_director"]{--foil-speed:6.0s;--foil-delay:-2.46s}
+[data-komi-title-id="title_starlight"],[data-komi-title-id="title_cosmic"],[data-komi-title-id="title_stargazer"],[data-komi-title-id="title_pioneer"]{--foil-paper:#2c3156;--foil-ink:#141725;--foil-edge:#b9b7ef;--foil-type:#eae9ff;--foil-glint:#d8d1ff;--foil-emblem:url('/assets/shop-title-foil/star.svg')}
+[data-komi-title-id="title_starlight"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_cosmic"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_stargazer"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_pioneer"]{--foil-speed:7.2s;--foil-delay:-1.64s}
+[data-komi-title-id="title_pagekeeper"],[data-komi-title-id="title_archivist"],[data-komi-title-id="title_critic"],[data-komi-title-id="title_explorer"],[data-komi-title-id="title_curator"]{--foil-paper:#23373b;--foil-ink:#111d24;--foil-edge:#a1c9c6;--foil-type:#e3f6f2;--foil-glint:#dbfff4;--foil-emblem:url('/assets/shop-title-foil/book.svg')}
+[data-komi-title-id="title_pagekeeper"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_archivist"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_critic"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_explorer"]{--foil-speed:7.2s;--foil-delay:-1.64s}
+[data-komi-title-id="title_curator"]{--foil-speed:5.4s;--foil-delay:-2.05s}
+[data-komi-title-id="title_collector"],[data-komi-title-id="title_legend"],[data-komi-title-id="title_veteran"]{--foil-paper:#4a3d29;--foil-ink:#1c1914;--foil-edge:#d8b984;--foil-type:#fff0ce;--foil-glint:#ffdf9a;--foil-emblem:url('/assets/shop-title-foil/star.svg')}
+[data-komi-title-id="title_collector"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+[data-komi-title-id="title_legend"]{--foil-speed:6.0s;--foil-delay:-0.82s}
+[data-komi-title-id="title_veteran"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
+[data-komi-title-id="title_playerone"]{--foil-paper:#153d4d;--foil-ink:#121927;--foil-edge:#61c5cc;--foil-type:#daffff;--foil-glint:#88f5ec;--foil-emblem:url('/assets/shop-title-foil/spark.svg')}
+[data-komi-title-id="title_playerone"]{--foil-speed:5.4s;--foil-delay:-0.41s}

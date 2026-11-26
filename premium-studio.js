@@ -198,8 +198,11 @@
       for(const set of activeSets)previewCard.classList.add(set.className);
     }
     const title = activeItem('title');
-    const titleText = products.find(p=>p.id===title && p.type==='title')?.title || '';
+    const equippedTitle=products.find(p=>p.id===title && p.type==='title');
+    const titleText=window.KomiShopCatalog?.titleText?.(equippedTitle)||equippedTitle?.title||'';
     $('preview-title').textContent = titleText;
+    if(titleText) $('preview-title').dataset.komiTitleId=title;
+    else delete $('preview-title').dataset.komiTitleId;
     $('preview-title').hidden = !titleText;
     $('try-on-note').hidden = !Object.values(state.trial).some(id=>id && !owns(id));
     const initial = nickname.trim().slice(0,1).toUpperCase() || 'K';
@@ -433,7 +436,7 @@
         else if(product.type==='shape'){
           if(state.avatarUrl){const img=document.createElement('img');img.alt='';img.src=state.avatarUrl;top.append(img);}else top.textContent='K';
         }
-      } else {top.className='store-title-chip';top.textContent=product.title;}
+      } else {top.className='store-title-chip';top.textContent=window.KomiShopCatalog?.titleText?.(product)||product.title;top.dataset.komiTitleId=product.id;}
       const heading=document.createElement('h3');heading.textContent=product.label;
       const subtitle=document.createElement('p');subtitle.className='store-subtitle';
       const owned=owns(product.id);

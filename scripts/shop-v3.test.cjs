@@ -53,7 +53,7 @@ function eventButton(name,id){
 const countCards=html=>(html.match(/data-shop-item-action=/g)||[]).length;
 test('shop v3 JavaScript parses without frameworks and is initialized from the catalog',()=>{
  assert.doesNotThrow(()=>new vm.Script(js));
- assert.equal(products.length,146);
+ assert.equal(products.length,152);
  assert.match(html,/src="\.\/komi-shop-v3\.js\?v=/);
  assert.match(html,/komi\.production\.css\?v=/);
  assert.match(core,/window\.KomiShopV3\?\.render/);
@@ -70,7 +70,7 @@ test('guest storefront shows a bounded first page, explicit prices and auth butt
  assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,24);
   assert.doesNotMatch(container.innerHTML,/Рамка для твоего аватара в профиле/);
  assert.equal((container.innerHTML.match(/data-rarity="(?:common|rare|epic|legendary)"/g)||[]).length,24);
- assert.match(container.innerHTML,/Показано 24 из 142/);
+ assert.match(container.innerHTML,/Показано 24 из 148/);
  assert.match(container.innerHTML,/data-v3-sort/);
  assert.match(container.innerHTML,/data-v3-hide-owned/);
  assert.match(container.innerHTML,/aria-label="Примерочная"/);
@@ -281,7 +281,7 @@ test('server revision must match before debiting and preview blocks even with th
  assert.equal(real.canCheckout(),false);
  assert.equal(await real.checkPricing({rpc:async()=>({data:'previous'})}),false);
  assert.equal(await real.checkPricing({rpc:async name=>{
-   assert.equal(name,'komi_shop_station_revision');
+   assert.equal(name,'komi_shop_titles_revision');
    return {data:real.revision};
  }}),true);
  assert.equal(real.canCheckout(),true);

@@ -18,10 +18,10 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
     if(url.origin!==origin)return route.abort();
     if(url.pathname==='/shop')return route.fulfill({contentType:'text/html',body:html});
     const name=url.pathname.slice(1);
-    if(!assets.includes(name)&&!scripts.includes(name))return route.abort();
-    return route.fulfill({contentType:name.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(__dirname,'..',name),'utf8')});
+    if(!assets.includes(name)&&!scripts.includes(name)&&!/^assets\/shop-(?:title-foil|station)\/[a-z0-9_-]+\.svg$/.test(name))return route.abort();
+    return route.fulfill({contentType:name.endsWith('.svg')?'image/svg+xml':name.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(__dirname,'..',name),'utf8')});
    });
-   await page.goto(origin+'/shop?shop_page=6');
+   await page.goto(origin+'/shop?shop_page=7');
    const info=await page.evaluate(()=>{
      window.currentView='shop';
      const render=()=>window.KomiShopV3.render(document.getElementById('mainContainer'),{owner:'',store:null,displayName:'Гость'});
@@ -45,26 +45,27 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
      if(document.documentElement.scrollWidth>innerWidth)errors.push('horizontal overflow');
      return {errors,count:cards.length,ids:new Set(cards.map(c=>c.dataset.itemId)).size,types:new Set(cards.map(c=>c.dataset.itemType)).size};
    });
-   assert.deepEqual([info.count,info.ids,info.types],[142,142,13]);
+   assert.deepEqual([info.count,info.ids,info.types],[148,148,13]);
    assert.equal(info.errors.length,0,width+': '+info.errors.slice(0,8).join('\n'));
    const tryButtons=page.locator('[data-v3-try]');
    if(width===1680){
     const output=process.env.KOMI_SHOP_OUTPUT;
     if(output){
-     await page.setViewportSize({width,height:width===1680?2100:1400});
+     await page.setViewportSize({width,height:width===1680?2090:1450});
      const grid=await page.locator('.sv3-product-grid').boundingBox();
-     const bottom=await page.locator('.sv3-item').nth(11).boundingBox();
-     await page.screenshot({path:path.join(output,'KomiAnime-legacy-cards-desktop.png'),clip:{x:Math.floor(grid.x),y:Math.floor(grid.y),width:Math.floor(grid.width),height:Math.floor(bottom.y+bottom.height-grid.y)}});
+     const start=page.locator('.sv3-item').nth(24);await start.scrollIntoViewIfNeeded();
+     const top=await start.boundingBox();
+     const bottom=await page.locator('.sv3-item').nth(35).boundingBox();
+     await page.screenshot({path:path.join(output,'KomiAnime-restored-desktop.png'),clip:{x:Math.floor(grid.x),y:Math.floor(top.y),width:Math.floor(grid.width),height:Math.floor(bottom.y+bottom.height-top.y)}});
     }
    }
-   if(width===390){
-    const output=process.env.KOMI_SHOP_OUTPUT;
-    if(output){
-     await page.setViewportSize({width,height:width===1680?2100:1400});
-     const grid=await page.locator('.sv3-product-grid').boundingBox();
-     const bottom=await page.locator('.sv3-item').nth(3).boundingBox();
-     await page.screenshot({path:path.join(output,'KomiAnime-legacy-cards-mobile.png'),clip:{x:Math.floor(grid.x),y:Math.floor(grid.y),width:Math.floor(grid.width),height:Math.floor(bottom.y+bottom.height-grid.y)}});
-    }
+   if(width===390&&process.env.KOMI_SHOP_OUTPUT){
+     await page.setViewportSize({width,height:1800});
+     const slice=page.locator('.sv3-item').nth(24);
+     await slice.scrollIntoViewIfNeeded();
+     const top=await slice.boundingBox(),grid=await page.locator('.sv3-product-grid').boundingBox();
+     const bottom=await page.locator('.sv3-item').nth(27).boundingBox();
+     await page.screenshot({path:path.join(process.env.KOMI_SHOP_OUTPUT,'KomiAnime-restored-mobile.png'),clip:{x:Math.floor(grid.x),y:Math.floor(top.y),width:Math.floor(grid.width),height:Math.floor(bottom.y+bottom.height-top.y)}});
    }
    await tryButtons.first().focus();
    await page.keyboard.press('Enter');
@@ -72,7 +73,7 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
    assert.deepEqual(await page.evaluate(()=>window.KomiShopV3.selected()),[id]);
    assert.equal(await tryButtons.first().getAttribute('aria-pressed'),'true');
    assert.equal(await page.locator(`.sv3-item[data-item-id="${id}"] [data-shop-item-action]`).textContent(),'Только примерка');
-   console.log('PASS '+width+'px: 142 cards, 13 scene types and real prices, keyboard fitting, no writes');
+   console.log('PASS '+width+'px: 148 cards, 13 scene types and real prices, keyboard fitting, no writes');
    await page.close();
   }
  }finally{await browser.close();}

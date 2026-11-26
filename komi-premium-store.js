@@ -105,10 +105,12 @@ function apply(){
   iconNode.textContent=icon.symbol||'';
   iconNode.className='komi-store-'+icon.cosmeticClass;
  }else iconNode?.remove();
- const content=products.find(x=>x.id===item?.title_id)?.title||'';
+ const equippedTitle=products.find(x=>x.id===item?.title_id&&x.type==='title');
+ const content=root.KomiShopCatalog?.titleText?.(equippedTitle)||equippedTitle?.title||'';
  if(content){
   if(!title){title=document.createElement('span');title.className='komi-store-earned-title';title.dataset.komiEarnedTitle='';titleHolder.append(title);}
   title.textContent=content;
+  title.dataset.komiTitleId=equippedTitle.id;
  }else title?.remove();
 }
 async function refresh(){
@@ -170,7 +172,7 @@ function mount(container,id,active){
   }else if(product.type==='banner'){
    const cover=document.createElement('span');cover.className='store-banner-swatch '+product.bannerClass;cover.textContent='KOMI';sample.append(cover);
   }else if(product.type==='title'){
-   const chip=document.createElement('span');chip.className='komi-coin-title';chip.textContent=product.title;sample.append(chip);
+   const chip=document.createElement('span');chip.className='komi-coin-title';chip.textContent=root.KomiShopCatalog?.titleText?.(product)||product.title;chip.dataset.komiTitleId=product.id;sample.append(chip);
   }else if(product.type==='overlay'){
    const cover=document.createElement('div');cover.className='komi-preview-cover';const layer=document.createElement('span');layer.className='komi-shop-overlay-layer '+product.cosmeticClass;cover.append(layer);sample.append(cover);
   }else if(product.type==='showcase'){

@@ -225,7 +225,7 @@ function renderAniCoinShop(container) {
     const symbolFor=product=>{
         if(product.type==='frame')return '<span class="komi-coin-frame komi-store-'+product.frameClass+'"><img data-komi-shop-avatar alt="" hidden><span aria-hidden="true">K</span></span>';
         if(product.type==='banner')return '<div class="store-banner-swatch '+product.bannerClass+'">KOMI</div>';
-        if(product.type==='title')return '<span class="komi-coin-title">'+product.title+'</span>';
+        if(product.type==='title')return '<span class="komi-coin-title" data-komi-title-id="'+product.id+'">'+(window.KomiShopCatalog?.titleText?.(product)||product.title)+'</span>';
         if(product.type==='overlay')return '<div class="komi-preview-cover"><div class="komi-shop-overlay-layer '+product.cosmeticClass+'"></div></div>';
         if(product.type==='showcase')return '<div class="komi-shop-showcase-demo komi-store-'+product.cosmeticClass+'"><i></i><i></i><i></i></div>';
         if(product.type==='card')return '<div class="komi-shop-mini-swatch komi-store-'+product.cosmeticClass+'">KOMI</div>';
