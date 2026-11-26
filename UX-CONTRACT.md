@@ -138,3 +138,5 @@ keeps a 72px icon rail; visual labels appear on hover and keyboard focus while
 accessible names and authenticated visibility are unchanged. Catalogue search
 uses the existing route state, prioritises exact title matches with the default
 sort, and clears text without resetting other filters. The player, purchases and persistence are unchanged.
+
+The catalogue search preserves keyboard focus feedback on the wrapper rather than drawing an inner ring. Search and clear icons cannot overlap the editable field. The native footer retains all informational, partner and social links without JavaScript, and the floating community launcher must not cover footer links at the end of the document.
