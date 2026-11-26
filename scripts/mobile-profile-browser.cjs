@@ -44,7 +44,7 @@ const widths = [320, 375, 390, 620, 768, 900, 1280, 1366];
       return name;
     });
     assert.equal(setup.length,40);
-    const sections = ['overview','anime','friends','comments'];
+    const sections = ['overview','anime','history','friends','achievements','activity','comments'];
     for (const width of widths) {
       await page.setViewportSize({width,height:844});
       for (const section of sections) {
@@ -69,7 +69,12 @@ const widths = [320, 375, 390, 620, 768, 900, 1280, 1366];
             activeTab:tabs.find(el=>el.getAttribute('aria-pressed')==='true')?.textContent.trim(),
             hasStatus:profile.textContent.includes('Z'.repeat(100)),
             nameWrap:getComputedStyle(profile.querySelector('.profile-name-row h2')).overflowWrap,
-            profileWidth:profile.getBoundingClientRect().width
+            profileWidth:profile.getBoundingClientRect().width,
+            navRight:profile.querySelector('.profile-navigation-shell').getBoundingClientRect().left,
+            panelRight:profile.querySelector('#komiProfilePanel').getBoundingClientRect().right,
+            navDirection:getComputedStyle(profile.querySelector('.profile-premium-tabs')).flexDirection,
+            more:profile.querySelectorAll('.profile-more').length,
+            tabs:tabs.length
           };
         },section);
         assert.ok(info.farRight <= width + 3,
@@ -77,6 +82,9 @@ const widths = [320, 375, 390, 620, 768, 900, 1280, 1366];
         assert.ok(info.docWidth <= width + 3,
           'Document clips horizontally at ' + width + ' ('+section+'): '+JSON.stringify(info));
         assert.equal(info.activeTabs,1,'Exactly one active profile tab at '+width);
+        assert.equal(info.tabs,7,'All owner sections must be reachable');
+        assert.equal(info.more,0,'No hidden navigation');
+        if(width>=1100){assert.equal(info.navDirection,'column');assert.ok(info.navRight>=info.panelRight-1,'Right column must not overlap content');}
         assert.equal(info.activeLabels,1,'Exactly one active collection tab at '+width);
         assert.equal(info.hasStatus,true,'Long profile status must stay visible at '+width);
         assert.equal(info.nameWrap,'anywhere','Unbroken nickname should wrap');
@@ -103,6 +111,24 @@ const widths = [320, 375, 390, 620, 768, 900, 1280, 1366];
       }
       console.log('PASS responsive profile and drawer '+width);
     }
+    await page.setViewportSize({width:390,height:844});
+    const preview=await page.evaluate(()=>{
+      const uid=currentUser.authUserId;
+      userFavorites[currentUser.username]={'52991':'Любимые'};
+      window.komiProfilePreviewOwner=uid;
+      komiPrivacyState.owner=uid;komiPrivacyState.data={hide_profile:false,invisible:false};
+      profilePageSection='overview';
+      const root=document.getElementById('komi-mobile-profile-test-root');
+      renderProfileView(root);
+      const p=root.querySelector('#profile');
+      const exposed=p.querySelector('[data-profile-edit],[data-profile-balance],[data-profile-week-owner],[data-profile-tab="history"],[data-profile-tab="activity"],.profile-favorites-widget');
+      const result={isPreview:p.dataset.profilePreview,exposed:!!exposed,exit:!!p.querySelector('[data-profile-preview-toggle]'),privateFavorite:p.textContent.includes('Проверочное аниме')};
+      komiPrivacyState.data.hide_profile=true;renderProfileView(root);result.hidden=root.textContent.includes('Профиль скрыт');
+      window.komiProfilePreviewOwner=null;komiPrivacyState.data.hide_profile=false;renderProfileView(root);result.restored=!!root.querySelector('[data-profile-edit]');
+      return result;
+    });
+    assert.deepEqual(preview,{isPreview:'true',exposed:false,exit:true,privateFavorite:false,hidden:true,restored:true});
+    console.log('PASS profile preview hides owner controls and private data, respects hidden profile and restores edit mode');
     await page.close();
   } finally {
     await browser.close();

@@ -421,3 +421,19 @@ body:has(#profile.komi-profile-studio) #sideFriendsBtn{width:44px!important;min-
  #profile.komi-profile-studio .profile-section-layout .profile-bento-side{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(max-width:620px){#profile.komi-profile-studio .profile-section-layout{gap:12px;margin-top:12px}#profile.komi-profile-studio .profile-section-layout .profile-premium-tabs{flex-wrap:wrap;overflow:visible!important}#profile.komi-profile-studio .profile-section-layout .komi-profile-tab{flex:1 1 auto;min-height:44px}}
+
+/* Keep the activity widget beside the overview on roomy screens, and prevent narrow columns. */
+#profile.komi-profile-studio .profile-preview-widgets{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}
+#profile.komi-profile-studio .profile-preview-summary{margin-top:12px;font-size:14px;color:var(--studio-muted)}
+#profile.komi-profile-studio.komi-profile-premium-mono .profile-summary-item strong.is-missing{font-size:14px;line-height:1.3}
+#profile.komi-profile-studio .profile-stat-retry[hidden]{display:none!important}
+@media(min-width:1100px){
+ #profile.komi-profile-studio .profile-section-layout .profile-navigation-shell{z-index:5}
+ #profile.komi-profile-studio .profile-section-layout .profile-bento-main{min-width:0;container-type:inline-size}
+ @container(max-width:580px){#profile.komi-profile-studio .profile-section-layout .profile-overview-library{grid-template-columns:minmax(0,1fr)}}
+}
+@media(min-width:1320px){
+ #profile.komi-profile-studio .profile-section-layout .profile-bento{grid-template-columns:minmax(0,1.65fr) minmax(250px,1fr)!important}
+ #profile.komi-profile-studio .profile-section-layout .profile-bento-side{display:flex!important;flex-direction:column;min-width:0}
+}
+@media(max-width:1099px){#profile.komi-profile-studio .profile-section-layout .profile-premium-tabs{flex-wrap:wrap;overflow:visible!important;justify-content:flex-start!important}}
