@@ -720,3 +720,30 @@
     mask-image: linear-gradient(90deg,transparent 0%,#000 35%);
   }
 }
+
+/* Cinema programme: one strong image, quiet controls and readable copy.
+   Preserve boot/hydrated geometry; no new artwork or font requests. */
+body.komi-media-hub .komi-home-hero #heroSlider .hero-slide h1.komi-hub-title-text {
+  font-family: Manrope,Inter,sans-serif !important; font-weight: 700 !important;
+  letter-spacing: -.035em !important; line-height: 1.15 !important;
+}
+@media (min-width: 769px) {
+  body.komi-media-hub .komi-home-hero #heroSlider .komi-home-hero-content {
+    width: min(660px, 72%); max-width: 660px;
+  }
+  body.komi-media-hub .komi-home-hero #heroSlider .hero-slide h1.komi-hub-title-text {
+    font-size: clamp(28px, 3.2vw, 44px) !important;
+  }
+}
+body.komi-media-hub .komi-home-hero #heroSlider .hero-slide p.komi-hub-description {
+  font-size: 16px !important; line-height: 1.55 !important; color: #d0d0d0 !important;
+}
+body.komi-media-hub .komi-home-hero #heroSlider .hero-buttons :is(a,button) {
+  border-radius: 10px !important; font-weight: 600 !important; font-size: 15px !important;
+  min-height: 46px !important; box-shadow: none !important;
+}
+body.komi-media-hub .komi-home-hero #heroSlider .hero-buttons :is(a,button):is(:hover,:active) { transform: none !important; }
+@media (max-width: 640px) {
+  body.komi-media-hub .komi-home-hero #heroSlider .hero-slide p.komi-hub-description { font-size: 14px !important; line-height: 1.45 !important; }
+  body.komi-media-hub .komi-home-hero #heroSlider .hero-buttons :is(a,button) { font-size: 14px !important; padding-inline: 16px !important; }
+}

@@ -122,3 +122,17 @@ Paid operations require the shared app-owned native dialog with named products, 
 The desktop fitting rail and mobile expandable sheet are non-modal. Profile/Comment buttons expose exactly one preview panel and preserve selected products and prices. Trying a plate selects Comment; another slot selects Profile. Header, scroll region and checkout footer occupy separate rows, so the last selected item can be reached without being obscured. The empty checkout action is hidden, while status and apply-only recovery remain available even with no trial items. Removing the last item or completing a purchase restores focus to an available fitting control. A direct desktop purchase whose card disappears through Hide purchased restores focus to the fitting heading. The sheet does not claim focus trapping or inert background; Escape/collapse returns focus to the sheet header. Desktop collection try-on focuses the fitting heading and scrolls its panel into view; normal single-item previews do not scroll the page. The compact community entry has separate space beside a collapsed sheet and is hidden while the sheet is expanded, then restored on collapse. The payment dialog is modal and owns focus, inert background, Escape and restoration. Trial-changing controls are disabled while an operation is pending. Purchase feedback lives next to the checkout action and in an accessible live region. Social gifts keep the existing server owner and are remounted after catalogue replacement. No live user's coins are spent for validation.
 
 Business sources: `supabase/migrations/20261122081500_shop_cart_charge_only_inserted.sql` owns cart concurrency behavior; `20261125122924_anicoin_shop_v7_collections.sql` expands only catalog rows and explicit equip allowlists, preserving existing prices, wallets, ownership and permissions. Premium pricing is outside this change.
+
+
+## Discovery comfort revision (26 November 2026)
+
+The layout changes in DESIGN.md do not introduce state owners. app-main.js keeps
+catalogue filtering, search/caret restoration, category and route state. Native
+select ownership remains accepted for the existing mobile-bottom-sheets.js filter
+sheet and inline advanced filters; the operating system owns popup geometry.
+komi-genre-moods.js keeps quick sort/year disclosures and genre selection. Catalogue
+genres follow search in the DOM; no CSS ordering changes keyboard traversal.
+On phones the duplicate inline advanced-filter action is hidden, while the same
+sheet trigger, fields and Apply/Reset actions remain available. Wide navigation
+reveals existing aria-hidden visual labels, retaining the buttons' accessible names
+and authenticated visibility. The player, purchases and persistence are unchanged.

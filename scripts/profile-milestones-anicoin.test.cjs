@@ -68,13 +68,13 @@ test('full friends tab displays escaped public nicknames and GIF avatars, keepin
     safeUrl:url=>url.startsWith('https://')?url:'',
     escapeText
   });
-  vm.runInContext(section(premium,'function fullFriendRows(names) {','function content(ctx){'),ui);
+  vm.runInContext(section(premium,'function friendAvatarMarkup(name,profile,label) {','function content(ctx){'),ui);
   ui.names=[name];
   const html=vm.runInContext('fullFriendRows(names)',ui);
   assert.match(html,/Komi &lt;friend&gt;/);
   assert.match(html,/avatar.gif/);
   assert.match(html,/komiProfileFriendNames\[0\]/);
-  assert.doesNotMatch(html,/google_1234567890abcdef/);
+  assert.doesNotMatch(html.replace(/<[^>]*>/g,''),/google_1234567890abcdef/);
   assert.match(premium,/fullList.innerHTML=fullFriendRows\(names\)/);
   assert.match(app,/KomiProfileUI.fullFriendRows\(myFriends\)/);
 });

@@ -598,3 +598,44 @@ body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-advanc
     z-index: 2147480200 !important;
   }
 }
+
+/* Catalogue is a working library: search and titles precede compact genres.
+   Match the existing v5 owner specificity instead of a separate theme layer. */
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-moods { margin: 4px 0 20px !important; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 { margin-bottom: 8px !important; padding-bottom: 0 !important; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-heading { margin-bottom: 8px; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-heading h2 { font-size: 16px; font-weight: 600; letter-spacing: 0; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-heading p { display: none; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-moods-grid {
+  display: flex !important; gap: 8px !important; overflow-x: auto;
+  padding: 3px 3px 9px; scroll-padding-inline: 3px; scrollbar-width: thin;
+  overscroll-behavior-inline: contain;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-card {
+  flex: 0 0 auto; width: auto !important; height: auto !important; min-height: 44px;
+  padding: 11px 16px; border-radius: 8px !important; background: #161616;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 :is(.komi-mood-art,.komi-mood-gradient) { display: none; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-copy { position: static; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-copy strong { font: 500 14px/1.4 Inter,sans-serif; letter-spacing: 0; white-space: nowrap; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-mood-copy small { display: none; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-heading { display: block; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-heading h1 { font: 700 clamp(28px,3vw,38px)/1.2 Manrope,Inter,sans-serif !important; letter-spacing: -.035em; margin-bottom: 8px; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-number { font-size: 14px; font-weight: 400; color: #a3a3a3; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search { max-width: 100% !important; border-radius: 10px !important; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search input { font-size: 16px !important; min-height: 48px; }
+.komi-media-hub :is(.komi-tool-menu summary,.komi-tool-filters,.komi-moods-all summary) {
+  min-height: 44px; border-radius: 9px; font: 600 14px/1.35 Manrope,Inter,sans-serif;
+  background: #161616; color: #e5e5e5;
+}
+.komi-media-hub :is(.komi-tool-dropdown,.komi-moods-dropdown) button { min-height: 44px; font-size: 14px; font-weight: 500; }
+.komi-media-hub .komi-tool-menu summary::after { content: ''; width: 6px; height: 6px; border-right: 1.5px solid; border-bottom: 1.5px solid; transform: rotate(45deg); margin: -3px 2px 0 5px; }
+.komi-media-hub .komi-tool-menu[open] summary::after { transform: rotate(225deg); margin-top: 3px; }
+.komi-media-hub :is(.komi-mood-card,.komi-tool-filters,.komi-tool-menu summary,.komi-moods-all summary):is(:hover,:active) { transform: none; }
+@media (max-width: 767px) {
+  /* The existing phone sheet is the single advanced-filter entry on phones. */
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-tool-filters { display: none; }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-tools { justify-content: flex-start !important; gap: 6px; }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-tool-menu summary { padding: 10px; font-size: 13px; }
+  .komi-media-hub .komi-tool-dropdown { left: 0; right: auto; max-width: calc(100vw - 40px); }
+}
