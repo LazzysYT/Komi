@@ -42,7 +42,7 @@
    finally{state.loading=false;renderArea();refreshGiftButtons();}
  }
  function featured(){
-   const list=catalog().filter(p=>!root.KomiShopCatalog?.isArchived?.(p.id)&&['frame','title','banner','overlay'].includes(p.type));
+   const list=catalog().filter(p=>root.KomiShopCatalog?.isOnSale?.(p.id)===true);
    const day=Math.floor(Date.now()/86400000);
    const week=Math.floor((day+3)/7);
    return [0,1,2].map((_,i)=>list[(week*7+i*13+5)%list.length]).filter(Boolean);
@@ -66,22 +66,7 @@
      area.append(picks);
    }
    const user=safeUser();
-   const extra=create('div','komi-shop-extra-grid');
-   const boosters=create('section','komi-shop-extra-card');
-   boosters.append(create('h3','','Бонус ×2 XP · 24 часа'));
-   boosters.append(create('p','komi-shop-muted','Только XP новых подтверждённых ежедневных заданий. Не удваивает AniCoin или другой опыт. Уже заработанный опыт не меняется; с Premium множители не складываются.'));
-   const active=Boolean(state.booster?.active&&Date.parse(state.booster.active_until)>Date.now());
-   boosters.append(create('p','komi-shop-muted',active?'Активен до '+date(state.booster.active_until):'Цена · 110 AniCoin'));
-   const preview=root.KomiShopCatalog?.isPreview?.()===true;
-   const purchase=create('button','komi-shop-primary',preview?'Недоступно в предпросмотре':!user?'Войти, чтобы активировать':active?'Усилитель активен':'Активировать за 110 ◈');
-   purchase.type='button';purchase.dataset.komiShopBoost='';purchase.disabled=preview||active||state.loading;
-   boosters.append(purchase);extra.append(boosters);
-   const highlight=create('section','komi-shop-extra-card');
-   highlight.append(create('h3','','Выделение комментария на 24 часа'));
-   highlight.append(create('p','komi-shop-muted','12 AniCoin. Для собственного комментария под аниме: рамка и честная пометка «Выделено за AniCoin». Максимум два в день. Оценки не изменяются.'));
-   highlight.append(create('p','komi-shop-muted','Открой свои комментарии под аниме и нажми «Выделить».'));
-   extra.append(highlight);
-   area.append(extra);
+   if(state.booster?.active&&Date.parse(state.booster.active_until)>Date.now())area.append(create('p','komi-shop-muted','Ранее купленный бонус XP активен до '+date(state.booster.active_until)+'.'));
    const gifting=create('section','komi-shop-gifts-panel');
    gifting.append(create('h3','','Подарки друзьям'));
    gifting.append(create('p','komi-shop-muted',!user?'Войди в аккаунт, чтобы дарить выбранные товары друзьям.':state.friends.length?'Выбери кнопку подарка на карточке товара. Можно отправить до трёх подарков в сутки.':'Доступно после добавления взаимных друзей. У каждого товара есть кнопка подарка.'));
@@ -128,7 +113,7 @@
    for(const card of section.querySelectorAll('.komi-coin-card')){
      const actions=card.querySelector('.komi-coin-actions');
      const original=actions?.querySelector('[data-shop-item-action]');
-     if(!actions||!original||actions.querySelector('[data-komi-shop-gift]'))continue;
+     if(!actions||!original||root.KomiShopCatalog?.isOnSale?.(original.dataset.shopItemAction)!==true||actions.querySelector('[data-komi-shop-gift]'))continue;
      const button=create('button','komi-shop-gift-button','');button.type='button';button.innerHTML=root.KomiShopIcons?.solid?.('gift',19)||root.KomiShopIcons?.svg('gift',19)||'✧';
      button.dataset.komiShopGift=original.dataset.shopItemAction;
      button.disabled=root.KomiShopCatalog?.isPreview?.()===true||!!safeUser()&&root.KomiShopCatalog?.canCheckout?.()!==true;
@@ -173,7 +158,7 @@
      if(root.KomiShopCatalog?.canCheckout?.()!==true){showStatus('Подарки временно недоступны: цены ещё не подтверждены.');return;}
      if(!state.loaded){showStatus('Загружаем список друзей…');void update();return;}
      if(!state.friends.length){showStatus('Для подарков нужны подтверждённые друзья.');return;}
-     const product=item(gift.dataset.komiShopGift);if(!product)return;
+     const product=item(gift.dataset.komiShopGift);if(!product||root.KomiShopCatalog?.isOnSale?.(product.id)!==true)return;
      const dialog=$('komiShopGiftDialog');
      if(!dialog)return;
      dialog.dataset.item=product.id;
@@ -182,25 +167,7 @@
      dialog.showModal();
      return;
    }
-   const booster=event.target.closest?.('[data-komi-shop-boost]');
-   if(booster&&currentSection()&&!booster.disabled&&root.KomiShopCatalog?.isPreview?.()!==true){
-     const user=safeUser();
-     if(!user){if(typeof openAuthModal==='function')openAuthModal('login');return;}
-     if(!root.confirm('Активировать ×2 XP для новых ежедневных заданий на 24 часа за 110 AniCoin?'))return;
-     booster.disabled=true;showStatus('Проверяем баланс и активируем усилитель…');
-     try{
-       const auth=await api().auth.getUser();
-       if(auth.error||auth.data?.user?.id!==user)throw Error('Повтори вход в аккаунт.');
-       const {data,error}=await api().rpc('komi_shop_booster',{p_action:'buy'});
-       if(error)throw error;
-       if(safeUser()===user){
-         state.booster=data;showStatus('Усилитель включён. Действует до '+date(data.active_until));
-         if(typeof root.komiShopReloadStore==='function')void root.komiShopReloadStore();
-         renderArea();
-       }
-     }catch(error){showStatus(error?.message||'Не удалось активировать усилитель.');}
-     finally{if(currentSection())renderArea();}
-   }
+
  });
  document.addEventListener('submit',async event=>{
    if(event.target?.id!=='komiShopGiftForm')return;
@@ -208,7 +175,7 @@
    const dialog=$('komiShopGiftDialog');const product=item(dialog?.dataset.item);
    const owner=safeUser();const recipient=$('komiShopGiftRecipient')?.value;
    const note=$('komiShopGiftMessage')?.value||'';
-   if(!owner||!product||!recipient||!state.friends.some(friend=>friend.id===recipient)||root.KomiShopCatalog?.canCheckout?.()!==true)return;
+   if(!owner||!product||root.KomiShopCatalog?.isOnSale?.(product.id)!==true||!recipient||!state.friends.some(friend=>friend.id===recipient)||root.KomiShopCatalog?.canCheckout?.()!==true)return;
    const confirm=event.target.querySelector('[type="submit"]');confirm.disabled=true;
    if(!root.confirm('Подарить «'+product.label+'» за '+product.cost+' AniCoin?')){confirm.disabled=false;return;}
    showStatus('Отправляем подарок…');

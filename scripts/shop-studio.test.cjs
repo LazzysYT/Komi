@@ -126,43 +126,34 @@ function fixture(options={}){
  return api;
 }
 
-test('catalogue pagination exposes every real product once and resets on a new category',async()=>{
- const f=fixture();
- assert.equal(f.ids.length,24);
- const initial=f.ids;
- await f.click('data-v7-more');
- assert.equal(f.ids.length,48);
- assert.deepEqual(f.ids.slice(0,24),initial);
- while(f.html.includes('data-v7-more'))await f.click('data-v7-more');
- assert.equal(f.ids.length,148);
- assert.equal(new Set(f.ids).size,148);
- assert.deepEqual(sorted(f.ids),sorted(f.products.filter(item=>!["banner_grid","frame_pixel","xp_hatch","xp_dots"].includes(item.id)).map(item=>item.id)));
- assert.match(f.html,/data-rarity="legendary"/);
- f.change('data-v7-category-select','frame');
- assert.equal(f.ids.length,24);
- assert.ok(f.ids.every(id=>f.product(id).type==='frame'));
- assert.equal(f.url.searchParams.has('shop_page'),false);
+test('pagination exposes each discoverable title once and no old non-title products',async()=>{
+ const f=fixture();assert.equal(f.ids.length,24);const first=f.ids;
+ await f.click('data-v7-more');assert.equal(f.ids.length,34);
+ assert.deepEqual(f.ids.slice(0,24),first);
+ assert.equal(new Set(f.ids).size,34);
+ assert.ok(f.ids.every(id=>f.product(id).type==='title'));
+ assert.doesNotMatch(f.html,/data-v7-category-select/);
 });
 
 test('local search is case-insensitive, retains fitting choices, and clear restores focus and results',async()=>{
  const f=fixture();
- f.window.KomiShopV3.tryItem('frame_moon');
- f.input('лУнНаЯ РАМКА');
- assert.deepEqual(f.ids,['frame_moon']);
- assert.equal(f.url.searchParams.get('shop_q'),'лУнНаЯ РАМКА');
+ f.window.KomiShopV3.tryItem('title_collector');
+ f.input('кОлЛеКцИоНеР');
+ assert.deepEqual(f.ids,['title_collector']);
+ assert.equal(f.url.searchParams.get('shop_q'),'кОлЛеКцИоНеР');
  assert.match(f.html,/data-v7-clear-search aria-label="Очистить поиск"/);
- assert.deepEqual(f.selected,['frame_moon']);
+ assert.deepEqual(f.selected,['title_collector']);
  await f.click('data-v7-clear-search');
  assert.equal(f.ids.length,24);
  assert.equal(f.url.searchParams.has('shop_q'),false);
- assert.deepEqual(f.selected,['frame_moon']);
+ assert.deepEqual(f.selected,['title_collector']);
  assert.equal(f.focusHistory.at(-1),'#shop [data-v7-search]');
 });
 
 test('late same-owner hydration preserves cleared-search focus and the current input selection',async()=>{
  const f=fixture();
- f.input('лУнНаЯ РАМКА');
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.input('кОлЛеКцИоНеР');
+ f.window.KomiShopV3.tryItem('title_collector');
  await f.click('data-v7-clear-search');
  const cleared=f.document.querySelector('#shop [data-v7-search]');
  assert.equal(f.document.activeElement,cleared);
@@ -172,8 +163,8 @@ test('late same-owner hydration preserves cleared-search focus and the current i
  assert.notEqual(restored,cleared,'the full renderer replaced the old input');
  assert.equal(f.document.activeElement,restored,'a later rerender must not send focus to body');
  assert.equal(f.ids.length,24);
- assert.deepEqual(f.selected,['frame_moon']);
- f.input('Лунная рамка');
+ assert.deepEqual(f.selected,['title_collector']);
+ f.input('Коллекционер');
  f.document.querySelector('#shop [data-v7-search]').setSelectionRange(2,6,'backward');
  f.render();
  const selectedInput=f.document.querySelector('#shop [data-v7-search]');
@@ -184,11 +175,11 @@ test('late same-owner hydration preserves cleared-search focus and the current i
 
 test('hydration does not restore search focus across owners or steal it from an open confirmation',async()=>{
  const f=fixture();
- f.input('Лунная рамка');
+ f.input('Коллекционер');
  f.render({owner:'uid-a',store:{balance:100,owned:[]}});
  assert.equal(f.document.activeElement,f.document.body,'owner change must not reuse the old focus state');
  f.document.querySelector('#shop [data-v7-search]').focus();
- const item=f.product('frame_moon');
+ const item=f.product('title_collector');
  const pending=f.window.KomiShopV3.confirmPurchase({items:[item],total:item.cost,balance:100,owner:'uid-a',action:'buy_equip'});
  const cancel=f.document.activeElement;
  assert.equal(f.focusHistory.at(-1),'[data-confirm-cancel]');
@@ -201,11 +192,11 @@ test('hydration does not restore search focus across owners or steal it from an 
 test('search waits for IME composition to finish and escapes the entered query',()=>{
  const f=fixture();
  const before=f.renders;
- f.input('Лунная рамка',{composing:true});
+ f.input('Коллекционер',{composing:true});
  assert.equal(f.renders,before);
  assert.equal(f.ids.length,24);
- f.input('Лунная рамка',{event:'compositionend'});
- assert.deepEqual(f.ids,['frame_moon']);
+ f.input('Коллекционер',{event:'compositionend'});
+ assert.deepEqual(f.ids,['title_collector']);
  f.input('<img src=x onerror=alert(1)>');
  assert.equal(f.ids.length,0);
  assert.match(f.html,/value="&lt;img src=x onerror=alert\(1\)&gt;"/);
@@ -214,26 +205,21 @@ test('search waits for IME composition to finish and escapes the entered query',
 
 test('empty search offers recovery without discarding a chosen profile look',async()=>{
  const f=fixture();
- f.window.KomiShopV3.tryItem('banner_moon');
+ f.window.KomiShopV3.tryItem('title_nocturne');
  f.input('zz-no-such-cosmetic');
  assert.equal(f.ids.length,0);
  assert.match(f.html,/Таких предметов пока нет/);
  await f.click('data-v7-browse');
  assert.equal(f.ids.length,24);
- assert.deepEqual(f.selected,['banner_moon']);
+ assert.deepEqual(f.selected,['title_nocturne']);
 });
 
-test('affordability includes already owned items and excludes unaffordable unowned items',async()=>{
- const owned=['frame_shogun'];
- const f=fixture({ctx:{owner:'uid-a',store:{balance:15,owned},wallet:{balance:15}}});
+test('affordability checks only titles and retains owned high-price titles',async()=>{
+ const owned=['title_veteran'],f=fixture({ctx:{owner:'uid-a',store:{balance:15,owned}}});
  f.change('data-v7-affordable',true);
- while(f.html.includes('data-v7-more'))await f.click('data-v7-more');
- assert.ok(f.ids.includes('frame_shogun'),'owned item costs nothing to apply');
- assert.deepEqual(sorted(f.ids),sorted(f.products.filter(item=>item.cost<=15||owned.includes(item.id)).map(item=>item.id)));
+ assert.ok(f.ids.includes('title_veteran'));
+ assert.deepEqual(sorted(f.ids),sorted(f.products.filter(p=>p.type==='title'&&(p.cost<=15||owned.includes(p.id))).map(p=>p.id)));
  assert.equal(f.url.searchParams.get('shop_available'),'1');
- f.change('data-v3-hide-owned',true);
- assert.ok(!f.ids.includes('frame_shogun'));
- assert.ok(f.ids.every(id=>f.product(id).cost<=15));
 });
 
 test('owned inventory shows exactly server-owned catalogue items and labels equipped items separately',async()=>{
@@ -272,66 +258,30 @@ test('owned inventory distinguishes pending hydration, a failed load, and a veri
  assert.doesNotMatch(f.html,/data-shop-retry/);
 });
 
-test('collection browsing selects its eight real products while trying a look changes only preview slots',async()=>{
- const f=fixture();
- const collection=f.collections[0];
- await f.click('data-v7-collection',collection.id);
- assert.deepEqual(sorted(f.ids),sorted(collection.items));
- assert.equal(f.url.searchParams.get('shop_collection'),collection.id);
- await f.click('data-v7-look',collection.id);
- assert.deepEqual(sorted(f.selected),sorted(collection.preview));
- assert.equal(f.mutations.length,0);
- assert.equal(f.status,'','a free preview does not fill checkout with a redundant success message');
- assert.deepEqual(f.mutations,[]);
- await f.click('data-v7-collection',collection.id);
- assert.equal(f.ids.length,24);
- assert.deepEqual(sorted(f.selected),sorted(collection.preview));
+test('legacy collection links still show titles instead of an empty catalog',()=>{
+ const f=fixture({url:'https://komianime.online/shop?shop_collection=cinema&shop_category=frame'});
+ assert.ok(f.ids.length&&f.ids.every(id=>f.product(id).type==='title'));
+ assert.doesNotMatch(f.html,/data-v7-collection=|data-v7-look=/);
 });
 
-test('collections default closed at every viewport and preserve explicit user preference',()=>{
- const isOpen=f=>/<details class="sv7-collections" open>/.test(f.html);
- const tall=fixture({height:900});
- assert.equal(isOpen(tall),false,'the first visit leads with products, including on a tall desktop');
- const short=fixture({height:800});
- assert.equal(isOpen(short),false);
- assert.equal(isOpen(fixture({height:686})),false);
- assert.equal(isOpen(fixture({narrow:true,height:900})),false);
- short.toggleCollections(true);
- assert.equal(isOpen(short),true,'explicit opening must survive rerender on the short viewport');
- short.viewport.height=900;short.render();
- assert.equal(isOpen(short),true);
- short.toggleCollections(false);
- assert.equal(isOpen(short),false,'explicit collapse survives viewport changes');
- assert.match(short.html,/Рамки, обложки и другие украшения для профиля\./);
+test('editorial title gallery is available without reviving mixed collections',()=>{
+ const f=fixture();
+ assert.match(f.html,/sv12-gallery/);
+ assert.doesNotMatch(f.html,/sv7-collections|sv7-starter|sv10-station/);
 });
 
-test('profile and comment preview modes preserve the trial, and a comment cosmetic reveals its actual result',async()=>{
- const f=fixture();
- const panelTag=id=>f.html.match(new RegExp('<div[^>]*id="'+id+'"[^>]*>'))?.[0];
- assert.doesNotMatch(panelTag('sv7ProfilePreview'),/\shidden/);
- assert.match(panelTag('sv7CommentPreview'),/\shidden/);
- f.window.KomiShopV3.tryItem('frame_moon');
- await f.click('data-v7-preview','comment');
- assert.match(panelTag('sv7ProfilePreview'),/\shidden/);
- assert.doesNotMatch(panelTag('sv7CommentPreview'),/\shidden/);
- assert.deepEqual(f.selected,['frame_moon']);
- const plate=f.products.find(item=>item.type==='plate');
- await f.click('data-v7-preview','profile');
- f.window.KomiShopV3.tryItem(plate.id);
- assert.doesNotMatch(panelTag('sv7CommentPreview'),/\shidden/,'trying a comment plate reveals the comment, not an unrelated profile');
- assert.match(f.html,new RegExp('sv3-comment komi-store-'+escapeRegex(plate.cosmeticClass)));
- f.change('data-v7-category-select','name');
- assert.doesNotMatch(panelTag('sv7CommentPreview'),/\shidden/,'filtering does not reset the selected preview');
- assert.deepEqual(sorted(f.selected),sorted(['frame_moon',plate.id]));
- f.window.KomiShopV3.tryItem('title_cinema');
- assert.doesNotMatch(panelTag('sv7ProfilePreview'),/\shidden/,'a profile cosmetic returns to the profile example');
+test('previously owned comment plates can still be tried in their real context',()=>{
+ const f=fixture({ctx:{owner:'uid-a',store:{balance:0,owned:['plate_manga']}}});
+ f.window.KomiShopV3.tryItem('plate_manga');
+ assert.deepEqual(f.selected,['plate_manga']);
+ assert.match(f.html,/id="sv7CommentPreview">/);
+ assert.match(f.html,/sv3-comment komi-store-plate-manga/);
  assert.deepEqual(f.mutations,[]);
- assert.deepEqual(f.logins,[]);
 });
 
 test('catalogue refresh preserves preview scroll while a new example and account change reset it',async()=>{
  const f=fixture();
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.window.KomiShopV3.tryItem('title_collector');
  f.previewScroll=160;f.input('Рамка');
  assert.equal(f.previewScroll,160,'search must not jump the independent preview scrollport');
  await f.click('data-v7-preview','comment');
@@ -345,13 +295,13 @@ test('catalogue refresh preserves preview scroll while a new example and account
 test('removing the last trial and reset never send focus to disabled or hidden checkout controls',async()=>{
  for(const narrow of [false,true]){
    const f=fixture({narrow});
-   f.window.KomiShopV3.tryItem('frame_moon');
-   await f.click('data-v3-remove','frame');
+   f.window.KomiShopV3.tryItem('title_collector');
+   await f.click('data-v3-remove','title');
    assert.deepEqual(f.selected,[]);
    assert.equal(f.focusHistory.at(-1),narrow?'#shop [data-v7-search]':'#shop .sv3-fitting-head h2');
    assert.match(f.html,/data-fitting-active="false"/);
    assert.match(f.html,/data-v3-checkout hidden/);
-   f.window.KomiShopV3.tryItem('frame_moon');
+   f.window.KomiShopV3.tryItem('title_collector');
    await f.click('data-v3-reset');
    assert.equal(f.focusHistory.at(-1),narrow?'#shop [data-v7-search]':'#shop [data-v7-preview="profile"]');
    assert.match(f.html,/data-fitting-active="false"/);
@@ -360,65 +310,41 @@ test('removing the last trial and reset never send focus to disabled or hidden c
  }
 });
 
-test('desktop collection try-on reveals the fitting room and respects reduced motion without moving single-item trials',async()=>{
- for(const reducedMotion of [false,true]){
-   const f=fixture({height:686,reducedMotion});
-   f.window.KomiShopV3.tryItem('frame_moon');
-   assert.equal(f.scrollHistory.length,0,'ordinary item previews must not move the page');
-   await f.click('data-v7-look',f.collections[0].id);
-   assert.deepEqual(f.scrollHistory,[{selector:'#shop .sv3-fitting',block:'start',behavior:reducedMotion?'auto':'smooth'}]);
-   assert.equal(f.focusHistory.at(-1),'#shop .sv3-fitting-head h2');
-   assert.match(f.html,/<h2 tabindex="-1">Примерочная<\/h2>/);
- }
- const mobile=fixture({narrow:true,height:686});
- await mobile.click('data-v7-look',mobile.collections[0].id);
- assert.deepEqual(mobile.scrollHistory,[],'the fixed mobile sheet must not scroll the background page');
- assert.equal(mobile.focusHistory.at(-1),'#shop [data-v3-sheet]');
+test('trying a featured title does not scroll the storefront automatically',async()=>{
+ const f=fixture();
+ await f.click('data-v3-try','title_crimson_hunter');
+ assert.deepEqual(f.selected,['title_crimson_hunter']);
+ assert.deepEqual(f.scrollHistory,[]);
 });
 
-test('trying a second item replaces only its own slot and reactions are never added to the equip cart',()=>{
+test('a different title replaces the first, but an unowned old effect cannot enter the cart',()=>{
  const f=fixture();
+ f.window.KomiShopV3.tryItem('title_crimson_hunter');
+ f.window.KomiShopV3.tryItem('title_moon_ronin');
  f.window.KomiShopV3.tryItem('frame_moon');
- f.window.KomiShopV3.tryItem('title_cinema');
- f.window.KomiShopV3.tryItem('frame_velvet');
- assert.deepEqual(sorted(f.selected),['frame_velvet','title_cinema']);
- f.window.KomiShopV3.tryItem('reaction_hype');
- assert.deepEqual(sorted(f.selected),['frame_velvet','title_cinema']);
- assert.match(f.html,/Покупаются отдельно на карточке/);
+ assert.deepEqual(f.selected,['title_moon_ronin']);
 });
 
-test('filters and sorting restore from the URL and browser navigation reapplies them',()=>{
- const f=fixture({url:'https://komianime.online/shop?shop_category=shape&shop_sort=price-down'});
- assert.deepEqual(f.ids,f.products.filter(item=>item.type==='shape').sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru')).map(item=>item.id));
- assert.match(f.html,/<option value="shape" selected>/);
- f.navigate('/shop?shop_collection=cinema');
- assert.deepEqual(sorted(f.ids),sorted(f.collections.find(item=>item.id==='cinema').items));
- f.navigate('/shop?shop_page=2');
- assert.equal(f.ids.length,48);
+test('title catalogue sorts by price and restores the URL page limit',()=>{
+ const f=fixture({url:'https://komianime.online/shop?shop_category=title&shop_page=2&shop_sort=price-down'});
+ const expected=f.products.filter(p=>p.type==='title').sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru')).map(p=>p.id);
+ assert.deepEqual(f.ids,expected);
 });
 
-test('returning through SPA navigation reads the new shop route rather than stale in-memory filters',()=>{
+test('returning through SPA navigation reads the provided title search',()=>{
  const f=fixture();
- f.input('Лунная рамка');
- assert.deepEqual(f.ids,['frame_moon']);
- f.navigate('/catalog',{view:'catalog'});
- f.setRoute('/shop?shop_category=shape&shop_sort=price-up');
- f.context.currentView='shop';
- f.render();
- assert.equal(f.ids.length,8);
- assert.ok(f.ids.every(id=>f.product(id).type==='shape'));
- assert.match(f.html,/<option value="price-up" selected>/);
- assert.match(f.html,/id="sv7Search"[^>]*value=""/);
+ f.navigate('https://komianime.online/shop?shop_q=Алый+охотник',{view:'shop'});
+ assert.deepEqual(f.ids,['title_crimson_hunter']);
 });
 
 test('mobile fitting-room toggle and Escape preserve selections while changing the expanded state',async()=>{
  const f=fixture({narrow:true});
  assert.match(f.html,/aria-controls="sv7FittingBody" aria-expanded="false"/);
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.window.KomiShopV3.tryItem('title_collector');
  assert.match(f.html,/aria-controls="sv7FittingBody" aria-expanded="true"/);
  f.handlers.keydown({key:'Escape'});
  assert.match(f.html,/aria-controls="sv7FittingBody" aria-expanded="false"/);
- assert.deepEqual(f.selected,['frame_moon']);
+ assert.deepEqual(f.selected,['title_collector']);
  await f.click('data-v3-sheet');
  assert.match(f.html,/aria-controls="sv7FittingBody" aria-expanded="true"/);
 });
@@ -426,7 +352,7 @@ test('mobile fitting-room toggle and Escape preserve selections while changing t
 test('owner changes clear the previous account trial and pending confirmation',async()=>{
  const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}}});
  await f.enablePricing();
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.window.KomiShopV3.tryItem('title_collector');
  const pending=f.click('data-v3-checkout');
  assert.equal(f.dialogs.length,1);
  f.render({owner:'uid-b',store:{balance:40,owned:[]},displayName:'Другой зритель'});
@@ -440,7 +366,7 @@ test('owner changes clear the previous account trial and pending confirmation',a
 test('checkout cancellation and Escape preserve the trial and never call a paid operation',async()=>{
  const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}}});
  await f.enablePricing();
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.window.KomiShopV3.tryItem('title_collector');
  let pending=f.click('data-v3-checkout');
  const dialog=f.dialogs[0];
  assert.equal(dialog.open,true);
@@ -449,12 +375,12 @@ test('checkout cancellation and Escape preserve the trial and never call a paid 
  assert.equal(f.focusHistory.at(-1),'[data-confirm-cancel]');
  dialog.choose(false);
  await pending;
- assert.deepEqual(f.selected,['frame_moon']);
+ assert.deepEqual(f.selected,['title_collector']);
  assert.equal(f.mutations.length,0);
  pending=f.click('data-v3-checkout');
  f.dialogs[0].cancel();
  await pending;
- assert.deepEqual(f.selected,['frame_moon']);
+ assert.deepEqual(f.selected,['title_collector']);
  assert.equal(f.mutations.length,0);
 });
 
@@ -462,7 +388,7 @@ test('Back or hash navigation cancels the body-owned purchase dialog and cannot 
  for(const event of ['popstate','hashchange']){
    const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}}});
    await f.enablePricing();
-   f.window.KomiShopV3.tryItem('frame_moon');
+   f.window.KomiShopV3.tryItem('title_collector');
    const pending=f.click('data-v3-checkout');
    assert.equal(f.dialogs.length,1);
    f.navigate(event==='hashchange'?'/#catalog':'/catalog',{view:'catalog',event});
@@ -475,7 +401,7 @@ test('Back or hash navigation cancels the body-owned purchase dialog and cannot 
 test('confirmation acceptance rechecks the active shop even when a route change emits no browser event',async()=>{
  const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}}});
  await f.enablePricing();
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.window.KomiShopV3.tryItem('title_collector');
  const pending=f.click('data-v3-checkout');
  f.setRoute('/catalog');
  f.context.currentView='catalog';
@@ -489,16 +415,16 @@ test('a changed quotation or balance while confirming prevents checkout and pres
  for(const changed of ['price','balance']){
    const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}}});
    await f.enablePricing();
-   f.window.KomiShopV3.tryItem('frame_moon');
+   f.window.KomiShopV3.tryItem('title_collector');
    const pending=f.click('data-v3-checkout');
    if(changed==='price'){
      const catalog=f.window.KomiShopCatalog;
-     f.window.KomiShopCatalog={...catalog,find:id=>id==='frame_moon'?{...catalog.find(id),cost:25}:catalog.find(id)};
+     f.window.KomiShopCatalog={...catalog,find:id=>id==='title_collector'?{...catalog.find(id),cost:25}:catalog.find(id)};
    }else f.render({store:{balance:12,owned:[]}});
    f.dialogs[0].choose(true);
    await pending;
    assert.equal(f.mutations.length,0,changed);
-   assert.deepEqual(f.selected,['frame_moon']);
+   assert.deepEqual(f.selected,['title_collector']);
    assert.match(f.status,changed==='price'?/стоимость обновились/:/Баланс изменился/);
  }
 });
@@ -517,11 +443,11 @@ test('owned-only checkout skips payment confirmation and submits the exact selec
 test('a failed cart keeps every selected item available for explicit retry without claiming success',async()=>{
  const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}},checkout:async()=>{throw Error('Не удалось связаться с сервером.');}});
  await f.enablePricing();
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.window.KomiShopV3.tryItem('title_collector');
  const pending=f.click('data-v3-checkout');
  f.dialogs[0].choose(true);
  await pending;
- assert.deepEqual(f.selected,['frame_moon']);
+ assert.deepEqual(f.selected,['title_collector']);
  assert.equal(f.mutations.length,1);
  assert.equal(f.status,'Не удалось связаться с сервером.');
  assert.doesNotMatch(f.status,/сохранён|не списаны/);
@@ -536,17 +462,17 @@ test('an inflight cart freezes trial controls and submits only its confirmed sna
  const gate=deferred(),started=deferred();
  const f=fixture({ctx:{owner:'uid-a',store:{balance:100,owned:[]}},checkout:()=>{started.resolve();return gate.promise;}});
  await f.enablePricing();
- f.window.KomiShopV3.tryItem('frame_moon');
+ f.window.KomiShopV3.tryItem('title_collector');
  const pending=f.click('data-v3-checkout');
  f.dialogs[0].choose(true);
  await started.promise;
  f.window.KomiShopV3.tryItem('title_cinema');
  await f.click('data-v3-reset',undefined,true);
- await f.click('data-v3-remove','frame',true);
- await f.click('data-v7-look',f.collections[0].id,true);
- assert.deepEqual(f.selected,['frame_moon']);
- assert.deepEqual(f.mutations,[{ids:['frame_moon'],owner:'uid-a'}]);
- gate.resolve({balance:80,owned:['frame_moon'],frame_id:'frame_moon',spent:20});
+ await f.click('data-v3-remove','title',true);
+ await f.click('data-v3-try','title_yokai_whisper',true);
+ assert.deepEqual(f.selected,['title_collector']);
+ assert.deepEqual(f.mutations,[{ids:['title_collector'],owner:'uid-a'}]);
+ gate.resolve({balance:80,owned:['title_collector'],title_id:'title_collector',spent:20});
  await pending;
  assert.deepEqual(f.selected,[]);
  assert.match(f.status,/Списано 20 AniCoin/);

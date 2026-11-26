@@ -142,7 +142,7 @@ function paint(panel){
   if(!product)continue;
   const owned=wallet.owned.includes(product.id);
   const equipped=wallet[product.type+'_id']===product.id;
-  if(root.KomiShopCatalog?.isArchived?.(product.id))button.closest('article').hidden=!owned;
+  if(root.KomiShopCatalog?.isOnSale?.(product.id)!==true)button.closest('article').hidden=!owned;
   button.dataset.action=product.type==='reaction'?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy_equip';
   const locked=root.KomiShopCatalog?.isPreview?.()===true||!owned&&root.KomiShopCatalog?.canCheckout?.()!==true;
   button.disabled=locked || busy || (product.type==='reaction'&&owned)||(!owned&&Number(wallet.balance)<product.cost);
@@ -155,14 +155,14 @@ function mount(container,id,active){
  css();
  const panel=document.createElement('section');
  panel.className='komi-premium-store';panel.dataset.premiumStorePanel=id;
- const title=document.createElement('h2');title.textContent='Магазин AniCoin · '+products.length+' товаров';
+ const title=document.createElement('h2');title.textContent='Титулы за AniCoin';
  const description=document.createElement('p');
- description.textContent='Рамки, титулы, обложки, эффекты и статусы. Покупки защищены сервером. Вся коллекция также доступна в #shop.';
+ description.textContent='Новые покупки доступны для титулов. Купленные ранее предметы остаются в коллекции.';
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
  const grid=document.createElement('div');grid.className='komi-premium-store-grid';
  for(const product of products){
   const item=document.createElement('article');item.className='komi-premium-store-item';
-  if(root.KomiShopCatalog?.isArchived?.(product.id))item.hidden=true;
+  if(root.KomiShopCatalog?.isOnSale?.(product.id)!==true)item.hidden=true;
   const label=document.createElement('h3');label.textContent=product.label;
   const button=document.createElement('button');button.type='button';button.dataset.premiumItem=product.id;
   button.disabled=true;button.textContent='Загрузка…';
@@ -216,7 +216,7 @@ function mount(container,id,active){
    if(authError||user?.id!==id)throw Error('Требуется вход в аккаунт.');
    const action=button.dataset.action;
    if(!['buy','buy_equip','equip','unequip'].includes(action))throw Error('Invalid action');
-   if(['buy','buy_equip'].includes(action)&&root.KomiShopCatalog?.canCheckout?.()!==true)throw Error('Сервер ещё не подтвердил цены.');
+   if(['buy','buy_equip'].includes(action)&&(root.KomiShopCatalog?.isOnSale?.(product.id)!==true||root.KomiShopCatalog?.canCheckout?.()!==true))throw Error('Сервер ещё не подтвердил цены.');
    const {data,error}=await client.rpc('komi_premium_store',{p_action:action,p_item:product.id});
    if(error)throw error;
    if(verifiedOwner()!==id)return;

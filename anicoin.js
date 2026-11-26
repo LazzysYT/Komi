@@ -175,6 +175,8 @@ window.komiShopCheckoutCart=async function(itemIds,expectedOwner){
     if(unique.size!==itemIds.length||!itemIds.every(item=>window.KomiShopCatalog?.find(item)))
         throw Error('Некорректный состав корзины.');
     const owned=aniCoinShopOwner===id?new Set(aniCoinShopWallet?.owned||[]):new Set();
+    if(itemIds.some(itemId=>!owned.has(itemId)&&window.KomiShopCatalog?.isOnSale?.(itemId)===false))
+        throw Error('Этот предмет больше не продаётся.');
     if(itemIds.some(itemId=>!owned.has(itemId))&&window.KomiShopCatalog?.canCheckout?.()!==true)
         throw Error('Покупки пока недоступны: сервер не подтвердил цены.');
     aniCoinShopBusy=true;
@@ -220,7 +222,7 @@ function renderAniCoinShop(container) {
     }
     const categories=[['all','Все · '+items.length],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты профиля'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['shape','Формы'],['plate','Комментарии'],['mascot','Маскоты'],['xp','XP-полоски'],['name','Ники'],['reaction','Watch Party'],['owned','Мои покупки']];
     const selected=items.filter(item=>aniCoinShopCategory==='owned'?store?.owned?.includes(item.id):
-      !window.KomiShopCatalog?.isArchived?.(item.id)&&(aniCoinShopCategory==='all'||item.type===aniCoinShopCategory));
+      window.KomiShopCatalog?.isOnSale?.(item.id)&&(aniCoinShopCategory==='all'||item.type===aniCoinShopCategory));
     const name=typeof escapeFriendHtml==='function'?escapeFriendHtml(aniCoinShopDisplayName):'Пользователь Komi';
     const symbolFor=product=>{
         if(product.type==='frame')return '<span class="komi-coin-frame komi-store-'+product.frameClass+'"><img data-komi-shop-avatar alt="" hidden><span aria-hidden="true">K</span></span>';
@@ -400,6 +402,7 @@ async function aniCoinRunStoreAction(itemId,requestedOperation) {
         if(!product)throw Error('Предмет больше недоступен. Обнови магазин.');
         if(!ownedOperation(verifiedStore))return;
         if(['buy','buy_equip'].includes(operation)){
+            if(window.KomiShopCatalog?.isOnSale?.(itemId)===false)throw Error('Этот предмет больше не продаётся.');
             if(window.KomiShopCatalog?.canCheckout?.()!==true)
                 throw Error('Покупка недоступна: сервер ещё не подтвердил цены.');
             if(!Number.isSafeInteger(product.cost)||product.cost<=0)
@@ -434,6 +437,7 @@ async function aniCoinRunStoreAction(itemId,requestedOperation) {
         if(!active())return;
         if(finalAuth.error||finalAuth.data?.user?.id!==owner)throw Error('Войди в аккаунт повторно.');
         if(['buy','buy_equip'].includes(operation)){
+            if(window.KomiShopCatalog?.isOnSale?.(itemId)===false)throw Error('Этот предмет больше не продаётся.');
             const finalProduct=window.KomiShopCatalog?.find(itemId);
             if(window.KomiShopCatalog?.canCheckout?.()!==true||!finalProduct||
                 finalProduct.type!==product.type||finalProduct.cost!==product.cost)

@@ -346,3 +346,53 @@
 [data-komi-title-id="title_veteran"]{--foil-speed:6.6000000000000005s;--foil-delay:-1.23s}
 [data-komi-title-id="title_playerone"]{--foil-paper:#153d4d;--foil-ink:#121927;--foil-edge:#61c5cc;--foil-type:#daffff;--foil-glint:#88f5ec;--foil-emblem:url('/assets/shop-title-foil/spark.svg')}
 [data-komi-title-id="title_playerone"]{--foil-speed:5.4s;--foil-delay:-0.41s}
+
+/* Signature effects, clipped to the badge so the nickname stays legible. */
+[data-komi-title-id]:is([data-komi-title-id="title_crimson_hunter"],[data-komi-title-id="title_spoiler"],[data-komi-title-id="title_nightmarathon"])::after{
+ background:radial-gradient(ellipse at 50% 32%,#ff7692d9 0 22%,#e91b49d4 35%,#660d23a8 56%,transparent 63%) no-repeat,
+ radial-gradient(ellipse,#ff4c6fc8 0 35%,transparent 63%) no-repeat,
+ linear-gradient(90deg,#aa143640,#f42c5a8a,transparent 78%) no-repeat;
+ background-size:9px 16px,5px 7px,100% 3px;
+ animation-name:komi-foil-scarlet;
+}
+@keyframes komi-foil-scarlet{
+ 0%,12%{background-position:7% -11px,2% -8px,0 0;opacity:.5}
+ 27%{background-position:32% 1px,17% -4px,0 5%;opacity:.95}
+ 48%{background-position:84% 68%,42% 32%,0 33%;opacity:.72}
+ 73%,100%{background-position:98% 125%,83% 120%,0 55%;opacity:.12}
+}
+[data-komi-title-id]:is([data-komi-title-id="title_moon_ronin"],[data-komi-title-id="title_nocturne"],[data-komi-title-id="title_midnight"],[data-komi-title-id="title_last_departure"])::after{
+ background:linear-gradient(122deg,transparent 40%,#62b2fb52 45%,#d4f4ffed 47% 49%,#84d1ff28 51%,transparent 62%) 0/80% 100% no-repeat;
+ animation-name:komi-foil-blade;
+}
+@keyframes komi-foil-blade{0%,19%{transform:translateX(-115%);opacity:.38}43%{transform:translateX(14%);opacity:.92}67%,100%{transform:translateX(118%);opacity:.07}}
+[data-komi-title-id]:is([data-komi-title-id="title_yokai_whisper"],[data-komi-title-id="title_otaku"])::after{
+ background:radial-gradient(ellipse at center,#b16af782,transparent 69%) no-repeat,radial-gradient(ellipse at center,#f6daff59,transparent 69%) no-repeat;
+ background-size:66% 100%,45% 80%;animation-name:komi-foil-yokai;
+}
+@keyframes komi-foil-yokai{0%,100%{background-position:-65% 100%,165% 0;opacity:.34}45%{background-position:94% 0,24% 100%;opacity:.85}70%{background-position:125% 35%,0 90%;opacity:.60}}
+[data-komi-title-id]:is([data-komi-title-id="title_awakening_mode"],[data-komi-title-id="title_marathon"],[data-komi-title-id="title_ongoing"],[data-komi-title-id="title_playerone"])::after{
+ background:radial-gradient(circle,#fff3b9e0 0 1px,#ffb3619c 2px,transparent 4px) no-repeat,
+ radial-gradient(circle,#fff9d9ea 0 1px,transparent 3.5px) no-repeat,
+ linear-gradient(109deg,transparent,#ffc15c64,transparent) no-repeat;
+ background-size:11px 11px,9px 9px,44% 100%;animation-name:komi-foil-ember;
+}
+@keyframes komi-foil-ember{0%,16%{background-position:-12px 98%,-9px 80%,-85% 0;opacity:.4}43%{background-position:73% 23%,45% 55%,49% 0;opacity:.88}76%,100%{background-position:106% 0,114% 16%,182% 0;opacity:.09}}
+[data-komi-title-id]:is([data-komi-title-id="title_sakura_vow"],[data-komi-title-id="title_bloom"],[data-komi-title-id="title_gardenkeeper"])::after{
+ background:radial-gradient(ellipse at center,#ffd6eaa8 0 31%,#d888adad 37% 48%,transparent 56%) no-repeat,
+ radial-gradient(ellipse at center,#ffbfd7c2 0 31%,transparent 57%) no-repeat;
+ background-size:10px 5px,7px 4px;animation-name:komi-foil-petals;
+}
+@keyframes komi-foil-petals{0%,16%{background-position:0 -5px,-10px 26%;opacity:.5}48%{background-position:59% 55%,41% 83%;opacity:.86}85%,100%{background-position:111% 120%,100% 105%;opacity:.10}}
+[data-komi-title-id]:is([data-komi-title-id="title_starlight"],[data-komi-title-id="title_cosmic"],[data-komi-title-id="title_stargazer"],[data-komi-title-id="title_pioneer"],[data-komi-title-id="title_legend"])::after{
+ background:radial-gradient(circle,#fbf4ffc4 0 1px,#b1a1fb67 2px,transparent 5px) no-repeat,
+ radial-gradient(circle,#d4d9ffd9 0 1px,transparent 4px) no-repeat;
+ background-size:13px 13px,9px 9px;animation-name:komi-foil-constellation;
+}
+@keyframes komi-foil-constellation{0%,100%{background-position:9% 89%,12% 32%;opacity:.28}45%{background-position:70% 12%,60% 85%;opacity:.86}69%{background-position:93% 48%,97% 67%;opacity:.51}}
+/* Gallery chips should remain still until the focus/hover that indicates intent. */
+#shop .sv12-gallery-marks [data-komi-title-id]::after{animation-play-state:paused}
+#shop .sv12-gallery-marks button:is(:hover,:focus-visible) [data-komi-title-id]::after{animation-play-state:running}
+@media(prefers-reduced-motion:reduce){
+ [data-komi-title-id]::after{animation:none!important;transform:none!important;opacity:.35!important;background-position:75% 54%,92% 70%,0 0!important}
+}
