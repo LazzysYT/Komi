@@ -1474,6 +1474,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (view === 'home' && currentView !== 'home') komiStartupHomeCommitted = true;
             if (currentView === 'catalog') komiStoreCatalogPosition();
             if (slideInterval) clearInterval(slideInterval);
+            if(view!=='profile')komiProfilePreviewOwner=null;
             currentView = view;
             const route = ['shop','partners'].includes(view) ? '/' + view : view === 'premium' ? '/#premium' : '/';
             const target = view === 'catalog' ? komiCatalogRoute() : route;
@@ -1484,6 +1485,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         function openProfile(username) {
+            komiProfilePreviewOwner=null;
             const handle = String(username || currentUser?.username || '').trim();
             if (!handle) { openAuthModal('login'); return; }
             // A different person's profile starts at its overview, without the
@@ -2712,6 +2714,21 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
             return komiProfileAnimeIndexCache.index;
         }
+        let komiProfilePreviewOwner=null;
+        async function toggleKomiProfilePreview(){
+            const uid=currentUser?.authUserId;
+            if(!uid||currentView!=='profile'||(profileTargetUser||currentUser.username)!==currentUser.username)return;
+            if(komiProfilePreviewOwner===uid){komiProfilePreviewOwner=null;}
+            else {
+                if(komiPrivacyState.owner!==uid||!komiPrivacyState.data)await komiPrivacyRequest();
+                if(currentUser?.authUserId!==uid||currentView!=='profile'||(profileTargetUser||currentUser.username)!==currentUser.username)return;
+                if(komiPrivacyState.owner!==uid||!komiPrivacyState.data){komiStatusFeedback('Не удалось проверить приватность профиля.');return;}
+                komiProfilePreviewOwner=uid;
+            }
+            profilePageSection='overview';profileActiveTab='Просмотрено';profileCollectionSearchQuery='';
+            render();
+            document.querySelector('[data-profile-preview-toggle]')?.focus({preventScroll:true});
+        }
         function renderProfileView(container) {
             if (!profileTargetUser && !currentUser) {
                 container.innerHTML = KomiProfileUI.guest();
@@ -2730,7 +2747,12 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
 
             const myFriends = friendsFor(username);
-            const isMe = currentUser && currentUser.username === username;
+            const ownsProfile = Boolean(currentUser && currentUser.username === username);
+            const isPreview = Boolean(ownsProfile && currentUser.authUserId && komiProfilePreviewOwner===currentUser.authUserId);
+            const isMe = ownsProfile && !isPreview;
+            if(isPreview && komiPrivacyState.owner===currentUser.authUserId && komiPrivacyState.data?.hide_profile){
+                container.innerHTML='<section id="profile" class="komi-profile-studio komi-profile-guest"><h2>Профиль скрыт</h2><p>В настройках включена приватность профиля.</p><button type="button" class="btn-secondary" data-profile-preview-toggle>Выйти из предпросмотра</button></section>';return;
+            }
             const canSeeProfileActivity = Boolean(isMe && currentUser?.authUserId);
             if (profilePageSection === 'activity' && !canSeeProfileActivity || profilePageSection === 'history' && !isMe) profilePageSection = 'overview';
             const amIFriend = currentUser && friendsFor(currentUser.username).includes(username);
@@ -2750,7 +2772,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
             const statsCounts = { 'Просмотрено': 0, 'В планах': 0, 'Смотрю': 0, 'Отложено': 0, 'Брошено': 0, 'Любимые': 0 };
             
-            const customFolders = userCustomFolders[username] || {};
+            const customFolders = isMe ? (userCustomFolders[username] || {}) : {};
             const customFolderNames = Object.keys(customFolders);
 
             const listForTab = [];
@@ -2832,7 +2854,8 @@ async function komiLoadCatalogPages(attempt = 0) {
             window.komiProfileFolderNames=customFolderNames.slice();
             window.komiWallAuthorByIndex=(profileWalls[username]||[]).map(m=>m.author);
             container.innerHTML = `
-                <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-mono komi-profile-studio" data-profile-user="${safeProfileText(username)}" aria-label="Профиль пользователя">
+                <section id="profile" class="profile-container komi-profile-v2 komi-profile-premium-mono komi-profile-studio" data-profile-user="${safeProfileText(username)}" data-profile-owner="${ownsProfile}" data-profile-preview="${isPreview}" aria-label="Профиль пользователя">
+                    ${isPreview ? '<div class="profile-preview-notice" role="status">Предпросмотр внешнего вида · личные разделы скрыты</div>' : ''}
                     <div class="profile-header-card" data-profile-hero>
                         <div class="profile-cover" data-profile-cover aria-hidden="true">${komiSafeUrl(p.banner || p.cover || p.coverUrl) ? `<img src="${safeProfileText(komiSafeUrl(p.banner || p.cover || p.coverUrl))}" alt="" loading="lazy">` : ''}</div>
                         <div class="profile-avatar-frame" data-profile-frame="${['red','neon','white'].includes(p.frame) ? safeProfileText(p.frame) : 'none'}">
@@ -2867,7 +2890,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                 </div>
                             </section>
                             <div class="komi-profile-actions profile-hero-actions">
-                                ${!isMe && currentUser ? `
+                                ${!isMe && !isPreview && currentUser ? `
                                     ${amIFriend
                                       ? `<button type="button" class="profile-hero-action profile-hero-action-muted" data-komi-onclick="playSound(); removeFriend(window.komiViewedProfileName)">✓ В друзьях · Удалить</button>`
                                       : `<button type="button" class="profile-hero-action profile-hero-action-primary" data-komi-onclick="playSound(); sendFriendRequest(window.komiViewedProfileName)">+ Добавить в друзья</button>`}
@@ -2878,10 +2901,11 @@ async function komiLoadCatalogPages(attempt = 0) {
                         </div>
                         <div class="profile-hero-tools">
                             ${isMe ? '<button type="button" class="profile-glass profile-glass-edit" data-profile-edit data-profile-settings aria-expanded="false" aria-controls="profile-settings"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m15 5 4 4M4 20l4-1L20 7a2.8 2.8 0 0 0-4-4L4 15z"/></svg>Редактировать</button><a class="profile-glass" href="/premium.html"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="m12 3 2.5 6.5L21 12l-6.5 2.5L12 21l-2.5-6.5L3 12l6.5-2.5z"/></svg>Оформление</a>' : ''}
+                            ${ownsProfile && currentUser?.authUserId ? `<button type="button" class="profile-glass" data-profile-preview-toggle>${isPreview?'Выйти из предпросмотра':'Как видят другие'}</button>` : ''}
                             <button type="button" class="profile-glass profile-glass-share" data-profile-share aria-label="Поделиться ссылкой"><span class="profile-share-default">Поделиться</span><span class="profile-share-copied" aria-hidden="true">Скопировано</span></button>
                         </div>
                     </div>
-                    ${KomiProfileUI.summary({level:calculatedLevel,xp:xpProgress,multiplier:xpMultiplier,titleCount:Object.keys(userStatuses).length,friendCount:isMe?myFriends.length:null})}
+                    ${KomiProfileUI.summary({level:calculatedLevel,xp:xpProgress,multiplier:xpMultiplier,titleCount:Object.keys(userStatuses).length,friendCount:isMe?myFriends.length:null,canReadMetrics:canSeeProfileActivity})}
                     ${isMe ? `
                             <div class="profile-settings-box" id="profile-settings">
                                 <section class="komi-premium-profile-media" data-komi-premium-editor data-komi-premium-username="${safeProfileText(username)}" hidden aria-label="Анимация профиля">
@@ -2933,6 +2957,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             </div>
                             ` : ''}
 
+                    <div class="profile-section-layout">
                     ${KomiProfileUI.navigation(profilePageSection, isMe?myFriends.length:null, Object.keys(userStatuses).length, profileExperience.badges.length, canSeeProfileActivity, isMe)}
                     <div id="komiProfilePanel" class="komi-profile-panel">
                     ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity,activityOwner:canSeeProfileActivity?currentUser.authUserId:'',resumeReady:!currentUser?.authUserId||komiResumeReadyUid===currentUser.authUserId,resumeFailed:Boolean(isMe&&currentUser?.authUserId&&komiResumeLoadError?.owner===currentUser.authUserId&&komiResumeLoadError.username===username)}) : ''}
@@ -3068,7 +3093,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     <div class="komi-profile-comments-section" style="display:${profilePageSection === 'comments' ? 'block' : 'none'}">
                     <div class="profile-wall-section">
                         <h3 style="font-size:14px; font-weight:800; margin-bottom:10px;"> Стена сообщений</h3>
-                        <div style="display:flex; gap:6px; margin-bottom:14px;">
+                        <div ${isPreview?'inert hidden':''} style="display:${isPreview?'none':'flex'}; gap:6px; margin-bottom:14px;">
                             <input type="text" id="wallMessageInput" class="form-control" placeholder="Написать на стену..." data-komi-onkeydown="if(event.key==='Enter') postToProfileWall(window.komiWallProfileName)">
                             <button class="btn-glow" style="padding: 7px 16px;" data-komi-onclick="playSound(); postToProfileWall(window.komiWallProfileName)">Отпр.</button>
                         </div>
@@ -3079,7 +3104,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                 </div>
                             ` : wallMessages.map((m, mIdx) => {
                                 const senderAvatar = (userProfiles[m.author] || {}).avatar || `https://api.dicebear.com/7.x/bottts/svg?seed=${m.author}`;
-                                const canDelete = currentUser && (currentUser.username === username || currentUser.username === m.author || false);
+                                const canDelete = !isPreview && currentUser && (currentUser.username === username || currentUser.username === m.author || false);
                                 return `
                                     <div class="wall-message-item">
                                         <div class="wall-message-author" data-komi-onclick="playSound(); openProfile(window.komiWallAuthorByIndex[${mIdx}])">
@@ -3093,6 +3118,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                 `;
                             }).join('')}
                         </div>
+                    </div>
                     </div>
                     </div>
                     </div>
