@@ -17,15 +17,22 @@ const premium=fs.readFileSync(path.join(root,'komi-premium.js'),'utf8');
 const context={window:{}};
 vm.runInNewContext(catalog,context);
 const products=context.window.KomiShopCatalog.items;
-test('141 fixed-price cosmetic items stay consistent between client catalog and protected server',()=>{
- assert.equal(products.length,141);
- assert.equal(new Set(products.map(x=>x.id)).size,141);
+const stationMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261126170000_anicoin_shop_night_station.sql'),'utf8');
+const foilMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261126190000_anicoin_anime_foil_titles.sql'),'utf8');
+const castMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261126194000_anicoin_anime_cast_titles.sql'),'utf8');
+test('158 fixed-price cosmetic items stay consistent between client catalog and protected server',()=>{
+ assert.equal(products.length,158);
+ assert.equal(new Set(products.map(x=>x.id)).size,158);
  assert.deepEqual([...new Set(products.map(x=>x.type))].sort(),['banner','card','frame','icon','mascot','name','overlay','plate','reaction','shape','showcase','title','xp']);
- const pricesSource=catalogMigration+'\n'+collectionsMigration;
- const prices=[...pricesSource.matchAll(/\('([a-z0-9_]+)',\s*(\d+),\s*true\)/g)];
- const allowed=collectionsMigration.match(/check \(item_id in \(([\s\S]*?)\)\)/)?.[1];
- assert.equal(prices.length,141);
- assert.deepEqual(prices.map(([,id])=>id).sort(),Array.from(products,item=>item.id).sort());
+ const pricesSource=[catalogMigration,collectionsMigration,stationMigration,foilMigration,castMigration].join('\n');
+ const prices=new Map();
+ for(const [,id,cost] of pricesSource.matchAll(/\('([a-z0-9_]+)',\s*(\d+),\s*true\)/g)){
+   if(prices.has(id))assert.equal(prices.get(id),Number(cost),'Conflicting price '+id);
+   prices.set(id,Number(cost));
+ }
+ const allowed=castMigration.match(/check \(item_id in \(([\s\S]*?)\)\)/)?.[1];
+ assert.equal(prices.size,158);
+ assert.deepEqual([...prices.keys()].sort(),Array.from(products,item=>item.id).sort());
  for(const item of products){
    assert.ok(Number.isInteger(item.cost)&&item.cost>0);
    assert.match(pricesSource,new RegExp("\\('"+item.id+"',"+item.cost+",true\\)"));
@@ -69,7 +76,7 @@ test('guest shop first paint and real preview have no auth dependency',()=>{
  const initial=fs.readFileSync(path.join(root,'shop-first-paint.js'),'utf8');
  const firstPaint=html.match(/<section id="shop" class="komi-static-shop[\s\S]*?<\/section>/)?.[0];
  assert.match(firstPaint,/komi-shop-studio/);
- assert.match(firstPaint,/Магазин оформления/);
+ assert.match(firstPaint,/Витрина титулов/);
  assert.match(firstPaint,/class="sv7-static-loading" role="status">Загружаем магазин/);
  assert.doesNotMatch(firstPaint,/sv5-static-card|sv5-weekly|data-shop-item-action/);
  assert.match(html,/src="\/shop-first-paint\.js\?/);
