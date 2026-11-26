@@ -444,8 +444,8 @@ async function checkNotifications(page) {
        hasCommunity:!!document.querySelector('#sideFriendsBtn[aria-controls="komiFriendsDrawer"]')
      };
    });
-   assert.ok(['rgb(5, 5, 5)','rgb(20, 20, 23)'].includes(shell.logoBackground),
-     'Media hub emblem must use the existing or updated monochrome dark surface');
+   assert.ok((width >= 1200 ? ['rgba(0, 0, 0, 0)'] : ['rgb(5, 5, 5)','rgb(20, 20, 23)']).includes(shell.logoBackground),
+     'Wide wordmark uses the rail surface; compact emblem keeps its dark tile');
    assert.equal(shell.logoInk,'rgb(255, 255, 255)','Media hub sidebar emblem has white K');
    assert.ok(shell.hasOverlay && shell.hasSearch && shell.hasCommunity,'New hub shell must expose search and community controls');
 
