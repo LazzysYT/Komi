@@ -446,7 +446,7 @@ async function checkNotifications(page) {
      details.open = true;
      const socials = [...details.querySelectorAll('.komi-header-socials a')].map(link => {
        const rect = link.getBoundingClientRect();
-       return { label: link.textContent.trim(), top: rect.top, bottom: rect.bottom,
+       return { label: link.textContent.trim(), top: rect.top, left: rect.left, right: rect.right,
                 width: rect.width, display: getComputedStyle(link).display };
      });
      details.open = false;
@@ -462,10 +462,11 @@ async function checkNotifications(page) {
      return {socials, initial, muted, synced, stored, restored};
    });
    assert.deepEqual(uiPolish.socials.map(x=>x.label), ['Telegram', 'TikTok']);
-   assert.ok(uiPolish.socials.every(x=>x.width >= 175 && x.display === 'flex'),
-             'Social accounts must be separately visible as full-width menu controls');
-   assert.ok(uiPolish.socials[1].top >= uiPolish.socials[0].bottom + 2,
-             'Telegram and TikTok must never overlap');
+   assert.ok(uiPolish.socials.every(x=>x.width >= 105 && x.display === 'flex'),
+             'Social accounts must have separate, readable targets');
+   assert.ok(Math.abs(uiPolish.socials[1].top - uiPolish.socials[0].top) < 1 &&
+             uiPolish.socials[1].left >= uiPolish.socials[0].right + 2,
+             'Telegram and TikTok must share a row without overlap');
    assert.equal(uiPolish.initial, 'true');
    assert.equal(uiPolish.muted, 'false');
    assert.equal(uiPolish.synced, 'false');

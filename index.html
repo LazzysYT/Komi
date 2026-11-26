@@ -21,7 +21,7 @@
     <meta name="komi-seo-revision" content="20261125-search-discovery">
     <meta name="google-site-verification" content="Nzv_eECGzk4WUEI3NHG6YX6nwstJ8jVuypU15341JGA">
     <meta name="theme-color" content="#090909">
-    <meta name="komi-ui-revision" content="20261125-catalog-plus">
+    <meta name="komi-ui-revision" content="20261126-header-menu">
     <meta name="komi-shop-revision" content="20261125-shop-v7">
     <meta name="komi-profile-revision" content="20261125-profile-editorial-r3">
     <meta property="og:type" content="website">
@@ -61,7 +61,7 @@
     <script defer src="/komi-ads-loader.js?v=20261125-mobile-startup-r3"></script>
     <link rel="icon" type="image/svg+xml" href="./icon.svg">
     <!-- Single local CSS bundle; original profile/media-hub cascade retained. -->
-    <link rel="stylesheet" href="/komi.production.css?v=20261125-catalog-plus">
+    <link rel="stylesheet" href="/komi.production.css?v=20261126-header-menu">
     <link rel="stylesheet" href="/komi-pill-system.css?v=20261124-v71">
     <link rel="stylesheet" href="/komi-icon-rail.css?v=20261124-v75">
     <link rel="stylesheet" href="/komi-shop-v5.css?v=20261125-editorial-r2" media="print" data-komi-deferred-style="shop">
@@ -236,6 +236,7 @@
                 <details class="komi-hub-tools-menu">
                     <summary aria-label="Разделы и аккаунт" title="Разделы и аккаунт"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></summary>
                     <div class="komi-hub-tools-panel">
+                        <p class="komi-tools-label">KomiAnime <span>Быстрый доступ</span></p>
                         <nav class="komi-social-links komi-header-socials" aria-label="Социальные сети Komi Anime">
                             <a class="komi-social-link" href="https://t.me/+X9yUQPEBldo2MzNi" target="_blank" rel="noopener noreferrer" title="Telegram-канал Komi Anime" aria-label="Telegram Komi Anime">
                                 <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M21.6 3.2 2.8 10.5c-1.3.5-1.3 1.3-.2 1.6l4.8 1.5 1.9 5.8c.2.7.1 1 1 .9.6 0 .9-.3 1.3-.7l2.3-2.2 4.8 3.6c.9.5 1.5.2 1.7-.9l3.2-15.3c.3-1.4-.5-2-2-1.4ZM8.2 13.3l10.6-6.7c.5-.3 1-.1.6.3l-8.8 8-.3 3.3-2.1-4.9Z"/></svg>
@@ -246,14 +247,28 @@
                                 <span class="komi-social-label">TikTok</span>
                             </a>
                         </nav>
-                        <button type="button" id="komiSoundToggle" class="komi-sound-toggle" data-komi-sound-toggle aria-pressed="true" aria-label="Выключить звук интерфейса" title="Выключить звук интерфейса">
-                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM16 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/></svg>
-                            <span class="komi-sound-label">Звук: включён</span>
+                        <p class="komi-tools-label komi-tools-divider">Разделы</p>
+                        <button type="button" data-komi-click="random" class="komi-tools-row">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="4"/><path d="M8 8h.01M12 12h.01M16 16h.01"/></svg>
+                            <span>Случайное аниме</span>
                         </button>
-                        <button type="button" data-komi-click="random">Случайное аниме</button>
-                        <button type="button" data-komi-click="partners">Партнёры</button>
-                        <a class="btn-secondary" href="/premium.html" style="display:inline-flex;align-items:center;justify-content:center;text-decoration:none;border-radius:14px;min-height:39px;padding:9px 14px;">✧ Komi Premium</a>
-                        <button type="button" id="komiHeaderAniCoin" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden><span class="komi-header-balance-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 21 12 12 21 3 12Z"/></svg></span><span id="komiHeaderAniCoinValue">—</span></button>
+                        <button type="button" data-komi-click="partners" class="komi-tools-row">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 7H7a5 5 0 0 0 0 10h3m4-10h3a5 5 0 0 1 0 10h-3M8 12h8"/></svg>
+                            <span>Партнёры</span>
+                        </button>
+                        <a class="btn-secondary komi-tools-row komi-tools-premium" href="/premium.html">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 14.5 9l7 3-7 3-2.5 6.5L9.5 15l-7-3 7-3z"/></svg>
+                            <span>Komi Premium</span><svg class="komi-tools-arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 18 18 6M10 6h8v8"/></svg>
+                        </a>
+                        <button type="button" id="komiHeaderAniCoin" class="komi-tools-row" data-komi-click="shop" aria-label="Открыть кошелёк AniCoin" title="AniCoin" hidden>
+                            <span class="komi-header-balance-icon" aria-hidden="true"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3 21 12 12 21 3 12Z"/></svg></span>
+                            <span>AniCoin</span><span id="komiHeaderAniCoinValue">—</span>
+                        </button>
+                        <p class="komi-tools-label komi-tools-divider">Настройки и аккаунт</p>
+                        <button type="button" id="komiSoundToggle" class="komi-sound-toggle komi-tools-row" data-komi-sound-toggle aria-pressed="true" aria-label="Выключить звук интерфейса" title="Выключить звук интерфейса">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4zM16 9a4 4 0 0 1 0 6M18 6a8 8 0 0 1 0 12"/></svg>
+                            <span class="komi-sound-label">Звук: включён</span><span class="komi-tools-switch" aria-hidden="true"></span>
+                        </button>
                         <div id="userHeaderArea"><button type="button" class="nav-btn" data-komi-onclick="playSound(); openAuthModal('login')" aria-label="Войти или зарегистрироваться">Войти / Регистрация</button></div>
                     </div>
                 </details>
@@ -514,7 +529,7 @@
     <script defer src="./komi-hero-title.js?v=20261124-v7hero"></script>
     <script defer src="./hybrid-search.js?v=20261122a"></script>
     <script defer src="./komi-comments.js?v=20261125-watch-discussion"></script>
-    <script defer src="./static-ui-events.js?v=20261125-home-guest-polish"></script>
+    <script defer src="./static-ui-events.js?v=20261126-header-menu"></script>
     <script defer src="./accessibility.js"></script>
     <script defer src="./mobile-nav.js?v=20261125-home-guest-polish"></script>
     <script defer src="./player-controls.js"></script>

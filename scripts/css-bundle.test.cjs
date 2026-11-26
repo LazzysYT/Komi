@@ -48,7 +48,8 @@ test('generated CSS maintains source order and matches committed artifact',()=>{
 test('single production CSS keeps original cascading order and matches all source files',()=>{
  const builder=require('./build-production-css.cjs');
  const result=fs.readFileSync(path.join(root,'komi.production.css'),'utf8');
- assert.equal(builder.sources.length,13);
+ assert.equal(builder.sources.length,14);
+ assert.equal(builder.sources.at(-1),'header-tools-menu.css');
  assert.equal(result,builder.buildCSS());
  let last=-1;
  for(const name of builder.sources){

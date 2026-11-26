@@ -74,6 +74,20 @@
   }
   for (const type of ['click','input','submit','focus','error'])
     document.addEventListener(type, event=>delegate(type,event), type==='focus'||type==='error');
+  const toolsMenu = document.querySelector('.komi-hub-tools-menu');
+  if (toolsMenu) {
+    const trigger = toolsMenu.querySelector('summary');
+    document.addEventListener('pointerdown', event => {
+      if (toolsMenu.open && !toolsMenu.contains(event.target)) toolsMenu.open = false;
+    });
+    document.addEventListener('keydown', event => {
+      if (event.key !== 'Escape' || event.defaultPrevented || !toolsMenu.open ||
+          !toolsMenu.contains(document.activeElement)) return;
+      event.preventDefault();
+      toolsMenu.open = false;
+      trigger?.focus({preventScroll:true});
+    });
+  }
   // An image may have failed before this script attached the capturing error listener.
   for (const image of document.querySelectorAll('img[data-komi-error="poster-error"]')) {
     if (image.complete && image.naturalWidth===0 && typeof komiCardPosterFallback === 'function')

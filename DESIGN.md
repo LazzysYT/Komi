@@ -153,3 +153,7 @@ At 860px the overview becomes one column; at 620px the summary becomes two colum
 The hero keeps a neutral, correctly sized backdrop before artwork arrives or when all sources fail. Do not render the generic Komi logo as a fullscreen image or use its dimensions to classify the hero. Known portrait fallbacks remain portrait even before decode. Near the viewport, the recommendations rail starts only its first two covers immediately; the rest remain visibility-loaded. Reserve the card geometry without flashing logo thumbnails while images arrive.
 
 A portrait-only slide still needs a banner composition on wide screens. Use a right-hand crop with preserved aspect ratio and feather the left edge into the text field. Do not put the original portrait in a narrow strip or stretch it into a blurred full-width background. Keep landscape art and mobile portrait positioning independent.
+
+### Header quick menu
+
+The native header disclosure keeps the navigation, sound, sign-in and dynamic account controls. Its matte graphite popover pairs the two social links above the site sections, then separates settings and account actions with a hairline. Rows use a common 44 px target and consistent 17 px outline icons; the sound switch mirrors the existing pressed state and AniCoin uses tabular numerals. Open and close share a short opacity and position transition on supporting browsers; reduced motion opens and closes immediately. The mobile dock's separate «Ещё» menu is unchanged.

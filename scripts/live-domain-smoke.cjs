@@ -266,8 +266,7 @@ fs.mkdirSync(output,{recursive:true});
         }
         await toolsSummary.click();
         assert.equal(await toolsMenu.evaluate(menu=>menu.open),false);
-        assert.equal(await toolsPanel.isVisible(),false,
-          'Closing the native disclosure must hide the entire supplementary panel');
+        await toolsPanel.waitFor({state:'hidden'});
         const adminDisabled=await page.evaluate(async()=>{
           const originalAlert=window.alert;
           window.alert=()=>{};
