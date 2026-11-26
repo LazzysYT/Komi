@@ -87,7 +87,7 @@ function visual(product,avatar,name){
  if(product.type==='frame')return '<span class="komi-coin-frame komi-store-'+esc(product.frameClass)+'">'+initialAvatar(avatar,name)+'</span>';
  if(product.type==='shape')return '<span class="sv3-shape komi-store-'+cls+'">'+initialAvatar(avatar,name)+'</span>';
  if(product.type==='title')return '<span class="sv3-title-sample">'+esc(product.title||product.label)+'</span>';
- if(product.type==='banner')return '<span class="store-banner-swatch '+esc(product.bannerClass)+'">KOMI</span>';
+ if(product.type==='banner')return '<span class="sv8-banner-context"><span class="store-banner-swatch '+esc(product.bannerClass)+'">KOMI</span><span class="sv8-banner-profile"><span class="sv7-card-avatar">'+initialAvatar(avatar,name)+'</span><span>Твой профиль</span></span></span>';
  if(product.type==='overlay')return '<span class="sv3-overlay-sample komi-preview-cover"><span class="sv7-cover-motif" aria-hidden="true"></span><span class="komi-shop-overlay-layer '+cls+'"></span><span class="sv7-cover-title">KOMI ANIME</span></span>';
  if(product.type==='reaction')return '<span class="komi-shop-reaction-swatch">'+(product.reactions||[]).map(x=>'<span role="img" aria-label="'+esc(x.label||x.id||'Реакция')+'">'+(root.KomiShopReactions?.render(x.emoji)||esc(x.label||'Реакция'))+'</span>').join('')+'</span>';
  if(product.type==='showcase')return '<span class="komi-shop-showcase-demo komi-store-'+cls+'"><i><b>01</b></i><i><b>02</b></i><i><b>03</b></i></span>';
@@ -137,33 +137,37 @@ function card(p,ctx,avatar,name){
  const affordable=!!store&&Number(store.balance)>=Number(p.cost),diff=Math.max(0,Number(p.cost)-Number(store?.balance||0));
  const operation=reaction?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy_equip';
  const locked=previewOnly()||(!owned&&!!owner&&!!store&&!canCheckout());
- const label=locked?'Только примерка':!owner?'Войти':!store?(ctx.failedFor?'Нет данных':'Загрузка…'):ctx.busy||state.busy?'Подождите…':reaction&&owned?'Куплено':equipped?'Снять':owned?'Надеть':affordable?(reaction?'Купить':'Купить и надеть'):'Не хватает '+fmt(diff)+' AC';
+ const label=locked?'Только примерка':!owner?'Войти':!store?(ctx.failedFor?'Нет данных':'Загрузка…'):ctx.busy||state.busy?'Подождите…':reaction&&owned?'Куплено':equipped?'Снять':owned?'Надеть':affordable?(reaction?'Купить':'Купить и надеть'):'Не хватает '+fmt(diff)+' AniCoin';
  const disabled=locked||!!owner&&(!store||ctx.busy||state.busy||reaction&&owned||!owned&&!affordable);
  const action=label+(owner||locked?': ':', чтобы купить: ')+p.label;
+ const badge=equipped?'<span class="sv3-owned">Надето</span>':owned?'<span class="sv3-owned">Куплено</span>':p.rarity&&p.rarity!=='common'?'<span class="komi-shop-rarity">'+esc(rarityLabels[p.rarity]||rarityLabels.common)+'</span>':p.introducedAt?'<span class="sv7-new">Новое</span>':'';
+ const context=p.type==='plate'?'Комментарии':reaction?'Watch Party':'Профиль';
  return '<article class="komi-coin-card sv3-item '+(equipped?'is-equipped ':'')+(chosen?'is-trying':'')+'" data-rarity="'+esc(p.rarity||'common')+'" data-item-id="'+esc(p.id)+'">'+
- '<div class="sv3-item-badges"><span class="komi-shop-rarity">'+esc(rarityLabels[p.rarity]||rarityLabels.common)+'</span>'+
- (equipped?'<span class="sv3-owned">Надето</span>':owned?'<span class="sv3-owned">Куплено</span>':p.introducedAt?'<span class="sv7-new">Новое</span>':'')+'</div>'+
+ (badge?'<div class="sv3-item-badges">'+badge+'</div>':'')+
  '<button type="button" class="komi-coin-sample sv3-item-scene sv5-preview-button" data-v3-try="'+esc(p.id)+'" aria-pressed="'+String(chosen)+'" aria-label="Примерить '+esc(p.label)+'"'+(state.busy||ctx.busy?' disabled':'')+'>'+visual(p,avatar,name)+
  '<span class="sv7-try-label">'+icon(chosen?'check':'eye',14)+' '+(chosen?'В примерочной':'Примерить')+'</span></button>'+
- '<div class="sv3-item-copy"><p class="sv7-item-kind">'+esc(categoryName(p.type))+' · '+esc(p.type==='plate'?'Под аниме':reaction?'Watch Party':'Профиль')+'</p><h3>'+esc(p.label)+'</h3>'+
+ '<div class="sv3-item-copy"><h3>'+esc(p.label)+'</h3><p class="sv7-item-kind">'+esc(context)+'</p>'+
  '<p class="sv7-item-description">'+esc(p.description||descriptionFor(p.type))+'</p><p class="sv3-unit-price">'+icon('coins',16)+' <strong>'+fmt(p.cost)+'</strong> <span>AniCoin</span></p></div>'+
- '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(action)+'"'+(disabled?' disabled':'')+'>'+label+'</button></div></article>';
+ '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+(owned?' is-owned-action':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(action)+'"'+(disabled?' disabled':'')+'>'+esc(label)+'</button></div></article>';
 }
 function descriptionFor(type){return {frame:'Обрамление твоей аватарки.',banner:'Фон шапки твоего профиля.',name:'Оформление имени в профиле.',title:'Небольшая подпись под именем.',shape:'Новый силуэт твоей аватарки.',overlay:'Атмосфера поверх обложки.',plate:'Оформление твоих комментариев.',icon:'Значок рядом с именем.',xp:'Оформление полоски опыта.',mascot:'Компаньон в твоём профиле.',showcase:'Оформление любимой тройки аниме.',card:'Стиль карточки профиля.',reaction:'Реакции для совместного просмотра.'}[type]||'Предмет для твоего профиля.';}
+function offerPrice(picks,store){
+ const total=priceOf(picks,store),full=picks.reduce((sum,p)=>sum+Number(p.cost),0);
+ return total===0?'Уже куплено':(total<full?'К оплате ':'')+fmt(total)+' AniCoin';
+}
 function collectionCard(collection,store,avatar,name){
- const picks=(collection.preview||[]).map(find).filter(Boolean),frame=picks.find(p=>p.type==='frame'),banner=picks.find(p=>p.type==='banner');
- return '<article class="sv7-collection '+(state.collection===collection.id?'is-selected':'')+'">'+
- '<button type="button" class="sv7-collection-browse" data-v7-collection="'+esc(collection.id)+'" aria-pressed="'+String(state.collection===collection.id)+'" aria-label="Товары коллекции '+esc(collection.label)+'">'+
- '<span class="sv7-collection-art '+(banner?'komi-store-'+esc(banner.bannerClass):'')+'"><span class="sv7-collection-avatar '+(frame?'komi-store-'+esc(frame.frameClass):'')+'">'+initialAvatar(avatar,name)+'</span></span>'+
- '<span class="sv7-collection-name">'+esc(collection.label)+'</span><small>'+String((collection.items||[]).length)+' предметов</small></button>'+
- '<button class="sv7-collection-try" type="button" data-v7-look="'+esc(collection.id)+'" aria-label="Примерить образ '+esc(collection.label)+'"'+(state.busy||latestCtx?.busy?' disabled':'')+'>'+icon('eye',14)+' Примерить образ</button></article>';
+ const picks=(collection.preview||[]).map(find).filter(p=>p&&p.type!=='reaction'),frame=picks.find(p=>p.type==='frame'),banner=picks.find(p=>p.type==='banner');
+ return '<article class="sv7-collection sv8-ticket '+(state.collection===collection.id?'is-selected':'')+'">'+
+ '<div class="sv7-collection-art sv8-ticket-art '+(banner?'komi-store-'+esc(banner.bannerClass):'')+'"><span class="sv7-collection-avatar '+(frame?'komi-store-'+esc(frame.frameClass):'')+'">'+initialAvatar(avatar,name)+'</span></div>'+
+ '<div class="sv8-ticket-copy"><button type="button" class="sv7-collection-browse" data-v7-collection="'+esc(collection.id)+'" aria-pressed="'+String(state.collection===collection.id)+'" aria-label="Товары коллекции '+esc(collection.label)+'"><span class="sv7-collection-name">'+esc(collection.label)+'</span><small>'+String((collection.items||[]).length)+' предметов в коллекции '+icon('chevron',12)+'</small></button>'+
+ '<p class="sv8-ticket-composition">'+picks.map(p=>esc(p.label)).join(' · ')+'</p><strong class="sv8-ticket-price">'+esc(offerPrice(picks,store))+'</strong>'+
+ '<button class="sv7-collection-try" type="button" data-v7-look="'+esc(collection.id)+'" aria-label="Примерить образ '+esc(collection.label)+'"'+(!picks.length||state.busy||latestCtx?.busy?' disabled':'')+'>'+icon('eye',14)+' Примерить образ</button></div></article>';
 }
 function starterCard(store,avatar,name,busy){
  const picks=STARTER_IDS.map(find).filter(Boolean);
  if(picks.length!==STARTER_IDS.length)return '';
- const frame=picks[0],title=picks[1],total=priceOf(picks,store),full=picks.reduce((sum,p)=>sum+p.cost,0);
- const price=total===0?'Уже куплено':total<full?'К оплате '+fmt(total)+' AC':fmt(full)+' AC';
- return '<article class="sv7-starter"><span class="sv7-starter-avatar komi-store-'+esc(frame.frameClass)+'">'+initialAvatar(avatar,name)+'</span><div class="sv7-starter-copy"><h3>Первый сеанс</h3><p>'+esc(frame.label)+' + '+esc(title.title||title.label)+'</p></div><div class="sv7-starter-action"><strong>'+esc(price)+'</strong><button type="button" data-v3-bundle="first-session"'+(busy?' disabled':'')+'>Примерить</button></div></article>';
+ const frame=picks[0],title=picks[1];
+ return '<article class="sv7-starter sv8-ticket"><div class="sv8-ticket-art"><span class="sv8-ticket-kicker">'+icon('movie',14)+' ПЕРВЫЙ СЕАНС</span><span class="sv7-starter-avatar komi-store-'+esc(frame.frameClass)+'">'+initialAvatar(avatar,name)+'</span><span class="sv8-ticket-title-sample">'+esc(title.title||title.label)+'</span></div><div class="sv7-starter-copy sv8-ticket-copy"><h3>Первый сеанс</h3><p class="sv8-ticket-composition">'+picks.map(p=>esc(p.label)).join(' · ')+'</p><div class="sv7-starter-action"><strong class="sv8-ticket-price">'+esc(offerPrice(picks,store))+'</strong><button type="button" data-v3-bundle="first-session"'+(busy?' disabled':'')+'>'+icon('eye',14)+' Примерить образ</button></div></div></article>';
 }
 function layout(ctx){
  const owner=ctx.owner||'',store=ctx.store,avatar=safeAvatar(ctx.avatar),name=String(ctx.displayName||(owner?'Пользователь Komi':'Твой ник')).slice(0,54);
@@ -203,7 +207,7 @@ function layout(ctx){
  '<aside class="sv3-fitting'+(hasContent?' has-content':'')+(state.sheetOpen&&hasContent?' is-open':'')+'" aria-label="Примерочная"><button type="button" class="sv3-sheet-toggle" aria-controls="sv7FittingBody" aria-expanded="'+String(state.sheetOpen&&hasContent)+'" data-v3-sheet><span>'+icon('palette',20)+' Примерочная <small>'+esc(sheetSummary)+'</small></span><span class="sv3-sheet-chevron">'+icon('chevron',18)+'</span></button>'+
  '<div class="sv3-fitting-body" id="sv7FittingBody"><div class="sv7-fitting-header"><div class="sv3-fitting-head"><h2 tabindex="-1">Примерочная</h2><button type="button" class="sv3-reset" data-v3-reset aria-label="Сбросить примерку"'+(!items.length&&!reaction||state.busy||ctx.busy?' disabled':'')+'>'+icon('reset',16)+'</button></div>'+
  '<div class="sv7-preview-tabs" role="group" aria-label="Где посмотреть оформление"><button type="button" data-v7-preview="profile" aria-controls="sv7ProfilePreview" aria-pressed="'+String(state.previewMode==='profile')+'">Профиль</button><button type="button" data-v7-preview="comment" aria-controls="sv7CommentPreview" aria-pressed="'+String(state.previewMode==='comment')+'">Комментарий</button>'+(reaction?'<button type="button" data-v7-preview="reaction" aria-controls="sv7ReactionPreview" aria-pressed="'+String(state.previewMode==='reaction')+'">Реакции</button>':'')+'</div></div>'+
- '<div class="sv7-fitting-scroll" tabindex="0" role="region" aria-label="Предпросмотр и выбранные предметы"><p class="sv7-preview-note">Примерка не меняет твой профиль.</p>'+preview(store,avatar,name)+(reaction?'<div class="sv7-preview-panel" id="sv7ReactionPreview"'+(state.previewMode==='reaction'?'':' hidden')+'><div class="sv5-reaction-preview"><strong>Реакции Watch Party</strong>'+visual(reaction,avatar,name)+'<small>'+(store?.owned?.includes(reaction.id)?'Набор уже в коллекции.':fmt(reaction.cost)+' AC · Покупаются отдельно на карточке.')+'</small></div></div>':'')+
+ '<div class="sv7-fitting-scroll" tabindex="0" role="region" aria-label="Предпросмотр и выбранные предметы"><p class="sv7-preview-note">Примерка не меняет твой профиль.</p>'+preview(store,avatar,name)+(reaction?'<div class="sv7-preview-panel" id="sv7ReactionPreview"'+(state.previewMode==='reaction'?'':' hidden')+'><div class="sv5-reaction-preview"><strong>Реакции Watch Party</strong><div class="sv8-party-context"><span class="sv8-party-screen">'+icon('movie',25)+'<small>Совместный просмотр</small></span><span class="sv8-party-chat"><strong>'+esc(name)+'</strong><small>Вот это момент!</small></span>'+visual(reaction,avatar,name)+'</div><small>'+(store?.owned?.includes(reaction.id)?'Набор уже в коллекции.':fmt(reaction.cost)+' AC · Покупаются отдельно на карточке.')+'</small></div></div>':'')+
  (items.length?'<div class="sv3-selection"><strong>В образе <span>'+items.length+'</span></strong>'+selectedList(store,state.busy||ctx.busy)+'</div>':'')+'</div><div class="sv7-checkout-footer">'+'<p class="sv3-status" role="status" aria-live="polite">'+esc(state.status||ctx.shopStatus||'')+'</p>'+(ctx.retryApplyItem?'<button type="button" class="sv3-retry" data-shop-item-action="'+esc(ctx.retryApplyItem)+'" data-shop-operation="equip">Применить купленный предмет</button>':'')+
  (items.length?'<div class="sv3-checkout-info"><span>'+(total===0?'Уже в коллекции':'К оплате')+'</span><strong class="sv3-tabular">'+fmt(total)+' <small>AniCoin</small></strong></div>':'<p class="sv3-empty-selection">Нажми «Примерить» на понравившемся товаре.</p>')+
  '<button class="sv3-checkout" type="button" data-v3-checkout'+(!items.length?' hidden':'')+(disabled?' disabled':'')+'>'+icon('bag',18)+' '+esc(action)+'</button>'+(items.length?'<p class="sv3-checkout-note">'+(owner&&store&&total<=Number(store.balance)?'Останется '+fmt(Number(store.balance)-total)+' AniCoin · списание после подтверждения':'Списание только после подтверждения.')+'</p>':'')+'</div></div></aside></div>'+
@@ -285,7 +289,7 @@ function mount(section,ctx){
    const starter=t.hasAttribute('data-v3-bundle'),collection=collections().find(c=>c.id===t.dataset.v7Look);
     if(!starter&&!collection)return;
     const ids=starter?STARTER_IDS:collection.preview;
-    if(starter){state.trial=Object.create(null);state.reactionPreview=null;}
+    state.trial=Object.create(null);state.reactionPreview=null;
    for(const id of ids){const p=find(id);if(p&&p.type!=='reaction')state.trial[p.type]=id;}
    state.sheetOpen=true;state.previewMode='profile';state.status='';resetPreviewScroll=true;
    refresh(narrow()?'[data-v3-sheet]':'.sv3-fitting-head h2');
