@@ -111,5 +111,31 @@ async function assertCanonicalRoute(page,pathname,view){
       console.log('PASS mobile navigation '+width,JSON.stringify(state));
       await page.close();
     }
+    for(const viewport of [{width:667,height:375},{width:568,height:320}]){
+      const page=await browser.newPage({viewport,hasTouch:true,isMobile:true,deviceScaleFactor:1,reducedMotion:'reduce'});
+      await page.goto(base,{waitUntil:'domcontentloaded',timeout:45000});
+      await page.locator('#komiMobileMoreToggle').tap();
+      await page.locator('[data-komi-mobile-extra="collection"]').tap();
+      await assertCanonicalRoute(page,'/collection','collection');
+      await page.locator('.kc-grid .kc-card').first().waitFor();
+      await page.locator('#komiMobileMoreToggle').tap();
+      const menu=page.locator('#komiMobileMoreMenu');
+      const rect=await menu.boundingBox();
+      const dock=await page.locator('.komi-side-nav').boundingBox();
+      assert.ok(rect.y>=0&&rect.y+rect.height<=dock.y,'Menu must fit above the dock');
+      const scrollBefore=await page.evaluate(()=>scrollY);
+      const session=await page.context().newCDPSession(page);
+      const x=rect.x+rect.width/2,y=rect.y+rect.height-15;
+      await session.send('Input.dispatchTouchEvent',{type:'touchStart',touchPoints:[{x,y}]});
+      for(let i=1;i<=12;i++)await session.send('Input.dispatchTouchEvent',{type:'touchMove',touchPoints:[{x,y:y-i*(rect.height-30)/12}]});
+      await session.send('Input.dispatchTouchEvent',{type:'touchEnd',touchPoints:[]});
+      await page.waitForFunction(()=>document.getElementById('komiMobileMoreMenu').scrollTop>40);
+      assert.equal(await page.evaluate(()=>scrollY),scrollBefore,'Swipe must scroll the menu, not the collection');
+      const sound=page.locator('#komiMobileSoundToggle');
+      await sound.tap();
+      assert.equal(await sound.getAttribute('aria-pressed'),'false');
+      console.log('PASS landscape menu touch '+viewport.width+'x'+viewport.height);
+      await page.close();
+    }
   }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

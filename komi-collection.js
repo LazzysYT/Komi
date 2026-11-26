@@ -65,11 +65,11 @@ function reelMarkup(s){
  const elapsed=Math.max(0,Math.min(REEL_DURATION,Date.now()-s.reel.started));
  return '<section class="kc-reel-panel" aria-label="Открытие кейса" aria-busy="true"><div class="kc-reel-heading"><div><div class="kc-kicker">Tokyo Ghoul · Открытие</div><h3>Кто внутри?</h3></div><span role="status">Результат получен, открываем…</span></div><div class="kc-reel-window" aria-hidden="true"><div class="kc-reel-track" style="--kc-stop:-'+(REEL_WIN*REEL_STEP+56)+'px;--kc-delay:-'+elapsed+'ms">'+s.reel.items.map(id=>{const c=roster.find(x=>x.id===id);return '<div class="kc-reel-tile kc-tier-'+c.rarity+'"><div class="kc-art">'+art(c,true)+'</div>'+rarityLabel(c)+'</div>';}).join('')+'</div><div class="kc-reel-marker"></div></div>'+button('Показать результат','skip-reel')+'</section>';
 }
-function finishReel(s,reel=s?.reel){
+function finishReel(s,reel=s?.reel,manual=false){
  if(!current(s)||!reel||s.reel!==reel)return;
  clearTimeout(reel.timer);
  const payload=reel.payload;
- s.reel=null;Object.assign(s,payload,{status:'ready'});paint();
+ s.reel=null;Object.assign(s,payload,{status:'ready'});paint(manual?'result':null);
 }
 function showReel(s,payload){
  if(!active()||root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){Object.assign(s,payload,{status:'ready'});paint();return;}
@@ -78,7 +78,7 @@ function showReel(s,payload){
  reel.timer=setTimeout(()=>finishReel(s,reel),REEL_DURATION+80);
 }
 function button(label,action,options={}){
- return '<button type="button" data-kc-action="'+action+'"'+(options.primary?' class="kc-primary"':'')+(options.pressed!==undefined?' aria-pressed="'+options.pressed+'"':'')+(options.disabled?' disabled':'')+'>'+esc(label)+'</button>';
+ return '<button type="button" data-kc-action="'+action+'"'+(options.primary?' class="kc-primary"':'')+(options.pressed!==undefined?' aria-pressed="'+options.pressed+'"':'')+(options.focus?' data-kc-focus="'+options.focus+'"':'')+(options.disabled?' disabled':'')+'>'+esc(label)+'</button>';
 }
 function notice(s){
  if(s.status==='guest')return '<div class="kc-notice">Войди, чтобы собирать героев и сохранять коллекцию. '+button('Войти','login',{primary:true})+'</div>';
@@ -86,10 +86,11 @@ function notice(s){
  if(s.status==='error')return '<div class="kc-notice" role="status">Не удалось получить коллекцию. Проверь соединение и попробуй ещё раз. '+button('Повторить','retry')+'</div>';
  return '';
 }
-function paint(){
+function focusKey(el){return el?.dataset.kcFocus||el?.dataset.kcAction||null;}
+function paint(nextFocus=null){
  if(!active()||!state)return;
  const s=state,owned=new Set(s.owned),known=s.status==='ready'||s.status==='opening',count=known?owned.size:0;
- const focus=document.activeElement?.closest?.('.kc-page')?document.activeElement.dataset.kcAction:null;
+ const previous=host.contains(document.activeElement)?focusKey(document.activeElement):null;
  const header='<header class="kc-header"><div><div class="kc-kicker">KomiAnime / Коллекции</div><h1>Коллекция и кейсы</h1><p class="kc-muted">Открывай персонажей и собирай любимые аниме.</p></div><div class="kc-count"><strong>'+(known?count+' / '+roster.length:s.status==='guest'?'— / '+roster.length:'…')+'</strong><small>Персонажей собрано</small></div></header>';
  const tabs='<nav class="kc-tabs" aria-label="Коллекция и кейсы">'+button('Моя коллекция','collection',{pressed:tab==='collection'})+button('Кейсы','cases',{pressed:tab==='cases'})+'</nav>';
  let body='';
@@ -100,9 +101,9 @@ function paint(){
  const balanceText=known&&s.balance!==null?'Баланс: '+s.balance.toLocaleString('ru-RU')+' AniCoin':'Цена: 50 AniCoin';
  const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true}):s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>':button(retryPurchase?'Повторить покупку':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
  const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
- const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual">'+caseArt+'<div class="kc-case-edition"><span>東京喰種</span><small>01 / GHOUL SERIES</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">Tokyo Ghoul · Коллекция 01</div><h2>Кейс «Токийский гуль»</h2><p class="kc-muted">18 героев в четырёх классах редкости. Каждый кейс содержит одного нового персонажа с равными шансами — без повторов.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
+ const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual">'+caseArt+'<div class="kc-case-edition"><span>東京喰種</span><small>01 / GHOUL SERIES</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">Tokyo Ghoul · Коллекция 01</div><h2>Кейс «Токийский гуль»</h2><p class="kc-muted">18 героев в четырёх классах редкости. Каждый кейс содержит одного нового персонажа с равными шансами — без повторов.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
  const prize=roster.find(c=>c.id===s.result);
- const reward=prize&&known?'<div class="kc-result" role="status">'+card(prize,true)+'<div class="kc-result-copy"><div class="kc-kicker">Новый персонаж</div><h3>'+esc(prize.name)+'</h3>'+rarityLabel(prize)+button('В мою коллекцию','collection',{primary:true})+'</div></div>':'';
+ const reward=prize&&known?'<div class="kc-result" role="status">'+card(prize,true)+'<div class="kc-result-copy"><div class="kc-kicker">Новый персонаж</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+button('В мою коллекцию','collection',{primary:true,focus:'result-collection'})+'</div></div>':'';
  if(tab==='collection'){
   const visible=roster.filter(c=>filter==='all'||filter==='owned'&&owned.has(c.id)||filter==='locked'&&!owned.has(c.id));
   body=feature+reelMarkup(s)+reward+'<div class="kc-series"><div class="kc-series-info"><div class="kc-kicker">Коллекция 01</div><h2>Токийский гуль</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к кейсам','cases',{primary:true})+'</div><div class="kc-tools"><span class="kc-muted">Все персонажи Tokyo Ghoul</span><div class="kc-filters" aria-label="Фильтр персонажей">'+[['all','Все'],['owned','Открытые'],['locked','Закрытые']].map(([id,title])=>button(title,'filter-'+id,{pressed:filter===id})).join('')+'</div></div>'+(visible.length?'<div class="kc-grid">'+visible.map(c=>card(c,owned.has(c.id))).join('')+'</div>':'<p class="kc-empty">Пока нет персонажей в этой категории.</p>');
@@ -111,7 +112,19 @@ function paint(){
  }
  host.innerHTML='<section class="kc-page" aria-label="Коллекция и кейсы">'+header+tabs+notice(s)+body+'</section>';
  host.querySelectorAll('.kc-art img,.kc-case-image').forEach(img=>{img.addEventListener('error',()=>{img.hidden=true;},{once:true});if(img.complete&&!img.naturalWidth)img.hidden=true;});
- if(focus){const btn=[...host.querySelectorAll('[data-kc-action]')].find(b=>b.dataset.kcAction===focus&&!b.disabled);btn?.focus({preventScroll:true});}
+ // The purchase controls are replaced on each step, but do not steal focus
+ // if the viewer has already moved to another control.
+ let focus=nextFocus||previous;
+ if(focus==='case-status'){
+  if(s.reel)focus='skip-reel';
+  else if(s.status==='error')focus='retry';
+  else if(prize&&known)focus='result';
+  else if(canBuy)focus='confirm-buy';
+ }else if(focus==='skip-reel'&&!s.reel&&prize&&known)focus='result';
+ if(focus){
+  const target=[...host.querySelectorAll('[data-kc-action],[data-kc-focus]')].find(el=>focusKey(el)===focus&&!el.disabled);
+  target?.focus({preventScroll:focus===previous||!['result','skip-reel'].includes(focus)});
+ }
 }
 async function request(action){
  const s=state;
@@ -120,7 +133,7 @@ async function request(action){
  if(action==='buy'&&(s.status!=='ready'||s.price!==CASE_PRICE||!s.confirmBuy||(!pending(s.owner)&&(s.balance<CASE_PRICE||s.owned.length===roster.length))))return;
  let purchaseId=null;
  if(action==='buy'){try{purchaseId=pending(s.owner)||root.crypto.randomUUID();remember(s.owner,purchaseId);}catch{return;}}
- s.confirmBuy=false;s.status=action==='read'?'loading':'opening';if(action==='buy')s.result=null;paint();
+ s.confirmBuy=false;s.status=action==='read'?'loading':'opening';if(action==='buy')s.result=null;paint(action==='buy'?'case-status':null);
  try{
   if(typeof _supabase==='undefined'||!_supabase)throw new Error('Unavailable');
   const {data:sessionData,error:sessionError}=await _supabase.auth.getSession();
@@ -136,10 +149,17 @@ async function request(action){
   if(action==='buy'&&payload.purchaseStatus==='ok'&&typeof aniCoinRequest==='function')void Promise.resolve().then(()=>aniCoinRequest('read',{},s.owner)).catch(()=>{});
  }catch{if(current(s)){s.status='error';s.owned=[];s.result=null;paint();}}
 }
-function click(event){if(!active())return;const b=event.target.closest?.('.kc-page [data-kc-action]');if(!b||b.disabled)return;const a=b.dataset.kcAction;if(a==='skip-reel'){finishReel(state);return;}if(a==='collection'||a==='cases'){tab=a;paint();}else if(a.startsWith('filter-')){filter=a.slice(7);paint();}else if(a==='login'){if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');}else if(a==='retry')void request('read');else if(a==='confirm-buy'){state.confirmBuy=true;paint();}else if(a==='cancel-buy'){state.confirmBuy=false;paint();}else if(a==='buy')void request('buy');}
+function click(event){if(!active())return;const b=event.target.closest?.('.kc-page [data-kc-action]');if(!b||b.disabled)return;const a=b.dataset.kcAction;if(a==='skip-reel'){finishReel(state,state.reel,true);return;}if(a==='collection'||a==='cases'){tab=a;paint(focusKey(b)==='result-collection'?'collection':null);}else if(a.startsWith('filter-')){filter=a.slice(7);paint();}else if(a==='login'){if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');}else if(a==='retry')void request('read');else if(a==='confirm-buy'){state.confirmBuy=true;paint('cancel-buy');}else if(a==='cancel-buy'){cancelPurchase();}else if(a==='buy')void request('buy');}
+function cancelPurchase(){state.confirmBuy=false;paint('confirm-buy');}
+function keydown(event){
+ if(event.key!=='Escape'||event.defaultPrevented||!active()||!state?.confirmBuy||
+    !event.target.closest?.('.kc-buy-confirm')||
+    document.getElementById('komiMobileMoreToggle')?.getAttribute('aria-expanded')==='true')return;
+ event.preventDefault();event.stopPropagation();cancelPurchase();
+}
 function render(container){
  const style=document.querySelector('link[data-komi-collection-style]');if(style&&style.media!=='all')style.media='all';
- if(host!==container){host=container;host.addEventListener('click',click);}
+ if(host!==container){host?.removeEventListener('click',click);host?.removeEventListener('keydown',keydown);host=container;host.addEventListener('click',click);host.addEventListener('keydown',keydown);}
  const id=owner();if(!state||state.owner!==id){if(state?.reel)clearTimeout(state.reel.timer);state=fresh(id);}
  paint();try{loadImages();}catch{}if(state.status==='idle')void request('read');
 }

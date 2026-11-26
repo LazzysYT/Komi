@@ -25,10 +25,33 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  await p.getByRole('button',{name:'Открытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),1);
  await p.getByRole('button',{name:'Закрытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),17);
  await p.getByRole('button',{name:'Все',exact:true}).click();
- await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).click();assert.equal(await p.evaluate(()=>window.buyCalls),0);
- await p.getByRole('button',{name:'Подтвердить · 50 AniCoin',exact:true}).click();
- if(width!==320){await p.waitForFunction(()=>document.querySelector('.kc-reel-track'));assert.equal(await p.locator('.kc-reel-tile').count(),29);assert.equal(await p.locator('.kc-result').count(),0);assert.equal(await p.locator('.kc-reel-tile').nth(23).locator('.kc-rarity').textContent(),'Эпический');assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));if(width!==1440)await p.getByRole('button',{name:'Показать результат',exact:true}).click();}
- await p.waitForFunction(()=>document.querySelector('.kc-result h3')?.textContent==='Тока Кирисима');assert.equal(await p.locator('.kc-reel-panel').count(),0);assert.equal(await p.evaluate(()=>window.buyCalls),1);assert.equal(await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).isDisabled(),true);assert.equal(await p.locator('.kc-grid .kc-locked').count(),16);assert.match(await p.locator('.kc-wallet').textContent(),/Баланс: 0 AniCoin/);
+ const buy=p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true});
+ const cancel=p.getByRole('button',{name:'Отмена',exact:true});
+ const confirm=p.getByRole('button',{name:'Подтвердить · 50 AniCoin',exact:true});
+ const focused=locator=>locator.evaluate(el=>el===document.activeElement);
+ await buy.press('Enter');assert.equal(await focused(cancel),true);
+ await p.keyboard.press('Escape');assert.equal(await focused(buy),true);
+ assert.equal(await confirm.count(),0);
+ await buy.click();await cancel.click();assert.equal(await focused(buy),true);
+ assert.equal(await p.evaluate(()=>window.buyCalls),0,'cancel never purchases');
+ await p.keyboard.press('Enter');await p.keyboard.press('Shift+Tab');assert.equal(await focused(confirm),true);
+ await p.keyboard.press('Enter');
+ if(width!==320){
+  const skip=p.getByRole('button',{name:'Показать результат',exact:true});
+  await skip.waitFor();assert.equal(await focused(skip),true);
+  assert.equal(await p.locator('.kc-reel-tile').count(),29);
+  assert.equal(await p.locator('.kc-result').count(),0);
+  assert.equal(await p.locator('.kc-reel-tile').nth(23).locator('.kc-rarity').textContent(),'Эпический');
+  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+  if(width===1024)await p.getByRole('button',{name:'Кейсы',exact:true}).focus(); // timer must not steal focus
+  else if(width===390)await skip.click();
+  else if(width!==1440)await p.keyboard.press('Enter');
+ }
+ const result=p.locator('.kc-result h3');
+ await p.waitForFunction(()=>document.querySelector('.kc-result h3')?.textContent==='Тока Кирисима');
+ if(width===1024)assert.equal(await focused(p.getByRole('button',{name:'Кейсы',exact:true})),true);
+ else assert.equal(await focused(result),true,'result receives keyboard focus');
+ assert.equal(await p.locator('.kc-reel-panel').count(),0);assert.equal(await p.evaluate(()=>window.buyCalls),1);assert.equal(await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).isDisabled(),true);assert.equal(await p.locator('.kc-grid .kc-locked').count(),16);assert.match(await p.locator('.kc-wallet').textContent(),/Баланс: 0 AniCoin/);
  await p.evaluate(()=>{window.currentUser=null;window.KomiCollection.authChanged('');window.KomiCollection.render(document.querySelector('#mainContainer'));});assert.equal(await p.locator('.kc-grid .kc-locked').count(),18);assert.equal(await p.locator('.kc-result').count(),0);
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);fs.mkdirSync(path.join(root,'browser-test-results'),{recursive:true});await p.screenshot({path:path.join(root,'browser-test-results','collection-ghoul-'+width+'.png'),fullPage:true});await p.close();console.log('collection width '+width+' passed');
  }}finally{await b.close();}

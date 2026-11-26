@@ -598,3 +598,15 @@ body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):is(:h
 
 /* Keep the collection action in the mobile More menu, independent of route CSS. */
 @media(max-width:767px){body.komi-media-hub .komi-icon-rail .komi-side-links>#sideCollectionBtn{display:none!important}}
+
+/* Keep all actions reachable between the top controls and the mobile dock. */
+@media (max-width: 767px) {
+  body.komi-media-hub #komiMobileMoreMenu {
+    --komi-more-reserved: calc(160px + env(safe-area-inset-bottom, 0px));
+    max-height: calc(100vh - var(--komi-more-reserved));
+    max-height: calc(100dvh - var(--komi-more-reserved));
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    align-content: start;
+  }
+}
