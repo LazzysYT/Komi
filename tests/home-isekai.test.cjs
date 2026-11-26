@@ -50,7 +50,7 @@ test('explicit localized Isekai labels match either supported catalog spelling, 
 
 test('guest catalog filter executes the real result pipeline on card-shaped data and preserves search', () => {
   const scope = makeContext();
-  const first = app.indexOf('function komiSortCatalogByYear(');
+  const first = app.indexOf('function komiNormalizeCatalogSearch(');
   const last = app.indexOf('function komiCatalogChipsMarkup(', first);
   assert.ok(first >= 0 && last > first);
   Object.assign(scope, {
@@ -72,6 +72,7 @@ test('guest catalog filter executes the real result pipeline on card-shaped data
     catalogSearchQuery:'',
     komiHideWatched:false,
     currentUser:null,
+    komiCatalogRevision:0,
     komiSearchVariants(query) {return query ? [query.toLowerCase()] : [];}
   });
   vm.runInContext(app.slice(first,last),scope);

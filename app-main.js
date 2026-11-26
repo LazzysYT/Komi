@@ -1160,6 +1160,50 @@ async function komiLoadCatalogPages(attempt = 0) {
             }).join('');
             return mapped !== query ? [query, mapped] : [query];
         }
+        // Cache normalized metadata per catalog revision. Rank exact and prefix
+        // matches ahead of words/genres when the default catalogue sort is used.
+        function komiNormalizeCatalogSearch(value) {
+            return String(value || '').normalize('NFKC').toLowerCase()
+                .replace(/ё/g,'е').replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+        }
+        let komiCatalogSearchIndex = null;
+        function komiGetCatalogSearchIndex() {
+            if (komiCatalogSearchIndex?.source === animeList &&
+                komiCatalogSearchIndex.revision === komiCatalogRevision &&
+                komiCatalogSearchIndex.length === animeList.length) return komiCatalogSearchIndex.items;
+            const items = new Map();
+            for (const anime of animeList) {
+                if (!anime || typeof anime !== 'object') continue;
+                const names = [anime.title,anime.originalTitle,anime.english,anime.japanese,
+                    ...(Array.isArray(anime.synonyms) ? anime.synonyms : [])]
+                    .map(komiNormalizeCatalogSearch).filter(Boolean);
+                const genres = (Array.isArray(anime.genres) ? anime.genres : [anime.genre])
+                    .flatMap(g=>g && typeof g === 'object' ? [g.name,g.russian,g.title] : [g])
+                    .map(komiNormalizeCatalogSearch).filter(Boolean);
+                items.set(anime,{names,genres});
+            }
+            komiCatalogSearchIndex = {source:animeList,revision:komiCatalogRevision,length:animeList.length,items};
+            return items;
+        }
+        function komiCatalogSearchScore(entry, queries) {
+            if (!entry) return 0;
+            let score = 0;
+            for (const query of queries) {
+                const tokens = query.split(' ');
+                for (const name of entry.names) {
+                    if (name === query) score = Math.max(score,100);
+                    else if (name.startsWith(query+' ')) score = Math.max(score,90);
+                    else if (name.startsWith(query)) score = Math.max(score,80);
+                    else if (name.includes(query)) score = Math.max(score,65);
+                    else if (tokens.length > 1 && tokens.every(token=>name.includes(token))) score = Math.max(score,50);
+                }
+                if (entry.genres.some(genre=>genre.includes(query))) score = Math.max(score,20);
+            }
+            return score;
+        }
+        function komiCatalogSearchTerms(value) {
+            return [...new Set(komiSearchVariants(value).map(komiNormalizeCatalogSearch).filter(Boolean))];
+        }
         // Returning to an unchanged, unfiltered catalog should never re-sort
         // thousands of titles. Private watched-status filters bypass this cache.
         let komiDefaultCatalogCache = null;
@@ -1189,7 +1233,9 @@ async function komiLoadCatalogPages(attempt = 0) {
                 };
                 return sorted;
             }
-            const queries=komiSearchVariants(catalogSearchQuery).filter(Boolean);
+            const queries=komiCatalogSearchTerms(catalogSearchQuery);
+            const searchIndex=queries.length ? komiGetCatalogSearchIndex() : null;
+            const searchScores=new Map();
             const top100 = catalogCategory === 'top100' ? new Set([...animeList].filter(a=>Number(a.shikiRating)>0)
                 .sort((a,b)=>Number(b.shikiRating)-Number(a.shikiRating)||Number(b.shikimoriId||b.id)-Number(a.shikimoriId||a.id))
                 .slice(0,100).map(a=>String(a.id))) : null;
@@ -1201,14 +1247,20 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (top100 && !top100.has(String(a.id))) return false;
                 if (komiHideWatched && currentUser?.authUserId &&
                     ['Просмотрено','Брошено'].includes(userAnimeStatuses[currentUser.username]?.[String(a.id)])) return false;
-                const genres=Array.isArray(a.genres)?a.genres:[a.genre].filter(Boolean);
                 if(catalogFilterGenre!=='Все'&&!window.KomiGenreMoods.matches(a,catalogFilterGenre))return false;
                 if(catalogFilterYear!=='Все'&&komiAnimeYear(a)!==String(catalogFilterYear))return false;
                 if(catalogFilterType!=='Все'&&komiCatalogType(a)!==catalogFilterType)return false;
-                if(queries.length&&![a.title,a.originalTitle,a.english,a.japanese,...(Array.isArray(a.synonyms)?a.synonyms:[]),...genres].some(v=>queries.some(q=>String(v||'').toLocaleLowerCase('ru-RU').includes(q))))return false;
+                if(queries.length){
+                    const score=komiCatalogSearchScore(searchIndex.get(a),queries);
+                    if(!score)return false;
+                    searchScores.set(a,score);
+                }
                 return true;
             });
-            if(catalogSort==='popular')return komiSortCatalogByYear(filtered);
+            if(catalogSort==='popular'){
+                const ordered=komiSortCatalogByYear(filtered);
+                return queries.length ? ordered.sort((a,b)=>searchScores.get(b)-searchScores.get(a)) : ordered;
+            }
             else if(catalogSort==='updated')return filtered.map(anime=>({anime,date:Date.parse(anime.lastEpisodeAddedAt)||0}))
                 .sort((a,b)=>b.date-a.date).map(item=>item.anime);
             else if(catalogSort==='rating')filtered.sort((a,b)=>(Number(b.shikiRating)||0)-(Number(a.shikiRating)||0));
@@ -1267,7 +1319,11 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
             if(count)count.textContent='Найдено: '+filtered.length;
             const headingCount = document.getElementById('komiCatalogHeadingCount');
-            if (headingCount) headingCount.textContent = filtered.length + ' тайтлов найдено';
+            if (headingCount) headingCount.textContent = filtered.length.toLocaleString('ru-RU') + ' тайтлов найдено';
+            const clear = document.getElementById('komiCatalogClearSearch');
+            if (clear) clear.hidden = !catalogSearchQuery;
+            const searchStatus = document.getElementById('komiCatalogSearchStatus');
+            if (searchStatus) searchStatus.textContent = catalogSearchQuery.trim() ? 'Найдено: ' + filtered.length.toLocaleString('ru-RU') : 'Русское или оригинальное название';
             if(more){
                 more.style.display=filtered.length>catalogVisibleCount?'flex':'none';
                 more.innerHTML=filtered.length>catalogVisibleCount?'<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · '+Math.min(catalogVisibleCount,filtered.length)+' из '+filtered.length+'</button>':'';
@@ -1859,12 +1915,14 @@ async function komiLoadCatalogPages(attempt = 0) {
                               <span class="komi-catalog-number" id="komiCatalogHeadingCount">${filtered.length} тайтлов найдено</span></div>
                             ${window.KomiGenreMoods.toolbar({years, year:catalogFilterYear, sort:catalogSort, scope:'catalog'})}
                         </div>
-                        <div class="komi-catalog-category-pills" role="group" aria-label="Категории каталога">
-                          ${[['all','Всё'],['ongoing','Онгоинги'],['series','Сериалы'],['movies','Фильмы'],['top100','Топ 100']].map(([key,label]) => `<button type="button" data-komi-category="${key}" data-komi-onclick="komiChooseCatalogCategory(this.dataset.komiCategory)" aria-pressed="${catalogCategory===key}">${label}</button>`).join('')}
-                        </div>
                         <div class="komi-catalog-search">
                           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
-                          <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Поиск аниме" aria-label="Поиск аниме" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false">
+                          <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Название аниме" aria-label="Поиск аниме" aria-describedby="komiCatalogSearchStatus" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false" maxlength="120">
+                          <button type="button" id="komiCatalogClearSearch" class="komi-catalog-search-clear" aria-label="Очистить поиск" ${catalogSearchQuery?'':'hidden'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg></button>
+                        </div>
+                        <div class="komi-catalog-search-feedback" id="komiCatalogSearchStatus" role="status" aria-live="polite">${catalogSearchQuery.trim()?'Найдено: '+filtered.length.toLocaleString('ru-RU'):'Русское или оригинальное название'}</div>
+                        <div class="komi-catalog-category-pills" role="group" aria-label="Категории каталога">
+                          ${[['all','Всё'],['ongoing','Онгоинги'],['series','Сериалы'],['movies','Фильмы'],['top100','Топ 100']].map(([key,label]) => `<button type="button" data-komi-category="${key}" data-komi-onclick="komiChooseCatalogCategory(this.dataset.komiCategory)" aria-pressed="${catalogCategory===key}">${label}</button>`).join('')}
                         </div>
                         ${window.KomiGenreMoods.render({animeList, genre:catalogFilterGenre, availableGenres:availableGenresList, artwork:animeArtwork})}
                         <div class="komi-catalog-advanced" id="komiCatalogAdvanced" ${komiShowAdvancedFilters?'':'hidden'}>
@@ -1900,6 +1958,19 @@ async function komiLoadCatalogPages(attempt = 0) {
                       ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
                     </div>
                 `;
+                const catalogField = document.getElementById('komiCatalogSearchInput');
+                const clearCatalogSearch = () => {
+                    if (!catalogField) return;
+                    catalogField.value = '';
+                    komiUpdateCatalogQuery('');
+                    catalogField.focus({preventScroll:true});
+                };
+                document.getElementById('komiCatalogClearSearch')?.addEventListener('click',clearCatalogSearch);
+                catalogField?.addEventListener('keydown',event=>{
+                    if (event.key === 'Escape' && catalogField.value && !event.isComposing) {
+                        event.preventDefault(); clearCatalogSearch();
+                    }
+                });
                 if (komiCatalogFocusPending || searchPreviouslyFocused) {
                     const nextSearch = document.getElementById('komiCatalogSearchInput');
                     if (nextSearch) {
@@ -3759,15 +3830,15 @@ async function komiLoadCatalogPages(attempt = 0) {
                 });
                 return;
             }
-            const queries = komiSearchVariants(input).filter(Boolean);
+            const queries = komiCatalogSearchTerms(input);
             if (!queries.length) {
                 dd.replaceChildren();
                 dd.classList.remove('active');
                 return;
             }
-            const matches = animeList.filter(a=>a && [
-                a.title,a.originalTitle,...(Array.isArray(a.genres) ? a.genres : [])
-            ].some(v=>queries.some(query=>String(v || '').toLocaleLowerCase('ru-RU').includes(query))));
+            const searchIndex = komiGetCatalogSearchIndex();
+            const matches = animeList.map(anime=>({anime,score:komiCatalogSearchScore(searchIndex.get(anime),queries)}))
+                .filter(item=>item.score>0).sort((a,b)=>b.score-a.score).map(item=>item.anime);
             const results = matches.slice(0,8);
             if (results.length) {
                 dd.replaceChildren(...results.map(a=>komiSearchSuggestion(a)));

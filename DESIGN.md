@@ -33,8 +33,8 @@ components:
 
 ## Comfort refinement, 26 November 2026
 
-This revision supersedes the earlier all-pill and icon-only guidance for discovery
-and catalogue. The brief is a comfortable monochrome anime library. References:
+This revision supersedes the earlier all-pill guidance for discovery
+and catalogue; the compact icon-only desktop navigation is retained. The brief is a comfortable monochrome anime library. References:
 Senku's image-led discovery, AnimeOn's explicit catalogue controls and Yanima's
 direct watch actions; do not copy their colour accents or upsells.
 
@@ -51,19 +51,17 @@ Plan comparison: another decorative catalogue banner would repeat the home hero
 and delay browsing. Choose the working-library composition with actual posters
 visible sooner and one compact scrolling row of genres. All copy is left aligned.
 
-    Wide (1200px+)                  Tablet / phone
-    KomiAnime | Search             Search / More
-    Home      | Title / tools      Catalogue title
-    Catalogue | Categories         Sort / year
-    Lists*    | Search             Categories / search
+    Desktop (768px+)               Phone
+    K icon    | Global search      Search / More
+    Home icon | Title / tools      Catalogue title / tools
+    Catalog   | Title search       Title search / feedback
+    Partners  | Categories         Categories
     Shop      | Genres             Genres / filter sheet
     Party     | Poster grid        Two-column poster grid
     Account   |                    Bottom navigation
     *Existing authenticated visibility remains authoritative.
 
-Wide navigation exposes the existing labels in 184px; 768–1199px retains the
-72px rail; below 768px retains the mobile dock. Catalogue DOM order is heading,
-categories, search, compact genres, advanced filters. Phones use the existing
+Desktop navigation is a stable 72px icon rail at 768px and above; labels appear on hover and keyboard focus. Below 768px retains the labeled mobile dock. Catalogue DOM order is heading, search and feedback, categories, compact genres, advanced filters. Phones use the existing
 sheet as their single advanced-filter entry; desktop keeps the inline panel.
 Home keeps one cinematic image, quieter controls and inset recommendation shelves.
 
