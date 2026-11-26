@@ -50,7 +50,11 @@ const widths = [320, 375, 390, 620, 768, 900, 1280, 1366];
       for (const section of sections) {
         const info = await page.evaluate(section => {
           profilePageSection = section;
-          renderProfileView(document.getElementById('komi-mobile-profile-test-root'));
+          // The async catalogue/account renderer may replace mainContainer between
+          // viewport changes. Reattach the synthetic fixture, not production DOM.
+          let fixture=document.getElementById('komi-mobile-profile-test-root');
+          if(!fixture){fixture=document.createElement('div');fixture.id='komi-mobile-profile-test-root';fixture.style.cssText='width:100%;min-width:0;max-width:100%;';document.getElementById('mainContainer').appendChild(fixture);}
+          renderProfileView(fixture);
           const profile = document.querySelector('#komi-mobile-profile-test-root .komi-profile-v2');
           const tabs = [...profile.querySelectorAll('.komi-profile-tab')];
           const counters = [...profile.querySelectorAll('.profile-stat-card')];
@@ -118,7 +122,8 @@ const widths = [320, 375, 390, 620, 768, 900, 1280, 1366];
       window.komiProfilePreviewOwner=uid;
       komiPrivacyState.owner=uid;komiPrivacyState.data={hide_profile:false,invisible:false};
       profilePageSection='overview';
-      const root=document.getElementById('komi-mobile-profile-test-root');
+      let root=document.getElementById('komi-mobile-profile-test-root');
+      if(!root){root=document.createElement('div');root.id='komi-mobile-profile-test-root';root.style.cssText='width:100%;min-width:0;max-width:100%;';document.getElementById('mainContainer').appendChild(root);}
       renderProfileView(root);
       const p=root.querySelector('#profile');
       const exposed=p.querySelector('[data-profile-edit],[data-profile-balance],[data-profile-week-owner],[data-profile-tab="history"],[data-profile-tab="activity"],.profile-favorites-widget');
