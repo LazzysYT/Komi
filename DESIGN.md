@@ -61,9 +61,7 @@ visible sooner and one compact scrolling row of genres. All copy is left aligned
     Account   |                    Bottom navigation
     *Existing authenticated visibility remains authoritative.
 
-Wide navigation exposes the existing labels in 184px; 768–1199px retains the
-72px rail; below 768px retains the mobile dock. Catalogue DOM order is heading,
-categories, search, compact genres, advanced filters. Phones use the existing
+Desktop navigation is a stable 72px icon rail at 768px and above; labels appear on hover and keyboard focus. Below 768px retains the labeled mobile dock. Catalogue DOM order is heading, search and feedback, categories, compact genres, advanced filters. Phones use the existing
 sheet as their single advanced-filter entry; desktop keeps the inline panel.
 Home keeps one cinematic image, quieter controls and inset recommendation shelves.
 

@@ -639,3 +639,34 @@ body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search
   body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-tool-menu summary { padding: 10px; font-size: 13px; }
   .komi-media-hub .komi-tool-dropdown { left: 0; right: auto; max-width: calc(100vw - 40px); }
 }
+
+/* Catalogue search: prominent but compact, with explicit clear and live feedback. */
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search {
+  max-width: 100% !important; min-height: 52px; margin: 0 !important;
+  padding-inline: 14px; gap: 12px; border-radius: 12px !important;
+  background: #161616; border-color: #303030; box-sizing: border-box;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search:focus-within {
+  border-color: #a3a3a3; box-shadow: 0 0 0 2px rgba(255,255,255,.07);
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 #komiCatalogSearchInput {
+  width: 0; min-width: 0; flex: 1; padding: 0 !important; color: #fff;
+  min-height: 48px; outline: none; font-size: 16px !important;
+}
+#komiCatalogSearchInput::-webkit-search-cancel-button { -webkit-appearance: none; }
+#komiCatalogSearchInput::placeholder { color: #a3a3a3; opacity: 1; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear {
+  flex: 0 0 40px; width: 40px; height: 40px; padding: 0 !important;
+  display: grid; place-items: center; border: 0; border-radius: 9px;
+  background: transparent; color: #a3a3a3; cursor: pointer;
+}
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear[hidden] { display: none !important; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear:hover { background: #242424; color: white; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 .komi-catalog-search-clear svg { width: 18px; height: 18px; stroke: currentColor; stroke-linecap: round; }
+body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search-feedback {
+  font: 400 12px/1.4 Inter,sans-serif; color: #a3a3a3; margin: 6px 0 14px;
+}
+@media (max-width: 767px) {
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search { min-height: 48px; padding-inline: 12px; }
+  body.komi-media-hub #mainContainer #catalog.komi-catalog-v5 > .komi-catalog-search-feedback { margin-bottom: 9px; }
+}

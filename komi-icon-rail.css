@@ -571,41 +571,24 @@ html.komi-home-boot-preview .komi-boot-real-hero .hero-slide.active .komi-hub-he
 /* A skeleton never needs continuous repaints while the page hydrates. */
 .komi-boot-line,.komi-boot-pill,.komi-boot-cards span{animation:none!important}
 
-/* Wide-screen navigation exposes existing labels. The same controls and state
-   remain canonical; !important matches this file's legacy shell declarations. */
-@media (min-width: 1200px) {
-  body.komi-media-hub { --hub-rail: 184px; --komi-rail-width: 184px; }
-  body.komi-media-hub .komi-side-nav.komi-icon-rail {
-    width: var(--komi-rail-width) !important;
-    min-width: var(--komi-rail-width) !important;
-    padding: 24px 14px !important;
-    align-items: flex-start !important;
-  }
+/* Desktop keeps one stable icon-only rail. Mobile retains its labeled dock. */
+@media (min-width: 768px) {
   body.komi-media-hub .komi-icon-rail .komi-side-links {
-    justify-content: flex-start !important; padding-top: 38px !important; gap: 6px !important;
+    justify-content: flex-start !important;
+    padding-top: 26px !important;
+    gap: 8px !important;
   }
-  body.komi-media-hub aside.komi-side-nav.komi-icon-rail :is(.komi-side-links,.komi-side-bottom,.komi-rail-extra) > .komi-side-button {
-    display: flex !important; flex-direction: row !important;
-    width: 100% !important; justify-content: flex-start !important;
-    gap: 12px !important; padding: 0 12px !important; border-radius: 9px !important;
+}
+@media (min-width: 768px) and (max-height: 650px) {
+  body.komi-media-hub .komi-icon-rail .komi-side-links {
+    padding-top: 8px !important;
+    gap: 3px !important;
   }
-  body.komi-media-hub .komi-side-nav.komi-icon-rail .komi-side-button > span.komi-rail-tooltip:not(#sidebarAvatarIcon,#notifBadge) {
-    position: static !important; display: inline !important; opacity: 1 !important;
-    visibility: visible !important; transform: none !important; min-height: 0 !important;
-    width: auto !important; max-width: none !important; padding: 0 !important;
-    border: 0 !important; background: none !important; box-shadow: none !important;
-    color: inherit !important; font: 600 14px/1.35 Manrope,Inter,sans-serif !important;
-    white-space: normal !important; text-align: left !important;
-  }
-  body.komi-media-hub .komi-icon-rail .komi-side-logo {
-    width: 100% !important; display: flex !important; justify-content: flex-start !important;
-    gap: 9px; padding: 0 12px !important; background: none !important; border: 0 !important;
-  }
-  body.komi-media-hub .komi-side-nav.komi-icon-rail .komi-side-logo > span.komi-rail-tooltip:not(#sidebarAvatarIcon,#notifBadge) {
-    position: static !important; opacity: 1 !important; visibility: visible !important;
-    transform: none !important; padding: 0 !important; border: 0 !important;
-    background: none !important; box-shadow: none !important; min-height: 0 !important;
-    font: 700 16px/1.3 Manrope,Inter,sans-serif !important; letter-spacing: -.04em !important;
+}
+@media (min-width: 768px) and (hover: none) {
+  body.komi-media-hub .komi-side-nav.komi-icon-rail
+    :is(.komi-side-button,.komi-side-logo):hover:not(:focus-visible) > span.komi-rail-tooltip:not(#sidebarAvatarIcon,#notifBadge) {
+    opacity: 0 !important; visibility: hidden !important;
   }
 }
 /* Navigation feedback changes contrast without making targets jump. */
