@@ -241,6 +241,7 @@ fs.mkdirSync(output,{recursive:true});
           'A closed disclosure must not expose duplicate navigation or social controls');
         await toolsSummary.click();
         assert.equal(await toolsMenu.evaluate(menu=>menu.open),true);
+        await toolsPanel.waitFor({state:'visible',timeout:5000});
         assert.equal(await toolsPanel.isVisible(),true,
           'The native summary must reveal the social links before their geometry is measured');
         const socials=await page.evaluate(()=>Array.from(document.querySelectorAll('nav[aria-label="Социальные сети Komi Anime"] a')).map(link=>{
