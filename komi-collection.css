@@ -32,9 +32,7 @@
 .kc-art img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 25%;position:absolute;inset:0}
 .kc-art img[hidden]{display:none!important}
 .kc-art:after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,transparent 50%,rgba(0,0,0,.48));z-index:1}
-.kc-locked .kc-art img{filter:grayscale(1) brightness(.22) contrast(1.25);opacity:.85}
 .kc-locked .kc-art:after{background:linear-gradient(180deg,rgba(9,9,11,.1),rgba(9,9,11,.57))}
-.kc-fallback{position:absolute;width:56%;height:auto;top:50%;left:50%;transform:translate(-50%,-50%);color:#41414a;opacity:.8}
 .kc-lock{position:absolute;inset:0;display:grid;place-items:center;z-index:2;pointer-events:none}
 .kc-lock span{display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:rgba(15,15,18,.78);border:1px solid rgba(255,255,255,.16);color:#aaaab3}
 .kc-number{position:absolute;top:9px;left:9px;z-index:3;border-radius:8px;background:rgba(9,9,11,.8);color:#c8c8cf;font-size:11px;font-weight:700;padding:5px 7px}
@@ -61,3 +59,49 @@
 @media(max-width:767px){body.komi-media-hub .komi-icon-rail .komi-side-links>#sideCollectionBtn{display:none!important}.kc-page{padding:15px 12px calc(95px + env(safe-area-inset-bottom))}.kc-header{gap:12px}.kc-count{width:100%;display:flex;justify-content:space-between;align-items:center}.kc-tabs{width:100%}.kc-tabs button{flex:1}.kc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kc-series{padding:16px;gap:12px}.kc-case{grid-template-columns:1fr;padding:14px;gap:16px}.kc-case-visual{min-height:185px}.kc-case-copy .kc-primary{max-width:none}.kc-card-info{padding:10px}.kc-tools{align-items:flex-start}}
 @media(min-width:520px) and (max-width:767px){.kc-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.kc-page button,.kc-result{transition:none;animation:none}}
+
+/* Tokyo Ghoul art and crimson details are confined to the collection. */
+.kc-page{--kc-red:#df4858}
+.kc-header{position:relative;isolation:isolate;padding-block:4px 10px}
+.kc-header:before{content:"";position:absolute;z-index:-1;inset:-20px -10px -8px 35%;pointer-events:none;background:radial-gradient(ellipse at 80% 0,rgba(130,22,38,.19),transparent 75%)}
+.kc-tabs{margin-bottom:18px}
+.kc-tabs button[aria-pressed=true]{background:linear-gradient(180deg,#292327,#25181d);color:#fff;border:1px solid #75313c;box-shadow:inset 0 -2px #d34755}
+.kc-tabs button[aria-pressed=true]:hover{background:#33232a;color:#fff}
+.kc-case{gap:0;padding:0;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);background:radial-gradient(ellipse at 0 100%,#371921 0,#16161a 55%);border-color:rgba(255,255,255,.12);margin-bottom:20px;position:relative}
+.kc-case-visual{position:relative;min-height:0;height:100%;border:none;border-radius:0;display:block;background:radial-gradient(ellipse at 40% 50%,#43222a,#131317 70%);aspect-ratio:500/205}
+.kc-case-visual img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center}
+.kc-case-image[hidden]{display:none!important}
+.kc-case-visual:after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent 80%,#16161a);pointer-events:none}
+.kc-case-copy{padding:clamp(18px,2.7vw,30px);position:relative;gap:10px}
+.kc-case-copy .kc-kicker,.kc-result .kc-kicker{color:#ed7180}
+.kc-case-copy h2{line-height:1.15}
+.kc-case-copy .kc-primary{background:linear-gradient(135deg,#b33644,#651c28);color:#fff;border:1px solid #d15461;box-shadow:0 6px 22px #8e24333b;max-width:100%;width:100%}
+.kc-case-copy .kc-primary:hover:not(:disabled){background:linear-gradient(135deg,#c94351,#7d2633)}
+.kc-case-copy .kc-primary:disabled{opacity:.58;box-shadow:none}
+.kc-case[aria-busy=true] .kc-case-image{animation:kc-case-pulse 1.1s ease-in-out infinite alternate}
+@keyframes kc-case-pulse{to{filter:brightness(1.15) saturate(1.2)}}
+.kc-case-status{color:#dddde1;font-weight:600}
+.kc-series{padding:16px 20px;margin:20px 0 0;background:#16161a}
+.kc-progress>span{background:linear-gradient(90deg,#812831,#e55b6b)}
+.kc-grid{grid-template-columns:repeat(auto-fill,minmax(min(100%,156px),1fr));gap:12px}
+.kc-card{border-radius:14px;position:relative;background:#151519}
+.kc-card:not(.kc-locked){border-color:#8d3744;box-shadow:0 0 12px #a5233719}
+.kc-card:not(.kc-locked) .kc-art{background:radial-gradient(ellipse at 50% 35%,#572330,#171318 80%)}
+.kc-art{aspect-ratio:5/4;background:radial-gradient(ellipse at 52% 38%,#48484e,#25252a 44%,#151518 81%)}
+.kc-silhouette{position:absolute;inset:0;width:100%;height:100%;display:block;filter:drop-shadow(0 0 5px rgba(180,180,190,.20));overflow:visible}
+.kc-locked .kc-art:after{background:linear-gradient(180deg,transparent 58%,rgba(4,4,6,.66))}
+.kc-lock{place-items:end center;padding-bottom:9px}
+.kc-lock span{width:27px;height:27px;border-radius:8px;background:#121216dc;border:1px solid #ffffff18;color:#c8c8ce}
+.kc-lock svg{width:16px;height:16px}
+.kc-number{font-size:10px;top:7px;left:7px;background:#101014d9}
+.kc-card-info{padding:9px 10px;min-height:54px}
+.kc-card-info strong{font-size:12px}
+.kc-locked .kc-card-info strong{color:#a2a2aa}
+.kc-card-info small{margin-top:3px}
+.kc-case-details{padding:18px 0}
+.kc-case-details h2{font-size:22px;margin-bottom:5px}
+.kc-case-details .kc-grid{margin-top:14px}
+@media(min-width:1200px){.kc-grid{grid-template-columns:repeat(6,minmax(0,1fr))}}
+@media(max-width:767px){.kc-header:before{inset:-10px 0}.kc-case{grid-template-columns:minmax(0,1fr);gap:0}.kc-case-visual{height:auto;aspect-ratio:500/210;min-height:0}.kc-case-visual:after{background:linear-gradient(180deg,transparent 82%,#16161a)}.kc-case-copy{padding:14px 16px 18px}.kc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kc-series{padding:14px}.kc-card-info{padding:8px;min-height:52px}.kc-case-details{padding-top:12px}}
+@media(min-width:520px) and (max-width:767px){.kc-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(prefers-reduced-motion:reduce){.kc-case[aria-busy=true] .kc-case-image{animation:none}}
