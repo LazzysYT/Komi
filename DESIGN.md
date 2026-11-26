@@ -238,3 +238,6 @@ study. Show the character and work on each shop card to make the catalog
 searchable and the inspiration explicit. Keep the first frame still in the
 catalog; motion is opt-in by hover, keyboard focus or fitting. Never obscure
 the name or use flashing, imported assets or franchise logos.
+
+### Live profile cosmetics
+The catalog deliberately reopens four slots for four new IDs only. Retired inventory and refunds are not reversed, and the 40 existing title treatments keep their prices. The four physical motifs are lacquer with a restrained crimson crack, a stroked ink signature, a strip of print panels, and a warm pool of cinema lamplight. Animate only the relevant component; honor reduced motion and avoid movement on initial XP hydration. A cinematic showcase displays at most three actually saved favorites, and does not grant access to private data. A neutral poster sample appears in a fitting room with no favorites. The new cosmetics are direct purchases; the existing gift list continues to show eligible titles only.

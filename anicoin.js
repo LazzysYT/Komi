@@ -197,6 +197,14 @@ window.komiShopCheckoutCart=async function(itemIds,expectedOwner){
     }finally{aniCoinShopBusy=false;}
 };
 
+function aniCoinShopFavoritePreview(id) {
+    if(!id||typeof userFavorites==='undefined'||typeof animeList==='undefined'||!Array.isArray(animeList))return [];
+    const keys=Object.keys(userFavorites[currentUser.username]||{}).slice(0,80);
+    if(!keys.length)return [];
+    const wanted=new Set(keys),found=new Map();
+    for(const anime of animeList){const key=String(anime.id);if(wanted.has(key))found.set(key,anime);if(found.size===wanted.size)break;}
+    return keys.map(key=>found.get(key)).filter(Boolean).slice(0,3).map(({title,poster})=>({title,poster}));
+}
 function renderAniCoinShop(container) {
     if (!container) return;
     const id=currentUser?.authUserId;
@@ -208,6 +216,7 @@ function renderAniCoinShop(container) {
             owner:id||'',wallet,store,
             avatar:id===aniCoinShopOwner?aniCoinShopAvatar:'',
             displayName:id===aniCoinShopOwner?aniCoinShopDisplayName:'Пользователь Komi',
+            favorites:aniCoinShopFavoritePreview(id),
             shopStatus:aniCoinShopStatus||aniCoinStatus||'',
             retryApplyItem:aniCoinShopRetryApply?.owner===id&&store?.owned?.includes(aniCoinShopRetryApply.item)&&
                 store?.[aniCoinShopRetryApply.type+'_id']!==aniCoinShopRetryApply.item?aniCoinShopRetryApply.item:'',

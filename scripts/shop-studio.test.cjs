@@ -126,13 +126,13 @@ function fixture(options={}){
  return api;
 }
 
-test('pagination exposes each discoverable title once and no old non-title products',async()=>{
+test('pagination exposes each title and new cosmetic once, without retired products',async()=>{
  const f=fixture();assert.equal(f.ids.length,24);const first=f.ids;
- await f.click('data-v7-more');assert.equal(f.ids.length,40);
+ await f.click('data-v7-more');assert.equal(f.ids.length,44);
  assert.deepEqual(f.ids.slice(0,24),first);
- assert.equal(new Set(f.ids).size,40);
- assert.ok(f.ids.every(id=>f.product(id).type==='title'));
- assert.doesNotMatch(f.html,/data-v7-category-select/);
+ assert.equal(new Set(f.ids).size,44);
+ assert.deepEqual(f.ids.filter(id=>f.product(id).type!=='title').sort(),['frame_ghoul_seal','name_mangaka_ink','showcase_personal_cinema','xp_story_rhythm']);
+ assert.match(f.html,/data-v7-category-select/);
 });
 
 test('local search is case-insensitive, retains fitting choices, and clear restores focus and results',async()=>{
@@ -258,9 +258,10 @@ test('owned inventory distinguishes pending hydration, a failed load, and a veri
  assert.doesNotMatch(f.html,/data-shop-retry/);
 });
 
-test('legacy collection links still show titles instead of an empty catalog',()=>{
+test('legacy collection links still show the current assortment instead of an empty catalog',()=>{
  const f=fixture({url:'https://komianime.online/shop?shop_collection=cinema&shop_category=frame'});
- assert.ok(f.ids.length&&f.ids.every(id=>f.product(id).type==='title'));
+ assert.equal(f.ids.length,24);
+ assert.ok(f.ids.every(id=>f.window.KomiShopCatalog.isOnSale(id)));
  assert.doesNotMatch(f.html,/data-v7-collection=|data-v7-look=/);
 });
 

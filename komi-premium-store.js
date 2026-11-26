@@ -3,6 +3,25 @@
 'use strict';
 const products=root.KomiShopCatalog?.items||[];
 let client=null,publicItems=new Map(),wallet=null,owner='',busy=false;
+let xpMotion=null;
+function updateStoryRhythm(levelNode,user,enabled){
+ const track=levelNode?.querySelector('.profile-xp-progress-track');
+ const meter=track?.querySelector('progress');
+ const level=Number(levelNode?.querySelector('.profile-xp-level strong')?.textContent?.replace(/[^0-9]/g,''));
+ if(!enabled||!track||!meter||!user||!(level>=1)||!(meter.max>0)){xpMotion=null;return;}
+ const value=meter.value,max=meter.max,previous=xpMotion;
+ xpMotion={user,level,value,max};
+ if(previous?.user!==user||previous.max!==max||level<previous.level||(level===previous.level&&value<=previous.value)||root.matchMedia?.('(prefers-reduced-motion: reduce)').matches)return;
+ const levelUp=level>previous.level,from=levelUp?0:previous.value;
+ track.classList.remove('is-xp-gain','is-xp-level-up');
+ track.style.setProperty('--komi-xp-gain-from',(from/max*100)+'%');
+ track.style.setProperty('--komi-xp-gain-width',((value-from)/max*100)+'%');
+ void track.offsetWidth;
+ track.classList.add('is-xp-gain');
+ if(levelUp)track.classList.add('is-xp-level-up');
+ clearTimeout(track.komiXpMotionTimer);
+ track.komiXpMotionTimer=setTimeout(()=>track.classList.remove('is-xp-gain','is-xp-level-up'),1050);
+}
 function css(){
  if(document.getElementById('komi-premium-store-css'))return;
  const style=document.createElement('style');style.id='komi-premium-store-css';
@@ -23,6 +42,8 @@ function apply(){
   frame.classList.remove(...products.filter(x=>x.type==='frame').map(x=>'komi-store-'+x.frameClass));
   const frameProduct=products.find(x=>x.id===item?.frame_id);
   if(frameProduct?.frameClass)frame.classList.add('komi-store-'+frameProduct.frameClass);
+  if(frameProduct?.id==='frame_ghoul_seal'&&!frame.hasAttribute('tabindex')){frame.tabIndex=0;frame.dataset.komiLivingFrameFocus='';}
+  else if(frameProduct?.id!=='frame_ghoul_seal'&&frame.hasAttribute('data-komi-living-frame-focus')){delete frame.dataset.komiLivingFrameFocus;if(!frame.querySelector('[data-komi-shop-hover-card]'))frame.removeAttribute('tabindex');}
  }
  const cover=profile.querySelector('[data-profile-cover]');
  if(cover){
@@ -39,6 +60,11 @@ function apply(){
   const favoriteStyle=products.find(x=>x.id===item?.showcase_id);
   favoriteShowcase.hidden=!favoriteStyle || !favoriteShowcase.querySelector('[data-komi-shop-favorite]');
   if(favoriteStyle?.cosmeticClass)favoriteShowcase.classList.add('komi-store-'+favoriteStyle.cosmeticClass);
+  const heading=favoriteShowcase.querySelector('h3');
+  const cinema=favoriteStyle?.id==='showcase_personal_cinema';
+  const label=cinema?'Личный кинотеатр':'Топ избранного';
+  if(heading&&heading.textContent!==label)heading.textContent=label;
+  favoriteShowcase.setAttribute('aria-label',label);
  }
  const cardStyle=products.find(x=>x.id===item?.card_id);
  const avatar=profile.querySelector('.profile-avatar-frame');
@@ -70,7 +96,8 @@ function apply(){
   level.classList.remove(...products.filter(x=>x.type==='xp').map(x=>'komi-store-'+x.cosmeticClass));
   const xp=products.find(x=>x.id===item?.xp_id);
   if(xp?.cosmeticClass)level.classList.add('komi-store-'+xp.cosmeticClass);
- }
+  updateStoryRhythm(level,id,xp?.id==='xp_story_rhythm');
+ }else xpMotion=null;
  const nickname=profile.querySelector('[data-profile-field="display-name"]');
  if(nickname){
   nickname.classList.remove(...products.filter(x=>x.type==='name').map(x=>'komi-store-'+x.cosmeticClass));
@@ -155,9 +182,9 @@ function mount(container,id,active){
  css();
  const panel=document.createElement('section');
  panel.className='komi-premium-store';panel.dataset.premiumStorePanel=id;
- const title=document.createElement('h2');title.textContent='Титулы за AniCoin';
+ const title=document.createElement('h2');title.textContent='Оформление за AniCoin';
  const description=document.createElement('p');
- description.textContent='Новые покупки доступны для титулов. Купленные ранее предметы остаются в коллекции.';
+ description.textContent='Титулы и эффекты для профиля. Примерить всё оформление можно в магазине.';
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
  const grid=document.createElement('div');grid.className='komi-premium-store-grid';
  for(const product of products){
@@ -239,7 +266,7 @@ function start(){
  css();
  const observer=new MutationObserver(changes=>{
   for(const change of changes)for(const node of change.addedNodes){
-   if(node.nodeType===1&&(node.matches?.('#profile')||node.querySelector?.('#profile')))apply();
+   if(node.nodeType===1&&(node.matches?.('#profile')||node.querySelector?.('#profile')||node.matches?.('.profile-xp-capsule,.profile-xp-progress-track')||node.querySelector?.('.profile-xp-capsule')))apply();
   }
  });
  observer.observe(document.body,{childList:true,subtree:true});

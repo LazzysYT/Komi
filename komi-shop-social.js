@@ -42,7 +42,7 @@
    finally{state.loading=false;renderArea();refreshGiftButtons();}
  }
  function featured(){
-   const list=catalog().filter(p=>root.KomiShopCatalog?.isOnSale?.(p.id)===true);
+   const list=catalog().filter(p=>root.KomiShopCatalog?.isGiftable?.(p.id)===true);
    const day=Math.floor(Date.now()/86400000);
    const week=Math.floor((day+3)/7);
    return [0,1,2].map((_,i)=>list[(week*7+i*13+5)%list.length]).filter(Boolean);
@@ -113,7 +113,7 @@
    for(const card of section.querySelectorAll('.komi-coin-card')){
      const actions=card.querySelector('.komi-coin-actions');
      const original=actions?.querySelector('[data-shop-item-action]');
-     if(!actions||!original||root.KomiShopCatalog?.isOnSale?.(original.dataset.shopItemAction)!==true||actions.querySelector('[data-komi-shop-gift]'))continue;
+     if(!actions||!original||root.KomiShopCatalog?.isGiftable?.(original.dataset.shopItemAction)!==true||actions.querySelector('[data-komi-shop-gift]'))continue;
      const button=create('button','komi-shop-gift-button','');button.type='button';button.innerHTML=root.KomiShopIcons?.solid?.('gift',19)||root.KomiShopIcons?.svg('gift',19)||'✧';
      button.dataset.komiShopGift=original.dataset.shopItemAction;
      button.disabled=root.KomiShopCatalog?.isPreview?.()===true||!!safeUser()&&root.KomiShopCatalog?.canCheckout?.()!==true;
@@ -158,7 +158,7 @@
      if(root.KomiShopCatalog?.canCheckout?.()!==true){showStatus('Подарки временно недоступны: цены ещё не подтверждены.');return;}
      if(!state.loaded){showStatus('Загружаем список друзей…');void update();return;}
      if(!state.friends.length){showStatus('Для подарков нужны подтверждённые друзья.');return;}
-     const product=item(gift.dataset.komiShopGift);if(!product||root.KomiShopCatalog?.isOnSale?.(product.id)!==true)return;
+     const product=item(gift.dataset.komiShopGift);if(!product||root.KomiShopCatalog?.isGiftable?.(product.id)!==true)return;
      const dialog=$('komiShopGiftDialog');
      if(!dialog)return;
      dialog.dataset.item=product.id;
@@ -175,7 +175,7 @@
    const dialog=$('komiShopGiftDialog');const product=item(dialog?.dataset.item);
    const owner=safeUser();const recipient=$('komiShopGiftRecipient')?.value;
    const note=$('komiShopGiftMessage')?.value||'';
-   if(!owner||!product||root.KomiShopCatalog?.isOnSale?.(product.id)!==true||!recipient||!state.friends.some(friend=>friend.id===recipient)||root.KomiShopCatalog?.canCheckout?.()!==true)return;
+   if(!owner||!product||root.KomiShopCatalog?.isGiftable?.(product.id)!==true||!recipient||!state.friends.some(friend=>friend.id===recipient)||root.KomiShopCatalog?.canCheckout?.()!==true)return;
    const confirm=event.target.querySelector('[type="submit"]');confirm.disabled=true;
    if(!root.confirm('Подарить «'+product.label+'» за '+product.cost+' AniCoin?')){confirm.disabled=false;return;}
    showStatus('Отправляем подарок…');

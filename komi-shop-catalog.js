@@ -3,6 +3,51 @@
 'use strict';
 const items=Object.freeze([
   {
+    "id": "frame_ghoul_seal",
+    "type": "frame",
+    "label": "Печать гуля",
+    "cost": 30,
+    "frameClass": "frame-ghoul-seal",
+    "description": "Матовый обод с тонкой багровой трещиной. Купить можно без кейса.",
+    "anime": "Токийский гуль",
+    "rarity": "epic",
+    "giftable": false,
+    "introducedAt": "2026-11-26T18:00:00Z"
+  },
+  {
+    "id": "name_mangaka_ink",
+    "type": "name",
+    "label": "Перо мангаки",
+    "cost": 25,
+    "cosmeticClass": "name-mangaka-ink",
+    "description": "Неровный штрих тушью подчёркивает ник, не меняя буквы.",
+    "rarity": "rare",
+    "giftable": false,
+    "introducedAt": "2026-11-26T18:00:00Z"
+  },
+  {
+    "id": "xp_story_rhythm",
+    "type": "xp",
+    "label": "Ритм сюжета",
+    "cost": 25,
+    "cosmeticClass": "xp-story-rhythm",
+    "description": "Лента кадров манги подсвечивает прирост опыта и новый уровень.",
+    "rarity": "rare",
+    "giftable": false,
+    "introducedAt": "2026-11-26T18:00:00Z"
+  },
+  {
+    "id": "showcase_personal_cinema",
+    "type": "showcase",
+    "label": "Личный кинотеатр",
+    "cost": 40,
+    "cosmeticClass": "showcase-personal-cinema",
+    "description": "До трёх любимых аниме в рамках афиш с мягким светом.",
+    "rarity": "epic",
+    "giftable": false,
+    "introducedAt": "2026-11-26T18:00:00Z"
+  },
+  {
     "id": "title_gojo_infinity",
     "type": "title",
     "label": "Бесконечность",
@@ -1670,7 +1715,7 @@ const collections=Object.freeze([
     ]
   }
 ].map(collection=>Object.freeze({...collection,items:Object.freeze(collection.items),preview:Object.freeze(collection.preview)})));
-const revision='20261126-anime-cast';
+const revision='20261126-living-profile';
 const titleText=p=>String(p?.title||p?.label||'').replace(/^[✧✦◇✳⌁☾✶▣↗◈◆✎▰▤▸❧❀]+\s+/u,'');
 // Hide from new discovery only. IDs and ownership continue to resolve.
 const archived=new Set(['banner_grid','frame_pixel','xp_hatch','xp_dots']);
@@ -1681,13 +1726,15 @@ function checkPricing(client){
  if(preview()||!client?.rpc)return Promise.resolve(false);
  if(pricingConfirmed)return Promise.resolve(true);
  if(checking)return checking;
- checking=Promise.resolve().then(()=>client.rpc('komi_shop_cast_revision')).then(result=>{
+ checking=Promise.resolve().then(()=>client.rpc('komi_shop_living_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;
   return pricingConfirmed;
  },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});
  return checking;
 }
-const isOnSale=id=>items.some(p=>p.id===id&&p.type==='title')&&!isArchived(id);
+const livingProfileIds=new Set(["frame_ghoul_seal", "name_mangaka_ink", "xp_story_rhythm", "showcase_personal_cinema"]);
+const isOnSale=id=>items.some(p=>p.id===id&&(p.type==='title'||livingProfileIds.has(id)))&&!isArchived(id);
+const isGiftable=id=>isOnSale(id)&&items.find(p=>p.id===id)?.giftable!==false;
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,titleText,isArchived,isOnSale,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);

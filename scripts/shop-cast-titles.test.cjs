@@ -8,7 +8,7 @@ test('six distinct character titles keep the forty-title retail policy and verif
  const cast=catalog.items.filter(i=>i.character);
  assert.equal(cast.length,6);
  assert.equal(new Set(cast.map(i=>i.anime)).size,6);
- assert.equal(catalog.items.filter(i=>catalog.isOnSale(i.id)).length,40);
+ assert.equal(catalog.items.filter(i=>i.type==='title'&&catalog.isOnSale(i.id)).length,40);
  for(const i of cast){
   assert.equal(i.type,'title');
   assert.ok(catalog.isOnSale(i.id));

@@ -2,7 +2,7 @@
 'use strict';
 const {chromium}=require('playwright'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const root=path.join(__dirname,'..');
-const styles=['komi.production.css','komi-shop-v5.css','komi-shop-v6-goods.css'];
+const styles=['komi.production.css','komi-shop-v5.css','komi-shop-v6-goods.css','komi-living-profile.css'];
 const scripts=['komi-shop-icons.js','komi-shop-reactions.js','komi-shop-catalog.js','komi-shop-v3.js','komi-premium-store.js'];
 const origin='http://komi-titles.test';
 const ids=['gojo_infinity','levi_captain','frieren_bloom','luffy_dawn','tanjiro_current','anya_signal'];
@@ -27,7 +27,7 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
      const render=()=>window.KomiShopV3.render(document.querySelector('#mainContainer'),{owner:'demo',store:{owned:['frame_pixel','banner_last_train','title_cinema','plate_manga'],balance:150,frame_id:'frame_pixel'},displayName:'Гость'});
      window.renderAniCoinShop=render;render();
    });
-   const count=await p.locator('.sv3-item').count();assert.equal(count,40);
+   const count=await p.locator('.sv3-item').count();assert.equal(count,44);
    const out=await p.evaluate(()=>{
      const nodes=[...document.querySelectorAll('.sv3-item [data-komi-title-id]')];
      return {ids:nodes.map(el=>el.dataset.komiTitleId),errors:nodes.filter(n=>{
@@ -51,8 +51,8 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
      const key=await p.locator('.sv3-item [data-komi-title-id="'+id+'"]').evaluate(n=>getComputedStyle(n,'::after').animationName);
      assert.equal(key,'komi-foil-'+name);
    }
-   assert.equal(await p.locator('[data-v7-category-select]').count(),0);
-   assert.equal(await p.locator('.sv3-item:not([data-item-type="title"])').count(),0);
+   assert.equal(await p.locator('[data-v7-category-select]').count(),1);
+   assert.equal(await p.locator('.sv3-item:not([data-item-type="title"])').count(),4);
    assert.equal(await p.locator('.sv10-station,.sv7-starter,.sv7-collections').count(),0);
    await chip.hover();
    assert.equal((await getStyle())[1],'running');
@@ -94,7 +94,7 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
    await p.locator('[data-v7-view="catalog"]').click();
    assert.equal(await p.locator('.sv12-gallery').count(),1);
    assert.equal(await p.locator('.sv3-item').count(),24);
-   assert.equal(await p.locator('.sv3-item:not([data-item-type="title"])').count(),0);
+   assert.equal(await p.locator('.sv3-item:not([data-item-type="title"])').count(),4);
    await p.locator('.sv12-gallery [data-v3-try="title_gojo_infinity"]').click();
    assert.deepEqual(await p.evaluate(()=>window.KomiShopV3.selected()),['title_gojo_infinity']);
    await p.evaluate(()=>window.KomiShopV3.reset());

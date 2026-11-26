@@ -3,7 +3,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const origin=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
 const entry=new URL('/#shop',origin).href;
-const expectedIds=['title_gojo_infinity','title_tanjiro_current','title_frieren_bloom'];
+const expectedIds=['title_gojo_infinity','title_tanjiro_current','title_frieren_bloom','frame_ghoul_seal','name_mangaka_ink','xp_story_rhythm','showcase_personal_cinema'];
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{
@@ -21,12 +21,12 @@ const expectedIds=['title_gojo_infinity','title_tanjiro_current','title_frieren_
    const cards=shop.locator('.sv3-item');
    assert.equal(await cards.count(),24);
    assert.equal(await shop.locator('.sv12-gallery').count(),1);
-   assert.equal(await shop.locator('[data-v7-category-select]').count(),0);
+   assert.equal(await shop.locator('[data-v7-category-select]').count(),1);
    for(const id of expectedIds)assert.equal(await shop.locator('[data-item-id="'+id+'"]').count(),1);
-   assert.equal(await shop.locator('.sv3-item:not([data-item-type="title"])').count(),0);
+   assert.equal(await shop.locator('.sv3-item:not([data-item-type="title"])').count(),4);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await shop.locator('[data-v7-more]').click();
-   assert.equal(await cards.count(),40);
+   assert.equal(await cards.count(),44);
    assert.equal(await shop.locator('.sv12-gallery').count(),0);
    const search=shop.locator('[data-v7-search]');
    await search.fill('ронИн');
@@ -40,7 +40,7 @@ const expectedIds=['title_gojo_infinity','title_tanjiro_current','title_frieren_
    assert.match(await shop.locator('.sv3-no-results').textContent(),/Войди/);
    assert.deepEqual(writes,[]);
    await page.close();
-   console.log('PASS '+width+'px: real title-only shop, search, pagination, fitting, guest inventory');
+   console.log('PASS '+width+'px: real mixed shop, search, pagination, fitting, guest inventory');
   }
  }finally{await browser.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

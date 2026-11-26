@@ -21,7 +21,7 @@ function load(hostname='komianime.online'){
  return context.window.KomiShopCatalog;
 }
 const catalog=load();
-const historic=catalog.items.filter(item=>item.collection!=='station-0017'&&item.introducedAt!=='2026-11-26');
+const historic=catalog.items.filter(item=>item.collection!=='station-0017'&&!item.introducedAt?.startsWith('2026-11-26'));
 const historicCollections=catalog.collections.filter(collection=>collection.id!=='station-0017');
 const additions=catalog.items.filter(item=>item.introducedAt==='2026-11-25');
 const priceRows=text=>Array.from(text.matchAll(/\('([a-z_0-9]+)',(\d+),true\)/g),match=>[match[1],Number(match[2])]);
@@ -127,13 +127,13 @@ test('XP skins cover native progress engines and name gradients retain forced-co
 test('checkout remains disabled until the server confirms the exact current revision',async()=>{
  const current=load();
  assert.equal(current.canCheckout(),false);
- assert.match(read('supabase/migrations/20261126194000_anicoin_anime_cast_titles.sql'),new RegExp("select '"+current.revision+"'::text"));
+ assert.match(read('supabase/migrations/20261126210000_anicoin_living_profile.sql'),new RegExp("select '"+current.revision+"'::text"));
  assert.equal(await current.checkPricing({rpc:async()=>({data:'20261125-shop-v6'})}),false);
  assert.equal(current.canCheckout(),false);
  assert.equal(await current.checkPricing({rpc:async()=>({error:{message:'offline'}})}),false);
  assert.equal(current.canCheckout(),false);
  assert.equal(await current.checkPricing({rpc:async(name)=>{
-  assert.equal(name,'komi_shop_cast_revision');
+  assert.equal(name,'komi_shop_living_revision');
   return {data:current.revision};
  }}),true);
  assert.equal(current.canCheckout(),true);

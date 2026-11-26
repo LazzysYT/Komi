@@ -53,7 +53,7 @@ function eventButton(name,id){
 const countCards=html=>(html.match(/data-shop-item-action=/g)||[]).length;
 test('shop v3 JavaScript parses without frameworks and is initialized from the catalog',()=>{
  assert.doesNotThrow(()=>new vm.Script(js));
- assert.equal(products.length,158);
+ assert.equal(products.length,162);
  assert.match(html,/src="\.\/komi-shop-v3\.js\?v=/);
  assert.match(html,/komi\.production\.css\?v=/);
  assert.match(core,/window\.KomiShopV3\?\.render/);
@@ -65,12 +65,12 @@ test('guest storefront shows a bounded first page, explicit prices and auth butt
  context.window.KomiShopV3.render(container,guest);
  const count=(container.innerHTML.match(/data-shop-item-action="/g)||[]).length;
  assert.equal(count,24);
- assert.match(container.innerHTML,/id="anicoin-title">Витрина титулов<\/h1>/);
+ assert.match(container.innerHTML,/id="anicoin-title">Магазин оформления<\/h1>/);
  assert.match(container.innerHTML,/Войти, чтобы купить/);
  assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,24);
   assert.doesNotMatch(container.innerHTML,/Рамка для твоего аватара в профиле/);
  assert.equal((container.innerHTML.match(/data-rarity="(?:common|rare|epic|legendary)"/g)||[]).length,24);
- assert.match(container.innerHTML,/Показано 24 из 40/);
+ assert.match(container.innerHTML,/Показано 24 из 44/);
  assert.match(container.innerHTML,/data-v3-sort/);
  assert.match(container.innerHTML,/data-v3-hide-owned/);
  assert.match(container.innerHTML,/aria-label="Примерочная"/);
@@ -165,7 +165,7 @@ test('shop avatars match verified Premium GIF rather than stale normal photo',()
 test('title gallery replaces mixed collections while purchase and gifting controls stay',()=>{
  reset();const output=container.innerHTML;
  assert.match(output,/sv12-gallery/);
- assert.doesNotMatch(output,/data-v7-collection=|data-v7-look=|sv7-starter|data-v7-category-select/);
+ assert.doesNotMatch(output,/data-v7-collection=|data-v7-look=|sv7-starter/);
  assert.match(output,/class="sv7-toolbar" role="search"/);
  assert.match(output,/data-v3-checkout/);
  assert.match(output,/id="komiShopSocialArea"/);
@@ -177,12 +177,13 @@ test('shop studio price sorting and visual preview preserve selected products',a
   scripts.change({target:{value:'price-down',matches:selector=>selector==='[data-v3-sort]'}});
   assert.match(container.innerHTML,/<option value="price-down" selected>/);
   const ids=[...container.innerHTML.matchAll(/data-item-id="([^"]+)"/g)].map(match=>match[1]);
-  assert.deepEqual(ids,Array.from(products).filter(p=>p.type==='title').sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru')).slice(0,24).map(item=>item.id));
+  assert.deepEqual(ids,Array.from(products).filter(p=>context.window.KomiShopCatalog.isOnSale(p.id)).sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru')).slice(0,24).map(item=>item.id));
   await scripts.click(eventButton('data-v3-try','title_collector'));
   assert.deepEqual([...context.window.KomiShopV3.selected()],['title_collector']);
   scripts.change({target:{value:'frame',matches:selector=>selector==='[data-v7-category-select]'}});
-  await scripts.click(eventButton('data-v7-more'));
-  assert.match(container.innerHTML,/class="komi-coin-card sv3-item is-trying"/);
+  assert.match(container.innerHTML,/data-item-id="frame_ghoul_seal"/);
+  assert.doesNotMatch(container.innerHTML,/data-item-id="frame_moon"/);
+  assert.deepEqual([...context.window.KomiShopV3.selected()],['title_collector']);
   context.window.KomiShopV3.reset();
 });
 test('svg sticker icons are predictable, non-interactive and have a fallback',()=>{
@@ -247,7 +248,7 @@ test('server revision must match before debiting and preview blocks even with th
  assert.equal(real.canCheckout(),false);
  assert.equal(await real.checkPricing({rpc:async()=>({data:'previous'})}),false);
  assert.equal(await real.checkPricing({rpc:async name=>{
-   assert.equal(name,'komi_shop_cast_revision');
+   assert.equal(name,'komi_shop_living_revision');
    return {data:real.revision};
  }}),true);
  assert.equal(real.canCheckout(),true);

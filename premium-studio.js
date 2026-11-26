@@ -375,7 +375,7 @@
     const filters=$('store-filters');
     if (filters) {
       filters.replaceChildren();
-      for (const [key,label] of [['all','Титулы'],['owned','Мои покупки']]) {
+      for (const [key,label] of [['all','Всё оформление'],['owned','Мои покупки']]) {
         const tab=document.createElement('button');tab.type='button';tab.textContent=label;
         tab.setAttribute('aria-pressed',String(storeCategory===key));
         tab.addEventListener('click',()=>{storeCategory=key;paintStore();});

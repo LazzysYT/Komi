@@ -40,18 +40,23 @@ function route(read=false){
   if(read){
    const q=url.searchParams;
    state.view=q.get('shop_owned')==='1'?'owned':'catalog';
-   state.category=state.view==='owned'&&categories.some(x=>x[0]===q.get('shop_category'))?q.get('shop_category'):'all';
+   const category=q.get('shop_category');
+   state.category=!q.has('shop_collection')&&categories.some(x=>x[0]===category)&&(state.view==='owned'||category==='all'||forSale().some(p=>p.type===category))?category:'all';
    state.sort=sorts.some(x=>x[0]===q.get('shop_sort'))?q.get('shop_sort'):'default';
    state.query=(q.get('shop_q')||'').slice(0,100);
    state.affordableOnly=q.get('shop_available')==='1';state.hideOwned=q.get('shop_hide_owned')==='1';
    state.limit=Math.min(240,Math.max(1,Number(q.get('shop_page'))||1))*PAGE_SIZE;
    return;
   }
-  const values={shop_owned:state.view==='owned'?'1':'',shop_category:state.view==='owned'?(state.category==='all'?'':state.category):'title',shop_sort:state.sort==='default'?'':state.sort,shop_q:state.query,shop_collection:'',shop_available:state.affordableOnly?'1':'',shop_hide_owned:state.hideOwned?'1':'',shop_page:state.limit>PAGE_SIZE?String(Math.ceil(state.limit/PAGE_SIZE)):''};
+  const values={shop_owned:state.view==='owned'?'1':'',shop_category:state.category==='all'?'':state.category,shop_sort:state.sort==='default'?'':state.sort,shop_q:state.query,shop_collection:'',shop_available:state.affordableOnly?'1':'',shop_hide_owned:state.hideOwned?'1':'',shop_page:state.limit>PAGE_SIZE?String(Math.ceil(state.limit/PAGE_SIZE)):''};
   for(const [key,value] of Object.entries(values)){if(value)url.searchParams.set(key,value);else url.searchParams.delete(key);}
   root.history.replaceState(root.history.state,'',url.pathname+url.search+url.hash);
   state.routeSignature=url.href;
  }catch{/* A restricted history surface must not prevent browsing. */}
+}
+function availableCategories(ctx){
+ const items=state.view==='owned'?catalog().filter(p=>ctx?.store?.owned?.includes(p.id)):forSale();
+ return categories.filter(([id])=>id==='all'||id===state.category||items.some(p=>p.type===id));
 }
 function resetFilters(){state.category='all';state.sort='default';state.query='';state.affordableOnly=false;state.hideOwned=false;state.limit=PAGE_SIZE;}
 function currentItems(ctx){
@@ -75,6 +80,13 @@ function selectedList(store,busy=false){
  if(!items.length)return '';
  return '<div class="sv3-selection-list">'+items.map(p=>'<div class="sv3-selection-chip"><span><small>'+esc(categoryName(p.type))+'</small>'+esc(p.label)+'</span><span>'+ (owned.has(p.id)?'Куплено':fmt(p.cost)+' AC')+'</span><button type="button" data-v3-remove="'+esc(p.type)+'" aria-label="Убрать '+esc(p.label)+'"'+(busy?' disabled':'')+'>×</button></div>').join('')+'</div>';
 }
+function safePoster(raw){
+ try{const url=new URL(raw,root.location?.origin);if(url.username||url.password)return '';return url.protocol==='https:'||url.origin===root.location?.origin?esc(url.href):'';}catch{return '';}
+}
+function cinemaPosters(favorites=[]){
+ const shown=(Array.isArray(favorites)?favorites:[]).filter(x=>x&&String(x.title||'').trim()).slice(0,3);
+ return '<span class="komi-shop-showcase-demo komi-store-showcase-personal-cinema">'+(shown.length?shown.map(x=>'<span class="komi-cinema-poster" title="'+esc(x.title)+'">'+(safePoster(x.poster)?'<img src="'+safePoster(x.poster)+'" loading="lazy" decoding="async" alt="">':'')+'<b>'+esc(x.title)+'</b></span>').join(''):'<i><b>01</b></i><i><b>02</b></i><i><b>03</b></i>')+'</span>';
+}
 function safeAvatar(url){
  try{const parsed=new URL(url);return parsed.protocol==='https:'?esc(parsed.href):'';}catch{return '';}
 }
@@ -82,7 +94,7 @@ function initialAvatar(avatar,name){
  return avatar?'<img src="'+avatar+'" alt="" loading="lazy" data-sv3-user-avatar><span hidden>'+esc((name||'K').charAt(0).toUpperCase())+'</span>':
  '<span aria-hidden="true">'+esc((name||'K').charAt(0).toUpperCase())+'</span>';
 }
-function visual(product,avatar,name){
+function visual(product,avatar,name,favorites){
  const cls=esc(product.cosmeticClass||'');
  if(product.type==='frame')return '<span class="komi-coin-frame komi-store-'+esc(product.frameClass)+'">'+initialAvatar(avatar,name)+'</span>';
  if(product.type==='shape')return '<span class="sv3-shape komi-store-'+cls+'">'+initialAvatar(avatar,name)+'</span>';
@@ -90,6 +102,7 @@ function visual(product,avatar,name){
  if(product.type==='banner')return '<span class="sv8-banner-context"><span class="store-banner-swatch '+esc(product.bannerClass)+'">KOMI</span><span class="sv8-banner-profile"><span class="sv7-card-avatar">'+initialAvatar(avatar,name)+'</span><span>Твой профиль</span></span></span>';
  if(product.type==='overlay')return '<span class="sv3-overlay-sample komi-preview-cover'+(product.id==='overlay_station_rain'?' sv10-station-rain-sample':'')+'"><span class="sv7-cover-motif" aria-hidden="true"></span><span class="komi-shop-overlay-layer '+cls+'"></span><span class="sv7-cover-title">KOMI ANIME</span></span>';
  if(product.type==='reaction')return '<span class="komi-shop-reaction-swatch">'+(product.reactions||[]).map(x=>'<span role="img" aria-label="'+esc(x.label||x.id||'Реакция')+'">'+(root.KomiShopReactions?.render(x.emoji)||esc(x.label||'Реакция'))+'</span>').join('')+'</span>';
+ if(product.id==='showcase_personal_cinema')return cinemaPosters(favorites);
  if(product.type==='showcase')return '<span class="komi-shop-showcase-demo komi-store-'+cls+'"><i><b>01</b></i><i><b>02</b></i><i><b>03</b></i></span>';
  if(product.type==='icon')return '<span class="sv7-icon-example"><span>Твой ник</span><span class="komi-shop-icon-swatch komi-store-'+cls+'">'+esc(product.symbol||'✧')+'</span></span>';
  if(product.type==='card')return '<span class="komi-shop-mini-swatch sv7-card-example komi-store-'+cls+'"><span class="sv7-card-avatar">'+initialAvatar(avatar,name)+'</span><span><strong>Твой профиль</strong><small>Участник Komi</small></span></span>';
@@ -147,7 +160,7 @@ function cardArtwork(p,avatar,name){
  return '<span class="sv9-plate" data-sv9-kind="'+esc(p.type)+'" aria-hidden="true">'+content+'</span>';
 }
 
-function preview(store,avatar,name){
+function preview(store,avatar,name,favorites){
  const current=type=>find(state.trial[type]||store?.[type+'_id'])||null;
  const frame=current('frame'),shape=current('shape'),title=current('title'),
  banner=current('banner'),overlay=current('overlay'),plate=current('plate'),nameStyle=current('name');
@@ -169,7 +182,7 @@ function preview(store,avatar,name){
  '<div class="sv3-profile-title">'+(title?'<span class="sv3-title-sample" data-komi-title-id="'+esc(title.id)+'">'+esc(foilTitle(title))+'</span>':'Участник сообщества Komi')+'</div>'+
  (xp?'<div class="sv3-profile-level komi-store-'+esc(xp.cosmeticClass)+'"><span>Пример полоски опыта</span><progress aria-label="Пример оформления XP" value="65" max="100">65%</progress></div>':'')+
  (sets.length?'<p class="sv3-set-active">✦ Сет: '+sets.map(x=>esc(x.label)).join(', ')+'</p>':'')+
- ((showcase||cardStyle)?'<div class="sv3-extra-samples">'+(showcase?'<div><small>Витрина топ-3</small>'+visual(showcase,avatar,name)+'</div>':'')+
+ ((showcase||cardStyle)?'<div class="sv3-extra-samples">'+(showcase?'<div><small>Витрина топ-3</small>'+visual(showcase,avatar,name,favorites)+'</div>':'')+
  (cardStyle?'<div><small>Карточка профиля</small>'+visual(cardStyle,avatar,name)+'</div>':'')+'</div>':'')+
  '</div></div></div>'+
  '<div class="sv7-preview-panel" id="sv7CommentPreview"'+(state.previewMode==='comment'?'':' hidden')+'><div class="sv3-comment '+(plate?'komi-store-'+esc(plate.cosmeticClass):'')+'">'+
@@ -218,30 +231,30 @@ function layout(ctx){
  const empty=state.view==='owned'&&!owner?'Войди, чтобы увидеть свои предметы.':state.view==='owned'&&!store?(ctx.failedFor?'Не удалось загрузить твои предметы.':'Загружаем твои предметы…'):state.view==='owned'&&!ownedCount?'Здесь появятся твои покупки.':state.affordableOnly&&!owner?'Войди, чтобы подобрать товары по балансу.':'Таких предметов пока нет.';
  const countable=state.view==='owned'?catalog().filter(p=>store?.owned?.includes(p.id)):forSale();
  const counts=Object.fromEntries(categories.map(([id])=>[id,countable.filter(p=>id==='all'||p.type===id).length]));
- const options=categories.map(([id,label])=>'<option value="'+id+'"'+(state.category===id?' selected':'')+'>'+esc(label)+' · '+counts[id]+'</option>').join('');
+ const options=availableCategories(ctx).map(([id,label])=>'<option value="'+id+'"'+(state.category===id?' selected':'')+'>'+esc(label)+' · '+counts[id]+'</option>').join('');
  const reaction=find(state.reactionPreview);
  const hasContent=!!(items.length||reaction||(state.sheetOpen&&(state.busy||ctx.busy||state.status||ctx.shopStatus||ctx.retryApplyItem)));
- const showGallery=state.view==='catalog'&&!state.query&&!state.affordableOnly&&!state.hideOwned&&state.sort==='default'&&state.limit===PAGE_SIZE;
+ const showGallery=state.view==='catalog'&&(state.category==='all'||state.category==='title')&&!state.query&&!state.affordableOnly&&!state.hideOwned&&state.sort==='default'&&state.limit===PAGE_SIZE;
  const sheetSummary=reaction?(items.length?items.length+' выбрано · '+fmt(total)+' AC + реакции':'Реакции · отдельно'):items.length+' выбрано · '+fmt(total)+' AC';
  return '<section id="shop" class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5 komi-shop-studio" data-fitting-active="'+String(hasContent)+'" aria-labelledby="anicoin-title">'+
- '<header class="sv3-topbar"><div class="sv3-heading"><h1 id="anicoin-title">Витрина титулов</h1><p>Выбери подпись под ником и примерь её в профиле.</p></div>'+
+ '<header class="sv3-topbar"><div class="sv3-heading"><h1 id="anicoin-title">Магазин оформления</h1><p>Примерь титулы, рамки и другие эффекты на своём профиле.</p></div>'+
  '<div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin">'+icon('coins',22)+'<span><small>Твой баланс</small><strong class="sv3-tabular">'+balanceText+' <span>AniCoin</span></strong></span></span>'+
  '<details class="sv3-earn"><summary>'+icon('plus',16)+' Как заработать</summary><div class="sv3-earn-pop"><strong>Как получить AniCoin</strong><p>За каждые 20 минут подтверждённого просмотра — 1 AniCoin. Ежедневные задания тоже приносят награды.</p><p>При активации Premium начисляется разовый бонус 500 AniCoin.</p><a href="/premium.html">Возможности Premium</a><button type="button" data-v3-promo>Есть промокод?</button></div></details></div></header>'+
  (notice?'<p class="sv3-price-notice" role="status">'+esc(notice)+'</p>':'')+
- '<div class="sv7-toolbar" role="search" aria-label="Поиск товаров"><div class="sv7-browse-head"><div class="sv7-view-tabs" role="group" aria-label="Раздел магазина"><button type="button" data-v7-view="catalog" aria-pressed="'+String(state.view==='catalog')+'">Титулы <span>'+forSale().length+'</span></button><button type="button" data-v7-view="owned" aria-pressed="'+String(state.view==='owned')+'">Мои предметы <span>'+ownedCount+'</span></button></div>'+
- '<div class="sv7-search"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sv7-sr-only" for="sv7Search">Найти оформление</label><input type="search" id="sv7Search" data-v7-search placeholder="'+(state.view==='owned'?'Поиск предметов':'Поиск титулов')+'" maxlength="100" autocomplete="off" value="'+esc(state.query)+'">'+(state.query?'<button type="button" data-v7-clear-search aria-label="Очистить поиск">×</button>':'')+'</div></div>'+
- '<div class="sv7-filter-row" data-title-gallery-view="'+state.view+'">'+(state.view==='owned'?'<label class="sv7-select sv7-category-select"><span class="sv7-sr-only">Все категории</span><select data-v7-category-select aria-label="Все категории">'+options+'</select>'+icon('chevron',14)+'</label>':'')+
+ '<div class="sv7-toolbar" role="search" aria-label="Поиск товаров"><div class="sv7-browse-head"><div class="sv7-view-tabs" role="group" aria-label="Раздел магазина"><button type="button" data-v7-view="catalog" aria-pressed="'+String(state.view==='catalog')+'">Каталог <span>'+forSale().length+'</span></button><button type="button" data-v7-view="owned" aria-pressed="'+String(state.view==='owned')+'">Мои предметы <span>'+ownedCount+'</span></button></div>'+
+ '<div class="sv7-search"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sv7-sr-only" for="sv7Search">Найти оформление</label><input type="search" id="sv7Search" data-v7-search placeholder="'+(state.view==='owned'?'Поиск предметов':'Поиск оформления')+'" maxlength="100" autocomplete="off" value="'+esc(state.query)+'">'+(state.query?'<button type="button" data-v7-clear-search aria-label="Очистить поиск">×</button>':'')+'</div></div>'+
+ '<div class="sv7-filter-row" data-title-gallery-view="'+state.view+'">'+('<label class="sv7-select sv7-category-select"><span class="sv7-sr-only">Все категории</span><select data-v7-category-select aria-label="Все категории">'+options+'</select>'+icon('chevron',14)+'</label>')+
  '<label class="sv7-select sv7-sort-select"><span class="sv7-sr-only">Сортировка</span><select data-v3-sort aria-label="Сортировка">'+sorts.map(([id,label])=>'<option value="'+id+'"'+(state.sort===id?' selected':'')+'>'+label+'</option>').join('')+'</select>'+icon('chevron',14)+'</label>'+
  '<div class="sv7-toggles"><label class="sv3-hide-toggle"><input type="checkbox" data-v7-affordable'+(state.affordableOnly?' checked':'')+(!owner||!store?' disabled':'')+'><span>По моему балансу</span></label><label class="sv3-hide-toggle"><input type="checkbox" data-v3-hide-owned'+(state.hideOwned&&state.view!=='owned'?' checked':'')+(!owner||!store||state.view==='owned'?' disabled':'')+'><span>Скрыть купленные</span></label></div></div></div>'+
  (showGallery?titleGallery(ctx.busy||state.busy):'')+
- '<div class="sv3-layout"><div class="sv3-market"><div class="sv3-market-caption"><h2>'+(state.view==='owned'?'Твои предметы':state.query?'Результаты поиска':state.category==='all'?'Все титулы':esc(categoryName(state.category)))+'</h2><span role="status" aria-live="polite">'+(state.view==='owned'?products.length+' в коллекции':'Товаров: '+products.length)+'</span>'+
+ '<div class="sv3-layout"><div class="sv3-market"><div class="sv3-market-caption"><h2>'+(state.view==='owned'?'Твои предметы':state.query?'Результаты поиска':state.category==='all'?'Всё оформление':esc(categoryName(state.category)))+'</h2><span role="status" aria-live="polite">'+(state.view==='owned'?products.length+' в коллекции':'Товаров: '+products.length)+'</span>'+
  (state.query||state.category!=='all'||state.affordableOnly||state.hideOwned?'<button type="button" data-v3-reset-filters>Сбросить фильтры</button>':'')+'</div>'+
  '<div class="komi-coin-grid sv3-product-grid">'+(visible.length?visible.map(p=>card(p,ctx,avatar,name)).join(''):'<div class="sv3-no-results">'+icon('palette',28)+'<h3>'+esc(empty)+'</h3><p>'+(state.view==='owned'?'Посмотри, что есть в каталоге.':'Попробуй другое название или убери фильтры.')+'</p><button type="button" '+(state.view==='owned'&&!owner?'data-v7-login':'data-v7-browse')+'>'+(state.view==='owned'&&!owner?'Войти':'Открыть весь каталог')+'</button></div>')+'</div>'+
  (products.length>visible.length?'<div class="sv7-load-more"><button type="button" data-v7-more>Показать ещё '+Math.min(PAGE_SIZE,products.length-visible.length)+'</button><span>Показано '+visible.length+' из '+products.length+'</span></div>':'')+'</div>'+
  '<aside class="sv3-fitting'+(hasContent?' has-content':'')+(state.sheetOpen&&hasContent?' is-open':'')+'" aria-label="Примерочная"><button type="button" class="sv3-sheet-toggle" aria-controls="sv7FittingBody" aria-expanded="'+String(state.sheetOpen&&hasContent)+'" data-v3-sheet><span>'+icon('palette',20)+' Примерочная <small>'+esc(sheetSummary)+'</small></span><span class="sv3-sheet-chevron">'+icon('chevron',18)+'</span></button>'+
  '<div class="sv3-fitting-body" id="sv7FittingBody"><div class="sv7-fitting-header"><div class="sv3-fitting-head"><h2 tabindex="-1">Примерочная</h2><button type="button" class="sv3-reset" data-v3-reset aria-label="Сбросить примерку"'+(!items.length&&!reaction||state.busy||ctx.busy?' disabled':'')+'>'+icon('reset',16)+'</button></div>'+
  '<div class="sv7-preview-tabs" role="group" aria-label="Где посмотреть оформление"><button type="button" data-v7-preview="profile" aria-controls="sv7ProfilePreview" aria-pressed="'+String(state.previewMode==='profile')+'">Профиль</button><button type="button" data-v7-preview="comment" aria-controls="sv7CommentPreview" aria-pressed="'+String(state.previewMode==='comment')+'">Комментарий</button>'+(reaction?'<button type="button" data-v7-preview="reaction" aria-controls="sv7ReactionPreview" aria-pressed="'+String(state.previewMode==='reaction')+'">Реакции</button>':'')+'</div></div>'+
- '<div class="sv7-fitting-scroll" tabindex="0" role="region" aria-label="Предпросмотр и выбранные предметы"><p class="sv7-preview-note">Примерка не меняет твой профиль.</p>'+preview(store,avatar,name)+(reaction?'<div class="sv7-preview-panel" id="sv7ReactionPreview"'+(state.previewMode==='reaction'?'':' hidden')+'><div class="sv5-reaction-preview"><strong>Реакции Watch Party</strong><div class="sv8-party-context"><span class="sv8-party-screen">'+icon('movie',25)+'<small>Совместный просмотр</small></span><span class="sv8-party-chat"><strong>'+esc(name)+'</strong><small>Вот это момент!</small></span>'+visual(reaction,avatar,name)+'</div><small>'+(store?.owned?.includes(reaction.id)?'Набор уже в коллекции.':fmt(reaction.cost)+' AC · Покупаются отдельно на карточке.')+'</small></div></div>':'')+
+ '<div class="sv7-fitting-scroll" tabindex="0" role="region" aria-label="Предпросмотр и выбранные предметы"><p class="sv7-preview-note">Примерка не меняет твой профиль.</p>'+preview(store,avatar,name,ctx.favorites)+(reaction?'<div class="sv7-preview-panel" id="sv7ReactionPreview"'+(state.previewMode==='reaction'?'':' hidden')+'><div class="sv5-reaction-preview"><strong>Реакции Watch Party</strong><div class="sv8-party-context"><span class="sv8-party-screen">'+icon('movie',25)+'<small>Совместный просмотр</small></span><span class="sv8-party-chat"><strong>'+esc(name)+'</strong><small>Вот это момент!</small></span>'+visual(reaction,avatar,name)+'</div><small>'+(store?.owned?.includes(reaction.id)?'Набор уже в коллекции.':fmt(reaction.cost)+' AC · Покупаются отдельно на карточке.')+'</small></div></div>':'')+
  (items.length?'<div class="sv3-selection"><strong>В образе <span>'+items.length+'</span></strong>'+selectedList(store,state.busy||ctx.busy)+'</div>':'')+'</div><div class="sv7-checkout-footer">'+'<p class="sv3-status" role="status" aria-live="polite">'+esc(state.status||ctx.shopStatus||'')+'</p>'+(ctx.retryApplyItem?'<button type="button" class="sv3-retry" data-shop-item-action="'+esc(ctx.retryApplyItem)+'" data-shop-operation="equip">Применить купленный предмет</button>':'')+
  (items.length?'<div class="sv3-checkout-info"><span>'+(total===0?'Уже в коллекции':'К оплате')+'</span><strong class="sv3-tabular">'+fmt(total)+' <small>AniCoin</small></strong></div>':'<p class="sv3-empty-selection">Нажми «Примерить» на понравившемся товаре.</p>')+
  '<button class="sv3-checkout" type="button" data-v3-checkout'+(!items.length?' hidden':'')+(disabled?' disabled':'')+'>'+icon('bag',18)+' '+esc(action)+'</button>'+(items.length?'<p class="sv3-checkout-note">'+(owner&&store&&total<=Number(store.balance)?'Останется '+fmt(Number(store.balance)-total)+' AniCoin · списание после подтверждения':'Списание только после подтверждения.')+'</p>':'')+'</div></div></aside></div>'+
@@ -336,7 +349,7 @@ function mount(section,ctx){
  section.addEventListener('change',event=>{
   const t=event.target;
   if(t.matches('[data-v3-sort]')){state.sort=sorts.some(s=>s[0]===t.value)?t.value:'default';filterChanged('[data-v3-sort]');}
-  else if(t.matches('[data-v7-category-select]')){state.category=state.view==='owned'&&categories.some(c=>c[0]===t.value)?t.value:'all';filterChanged('[data-v7-category-select]');}
+  else if(t.matches('[data-v7-category-select]')){state.category=categories.some(c=>c[0]===t.value&&availableCategories(latestCtx).some(([id])=>id===t.value))?t.value:'all';filterChanged('[data-v7-category-select]');}
   else if(t.matches('[data-v3-hide-owned]')){state.hideOwned=t.checked;filterChanged('[data-v3-hide-owned]');}
   else if(t.matches('[data-v7-affordable]')){state.affordableOnly=t.checked;filterChanged('[data-v7-affordable]');}
  });
@@ -362,7 +375,7 @@ function render(container,ctx){
   if(Number.isInteger(searchFocus.start)&&Number.isInteger(searchFocus.end))
    try{input?.setSelectionRange?.(searchFocus.start,searchFocus.end,searchFocus.direction);}catch{}
  }
- document.title='Витрина титулов — KomiAnime';
+ document.title='Магазин оформления — KomiAnime';
 }
 function routeChanged(){if(!inShop()){pendingConfirmation?.cancel();return;}route(true);refresh();}
 root.addEventListener?.('popstate',routeChanged);root.addEventListener?.('hashchange',routeChanged);
