@@ -73,6 +73,37 @@ const assert=require('node:assert/strict');
   assert.equal(result.injected,0);
   assert.equal(result.viewAfterTyping,'home','Typing in header must not replace the homepage');
   assert.match(result.allResultsAction,/Все результаты/);
-  console.log('PASS safe popular and instant search suggestions, click handling and clear state');
+  for(const width of [1440,390]){
+   await page.setViewportSize({width,height:800});
+   await page.evaluate(()=>{
+     animeList=[{id:'16498',title:'Атака титанов',originalTitle:'Shingeki no Kyojin',shikiRating:9},...Array.from({length:32},(_,i)=>({id:String(80000+i),title:'Аниме '+(i+1),shikiRating:7,year:'2026'}))];
+     ++komiCatalogRevision;currentView='home';window.scrollTo(0,0);
+   });
+   const field=page.locator('#searchInput'),dropdown=page.locator('#searchDropdown');
+   await field.fill('Atack on Titan');
+   await page.waitForFunction(()=>document.querySelector('#searchDropdown .search-dropdown-item b')?.textContent==='Атака титанов');
+   await field.fill('Атака титанів');
+   await page.waitForFunction(()=>document.querySelector('#searchDropdown .search-dropdown-item b')?.textContent==='Атака титанов');
+   await field.fill('аниме');
+   await page.waitForFunction(()=>document.querySelectorAll('#searchDropdown .search-dropdown-item').length===24);
+   assert.equal(await field.getAttribute('autocomplete'),'off');
+   const before=await dropdown.evaluate(el=>({scroll:el.scrollTop,client:el.clientHeight,total:el.scrollHeight,overflow:getComputedStyle(el).overflowY}));
+   assert.equal(before.overflow,'auto');assert.ok(before.total>before.client+100,JSON.stringify(before));
+   const box=await dropdown.boundingBox();
+   await page.mouse.move(box.x+box.width/2,box.y+Math.min(130,box.height/2));
+   await page.mouse.wheel(0,550);
+   await page.waitForFunction(()=>document.getElementById('searchDropdown').scrollTop>100);
+   await page.mouse.wheel(0,5000);
+   await page.waitForFunction(()=>{const d=document.getElementById('searchDropdown');return d.scrollTop+d.clientHeight>=d.scrollHeight-3;});
+   const last=await dropdown.locator('.komi-search-view-all').boundingBox(),visible=await dropdown.boundingBox();
+   assert.ok(last.y+last.height<=visible.y+visible.height+1&&last.y>=visible.y,'All-results action is reachable');
+   assert.match(await dropdown.locator('.komi-search-view-all').textContent(),/32/);
+   await field.focus();
+   await field.press('ArrowDown');
+   assert.equal(await page.evaluate(()=>document.activeElement.classList.contains('search-dropdown-item')),true);
+   assert.ok(await dropdown.evaluate(el=>el.scrollTop<100),'Keyboard returns to first result');
+   await field.press('Escape');await dropdown.waitFor({state:'hidden'});
+  }
+  console.log('PASS safe popular and instant search suggestions, click handling, typo and localized search, and independent desktop/mobile scrolling');
  }finally{await browser.close();}
 })().catch(error=>{console.error(error);process.exitCode=1;});
