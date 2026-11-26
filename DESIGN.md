@@ -4,11 +4,11 @@ name: "Komi Anime"
 description: "A Russian-language anime catalogue with monochrome controls and cinematic, artwork-led discovery."
 colors:
   primary: "#FFFFFF"
-  background: "#09090B"
-  surface: "#16161A"
-  active: "#1C1C21"
-  segment: "#242429"
-  muted: "#8E8E93"
+  background: "#090909"
+  surface: "#161616"
+  active: "#242424"
+  segment: "#242424"
+  muted: "#A3A3A3"
 typography:
   display:
     fontFamily: "Inter, Manrope, sans-serif"
@@ -30,6 +30,48 @@ components:
 ---
 
 # Komi Anime
+
+## Comfort refinement, 26 November 2026
+
+This revision supersedes the earlier all-pill and icon-only guidance for discovery
+and catalogue. The brief is a comfortable monochrome anime library. References:
+Senku's image-led discovery, AnimeOn's explicit catalogue controls and Yanima's
+direct watch actions; do not copy their colour accents or upsells.
+
+Palette: canvas #090909, surface #161616, selected/recessed #242424, secondary
+text #A3A3A3, reading text #F5F5F5, white actions. komi-pill-system.css remains
+the runtime token owner; komi-icon-rail.css maps rail aliases. Personal cosmetics
+and original anime artwork retain their colours. Legacy feature palettes remain
+upstream cascade inputs. Manrope 700 carries headings; Inter 400–500 carries copy;
+controls use Manrope 600. Existing font delivery is retained. Hero actions and
+shelf links use 10px corners, selected categories retain pills, carousel controls
+remain circles. Selected pills no longer glow.
+
+Plan comparison: another decorative catalogue banner would repeat the home hero
+and delay browsing. Choose the working-library composition with actual posters
+visible sooner and one compact scrolling row of genres. All copy is left aligned.
+
+    Wide (1200px+)                  Tablet / phone
+    KomiAnime | Search             Search / More
+    Home      | Title / tools      Catalogue title
+    Catalogue | Categories         Sort / year
+    Lists*    | Search             Categories / search
+    Shop      | Genres             Genres / filter sheet
+    Party     | Poster grid        Two-column poster grid
+    Account   |                    Bottom navigation
+    *Existing authenticated visibility remains authoritative.
+
+Wide navigation exposes the existing labels in 184px; 768–1199px retains the
+72px rail; below 768px retains the mobile dock. Catalogue DOM order is heading,
+categories, search, compact genres, advanced filters. Phones use the existing
+sheet as their single advanced-filter entry; desktop keeps the inline panel.
+Home keeps one cinematic image, quieter controls and inset recommendation shelves.
+
+Review against the brief: actual anime artwork is the signature. No new tagline,
+artificial statistics, decorative numbering, font download or independently loaded
+theme. Extend maintained stylesheet owners; preserve IDs, events, routes and state.
+Verify 320/390px, tablet/wide navigation, long titles, open filters, empty/reset,
+keyboard access, guest login and watch entry before releasing.
 
 ## Overview
 

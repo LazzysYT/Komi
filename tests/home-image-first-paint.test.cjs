@@ -38,12 +38,12 @@ test('only the first two recommendation posters start on the first viewport noti
 });
 test('desktop portrait backups fill a feathered stage instead of a hard-edged narrow strip',()=>{
   const css=read('komi-hero-senku.css');
-  const desktop=css.slice(css.lastIndexOf('@media (min-width: 769px)'));
+  const desktop=css.slice(css.indexOf('/* Portrait-only titles'),css.indexOf('/* Cinema programme'));
   assert.match(desktop,/komi-hd-poster/);
   assert.match(desktop,/anilistcdn\/media\/anime\/cover/);
   assert.match(desktop,/width:\s*67%/);
   assert.match(desktop,/object-fit:\s*cover/);
   assert.match(desktop,/mask-image:\s*linear-gradient/);
   assert.doesNotMatch(desktop,/komi-hd-wide|komi-hero-video|filter:\s*blur/);
-  assert.match(read('index.html'),/komi-hero-senku\.css\?v=20261125-watch-v9-portrait-stage/);
+  assert.match(read('index.html'),/komi-hero-senku\.css\?v=20261126-comfort/);
 });

@@ -3968,6 +3968,19 @@ html.komi-home-booting .komi-static-storefront { display: none !important; }
   background:#29292d!important;
 }
 
+/* Discovery shelves share a comfortable reading rhythm with the catalogue. */
+.komi-media-hub .komi-home-storefront .komi-home-heading h2 {
+  font-family: Manrope,Inter,sans-serif; font-weight: 700; letter-spacing: -.025em;
+}
+.komi-media-hub .komi-home-storefront .komi-home-all { border-radius: 10px !important; font-weight: 600 !important; box-shadow: none !important; }
+.komi-media-hub .komi-home-storefront .komi-home-subtitle { color: #a3a3a3 !important; }
+.komi-media-hub .komi-home-storefront .komi-discovery-title { font-size: 15px !important; line-height: 1.4 !important; font-weight: 600 !important; }
+@media (min-width: 768px) {
+  .komi-media-hub .komi-home-storefront > :is(.komi-home-popular,.komi-home-continue,.komi-home-genres-section,.komi-home-shelf,.komi-home-browse-footer) {
+    padding-inline: clamp(20px, 2.6vw, 40px);
+  }
+}
+
 
 /* --- styles/inline-tail.css --- */
 /* Original inline style block 8; order preserved. */

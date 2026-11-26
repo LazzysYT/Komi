@@ -163,7 +163,7 @@ test('shop avatars match verified Premium GIF rather than stale normal photo',()
  const p=read('komi-premium.js');
  assert.match(p,/komi:premium-refreshed/);
  assert.match(core,/window\.addEventListener\('komi:premium-refreshed'/);
- assert.match(html,/komi-premium\.js\?v=20261122h/);
+ assert.match(html,/komi-premium\.js\?v=20261125-friend-avatars/);
 });
 
 test('shop studio presents six permanent collections and filled icons while preserving purchase and gift hooks',()=>{

@@ -65,7 +65,7 @@ async function run(){
    page.on('pageerror',e=>errors.push(e.message));
    try{
     await page.goto(origin+'/catalog',{waitUntil:'domcontentloaded'});
-    const card=page.locator('.anime-card[data-komi-anime-id="900001"]').first();
+    const card=page.locator('.komi-catalog-card[data-komi-anime-id="900001"]').first();
     await card.waitFor({state:'visible',timeout:45000});
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),true,'catalog horizontal overflow');
     // Exercise the real browser DOM, independent of network or media fixtures.
@@ -84,7 +84,7 @@ async function run(){
     });
     assert.deepEqual(reconcile,{same:true,updated:true,isolated:true},'reuse unchanged DOM without crossing account boundary');
 
-    await card.click();
+    await card.getByRole('button',{name:'Смотреть: QA Test 1',exact:true}).click();
     await page.locator('#watchModal.active').waitFor({state:'visible',timeout:20000});
     if (name.startsWith('mobile')) {
       await page.locator('#watchModal .komi-mobile-watch-episodes').click();

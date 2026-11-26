@@ -1854,7 +1854,6 @@ async function komiLoadCatalogPages(attempt = 0) {
 
                 container.innerHTML = `
                     <section class="komi-hub-catalog-toolbar komi-catalog-v5" id="catalog" aria-labelledby="komiFullCatalogTitle">
-                        ${window.KomiGenreMoods.render({animeList, genre:catalogFilterGenre, availableGenres:availableGenresList, artwork:animeArtwork})}
                         <div class="komi-catalog-head-row">
                             <div class="komi-catalog-heading"><h1 id="komiFullCatalogTitle">Каталог аниме</h1>
                               <span class="komi-catalog-number" id="komiCatalogHeadingCount">${filtered.length} тайтлов найдено</span></div>
@@ -1867,6 +1866,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 5 5"></path></svg>
                           <input id="komiCatalogSearchInput" type="search" value="${escapeFriendHtml(catalogSearchQuery)}" placeholder="Поиск аниме" aria-label="Поиск аниме" data-komi-oninput="komiUpdateCatalogQuery(this.value)" autocomplete="off" spellcheck="false">
                         </div>
+                        ${window.KomiGenreMoods.render({animeList, genre:catalogFilterGenre, availableGenres:availableGenresList, artwork:animeArtwork})}
                         <div class="komi-catalog-advanced" id="komiCatalogAdvanced" ${komiShowAdvancedFilters?'':'hidden'}>
                           <div class="catalog-filters-box" role="group" aria-label="Дополнительные фильтры">
                             <div class="form-group"><label for="komiCatalogGenre">Жанр</label>
