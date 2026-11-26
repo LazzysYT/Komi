@@ -172,3 +172,33 @@
 .kc-case-visual{width:100%;min-width:0;min-height:clamp(240px,30vw,430px);aspect-ratio:auto;align-self:stretch}
 .kc-case-copy{z-index:2;min-width:0}
 @media(max-width:900px){.kc-case{grid-template-columns:minmax(0,1fr)}.kc-case-visual{height:auto;min-height:0;aspect-ratio:1000/660}.kc-case-visual:after{background:linear-gradient(180deg,transparent 88%,#141418)}.kc-case-copy{padding:16px;gap:10px}}
+
+/* Tokyo Ghoul / Night edition: original local art, black locked cutouts. */
+.kc-page{background:radial-gradient(ellipse 82% 24rem at 72% 4%,#6b101e32,transparent 77%)}
+.kc-header h1{border-inline-start:3px solid #dd314a;padding-inline-start:12px}
+.kc-header p{padding-inline-start:15px}
+.kc-case{background:#121116;border-radius:19px;border-color:#a841524d}
+.kc-case-visual{aspect-ratio:3/2;background:#160c11}
+.kc-case-visual img{object-fit:cover;object-position:center}
+.kc-case-visual:after{background:linear-gradient(90deg,transparent 88%,#121116 100%);}
+.kc-case-edition{top:14px;left:16px}
+.kc-case-edition span{font-size:clamp(15px,1.9vw,25px);line-height:1.05}
+.kc-case-edition small{font-size:9px;color:#ffcfdb}
+.kc-case-count{bottom:12px;left:14px}
+.kc-card .kc-art{aspect-ratio:5/4;background:radial-gradient(ellipse at 50% 37%,#51515a,#2a282f 58%,#141318 100%)}
+.kc-card:not(.kc-locked) .kc-art,.kc-reel-tile .kc-art{
+  background:radial-gradient(ellipse at 49% 43%,#7c303b,#311720 60%,#151318 100%);
+}
+.kc-art .kc-portrait{inset:0;object-fit:cover;object-position:50% 0%}
+.kc-art:has(.kc-portrait[data-kc-art-ready]:not([hidden])) .kc-silhouette{visibility:hidden}
+.kc-locked .kc-art .kc-portrait{filter:drop-shadow(0 0 3px #9591a279)}
+.kc-locked .kc-art:after{background:linear-gradient(180deg,transparent 65%,#09090d91)}
+.kc-card:not(.kc-locked){box-shadow:0 0 0 1px color-mix(in srgb,var(--kc-tier),transparent 68%),0 6px 18px #0b090d80}
+.kc-card:not(.kc-locked) .kc-card-info{background:linear-gradient(145deg,color-mix(in srgb,var(--kc-tier),#161319 86%),#141317 78%)}
+.kc-card .kc-lock{padding-bottom:7px}
+@media(max-width:767px){
+  .kc-case-visual{aspect-ratio:3/2}
+  .kc-case-visual:after{background:linear-gradient(180deg,transparent 86%,#121116 100%)}
+  .kc-case-edition{left:12px;top:11px}
+  .kc-case-edition small{font-size:8px}
+}

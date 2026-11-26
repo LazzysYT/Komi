@@ -12,7 +12,8 @@ function pending(owner){try{return purchaseIds.get(owner)||sessionStorage.getIte
 function remember(owner,id){if(id)purchaseIds.set(owner,id);else purchaseIds.delete(owner);try{if(id)sessionStorage.setItem(pendingKey(owner),id);else sessionStorage.removeItem(pendingKey(owner));}catch{}}
 const portraitFallback=c=>root.KomiCollectionArt?.silhouette(c.id)||'';
 const lock='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></svg>';
-const caseArt='<img class="kc-case-image" src="/assets/collection/tokyo-ghoul-case-r5.svg" width="1000" height="720" alt="Чёрный кейс Токийский гуль: маска, цепи и красное кагуне" decoding="async">';
+const artRoot='/assets/collection/ghoul-noir/';
+const caseArt='<img class="kc-case-image" src="'+artRoot+'case-640.webp" srcset="'+artRoot+'case-640.webp 640w, '+artRoot+'case-1200.webp 1200w" sizes="(max-width: 767px) calc(100vw - 26px), min(620px, 50vw)" width="1200" height="800" alt="Кейс «Токийский гуль»: чёрная сталь, цепь и маска с красным глазом" decoding="async">';
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function normalizePayload(data){
  if(!data||!Array.isArray(data.owned))throw new Error('Invalid collection response');
@@ -21,8 +22,7 @@ function normalizePayload(data){
  const balance=Number.isSafeInteger(data.balance)&&data.balance>=0?data.balance:null;
  return {owned,result,balance,price:data.price===CASE_PRICE?CASE_PRICE:null,purchaseStatus:['ok','insufficient','complete'].includes(data.purchase_status)?data.purchase_status:null};
 }
-let state=null,observedOwner,host=null,tab='collection',filter='all',imagePromise=null,imageAttempt=0;
-const pictures=new Map();
+let state=null,observedOwner,host=null,tab='collection',filter='all';
 function active(){return typeof currentView==='string'&&currentView==='collection'&&host?.isConnected;}
 function owner(){const id=typeof currentUser==='undefined'?'':currentUser?.authUserId||'';return observedOwner===undefined||observedOwner===id?id:'';}
 function fresh(id){return {owner:id,status:id?'idle':'guest',owned:[],result:null,balance:null,price:null,confirmBuy:false,purchaseStatus:null,reel:null};}
@@ -30,25 +30,10 @@ function fresh(id){return {owner:id,status:id?'idle':'guest',owned:[],result:nul
 // but paint() only touches the DOM when collection is the active route.
 function current(s){return !!s&&state===s&&owner()===s.owner;}
 function authChanged(id){observedOwner=id||'';if(state&&state.owner!==observedOwner){if(state.reel)clearTimeout(state.reel.timer);state=fresh(owner());if(active())paint();}}
-const aliases={juuzou:['Juzou Suzuya','Juzo Suzuya'],eto:['Eto','Sen Takatsuki'],yoshimura:['Yoshimura','Kuzen'],arima:['Kisho Arima'],tsukiyama:['Shu Tsukiyama'],amon:['Kotaro Amon'],takizawa:['Seido Takizawa'],hide:['Hide Nagachika']};
-function normalizedName(n){return String(n||'').normalize('NFKD').toLowerCase().replace(/[^a-z ]/g,' ').trim().split(/\s+/).sort().join(' ');}
-function safePortrait(url){try{const u=new URL(url);return u.protocol==='https:'&&(/(^|\.)anilist\.co$/i.test(u.hostname))?u.href:'';}catch{return '';}}
-function loadImages(){
- if(!state||imagePromise||Date.now()-imageAttempt<60000||pictures.size===roster.length)return;
- imageAttempt=Date.now();
- const args=roster.map((c,i)=>'$n'+i+':String!').join(',');
- const fields=roster.map((c,i)=>'c'+i+':Character(search:$n'+i+'){name{full alternative} image{large medium} media(perPage:10){nodes{title{romaji english native}}}}').join(' ');
- const variables=Object.fromEntries(roster.map((c,i)=>['n'+i,c.query]));
- const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),9000);
- imagePromise=fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query:'query('+args+'){'+fields+'}',variables}),signal:ctrl.signal})
- .then(r=>{if(!r.ok)throw new Error('Portrait source unavailable');return r.json();})
- .then(({data})=>{if(!data)return;roster.forEach((c,i)=>{const item=data['c'+i];if(!item)return;const expected=[c.query,...(aliases[c.id]||[])].map(normalizedName);const names=[item.name?.full,...(Array.isArray(item.name?.alternative)?item.name.alternative:[])].map(normalizedName);if(!names.some(n=>n&&expected.includes(n)))return;const media=Array.isArray(item.media?.nodes)?item.media.nodes:[];if(!media.some(m=>Object.values(m.title||{}).some(t=>typeof t==='string'&&/tokyo\s+(ghoul|kushu)|東京喰種/i.test(t))))return;const url=safePortrait(item.image?.large)||safePortrait(item.image?.medium);if(url)pictures.set(c.id,url);});if(active()&&!state?.reel)paint();})
- .catch(()=>{}).finally(()=>{clearTimeout(timer);imagePromise=null;});
-}
 function rarityLabel(c){return '<span class="kc-rarity kc-rarity-'+c.rarity+'"><i aria-hidden="true"></i>'+rarityNames[c.rarity]+'</span>';}
 function art(c,opened){
- const image=pictures.get(c.id);
- return portraitFallback(c)+(image?'<img class="kc-photo" src="'+esc(image)+'" alt="" width="240" height="320" loading="lazy" decoding="async" referrerpolicy="no-referrer">':'');
+ const image=artRoot+(opened?'':'locked/')+c.id+'.webp';
+ return portraitFallback(c)+'<img class="kc-portrait" src="'+image+'" alt="" width="'+(opened?384:240)+'" height="'+(opened?384:240)+'" loading="lazy" decoding="async">';
 }
 function card(c,opened){
  const number=String(roster.indexOf(c)+1).padStart(2,'0');
@@ -111,7 +96,18 @@ function paint(nextFocus=null){
   body=feature+reelMarkup(s)+reward+'<div class="kc-case-details"><h2>Что внутри?</h2><p class="kc-muted">18 персонажей. Каждый кейс стоит 50 AniCoin. Без повторов.</p><div class="kc-grid">'+roster.map(c=>card(c,owned.has(c.id))).join('')+'</div></div>';
  }
  host.innerHTML='<section class="kc-page" aria-label="Коллекция и кейсы">'+header+tabs+notice(s)+body+'</section>';
- host.querySelectorAll('.kc-art img,.kc-case-image').forEach(img=>{img.addEventListener('error',()=>{img.hidden=true;},{once:true});if(img.complete&&!img.naturalWidth)img.hidden=true;});
+ host.querySelectorAll('.kc-portrait,.kc-case-image').forEach(img=>{
+  const ready=()=>{if(img.naturalWidth>0)img.setAttribute('data-kc-art-ready','');};
+  const failed=()=>{
+   if(img.classList.contains('kc-case-image')&&img.hasAttribute('srcset')){
+    img.removeAttribute('srcset');img.src='/assets/collection/tokyo-ghoul-case-r5.svg';return;
+   }
+   img.hidden=true;
+  };
+  img.addEventListener('load',ready,{once:true});
+  img.addEventListener('error',failed);
+  if(img.complete){if(img.naturalWidth)ready();else failed();}
+ });
  // The purchase controls are replaced on each step, but do not steal focus
  // if the viewer has already moved to another control.
  let focus=nextFocus||previous;
@@ -145,7 +141,6 @@ async function request(action){
   const payload=normalizePayload(data);
   if(action==='buy'){if(!payload.purchaseStatus||payload.purchaseStatus==='ok'&&!payload.result)throw Error('Unconfirmed purchase');remember(s.owner,null);}
   if(action==='buy'&&payload.purchaseStatus==='ok'&&payload.result){showReel(s,payload);}else{Object.assign(s,payload,{status:'ready'});paint();}
-  try{loadImages();}catch{/* Art failure never changes confirmed ownership. */}
   if(action==='buy'&&payload.purchaseStatus==='ok'&&typeof aniCoinRequest==='function')void Promise.resolve().then(()=>aniCoinRequest('read',{},s.owner)).catch(()=>{});
  }catch{if(current(s)){s.status='error';s.owned=[];s.result=null;paint();}}
 }
@@ -161,7 +156,7 @@ function render(container){
  const style=document.querySelector('link[data-komi-collection-style]');if(style&&style.media!=='all')style.media='all';
  if(host!==container){host?.removeEventListener('click',click);host?.removeEventListener('keydown',keydown);host=container;host.addEventListener('click',click);host.addEventListener('keydown',keydown);}
  const id=owner();if(!state||state.owner!==id){if(state?.reel)clearTimeout(state.reel.timer);state=fresh(id);}
- paint();try{loadImages();}catch{}if(state.status==='idle')void request('read');
+ paint();if(state.status==='idle')void request('read');
 }
 root.KomiCollection=Object.freeze({render,authChanged,roster:Object.freeze(roster),normalizePayload,makeReel});
 })(typeof window==='object'?window:{});

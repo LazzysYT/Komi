@@ -14,3 +14,16 @@ test('paid case is fixed, transactional, idempotent and does not use earned-coin
 test('paid-only release blocks old free action on the server and removes it from UI',()=>{const sql=read('supabase/migrations/20261126195100_komi_collection_paid_only.sql');assert.match(sql,/p_action is distinct from 'read'/);assert.match(sql,/'can_open',false/);assert.doesNotMatch(sql,/\b(?:insert|delete|update)\b/i);const js=read('komi-collection.js');assert.doesNotMatch(js,/бесплатн|раз в день|request\('open'\)/i);assert.match(js,/Купить за 50 AniCoin/);assert.doesNotMatch(read('komi-page-meta.js'),/ежедневный бесплатный кейс/);});
 
 test('R5 rarity grades and reel winner, no client-side payout selection',()=>{const counts={common:6,rare:5,epic:4,legendary:3};for(const [r,n] of Object.entries(counts))assert.equal(c.roster.filter(x=>x.rarity===r).length,n);const ids=new Set(c.roster.map(x=>x.id));for(const winner of c.roster){const items=c.makeReel(winner.id,[],()=>.42);assert.equal(items.length,29);assert.equal(items[23],winner.id);assert.ok(items.every(x=>ids.has(x)));}assert.match(read('komi-collection.js'),/showReel\(s,payload\)/);assert.match(read('komi-collection.css'),/prefers-reduced-motion/);const vector=read('assets/collection/tokyo-ghoul-case-r5.svg');assert.match(vector,/<svg[^>]*viewBox="0 0 1000 720"/);});
+
+
+test('all 18 portraits and black cutouts are local WebP, responsive chest has two sizes',()=>{
+ const dir=path.join(root,'assets/collection/ghoul-noir');
+ for(const rel of ['case-640.webp','case-1200.webp',...c.roster.flatMap(x=>[x.id+'.webp','locked/'+x.id+'.webp'])]){
+  const data=fs.readFileSync(path.join(dir,rel));
+  assert.equal(data.toString('ascii',0,4),'RIFF',rel);
+  assert.equal(data.toString('ascii',8,12),'WEBP',rel);
+  assert.ok(data.length>100&&data.length<(rel.startsWith('case-')?145000:rel.startsWith('locked/')?18000:48000),rel+' '+data.length);
+ }
+ const js=read('komi-collection.js');assert.doesNotMatch(js,/graphql\.anilist|loadImages/);
+ assert.match(js,/opened\?'':'locked\//);
+});

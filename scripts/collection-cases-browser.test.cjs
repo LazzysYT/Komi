@@ -10,10 +10,22 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{for(const width of [1440,1024,900,768,390,320]){
  const p=await b.newPage({viewport:{width,height:1000},reducedMotion:width===320?'reduce':'no-preference'}),errors=[];p.on('pageerror',e=>errors.push(e.message));
- await p.route('**/*',r=>{const u=new URL(r.request().url()),f=u.pathname.slice(1);if(u.origin!==origin)return r.abort();if(u.pathname==='/collection')return r.fulfill({contentType:'text/html',body:fixture});if(!assets.includes(f))return r.abort();return r.fulfill({contentType:f.endsWith('.webp')?'image/webp':f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(root,f))});});
+ await p.route('**/*',r=>{const u=new URL(r.request().url()),f=u.pathname.slice(1);if(u.origin!==origin)return r.abort();if(u.pathname==='/collection')return r.fulfill({contentType:'text/html',body:fixture});if(!assets.includes(f)&&!/^assets\/collection\/ghoul-noir\/(?:locked\/)?[a-z0-9-]+\.webp$/.test(f))return r.abort();return r.fulfill({contentType:f.endsWith('.webp')?'image/webp':f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(root,f))});});
  await p.goto(origin+'/collection');await p.evaluate(()=>{window.currentView='collection';window.currentUser=null;window.openAuthModal=()=>{window.loginCalled=true};window.KomiCollection.render(document.querySelector('#mainContainer'));});
- assert.equal(await p.locator('.kc-grid .kc-card.kc-locked').count(),18);assert.equal(await p.locator('.kc-art img').count(),0);assert.equal(await p.locator('.kc-silhouette').count(),18);assert.equal(await p.locator('.kc-grid .kc-rarity').count(),18);
- await p.waitForFunction(()=>document.querySelector('.kc-case-image')?.naturalWidth===1000);
+ assert.equal(await p.locator('.kc-grid .kc-card.kc-locked').count(),18);assert.equal(await p.locator('.kc-art img[src*="/locked/"]').count(),18);assert.equal(await p.locator('.kc-art img:not([src*="/locked/"])').count(),0);assert.equal(await p.locator('.kc-silhouette').count(),18);assert.equal(await p.locator('.kc-grid .kc-rarity').count(),18);
+ await p.waitForFunction(()=>document.querySelector('.kc-case-image')?.hasAttribute('data-kc-art-ready'));
+ assert.match(await p.locator('.kc-case-image').evaluate(img=>img.currentSrc),/ghoul-noir\/case-(640|1200)\.webp$/);
+ const lockedPortrait=p.locator('.kc-grid .kc-locked .kc-portrait').first();
+ await lockedPortrait.scrollIntoViewIfNeeded();
+ await p.waitForFunction(()=>document.querySelector('.kc-grid .kc-locked .kc-portrait')?.naturalWidth===240);
+ assert.equal(await p.locator('.kc-grid .kc-locked strong').first().textContent(),'Неизвестный персонаж');
+ assert.deepEqual(await lockedPortrait.evaluate(img=>{
+  const canvas=document.createElement('canvas');canvas.width=img.naturalWidth;canvas.height=img.naturalHeight;
+  const context=canvas.getContext('2d');context.drawImage(img,0,0);
+  const {data}=context.getImageData(0,0,canvas.width,canvas.height);
+  let black=0,visible=0;for(let i=0;i<data.length;i+=4){if(data[i+3]>10){visible++;if(!(data[i]||data[i+1]||data[i+2]))black++;}}
+  return {hasSilhouette:visible>15000&&visible<56000,allBlack:black===visible};
+ }),{hasSilhouette:true,allBlack:true});
  assert.equal(await p.evaluate(()=>new Set([...document.querySelectorAll('.kc-silhouette')].map(e=>e.innerHTML)).size),18);
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'horizontal overflow at '+width);
  assert.ok(await p.evaluate(()=>{const a=document.querySelector('.kc-case-visual').getBoundingClientRect(),b=document.querySelector('.kc-case-copy').getBoundingClientRect();return a.right<=b.left+1||a.bottom<=b.top+1;}),'case art overlaps text at '+width);
@@ -23,6 +35,10 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  assert.equal(await p.locator('[data-kc-action="open"]').count(),0);assert.doesNotMatch(await p.locator('.kc-page').textContent(),/бесплатн|раз в день/i);assert.equal(await p.evaluate(()=>window.openCalls),0);
  await p.getByRole('button',{name:'Моя коллекция',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-locked').count(),17);
  await p.getByRole('button',{name:'Открытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),1);
+ const ownedPortrait=p.locator('.kc-grid .kc-portrait');
+ assert.match(await ownedPortrait.getAttribute('src'),/ghoul-noir\/kaneki\.webp$/);
+ await ownedPortrait.scrollIntoViewIfNeeded();
+ await p.waitForFunction(()=>document.querySelector('.kc-grid .kc-portrait')?.naturalWidth===384);
  await p.getByRole('button',{name:'Закрытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),17);
  await p.getByRole('button',{name:'Все',exact:true}).click();
  const buy=p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true});
