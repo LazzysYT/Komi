@@ -230,3 +230,33 @@
   background-image:none!important;color:CanvasText!important;-webkit-text-fill-color:CanvasText!important;
  }
 }
+
+/* Station 00:17. The same lightweight local prints are used on shop and profile. */
+:is(.komi-store-banner-last-train,.banner-last-train){
+ --komi-banner-pattern:#26313e url('/assets/shop-station/last-train.svg') center 54%/cover no-repeat;
+}
+:is(.komi-store-banner-moon-platform,.banner-moon-platform){
+ --komi-banner-pattern:#22364a url('/assets/shop-station/moon-platform.svg') center 53%/cover no-repeat;
+}
+#profile.komi-profile-premium-mono .profile-header-card .profile-cover:is(.komi-store-banner-last-train,.komi-store-banner-moon-platform)::after{
+ content:"";position:absolute;inset:0;z-index:3;opacity:1;pointer-events:none;background:var(--komi-banner-pattern);
+}
+:is(.komi-store-frame-platform-light,.frame-platform-light),
+#profile.komi-profile-premium-mono .profile-header-card .profile-avatar-frame.komi-store-frame-platform-light{
+ box-shadow:0 0 0 2px #0b1117,0 0 0 3px #b7c1c8,3px 2px 0 3px #8c673f,4px 3px 15px #ffcc774a,inset 0 0 0 2px #2b333d!important;
+}
+:is(.komi-store-overlay-station-rain,.overlay-station-rain){
+ --komi-overlay-pattern:radial-gradient(ellipse 1px 10px at 18% 32%,#a9cfea99 80%,transparent),radial-gradient(ellipse 1px 14px at 71% 65%,#caddeb89 80%,transparent);
+ --komi-overlay-size:25px 83px;--komi-overlay-speed:13s;--komi-overlay-opacity:.7;
+}
+#profile.komi-profile-premium-mono .profile-header-card .profile-cover.komi-store-overlay-station-rain::before{
+ content:"";display:block;position:absolute;inset:-35% 0;z-index:4;
+ background-image:var(--komi-overlay-pattern);background-color:transparent;
+ background-size:var(--komi-overlay-size);background-position:0 0;
+ opacity:var(--komi-overlay-opacity);pointer-events:none;
+ animation:komi-shop-fall var(--komi-overlay-speed) linear infinite;
+}
+@media(prefers-reduced-motion:reduce){
+ #profile.komi-profile-premium-mono .profile-header-card .profile-cover.komi-store-overlay-station-rain::before,
+ .komi-shop-overlay-layer.overlay-station-rain::before{animation:none!important}
+}

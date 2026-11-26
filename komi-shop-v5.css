@@ -479,3 +479,90 @@ body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-co
 #shop.komi-shop-studio .sv8-ticket>.sv8-ticket-copy{grid-column:2;grid-row:1}
 @media(max-width:767px){#shop.komi-shop-studio .sv3-item-actions .sv3-primary-buy,#shop.komi-shop-studio .sv3-item-actions .komi-shop-gift-button{min-height:50px}}
 @media(max-width:359px){#shop.komi-shop-studio .sv3-item-actions .sv3-primary-buy,#shop.komi-shop-studio .sv3-item-actions .komi-shop-gift-button{min-height:54px}}
+
+/* Legacy catalogue: an item in context, not a neutral swatch. */
+#shop.komi-shop-studio .sv3-item[data-item-type] .sv3-item-scene{height:182px;min-height:182px;padding:28px 12px 38px;background:radial-gradient(ellipse at 50% 48%,#303039,#1b1b20 79%)}
+#shop.komi-shop-studio .sv9-plate{isolation:isolate;position:relative;display:grid;place-items:center;box-sizing:border-box;width:min(100%,235px);height:100%;min-width:0;padding:6px 10px;color:#f3f3f6;background:linear-gradient(135deg,#ffffff07,#00000019);border:1px solid #ffffff15;border-radius:9px}
+#shop.komi-shop-studio .sv9-plate::before{content:"";position:absolute;inset:3px;border-radius:6px;pointer-events:none;background:linear-gradient(#ffffff56,#ffffff56) left top/12px 1px no-repeat,linear-gradient(#ffffff56,#ffffff56) left top/1px 10px no-repeat,linear-gradient(#ffffff56,#ffffff56) right bottom/12px 1px no-repeat,linear-gradient(#ffffff56,#ffffff56) right bottom/1px 10px no-repeat}
+#shop.komi-shop-studio .sv9-plate>:is(span,div){max-width:100%;min-width:0}
+#shop.komi-shop-studio .sv9-headshot{display:grid;justify-items:center;gap:7px}
+#shop.komi-shop-studio .sv9-mini-id,#shop.komi-shop-studio .sv9-screen-mark{font:650 9px/1.15 Manrope,Inter,sans-serif;color:#dddde5;letter-spacing:.04em}
+#shop.komi-shop-studio .sv9-plate .komi-coin-frame,#shop.komi-shop-studio .sv9-plate .sv3-shape{width:66px!important;height:66px!important}
+#shop.komi-shop-studio :is(.sv9-cover-shot,.sv9-profile-panel,.sv9-name-shot,.sv9-mascot-shot,.sv9-comment-shot,.sv9-showcase-shot,.sv9-hover-shot,.sv9-party-shot){width:100%;min-width:0;box-sizing:border-box;border:1px solid #ffffff23;background-color:#141418;border-radius:10px}
+#shop.komi-shop-studio .sv9-context-strip{display:flex;align-items:center;gap:6px;min-width:0;padding:6px 7px;text-align:start}
+#shop.komi-shop-studio .sv9-context-strip .sv7-card-avatar,#shop.komi-shop-studio .sv9-name-shot .sv7-card-avatar,#shop.komi-shop-studio .sv9-comment-shot .sv7-card-avatar{flex:0 0 24px;width:24px;height:24px}
+#shop.komi-shop-studio :is(.sv9-context-strip,.sv9-comment-shot)>span:last-child{min-width:0;display:grid;gap:2px}
+#shop.komi-shop-studio :is(.sv9-context-strip,.sv9-comment-shot) :is(small,b){display:block;overflow-wrap:anywhere;line-height:1.22}
+#shop.komi-shop-studio :is(.sv9-context-strip,.sv9-comment-shot) b{font-size:10px}
+#shop.komi-shop-studio :is(.sv9-context-strip,.sv9-comment-shot) small{font-size:9px;color:#c2c2cc}
+#shop.komi-shop-studio .sv9-profile-panel>.sv3-title-sample{display:block;width:fit-content;max-width:calc(100% - 10px);margin:0 5px 6px;padding:3px 7px;font-size:11px;line-height:1.15}
+#shop.komi-shop-studio .sv9-cover-shot .sv3-overlay-sample{height:51px;min-height:0;max-width:none;display:grid;place-items:center;border-radius:9px 9px 0 0;overflow:hidden;border:0}
+#shop.komi-shop-studio .sv9-cover-shot .sv7-cover-title{letter-spacing:.07em;font-size:10px}
+#shop.komi-shop-studio .sv9-cover-shot .sv9-context-strip{padding-block:4px}
+#shop.komi-shop-studio .sv9-name-shot,#shop.komi-shop-studio .sv9-comment-shot{display:flex;align-items:center;gap:7px;padding:7px;text-align:start}
+#shop.komi-shop-studio .sv9-name-shot .sv3-name-sample{min-width:0;font-size:14px;line-height:1.2;text-align:start}
+#shop.komi-shop-studio .sv9-name-shot .sv7-icon-example{gap:4px;flex-wrap:wrap;min-width:0;font-size:12px;line-height:1.2;text-align:start}
+#shop.komi-shop-studio .sv9-name-shot .komi-shop-icon-swatch{font-size:17px;min-height:0;height:auto;padding:1px 2px}
+#shop.komi-shop-studio .sv9-level-panel{padding:9px}
+#shop.komi-shop-studio .sv9-level-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:3px;font-size:12px;line-height:1.2;margin-bottom:7px}
+#shop.komi-shop-studio .sv9-level-top small{font-size:9px;color:#bbb}
+#shop.komi-shop-studio .sv9-level-panel .sv3-xp-sample{width:100%;gap:4px}
+#shop.komi-shop-studio .sv9-level-panel .sv7-xp-caption{gap:3px;align-items:center;text-align:start;font-size:9px}
+#shop.komi-shop-studio .sv9-mascot-shot{position:relative;min-height:61px;padding-right:36px}
+#shop.komi-shop-studio .sv9-mascot-shot .sv3-mascot-sample{position:absolute;right:3px;bottom:2px;width:37px;height:41px}
+#shop.komi-shop-studio .sv9-mascot-shot .komi-profile-mascot{position:relative;inset:auto;width:36px;height:36px;transform:none}
+#shop.komi-shop-studio .sv9-showcase-shot{padding:6px;text-align:start}
+#shop.komi-shop-studio .sv9-showcase-shot>b{display:block;font-size:10px;margin:0 0 4px}
+#shop.komi-shop-studio .sv9-showcase-shot .komi-shop-showcase-demo{gap:3px}
+#shop.komi-shop-studio .sv9-showcase-shot .komi-shop-showcase-demo i{height:45px}
+#shop.komi-shop-studio .sv9-showcase-shot .komi-shop-showcase-demo b{left:3px;font-size:9px}
+#shop.komi-shop-studio .sv9-hover-shot .sv7-card-example{height:auto;min-height:55px;padding:7px;gap:5px}
+#shop.komi-shop-studio .sv9-hover-shot .sv7-card-example :is(strong,small){font-size:9px;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv9-party-shot{padding:7px;display:grid;gap:4px}
+#shop.komi-shop-studio .sv9-screen-mark{display:flex;gap:3px;justify-content:center;align-items:center}
+#shop.komi-shop-studio .sv9-party-shot .komi-shop-reaction-swatch{gap:3px;justify-content:center;min-width:0}
+#shop.komi-shop-studio .sv9-party-shot .komi-shop-reaction-swatch svg{width:21px;height:21px}
+#shop.komi-shop-studio .sv3-item[data-item-type] .sv7-item-description{display:block;overflow:visible;-webkit-line-clamp:unset}
+#shop.komi-shop-studio .sv3-item[data-item-type] .sv3-item-scene:focus-visible{outline:2px solid #fff;outline-offset:2px}
+@media(max-width:767px){
+ #shop.komi-shop-studio .sv3-item[data-item-type] .sv3-item-scene{height:153px;min-height:153px;padding:23px 6px 31px}
+ #shop.komi-shop-studio .sv9-plate{padding:5px}
+ #shop.komi-shop-studio .sv9-plate .komi-coin-frame,#shop.komi-shop-studio .sv9-plate .sv3-shape{width:53px!important;height:53px!important}
+ #shop.komi-shop-studio .sv9-mini-id{font-size:8px}
+ #shop.komi-shop-studio .sv9-context-strip{gap:4px;padding:5px}
+ #shop.komi-shop-studio .sv9-mascot-shot{padding-right:30px}
+ #shop.komi-shop-studio .sv9-mascot-shot .sv3-mascot-sample{right:0;transform:scale(.78);transform-origin:right bottom}
+ #shop.komi-shop-studio .sv9-comment-shot,#shop.komi-shop-studio .sv9-name-shot{padding:5px;gap:4px}
+ #shop.komi-shop-studio .sv9-plate .sv7-card-avatar{width:19px;height:19px;flex-basis:19px}
+ #shop.komi-shop-studio .sv9-plate .sv7-card-avatar>span{font-size:10px}
+ #shop.komi-shop-studio .sv9-party-shot .komi-shop-reaction-swatch svg{width:17px;height:17px}
+ #shop.komi-shop-studio .sv9-hover-shot .sv7-card-example{padding:4px;gap:4px}
+}
+@media(forced-colors:active){#shop.komi-shop-studio .sv9-plate{border-color:CanvasText;background:Canvas;color:CanvasText}#shop.komi-shop-studio .sv3-item[data-item-type] .sv3-item-scene:focus-visible{outline-color:Highlight}}
+@media(max-width:359px){
+ #shop.komi-shop-studio .sv3-item[data-item-type] .sv3-item-scene{height:183px;min-height:183px}
+}
+
+/* Station season poster. Amber is part of the artwork, not a global theme. */
+#shop.komi-shop-studio .sv10-station{display:grid;isolation:isolate;position:relative;grid-template-columns:1fr;min-height:244px;align-items:center;overflow:hidden;margin:0 0 14px;border:1px solid #6d6a683d;border-radius:17px;background:#11141b;color:#fff}
+#shop.komi-shop-studio .sv10-station-art{position:absolute;inset:0;z-index:-1;pointer-events:none;background:linear-gradient(90deg,#0b101cf5 0%,#0b101cea 23%,#0b101c72 52%,#0b101c02 80%),url('/assets/shop-station/last-train.svg') center 59%/cover no-repeat}
+#shop.komi-shop-studio .sv10-station-copy{padding:21px clamp(16px,4vw,42px);display:grid;justify-items:start;gap:8px}
+#shop.komi-shop-studio .sv10-station-copy p{margin:0;font-size:10px;letter-spacing:.18em;font-weight:850;color:#f1cc9e;line-height:1.25}
+#shop.komi-shop-studio .sv10-station-copy h2{margin:0;font-size:clamp(27px,4.6vw,55px);line-height:1.02;letter-spacing:-.07em;color:#fff;font-weight:850}
+#shop.komi-shop-studio .sv10-station-copy>span{font-size:clamp(12px,1.3vw,15px);color:#e5e5eb}
+#shop.komi-shop-studio .sv10-station-copy>small{font-size:11px;color:#eee2d5}
+#shop.komi-shop-studio .sv10-station-actions{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px}
+#shop.komi-shop-studio .sv10-station-actions button{min-height:42px;border:1px solid #ffffff3d;border-radius:11px;background:#16161cdd;color:#fff;padding:7px 12px;font-size:12px;font-weight:800}
+#shop.komi-shop-studio .sv10-station-actions button:first-child{background:#fff;color:#141416;border-color:#fff}
+#shop.komi-shop-studio .sv10-station-actions button:focus-visible{outline:2px solid #fff;outline-offset:3px}
+#shop.komi-shop-studio :is(.banner-last-train,.banner-moon-platform){filter:none}
+#shop.komi-shop-studio .sv9-plate:has(:is(.banner-last-train,.banner-moon-platform)) .store-banner-swatch{color:transparent}
+@media(max-width:640px){
+ #shop.komi-shop-studio .sv10-station{min-height:221px;align-items:end}
+ #shop.komi-shop-studio .sv10-station-art{background:linear-gradient(0deg,#09101cfb 0%,#09101cef 23%,#09101c99 52%,#09101c08 85%),url('/assets/shop-station/last-train.svg') 55% 35%/cover no-repeat}
+ #shop.komi-shop-studio .sv10-station-copy{padding:21px 12px 13px;gap:6px}
+ #shop.komi-shop-studio .sv10-station-actions button{min-height:44px;padding-inline:8px;font-size:11px}
+}
+@media(forced-colors:active){#shop.komi-shop-studio .sv10-station{border-color:CanvasText}#shop.komi-shop-studio .sv10-station-art{opacity:.45}#shop.komi-shop-studio .sv10-station-actions button:focus-visible{outline-color:Highlight}}
+#shop.komi-shop-studio .sv10-station-rain-sample .sv7-cover-motif{background:url('/assets/shop-station/last-train.svg') center/cover no-repeat}
+#shop.komi-shop-studio .sv10-station-rain-sample .sv7-cover-title{visibility:hidden}

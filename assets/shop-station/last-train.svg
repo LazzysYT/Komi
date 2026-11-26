@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 390" role="img" aria-label="Ночной поезд на мокрой станции">
+<defs>
+ <linearGradient id="sky" x2=".8" y2="1"><stop stop-color="#101728"/><stop offset=".6" stop-color="#304154"/><stop offset="1" stop-color="#4b555c"/></linearGradient>
+ <linearGradient id="floor" x2=".4" y2="1"><stop stop-color="#414953"/><stop offset=".6" stop-color="#171f29"/><stop offset="1" stop-color="#0b111a"/></linearGradient>
+ <linearGradient id="car" x2="0" y2="1"><stop stop-color="#59656a"/><stop offset=".4" stop-color="#29333d"/><stop offset="1" stop-color="#111823"/></linearGradient>
+ <linearGradient id="light" x2="0" y2="1"><stop stop-color="#fff0bb"/><stop offset="1" stop-color="#bd784a"/></linearGradient>
+ <radialGradient id="glow"><stop stop-color="#f8c68d" stop-opacity=".5"/><stop offset="1" stop-color="#d9945d" stop-opacity="0"/></radialGradient>
+ <pattern id="rain" width="63" height="55" patternUnits="userSpaceOnUse" patternTransform="rotate(14)"><path d="M5 0v12M25 13v18M47 34v17M57 5v9" stroke="#b1c7dc" stroke-opacity=".21"/></pattern>
+ <pattern id="city" width="22" height="18" patternUnits="userSpaceOnUse"><path d="M2 4h2v4H2zm9 5h2v4h-2zm7-7h2v3h-2z" fill="#eac59a" opacity=".29"/></pattern>
+ <clipPath id="train"><path d="M386 174 935 108Q960 105 960 139V267L395 227Q386 225 386 214Z"/></clipPath>
+</defs>
+<path fill="url(#sky)" d="M0 0h960v390H0z"/>
+<path fill="#182332" d="M0 197 0 117 39 117 39 94 81 94 81 146 123 146 123 111 169 111 169 134 206 134 206 92 248 92 248 146 298 146 298 121 329 121 329 150 376 150 376 105 398 105 398 153 448 153 448 197z"/>
+<path fill="url(#city)" d="M0 197 0 117 39 117 39 94 81 94 81 146 123 146 123 111 169 111 169 134 206 134 206 92 248 92 248 146 298 146 298 121 329 121 329 150 376 150 376 105 398 105 398 153 448 153 448 197z"/>
+<path fill="url(#floor)" d="M0 222 385 203 960 215V390H0Z"/>
+<path d="M17 390 393 204M196 390l210-180M497 390l-76-178M791 390 435 218M959 350 445 219" stroke="#748391" stroke-opacity=".47" stroke-width="2"/>
+<path d="M0 356 393 226l-29-5L0 316Z" fill="#b79561" opacity=".46"/>
+<path fill="#0b111b" d="M0 0h960v52L389 137 0 72Z"/>
+<path fill="#16202a" d="m0 63 380 76 580-88v13L382 153 0 80z"/>
+<path d="M0 50 382 134 960 38M0 82l385 76 575-91" stroke="#8c9ba2" stroke-opacity=".48"/>
+<path d="M98 89v185m114-162v124m79-106v79m45-69v67" stroke="#141f2a" stroke-width="8"/>
+<path d="M103 94v175m113-154v118m79-102v74m45-64v63" stroke="#607381" stroke-width="1.6"/>
+<ellipse cx="520" cy="191" rx="230" ry="100" fill="url(#glow)"/>
+<path d="M386 174 935 108Q960 105 960 139V267L395 227Q386 225 386 214Z" fill="url(#car)" stroke="#738084" stroke-width="2"/>
+<g clip-path="url(#train)"><path d="m386 202 574-23v9l-574 18z" fill="#ba874b" opacity=".75"/><path d="m387 219 575 22m-575-12 574 33" stroke="#808a87" stroke-opacity=".52"/><path d="M462 165v69m74-79v89m97-100v109m125-121v133m127-148v144" stroke="#0b1119" stroke-width="2"/>
+<path fill="url(#light)" d="m407 181 40-4v20l-40 2zm67-7 46-5v25l-46 1zm79-10 66-7v34l-66 2zm98-12 88-11v46l-88 4zm127-15 85-10v55l-85 5zm123-15 41-5v61l-41 3z"/>
+<path d="M429 180v17m66-24v20m88-30v29m112-45v41m128-56v53m96-63v55" stroke="#784e39" opacity=".54" stroke-width="2"/></g>
+<g fill="#db9e60" opacity=".31"><path d="m412 246 43-2 66 61-64 3z"/><path d="m556 249 40 3 111 107-68-8z"/><path d="m649 254 45 2 168 112-67 4z"/><path d="m802 259 66 6 92 55v47z"/></g>
+<g fill="none" stroke-linecap="round"><path d="M72 345h56m-94 24h69m76-33h25m94-29h51m61 41h94m31-50h46m117 18h45m-42 50h130m-12-75h20m-3-10h49" stroke="#dcb17e" opacity=".44"/><path d="M16 332h91m20-28h56m75 60h67m259-81h34m242 44h68m-238 52h51" stroke="#92adc3" opacity=".35"/></g>
+<path fill="url(#rain)" d="M0 0h960v390H0z"/><path d="M0 0h960v22H0zm0 368h960v22H0z" fill="#070b13" opacity=".43"/>
+</svg>

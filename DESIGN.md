@@ -200,3 +200,18 @@ The native header disclosure keeps the navigation, sound, sign-in and dynamic ac
 
 ### Search and footer correction (26 November 2026)
 The v5 catalogue search is a single outlined flex surface: search icon, transparent borderless text input, and conditional clear button. Its wrapper owns keyboard focus feedback. The home browse link is a compact end-of-list action; all site and social links live in the native shared footer. The footer reserves clearance for the community launcher and mobile dock without duplicating navigation.
+
+### Catalogue contact prints
+Existing AniCoin products are displayed in miniature versions of the surfaces
+where they appear. The scene is a dark film contact print with registration
+marks: profile header, hover card, comment or watch room. Use the product's
+existing cosmetic classes inside, without retinting the purchased item.
+Card copy names the exact slot, not just «Профиль». Preserve the shared
+renderer, filters, fitting room, native confirmation and server quotes.
+
+### Station 00:17 collection
+Two custom cinematic SVG prints, after-hours rail infrastructure and moving
+rain. Let warm train windows be the only amber focal point. No third-party
+art, remote asset dependencies, auto-playing video, or background redraw
+effects. Respect reduced motion. Archiving a card changes store discovery
+only; owners keep item IDs, fitting, visibility in inventory and equipment.

@@ -21,6 +21,8 @@ function load(hostname='komianime.online'){
  return context.window.KomiShopCatalog;
 }
 const catalog=load();
+const historic=catalog.items.filter(item=>item.collection!=='station-0017');
+const historicCollections=catalog.collections.filter(collection=>collection.id!=='station-0017');
 const additions=catalog.items.filter(item=>item.introducedAt==='2026-11-25');
 const priceRows=text=>Array.from(text.matchAll(/\('([a-z_0-9]+)',(\d+),true\)/g),match=>[match[1],Number(match[2])]);
 const ids=text=>Array.from(text.matchAll(/'([a-z]+_[a-z_0-9]+)'/g),match=>match[1]);
@@ -34,8 +36,8 @@ function allowlist(constraint,column){
 }
 
 test('V7 retains every existing product price and adds 48 uniquely identified products',()=>{
- assert.equal(catalog.items.length,141);
- assert.equal(new Set(catalog.items.map(item=>item.id)).size,141);
+ assert.equal(historic.length,141);
+ assert.equal(new Set(historic.map(item=>item.id)).size,141);
  assert.equal(additions.length,48);
  const priorPrices=priceRows(previous);
  assert.equal(priorPrices.length,93);
@@ -65,19 +67,19 @@ test('the new private server price rows match all advertised new prices exactly'
 
 test('purchase and equipped-slot constraints preserve old products and accept every new one',()=>{
  const purchaseIds=allowlist('premium_store_purchases_item_id_check','item_id');
- assert.deepEqual(new Set(purchaseIds),new Set(catalog.items.map(item=>item.id)));
+ assert.deepEqual(new Set(purchaseIds),new Set(historic.map(item=>item.id)));
  const types=new Set(additions.map(item=>item.type));
  assert.equal(types.size,9);
  for(const type of types){
   const slotIds=allowlist('komi_premium_cosmetic_equips_'+type+'_id_check',type+'_id');
-  assert.deepEqual(new Set(slotIds),new Set(catalog.items.filter(item=>item.type===type).map(item=>item.id)));
+  assert.deepEqual(new Set(slotIds),new Set(historic.filter(item=>item.type===type).map(item=>item.id)));
  }
 });
 
 test('collections contain real products and a valid three-slot fitting-room combination',()=>{
- assert.deepEqual(Array.from(catalog.collections,collection=>collection.id),['nocturne','manga','arcade','celestial','cinema','botanical']);
+ assert.deepEqual(Array.from(historicCollections,collection=>collection.id),['nocturne','manga','arcade','celestial','cinema','botanical']);
  const included=[];
- for(const collection of catalog.collections){
+ for(const collection of historicCollections){
   assert.equal(collection.items.length,8);
   assert.ok(Object.isFrozen(collection)&&Object.isFrozen(collection.items)&&Object.isFrozen(collection.preview));
   for(const id of collection.items){
@@ -122,16 +124,16 @@ test('XP skins cover native progress engines and name gradients retain forced-co
  assert.match(styles,/-webkit-text-fill-color:CanvasText!important/);
 });
 
-test('checkout remains disabled until the server confirms the exact V7 revision',async()=>{
+test('checkout remains disabled until the server confirms the exact current revision',async()=>{
  const current=load();
  assert.equal(current.canCheckout(),false);
- assert.match(sql,new RegExp("select '"+current.revision+"'::text"));
+ assert.match(read('supabase/migrations/20261126170000_anicoin_shop_night_station.sql'),new RegExp("select '"+current.revision+"'::text"));
  assert.equal(await current.checkPricing({rpc:async()=>({data:'20261125-shop-v6'})}),false);
  assert.equal(current.canCheckout(),false);
  assert.equal(await current.checkPricing({rpc:async()=>({error:{message:'offline'}})}),false);
  assert.equal(current.canCheckout(),false);
  assert.equal(await current.checkPricing({rpc:async(name)=>{
-  assert.equal(name,'komi_shop_catalog_revision');
+  assert.equal(name,'komi_shop_station_revision');
   return {data:current.revision};
  }}),true);
  assert.equal(current.canCheckout(),true);

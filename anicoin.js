@@ -219,7 +219,8 @@ function renderAniCoinShop(container) {
         return;
     }
     const categories=[['all','Все · '+items.length],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты профиля'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['shape','Формы'],['plate','Комментарии'],['mascot','Маскоты'],['xp','XP-полоски'],['name','Ники'],['reaction','Watch Party'],['owned','Мои покупки']];
-    const selected=items.filter(item=>aniCoinShopCategory==='all'||(aniCoinShopCategory==='owned'&&store?.owned?.includes(item.id))||item.type===aniCoinShopCategory);
+    const selected=items.filter(item=>aniCoinShopCategory==='owned'?store?.owned?.includes(item.id):
+      !window.KomiShopCatalog?.isArchived?.(item.id)&&(aniCoinShopCategory==='all'||item.type===aniCoinShopCategory));
     const name=typeof escapeFriendHtml==='function'?escapeFriendHtml(aniCoinShopDisplayName):'Пользователь Komi';
     const symbolFor=product=>{
         if(product.type==='frame')return '<span class="komi-coin-frame komi-store-'+product.frameClass+'"><img data-komi-shop-avatar alt="" hidden><span aria-hidden="true">K</span></span>';

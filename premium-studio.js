@@ -383,7 +383,7 @@
     const balance=Number(wallet?.balance);
     message('store-balance',wallet && Number.isFinite(balance)
       ? '◈ '+balance.toLocaleString('ru-RU')+' AniCoin' : '◈ — AniCoin');
-    products.filter(p=>storeCategory==='all'||p.type===storeCategory||(storeCategory==='owned'&&owns(p.id))).forEach(product => {
+    products.filter(p=>storeCategory==='owned'?owns(p.id):!window.KomiShopCatalog?.isArchived?.(p.id)&&(storeCategory==='all'||p.type===storeCategory)).forEach(product => {
       const item=document.createElement('article');
       item.className='store-item';
       item.dataset.rarity=product.rarity||'common';

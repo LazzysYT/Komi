@@ -134,9 +134,9 @@ test('catalogue pagination exposes every real product once and resets on a new c
  assert.equal(f.ids.length,48);
  assert.deepEqual(f.ids.slice(0,24),initial);
  while(f.html.includes('data-v7-more'))await f.click('data-v7-more');
- assert.equal(f.ids.length,141);
- assert.equal(new Set(f.ids).size,141);
- assert.deepEqual(sorted(f.ids),sorted(f.products.map(item=>item.id)));
+ assert.equal(f.ids.length,142);
+ assert.equal(new Set(f.ids).size,142);
+ assert.deepEqual(sorted(f.ids),sorted(f.products.filter(item=>!["banner_grid","frame_pixel","xp_hatch","xp_dots"].includes(item.id)).map(item=>item.id)));
  assert.match(f.html,/data-rarity="legendary"/);
  f.change('data-v7-category-select','frame');
  assert.equal(f.ids.length,24);

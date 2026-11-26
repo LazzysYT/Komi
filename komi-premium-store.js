@@ -140,6 +140,7 @@ function paint(panel){
   if(!product)continue;
   const owned=wallet.owned.includes(product.id);
   const equipped=wallet[product.type+'_id']===product.id;
+  if(root.KomiShopCatalog?.isArchived?.(product.id))button.closest('article').hidden=!owned;
   button.dataset.action=product.type==='reaction'?(owned?'owned':'buy'):equipped?'unequip':owned?'equip':'buy_equip';
   const locked=root.KomiShopCatalog?.isPreview?.()===true||!owned&&root.KomiShopCatalog?.canCheckout?.()!==true;
   button.disabled=locked || busy || (product.type==='reaction'&&owned)||(!owned&&Number(wallet.balance)<product.cost);
@@ -159,6 +160,7 @@ function mount(container,id,active){
  const grid=document.createElement('div');grid.className='komi-premium-store-grid';
  for(const product of products){
   const item=document.createElement('article');item.className='komi-premium-store-item';
+  if(root.KomiShopCatalog?.isArchived?.(product.id))item.hidden=true;
   const label=document.createElement('h3');label.textContent=product.label;
   const button=document.createElement('button');button.type='button';button.dataset.premiumItem=product.id;
   button.disabled=true;button.textContent='Загрузка…';

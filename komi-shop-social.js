@@ -42,7 +42,7 @@
    finally{state.loading=false;renderArea();refreshGiftButtons();}
  }
  function featured(){
-   const list=catalog().filter(p=>['frame','title','banner','overlay'].includes(p.type));
+   const list=catalog().filter(p=>!root.KomiShopCatalog?.isArchived?.(p.id)&&['frame','title','banner','overlay'].includes(p.type));
    const day=Math.floor(Date.now()/86400000);
    const week=Math.floor((day+3)/7);
    return [0,1,2].map((_,i)=>list[(week*7+i*13+5)%list.length]).filter(Boolean);

@@ -53,7 +53,7 @@ function eventButton(name,id){
 const countCards=html=>(html.match(/data-shop-item-action=/g)||[]).length;
 test('shop v3 JavaScript parses without frameworks and is initialized from the catalog',()=>{
  assert.doesNotThrow(()=>new vm.Script(js));
- assert.equal(products.length,141);
+ assert.equal(products.length,146);
  assert.match(html,/src="\.\/komi-shop-v3\.js\?v=/);
  assert.match(html,/komi\.production\.css\?v=/);
  assert.match(core,/window\.KomiShopV3\?\.render/);
@@ -70,7 +70,7 @@ test('guest storefront shows a bounded first page, explicit prices and auth butt
  assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,24);
   assert.doesNotMatch(container.innerHTML,/Рамка для твоего аватара в профиле/);
  assert.equal((container.innerHTML.match(/data-rarity="(?:common|rare|epic|legendary)"/g)||[]).length,24);
- assert.match(container.innerHTML,/Показано 24 из 141/);
+ assert.match(container.innerHTML,/Показано 24 из 142/);
  assert.match(container.innerHTML,/data-v3-sort/);
  assert.match(container.innerHTML,/data-v3-hide-owned/);
  assert.match(container.innerHTML,/aria-label="Примерочная"/);
@@ -166,15 +166,15 @@ test('shop avatars match verified Premium GIF rather than stale normal photo',()
  assert.match(html,/komi-premium\.js\?v=20261125-friend-avatars/);
 });
 
-test('shop studio presents six permanent collections and filled icons while preserving purchase and gift hooks',()=>{
+test('shop studio presents seven permanent collections and a featured entry and filled icons while preserving purchase and gift hooks',()=>{
   const icons=read('komi-shop-icons.js');
   const premium=read('komi-premium.js');
   reset();
   const output=container.innerHTML;
   assert.match(output,/class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5 komi-shop-studio"/);
   assert.match(output,/id="anicoin-title">Магазин оформления<\/h1>/);
-  assert.equal((output.match(/data-v7-collection=/g)||[]).length,6);
-  assert.equal((output.match(/data-v7-look=/g)||[]).length,6);
+  assert.equal((output.match(/data-v7-collection=/g)||[]).length,8);
+  assert.equal((output.match(/data-v7-look=/g)||[]).length,8);
   assert.doesNotMatch(output,/sv4-feature-grid|sv3-bento|Ещё категории/);
   assert.equal((output.match(/data-v3-category=/g)||[]).length,0,'One complete category selector replaces the clipped quick-filter rail');
   assert.match(output,/class="sv7-toolbar" role="search" aria-label="Поиск товаров"/);
@@ -228,7 +228,7 @@ test('all product categories have a dedicated filter and showcase/card cosmetics
  for(const type of new Set(products.map(row=>row.type))){
   assert.match(container.innerHTML,new RegExp('<option value="'+type+'"'));
   scripts.change({target:{value:type,matches:selector=>selector==='[data-v7-category-select]'}});
-  const expected=products.filter(row=>row.type===type);
+  const expected=products.filter(row=>row.type===type&&!context.window.KomiShopCatalog.isArchived(row.id));
   assert.equal(countCards(container.innerHTML),Math.min(24,expected.length),type);
   if(expected.length>24)await scripts.click(eventButton('data-v7-more'));
   assert.equal(countCards(container.innerHTML),expected.length,type);
@@ -281,7 +281,7 @@ test('server revision must match before debiting and preview blocks even with th
  assert.equal(real.canCheckout(),false);
  assert.equal(await real.checkPricing({rpc:async()=>({data:'previous'})}),false);
  assert.equal(await real.checkPricing({rpc:async name=>{
-   assert.equal(name,'komi_shop_catalog_revision');
+   assert.equal(name,'komi_shop_station_revision');
    return {data:real.revision};
  }}),true);
  assert.equal(real.canCheckout(),true);
@@ -302,7 +302,7 @@ test('first session uses existing IDs and verified prices without charging owned
  assert.equal(price(picks,{owned:['frame_matte']}),10);
  assert.equal(price(picks,{owned:['title_cinema']}),15);
  assert.equal(price(picks,{owned:ids}),0);
- assert.match(container.innerHTML,/Первый сеанс[\s\S]*?25 AC/);
+ assert.match(container.innerHTML,/Первый сеанс[\s\S]*?25 AniCoin/);
  await scripts.click(eventButton('data-v3-try','overlay_rain'));
  await scripts.click(eventButton('data-v3-bundle','first-session'));
  assert.deepEqual([...context.window.KomiShopV3.selected()],ids);

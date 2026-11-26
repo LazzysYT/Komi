@@ -3,6 +3,62 @@
 'use strict';
 const items=Object.freeze([
   {
+    "id": "banner_last_train",
+    "label": "Последний поезд",
+    "cost": 45,
+    "type": "banner",
+    "bannerClass": "banner-last-train",
+    "rarity": "rare",
+    "description": "Тёплые окна поезда отражаются в мокром перроне.",
+    "collection": "station-0017",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "banner_moon_platform",
+    "label": "Лунный перрон",
+    "cost": 40,
+    "type": "banner",
+    "bannerClass": "banner-moon-platform",
+    "rarity": "rare",
+    "description": "Пустая станция, луна и синие горы за рельсами.",
+    "collection": "station-0017",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "frame_platform_light",
+    "label": "Свет платформы",
+    "cost": 30,
+    "type": "frame",
+    "frameClass": "frame-platform-light",
+    "rarity": "rare",
+    "description": "Графитовый контур аватара с янтарным бликом.",
+    "collection": "station-0017",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "overlay_station_rain",
+    "label": "Дождь у путей",
+    "cost": 35,
+    "type": "overlay",
+    "cosmeticClass": "overlay-station-rain",
+    "rarity": "rare",
+    "description": "Тонкие светлые капли на обложке. Без мерцания.",
+    "collection": "station-0017",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_last_departure",
+    "label": "До последнего поезда",
+    "title": "До последнего поезда",
+    "cost": 15,
+    "type": "title",
+    "rarity": "common",
+    "description": "Титул для тех, кто досматривает до ночи.",
+    "collection": "station-0017",
+    "introducedAt": "2026-11-26"
+  },
+
+  {
     "id": "frame_moon",
     "label": "Лунная рамка",
     "cost": 20,
@@ -1342,6 +1398,24 @@ const items=Object.freeze([
 const sets=Object.freeze([{"id":"eclipse","label":"Ночное затмение","items":["frame_eclipse","shape_octagon","title_nightmarathon"],"className":"komi-set-eclipse"},{"id":"film","label":"Кинолегенда","items":["frame_film35","plate_manga","title_critic"],"className":"komi-set-film"},{"id":"sakura","label":"Сад сакуры","items":["frame_sakura","shape_drop","mascot_spirit"],"className":"komi-set-sakura"}].map(Object.freeze));
 const collections=Object.freeze([
   {
+    "id": "station-0017",
+    "label": "Станция 00:17",
+    "description": "Свет последнего поезда, пустой перрон и город под дождём.",
+    "items": [
+      "banner_last_train",
+      "banner_moon_platform",
+      "frame_platform_light",
+      "overlay_station_rain",
+      "title_last_departure"
+    ],
+    "preview": [
+      "frame_platform_light",
+      "banner_last_train",
+      "title_last_departure"
+    ]
+  },
+
+  {
     "id": "nocturne",
     "label": "После полуночи",
     "description": "Лунный свет, ночные окна и ещё одна серия.",
@@ -1462,19 +1536,22 @@ const collections=Object.freeze([
     ]
   }
 ].map(collection=>Object.freeze({...collection,items:Object.freeze(collection.items),preview:Object.freeze(collection.preview)})));
-const revision='20261125-shop-v7';
+const revision='20261126-station-0017';
+// Hide from new discovery only. IDs and ownership continue to resolve.
+const archived=new Set(['banner_grid','frame_pixel','xp_hatch','xp_dots']);
+const isArchived=id=>archived.has(id);
 const preview=()=>Boolean(root.location?.hostname&&root.location.hostname!=='komianime.online');
 let pricingConfirmed=false,checking=null;
 function checkPricing(client){
  if(preview()||!client?.rpc)return Promise.resolve(false);
  if(pricingConfirmed)return Promise.resolve(true);
  if(checking)return checking;
- checking=Promise.resolve().then(()=>client.rpc('komi_shop_catalog_revision')).then(result=>{
+ checking=Promise.resolve().then(()=>client.rpc('komi_shop_station_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;
   return pricingConfirmed;
  },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});
  return checking;
 }
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,isArchived,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 960 390" role="img" aria-label="Лунный перрон среди синих гор">
+<defs>
+ <linearGradient id="s" x2="0" y2="1"><stop stop-color="#0c1429"/><stop offset=".65" stop-color="#314e69"/><stop offset="1" stop-color="#688090"/></linearGradient>
+ <linearGradient id="b" x2=".45" y2="1"><stop stop-color="#44556a"/><stop offset="1" stop-color="#11192b"/></linearGradient>
+ <radialGradient id="m"><stop offset=".35" stop-color="#99daf6" stop-opacity=".56"/><stop offset="1" stop-color="#85c9e8" stop-opacity="0"/></radialGradient>
+ <pattern id="stars" width="99" height="83" patternUnits="userSpaceOnUse"><path d="M4 6h1v1H4zm36 11h1v2h-1zm39 9h1v1h-1zm-55 31h1v1h-1zm57 23h1v1h-1z" fill="#c9e2f4" opacity=".57"/></pattern>
+ <linearGradient id="edge" x2="1" y2="0"><stop stop-color="#152034"/><stop offset=".6" stop-color="#b6e1f4"/><stop offset="1" stop-color="#4c789d"/></linearGradient>
+</defs>
+<path fill="url(#s)" d="M0 0h960v390H0z"/><path fill="url(#stars)" d="M0 0h960v274H0z"/>
+<ellipse cx="685" cy="118" rx="176" ry="119" fill="url(#m)"/>
+<circle cx="685" cy="113" r="48" fill="#d1ecf5"/><path d="M657 78Q687 64 715 78M650 132q36 11 69-7m-21-37 9 6m-48 23 8 4" fill="none" stroke="#b5ccd9" stroke-width="3" opacity=".5"/>
+<path d="m0 192 98-62 92 43 58-38 66 56 91-74 69 65 63-38 86 61 65-51 86 47 72-83 114 68v114H0z" fill="#405f78"/>
+<path d="m0 204 62-15 58 23 72-49 63 49 62-20 62 25 76-23 83 27 71-25 62 32 58-34 95 21 50-33 86 31v73H0z" fill="#223c56"/>
+<path d="M0 248Q380 203 521 243t439-13v160H0Z" fill="url(#b)"/>
+<path d="M0 262 510 238 960 258v13l-451-25L0 318Z" fill="#10192a"/>
+<path d="M0 335 503 245 960 281" fill="none" stroke="url(#edge)" stroke-width="3"/>
+<path d="M0 389 524 252l436 54M226 390 538 256l422 98" stroke="#718ba1" opacity=".45" fill="none"/>
+<path d="M0 325 504 240" stroke="url(#edge)" stroke-width="9"/>
+<path d="M0 329 502 243" stroke="#09131f" stroke-width="1.2" stroke-dasharray="10 5"/>
+<g fill="#0a1424"><path d="M0 36 312 139v16L0 103z"/><path d="M74 106h8v168h-8zm114 17h6v129h-6zm81 23h4v101h-4z"/><path d="M436 165h4v77h-4zm-3 0h20v4h-20zM574 178h3v63h-3zm-1 0h16v3h-16zm262-18h5v94h-5zm-3 0h25v4h-25z"/></g>
+<g fill="#efcf9e"><path d="M441 167h10v2h-10zm138 13h8v2h-8zm262-19h13v3h-13z"/><ellipse cx="451" cy="242" rx="26" ry="3" opacity=".25"/><ellipse cx="842" cy="254" rx="38" ry="4" opacity=".24"/></g>
+<path d="M0 36 312 139M0 104l312 51" stroke="#637e94" fill="none" opacity=".58"/><path d="M0 379h960v11H0z" fill="#0a111e" opacity=".48"/>
+</svg>
