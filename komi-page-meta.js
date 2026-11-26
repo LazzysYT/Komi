@@ -14,6 +14,7 @@
       description: 'Каталог KomiAnime: аниме-сериалы, фильмы, OVA и ONA. Ищите по названию, выбирайте жанр и год, смотрите информацию о сериях и сохраняйте тайтлы в свой список.'
     },
     shop: {path: '/shop', title: 'Магазин оформления — KomiAnime', description: 'Оформление профиля, аватары, рамки и другие предметы за AniCoin в KomiAnime.'},
+    collection: {path: '/collection', title: 'Коллекция и кейсы — KomiAnime', description: 'Собирай персонажей любимых аниме и открывай бесплатные кейсы.'},
     partners: {path: '/partners', title: 'Партнёры — KomiAnime', description: 'Партнёры и авторы сообщества KomiAnime.'},
     profile: {path: '/profile', title: 'Профиль — KomiAnime', description: 'Профиль, личные списки просмотра и достижения в KomiAnime.'}
   };

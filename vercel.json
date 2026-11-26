@@ -90,6 +90,19 @@
       ]
     },
     {
+      "source": "/collection",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, max-age=0, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, follow"
+        }
+      ]
+    },
+    {
       "source": "/partners",
       "headers": [
         {
@@ -148,6 +161,10 @@
     },
     {
       "source": "/shop",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/collection",
       "destination": "/index.html"
     },
     {

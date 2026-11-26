@@ -127,7 +127,7 @@
   // Shop-only rules stay nonblocking on the homepage; retain their original
   // cascade position and activate immediately when entering the shop.
   const ensureShopStyle=()=>{
-    if (/^\/(?:catalog|shop|partners|profile)$/.test(location.pathname) || /^#(?:catalog|shop|partners|profile)$/.test(location.hash.toLowerCase())) {
+    if (/^\/(?:catalog|shop|partners|profile|collection)$/.test(location.pathname) || /^#(?:catalog|shop|partners|profile|collection)$/.test(location.hash.toLowerCase())) {
       const base=document.querySelector('link[data-komi-deferred-style="base"]');
       if (base) base.media='all';
     }
@@ -166,7 +166,7 @@
     }, 12000);
     return;
   }
-  const sectionRoute = /^\/(catalog|shop|partners|profile)$/.test(location.pathname) || /^#(catalog|shop|partners|profile)$/.test(location.hash.toLowerCase());
+  const sectionRoute = /^\/(catalog|shop|partners|profile|collection)$/.test(location.pathname) || /^#(catalog|shop|partners|profile|collection)$/.test(location.hash.toLowerCase());
   if (!sectionRoute && (!/^\/(?:index\.html)?$/.test(location.pathname) ||
       (location.hash && location.hash !== '#home') ||
       new URLSearchParams(location.search).has('anime'))) return;

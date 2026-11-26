@@ -24,6 +24,7 @@
       case 'click:admin-panel': return withSound(() => openAdminPanel());
       case 'click:anime-add': return withSound(() => openAddModal());
       case 'click:shop': return openAniCoinShop();
+      case 'click:collection': return withSound(() => navigate('collection'));
       case 'click:premium': return withSound(() => navigate('premium'));
       case 'click:friends': return withSound(() => toggleFriendsDrawer());
       case 'click:partners': return withSound(() => navigate('partners'));
