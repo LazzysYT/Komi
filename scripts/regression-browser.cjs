@@ -378,7 +378,13 @@ async function checkNotifications(page) {
      assert.ok(Math.abs((await menu.boundingBox()).width-72)<=1,'Desktop navigation stays 72px wide');
      await page.waitForFunction(()=>getComputedStyle(document.querySelector('#sideCatalogBtn .komi-rail-tooltip')).visibility==='hidden');
      await item.hover();
-     await page.waitForFunction(()=>getComputedStyle(document.querySelector('#sideCatalogBtn .komi-rail-tooltip')).visibility==='visible');
+     await page.waitForFunction(()=>{
+       const rail=document.querySelector('.komi-side-nav.komi-icon-rail');
+       const tooltip=document.querySelector('#sideCatalogBtn .komi-rail-tooltip');
+       const style=getComputedStyle(tooltip);
+       return style.visibility==='visible' && Number(style.opacity)>.98 &&
+         tooltip.getBoundingClientRect().left>=rail.getBoundingClientRect().right-1;
+     });
      assert.ok((await label.boundingBox()).x >= (await menu.boundingBox()).width-1,'Tooltip opens outside the rail');
      await page.mouse.move(width-5,5);
      await page.waitForFunction(()=>getComputedStyle(document.querySelector('#sideCatalogBtn .komi-rail-tooltip')).visibility==='hidden');

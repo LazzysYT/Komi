@@ -190,7 +190,7 @@ body.komi-media-hub .komi-icon-rail > .komi-rail-indicator.is-visible { opacity:
     position: absolute !important;
     z-index: 15 !important;
     top: 50% !important;
-    left: calc(100% + 16px) !important;
+    left: calc(100% + 20px) !important;
     right: auto !important;
     bottom: auto !important;
     display: inline-flex !important;
@@ -218,7 +218,7 @@ body.komi-media-hub .komi-icon-rail > .komi-rail-indicator.is-visible { opacity:
     opacity: 0 !important;
     visibility: hidden !important;
     pointer-events: none !important;
-    transform: translate3d(-8px,-50%,0) scale(.97) !important;
+    transform: translate3d(0,-50%,0) scale(.97) !important;
     transition: opacity .2s ease,
                 transform .24s cubic-bezier(.22,1,.36,1),
                 visibility .2s ease !important;
