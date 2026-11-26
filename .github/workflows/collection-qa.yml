@@ -1,0 +1,39 @@
+name: Collection cases QA
+on:
+  pull_request:
+    paths:
+      - 'komi-collection*'
+      - 'assets/collection/**'
+      - 'scripts/collection-cases*'
+      - 'index.html'
+      - 'komi-icon-rail.css'
+      - '.github/workflows/collection-qa.yml'
+permissions:
+  contents: read
+jobs:
+  collection-qa:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Collection unit checks
+        run: node --test scripts/collection-cases.test.cjs
+      - name: Install browser
+        run: |
+          npm install --prefix "$RUNNER_TEMP/komi-collection-qa" --no-save --package-lock=false --ignore-scripts playwright@1.65.1
+          "$RUNNER_TEMP/komi-collection-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Collection browser checks (mock wallet)
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/komi-collection-qa/node_modules"
+          node -e "require('playwright')"
+          node --test scripts/collection-cases-browser.test.cjs
+      - name: Save collection screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: collection-browser-screens
+          path: browser-test-results/collection-ghoul-*.png
+          if-no-files-found: ignore
