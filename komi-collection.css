@@ -105,3 +105,9 @@
 @media(max-width:767px){.kc-header:before{inset:-10px 0}.kc-case{grid-template-columns:minmax(0,1fr);gap:0}.kc-case-visual{height:auto;aspect-ratio:500/210;min-height:0}.kc-case-visual:after{background:linear-gradient(180deg,transparent 82%,#16161a)}.kc-case-copy{padding:14px 16px 18px}.kc-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kc-series{padding:14px}.kc-card-info{padding:8px;min-height:52px}.kc-case-details{padding-top:12px}}
 @media(min-width:520px) and (max-width:767px){.kc-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(prefers-reduced-motion:reduce){.kc-case[aria-busy=true] .kc-case-image{animation:none}}
+
+/* Explicit confirmation; payment never starts on the initial button press. */
+.kc-case-actions{display:grid;gap:8px;min-width:0}
+.kc-case-actions>button,.kc-buy-confirm>button{width:100%;min-width:0}
+.kc-buy-confirm{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px}
+.kc-wallet{font-variant-numeric:tabular-nums}

@@ -3,7 +3,7 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 let chromium;
 try{({chromium}=require('playwright'));}catch{}
-const root=path.resolve(__dirname,'..'),origin='http://komi-collection.test';
+const root=path.resolve(__dirname,'..'),origin='http://localhost:8767';
 const assets=['komi-collection-art.js','komi-collection.js','komi-collection.css','assets/collection/tokyo-ghoul-case.webp','komi.production.css'];
 const fixture='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/komi.production.css"><link rel="stylesheet" href="/komi-collection.css"></head><body style="background:#09090b;color:white"><main id="mainContainer"></main><script src="/komi-collection-art.js"></script><script src="/komi-collection.js"></script></body></html>';
 test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},async()=>{
@@ -17,12 +17,14 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  assert.equal(await p.evaluate(()=>new Set([...document.querySelectorAll('.kc-silhouette')].map(e=>e.innerHTML)).size),18);
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'horizontal overflow at '+width);
  await p.getByRole('button',{name:'Кейсы',exact:true}).click();assert.equal(await p.locator('.kc-case h2').textContent(),'Кейс «Токийский гуль»');await p.locator('.kc-case').getByRole('button',{name:'Войти и открыть'}).click();assert.equal(await p.evaluate(()=>window.loginCalled),true);
- await p.evaluate(()=>{window.currentUser={authUserId:'qa-user-a'};window.openCalls=0;window._supabase={auth:{getSession:async()=>({data:{session:{user:{id:window.currentUser.authUserId}}}})},rpc:async(_,args)=>{if(args.p_action==='open'){window.openCalls++;return {data:{owned:['kaneki'],can_open:false,result:'kaneki',next_at:'2099-01-01T00:00:00Z'}}}return {data:{owned:[],can_open:true}};}};window.KomiCollection.authChanged('qa-user-a');window.KomiCollection.render(document.querySelector('#mainContainer'));});
+ await p.evaluate(()=>{window.currentUser={authUserId:'qa-user-a'};window.openCalls=0;window.buyCalls=0;window._supabase={auth:{getSession:async()=>({data:{session:{user:{id:window.currentUser.authUserId}}}})},rpc:async(name,args)=>{if(name==='komi_collection_buy'){window.buyCalls++;return {data:{owned:['kaneki','touka'],can_open:false,result:'touka',next_at:'2099-01-01T00:00:00Z',balance:0,price:50,purchase_status:'ok'}}}if(args.p_action==='open'){window.openCalls++;return {data:{owned:['kaneki'],can_open:false,result:'kaneki',next_at:'2099-01-01T00:00:00Z',balance:50,price:50}}}return {data:{owned:[],can_open:true,balance:50,price:50}};}};window.KomiCollection.authChanged('qa-user-a');window.KomiCollection.render(document.querySelector('#mainContainer'));});
  await p.getByRole('button',{name:'Открыть бесплатно'}).click();await p.waitForFunction(()=>document.querySelector('.kc-result h3')?.textContent==='Кэн Канэки');assert.equal(await p.evaluate(()=>window.openCalls),1);assert.equal(await p.getByRole('button',{name:'Открыть бесплатно'}).isDisabled(),true);
  await p.getByRole('button',{name:'В мою коллекцию'}).click();assert.equal(await p.locator('.kc-grid .kc-locked').count(),17);
  await p.getByRole('button',{name:'Открытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),1);
  await p.getByRole('button',{name:'Закрытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),17);
  await p.getByRole('button',{name:'Все',exact:true}).click();
+ await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).click();assert.equal(await p.evaluate(()=>window.buyCalls),0);
+ await p.getByRole('button',{name:'Подтвердить · 50 AniCoin',exact:true}).click();await p.waitForFunction(()=>document.querySelector('.kc-result h3')?.textContent==='Тока Кирисима');assert.equal(await p.evaluate(()=>window.buyCalls),1);assert.equal(await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).isDisabled(),true);assert.equal(await p.locator('.kc-grid .kc-locked').count(),16);assert.match(await p.locator('.kc-wallet').textContent(),/Баланс: 0 AniCoin/);
  await p.evaluate(()=>{window.currentUser=null;window.KomiCollection.authChanged('');window.KomiCollection.render(document.querySelector('#mainContainer'));});assert.equal(await p.locator('.kc-grid .kc-locked').count(),18);assert.equal(await p.locator('.kc-result').count(),0);
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));assert.deepEqual(errors,[]);fs.mkdirSync(path.join(root,'browser-test-results'),{recursive:true});await p.screenshot({path:path.join(root,'browser-test-results','collection-ghoul-'+width+'.png'),fullPage:true});await p.close();console.log('collection width '+width+' passed');
  }}finally{await b.close();}

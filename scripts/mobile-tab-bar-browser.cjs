@@ -79,7 +79,12 @@ async function assertCanonicalRoute(page,pathname,view){
         assert.equal(await page.locator('#authModal').evaluate(el=>el.classList.contains('active')),false);
         await page.locator('#komiMobileMoreToggle').click();
         assert.equal(await page.locator('#komiMobileMoreToggle').getAttribute('aria-expanded'),'true');
-        assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),5);
+        assert.equal(await page.locator('#komiMobileMoreMenu button:visible').count(),6);
+        await page.locator('[data-komi-mobile-extra="collection"]').click();
+        await assertCanonicalRoute(page,'/collection','collection');
+        await page.locator('.kc-grid .kc-card').first().waitFor({state:'visible'});
+        assert.equal(await page.locator('.kc-grid .kc-card').count(),18);
+        await page.locator('#komiMobileMoreToggle').click();
         const soundToggle=page.locator('#komiMobileSoundToggle');
         assert.equal(await soundToggle.getAttribute('aria-pressed'),'true');
         await soundToggle.click();
