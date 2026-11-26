@@ -166,3 +166,8 @@
 @keyframes kc-roll{from{transform:translateX(-428px)}to{transform:translateX(var(--kc-stop))}}
 @media(max-width:767px){.kc-case{grid-template-columns:minmax(0,1fr)}.kc-case-visual{height:auto;aspect-ratio:1000/660}.kc-case-visual:after{background:linear-gradient(180deg,transparent 88%,#141418)}.kc-case-copy{padding:16px;gap:10px}.kc-card-info{min-height:76px;padding:8px}.kc-reel-panel{padding:12px}.kc-reel-tile .kc-rarity{font-size:9px}}
 @media(prefers-reduced-motion:reduce){.kc-reel-track{animation:none;will-change:auto;transform:translateX(var(--kc-stop))}}
+
+/* R7: prevent an intrinsically sized artwork grid item from overflowing its column. */
+.kc-case-visual{width:100%;min-width:0;min-height:clamp(240px,30vw,430px);aspect-ratio:auto;align-self:stretch}
+.kc-case-copy{z-index:2;min-width:0}
+@media(max-width:900px){.kc-case{grid-template-columns:minmax(0,1fr)}.kc-case-visual{height:auto;min-height:0;aspect-ratio:1000/660}.kc-case-visual:after{background:linear-gradient(180deg,transparent 88%,#141418)}.kc-case-copy{padding:16px;gap:10px}}
