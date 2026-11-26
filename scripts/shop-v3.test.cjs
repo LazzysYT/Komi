@@ -293,3 +293,39 @@ test('server revision must match before debiting and preview blocks even with th
  assert.equal((container.innerHTML.match(/disabled>Только примерка<\/button>/g)||[]).length,24);
  delete context.window.location;
 });
+
+test('first session uses existing IDs and verified prices without charging owned items',async()=>{
+ reset();
+ const ids=['frame_matte','title_cinema'],picks=ids.map(id=>context.window.KomiShopCatalog.find(id));
+ const price=context.window.KomiShopV3.priceOf;
+ assert.equal(price(picks,null),25);
+ assert.equal(price(picks,{owned:['frame_matte']}),10);
+ assert.equal(price(picks,{owned:['title_cinema']}),15);
+ assert.equal(price(picks,{owned:ids}),0);
+ assert.match(container.innerHTML,/Первый сеанс[\s\S]*?25 AC/);
+ await scripts.click(eventButton('data-v3-try','overlay_rain'));
+ await scripts.click(eventButton('data-v3-bundle','first-session'));
+ assert.deepEqual([...context.window.KomiShopV3.selected()],ids);
+ assert.match(container.innerHTML,/data-fitting-active="true"/);
+ reset();
+ assert.match(container.innerHTML,/data-fitting-active="false"/);
+});
+test('rain IDs and prices stay stable; selection opens the appropriate context',async()=>{
+ reset();
+ const cat=context.window.KomiShopCatalog;
+ assert.equal(cat.find('overlay_rain').label,'Дождь на обложке');
+ assert.equal(cat.find('overlay_rain').cost,50);
+ assert.equal(cat.find('plate_rain').label,'Дождь в комментариях');
+ assert.equal(cat.find('plate_rain').cost,45);
+ await scripts.click(eventButton('data-v3-try','overlay_rain'));
+ assert.match(container.innerHTML,/id="sv7ProfilePreview">/);
+ await scripts.click(eventButton('data-v3-try','plate_rain'));
+ assert.match(container.innerHTML,/id="sv7CommentPreview">/);
+ await scripts.click(eventButton('data-v3-try','reaction_cinema'));
+ assert.match(container.innerHTML,/id="sv7ReactionPreview">/);
+ assert.deepEqual([...context.window.KomiShopV3.selected()],['overlay_rain','plate_rain']);
+ await scripts.click(eventButton('data-v3-reset'));
+ assert.match(container.innerHTML,/data-fitting-active="false"/);
+ assert.doesNotMatch(container.innerHTML,/id="sv7ReactionPreview"/);
+ assert.match(container.innerHTML,/aria-controls="sv7FittingBody" aria-expanded="false"/);
+});

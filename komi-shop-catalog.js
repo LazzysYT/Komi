@@ -268,7 +268,8 @@ const items=Object.freeze([
   },
   {
     "id": "overlay_rain",
-    "label": "Ночной дождь",
+    "label": "Дождь на обложке",
+    "description": "Ночной дождь поверх обложки твоего профиля.",
     "cost": 50,
     "type": "overlay",
     "cosmeticClass": "overlay-rain",
@@ -594,7 +595,8 @@ const items=Object.freeze([
   },
   {
     "id": "plate_rain",
-    "label": "Ночной дождь",
+    "label": "Дождь в комментариях",
+    "description": "Ночной дождь на фоне твоих комментариев.",
     "cost": 45,
     "type": "plate",
     "cosmeticClass": "plate-rain",

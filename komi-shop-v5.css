@@ -365,3 +365,30 @@ body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-co
 @media(forced-colors:active){#shop.komi-shop-studio :where(*){scrollbar-color:auto}#shop.komi-shop-studio :is(button,input,select){border:1px solid ButtonText}#shop.komi-shop-studio .sv3-item-scene{background:Canvas}}
 
 #shop.komi-shop-studio .sv7-checkout-footer .sv3-status{margin:0;padding:10px 12px;border-radius:12px;background:var(--shop-active);font-size:13px;line-height:1.5}
+
+/* First session: a real existing two-item look, not a new SKU or price. */
+#shop.komi-shop-studio .sv7-starter{display:flex;align-items:center;gap:12px;min-width:0;margin:0 0 12px;padding:10px 14px;border:1px solid var(--shop-line);border-radius:15px;background:var(--shop-card)}
+#shop.komi-shop-studio .sv7-starter-avatar{display:grid;place-items:center;position:relative;flex:0 0 36px;width:36px;height:36px;border-radius:50%;background:#292932;color:#fff;font-weight:800}
+#shop.komi-shop-studio .sv7-starter-avatar img{width:100%;height:100%;object-fit:cover;border-radius:inherit}
+#shop.komi-shop-studio .sv7-starter-copy{flex:1;min-width:0}
+#shop.komi-shop-studio .sv7-starter-copy h3{font-size:14px;line-height:1.3;margin:0 0 3px}
+#shop.komi-shop-studio .sv7-starter-copy p{font-size:12px;color:var(--shop-muted);line-height:1.4;margin:0;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv7-starter-action{display:flex;align-items:center;gap:10px;flex:none}
+#shop.komi-shop-studio .sv7-starter-action strong{font-size:13px;font-variant-numeric:tabular-nums}
+#shop.komi-shop-studio .sv7-starter-action button{min-height:34px;padding:7px 12px;border:1px solid var(--shop-line);border-radius:999px;background:var(--shop-active);color:#fff;font-size:12px;font-weight:700}
+#shop.komi-shop-studio .sv3-item-actions .sv3-primary-buy{white-space:normal;overflow-wrap:anywhere}
+#shop.komi-shop-studio .sv7-preview-panel[hidden]{display:none!important}
+@media(max-width:980px){
+ #shop.komi-shop-studio .sv3-fitting:not(.has-content){display:none!important}
+ #shop.komi-shop-studio[data-fitting-active="false"]{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:767px){
+ #shop.komi-shop-studio .sv7-starter{gap:8px;padding:8px 10px;margin-bottom:8px}
+ #shop.komi-shop-studio .sv7-starter-avatar{flex-basis:30px;width:30px;height:30px}
+ #shop.komi-shop-studio .sv7-starter-copy h3{font-size:13px}
+ #shop.komi-shop-studio .sv7-starter-copy p{font-size:11px}
+ #shop.komi-shop-studio .sv7-starter-action{flex-direction:column;align-items:flex-end;gap:4px}
+ #shop.komi-shop-studio .sv7-starter-action strong{font-size:11px}
+ #shop.komi-shop-studio .sv7-starter-action button{min-height:30px;padding:5px 9px;font-size:11px}
+ #shop.komi-shop-studio .sv7-preview-tabs button{padding-inline:5px;font-size:11px}
+}

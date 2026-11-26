@@ -68,8 +68,8 @@
    const user=safeUser();
    const extra=create('div','komi-shop-extra-grid');
    const boosters=create('section','komi-shop-extra-card');
-   boosters.append(create('h3','','×2 XP для заданий на 24 часа'));
-   boosters.append(create('p','komi-shop-muted','Только XP новых подтверждённых ежедневных заданий. Уже заработанный опыт не меняется; с Premium множители не складываются.'));
+   boosters.append(create('h3','','Бонус ×2 XP · 24 часа'));
+   boosters.append(create('p','komi-shop-muted','Только XP новых подтверждённых ежедневных заданий. Не удваивает AniCoin или другой опыт. Уже заработанный опыт не меняется; с Premium множители не складываются.'));
    const active=Boolean(state.booster?.active&&Date.parse(state.booster.active_until)>Date.now());
    boosters.append(create('p','komi-shop-muted',active?'Активен до '+date(state.booster.active_until):'Цена · 110 AniCoin'));
    const preview=root.KomiShopCatalog?.isPreview?.()===true;
