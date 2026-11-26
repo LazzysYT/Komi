@@ -128,9 +128,9 @@ function fixture(options={}){
 
 test('pagination exposes each discoverable title once and no old non-title products',async()=>{
  const f=fixture();assert.equal(f.ids.length,24);const first=f.ids;
- await f.click('data-v7-more');assert.equal(f.ids.length,34);
+ await f.click('data-v7-more');assert.equal(f.ids.length,40);
  assert.deepEqual(f.ids.slice(0,24),first);
- assert.equal(new Set(f.ids).size,34);
+ assert.equal(new Set(f.ids).size,40);
  assert.ok(f.ids.every(id=>f.product(id).type==='title'));
  assert.doesNotMatch(f.html,/data-v7-category-select/);
 });

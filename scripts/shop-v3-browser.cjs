@@ -3,7 +3,7 @@
 const {chromium}=require('playwright'),assert=require('node:assert/strict');
 const origin=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
 const entry=new URL('/#shop',origin).href;
-const expectedIds=['title_crimson_hunter','title_moon_ronin','title_yokai_whisper'];
+const expectedIds=['title_gojo_infinity','title_tanjiro_current','title_frieren_bloom'];
 (async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{
@@ -26,7 +26,7 @@ const expectedIds=['title_crimson_hunter','title_moon_ronin','title_yokai_whispe
    assert.equal(await shop.locator('.sv3-item:not([data-item-type="title"])').count(),0);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
    await shop.locator('[data-v7-more]').click();
-   assert.equal(await cards.count(),34);
+   assert.equal(await cards.count(),40);
    assert.equal(await shop.locator('.sv12-gallery').count(),0);
    const search=shop.locator('[data-v7-search]');
    await search.fill('ронИн');

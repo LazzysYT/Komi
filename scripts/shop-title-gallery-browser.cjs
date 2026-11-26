@@ -5,7 +5,7 @@ const root=path.join(__dirname,'..');
 const styles=['komi.production.css','komi-shop-v5.css','komi-shop-v6-goods.css'];
 const scripts=['komi-shop-icons.js','komi-shop-reactions.js','komi-shop-catalog.js','komi-shop-v3.js','komi-premium-store.js'];
 const origin='http://komi-titles.test';
-const ids=['crimson_hunter','moon_ronin','yokai_whisper','awakening_mode','sakura_vow','last_cut'];
+const ids=['gojo_infinity','levi_captain','frieren_bloom','luffy_dawn','tanjiro_current','anya_signal'];
 const output=process.env.KOMI_SHOP_OUTPUT;
 const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">'+styles.map(f=>'<link rel="stylesheet" href="/'+f+'">').join('')+'</head><body style="background:#09090b;color:#fff"><main id="mainContainer" style="max-width:1300px;margin:auto"></main>'+scripts.map(f=>'<script src="/'+f+'"></script>').join('')+'</body></html>';
 (async()=>{
@@ -18,7 +18,7 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
     const u=new URL(route.request().url()),f=u.pathname.slice(1);
     if(u.origin!==origin)return route.abort();
     if(u.pathname==='/shop')return route.fulfill({contentType:'text/html',body:html});
-    if(![...styles,...scripts].includes(f)&&!/^assets\/shop-title-foil\/[a-z]+\.svg$/.test(f)&&!/^assets\/shop-station\/[a-z-]+\.svg$/.test(f))return route.abort();
+    if(![...styles,...scripts].includes(f)&&!/^assets\/shop-title-(?:foil|cast)\/[a-z]+\.svg$/.test(f)&&!/^assets\/shop-station\/[a-z-]+\.svg$/.test(f))return route.abort();
     return route.fulfill({contentType:f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(root,f),'utf8')});
    });
    await p.goto(origin+'/shop?shop_category=frame&shop_collection=station-0017&shop_page=2');
@@ -27,7 +27,7 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
      const render=()=>window.KomiShopV3.render(document.querySelector('#mainContainer'),{owner:'demo',store:{owned:['frame_pixel','banner_last_train','title_cinema','plate_manga'],balance:150,frame_id:'frame_pixel'},displayName:'Гость'});
      window.renderAniCoinShop=render;render();
    });
-   const count=await p.locator('.sv3-item').count();assert.equal(count,34);
+   const count=await p.locator('.sv3-item').count();assert.equal(count,40);
    const out=await p.evaluate(()=>{
      const nodes=[...document.querySelectorAll('.sv3-item [data-komi-title-id]')];
      return {ids:nodes.map(el=>el.dataset.komiTitleId),errors:nodes.filter(n=>{
@@ -41,6 +41,12 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
    const getStyle=()=>chip.evaluate(n=>{const s=getComputedStyle(n,'::after');return [s.animationName,s.animationPlayState,s.backgroundPosition];});
    assert.deepEqual((await getStyle()).slice(0,2),['komi-foil-scarlet','paused']);
    const treatments={title_moon_ronin:'blade',title_yokai_whisper:'yokai',title_awakening_mode:'ember',title_sakura_vow:'petals'};
+   const castFX=['convergence','crosscut','bloom','sunrise','wave','thought'];
+   for(let i=0;i<ids.length;i++){
+    const badge=p.locator('.sv3-item [data-komi-title-id="title_'+ids[i]+'"]');
+    assert.equal(await badge.evaluate(n=>getComputedStyle(n,'::after').animationName),'komi-cast-'+castFX[i]);
+    assert.equal(await badge.evaluate(n=>getComputedStyle(n,'::before').maskImage.includes('/assets/shop-title-cast/')),true);
+   }
    for(const [id,name] of Object.entries(treatments)){
      const key=await p.locator('.sv3-item [data-komi-title-id="'+id+'"]').evaluate(n=>getComputedStyle(n,'::after').animationName);
      assert.equal(key,'komi-foil-'+name);
@@ -54,7 +60,7 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
    await p.waitForFunction(before=>getComputedStyle(document.querySelector('.sv3-item [data-komi-title-id="title_crimson_hunter"]'),'::after').backgroundPosition!==before,before);
    if(output&&width===1440){
      const grid=await p.locator('.sv3-product-grid').boundingBox(),last=await p.locator('.sv3-item').nth(5).boundingBox();
-     await p.screenshot({path:path.join(output,'KomiAnime-title-gallery.png'),clip:{x:Math.floor(grid.x),y:Math.floor(grid.y),width:Math.floor(grid.width),height:Math.floor(last.y+last.height-grid.y)}});
+     await p.screenshot({path:path.join(output,'KomiAnime-character-titles.png'),clip:{x:Math.floor(grid.x),y:Math.floor(grid.y),width:Math.floor(grid.width),height:Math.floor(last.y+last.height-grid.y)}});
      if(process.env.KOMI_FOIL_FRAMES){
        const frameDir=process.env.KOMI_FOIL_FRAMES;fs.mkdirSync(frameDir,{recursive:true});
        const top=await p.locator('.sv3-item').first().boundingBox();
@@ -68,6 +74,7 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
 
    }
    await p.emulateMedia({reducedMotion:'reduce'});
+   assert.equal(await p.locator('.sv3-item [data-komi-title-id="title_gojo_infinity"]').evaluate(n=>getComputedStyle(n,'::after').animationName),'none');
    assert.equal((await getStyle())[0],'none');
    await p.locator('[data-v3-try="title_crimson_hunter"]').click();
    const fitting=p.locator('.sv3-fitting [data-komi-title-id="title_crimson_hunter"]');
@@ -88,8 +95,8 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
    assert.equal(await p.locator('.sv12-gallery').count(),1);
    assert.equal(await p.locator('.sv3-item').count(),24);
    assert.equal(await p.locator('.sv3-item:not([data-item-type="title"])').count(),0);
-   await p.locator('.sv12-gallery [data-v3-try="title_moon_ronin"]').click();
-   assert.deepEqual(await p.evaluate(()=>window.KomiShopV3.selected()),['title_moon_ronin']);
+   await p.locator('.sv12-gallery [data-v3-try="title_gojo_infinity"]').click();
+   assert.deepEqual(await p.evaluate(()=>window.KomiShopV3.selected()),['title_gojo_infinity']);
    await p.evaluate(()=>window.KomiShopV3.reset());
    await p.evaluate(()=>{
      window.fixtureConfirm=window.KomiShopV3.confirmPurchase({items:[window.KomiShopCatalog.find('title_moon_ronin')],total:25,balance:150,owner:'demo',action:'buy_equip'});
@@ -97,10 +104,15 @@ const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta nam
    await p.locator('.sv7-purchase-dialog[open] [data-confirm-cancel]').waitFor();
    await p.keyboard.press('Escape');
    assert.equal(await p.evaluate(()=>window.fixtureConfirm),false);
+   const search=p.locator('[data-v7-search]');
+   await search.fill('маГичЕская битва');
+   assert.equal(await p.locator('.sv3-item').count(),1);
+   assert.equal(await p.locator('[data-item-id="title_gojo_infinity"] .sv13-title-origin').count(),1);
+   await search.fill('');
    if(output&&width===390){
      await p.setViewportSize({width,height:1300});
      const hero=await p.locator('.sv12-gallery').boundingBox(),last=await p.locator('.sv3-item').nth(1).boundingBox();
-     await p.screenshot({path:path.join(output,'KomiAnime-title-gallery-mobile.png'),clip:{x:Math.floor(hero.x),y:Math.floor(hero.y),width:Math.floor(hero.width),height:Math.floor(last.y+last.height-hero.y)}});
+     await p.screenshot({path:path.join(output,'KomiAnime-character-titles-mobile.png'),clip:{x:Math.floor(hero.x),y:Math.floor(hero.y),width:Math.floor(hero.width),height:Math.floor(last.y+last.height-hero.y)}});
    }
 
    await p.evaluate(()=>{

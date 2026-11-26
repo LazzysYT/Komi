@@ -3,6 +3,79 @@
 'use strict';
 const items=Object.freeze([
   {
+    "id": "title_gojo_infinity",
+    "type": "title",
+    "label": "Бесконечность",
+    "title": "Бесконечность",
+    "character": "Сатору Годзё",
+    "anime": "Магическая битва",
+    "cost": 45,
+    "description": "Две сферы сходятся в фиолетовый ореол.",
+    "rarity": "epic",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_levi_captain",
+    "type": "title",
+    "label": "Капитан разведки",
+    "title": "Капитан разведки",
+    "character": "Леви Аккерман",
+    "anime": "Атака титанов",
+    "cost": 35,
+    "description": "Два серебряных следа пересекают графитовую эмаль.",
+    "rarity": "rare",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_frieren_bloom",
+    "type": "title",
+    "label": "Цветы сквозь века",
+    "title": "Цветы сквозь века",
+    "character": "Фрирен",
+    "anime": "Провожающая в последний путь Фрирен",
+    "cost": 30,
+    "description": "Мятное кольцо раскрывается, как цветок.",
+    "rarity": "rare",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_luffy_dawn",
+    "type": "title",
+    "label": "Навстречу рассвету",
+    "title": "Навстречу рассвету",
+    "character": "Монки Д. Луффи",
+    "anime": "Ван-Пис",
+    "cost": 35,
+    "description": "Солнце поднимается над морским горизонтом.",
+    "rarity": "rare",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_tanjiro_current",
+    "type": "title",
+    "label": "Дыхание воды",
+    "title": "Дыхание воды",
+    "character": "Тандзиро Камадо",
+    "anime": "Клинок, рассекающий демонов",
+    "cost": 40,
+    "description": "Бирюзовая волна проходит по нижней кромке.",
+    "rarity": "epic",
+    "introducedAt": "2026-11-26"
+  },
+  {
+    "id": "title_anya_signal",
+    "type": "title",
+    "label": "Секретная мысль",
+    "title": "Секретная мысль",
+    "character": "Аня Форджер",
+    "anime": "Семья шпиона",
+    "cost": 30,
+    "description": "Розовые кольца расходятся от маленькой звезды.",
+    "rarity": "rare",
+    "introducedAt": "2026-11-26"
+  },
+
+  {
     "id": "title_crimson_hunter",
     "label": "Алый охотник",
     "title": "Алый охотник",
@@ -1597,7 +1670,7 @@ const collections=Object.freeze([
     ]
   }
 ].map(collection=>Object.freeze({...collection,items:Object.freeze(collection.items),preview:Object.freeze(collection.preview)})));
-const revision='20261126-anime-title-foil';
+const revision='20261126-anime-cast';
 const titleText=p=>String(p?.title||p?.label||'').replace(/^[✧✦◇✳⌁☾✶▣↗◈◆✎▰▤▸❧❀]+\s+/u,'');
 // Hide from new discovery only. IDs and ownership continue to resolve.
 const archived=new Set(['banner_grid','frame_pixel','xp_hatch','xp_dots']);
@@ -1608,7 +1681,7 @@ function checkPricing(client){
  if(preview()||!client?.rpc)return Promise.resolve(false);
  if(pricingConfirmed)return Promise.resolve(true);
  if(checking)return checking;
- checking=Promise.resolve().then(()=>client.rpc('komi_shop_titles_revision')).then(result=>{
+ checking=Promise.resolve().then(()=>client.rpc('komi_shop_cast_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;
   return pricingConfirmed;
  },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});

@@ -231,3 +231,10 @@ equipment, history and ownership stay intact; existing owners manage them in
 droplet, cold blade trail, purple mist, sparks, petals, stars and classic foil.
 Contexts share one badge, with no flash and stable metrics. The store is still
 until hover/focus; fitting and profile animate unless reduced motion is active.
+
+### Character study titles
+Fan-made profile badges combine an original small emblem with a personal motion
+study. Show the character and work on each shop card to make the catalog
+searchable and the inspiration explicit. Keep the first frame still in the
+catalog; motion is opt-in by hover, keyboard focus or fitting. Never obscure
+the name or use flashing, imported assets or franchise logos.
