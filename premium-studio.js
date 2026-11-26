@@ -375,7 +375,7 @@
     const filters=$('store-filters');
     if (filters) {
       filters.replaceChildren();
-      for (const [key,label] of [['all','Все'],['frame','Рамки'],['title','Титулы'],['banner','Обложки'],['overlay','Эффекты'],['showcase','Топ-3'],['card','Карточки'],['icon','Иконки'],['shape','Формы аватара'],['plate','Комментарии'],['mascot','Маскоты'],['xp','XP-полоски'],['name','Стили ника'],['reaction','Watch Party'],['owned','Мои покупки']]) {
+      for (const [key,label] of [['all','Титулы'],['owned','Мои покупки']]) {
         const tab=document.createElement('button');tab.type='button';tab.textContent=label;
         tab.setAttribute('aria-pressed',String(storeCategory===key));
         tab.addEventListener('click',()=>{storeCategory=key;paintStore();});
@@ -386,7 +386,7 @@
     const balance=Number(wallet?.balance);
     message('store-balance',wallet && Number.isFinite(balance)
       ? '◈ '+balance.toLocaleString('ru-RU')+' AniCoin' : '◈ — AniCoin');
-    products.filter(p=>storeCategory==='owned'?owns(p.id):!window.KomiShopCatalog?.isArchived?.(p.id)&&(storeCategory==='all'||p.type===storeCategory)).forEach(product => {
+    products.filter(p=>storeCategory==='owned'?owns(p.id):window.KomiShopCatalog?.isOnSale?.(p.id)&&(storeCategory==='all'||p.type===storeCategory)).forEach(product => {
       const item=document.createElement('article');
       item.className='store-item';
       item.dataset.rarity=product.rarity||'common';
@@ -491,7 +491,7 @@
   }
   async function storeAction(product,action) {
     if (state.shopping || !state.wallet || !['buy','equip','buy_equip','unequip'].includes(action) || window.KomiShopCatalog?.isPreview?.()===true) return;
-    if (['buy','buy_equip'].includes(action) && window.KomiShopCatalog?.canCheckout?.()!==true) return;
+    if (['buy','buy_equip'].includes(action) && (window.KomiShopCatalog?.isOnSale?.(product.id)!==true||window.KomiShopCatalog?.canCheckout?.()!==true)) return;
     if (['buy','buy_equip'].includes(action) && !window.confirm('Купить «'+product.label+'» за '+product.cost+' AniCoin?')) return;
     state.shopping=true;paintStore();
     message('store-status',action==='buy_equip'?'Покупаем и надеваем…':action==='buy'?'Покупаем набор…':action==='equip'?'Надеваем предмет…':'Снимаем предмет…');

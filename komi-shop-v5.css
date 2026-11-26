@@ -566,3 +566,31 @@ body.komi-media-hub:has(#shop.komi-shop-studio) #sideFriendsBtn :is(.komi-hub-co
 @media(forced-colors:active){#shop.komi-shop-studio .sv10-station{border-color:CanvasText}#shop.komi-shop-studio .sv10-station-art{opacity:.45}#shop.komi-shop-studio .sv10-station-actions button:focus-visible{outline-color:Highlight}}
 #shop.komi-shop-studio .sv10-station-rain-sample .sv7-cover-motif{background:url('/assets/shop-station/last-train.svg') center/cover no-repeat}
 #shop.komi-shop-studio .sv10-station-rain-sample .sv7-cover-title{visibility:hidden}
+
+/* Titles-only gallery. Keep the purchase and owned spaces in the same route. */
+#shop.komi-shop-studio .sv12-gallery{
+ display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.88fr);gap:14px;align-items:center;
+ min-height:175px;box-sizing:border-box;margin:0 0 16px;padding:clamp(15px,3vw,30px);border:1px solid #95869e39;border-radius:17px;
+ color:#fff;background:radial-gradient(ellipse at 77% 28%,#3f1b2b85,transparent 42%),radial-gradient(ellipse at 95% 90%,#20345473,transparent 51%),#121218;
+}
+#shop.komi-shop-studio .sv12-gallery-copy{display:grid;align-content:center;gap:6px;min-width:0}
+#shop.komi-shop-studio .sv12-gallery-copy p{margin:0;color:#e7afc7;font:750 10px/1.2 Manrope,Inter,sans-serif;letter-spacing:.14em}
+#shop.komi-shop-studio .sv12-gallery-copy h2{margin:0;color:#fff;font:850 clamp(22px,3.9vw,41px)/1.04 Manrope,Inter,sans-serif;letter-spacing:-.05em}
+#shop.komi-shop-studio .sv12-gallery-copy>span{font-size:clamp(11px,1.2vw,14px);color:#ccc8d4}
+#shop.komi-shop-studio .sv12-gallery-marks{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;min-width:0}
+#shop.komi-shop-studio .sv12-gallery-marks button{color:inherit;background:#111117b8;border:1px solid #dbc3db36;border-radius:12px;padding:5px 7px;min-height:44px;max-width:100%}
+#shop.komi-shop-studio .sv12-gallery-marks button:hover,#shop.komi-shop-studio .sv12-gallery-marks button[aria-pressed="true"]{border-color:#eab5d3b0;background:#211b26}
+#shop.komi-shop-studio .sv12-gallery-marks button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+#shop.komi-shop-studio .sv7-filter-row[data-title-gallery-view="catalog"]{grid-template-columns:minmax(130px,.55fr) minmax(0,1fr)}
+#shop.komi-shop-studio .sv3-item[data-item-type="title"] .sv9-plate{
+ background:radial-gradient(ellipse at center,#3b2438a0 3%,#1f1a24 48%,#111117 100%);
+}
+#shop.komi-shop-studio .sv3-item[data-item-type="title"]:has([data-komi-title-id="title_moon_ronin"]) .sv9-plate{background:radial-gradient(ellipse at center,#223b58,#10131d 73%)}
+#shop.komi-shop-studio .sv3-item[data-item-type="title"]:has([data-komi-title-id="title_crimson_hunter"]) .sv9-plate{background:radial-gradient(ellipse at center,#53172b,#17111b 73%)}
+#shop.komi-shop-studio .sv3-item[data-item-type="title"]:has([data-komi-title-id="title_yokai_whisper"]) .sv9-plate{background:radial-gradient(ellipse at center,#442d5a,#181122 73%)}
+@media(max-width:640px){
+ #shop.komi-shop-studio .sv12-gallery{grid-template-columns:minmax(0,1fr);min-height:0;gap:11px}
+ #shop.komi-shop-studio .sv12-gallery-marks{justify-content:flex-start;gap:5px}
+ #shop.komi-shop-studio .sv12-gallery-marks button{padding:4px 6px}
+ #shop.komi-shop-studio .sv7-filter-row[data-title-gallery-view="catalog"]{grid-template-columns:minmax(0,1fr)}
+}

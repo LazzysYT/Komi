@@ -223,3 +223,11 @@ IDs pick the same emblem and palette in cards, fitting, Premium studio and
 public profile. Idle shop cards stay still; user hover or keyboard focus plays
 the sheen. Reduced motion has a static highlight and high-contrast mode keeps
 the text readable. Old names, prices, inventory and equipment remain intact.
+
+### Title gallery
+Only titles are offered for new cosmetic purchases. Other IDs, prices, gifts,
+equipment, history and ownership stay intact; existing owners manage them in
+«Мои предметы». The main view shows distinct effects: a stylized scarlet
+droplet, cold blade trail, purple mist, sparks, petals, stars and classic foil.
+Contexts share one badge, with no flash and stable metrics. The store is still
+until hover/focus; fitting and profile animate unless reduced motion is active.

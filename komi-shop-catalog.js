@@ -1614,6 +1614,7 @@ function checkPricing(client){
  },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});
  return checking;
 }
+const isOnSale=id=>items.some(p=>p.id===id&&p.type==='title')&&!isArchived(id);
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,titleText,isArchived,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,titleText,isArchived,isOnSale,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);

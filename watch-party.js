@@ -417,7 +417,7 @@ async function enterParty(room) {
         const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
         if(error||!isActive()||currentUser?.authUserId!==uid)return;
         const owned=new Set(data?.owned||[]);
-        const packs=(window.KomiShopCatalog?.items||[]).filter(item=>item.type==='reaction');
+        const packs=(window.KomiShopCatalog?.items||[]).filter(item=>item.type==='reaction'&&(owned.has(item.id)||window.KomiShopCatalog?.isOnSale?.(item.id)));
         paidContainer.replaceChildren();
         const heading=document.createElement('p');
         heading.className='komi-party-reaction-title';
