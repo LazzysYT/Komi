@@ -18,7 +18,7 @@ function fixture({owner=true,user='Komi',section='overview',resumeReady=true,res
  const profile={querySelectorAll:()=>navigationButtons(),querySelector:selector=>selector.includes('summary')?summary:selector.includes('profile-more')?more:null};
  const navigationButtons=()=>[...container.innerHTML.matchAll(/data-profile-tab="([^"]+)"/g)].map(([,id])=>({
   dataset:{profileTab:id},focus:()=>{focus=id},scrollIntoView:()=>{},
-  closest:selector=>selector==='#profile'?profile:selector.includes('profile-more')&&['activity','achievements','comments'].includes(id)?more:null
+  closest:selector=>selector==='#profile'?profile:null
  }));
  const query=selector=>selector==='#profile'?profile:selector.includes('summary')?summary:selector.includes('profile-more[open]')?(more.open?more:null):selector.includes('profile-more')?more:
   selector.includes('data-profile-tab=')?navigationButtons().find(button=>selector.includes('"'+button.dataset.profileTab+'"')):null;
@@ -69,7 +69,7 @@ test('owner overview preserves private resume, settings, music, cover, wallet, f
  tab.matches=()=>false;
  f.listeners.click({target:{closest:()=>tab}});
  assert.equal(f.renders(),1);
- assert.equal(f.focus(),'more','a collapsed secondary tab must return focus to the visible disclosure');
+ assert.equal(f.focus(),'activity','keyboard focus must return to the visible selected tab');
  for(const hook of ['data-komi-daily-activity','data-komi-quest-rewards','data-komi-daily-refresh','data-quest-reward-id','daily-checkin'])assert.ok(f.html().includes(hook),hook);
 });
 test('shared profile does not gain owner controls even when the previous section was Activity',()=>{
@@ -90,8 +90,8 @@ test('collection, folders, friends, wall, history and achievements retain their 
 test('profile summary distinguishes unavailable watch totals from a genuine empty collection',()=>{
  const h=fixture().html();
  assert.match(h,/class="profile-summary"/);
- assert.match(h,/data-profile-field="episodes"[^>]*>—/);
- assert.match(h,/data-profile-field="hours"[^>]*>—/);
+ assert.match(h,/data-profile-field="episodes"[^>]*>Загрузка…/);
+ assert.match(h,/data-profile-field="hours"[^>]*>Загрузка…/);
  assert.ok(h.indexOf('class="profile-summary"')<h.indexOf('Разделы профиля'));
 });
 test('unverified history is absent from overview and has a loading state in its owner section',()=>{

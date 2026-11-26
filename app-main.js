@@ -1474,7 +1474,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (view === 'home' && currentView !== 'home') komiStartupHomeCommitted = true;
             if (currentView === 'catalog') komiStoreCatalogPosition();
             if (slideInterval) clearInterval(slideInterval);
-            if(view!=='profile')window.komiProfilePreviewOwner=null;
+            if(view!=='profile')globalThis.komiProfilePreviewOwner=null;
             currentView = view;
             const route = ['shop','partners'].includes(view) ? '/' + view : view === 'premium' ? '/#premium' : '/';
             const target = view === 'catalog' ? komiCatalogRoute() : route;
@@ -1485,7 +1485,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         function openProfile(username) {
-            window.komiProfilePreviewOwner=null;
+            globalThis.komiProfilePreviewOwner=null;
             const handle = String(username || currentUser?.username || '').trim();
             if (!handle) { openAuthModal('login'); return; }
             // A different person's profile starts at its overview, without the
@@ -2714,16 +2714,16 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
             return komiProfileAnimeIndexCache.index;
         }
-        window.komiProfilePreviewOwner=null;
+        globalThis.komiProfilePreviewOwner=null;
         async function toggleKomiProfilePreview(){
             const uid=currentUser?.authUserId;
             if(!uid||currentView!=='profile'||(profileTargetUser||currentUser.username)!==currentUser.username)return;
-            if(window.komiProfilePreviewOwner===uid){window.komiProfilePreviewOwner=null;}
+            if(globalThis.komiProfilePreviewOwner===uid){globalThis.komiProfilePreviewOwner=null;}
             else {
                 if(komiPrivacyState.owner!==uid||!komiPrivacyState.data)await komiPrivacyRequest();
                 if(currentUser?.authUserId!==uid||currentView!=='profile'||(profileTargetUser||currentUser.username)!==currentUser.username)return;
                 if(komiPrivacyState.owner!==uid||!komiPrivacyState.data){komiStatusFeedback('Не удалось проверить приватность профиля.');return;}
-                window.komiProfilePreviewOwner=uid;
+                globalThis.komiProfilePreviewOwner=uid;
             }
             profilePageSection='overview';profileActiveTab='Просмотрено';profileCollectionSearchQuery='';
             render();
@@ -2747,7 +2747,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             }
 
             const ownsProfile = Boolean(currentUser && currentUser.username === username);
-            const isPreview = Boolean(ownsProfile && currentUser.authUserId && window.komiProfilePreviewOwner===currentUser.authUserId);
+            const isPreview = Boolean(ownsProfile && currentUser.authUserId && globalThis.komiProfilePreviewOwner===currentUser.authUserId);
             const isMe = ownsProfile && !isPreview;
             const myFriends = isPreview ? [] : friendsFor(username);
             if(isPreview && komiPrivacyState.owner===currentUser.authUserId && komiPrivacyState.data?.hide_profile){
