@@ -595,3 +595,6 @@ html.komi-home-boot-preview .komi-boot-real-hero .hero-slide.active .komi-hub-he
 body.komi-media-hub .komi-icon-rail :is(.komi-side-button,.komi-side-logo):is(:hover,:active) {
   transform: none !important;
 }
+
+/* Keep the collection action in the mobile More menu, independent of route CSS. */
+@media(max-width:767px){body.komi-media-hub .komi-icon-rail .komi-side-links>#sideCollectionBtn{display:none!important}}

@@ -29,7 +29,7 @@ function fresh(id){return {owner:id,status:id?'idle':'guest',owned:[],result:nul
 // A request may finish after navigating away; keep the same account's result,
 // but paint() only touches the DOM when collection is the active route.
 function current(s){return !!s&&state===s&&owner()===s.owner;}
-function authChanged(id){observedOwner=id||'';if(state&&state.owner!==observedOwner){state=fresh(owner());if(active())paint();}}
+function authChanged(id){observedOwner=id||'';if(state&&state.owner!==observedOwner){if(state.reel)clearTimeout(state.reel.timer);state=fresh(owner());if(active())paint();}}
 const aliases={juuzou:['Juzou Suzuya','Juzo Suzuya'],eto:['Eto','Sen Takatsuki'],yoshimura:['Yoshimura','Kuzen'],arima:['Kisho Arima'],tsukiyama:['Shu Tsukiyama'],amon:['Kotaro Amon'],takizawa:['Seido Takizawa'],hide:['Hide Nagachika']};
 function normalizedName(n){return String(n||'').normalize('NFKD').toLowerCase().replace(/[^a-z ]/g,' ').trim().split(/\s+/).sort().join(' ');}
 function safePortrait(url){try{const u=new URL(url);return u.protocol==='https:'&&(/(^|\.)anilist\.co$/i.test(u.hostname))?u.href:'';}catch{return '';}}
@@ -37,12 +37,12 @@ function loadImages(){
  if(!state||imagePromise||Date.now()-imageAttempt<60000||pictures.size===roster.length)return;
  imageAttempt=Date.now();
  const args=roster.map((c,i)=>'$n'+i+':String!').join(',');
- const fields=roster.map((c,i)=>'c'+i+':Character(search:$n'+i+'){name{full alternative} image{large medium}}').join(' ');
+ const fields=roster.map((c,i)=>'c'+i+':Character(search:$n'+i+'){name{full alternative} image{large medium} media(perPage:10){nodes{title{romaji english native}}}}').join(' ');
  const variables=Object.fromEntries(roster.map((c,i)=>['n'+i,c.query]));
  const ctrl=new AbortController(),timer=setTimeout(()=>ctrl.abort(),9000);
  imagePromise=fetch('https://graphql.anilist.co',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json'},body:JSON.stringify({query:'query('+args+'){'+fields+'}',variables}),signal:ctrl.signal})
  .then(r=>{if(!r.ok)throw new Error('Portrait source unavailable');return r.json();})
- .then(({data})=>{if(!data)return;roster.forEach((c,i)=>{const item=data['c'+i];if(!item)return;const expected=[c.query,...(aliases[c.id]||[])].map(normalizedName);const names=[item.name?.full,...(Array.isArray(item.name?.alternative)?item.name.alternative:[])].map(normalizedName);if(!names.some(n=>n&&expected.includes(n)))return;const url=safePortrait(item.image?.large)||safePortrait(item.image?.medium);if(url)pictures.set(c.id,url);});if(active()&&!state?.reel)paint();})
+ .then(({data})=>{if(!data)return;roster.forEach((c,i)=>{const item=data['c'+i];if(!item)return;const expected=[c.query,...(aliases[c.id]||[])].map(normalizedName);const names=[item.name?.full,...(Array.isArray(item.name?.alternative)?item.name.alternative:[])].map(normalizedName);if(!names.some(n=>n&&expected.includes(n)))return;const media=Array.isArray(item.media?.nodes)?item.media.nodes:[];if(!media.some(m=>Object.values(m.title||{}).some(t=>typeof t==='string'&&/tokyo\s+(ghoul|kushu)|東京喰種/i.test(t))))return;const url=safePortrait(item.image?.large)||safePortrait(item.image?.medium);if(url)pictures.set(c.id,url);});if(active()&&!state?.reel)paint();})
  .catch(()=>{}).finally(()=>{clearTimeout(timer);imagePromise=null;});
 }
 function rarityLabel(c){return '<span class="kc-rarity kc-rarity-'+c.rarity+'"><i aria-hidden="true"></i>'+rarityNames[c.rarity]+'</span>';}
@@ -65,16 +65,17 @@ function reelMarkup(s){
  const elapsed=Math.max(0,Math.min(REEL_DURATION,Date.now()-s.reel.started));
  return '<section class="kc-reel-panel" aria-label="Открытие кейса" aria-busy="true"><div class="kc-reel-heading"><div><div class="kc-kicker">Tokyo Ghoul · Открытие</div><h3>Кто внутри?</h3></div><span role="status">Результат получен, открываем…</span></div><div class="kc-reel-window" aria-hidden="true"><div class="kc-reel-track" style="--kc-stop:-'+(REEL_WIN*REEL_STEP+56)+'px;--kc-delay:-'+elapsed+'ms">'+s.reel.items.map(id=>{const c=roster.find(x=>x.id===id);return '<div class="kc-reel-tile kc-tier-'+c.rarity+'"><div class="kc-art">'+art(c,true)+'</div>'+rarityLabel(c)+'</div>';}).join('')+'</div><div class="kc-reel-marker"></div></div>'+button('Показать результат','skip-reel')+'</section>';
 }
-function finishReel(s){
- if(!current(s)||!s.reel)return;
- const payload=s.reel.payload;
+function finishReel(s,reel=s?.reel){
+ if(!current(s)||!reel||s.reel!==reel)return;
+ clearTimeout(reel.timer);
+ const payload=reel.payload;
  s.reel=null;Object.assign(s,payload,{status:'ready'});paint();
 }
 function showReel(s,payload){
  if(!active()||root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){Object.assign(s,payload,{status:'ready'});paint();return;}
- s.reel={payload,items:makeReel(payload.result,s.owned),started:Date.now()};
- paint();
- setTimeout(()=>finishReel(s),REEL_DURATION+80);
+ const reel={payload,items:makeReel(payload.result,s.owned),started:Date.now(),timer:null};
+ s.reel=reel;paint();
+ reel.timer=setTimeout(()=>finishReel(s,reel),REEL_DURATION+80);
 }
 function button(label,action,options={}){
  return '<button type="button" data-kc-action="'+action+'"'+(options.primary?' class="kc-primary"':'')+(options.pressed!==undefined?' aria-pressed="'+options.pressed+'"':'')+(options.disabled?' disabled':'')+'>'+esc(label)+'</button>';
@@ -137,8 +138,9 @@ async function request(action){
 }
 function click(event){if(!active())return;const b=event.target.closest?.('.kc-page [data-kc-action]');if(!b||b.disabled)return;const a=b.dataset.kcAction;if(a==='skip-reel'){finishReel(state);return;}if(a==='collection'||a==='cases'){tab=a;paint();}else if(a.startsWith('filter-')){filter=a.slice(7);paint();}else if(a==='login'){if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');}else if(a==='retry')void request('read');else if(a==='confirm-buy'){state.confirmBuy=true;paint();}else if(a==='cancel-buy'){state.confirmBuy=false;paint();}else if(a==='buy')void request('buy');}
 function render(container){
+ const style=document.querySelector('link[data-komi-collection-style]');if(style&&style.media!=='all')style.media='all';
  if(host!==container){host=container;host.addEventListener('click',click);}
- const id=owner();if(!state||state.owner!==id)state=fresh(id);
+ const id=owner();if(!state||state.owner!==id){if(state?.reel)clearTimeout(state.reel.timer);state=fresh(id);}
  paint();try{loadImages();}catch{}if(state.status==='idle')void request('read');
 }
 root.KomiCollection=Object.freeze({render,authChanged,roster:Object.freeze(roster),normalizePayload,makeReel});
