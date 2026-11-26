@@ -37,6 +37,7 @@
     openMore(false);
     toggle.focus({preventScroll:true});
     if (action === 'shop' && typeof openAniCoinShop === 'function') openAniCoinShop();
+    else if (action === 'collection' && typeof navigate === 'function') navigate('collection');
     else if (action === 'party' && typeof openWatchPartyHub === 'function') openWatchPartyHub();
     else if (action === 'partners' && typeof navigate === 'function') navigate('partners');
     else if (action === 'notifications' && typeof toggleNotifications === 'function') toggleNotifications();

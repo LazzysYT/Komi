@@ -160,7 +160,7 @@
         function komiRouteView() {
             const path = location.pathname;
             const hash = location.hash.toLowerCase();
-            for (const view of ['catalog','shop','partners','profile']) {
+            for (const view of ['catalog','shop','partners','profile','collection']) {
                 if (path === '/' + view || ((path === '/' || path === '/index.html') && hash === '#' + view)) return view;
             }
             if (hash === '#premium' && path === '/') return 'premium';
@@ -1476,7 +1476,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (slideInterval) clearInterval(slideInterval);
             if(view!=='profile')globalThis.komiProfilePreviewOwner=null;
             currentView = view;
-            const route = ['shop','partners'].includes(view) ? '/' + view : view === 'premium' ? '/#premium' : '/';
+            const route = ['shop','partners','collection'].includes(view) ? '/' + view : view === 'premium' ? '/#premium' : '/';
             const target = view === 'catalog' ? komiCatalogRoute() : route;
             if (location.pathname + location.search + location.hash !== target)
                 history.pushState(null, '', target);
@@ -2164,6 +2164,9 @@ async function komiLoadCatalogPages(attempt = 0) {
             } else if (currentView === 'shop') {
                 if (typeof renderAniCoinShop === 'function') renderAniCoinShop(container);
                 else if (!container.querySelector('.komi-static-shop')) container.innerHTML = '<section id="shop" class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
+            } else if (currentView === 'collection') {
+                if (window.KomiCollection?.render) window.KomiCollection.render(container);
+                else container.innerHTML = '<section class="kc-page"><h1>Коллекция и кейсы</h1><p>Не удалось загрузить раздел.</p></section>';
             } else if (currentView === 'premium') {
                 if (window.KomiPremium?.renderPage) window.KomiPremium.renderPage(container);
                 else container.innerHTML = '<section class="komi-premium-page"><h1>Komi Premium</h1><p>Загрузка раздела Premium…</p></section>';
@@ -4613,8 +4616,9 @@ async function komiLoadCatalogPages(attempt = 0) {
             return komiSessionRestoreQueue;
         }
         if (_supabase) {
-            _supabase.auth.onAuthStateChange((event) => {
+            _supabase.auth.onAuthStateChange((event, session) => {
                 if (event === 'INITIAL_SESSION' || event === 'SIGNED_IN' || event === 'SIGNED_OUT') {
+                    window.KomiCollection?.authChanged(session?.user?.id || '');
                     // Never call Supabase APIs synchronously inside an auth callback.
                     setTimeout(() => queueKomiSessionRestore(), 0);
                 }
@@ -6182,6 +6186,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const saved = komiCatalogSavedPosition();
                 if (saved && Number.isFinite(saved.visibleCount)) catalogVisibleCount = Math.max(komiCatalogPageSize(), Math.min(window.matchMedia?.('(max-width: 767px)').matches ? 240 : 2400, Math.ceil(saved.visibleCount / komiCatalogPageSize()) * komiCatalogPageSize()));
                 currentView='catalog'; render();
+            } else if (view === 'collection') {
+                if (currentView !== 'collection') { currentView='collection'; render(); }
             } else if (view === 'partners') {
                 if (currentView !== 'partners') { currentView='partners'; render(); }
             } else if (view === 'profile') {
@@ -6200,7 +6206,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         render();
                     }
                 }
-            } else if (view === 'home' && ['shop','catalog','profile','partners'].includes(currentView)) {
+            } else if (view === 'home' && ['shop','catalog','profile','partners','collection'].includes(currentView)) {
                 komiStartupHomeCommitted = true;
                 currentView='home';
                 render();

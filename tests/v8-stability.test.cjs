@@ -17,7 +17,9 @@ const revision=html.match(/<meta name="komi-ui-revision" content="([^"]+)"/)?.[1
 assert.match(revision,/^\d{8}-[\w-]+$/);
 const profileRevision=html.match(/<meta name="komi-profile-revision" content="([^"]+)"/)?.[1];
 assert.match(profileRevision,/^\d{8}-profile-[\w-]+$/);
-assert.equal(html.match(/app-main\.js\?v=([^"]+)/)?.[1],revision+'-'+profileRevision.replace(/^\d{8}-/,''));
+const collectionRevision=html.match(/<meta name="komi-collection-revision" content="([^"]+)"/)?.[1];
+assert.match(collectionRevision,/^\d{8}-collection-[\w-]+$/);
+assert.equal(html.match(/app-main\.js\?v=([^"]+)/)?.[1],revision+'-'+profileRevision.replace(/^\d{8}-/,'')+'-'+collectionRevision.replace(/^\d{8}-/,''));
 assert.equal(html.match(/profile-premium\.js\?v=([^"]+)/)?.[1],profileRevision);
 assert.equal(html.match(/profile-studio\.css\?v=([^"]+)/)?.[1],profileRevision);
 assert.equal(html.match(/komi-community\.js\?v=([^"]+)/)?.[1],profileRevision);

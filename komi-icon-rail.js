@@ -24,6 +24,7 @@
 
     if (view === 'premium' || hash === '#premium') return rail.querySelector('#sidePremiumBtn');
     if (view === 'shop' || hash === '#shop') return rail.querySelector('#sideShopBtn');
+    if (view === 'collection' || hash === '#collection') return mobile.matches ? null : rail.querySelector('#sideCollectionBtn');
     if (view === 'catalog' || hash === '#catalog') return rail.querySelector('#sideCatalogBtn');
     if (view === 'partners' || hash === '#partners') return mobile.matches
       ? null : rail.querySelector('#sidePartnersBtn');
