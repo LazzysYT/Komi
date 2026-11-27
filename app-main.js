@@ -16,6 +16,7 @@
 
         window.KomiPremium?.setClient(_supabase);
         window.KomiPremiumMedia?.setClient(_supabase);
+        window.KomiProfileExtras?.configure({client:_supabase,getViewer:()=>currentUser?.authUserId,onWallet:async(uid)=>{if(currentUser?.authUserId!==uid)return;try{await window.komiShopReloadStore?.();}catch{}}});
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай', 'Ужасы', 'Психологическое'];
         let audioCtx = null; // Create only after a user gesture; audio support is optional.
         
@@ -635,9 +636,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.has(name);
                 const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name) && name !== me);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-friend-avatar="'+escapeFriendHtml(profile.publicAvatarUserId?'':name)+'" data-komi-friend-avatar-id="'+escapeFriendHtml(profile.publicAvatarUserId||'')+'" data-komi-friend-avatar-placeholder><span><strong data-komi-premium-username="'+escapeFriendHtml(name)+'">'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
+                return '<div class="komi-friends-person"><button class="komi-friends-identity"'+(isFriend?' data-kpe-friend="'+escapeFriendHtml(name)+'"':'')+' data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-friend-avatar="'+escapeFriendHtml(profile.publicAvatarUserId?'':name)+'" data-komi-friend-avatar-id="'+escapeFriendHtml(profile.publicAvatarUserId||'')+'" data-komi-friend-avatar-placeholder><span><strong data-komi-premium-username="'+escapeFriendHtml(name)+'">'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
+            void window.KomiProfileExtras?.decorateFriends(list);
         }
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFriendsDrawer(); });
 
@@ -713,7 +715,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     const safeName = escapeFriendHtml(typeof komiVisibleUsername === 'function' ? komiVisibleUsername(name, profile, false) : (profile.displayName || name));
                     const safeAvatar = escapeFriendHtml(profile.avatar || '/icon.svg');
                     return `
-                        <button type="button" class="sidebar-friend-item"
+                        <button type="button" class="sidebar-friend-item" data-kpe-friend="${escapeFriendHtml(name)}"
                             data-komi-onclick="playSound();openProfile(window.komiSidebarFriendNames[${index}])">
                             <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
                                 data-komi-friend-avatar="${escapeFriendHtml(profile.publicAvatarUserId?'':name)}" data-komi-friend-avatar-id="${escapeFriendHtml(profile.publicAvatarUserId||'')}" data-komi-friend-avatar-placeholder>
@@ -725,6 +727,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 friendsHtml += '<span style="color:var(--text-muted);font-size:11px;padding:4px;">Список друзей пуст. Введите ник выше для поиска.</span>';
             }
             friendsContainer.innerHTML = friendsHtml;
+            void window.KomiProfileExtras?.decorateFriends(friendsContainer);
         }
 
         let accountNotifications = { owner: null, rows: [], count: 0 };
@@ -2954,6 +2957,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     </div>
                                     <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" data-komi-onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
+                                <section class="kpe-editor" data-kpe-editor aria-label="Мини-карточка и курсор"></section>
                                 <div class="profile-settings-session-actions">
                                     <button type="button" class="btn-secondary profile-settings-logout" data-komi-onclick="logoutUser('local')">Выйти из аккаунта</button>
                                     <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
@@ -2966,6 +2970,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     <div id="komiProfilePanel" class="komi-profile-panel">
                     ${profilePageSection==='overview' && isMe && currentUser?.authUserId ? '<section class="kcs-wallpaper" data-kcs-wallpaper-panel hidden aria-label="Фон за полный альбом"></section>' : ''}
                     ${profilePageSection==='overview' && currentUser?.authUserId ? '<section class="kcs-showcase" data-kcs-profile hidden aria-label="Витрина персонажей"></section>' : ''}
+                    ${!isPreview && currentUser?.authUserId && ['overview','achievements'].includes(profilePageSection) ? '<section class="kpe-panel" data-kpe-medals'+(isMe?'':' hidden')+' aria-label="Коллекционные медали"></section>' : ''}
                     ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,preview:isPreview,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity,activityOwner:canSeeProfileActivity?currentUser.authUserId:'',resumeReady:!currentUser?.authUserId||komiResumeReadyUid===currentUser.authUserId,resumeFailed:Boolean(isMe&&currentUser?.authUserId&&komiResumeLoadError?.owner===currentUser.authUserId&&komiResumeLoadError.username===username)}) : ''}
                     ${canSeeProfileActivity && profilePageSection === 'activity' ? `
                     <section class="profile-activity-card" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
@@ -3131,6 +3136,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     </div>
                 </section>
             `;
+            if(currentUser?.authUserId)void window.KomiProfileExtras?.mountProfile(container.querySelector('#profile'),{viewer:currentUser.authUserId,username,isMe,preview:isPreview,full:profilePageSection==='achievements',avatar:komiSafeUrl(p.avatar),name:p.displayName||username});
             if(currentUser?.authUserId && window.KomiCollectorShowcase && typeof _supabase!=='undefined' && _supabase){
                 const cover=container.querySelector('[data-profile-cover]');
                 const opts={client:_supabase,viewer:currentUser.authUserId,getViewer:()=>currentUser?.authUserId,username,isMe};

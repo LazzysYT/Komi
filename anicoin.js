@@ -225,6 +225,7 @@ function renderAniCoinShop(container) {
             loading:aniCoinShopLoading,busy:aniCoinShopBusy,
             failedFor:aniCoinShopFailedFor===id&&id
         });
+        window.KomiProfileExtras?.mountShop(container,{owner:id||'',avatar:id===aniCoinShopOwner?aniCoinShopAvatar:'',name:aniCoinShopDisplayName,login:()=>openAuthModal('login')});
         if(window.KomiShopSocial?.mount)
             window.KomiShopSocial.mount(container,{userId:id,store,wallet,products:items});
         if(id&&!store&&!aniCoinShopLoading&&aniCoinShopFailedFor!==id)
