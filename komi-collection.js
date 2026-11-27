@@ -179,6 +179,135 @@ function heroInfo(c){
  }
  return c;
 }
+// Editorial motifs. Colors, geometry, and timing are local style choices, not ownership or draw data.
+const atmospherePaths=Object.freeze({
+ water:'M2 157Q64 148 94 103T177 114 251 102 298 45M1 194Q72 180 96 139T177 145 251 132 299 81M9 127q41-13 54-45m164-14q27-7 47-34M25 206q46-7 88-25m127-19 40-18',
+ flame:'M10 213q-7-34 33-72-7 36 13 30-3-21 41-85-13 50 12 49m91 77q28-40 25-71 18 9 15 40 23-15 36-63 14 64-5 95M31 112l13-23m225 5 9-23M63 52l8-22',
+ thunder:'M6 199l46-64-12-2 27-39-9-1 49-65M294 11l-55 59 17 1-49 46 22 7-42 49M28 163l19-9m202-79 38-10M6 207l49-15m191-52 45-21',
+ frost:'M30 31l11 29 27 9-27 10-11 28-9-28-26-10 26-9zM260 96l11 38 28 10-28 10-11 35-12-35-25-10 25-10zM5 188l27-11 12-27m-4 68 9-28 24-11m195-143-14 17-29-3',
+ petals:'M26 34q31 0 45 29-35 4-45-29zm34 132q-33-6-43-43 32 10 43 43zm149-80q21-30 62-24-12 26-62 24zm33 106q9-32 40-40-6 36-40 40zM57 189Q154 228 245 104',
+ shadow:'M2 209Q23 176 21 141q21 20 30 0t4-55q34 18 27 64 22-9 41-13-24 52-83 76M297 202q-21-46-12-119-29 15-27 57-26-12-42-5 14 48 68 79M29 64l13 13m216-1 14-29',
+ ribbon:'M0 164Q58 107 112 121q87 9 188-91M0 178q71-57 137-44 86-4 163-89M9 191q37-13 50-11m185-78 49-26',
+ wires:'M1 180Q90 137 135 60m-28 24-55 61L20 160M298 32q-40 45-115 87m77-73-47 53-52 42M19 196l49-15m160-77 46-38M42 44l25-21',
+ circles:'M150 16a96 94 0 1 0 .1 0M150 31a81 79 0 1 0 .1 0M150 39l73 124H77Zm0 142-69-119h138zM150 12v27m0 142v25M48 110h29m145 0h29',
+ horizon:'M0 161h58v-25h26v25h52v-31h30v31h69v-20h29v20h36M0 171h300m-284 20 48-16m53 24 71-17m10 23 80-22M45 44h38m143-3h31',
+ crimson:'M9 179l35-73 13 20 28-63 11 21M287 31l-32 50-11-22-29 66-14-24M12 122l29-16m237 42-36 28M58 185l27-29m123-103 25-27',
+ moth:'M24 73q26 3 25 25Q13 94 24 73zm27 25q6-33 32-27-2 24-32 27zm188 45q-24-16-41 3 20 15 41-3zm0 0q20 19 44 2-13-17-44-2z'
+});
+const sceneProfiles=Object.freeze({
+ ghoul:{kaneki:['crimson','#ef466a'],touka:['ribbon','#ce8af1'],juuzou:['wires','#eecdc9'],uta:['shadow','#d5a0ee'],rize:['crimson','#ff6b9d'],arima:['frost','#b9deff'],eto:['shadow','#91c0a5'],yoshimura:['circles','#ecc588'],irimi:['shadow','#a78ad0']},
+ jujutsu:{gojo:['circles','#8cafff'],fushiguro:['shadow','#7e87e8'],sukuna:['crimson','#ed535d'],kugisaki:['wires','#efb77b'],geto:['shadow','#9b67cb'],choso:['ribbon','#f26383'],nanami:['wires','#edc07e'],yuta:['circles','#a0d2fe']},
+ frieren:{frieren:['petals','#f1d894'],fern:['circles','#c0a0ff'],stark:['flame','#f4a079'],himmel:['petals','#a9dbfd'],flamme:['flame','#fac28a'],serie:['circles','#f5dc91'],lawine:['frost','#abe4ff'],kanne:['water','#94dcff'],scharf:['petals','#e8a3c0']},
+ alchemist:{edward:['circles','#f2bb71'],alphonse:['circles','#aaceef'],roy:['flame','#ff9d6e'],riza:['wires','#e9d59c'],lust:['crimson','#ed7a9e'],hohenheim:['circles','#e1bc68'],envy:['shadow','#9bd37f'],olivier:['frost','#a8d9f8']},
+ demon:{tanjiro:['water','#7ee6ec'],giyu:['water','#65b7f5'],zenitsu:['thunder','#f9d56b'],rengoku:['flame','#ffad65'],nezuko:['flame','#ee91c7'],inosuke:['wires','#a6c9e8'],shinobu:['moth','#c2a3ff'],kanao:['petals','#f4b8d9'],mitsuri:['ribbon','#edb9d9'],muichiro:['water','#a0dec8'],sanemi:['wires','#a5e2be'],obanai:['ribbon','#d1e6a9'],akaza:['frost','#a5e5ff'],doma:['frost','#a6e2ee'],kokushibo:['crimson','#bf9afa'],muzan:['shadow','#ed697f']},
+ aot:{eren:['horizon','#e4a572'],armin:['horizon','#a2d0df'],mikasa:['ribbon','#e66d7e'],levi:['wires','#b9dce8'],erwin:['horizon','#e0c08b'],hange:['circles','#b6d6aa'],annie:['frost','#b8dcf3'],reiner:['horizon','#c5ad83'],ymir:['shadow','#9ec2b0']}
+});
+const ambientFallback=Object.freeze({eye:'crimson',claw:'wires',streak:'ribbon',orbit:'petals',ring:'circles',spark:'thunder',seal:'circles'});
+function heroScene(c,info){
+ const preset=sceneProfiles[seriesKey]?.[c.id];
+ const kind=preset?.[0]||ambientFallback[info.fx]||'circles';
+ return {kind,tone:preset?.[1]||info.tint||'#c5a5e7'};
+}
+function sceneAttributes(c,info,card=false){
+ const {kind,tone}=heroScene(c,info);
+ return ' data-kc-scene="'+kind+'" style="--kc-scene-ink:'+tone+(card?';--kc-character-fx:'+info.tint:'')+'"';
+}
+// Original cel-style backgrounds. Each location is paired with a character's own motif.
+const sceneSets=Object.freeze({
+ ghoul:{cafe:'kaneki touka yomo yoshimura hinami irimi hide',alley:'juuzou uta rize eto ayato nishiki tsukiyama',archive:'arima amon akira furuta takizawa mado'},
+ jujutsu:{shrine:'fushiguro sukuna itadori geto choso yuta',metro:'gojo nanami kugisaki shoko toji',courtyard:'maki toge panda todo utahime miwa'},
+ frieren:{meadow:'frieren himmel heiter eisen stark flamme',library:'fern serie lernen land methode denken',ravine:'ubel lawine kanne wirbel ehre scharf'},
+ alchemist:{workshop:'edward alphonse winry pinako',archive:'roy riza maes alex olivier',ravine:'scar ling mei lanfan',underworld:'greed lust envy gluttony wrath pride hohenheim'},
+ demon:{river:'tanjiro giyu muichiro sanemi inosuke',rail:'rengoku zenitsu tengen',courtyard:'shinobu kanao mitsuri obanai nezuko genya',underworld:'muzan akaza doma kokushibo daki'},
+ aot:{roofs:'mikasa levi eren jean connie sasha erwin hange moblit historia ymir',coast:'armin',fortress:'reiner bertholdt annie zeke pieck porco gabi falco'}
+});
+const scenery=Object.freeze({
+ cafe:['#312030','#b46e52','#080b14',
+  '<path d="M0 130 238 73 270 285 0 338Z"/><path d="M262 72 400 98V337l-105-57Z"/>',
+  '<path d="M0 149 221 100l27 164L0 309Z"/><path d="M326 119h49v129h-49Z" />',
+  '<path d="m66 134 13 159m58-176 22 158m-159-65 237-48M0 335l250-57 150 56M0 421l260-131m140 134-110-132"/><path d="M304 324v-28q0-9 9-9h9v22h-18m20-19q15 0 6 10h-6M297 325h40"/>','rain'],
+ alley:['#281b30','#a04061','#0a0b16',
+  '<path d="M0 59h86v100h36v112L0 352Zm400-13h-74v86h-39v146l113 78ZM110 271v-56h23v-31h27v65l23 5v-66h24v-48h15v126l27 8v-58h35v81Z"/>',
+  '<path d="M12 115h29v63H12zm42 51h32v22H54zm283-49h53v19h-53zm-23 80h14v43h-14Z"/>',
+  '<path d="m0 90 155 65 245-48M0 114l166 53 234-31M0 370l190-88m210 79-184-81M32 384l114-43m98 16 125 26"/>','rain'],
+ archive:['#25394a','#7298a2','#0b1220',
+  '<path d="M0 100h118v230H0Zm290 25h110v200H290ZM109 323l92-41 107 41 92 47v80H0v-72Z"/>',
+  '<path d="M16 151h82v20H16zm0 55h82v20H16zm0 55h82v20H16zm292-84h72v22h-72zm0 52h72v22h-72Z"/>',
+  '<path d="M130 117h140v174H130Zm18 30h101m-101 21h101m-101 21h101m-101 21h101M5 338h103m184 0h108M166 356l53-22 73 30-57 28Z"/>','motes'],
+ metro:['#222843','#6681d2','#0a1020',
+  '<path d="M0 0h400v106L222 177 0 109ZM0 110l192 79v84L0 350Zm400 0-179 78v84l179 78Z"/>',
+  '<path d="M14 94l171 79 8 22L14 123Zm372-1-157 77-8 23 165-72Z"/>',
+  '<path d="M0 343l195-67M400 343l-177-67M0 400l198-117m202 117L218 283M88 153v164m226-164v164M24 130v204m352-204v204"/>','motes'],
+ shrine:['#292442','#8c6dba','#100d1b',
+  '<path d="M0 193q73-124 168-68-23 37-37 139L0 333Zm400-10q-84-92-171-50 43 40 42 141l129 62Z"/><path d="M60 302h280l40 35H23Z"/>',
+  '<path d="M45 151q155 45 310 0l-12 20q-143 41-285 0Zm41 44h228v14H86Z"/>',
+  '<path d="M103 174v132m194-132v132M96 304h24m165 0h24M0 354l103-28m297 31-100-31M114 231h172"/>','papers'],
+ meadow:['#343b49','#d29e62','#101d21',
+  '<path d="M0 207 66 139l84 86 76-62 53 45 61-84 60 74v252H0Z"/><path d="M0 246q102-58 207 0 79 35 193-8v212H0Z"/>',
+  '<circle cx="282" cy="107" r="52"/><path d="M0 283q92-38 189 6t211-8v16q-123 44-218 6T0 300Z"/>',
+  '<path d="M0 332q170-62 400 4M0 359q155-41 400 11M25 409l8-47 8 47m17 27 7-40 8 40m245 0 8-50 9 50m22-16 16-66 9 66"/>','petals'],
+ library:['#392b46','#ba836c','#120d1d',
+  '<path d="M0 75h91v245H0Zm309 0h91v245h-91ZM103 272V133a97 97 0 0 1 194 0v139Z"/>',
+  '<path d="M127 264V134a73 73 0 0 1 146 0v130Z"/>',
+  '<path d="M200 60v203m-72-98h144m-134-53 62 53 62-53M0 124h92M0 173h92M0 222h92m217-98h91m-91 49h91m-91 49h91M0 336l115-62m285 62-115-62M0 386l152-96m248 96-152-96"/>','papers'],
+ ravine:['#253644','#7eafc3','#101923',
+  '<path d="M0 0 43 77 96 82 142 227 104 270 77 450H0ZM400 0l-67 114-50-3-45 114 86 94-26 131h102Z"/>',
+  '<path d="M130 284q121-17 156 19t114 35v78q-111-17-165-61t-123-34Z"/>',
+  '<path d="m0 115 55 26 43 96M400 105l-44 37-68 71M15 297l43-22 33-95m215 206 27-56-22-78m-205 64q88-25 163 16"/>','motes'],
+ workshop:['#3a3432','#b58f65','#11131a',
+  '<path d="M0 106h97v236H0Zm288 55h112v207H288ZM74 338l84-45 115 17 51 35v105H74Z"/>',
+  '<path d="M107 116h156v107H107Z"/><circle cx="353" cy="202" r="29"/><circle cx="318" cy="251" r="18"/>',
+  '<path d="M185 115v110m-78-55h157m48 32h82m-41-41v82m-47 14 24-12m-14-9v32M8 179h79m-79 64h79M99 344h220m-206 24h188"/>','sparks'],
+ underworld:['#342333','#aa5775','#100b16',
+  '<path d="M0 71 93 38l33 159-24 141L0 407Zm400-31-93 42-33 120 40 143 86 59ZM126 95l74-42 74 42v216H126Z"/>',
+  '<path d="M169 132h62v171h-62Zm-138 29 35-7v140l-35 24Zm338-17-35 11v145l35 19Z"/>',
+  '<path d="m0 339 156-54m244 54-156-54M0 395l173-92m227 92-173-92M0 121l102-37m298 37L298 84"/>','sparks'],
+ river:['#243c54','#76bbcb','#0a1725',
+  '<path d="M0 229 59 104l73 108 54-51 65 46 76-104 73 105v242H0Z"/><path d="M0 253q96-48 189-11t211 1v207H0Z"/>',
+  '<circle cx="298" cy="87" r="48"/><path d="M191 251q56 41-43 84T53 450h326q-2-42-104-102t-52-101Z"/>',
+  '<path d="M0 307q67-21 122-8m278 46q-52-22-115-20M5 382q40-20 100-13m161 47q79-20 134-8m-266-72q70-15 126 9M90 419q76-26 161-6"/>','water'],
+ rail:['#3e2730','#e69058','#171221',
+  '<path d="M0 119 149 191v91L0 354Zm400 0-149 72v91l149 72ZM130 265q49-86 116-20l32 73H105Z"/>',
+  '<circle cx="200" cy="262" r="24"/><path d="m0 132 137 66v17L0 171Zm400 0-137 66v17l137-44Z"/>',
+  '<path d="m48 450 130-140m174 140L222 310M100 399h199m-219 22h240m-189-58h137m-119-21h103M16 197l114 34m254-34-114 34"/>','sparks'],
+ courtyard:['#353041','#a77cab','#10161d',
+  '<path d="M0 100q83-53 173 17L89 295 0 343Zm400-9q-91-29-169 32l89 183 80 50Z"/><path d="M49 281h302l49 66v103H0v-105Z"/>',
+  '<path d="M46 207q143-50 308 0l-30 23H75Z"/><circle cx="275" cy="100" r="38"/>',
+  '<path d="M99 230v83m202-83v83M0 357l114-41m286 41-114-41M5 404l147-73m243 73-147-73M30 140q50-32 107-6m142 8q46-36 102-26"/>','petals'],
+ roofs:['#423337','#d38e6e','#131820',
+  '<path d="M0 215h400v128H0Z"/><path d="M0 303l59-61 58 61v147H0Zm102 25 56-68 65 68v122H102Zm88 4 77-86 64 86v118H190Zm102-19 58-73 50 57v153H292Z"/>',
+  '<path d="M0 187h40v12h21v-12h42v12h23v-12h42v12h24v-12h42v12h24v-12h42v12h22v-12h42v12h20v-12h16v39H0Z"/><circle cx="283" cy="107" r="45"/>',
+  '<path d="M0 239h400M0 280h400M47 247l-22 54m140-34 24 58m111-44 32 40M7 338h85m122 14h89m18-22h71"/>','gust'],
+ fortress:['#343b3b','#9eb08d','#121a20',
+  '<path d="M0 239h400v211H0Zm36-52h94v154H36Zm233 0h96v154h-96Z"/>',
+  '<path d="M0 224h400v20H0Zm40-50h90v19H40Zm229 0h95v19h-95Z"/>',
+  '<path d="M0 264h400M0 291h400M0 324h400m-246-33v-32m101 33v-32M78 198v55m246-55v55M0 378l149-45m251 45-149-45"/>','gust'],
+ coast:['#273e54','#92bfc9','#102333',
+  '<path d="M0 216q149-30 256 5l144-12v241H0Z"/><path d="M0 345q101 19 200 0t200-3v108H0Z"/>',
+  '<circle cx="187" cy="161" r="68"/><path d="M0 262q126 14 217 0t183 0v13q-78-4-177 7T0 277Z"/>',
+  '<path d="M0 309q127 19 211 5t189 0M0 349q127 19 211 5t189 0M0 390q127 19 211 5t189 0M12 187l32-14 22 5m224 3 37-15 28 8"/>','water']
+});
+const backdropFallback={ghoul:'alley',jujutsu:'shrine',frieren:'meadow',alchemist:'archive',demon:'courtyard',aot:'roofs'};
+const sceneMotion=Object.freeze({
+ rain:'M28 61l-21 49m54-7-19 48m295-74-22 54m51-15-25 63m54 31-20 51M30 270l-18 40m68-14-15 33m260-45-12 37',
+ papers:'M31 148l24-12 11 24-24 13Zm295-39 20 11-13 23-21-12ZM42 300l11 22-14 5-12-21ZM349 280l25 8-6 14-25-7Z',
+ sparks:'M34 279l16-19m21 54 9-19m-45 62 13-14m290-72 14-18m21 57 13-22m-71 81 18-20m-280-127 8-13m273 7 11-19',
+ petals:'M26 105q24-7 24 5-17 8-24-5Zm291 33q8-18 22-14-3 19-22 14ZM65 274q24 1 22 14-21 5-22-14Zm258 48q6-18 20-15-1 16-20 15Z',
+ water:'M0 341q81-25 129-7m135 7q58-18 136-7M0 380q55-17 110-9m170 14q56-18 120-7M10 409q57-11 99-4m160 12q58-20 121-13',
+ gust:'M0 152q47-14 84 2m237-14q36-12 79 2M0 299q73-27 112-18m208-6q40-16 80-13M0 381q58-22 100-15m186-6q50-13 114-21',
+ motes:'M35 140h1m29 71h1m-18 101h1m281-155h1m52 60h1m-32 93h1m-37 42h1'
+});
+function landscapeMarkup(c,kind){
+ const location=Object.entries(sceneSets[seriesKey]).find(([,cast])=>(' '+cast+' ').includes(' '+c.id+' '))?.[0]||backdropFallback[seriesKey];
+ const [sky,light,ink,depth,lit,lines,weather]=scenery[location];
+ return '<svg class="kc-world-backdrop" data-kc-location="'+location+'" data-kc-weather="'+weather+'" style="--kc-scene-sky:'+sky+';--kc-scene-light:'+light+';--kc-scene-depth:'+ink+'" viewBox="0 0 400 450" preserveAspectRatio="xMidYMid slice" focusable="false"><g class="kc-land-planes">'+depth+'</g><g class="kc-land-lit">'+lit+'</g><g class="kc-land-ink">'+lines+'</g><path class="kc-land-motion" d="'+sceneMotion[weather]+'"/><path class="kc-land-hero" pathLength="1" transform="matrix(1.33 0 0 1.33 0 82)" d="'+atmospherePaths[kind]+'"/></svg>';
+}
+function stageScenery(c,info){
+ const {kind}=heroScene(c,info);
+ // One small vector only in the full viewer, behind the actual character.
+ return '<div class="kc-scene" aria-hidden="true">'+landscapeMarkup(c,kind)+'<span class="kc-scene-wash"></span><span class="kc-scene-dust"></span></div>';
+}
+
 const chapterSets={
  ghoul:[['Антэйку',['kaneki','touka','yomo','yoshimura']],['Следствие CCG',['arima','amon','akira','juuzou']],['Город после заката',['uta','rize','tsukiyama','nishiki']],['Антэйку и следователи',['irimi','mado']]],
  jujutsu:[['Первый курс',['itadori','fushiguro','kugisaki']],['Второй курс',['maki','toge','panda','yuta']],['Мастера и легенды',['gojo','sukuna','nanami']],['Киотская школа',['todo','utahime','miwa']],['В старых записях',['shoko','geto','toji']]],
@@ -335,11 +464,11 @@ function card(c,opened,place='grid'){
  const key=place+'-'+c.id, backId='kc-back-'+key;
  const flipped=opened&&state?.inspected===key;
  const label=opened?c.name:'Неизвестный персонаж';
- const {group,intro,tint}=heroInfo(c);
+ const info=heroInfo(c),{group,intro}=info;
  const back=opened?'<div class="kc-card-back" id="'+backId+'"'+(flipped?'':' hidden')+'><div class="kc-file-code">'+esc(seriesKey==='ghoul'?'CCG':series.code)+' · '+number+'</div><h4>'+esc(c.name)+'</h4><p class="kc-file-group">'+esc(group)+'</p><p class="kc-file-intro">'+esc(intro)+'</p><div class="kc-file-footer">'+rarityLabel(c)+'</div></div>':'';
  const viewer=opened?'<button type="button" '+(flipped?'hidden ':'')+'class="kc-view-hero" data-kc-action="view-'+c.id+'" data-kc-focus="view-'+key+'" aria-label="Открыть персонажа: '+esc(c.name)+'"><span>В полный рост</span></button>':'';
  const control=opened?'<button type="button" class="kc-inspect" data-kc-action="inspect" data-kc-focus="inspect-'+key+'" aria-controls="'+backId+'" aria-expanded="'+flipped+'" aria-label="'+esc(series.dossier)+': '+esc(c.name)+'">'+flipIcon+'<span>'+(flipped?'Лицевая':'Досье')+'</span></button>':'';
- return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'"'+(opened?' style="--kc-character-fx:'+tint+'"':'')+' data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong><div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+back+viewer+control+'</article>';
+ return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'"'+(opened?sceneAttributes(c,info,true):'')+' data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong><div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+back+viewer+control+'</article>';
 }
 function album(owned,known){
  const slots=byRarity(roster).map(c=>{
@@ -396,6 +525,7 @@ function playSignature(stage){
  fx.classList.remove('kc-signature-play');
  void fx.offsetWidth;
  fx.classList.add('kc-signature-play');
+ if(stage.matches('.kc-hero-stage,.kc-result')){stage.classList.remove('kc-scene-running');void stage.offsetWidth;stage.classList.add('kc-scene-running');}
 }
 function signatureMarkup(c){
  const info=heroInfo(c);
@@ -411,7 +541,7 @@ function openViewer(id,trigger){
  const dialog=document.createElement('dialog');
  dialog.className='kc-hero-view kc-theme-'+seriesKey;
  dialog.setAttribute('aria-labelledby','kc-hero-title');
- dialog.innerHTML='<div class="kc-hero-layout"><button type="button" class="kc-view-close" autofocus aria-label="Закрыть просмотр">×</button><div class="kc-hero-stage kc-tier-'+c.rarity+'"><span class="kc-hero-art-serial">'+number+'</span>'+signatureMarkup(c)+'<img src="'+asset+'" width="400" height="720" alt="'+esc(c.name)+', в полный рост" decoding="async"><p class="kc-image-unavailable" hidden>Не удалось загрузить иллюстрацию.</p></div><div class="kc-hero-info"><div class="kc-view-meta">'+rarityLabel(c)+'<span>'+esc(series.title)+'</span></div><h2 id="kc-hero-title">'+esc(c.name)+'</h2><div class="kc-hero-metrics"><div><small>Карточка</small><strong>'+number+'</strong></div><div><small>В альбоме</small><strong>'+(roster.indexOf(c)+1)+' / '+roster.length+'</strong></div></div>'+'<dl><dt>Фракция или роль</dt><dd>'+esc(info.group)+'</dd><dt>Мир</dt><dd>'+esc(series.world)+'</dd><dt>Фирменный эффект</dt><dd>'+esc(info.reveal)+'</dd></dl><p class="kc-view-intro">'+esc(info.intro)+'</p><div class="kc-hero-actions"><button type="button" class="kc-view-signature">Показать эффект</button><button type="button" class="kc-view-poster">Скачать постер</button></div><p class="kc-poster-status" role="status"></p></div></div>';
+ dialog.innerHTML='<div class="kc-hero-layout"><button type="button" class="kc-view-close" autofocus aria-label="Закрыть просмотр">×</button><div class="kc-hero-stage kc-tier-'+c.rarity+'"'+sceneAttributes(c,info)+'>'+stageScenery(c,info)+'<span class="kc-hero-art-serial">'+number+'</span>'+signatureMarkup(c)+'<img src="'+asset+'" width="400" height="720" alt="'+esc(c.name)+', в полный рост" decoding="async"><p class="kc-image-unavailable" hidden>Не удалось загрузить иллюстрацию.</p></div><div class="kc-hero-info"><div class="kc-view-meta">'+rarityLabel(c)+'<span>'+esc(series.title)+'</span></div><h2 id="kc-hero-title">'+esc(c.name)+'</h2><div class="kc-hero-metrics"><div><small>Карточка</small><strong>'+number+'</strong></div><div><small>В альбоме</small><strong>'+(roster.indexOf(c)+1)+' / '+roster.length+'</strong></div></div>'+'<dl><dt>Фракция или роль</dt><dd>'+esc(info.group)+'</dd><dt>Мир</dt><dd>'+esc(series.world)+'</dd><dt>Фирменный эффект</dt><dd>'+esc(info.reveal)+'</dd></dl><p class="kc-view-intro">'+esc(info.intro)+'</p><div class="kc-hero-actions"><button type="button" class="kc-view-signature">Показать эффект</button><button type="button" class="kc-view-poster">Скачать постер</button></div><p class="kc-poster-status" role="status"></p></div></div>';
  const dismiss=dialog.querySelector('.kc-view-close');
  const stage=dialog.querySelector('.kc-hero-stage');
  const illustration=stage.querySelector('img');
@@ -429,6 +559,7 @@ function openViewer(id,trigger){
  if(typeof dialog.showModal==='function')dialog.showModal();
  else dialog.setAttribute('open','');
  dismiss.focus({preventScroll:true});
+ if(!effect.hidden)playSignature(stage);
 }
 function selectSeries(id){
  if(!Object.hasOwn(seriesList,id)||seriesKey===id||state?.status==='opening'||state?.reel)return;
@@ -466,21 +597,35 @@ function pickScene(reel,theme){
  }).join('');
  return '<div class="kc-pick-arena'+(reveal?' is-revealing kc-pick-position-'+reel.chosen:'')+'" data-kc-pick-world="'+seriesKey+'"'+(reveal?' style="--kc-pick-elapsed:-'+elapsed+'ms"':'')+'>'+particles+'<div class="kc-pick-card-row" role="group" aria-label="Три рубашки карточек">'+cards+'</div></div>';
 }
+const FOIL_DURATION=980;
+const sealEdge='0 14%,7% 13%,12% 15%,19% 13%,24% 14%,31% 12%,38% 14%,46% 12%,54% 14%,62% 12%,69% 14%,76% 13%,82% 15%,90% 12%,96% 15%,100% 13%';
+function wrapperMarkup(animated,reel){
+ const art='/assets/collection/deluxe-packs/'+seriesKey+'.webp';
+ const image='<img class="kc-foil-print" src="'+art+'" width="360" height="640" alt="" draggable="false" decoding="async">';
+ return '<span class="kc-foil-table'+(animated?' is-tearing':'')+'" aria-hidden="true" style="--kc-foil-start:'+(animated?reel.dragStart:0)+';--kc-foil-elapsed:-'+(animated?Math.max(0,Date.now()-reel.started):0)+'ms;--kc-seal-edge:'+sealEdge+'"><span class="kc-foil-object"><span class="kc-foil-lining"></span><span class="kc-foil-deck"></span><span class="kc-foil-shell">'+image+'</span><span class="kc-foil-strip">'+image+'</span><span class="kc-foil-rip"></span><span class="kc-foil-tab"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M5 18 18 5M9 5h9v9"/></svg></span></span></span>';
+}
 function reelMarkup(s){
  const reel=s.reel;
  if(!reel)return '';
  const theme=pickThemes[seriesKey]||pickThemes.ghoul;
- const seal=reel.phase==='seal',reveal=reel.phase==='reveal';
- const heading=seal?'Пак запечатан':reveal?'Кто внутри?':'Выбери одну из трёх карточек';
- const hint=seal?'Карточка получена. Осталось открыть пак.':reveal?'Раскрываем карточку…':reel.isReplay?'Это повтор уже полученной карточки.':'Карточка уже определена. Выбор меняет только сцену.';
- const scene=seal?'<button type="button" class="kc-peel" data-kc-action="peel" aria-label="Сорвать печать с бустера"><span class="kc-peel-pack" aria-hidden="true">'+packArt()+'</span><span class="kc-peel-tab" aria-hidden="true">⟶</span><span>Сорвать печать</span></button><small class="kc-peel-help">Потяни за край или нажми кнопку.</small>':pickScene(reel,theme);
- return '<section class="kc-reel-panel kc-manga-panel kc-pick-panel" aria-label="Открытие бустера"'+(reveal?' aria-busy="true"':'')+'><div class="kc-reel-heading"><div><div class="kc-kicker">'+esc(theme.scene)+' · '+(reel.isReplay?'Повтор сцены':'Открытие')+'</div><h3>'+heading+'</h3></div><span role="status">'+hint+'</span></div>'+scene+button('Показать результат','skip-reel')+'</section>';
+ const seal=reel.phase==='seal',tear=reel.phase==='tear',reveal=reel.phase==='reveal';
+ const heading=seal?'Пак запечатан':tear?'Открываем пак':reveal?'Кто внутри?':'Выбери одну из трёх карточек';
+ const hint=seal?'Возьмись за верхний край.':tear?'Карточки выходят из обёртки…':reveal?'Раскрываем карточку…':reel.isReplay?'Это повтор уже полученной карточки.':'Карточка уже определена. Выбор меняет только сцену.';
+ const scene=seal?'<button type="button" class="kc-peel kc-foil-control" data-kc-action="peel" aria-label="Сорвать печать с бустера">'+wrapperMarkup(false,reel)+'<span class="kc-foil-label">Открыть пак</span></button><small class="kc-peel-help">Потяни край вправо или нажми «Открыть пак».</small>':tear?wrapperMarkup(true,reel):pickScene(reel,theme);
+ return '<section class="kc-reel-panel kc-manga-panel kc-pick-panel" aria-label="Открытие бустера"'+(reveal||tear?' aria-busy="true"':'')+'><div class="kc-reel-heading"><div><div class="kc-kicker">'+esc(theme.scene)+' · '+(reel.isReplay?'Повтор сцены':'Открытие')+'</div><h3>'+heading+'</h3></div><span role="status">'+hint+'</span></div>'+scene+button('Показать результат','skip-reel')+'</section>';
 }
-function peelReel(){
+function peelReel(progress=0){
  const s=state,reel=s?.reel;
  if(!current(s)||!reel||reel.phase!=='seal')return;
- reel.phase='choose';
- paint('pick-card-1');
+ const showChoices=()=>{
+  if(!current(s)||s.reel!==reel)return;
+  reel.timer=null;reel.phase='choose';
+  paint('pick-card-1');
+ };
+ if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){showChoices();return;}
+ reel.phase='tear';reel.started=Date.now();reel.dragStart=progress;
+ paint('skip-reel');
+ reel.timer=setTimeout(showChoices,FOIL_DURATION);
 }
 function chooseCard(n){
  const s=state,reel=s?.reel;
@@ -491,10 +636,11 @@ function chooseCard(n){
  paint('skip-reel');
  reel.timer=setTimeout(()=>finishReel(s,reel),PICK_DURATION);
 }
-let peelPointer=null;
+let peelPointer=null,suppressPeelClickUntil=0;
 function pointerStart(event){
  const target=event.target.closest?.('.kc-peel');
  if(!active()||!target||!event.isPrimary||event.button!==0)return;
+ suppressPeelClickUntil=0;
  peelPointer={target,id:event.pointerId,x:event.clientX,y:event.clientY};
  try{target.setPointerCapture(event.pointerId);}catch{}
 }
@@ -502,6 +648,7 @@ function pointerMove(event){
  const p=peelPointer;
  if(!p||p.id!==event.pointerId||!p.target.isConnected)return;
  const dx=event.clientX-p.x,dy=event.clientY-p.y;
+ if(Math.hypot(dx,dy)>12)suppressPeelClickUntil=performance.now()+500;
  if(Math.abs(dy)>Math.max(20,dx)&&dy!==0){pointerCancel(event);return;}
  p.target.style.setProperty('--kc-peel-progress',String(Math.max(0,Math.min(1,dx/85))));
 }
@@ -514,7 +661,7 @@ function pointerEnd(event){
  if(!p||p.id!==event.pointerId)return;
  const dx=event.clientX-p.x,dy=event.clientY-p.y;
  pointerCancel(event);
- if(dx>=55&&Math.abs(dy)<Math.max(35,dx*.65))peelReel();
+ if(dx>=55&&Math.abs(dy)<Math.max(35,dx*.65))peelReel(Math.max(0,Math.min(1,dx/85)));
 }
 function finishReel(s,reel=s?.reel,manual=false){
  if(!current(s)||!reel||s.reel!==reel)return;
@@ -554,7 +701,7 @@ function albumTools(){
   +'</div><section class="kc-album-results" id="kc-album-results" aria-label="Карточки серии"></section>';
 }
 function bindArtwork(container){
- for(const img of container.querySelectorAll('.kc-portrait,.kc-case-image,.kc-album-image,.kc-pack-thumb,.kc-shelf-hero,.kc-feature-hero')){
+ for(const img of container.querySelectorAll('.kc-portrait,.kc-case-image,.kc-album-image,.kc-pack-thumb,.kc-shelf-hero,.kc-feature-hero,.kc-foil-print')){
   const ready=()=>{if(img.naturalWidth>0)img.setAttribute('data-kc-art-ready','');};
   const failed=()=>{
    if(img.classList.contains('kc-case-image')&&img.hasAttribute('data-kc-pack-fallback')){
@@ -634,7 +781,7 @@ function paint(nextFocus=null){
  const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
  const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">'+esc(series.script)+'</span><small>СЕРИЯ '+series.edition+'</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h2>Бустер «'+esc(series.pack)+'»</h2><p class="kc-muted">Карточек в серии: '+roster.length+'. В каждом бустере одна новая карточка. Шансы равные, повторов нет.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
  const prize=s.reel?null:roster.find(c=>c.id===(s.replayResult||s.result));
- const reward=prize&&known?'<div class="kc-result" role="status">'+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','collection',{primary:true,focus:'result-collection'}))+'</div></div>':'';
+ const reward=prize&&known?'<div class="kc-result" role="status"'+sceneAttributes(prize,heroInfo(prize))+'>'+stageScenery(prize,heroInfo(prize))+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','collection',{primary:true,focus:'result-collection'}))+'</div></div>':'';
  if(inAlbum){
   const extras='<section class="kc-extras"><button type="button" class="kc-extras-toggle" data-kc-action="album-details" aria-expanded="'+s.extrasOpen+'" aria-controls="kc-extras-body"><span>Альбом и журнал</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div id="kc-extras-body"'+(s.extrasOpen?'':' hidden')+'>'+album(owned,known)+collectorProgress(s,owned,known)+journalMarkup(s)+'</div></section>';
   body=albumFinalMarkup(s,owned)+'<div class="kc-series"><div class="kc-series-info"><h2>'+esc(series.title)+'</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к пакам','cases',{primary:true})+'</div>'+albumTools()+extras;
@@ -695,7 +842,7 @@ function click(event){if(!active())return;const b=event.target.closest?.('.kc-pa
  state.journalOpen=a==='journal-retry'||!state.journalOpen;paint('journal');if(state.journalOpen)void readJournal(state);return;
  }if(a.startsWith('replay-')){startReplay(a.slice(7));return;}
  if(a==='leave-replay'){state.replayResult=null;state.extrasOpen=true;tab='collection';paint('journal');return;}
- if(a==='peel'){peelReel();return;}
+ if(a==='peel'){if(!event.detail||performance.now()>=suppressPeelClickUntil)peelReel();return;}
  if(a.startsWith('pick-card-')){chooseCard(Number(a.slice(10)));return;}
  if(a==='skip-reel'){finishReel(state,state.reel,true);return;}if(a==='collection'||a==='cases'){if(tab!==a){state.confirmBuy=false;state.replayResult=null;state.inspected='';}tab=a;paint(a);}else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
  const query=host.querySelector('#kc-album-search');

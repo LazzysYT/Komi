@@ -4,7 +4,7 @@ let chromium;try{({chromium}=require('playwright'));}catch{}
 const source=path.resolve(__dirname,'..'),origin='http://localhost:8767';
 const fixture='<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/komi-collection.css"><body style="background:#09090b"><main id="mainContainer"></main><script src="/komi-collection.js"></script></body></html>';
 const motion={ghoul:'kc-pick-splash',jujutsu:'kc-pick-skew',frieren:'kc-pick-orbit',alchemist:'kc-pick-register',demon:'kc-pick-crest',aot:'kc-pick-gust'};
-test('themed identical backs reveal one server-issued card without another purchase', {skip:!chromium,timeout:60000},async()=>{
+test('themed identical backs reveal one server-issued card without another purchase', {skip:!chromium,timeout:90000},async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{for(const [width,reduced] of [[1440,false],[320,false],[320,true]]){
   const p=await browser.newPage({viewport:{width,height:820},reducedMotion:reduced?'reduce':'no-preference'}),errors=[];
@@ -58,10 +58,38 @@ test('themed identical backs reveal one server-issued card without another purch
    const peel=p.getByRole('button',{name:'Сорвать печать с бустера'});
    await peel.waitFor();
    assert.equal(await peel.evaluate(el=>el===document.activeElement),true);
-   await peel.press('Enter');
+   const foil=p.locator('.kc-foil-table.is-tearing');
+   assert.equal(await peel.locator('.kc-foil-strip img').getAttribute('src'),await peel.locator('.kc-foil-shell img').getAttribute('src'));
+   if(i===0&&width===1440&&process.env.KOMI_FOIL_PREVIEWS){
+    await peel.locator('.kc-foil-shell img').evaluate(n=>n.decode());
+    await peel.locator('.kc-foil-table').screenshot({path:process.env.KOMI_FOIL_PREVIEWS+'/Komi-foil-sealed.png'});
+   }
+   if(i===0&&!reduced){
+    // An insufficient drag leaves the foil sealed; a rightward pull tears it.
+    await peel.scrollIntoViewIfNeeded();
+    const box=await peel.boundingBox(),x=box.x+box.width/2,y=box.y+box.height/2;
+    await p.mouse.move(x,y);await p.mouse.down();await p.mouse.move(x+30,y,{steps:5});await p.mouse.up();
+    assert.equal(await peel.count(),1);
+    await p.mouse.move(x,y);await p.mouse.down();await p.mouse.move(x+78,y-8,{steps:6});await p.mouse.up();
+   }else await peel.press('Enter');
+   if(!reduced){
+    await foil.waitFor();
+    assert.equal(await foil.locator('.kc-foil-strip').evaluate(el=>getComputedStyle(el).animationName),'kc-foil-away');
+    assert.equal(await foil.locator('.kc-foil-deck').evaluate(el=>getComputedStyle(el).animationName),'kc-foil-slide');
+    assert.equal(await p.locator('.kc-pick-card,.kc-result').count(),0);
+    if(i===0&&width===1440&&process.env.KOMI_FOIL_PREVIEWS){
+     await foil.locator('.kc-foil-strip img').evaluate(n=>n.decode());
+     await foil.evaluate(el=>{for(const a of el.getAnimations({subtree:true})){a.pause();a.currentTime=395;}});
+     await foil.screenshot({path:process.env.KOMI_FOIL_PREVIEWS+'/Komi-foil-tear.png'});
+    }
+   }else assert.equal(await foil.count(),0);
    const arena=p.locator('.kc-pick-arena[data-kc-pick-world="'+key+'"]');
    const options=arena.locator('.kc-pick-card');
+   await options.first().waitFor();
    assert.equal(await options.count(),3);
+   if(i===0&&width===1440&&process.env.KOMI_FOIL_PREVIEWS){
+    await arena.screenshot({path:process.env.KOMI_FOIL_PREVIEWS+'/Komi-foil-choice.png',animations:'disabled'});
+   }
    assert.equal(new Set(await arena.locator('.kc-pick-back').evaluateAll(els=>els.map(x=>x.outerHTML))).size,1);
    assert.equal(await arena.locator('img').count(),0);
    assert.ok((await arena.locator('.kc-pick-atmosphere path').first().getAttribute('d')).startsWith('M'));
@@ -81,6 +109,7 @@ test('themed identical backs reveal one server-issued card without another purch
    const reward=p.locator('.kc-result h3');
    await reward.waitFor();
    assert.equal(await reward.textContent(),name);
+   assert.ok(await p.locator('.kc-result .kc-world-backdrop').getAttribute('data-kc-location'));
    assert.equal(await reward.evaluate(el=>el===document.activeElement),true);
    assert.equal(await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_buy_v2')).length),i+1);
    assert.match(await p.locator('.kc-wallet').textContent(),/100 AniCoin/);
