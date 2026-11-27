@@ -184,7 +184,7 @@ begin
     if not exists(select 1 from komi_profile_extras_private.purchases p where p.user_id=actor and p.item_id=item) then
      if balance<price then raise exception 'Not enough AniCoin' using errcode='22023'; end if;
      insert into komi_profile_extras_private.purchases(user_id,item_id,price) values(actor,item,price);
-     update public.komi_anicoin_wallets set balance=balance-price where user_id=actor;
+     update public.komi_anicoin_wallets as w set balance=w.balance-price where w.user_id=actor;
     end if;
    elsif not exists(select 1 from komi_profile_extras_private.purchases p where p.user_id=actor and p.item_id=item) then
     raise exception 'Purchase required' using errcode='42501';

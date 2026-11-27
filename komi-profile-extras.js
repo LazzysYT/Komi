@@ -99,7 +99,7 @@ function medalGallery(node,data,uid,full){
   let all=cat.medals.filter(m=>filter==='all'||filter==='ready'&&!data.medals.has(m.id)&&eligible(m)||filter==='owned'&&data.medals.has(m.id)||filter===m.rarity).sort(sort);
   if(!full)all=all.sort((a,b)=>Number(eligible(b)&&!data.medals.has(b.id))-Number(eligible(a)&&!data.medals.has(a.id))||Number(data.medals.has(b.id))-Number(data.medals.has(a.id))||sort(a,b)).slice(0,6);
   for(const m of all){
-   const owned=data.medals.has(m.id),ready=eligible(m),tile=el('article','kpe-medal-tile'+(!owned&&!ready?' is-locked':''));tile.dataset.rarity=m.rarity;
+   const owned=data.medals.has(m.id),ready=eligible(m),tile=el('article','kpe-medal-tile'+(!owned&&!ready?' is-locked':''));tile.dataset.rarity=m.rarity;tile.dataset.medalId=m.id;tile.dataset.medalState=owned?'owned':ready?'ready':'locked';
    const val=Math.max(0,Math.min(m.target,Number(data.stats[m.metric])||0));
    const progress=el('progress');progress.max=m.target;progress.value=owned?m.target:val;progress.setAttribute('aria-label',m.label+' '+(owned?m.target:val)+' из '+m.target);
    tile.append(el('span','kpe-rarity',cat.rarities[m.rarity]),medalImage(m),el('strong','',m.label),el('small','',m.description+' · '+(owned?m.target:val)+' / '+m.target),progress);
@@ -241,9 +241,9 @@ function confirmBuy(p,data,uid){
  return new Promise(resolve=>{
   if(!prod()||viewer()!==uid||data.balance<p.cost){resolve(false);return;}
   const d=el('dialog','kpe-confirm');d.setAttribute('aria-label','Подтвердить покупку');
-  const finish=yes=>{if(d.open)d.close();d.remove();resolve(yes&&viewer()===uid);};
+  let settled=false;const finish=yes=>{if(settled)return;settled=true;const accepted=yes&&viewer()===uid;if(d.open)d.close();d.remove();resolve(accepted);};
   d.append(el('h3','','Подтвердить покупку'),el('p','',p.label+' · '+p.cost+' AniCoin'),el('p','','Останется '+(data.balance-p.cost)+' AniCoin.'),button('Отмена',()=>finish(false)),button('Купить и надеть',()=>finish(true),'kpe-button kpe-primary'));
-  d.addEventListener('cancel',e=>{e.preventDefault();finish(false);});d.addEventListener('close',()=>{d.remove();resolve(false);},{once:true});
+  d.addEventListener('cancel',e=>{e.preventDefault();finish(false);});d.addEventListener('close',()=>finish(false),{once:true});
   document.body.append(d);try{d.showModal();d.querySelector('button')?.focus();}catch{d.remove();resolve(false);}
  });
 }
@@ -256,7 +256,7 @@ function renderShop(details,data,uid,opts){
   grid.replaceChildren();for(const b of tabs)b.setAttribute('aria-pressed',String(b.dataset.kpeTab===filter));
   const selected=cat.products.filter(p=>filter==='owned'?data?.owned.has(p.id):p.kind===filter);
   for(const p of selected){
-   const tile=el('article','kpe-product'),owned=data?.owned.has(p.id),equipped=owned&&data.appearance[p.kind==='cursor'?'cursor_id':'effect_id']===p.id;
+   const tile=el('article','kpe-product'),owned=data?.owned.has(p.id),equipped=owned&&data.appearance[p.kind==='cursor'?'cursor_id':'effect_id']===p.id;tile.dataset.productId=p.id;
    if(p.kind==='cursor'){const sample=el('div','kpe-cursor-sample');sample.dataset.kpeCursor=p.art;const i=el('img');i.src='/assets/profile-cursors/'+p.art+'.svg';i.alt='';sample.append(i,el('span','','Наведи для примерки'));tile.append(sample);}
    else tile.append(miniCard({background:'night',effect_id:p.id},opts.avatar,opts.name));
    tile.append(el('strong','',p.label),el('small','',owned?'Уже куплено':p.cost+' AniCoin'));

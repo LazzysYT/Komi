@@ -99,3 +99,20 @@
 }
 @keyframes kpe-petals{from{transform:translate(-3px,-5px) rotate(-8deg);opacity:.65}to{transform:translate(8px,7px) rotate(5deg);opacity:1}}
 @keyframes kpe-moon{from{opacity:.32;transform:scale(.96)}to{opacity:.85;transform:scale(1.08)}}
+
+/* Distinct rare-to-mythic reveal trajectories, all disabled in reduced-motion mode. */
+.kpe-award[data-rarity=legendary]{box-shadow:0 0 70px #c99b3a35}
+.kpe-award[data-rarity=mythic]{box-shadow:0 0 85px #d4446240;border-color:#f0bd81}
+@media(prefers-reduced-motion:no-preference){
+ .kpe-award[data-rarity=uncommon] .kpe-medal-art{animation-name:kpe-uncommon}
+ .kpe-award[data-rarity=rare] .kpe-medal-art{animation-name:kpe-rare}
+ .kpe-award[data-rarity=legendary] .kpe-medal-art{animation-name:kpe-legend}
+ .kpe-award[data-rarity=mythic] .kpe-medal-art{animation-name:kpe-mythic}
+ .kpe-award[data-rarity=rare] .kpe-award-stage::before{animation-name:kpe-ring-reveal}
+ .kpe-award[data-rarity=mythic] .kpe-award-stage::before{background:radial-gradient(circle,#f1cc8c80,#b4355455 35%,transparent 65%);animation-name:kpe-ring-reveal}
+}
+@keyframes kpe-uncommon{0%{opacity:0;transform:translateY(16px) scale(.74)}70%{opacity:1;transform:translateY(-3px) scale(1.06)}100%{transform:translateY(0) scale(1)}}
+@keyframes kpe-rare{0%{opacity:0;transform:scale(.4) rotate(-30deg)}64%{opacity:1;transform:scale(1.12) rotate(3deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes kpe-legend{0%{opacity:0;transform:scale(.45) rotateY(-100deg)}45%{opacity:1;transform:scale(1.08) rotateY(10deg);filter:drop-shadow(0 0 18px #ffe3a4)}100%{transform:scale(1) rotateY(0)}}
+@keyframes kpe-mythic{0%{opacity:0;transform:scale(.3) rotate(-25deg) rotateY(140deg)}45%{opacity:1;transform:scale(1.15) rotate(5deg) rotateY(0);filter:drop-shadow(0 0 22px #f1a07a)}75%{transform:scale(.98) rotate(-2deg)}100%{transform:scale(1) rotate(0)}}
+@keyframes kpe-ring-reveal{0%{opacity:0;transform:scale(.1)}45%{opacity:1;transform:scale(1.35)}100%{opacity:.8;transform:scale(1)}}
