@@ -659,3 +659,68 @@
  .kc-page .kc-grid .kc-card.kc-owned:not(.kc-flipped):hover .kc-portrait[data-kc-art-ready]{transform:scale(1.30)}
 }
 @media(forced-colors:active){.kc-page .kc-world-shelves .kc-world-window[aria-pressed=true]{outline:2px solid Highlight;outline-offset:-3px}}
+
+/* Compact album: no duplicated progress or repeated locked-card titles.
+   Scoped to the album, never to pack openings or the full-screen viewer. */
+.kc-page.kc-clean-album .kc-header{padding:0;margin:0 0 12px}
+.kc-page.kc-clean-album .kc-header h1{border:0;padding:0;font-size:clamp(25px,3vw,34px)}
+.kc-page.kc-clean-album .kc-tabs{margin-bottom:14px}
+.kc-page.kc-clean-album .kc-world-shelves{margin-bottom:14px;gap:10px}
+.kc-page.kc-clean-album .kc-world-shelves .kc-world-window{min-height:116px;max-height:142px;border-radius:20px}
+.kc-page.kc-clean-album .kc-world-window .kc-shelf-hero{height:165%;width:64%;right:-4%}
+.kc-page.kc-clean-album .kc-series{padding:13px 16px;gap:12px;margin-bottom:12px;background:#131316;border:1px solid #ffffff14;border-radius:18px;flex-wrap:nowrap}
+.kc-page.kc-clean-album .kc-series h2{margin:0 0 3px;font-size:clamp(16px,2vw,22px);letter-spacing:-.025em}
+.kc-page.kc-clean-album .kc-series .kc-muted{font-size:12px}
+.kc-page.kc-clean-album .kc-series-info{min-width:0;flex:1}
+.kc-page.kc-clean-album .kc-series .kc-progress{height:4px;margin-top:7px}
+.kc-page.kc-clean-album .kc-series .kc-primary{flex:none;min-height:42px;border-radius:999px;padding:9px 16px;font-size:12px}
+.kc-page.kc-clean-album .kc-tools.kc-album-tools{margin:0 0 12px;padding:0;background:none;border:0;gap:8px}
+.kc-page.kc-clean-album .kc-tools-head h3{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:17px}
+.kc-order-note{font-size:11px;font-weight:550;letter-spacing:0;color:#a1a1aa}
+.kc-page.kc-clean-album .kc-tools-controls{grid-template-columns:minmax(0,1fr) minmax(140px,185px);gap:8px}
+.kc-clean-album :is(.kc-tools-controls label,.kc-tools-hint,.kc-grid .kc-locked .kc-card-info strong){
+ position:absolute!important;width:1px;height:1px;padding:0!important;margin:-1px!important;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0!important;
+}
+.kc-page.kc-clean-album .kc-tools-options button{min-height:38px;border-radius:999px}
+.kc-page.kc-clean-album .kc-search-field,.kc-page.kc-clean-album .kc-rarity-control select{border-color:#ffffff20;border-radius:14px}
+.kc-page.kc-clean-album .kc-rarity-control select{font-size:14px}
+.kc-page.kc-clean-album .kc-grid .kc-card{border-radius:18px;box-shadow:none}
+.kc-page.kc-clean-album .kc-grid .kc-card::after{display:none}
+.kc-page.kc-clean-album .kc-grid .kc-card.kc-locked{border-color:color-mix(in srgb,var(--kc-tier) 23%,#202024)}
+.kc-page.kc-clean-album .kc-grid .kc-card.kc-locked .kc-art{background:radial-gradient(ellipse at 50% 38%,color-mix(in srgb,var(--kc-tier) 10%,#29292e),#17171a 58%,#101013 90%)}
+.kc-page.kc-clean-album .kc-grid .kc-card.kc-locked .kc-art::before{display:none}
+.kc-page.kc-clean-album .kc-grid .kc-card-register{display:none}
+.kc-page.kc-clean-album .kc-grid .kc-card .kc-lock span{width:32px;height:32px;border-radius:50%;background:#111114b8;border-color:#ffffff20}
+.kc-page.kc-clean-album .kc-grid .kc-card .kc-card-info{margin:0;padding:24px 12px 12px;gap:5px;border-radius:0;background:linear-gradient(180deg,transparent,#101013e8 55%,#101013)}
+.kc-page.kc-clean-album .kc-grid .kc-card:not(.kc-locked) .kc-card-info strong{color:#f7f7f8;font-size:clamp(13px,1.25vw,18px);line-height:1.14}
+.kc-page.kc-clean-album .kc-grid .kc-card-details .kc-rarity{font-size:11px}
+.kc-page.kc-clean-album .kc-grid .kc-card-details small{display:none}
+.kc-page.kc-clean-album .kc-grid .kc-card.kc-locked .kc-card-details{justify-content:center}
+.kc-page.kc-clean-album .kc-grid .kc-inspect{border-radius:50%;width:36px;min-height:36px;padding:0;justify-content:center;background:#131316d9;border-color:#ffffff29;box-shadow:none}
+.kc-page.kc-clean-album .kc-grid .kc-inspect span{display:none}
+.kc-page.kc-clean-album .kc-grid .kc-inspect svg{width:15px;height:15px}
+.kc-page.kc-clean-album .kc-grid .kc-inspect[aria-expanded=true]{background:#2a2a30;border-color:#ffffff70}
+.kc-page.kc-clean-album .kc-grid .kc-card.kc-flipped .kc-card-back{border-radius:15px}
+.kc-page.kc-clean-album .kc-grid .kc-card:focus-visible{outline:2px solid white;outline-offset:2px}
+.kc-extras{margin-top:18px;border:1px solid #ffffff17;border-radius:18px;background:#111114;overflow:hidden}
+.kc-page .kc-extras-toggle{width:100%;display:flex;align-items:center;justify-content:space-between;min-height:46px;padding:12px 15px;background:transparent;border-radius:0;text-align:left}
+.kc-page .kc-extras-toggle:focus-visible{outline-offset:-3px}
+.kc-extras-toggle[aria-expanded=true] svg{transform:rotate(180deg)}
+.kc-extras #kc-extras-body{padding:10px 12px 0}
+.kc-extras #kc-extras-body[hidden]{display:none!important}
+@media(max-width:600px){
+ .kc-page.kc-clean-album .kc-world-shelves .kc-world-window{min-height:94px;border-radius:18px}
+ .kc-page.kc-clean-album .kc-world-window .kc-shelf-hero{width:70%;right:-8%}
+ .kc-page.kc-clean-album .kc-series{padding:10px 12px}
+ .kc-page.kc-clean-album .kc-series .kc-primary{font-size:11px;padding:8px 11px}
+ .kc-page.kc-clean-album .kc-tools-controls{grid-template-columns:minmax(0,1fr) minmax(112px,36%)}
+ .kc-page.kc-clean-album .kc-tools-controls select{font-size:12px;padding-inline:7px}
+ .kc-page.kc-clean-album .kc-search-field{padding-inline-start:8px;gap:5px;grid-template-columns:auto minmax(0,1fr) auto}
+ .kc-page.kc-clean-album .kc-search-field:has(button[hidden]){grid-template-columns:auto minmax(0,1fr)}
+ .kc-page.kc-clean-album .kc-search-field input{font-size:16px}
+ .kc-page.kc-clean-album .kc-grid .kc-card{border-radius:15px}
+ .kc-page.kc-clean-album .kc-grid .kc-card .kc-card-info{padding:18px 8px 9px}
+ .kc-page.kc-clean-album .kc-grid .kc-card-details .kc-rarity{font-size:10px}
+}
+@media(max-width:360px){.kc-page.kc-clean-album .kc-tools-controls{grid-template-columns:minmax(0,1fr)}}
+@media(forced-colors:active){.kc-page.kc-clean-album .kc-grid .kc-card{border:1px solid CanvasText}}

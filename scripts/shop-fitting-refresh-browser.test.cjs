@@ -41,9 +41,21 @@ test('shop: products first, accessible filters, current/trial comparison and no 
   assert.equal(await sort.isVisible(),true);
   await sort.selectOption('price-up');
   assert.equal(await sort.inputValue(),'price-up');
+  assert.equal(await sort.isVisible(),true,'sort repaint keeps the filter disclosure open');
   assert.equal(new URL(page.url()).searchParams.get('shop_sort'),'price-up');
   await filters.locator('summary').click();
   assert.equal(await sort.isVisible(),false);
+  // Repaint in the same task, before the browser can deliver the toggle event.
+  await page.evaluate(()=>{
+   const details=document.querySelector('.sv14-filters');
+   details.open=true;window.renderAniCoinShop();
+  });
+  assert.equal(await sort.isVisible(),true,'same-task repaint keeps native open state');
+  await page.evaluate(()=>{
+   const details=document.querySelector('.sv14-filters');
+   details.open=false;window.renderAniCoinShop();
+  });
+  assert.equal(await sort.isVisible(),false,'same-task repaint keeps native closed state');
   await page.getByText('Сбросить фильтры',{exact:true}).count().then(async n=>{if(n)await page.getByText('Сбросить фильтры',{exact:true}).click();});
   await filters.locator('summary').click();await sort.selectOption('default');await filters.locator('summary').click();
   await page.getByRole('button',{name:'Титулы',exact:true}).click();

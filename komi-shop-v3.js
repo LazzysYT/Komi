@@ -379,6 +379,9 @@ function mount(section,ctx){
 }
 function render(container,ctx){
  if(!container)return;latestCtx=ctx;
+ // Preserve native filter state when replacing the storefront after hydration.
+ const liveFilters=container.querySelector?.('#shop .sv14-filters');
+ if(liveFilters&&typeof liveFilters.open==='boolean')state.filtersOpen=liveFilters.open;
  if(!state.routeRead||(root.location?.href&&root.location.href!==state.routeSignature)){route(true);state.routeRead=true;}
  const owner=ctx.owner||'';
  const previousSearch=container.querySelector?.('#shop [data-v7-search]');

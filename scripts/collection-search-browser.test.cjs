@@ -84,10 +84,14 @@ test('album search: opened names only, rarity, IME, reset, jump and safe owner c
   assert.equal(await cards.count(),0);
   assert.equal(await page.locator('.kc-tools script').count(),0);
 
-  await page.locator('[data-kc-action="slot-hinami"]').click();
+  const extras=page.getByRole('button',{name:'Альбом и журнал'});
+   assert.equal(await extras.getAttribute('aria-expanded'),'false');
+   await extras.click();
+   await page.locator('[data-kc-action="slot-hinami"]').click();
   assert.equal(await query.inputValue(),'');
   assert.equal(await cards.count(),18);
   assert.equal(await result.locator('[data-kc-card="hinami"]').evaluate(el=>el===document.activeElement),true);
+   assert.equal(await extras.getAttribute('aria-expanded'),'true');
   await page.getByRole('button',{name:'Закрытые',exact:true}).click();
   assert.equal(await cards.count(),15);
   await page.locator('[data-kc-action="slot-kaneki"]').click();
