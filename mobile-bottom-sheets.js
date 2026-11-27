@@ -141,7 +141,7 @@
             item.setAttribute('aria-pressed', String(option.value === select.value));
             item.addEventListener('click', () => {
                 const changed = option.value !== select.value;
-                close(!changed);
+                close(true);
                 if (changed && select.isConnected) {
                     select.value = option.value;
                     select.dispatchEvent(new Event('change',{bubbles:true}));

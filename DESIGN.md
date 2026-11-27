@@ -320,3 +320,10 @@ Use scene motifs, not clips or heavy full-bleed videos. Selected heroes have ind
 
 ### Physical opening and places behind heroes
 Use the actual wrapper print on both the crimp strip and pouch. Show a short pull and recoil, exposed lining, a stack sliding out, then the three identical backs. The optional drag is not required; button, keyboard, and skip reach the same issued reward. Under reduced motion, jump straight to the choice. Character effects should imply a recognizable place (rain beyond the café windows, water winding through a mountain valley, tiled rooftops under the wall) before adding a personal mark. Only owned/revealed artwork gets the panorama; keep the collection grid static at rest.
+
+### Кинозал Komi
+The watch page keeps the moving frame as its only saturated surface. Use a short title and episode line above the frame, an adjacent playback strip with one white next action, and quieter list, Party and theater actions below it. Show source controls and recoverability outside an external iframe; do not imply we control it. The episode rail uses genuine frames or a deliberately numbered fallback, distinct special episodes and progress only from known timing.
+
+Reference refinement: keep the film artwork visually dominant, like a quiet personal theater. The episode rail should read like a list rather than a wall of cards; save outlines for focus and the current episode. The native control overlay is legible without extending a separate chrome block, and discussion starts on a fine divider with comfortable line length. Preserve decorated/pinned comments and the external provider's own UI.
+
+Desktop reference layout: open with the film frame and rail in the same row. Place the title and a compact playback strip directly beneath, within a normal-height desktop viewport; on phones retain the short identifying header above the picture. Keep source interaction outside cross-origin video, and preserve the native player's separate controls.

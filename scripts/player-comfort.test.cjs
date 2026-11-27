@@ -72,7 +72,7 @@ test('native end handler does not skip the five-second cancel countdown',()=>{
     assert.match(ux,/remaining -= 1/);
     assert.match(ux,/clearNextCountdown\(context\)/);
     assert.match(ux,/cancel\.addEventListener\('click'/);
-    assert.match(ux,/root\.openWatchModal\(context\.animeId, context\.season, context\.index \+ 1\)/);
+    assert.match(ux,/root\.openWatchModal\(context\.animeId, context\.season, context\.index \+ 1, null, null, \{playNative:true\}\)/);
 });
 test('native-only seek and PiP paths keep provider iframe untouched',()=>{
     const ux=source('player-ux.js');

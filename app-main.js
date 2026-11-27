@@ -5648,11 +5648,12 @@ async function komiLoadCatalogPages(attempt = 0) {
             return {
                 supplemental: supplemental.map(value => verified && value),
                 mainCount: verified ? mainCount : episodes.length,
-                summary: verified ? '64 серии + ' + extraCount + ' дополнительных выпуска STEPonee' : ''
+                extraCount: verified ? extraCount : 0,
+                summary: verified ? '64 основные серии · ' + extraCount + ' доп. выпуска STEPonee' : ''
             };
         }
 
-        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null, requestedEpisodeNumber = null) {
+        async function openWatchModal(id, selectedSeason = null, selectedEpIdx = 0, requestedSource = null, requestedEpisodeNumber = null, watchOptions = null) {
             // Keep watch-specific CSS out of the first paint critical path.
             const watchStyle=document.querySelector('link[data-komi-deferred-style="watch"]');
             if (watchStyle) watchStyle.media='all';
@@ -5670,8 +5671,21 @@ async function komiLoadCatalogPages(attempt = 0) {
                 ? (komiWatchSourceIntent?.animeId === String(id) ? komiWatchSourceIntent.name : null) ||
                     document.getElementById('komiWatchSourceSelect')?.value || null : null;
             const sourceRequest = requestedSource ?? continuingSource;
+            const previousControl = document.activeElement;
+            const returnWatchFocus = previousControl?.closest('#watchModal') &&
+                (previousControl.matches('.komi-watch-navbtn.primary') ? '.komi-player-support .komi-watch-navbtn.primary' :
+                previousControl.matches('.komi-watch-navbtn') ? '.komi-player-support .komi-watch-navbtn:not(.primary)' :
+                previousControl.matches('#komiWatchSourceSelect') ? '#komiWatchSourceSelect' :
+                previousControl.matches('.komi-mobile-watch-source') ? '.komi-mobile-watch-source' :
+                previousControl.matches('.komi-episode-number') ? (previousControl.closest('#komiMobileSheet')
+                    ? '.komi-mobile-watch-episodes' : '.komi-episode-number[aria-current="true"]') : null);
             closeWatchModal(true, true);
             const requestToken = komiDetailOpenToken;
+            const showWatchPending = (body, message) => {
+                body.innerHTML = '<button class="modal-close" aria-label="Закрыть просмотр" data-komi-onclick="closeWatchModal()">×</button>' +
+                    '<div class="komi-cinema-pending"><span aria-hidden="true">Кинозал Komi</span><div class="komi-cinema-pending-screen"><p role="status">' +
+                    escapeFriendHtml(message) + '</p></div></div>';
+            };
             const presentWatch = () => {
                 document.getElementById('watchModal').classList.add('active');
                 document.documentElement?.classList.remove('komi-watch-entry');
@@ -5679,7 +5693,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (!anime.komiDetailsLoaded || anime.komiDetailsLoadedAt !== anime.komiCardUpdatedAt) {
                 const modal = document.getElementById('watchModal');
                 const body = document.getElementById('watchModalContent');
-                body.innerHTML = '<button class="modal-close" data-komi-onclick="closeWatchModal()">×</button><p role="status" style="padding:35px">Загружаем описание и серии…</p>';
+                showWatchPending(body, 'Загружаем описание и серии…');
                 presentWatch();
                 try {
                     await ensureKomiAnimeDetails(anime);
@@ -5748,8 +5762,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             );
             if (tryPartner) {
                 const pending=document.getElementById('watchModalContent');
-                pending.innerHTML='<button class="modal-close" data-komi-onclick="closeWatchModal()" aria-label="Закрыть">×</button>' +
-                    '<p role="status" style="padding:35px">Подбираем доступный плеер для серии…</p>';
+                showWatchPending(pending, 'Подбираем плеер для серии…');
                 presentWatch();
                 const signedUrl=await komiAniVibeEpisodeSource(
                     Number(anime.shikimoriId || anime.id),
@@ -5841,7 +5854,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                             <div class="player-wrapper">${playerHtml}</div>
                             <div class="komi-player-heading">
                                 <div><h1>${escapeFriendHtml(anime.title)}</h1>
-                                    <p>${seasonNumbers.length > 1 ? 'Сезон ' + activeSeason + ' · ' : ''}${currentEpisodeLabel}<span class="komi-current-duration"></span></p>
+                                    <p>${'Сезон ' + activeSeason + ' · '}${currentEpisodeLabel}<span class="komi-current-duration"></span></p>
                                 </div>
                                 <div class="komi-episode-navigation" role="group" aria-label="Навигация по сериям">
                                     <button type="button" class="komi-watch-navbtn" aria-label="Предыдущая серия" ${hasPrevious?'':'disabled'} data-komi-onclick="openWatchModal('${anime.id}',${activeSeason},${activeIndex - 1})">Предыдущая</button>
@@ -5871,8 +5884,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                                 <div id="komiPlayerRecovery" class="komi-player-notice" hidden>
                                     <p id="komiPlayerStatus" role="status"></p>
                                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
-                                        <button id="komiRetryPlayer" type="button" class="btn-secondary">Повторить загрузку</button>
-                                        ${alternateSource ? '<button id="komiAlternatePlayer" type="button" class="btn-secondary">Сменить источник</button>' : ''}
+                                        <button id="komiRetryPlayer" type="button" class="btn-secondary">Повторить</button>
+                                        ${alternateSource ? '<button id="komiAlternatePlayer" type="button" class="btn-secondary">Другой источник</button>' : ''}
                                         ${isExternalPlayer ? '<a class="btn-secondary" target="_blank" rel="noopener" href="' + escapeFriendHtml(activeUrl) + '">Открыть у провайдера ↗</a>' : ''}
                                     </div>
                                 </div>
@@ -5880,7 +5893,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                         </div>
                         <aside class="komi-watch-sidebar" aria-label="Список серий">
                             <div class="komi-watch-side-heading">
-                                <h3>Серии <span>${currentSeasonEpisodes.length}</span></h3>
+                                <h3>Серии <span>${episodePresentation.mainCount}</span>${episodePresentation.extraCount ? '<small class="komi-cinema-extra-count" aria-label="Дополнительных выпусков: '+episodePresentation.extraCount+'">+'+episodePresentation.extraCount+'</small>' : ''}</h3>
                                 <div class="komi-episode-search">
                                     <input id="komiEpisodeSearch" type="search" inputmode="numeric" aria-label="Найти серию по номеру" class="form-control" placeholder="Найти серию" data-komi-oninput="komiFindEpisode(this.value)">
                                     <button id="komiClearEpisodeSearch" type="button" aria-label="Очистить поиск серии" hidden>×</button>
@@ -5952,7 +5965,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 playSound();
                 createWatchPartyFromAnime(anime.id, '', false, sourceOrigin.index, sourceOrigin.name);
             });
-            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl, progressIndex);
+            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl, progressIndex, watchOptions?.playNative === true);
             const watchedOwner = currentUser?.authUserId || null;
             const watchedLocalOwner = watchedOwner || currentUser?.username || '';
             const watchContext = window.KomiPlayerUX?.mount({
@@ -5965,6 +5978,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 index:activeIndex,
                 hasNext,
                 displayNumber,
+                savedEpisodeProgress: resuming ? {time:previousProgress.time,duration:previousProgress.duration} : null,
                 episodeSummary: episodePresentation.summary,
                 // Use the same Shikimori-to-MAL cross-reference as AniList artwork.
                 episodeArtworkId: Number(anime.shikimoriId || 0),
@@ -5995,6 +6009,11 @@ async function komiLoadCatalogPages(attempt = 0) {
             renderAnimeExtras(anime, seasonNumbers);
             window.KomiComments?.mount(anime.id, {season:activeSeason, episodeNumber:displayNumber});
             window.KomiMobileSheets?.ensureWatchDock?.();
+            if (returnWatchFocus && document.activeElement === document.body) {
+                const control = document.querySelector('#watchModalContent ' + returnWatchFocus);
+                if (control?.getClientRects().length && !control.disabled && !control.closest('[hidden]'))
+                    control.focus({preventScroll:true});
+            }
             void komiMountFollowButton(anime);
         }
 

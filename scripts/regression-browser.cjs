@@ -625,7 +625,7 @@ async function checkNotifications(page) {
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       supportGap:support.top-player.bottom,titleGap:heading.top-support.bottom,
+       supportGap:support.top-(innerWidth>1050?heading.bottom:player.bottom),titleGap:innerWidth>1050?heading.top-player.bottom:player.top-heading.bottom, nextInDock:!!stage.querySelector(".komi-player-support .komi-watch-navbtn.primary"),
        sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
@@ -637,13 +637,14 @@ async function checkNotifications(page) {
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
    assert.ok(cinema.supportGap>=-2 && cinema.supportGap<=48,JSON.stringify(cinema));
+   assert.equal(cinema.nextInDock,true,'Next must be in the playback strip');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
    // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
    assert.ok(width>1050 ? cinema.sidebarBesideVideo : (cinema.sidebarHidden || cinema.sidebarAfterVideo),JSON.stringify(cinema));
    assert.equal(cinema.color,'rgb(255, 255, 255)');
-   assert.ok(cinema.background==='rgb(36, 36, 41)' || cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(32, 32, 34)' || cinema.background==='rgb(19, 19, 22)' || (cinema.background==='rgba(255, 69, 79, 0.1)' && cinema.border==='rgb(255, 69, 79)'),JSON.stringify(cinema));
-   assert.notEqual(cinema.before,'none','Active episode must have a visible indicator');
-   assert.notEqual(cinema.after,'none','Episode progress must remain visible');
+   assert.ok(cinema.background==='rgb(36, 36, 39)' || cinema.background==='rgb(36, 36, 41)' || cinema.background==='rgb(32, 32, 36)' || cinema.background==='rgb(32, 32, 34)' || cinema.background==='rgb(19, 19, 22)' || (cinema.background==='rgba(255, 69, 79, 0.1)' && cinema.border==='rgb(255, 69, 79)'),JSON.stringify(cinema));
+   assert.ok(cinema.before!=='none'||cinema.border==='rgb(204, 204, 208)','Active episode must have a visible outline');
+   assert.equal(await page.locator('.komi-episode-number.active .komi-cinema-progress').count(),1);
    await page.waitForSelector(width<=767 ? '.komi-mobile-watch-episodes' : '.komi-episodes-toggle');
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
@@ -659,6 +660,7 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
    assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
+   await page.screenshot({path:path.join(output,`cinema-room-${width}.png`)});
    if (width <= 767) {
      await page.locator('.komi-mobile-watch-episodes').click();
      await page.locator('#komiMobileSheet.is-open .komi-watch-sidebar').waitFor();
@@ -724,13 +726,13 @@ async function checkNotifications(page) {
      const actions=document.querySelector('.komi-watch-quick-actions').getBoundingClientRect();
      return {recoveryTop:recovery.top,actionsBottom:actions.bottom};
    });
-   assert.ok(recoveryLayout.recoveryTop>=recoveryLayout.actionsBottom-1,JSON.stringify(recoveryLayout));
-   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Повторить загрузку',exact:true}).click();
+   assert.ok(recoveryLayout.recoveryTop<recoveryLayout.actionsBottom,JSON.stringify(recoveryLayout));
+   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Повторить',exact:true}).click();
    await page.waitForFunction(()=>!window.komiFailedTestVideo.isConnected && !!document.getElementById('animeVideoPlayer'));
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
    assert.equal(await page.evaluate(()=>getKomiProgress('1').time),42);
    await page.evaluate(()=>document.getElementById('animeVideoPlayer').dispatchEvent(new Event('error')));
-   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Сменить источник',exact:true}).click();
+   await page.locator('#komiPlayerRecovery').getByRole('button',{name:'Другой источник',exact:true}).click();
    const providerFrame = page.locator('#watchModal .player-wrapper iframe');
    await providerFrame.waitFor();
    assert.equal(await playback.count(),0);

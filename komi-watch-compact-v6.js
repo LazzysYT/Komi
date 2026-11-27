@@ -34,13 +34,17 @@
       summaryLine.append(rating);
     }
 
-    const navigation = controls.querySelector('.komi-episode-navigation');
+    stage.classList.add('komi-cinema-v7');
+    const label = create('span','komi-cinema-kicker','Кинозал Komi');
+    heading.firstElementChild?.prepend(label);
+    const navigation = controls.querySelector('.komi-episode-navigation') || heading.querySelector('.komi-episode-navigation');
     if (navigation) {
       navigation.querySelectorAll('.komi-watch-navbtn').forEach((btn, index) => {
-        btn.textContent = index ? 'Следующая' : 'Предыдущая';
+        btn.replaceChildren(create('span','komi-cinema-nav-glyph',index ? '›' : '‹'));
+        btn.firstChild.setAttribute('aria-hidden','true');
+        if (index) btn.prepend(create('span','komi-cinema-next-text','Следующая'));
         btn.title = index ? 'Следующая серия' : 'Предыдущая серия';
       });
-      heading.append(navigation);
     }
 
     const actions = create('div', 'komi-watch-quick-actions');
@@ -87,17 +91,31 @@
       const dub = create('button','komi-mobile-watch-source','Озвучка');
       const episodes = create('button','komi-mobile-watch-episodes','Серии');
       for (const btn of [dub,episodes]) { btn.type='button'; btn.setAttribute('aria-haspopup','dialog'); btn.setAttribute('aria-controls','komiMobileSheet'); }
-      dub.addEventListener('click',()=>void root.KomiMobileSheets.openSource(dub));
-      episodes.addEventListener('click',()=>void root.KomiMobileSheets.openEpisodes(episodes));
       mobileDock.append(episodes,dub);
     }
     if (mobileDock) {
       mobileDock.classList.add('komi-player-support');
       if (source) mobileDock.prepend(source);
+      const sourceButton = mobileDock.querySelector('.komi-mobile-watch-source');
+      const selected = source?.querySelector('select')?.selectedOptions[0]?.textContent.trim();
+      if (sourceButton && selected) {
+        const studio = selected.replace(/^Озвучка\s+/u,'');
+        sourceButton.replaceChildren(create('span','komi-cinema-dock-caption','Озвучка'),create('strong','komi-cinema-dock-value',studio));
+        sourceButton.setAttribute('aria-label','Озвучка: '+studio);
+      }
+      if (navigation) mobileDock.append(navigation);
+      const help = mobileDock.querySelector('#komiPlayerHelp');
+      if (help) {
+        help.setAttribute('aria-label','Видео не работает?');
+        help.title='Видео не работает?';
+        help.replaceChildren(create('span','komi-cinema-help-icon','?'));
+        help.firstChild.setAttribute('aria-hidden','true');
+        mobileDock.append(help);
+      }
       const playerRow = wrapper.parentElement === stage ? wrapper : wrapper.closest('.komi-watch-main');
       if (playerRow?.parentElement === stage) playerRow.after(mobileDock);
       else stage.append(mobileDock);
-    } else if (source && menu) menu.append(source);
+    } else { if (source && menu) menu.append(source); if (navigation) heading.append(navigation); }
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
     const recovery = content.querySelector('#komiPlayerRecovery');
@@ -111,7 +129,18 @@
     const drawer = controls.querySelector('.komi-episodes-toggle');
     if (drawer) actions.append(drawer);
     const share = controls.querySelector('.komi-cinema-share');
-    if (share) { share.textContent = '↗'; share.title = 'Поделиться серией'; actions.append(share); }
+    if (share) {
+      const arrow = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      arrow.setAttribute('viewBox','0 0 24 24');
+      arrow.setAttribute('width','17'); arrow.setAttribute('height','17');
+      arrow.setAttribute('aria-hidden','true'); arrow.setAttribute('focusable','false');
+      const glyph = document.createElementNS('http://www.w3.org/2000/svg','path');
+      glyph.setAttribute('d','M6 18 18 6M9 6h9v9'); glyph.setAttribute('stroke','currentColor');
+      glyph.setAttribute('stroke-width','2'); glyph.setAttribute('stroke-linejoin','round');
+      glyph.setAttribute('stroke-linecap','round'); glyph.setAttribute('fill','none');
+      arrow.append(glyph); share.replaceChildren(arrow);
+      share.title = 'Поделиться серией'; actions.append(share);
+    }
 
     // Move only remaining original actions; keep their own registered listeners.
     if (menu) {
@@ -127,7 +156,8 @@
     const feedback = controls.querySelector('.komi-cinema-action-status');
     if (feedback) actions.append(feedback);
 
-    stage.append(heading, actions);
+    stage.prepend(heading);
+    stage.append(actions);
     controls.classList.add('komi-deck-parked');
     if (titleActions && !titleActions.children.length) titleActions.remove();
 
@@ -138,6 +168,15 @@
       sideHead.after(filters);
       filters.append(search);
       if (views) filters.append(views);
+    }
+
+    const grid = sidebar.querySelector('.komi-episode-number-grid');
+    const firstExtra = grid?.querySelector('.komi-episode-number[data-supplemental-label]:not([data-supplemental-label=""])');
+    if (firstExtra) {
+      const divider = create('div','komi-cinema-extra-divider','Дополнительные выпуски');
+      divider.setAttribute('role','heading');
+      divider.setAttribute('aria-level','4');
+      firstExtra.before(divider);
     }
 
     // Mirror the verified, account-scoped sidebar avatar as it loads or changes.

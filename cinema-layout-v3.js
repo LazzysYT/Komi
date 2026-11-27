@@ -243,6 +243,16 @@
         });
       });
   }
+  function paintEpisodeProgress(context, node=context.grid?.querySelector('.komi-episode-number.active .komi-cinema-progress')) {
+    if (!node) return;
+    const live=context.video;
+    const measured=Number(live?.duration);
+    const validMedia=Number.isFinite(measured)&&measured>0&&Number(live?.currentTime)>0;
+    const time=validMedia?Number(live.currentTime):Number(context.savedEpisodeProgress?.time);
+    const duration=validMedia?measured:Number(context.savedEpisodeProgress?.duration);
+    node.hidden=!(Number.isFinite(duration)&&duration>0&&Number.isFinite(time)&&time>0);
+    if(!node.hidden) node.value=Math.min(100, Math.max(0, time/duration*100));
+  }
   function makeEpisodeThumb(context,index,label) {
     const frame=document.createElement('span');
     frame.className='komi-episode-preview komi-episode-thumb';
@@ -251,6 +261,13 @@
     number.className='komi-episode-thumb-badge';
     number.textContent=label;
     frame.append(number);
+    if(index===context.index){
+      const progress=document.createElement('progress');
+      progress.className='komi-cinema-progress';
+      progress.max=100;
+      frame.append(progress);
+      paintEpisodeProgress(context, progress);
+    }
     paintWatchEpisodeFrame(context,index,frame);
     return frame;
   }
@@ -361,6 +378,7 @@
     context.sidebar = sidebar;
     context.grid = grid;
     context.title = heading.querySelector('h1')?.textContent || 'KomiAnime';
+    context.savedEpisodeProgress=settings.savedEpisodeProgress || null;
     context.episodeMeta = Array.isArray(settings.episodeMeta) ? settings.episodeMeta : [];
     context.episodeArtworkId = Number(settings.episodeArtworkId || settings.animeId || context.animeId);
     context.externalPreviews = [];
@@ -391,7 +409,8 @@
     };
     if (context.video) {
       if (poster) context.video.poster = poster;
-      context.video.addEventListener('durationchange', paintDuration);
+      context.video.addEventListener('durationchange', paintDuration,{signal:context.abort.signal});
+      context.video.addEventListener('timeupdate', ()=>paintEpisodeProgress(context),{signal:context.abort.signal});
     }
     paintDuration();
     current = context;
