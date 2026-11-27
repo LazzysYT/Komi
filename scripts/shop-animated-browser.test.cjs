@@ -12,11 +12,12 @@ test('animated shop: rarity, sets, dedicated slots and responsive layout',async(
   await page.goto(origin+'/shop');await page.evaluate(async()=>{window.currentView='shop';window.KomiPremium={idForUsername:()=> 'fixture'};await window.KomiShopCatalog.checkPricing({rpc:async name=>({data:name==='komi_shop_living_revision'?window.KomiShopCatalog.revision:window.KomiShopCatalog.animatedRevision})});window.renderAniCoinShop=()=>window.KomiShopV3.render(document.querySelector('#mainContainer'),{owner:'fixture',store:{owned:[],balance:500},displayName:'Komi'});window.renderAniCoinShop();});
   const shop=page.locator('#shop');assert.equal(await shop.locator('.sv-animated-set').count(),4);
   await shop.locator('[data-animated-set="anime-ghoul"]').click();assert.deepEqual((await page.evaluate(()=>window.KomiShopV3.selected())).sort(),['frame_kakugan','name_crimson_reflection','title_one_eyed_king'].sort());
-  for(const id of ['aura_crimson','commentfx_hype'])await page.evaluate(id=>window.KomiShopV3.tryItem(id),id);
-  assert.equal((await page.evaluate(()=>window.KomiShopV3.selected())).length,5);
+  assert.equal(await shop.getByText('Ауры персонажей',{exact:true}).count(),0);
+  for(const id of ['aura_crimson','aura_starlight','commentfx_hype'])await page.evaluate(id=>window.KomiShopV3.tryItem(id),id);
+  assert.equal((await page.evaluate(()=>window.KomiShopV3.selected())).length,4);
   assert.equal(await shop.locator('.sv3-fitting .komi-fx-commentfx-hype').count(),1);
   await shop.locator('[data-v7-preview="profile"]').click();
-  assert.equal(await shop.locator('.sv3-fitting .sv-fx-preview-grid .sv-fx-sample').count(),1);
+  assert.equal(await shop.locator('.sv3-fitting .sv-fx-preview-grid .sv-fx-sample').count(),0);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.evaluate(()=>{window.KomiShopV3.reset();});
   await page.evaluate(()=>{const profile=document.createElement('section');profile.id='profile';profile.dataset.profileUser='fixture';profile.innerHTML='<div class="profile-header-card"><div class="profile-avatar-frame"><div class="profile-avatar-box"></div></div><div class="profile-name-row"><h2 data-profile-field="display-name">Komi</h2></div></div>';document.querySelector('#mainContainer').replaceChildren(profile);window.KomiPremiumStore.setClient({from:()=>({select:()=>({limit:async()=>({data:[{user_id:"fixture",frame_id:"frame_kakugan",entry_id:"entry_moonrise",name_id:"name_glitch_motion"}]})})})});});

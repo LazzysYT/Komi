@@ -92,3 +92,33 @@ do $$ declare id text; begin
 end $$;
 reset role;
 select 'PASS: arrival effect retirement rejects direct and cart purchases' as result;
+
+-- Keep a historic owner and exercise both the retired price and stale-price paths.
+\ir ../supabase/migrations/20261127135000_anicoin_retire_character_auras.sql
+update public.komi_anicoin_wallets set balance=120 where user_id='00000000-0000-0000-0000-000000000002';
+do $$ begin
+ if exists(select 1 from komi_private.shop_item_prices where item_id='aura_starlight') then raise exception 'unowned aura still priced'; end if;
+ if (select count(*) from komi_private.premium_store_purchases where item_id='aura_crimson')<>1 then raise exception 'historic aura was modified'; end if;
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+do $$ declare receipt jsonb; begin
+ perform public.komi_premium_store('unequip','aura_crimson');
+ receipt:=public.komi_shop_cart_buy_equip(array['aura_crimson']);
+ if receipt->>'aura_id'<>'aura_crimson' or (receipt->>'spent')::integer<>0 or (receipt->>'balance')::integer<>80 then
+  raise exception 'historic aura can no longer be equipped for free: %',receipt;
+ end if;
+end $$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
+do $$ declare id text; receipt jsonb; begin
+ foreach id in array array['aura_crimson','aura_starlight'] loop
+  begin perform public.komi_premium_store('buy',id); raise exception 'retired direct purchase allowed'; exception when invalid_parameter_value then null; end;
+  begin perform public.komi_shop_cart_buy_equip(array['frame_kakugan',id]); raise exception 'retired cart purchase allowed'; exception when invalid_parameter_value then null; end;
+ end loop;
+ receipt:=public.komi_premium_store('read',null);
+ if (receipt->>'balance')::integer<>120 or jsonb_array_length(receipt->'owned')<>0 then raise exception 'declined checkout changed inventory or balance'; end if;
+ receipt:=public.komi_premium_store('buy','frame_kakugan');
+ if (receipt->>'balance')::integer<>80 then raise exception 'unrelated checkout broken'; end if;
+end $$;
+reset role;
+select 'PASS: retired auras cannot be purchased; historical ownership and normal checkout remain intact' as result;

@@ -3,8 +3,8 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
 function load(hostname='komianime.online'){const window={location:{hostname,search:hostname==='komianime.online'?'':'?animated_shop=1'}};vm.runInNewContext(read('komi-shop-catalog.js'),{window});return window.KomiShopCatalog;}
 test('new animated cosmetics are unique and preview-only until the second server revision is confirmed',async()=>{
- const c=load(),p=load('preview.example'),items=c.items.filter(x=>x.animatedShop);
- assert.equal(items.length,24);
+ const c=load(),p=load('preview.example'),items=c.items.filter(x=>x.animatedShop&&x.type!=='aura');
+ assert.equal(items.length,22);
  for(const id of ["entry_moonrise","entry_neon_gate","party_comet","party_portal"]){assert.equal(c.find(id),null);assert.equal(p.isOnSale(id),false);}
  assert.equal(new Set(c.items.map(x=>x.id)).size,c.items.length);
  assert.ok(items.every(x=>!c.isOnSale(x.id)&&p.isOnSale(x.id)&&!p.isGiftable(x.id)));
@@ -13,6 +13,7 @@ test('new animated cosmetics are unique and preview-only until the second server
  assert.ok(items.every(x=>!c.isOnSale(x.id)));
  await c.checkAnimatedPricing({rpc:async name=>{assert.equal(name,'komi_shop_animated_revision');return {data:c.animatedRevision};}});
  assert.ok(items.every(x=>c.isOnSale(x.id)));
+ for(const id of ['aura_crimson','aura_starlight']){assert.equal(c.find(id).type,'aura');assert.equal(c.isOnSale(id),false);assert.equal(c.isGiftable(id),false);assert.equal(p.isOnSale(id),false);}
  assert.equal(c.isOnSale('frame_moon'),false);
  assert.equal(p.canCheckout(),false);
 });

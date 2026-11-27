@@ -2045,7 +2045,8 @@ function checkPricing(client){
  return checking;
 }
 const livingProfileIds=new Set(["frame_ghoul_seal", "name_mangaka_ink", "xp_story_rhythm", "showcase_personal_cinema"]);
-const isOnSale=id=>items.some(p=>p.id===id&&(p.animatedShop?(animatedPreview()||animatedPricingConfirmed):(p.type==='title'||livingProfileIds.has(id))))&&!isArchived(id);
+const retiredFromSale=new Set(['aura_crimson','aura_starlight']);
+const isOnSale=id=>!retiredFromSale.has(id)&&items.some(p=>p.id===id&&(p.animatedShop?(animatedPreview()||animatedPricingConfirmed):(p.type==='title'||livingProfileIds.has(id))))&&!isArchived(id);
 const isGiftable=id=>isOnSale(id)&&items.find(p=>p.id===id)?.giftable!==false;
 const canCheckout=()=>!preview()&&pricingConfirmed;
 root.KomiShopCatalog=Object.freeze({items,sets,animatedSets,collections,revision,animatedRevision,checkAnimatedPricing,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return [...sets,...animatedSets].filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
