@@ -74,3 +74,21 @@ do $$ declare r jsonb; n integer; begin
 end $$;
 reset role;
 select 'PASS: server prices, independent equipment, no repeat charge, retired checks, RLS reaction ownership and account isolation' as result;
+
+-- Remove only fixture purchases for the four retired effects to simulate a shop with no customers affected.
+delete from komi_private.premium_store_purchases where item_id in ('entry_moonrise','entry_neon_gate','party_comet','party_portal');
+\ir ../docs/animated-shop-retirement.sql
+do $$ begin
+ if exists(select 1 from komi_private.shop_item_prices where item_id in ('entry_moonrise','entry_neon_gate','party_comet','party_portal')) then raise exception 'retired prices remain';end if;
+ if (select count(*) from komi_private.shop_item_prices)<>28 then raise exception 'unrelated prices changed';end if;
+end $$;
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+do $$ declare id text; begin
+ foreach id in array array['entry_moonrise','entry_neon_gate','party_comet','party_portal'] loop
+  begin perform public.komi_premium_store('buy_equip',id);raise exception 'retired single purchase accepted';exception when invalid_parameter_value then null;end;
+  begin perform public.komi_shop_cart_buy_equip(array[id]);raise exception 'retired cart accepted';exception when invalid_parameter_value then null;end;
+ end loop;
+end $$;
+reset role;
+select 'PASS: arrival effect retirement rejects direct and cart purchases' as result;

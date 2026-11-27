@@ -4,7 +4,8 @@ const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'
 function load(hostname='komianime.online'){const window={location:{hostname,search:hostname==='komianime.online'?'':'?animated_shop=1'}};vm.runInNewContext(read('komi-shop-catalog.js'),{window});return window.KomiShopCatalog;}
 test('new animated cosmetics are unique and preview-only until the second server revision is confirmed',async()=>{
  const c=load(),p=load('preview.example'),items=c.items.filter(x=>x.animatedShop);
- assert.equal(items.length,28);
+ assert.equal(items.length,24);
+ for(const id of ["entry_moonrise","entry_neon_gate","party_comet","party_portal"]){assert.equal(c.find(id),null);assert.equal(p.isOnSale(id),false);}
  assert.equal(new Set(c.items.map(x=>x.id)).size,c.items.length);
  assert.ok(items.every(x=>!c.isOnSale(x.id)&&p.isOnSale(x.id)&&!p.isGiftable(x.id)));
  await c.checkPricing({rpc:async name=>name==='komi_shop_living_revision'?{data:c.revision}:{error:{message:'not deployed'}}});
@@ -35,7 +36,7 @@ test('four anime sets contain three distinct equipment slots and use normal serv
  }
 });
 
-test('new slots have distinct frontend surfaces and syntax',()=>{for(const type of ['entry','aura','commentfx','party'])assert.ok(read('komi-shop-v3.js').includes("['"+type+"',"));for(const [file,marker] of [['komi-comments.js','renderAnimatedReactions'],['watch-party.js','animatePartyArrivals'],['komi-collection.js','loadOwnedAura'],['komi-premium-store.js','entrySeen']]){assert.ok(read(file).includes(marker));assert.doesNotThrow(()=>new vm.Script(read(file)));}});
+test('new slots have distinct frontend surfaces and syntax',()=>{for(const type of ['aura','commentfx'])assert.ok(read('komi-shop-v3.js').includes("['"+type+"',"));for(const [file,marker] of [['komi-comments.js','renderAnimatedReactions'],['komi-collection.js','loadOwnedAura']]){assert.ok(read(file).includes(marker));assert.doesNotThrow(()=>new vm.Script(read(file)));}});
 
 test('SQL grants no direct equipment writes and validates reactions against equipped items',()=>{
  const sql=read('docs/animated-shop-catalog.sql');
@@ -49,3 +50,5 @@ test('SQL grants no direct equipment writes and validates reactions against equi
  assert.match(sql,/animated_reactions_delete[^;]+auth\.uid\(\)/);
  assert.doesNotMatch(sql,/grant (?:all|insert|update|delete)[^;]+on public\.komi_premium_cosmetic_equips/i);
 });
+
+test('retired effects never appear in UI or trigger Party/profile animations',()=>{assert.doesNotMatch(read('komi-shop-v3.js'),/Эффекты входа|Эффекты Party/);assert.doesNotMatch(read('watch-party.js'),/animatePartyArrivals/);assert.doesNotMatch(read('komi-premium-store.js'),/entrySeen/);});
