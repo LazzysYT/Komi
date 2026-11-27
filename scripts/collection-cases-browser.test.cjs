@@ -4,7 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 let chromium;
 try{({chromium}=require('playwright'));}catch{}
 const root=path.resolve(__dirname,'..'),origin='http://localhost:8767';
-const assets=[...['ghoul','jujutsu','frieren','alchemist'].map(id=>'assets/collection/deluxe-packs/'+id+'.webp'),'komi-collection-art.js','komi-collection.js','komi-collection.css','assets/collection/ghoul-booster/pack-320.webp','assets/collection/ghoul-booster/pack-640.webp','assets/collection/ghoul-booster/pack-fallback.svg','komi.production.css'];
+const assets=['assets/collection/jujutsu/gojo.webp','assets/collection/frieren/frieren.webp','assets/collection/alchemist/edward.webp',...['ghoul','jujutsu','frieren','alchemist'].map(id=>'assets/collection/deluxe-packs/'+id+'.webp'),'komi-collection-art.js','komi-collection.js','komi-collection.css','assets/collection/ghoul-booster/pack-320.webp','assets/collection/ghoul-booster/pack-640.webp','assets/collection/ghoul-booster/pack-fallback.svg','komi.production.css'];
 const fixture='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/komi.production.css"><link rel="stylesheet" href="/komi-collection.css"></head><body style="background:#09090b;color:white"><main id="mainContainer"></main><script src="/komi-collection-art.js"></script><script src="/komi-collection.js"></script></body></html>';
 test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},async()=>{
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
@@ -177,5 +177,7 @@ test('booster still shows a tall foil pack when its WebP fails', {skip:!chromium
   await p.waitForFunction(()=>{const i=document.querySelector('.kc-case-image');return i?.currentSrc.endsWith('/pack-fallback.svg')&&i.naturalHeight>i.naturalWidth&&!i.hidden;});
   assert.equal(await p.locator('.kc-case h2').textContent(),'Бустер «Токийский гуль»');
   assert.equal(await p.locator('.kc-pack-thumb[hidden]').count(),4);
+  assert.equal(await p.locator('.kc-world-window').count(),4);
+  await p.waitForFunction(()=>[...document.querySelectorAll('.kc-shelf-hero,.kc-feature-hero')].every(img=>img.hidden));
  }finally{await b.close();}
 });

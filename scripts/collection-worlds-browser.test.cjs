@@ -43,6 +43,9 @@ test('four worlds: separate album, full-body view, one-time reveal and safe purc
    assert.equal(await windows.locator('.kc-shelf-hero[aria-hidden="true"]').count(),4);
    await p.waitForFunction(()=>[...document.querySelectorAll('.kc-shelf-hero')].every(img=>img.naturalWidth>0));
    assert.equal(await p.locator('.kc-world-window[aria-pressed=true]').getAttribute('data-kc-action'),'series-'+series);
+   const motifs=await windows.locator('.kc-window-motif').evaluateAll(els=>els.map(el=>getComputedStyle(el).backgroundImage));
+   assert.equal(new Set(motifs).size,4,'each world retains its own art effect when another is selected');
+   assert.ok(await windows.evaluateAll(els=>els.every(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('.kc-window-copy').getBoundingClientRect();return b.left>=a.left&&b.right<=a.right+1&&b.bottom<=a.bottom+1;})),'world labels fit within windows');
    assert.ok(await windows.first().evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius)>=18));
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    assert.ok(await p.locator('.kc-grid .kc-owned').first().evaluate(el=>!!el.style.getPropertyValue('--kc-character-fx')));
