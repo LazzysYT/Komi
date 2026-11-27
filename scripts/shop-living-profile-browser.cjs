@@ -28,7 +28,7 @@ const setup=()=>{ window.currentView='shop';window.KomiPremium={idForUsername:()
      if(u.origin!==origin)return route.abort();
      if(u.pathname===pathname)return route.fulfill({contentType:'text/html',body:html});
      if(f==='anime-artwork.svg')return route.fulfill({contentType:'image/svg+xml',body:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 10 15"><rect width="10" height="15" fill="#964f52"/></svg>'});
-     if(![...styles,...scripts].includes(f)&&!/^assets\/shop-title-(?:foil|cast)\/[a-z]+\.svg$/.test(f))return route.abort();
+     if(![...styles,...scripts].includes(f)&&!/^assets\/shop-frames-atelier\/[a-z-]+\.svg$/.test(f)&&!/^assets\/shop-title-(?:foil|cast)\/[a-z]+\.svg$/.test(f))return route.abort();
      return route.fulfill({contentType:f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(src,f),'utf8')});
    });
    await page.goto(origin+pathname);

@@ -154,7 +154,7 @@ async function mount(node,{client,viewer,getViewer,username,isMe}){
  }catch{if(!live(v))return;v.failed=true;}
  repaint(v);
 }
-const wallpaperLabels={ghoul:'Ночной Токио',jujutsu:'Архив талисманов',frieren:'Карта пути',alchemist:'Чертёж Аместриса'};
+const wallpaperLabels={ghoul:'Ночной Токио',jujutsu:'Архив талисманов',frieren:'Карта пути',alchemist:'Чертёж Аместриса',demon:'Волны эпохи Тайсё',aot:'Силуэт стен'};
 async function mountWallpaper(node,cover,{client,viewer,getViewer,username,isMe}){
  if(!node||!cover||!client||!viewer)return;
  const v={node,client,viewer,getViewer},current=()=>live(v)&&cover.isConnected;

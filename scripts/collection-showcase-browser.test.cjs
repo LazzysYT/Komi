@@ -23,7 +23,7 @@ test('profile showcase shows explicit picks only, can hide them, guards stale ow
     if(name==='komi_collection_showcase_read_handle')return {data:args.p_username==='Visible'?chosen:[]};
     if(name==='komi_collection_showcase_read')return {data:chosen};
     if(name==='komi_collection_action')return {data:{owned:['kaneki','touka']}};
-    return {data:{owned:{frieren:['fern'],jujutsu:['gojo'],alchemist:['edward']}[args.p_series_id]}};
+    return {data:{owned:{frieren:['fern'],jujutsu:['gojo'],alchemist:['edward'],demon:[],aot:[]}[args.p_series_id]}};
    }};
    window.reopen=(isMe,username='Owner')=>{
     const section=document.createElement('section');section.className='kcs-showcase';section.hidden=true;
