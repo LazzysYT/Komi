@@ -295,6 +295,19 @@ async function enterParty(room) {
     const memberList=document.getElementById('partyParticipants');
     const queueList=document.getElementById('partyQueueList');
     let lastQueueRefresh=0,lastPresenceRefresh=performance.now();
+    let knownPartyMembers=new Set(),partyMembersInitialized=false;
+    function animatePartyArrivals(members){
+        const current=new Set(members.map(m=>String(m.id||'')).filter(Boolean));
+        const arriving=members.filter(m=>m.id&&!knownPartyMembers.has(String(m.id))&&(partyMembersInitialized||String(m.id)===currentUser?.authUserId));
+        knownPartyMembers=current;partyMembersInitialized=true;
+        if(!arriving.length||document.hidden||window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
+        Promise.resolve().then(()=>_supabase.from('komi_premium_cosmetic_equips').select('user_id,party_id').in('user_id',arriving.map(m=>m.id).slice(0,20))).then(({data,error})=>{
+            if(error||!isActive()||document.hidden)return;
+            for(const e of (data||[]).slice(0,4)){const p=window.KomiShopCatalog?.find(e.party_id),m=arriving.find(m=>String(m.id)===String(e.user_id));
+                if(!p||p.type!=='party'||!m||!knownPartyMembers.has(String(m.id)))continue;
+                const token=document.createElement('span');token.className='komi-party-arrival komi-fx-'+p.cosmeticClass;token.textContent=p.symbol+' '+String(m.displayName||m.username||'Участник').slice(0,45)+' вошёл';memberList.append(token);setTimeout(()=>token.remove(),2200);}
+        }).catch(()=>{});
+    }
     function showMembers(members){
         if(!isActive()||!memberList)return;
         const count=Array.isArray(members)?members.length:0;
@@ -310,6 +323,7 @@ async function enterParty(room) {
             label.textContent=String(member.displayName||member.username||'Участник').slice(0,60)+(member.host?' ★':'');
             memberList.append(label);
         }
+        animatePartyArrivals(Array.isArray(members)?members:[]);
     }
     showMembers(initialMembers);
     async function refreshQueue(){

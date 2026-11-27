@@ -16,7 +16,7 @@ const standalone=fs.readFileSync(path.join(root,'premium.html'),'utf8');
 const premium=fs.readFileSync(path.join(root,'komi-premium.js'),'utf8');
 const context={window:{}};
 vm.runInNewContext(catalog,context);
-const products=context.window.KomiShopCatalog.items;
+const products=context.window.KomiShopCatalog.items.filter(p=>!p.animatedShop);
 const stationMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261126170000_anicoin_shop_night_station.sql'),'utf8');
 const foilMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261126190000_anicoin_anime_foil_titles.sql'),'utf8');
 const castMigration=fs.readFileSync(path.join(root,'supabase/migrations/20261126194000_anicoin_anime_cast_titles.sql'),'utf8');

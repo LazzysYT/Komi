@@ -228,6 +228,8 @@ function normalizePayload(data){
  return {owned,result,balance,price:data.price===CASE_PRICE?CASE_PRICE:null,purchaseStatus:['ok','insufficient','complete'].includes(data.purchase_status)?data.purchase_status:null};
 }
 let state=null,observedOwner,host=null,tab='collection';
+let auraRequest=0;
+async function loadOwnedAura(id){const serial=++auraRequest;if(!id||typeof _supabase==='undefined'||!_supabase)return;try{const {data,error}=await _supabase.from('komi_premium_cosmetic_equips').select('aura_id').eq('user_id',id).maybeSingle();if(error||serial!==auraRequest||owner()!==id||!active()||state?.owner!==id)return;const p=root.KomiShopCatalog?.find(data?.aura_id);state.auraClass=p?.type==='aura'?p.cosmeticClass:'';const page=host?.querySelector('.kc-page');if(page)page.dataset.komiAura=state.auraClass;}catch{}}
 let filter='all',rarityFilter='all',searchQuery='',searchComposing=false,deferredPaint=false;
 const collectionFilters=Object.freeze({all:'Все',owned:'Открытые',locked:'Закрытые'});
 const normalizedName=value=>String(value??'').normalize('NFKC').toLocaleLowerCase('ru-RU').replace(/ё/g,'е').trim().replace(/\s+/g,' ');
@@ -541,7 +543,7 @@ function paint(nextFocus=null){
  }else{
   body=(s.reel||s.replayResult?'':feature)+reelMarkup(s)+reward;
  }
- const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':'')+'" aria-label="Коллекции и паки">'+header+tabs+seriesPicker()+notice(s)+body+'</section>';
+ const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+tabs+seriesPicker()+notice(s)+body+'</section>';
  if(activeDialog?.dialog.isConnected){
   const template=document.createElement('template');template.innerHTML=markup;
   host.querySelector('.kc-page').replaceWith(template.content);
@@ -624,6 +626,7 @@ function render(container){
  }
  const id=owner();if(!state||state.owner!==id){if(state?.reel){clearTimeout(state.reel.timer);clearTimeout(state.reel.detailTimer);}resetFilters();state=fresh(id);}
  paint();if(state.status==='idle')void request('read');
+ if(id)void loadOwnedAura(id);
 }
 root.KomiCollection=Object.freeze({render,authChanged,roster:ghoulRoster,normalizePayload,makeReel,seriesList,ghoulFx});
 })(typeof window==='object'?window:{});

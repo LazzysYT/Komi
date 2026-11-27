@@ -2,6 +2,361 @@
 (function(root){
 'use strict';
 const items=Object.freeze([
+{
+  "id": "entry_moonrise",
+  "type": "entry",
+  "label": "Лунное пробуждение",
+  "cost": 20,
+  "rarity": "uncommon",
+  "description": "Серебряная волна при открытии профиля.",
+  "symbol": "☾",
+  "cosmeticClass": "entry-moonrise",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "entry_neon_gate",
+  "type": "entry",
+  "label": "Неоновый портал",
+  "cost": 30,
+  "rarity": "rare",
+  "description": "Фиолетовый портал при открытии профиля.",
+  "symbol": "✧",
+  "cosmeticClass": "entry-neon-gate",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "aura_crimson",
+  "type": "aura",
+  "label": "Багровая аура",
+  "cost": 25,
+  "rarity": "rare",
+  "description": "Алый ореол открытых героев коллекции.",
+  "symbol": "✦",
+  "cosmeticClass": "aura-crimson",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "aura_starlight",
+  "type": "aura",
+  "label": "Звёздная аура",
+  "cost": 35,
+  "rarity": "epic",
+  "description": "Сияние звёзд на открытых карточках коллекции.",
+  "symbol": "✧",
+  "cosmeticClass": "aura-starlight",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "commentfx_hype",
+  "type": "commentfx",
+  "label": "Восторг",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Анимированная реакция «Огонь» под комментариями.",
+  "symbol": "🔥",
+  "cosmeticClass": "commentfx-hype",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "commentfx_heart",
+  "type": "commentfx",
+  "label": "Сердце",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Анимированная реакция «Сердце» под комментариями.",
+  "symbol": "♥",
+  "cosmeticClass": "commentfx-heart",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "party_comet",
+  "type": "party",
+  "label": "Комета",
+  "cost": 20,
+  "rarity": "uncommon",
+  "description": "Комета при появлении участника в Watch Party.",
+  "symbol": "✦",
+  "cosmeticClass": "party-comet",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "party_portal",
+  "type": "party",
+  "label": "Теневой портал",
+  "cost": 30,
+  "rarity": "rare",
+  "description": "Портал при появлении участника в Watch Party.",
+  "symbol": "◈",
+  "cosmeticClass": "party-portal",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_black_flame",
+  "type": "frame",
+  "label": "Чёрное пламя",
+  "cost": 35,
+  "rarity": "epic",
+  "description": "Чёрные языки пламени с серебряными краями движутся вокруг аватара.",
+  "frameClass": "frame-black-flame",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_sakura_drift",
+  "type": "frame",
+  "label": "Лепестки сакуры",
+  "cost": 20,
+  "rarity": "uncommon",
+  "description": "Розовые лепестки кружатся по краям аватара.",
+  "frameClass": "frame-sakura-drift",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_kakugan",
+  "type": "frame",
+  "label": "Какуган",
+  "cost": 40,
+  "rarity": "epic",
+  "description": "Багровые прожилки и красный глаз на тёмном ободе.",
+  "anime": "Токийский гуль",
+  "frameClass": "frame-kakugan",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_cursed_energy",
+  "type": "frame",
+  "label": "Проклятая энергия",
+  "cost": 35,
+  "rarity": "epic",
+  "description": "Фиолетовые разряды пересекают кольцо аватара.",
+  "anime": "Магическая битва",
+  "frameClass": "frame-cursed-energy",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_solar_eclipse",
+  "type": "frame",
+  "label": "Затмение",
+  "cost": 30,
+  "rarity": "rare",
+  "description": "Тёмное кольцо с вращающимся солнечным серпом.",
+  "frameClass": "frame-solar-eclipse",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_ghost_butterflies",
+  "type": "frame",
+  "label": "Призрачные бабочки",
+  "cost": 25,
+  "rarity": "rare",
+  "description": "Светящиеся бабочки мягко огибают аватар.",
+  "frameClass": "frame-ghost-butterflies",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_eternal_winter",
+  "type": "frame",
+  "label": "Вечная зима",
+  "cost": 25,
+  "rarity": "rare",
+  "description": "Иней, снежинки и прозрачные кристаллы по контуру.",
+  "frameClass": "frame-eternal-winter",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_dragon_spirit",
+  "type": "frame",
+  "label": "Дух дракона",
+  "cost": 75,
+  "rarity": "mythic",
+  "description": "Сияющий контур дракона медленно обвивает аватар.",
+  "frameClass": "frame-dragon-spirit",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_fractured_reality",
+  "type": "frame",
+  "label": "Разбитая реальность",
+  "cost": 45,
+  "rarity": "epic",
+  "description": "Осколки и тонкие светящиеся трещины расходятся от края.",
+  "frameClass": "frame-fractured-reality",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_abyss",
+  "type": "frame",
+  "label": "Бездна",
+  "cost": 55,
+  "rarity": "legendary",
+  "description": "Две космические орбиты и далёкие звёзды вращаются вокруг аватара.",
+  "frameClass": "frame-abyss",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_shadow_monarch",
+  "type": "frame",
+  "label": "Власть теней",
+  "cost": 40,
+  "rarity": "epic",
+  "description": "Фиолетовые тени поднимаются из тёмного ореола.",
+  "anime": "Поднятие уровня в одиночку",
+  "frameClass": "frame-shadow-monarch",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "frame_water_breath",
+  "type": "frame",
+  "label": "Дыхание стихии",
+  "cost": 30,
+  "rarity": "rare",
+  "description": "Бирюзовые волны и белая пена обтекают аватар.",
+  "anime": "Клинок, рассекающий демонов",
+  "frameClass": "frame-water-breath",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "banner_blood_moon",
+  "type": "banner",
+  "label": "Кровавая луна",
+  "cost": 35,
+  "rarity": "epic",
+  "description": "Красная луна над ночным туманом; облака медленно проплывают по баннеру.",
+  "anime": "Токийский гуль",
+  "bannerClass": "banner-blood-moon",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "name_glitch_motion",
+  "type": "name",
+  "label": "Глитч",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Короткий цветной сдвиг без потери читаемости ника.",
+  "cosmeticClass": "name-glitch-motion",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "name_crimson_reflection",
+  "type": "name",
+  "label": "Красный отблеск",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Багровый блик скользит по буквам.",
+  "anime": "Токийский гуль",
+  "cosmeticClass": "name-crimson-reflection",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "name_infinity_light",
+  "type": "name",
+  "label": "Грань бесконечности",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Холодное фиолетовое мерцание на буквах.",
+  "anime": "Магическая битва",
+  "cosmeticClass": "name-infinity-light",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "name_shadow_glow",
+  "type": "name",
+  "label": "Тень монарха",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Фиолетовая тень проходит по никнейму.",
+  "anime": "Поднятие уровня в одиночку",
+  "cosmeticClass": "name-shadow-glow",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "name_wave_glimmer",
+  "type": "name",
+  "label": "Отблеск волны",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Бирюзовый градиент плавно проходит по буквам.",
+  "anime": "Клинок, рассекающий демонов",
+  "cosmeticClass": "name-wave-glimmer",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "title_one_eyed_king",
+  "type": "title",
+  "label": "Одноглазый король",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Тёмно-красный титул с мягким светом.",
+  "anime": "Токийский гуль",
+  "title": "Одноглазый король",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "title_shadow_sovereign",
+  "type": "title",
+  "label": "Монарх теней",
+  "cost": 20,
+  "rarity": "rare",
+  "description": "Лиловый титул, свет которого медленно пульсирует.",
+  "anime": "Поднятие уровня в одиночку",
+  "title": "Монарх теней",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
   {
     "id": "frame_ghoul_seal",
     "type": "frame",
@@ -1716,6 +2071,17 @@ const collections=Object.freeze([
   }
 ].map(collection=>Object.freeze({...collection,items:Object.freeze(collection.items),preview:Object.freeze(collection.preview)})));
 const revision='20261126-living-profile';
+const animatedRevision='20261127-animated-shop';
+const animatedSets=Object.freeze([{"id":"anime-ghoul","label":"Токийский гуль — Пробуждение","items":["frame_kakugan","name_crimson_reflection","title_one_eyed_king"],"className":"komi-set-anime-ghoul"},{"id":"anime-jujutsu","label":"Магическая битва — Бесконечность","items":["frame_cursed_energy","name_infinity_light","title_gojo_infinity"],"className":"komi-set-anime-jujutsu"},{"id":"anime-shadow","label":"Поднятие уровня в одиночку — Монарх теней","items":["frame_shadow_monarch","name_shadow_glow","title_shadow_sovereign"],"className":"komi-set-anime-shadow"},{"id":"anime-demon","label":"Клинок, рассекающий демонов — Дыхание стихии","items":["frame_water_breath","name_wave_glimmer","title_tanjiro_current"],"className":"komi-set-anime-demon"}].map(set=>Object.freeze({...set,items:Object.freeze(set.items)})));
+let animatedPricingConfirmed=false,animatedChecking=null;
+const animatedPreview=()=>preview()&&/(?:^|[?&])animated_shop=1(?:&|$)/.test(root.location?.search||'');
+function checkAnimatedPricing(client){
+ if(preview()||!client?.rpc)return Promise.resolve(false);
+ if(animatedPricingConfirmed)return Promise.resolve(true);
+ if(animatedChecking)return animatedChecking;
+ animatedChecking=Promise.resolve().then(()=>client.rpc('komi_shop_animated_revision')).then(r=>{animatedPricingConfirmed=!r?.error&&r?.data===animatedRevision;return animatedPricingConfirmed;},()=>false).finally(()=>{animatedChecking=null;});
+ return animatedChecking;
+}
 const titleText=p=>String(p?.title||p?.label||'').replace(/^[✧✦◇✳⌁☾✶▣↗◈◆✎▰▤▸❧❀]+\s+/u,'');
 // Hide from new discovery only. IDs and ownership continue to resolve.
 const archived=new Set(['banner_grid','frame_pixel','xp_hatch','xp_dots']);
@@ -1728,13 +2094,14 @@ function checkPricing(client){
  if(checking)return checking;
  checking=Promise.resolve().then(()=>client.rpc('komi_shop_living_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;
-  return pricingConfirmed;
+  if(!pricingConfirmed)return false;
+  return checkAnimatedPricing(client).then(()=>pricingConfirmed);
  },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});
  return checking;
 }
 const livingProfileIds=new Set(["frame_ghoul_seal", "name_mangaka_ink", "xp_story_rhythm", "showcase_personal_cinema"]);
-const isOnSale=id=>items.some(p=>p.id===id&&(p.type==='title'||livingProfileIds.has(id)))&&!isArchived(id);
+const isOnSale=id=>items.some(p=>p.id===id&&(p.animatedShop?(animatedPreview()||animatedPricingConfirmed):(p.type==='title'||livingProfileIds.has(id))))&&!isArchived(id);
 const isGiftable=id=>isOnSale(id)&&items.find(p=>p.id===id)?.giftable!==false;
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,collections,revision,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return sets.filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,animatedSets,collections,revision,animatedRevision,checkAnimatedPricing,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return [...sets,...animatedSets].filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);

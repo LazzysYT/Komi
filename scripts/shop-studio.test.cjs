@@ -218,7 +218,7 @@ test('affordability checks only titles and retains owned high-price titles',asyn
  const owned=['title_veteran'],f=fixture({ctx:{owner:'uid-a',store:{balance:15,owned}}});
  f.change('data-v7-affordable',true);
  assert.ok(f.ids.includes('title_veteran'));
- assert.deepEqual(sorted(f.ids),sorted(f.products.filter(p=>p.type==='title'&&(p.cost<=15||owned.includes(p.id))).map(p=>p.id)));
+ assert.deepEqual(sorted(f.ids),sorted(f.products.filter(p=>p.type==='title'&&f.window.KomiShopCatalog.isOnSale(p.id)&&(p.cost<=15||owned.includes(p.id))).map(p=>p.id)));
  assert.equal(f.url.searchParams.get('shop_available'),'1');
 });
 
@@ -329,7 +329,7 @@ test('a different title replaces the first, but an unowned old effect cannot ent
 
 test('title catalogue sorts by price and restores the URL page limit',()=>{
  const f=fixture({url:'https://komianime.online/shop?shop_category=title&shop_page=2&shop_sort=price-down'});
- const expected=f.products.filter(p=>p.type==='title').sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru')).map(p=>p.id);
+ const expected=f.products.filter(p=>p.type==='title'&&f.window.KomiShopCatalog.isOnSale(p.id)).sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru')).map(p=>p.id);
  assert.deepEqual(f.ids,expected);
 });
 

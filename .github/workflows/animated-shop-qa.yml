@@ -1,0 +1,54 @@
+name: Animated shop release checks
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'komi-shop-catalog.js'
+      - 'komi-shop-v3.js'
+      - 'komi-living-profile.css'
+      - 'komi-premium-store.js'
+      - 'docs/animated-shop-catalog.sql'
+      - 'scripts/*animated*'
+      - '.github/workflows/animated-shop-qa.yml'
+permissions:
+  contents: read
+jobs:
+  database:
+    runs-on: ubuntu-24.04
+    services:
+      postgres:
+        image: postgres:17.6
+        env:
+          POSTGRES_PASSWORD: fixture-only
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Verify isolated SQL purchase and RLS flow
+        env:
+          PGPASSWORD: fixture-only
+        run: psql -h 127.0.0.1 -U postgres -d postgres -v ON_ERROR_STOP=1 -f scripts/animated-shop-db-fixture.sql
+  browser:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Static and catalog tests
+        run: node --test scripts/shop-animated-catalog.test.cjs scripts/shop-studio.test.cjs scripts/shop-v7-catalog.test.cjs scripts/shop-v3.test.cjs scripts/premium-store.test.cjs
+      - name: Install browser
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
+      - name: Verify new effects and store on desktop and mobile
+        run: node --test scripts/shop-animated-browser.test.cjs
