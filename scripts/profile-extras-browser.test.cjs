@@ -1,14 +1,14 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path');
 const {chromium}=require('playwright');
 const root=path.join(__dirname,'..'),origin='https://komianime.online';
-const html='<!doctype html><html><head></head><body><main id="mainContainer"><section id="profile" data-profile-owner="true" data-profile-preview="false"><section class="kpe-panel" data-kpe-medals></section><section class="kpe-editor" data-kpe-editor></section><button data-kpe-friend="beta"><img src="/icon.svg" data-komi-friend-avatar="beta"><span>Beta</span></button></section></main><script src="/komi-profile-extras-catalog.js"></script><script src="/komi-profile-extras.js"></script></body></html>';
+const html='<!doctype html><html lang="ru"><head><meta charset="utf-8"></head><body><main id="mainContainer"><section id="profile" data-profile-owner="true" data-profile-preview="false"><section class="kpe-panel" data-kpe-medals></section><section class="kpe-editor" data-kpe-editor></section><button data-kpe-friend><img src="/icon.svg" data-komi-friend-avatar="beta"><span>Beta</span></button></section></main><script src="/komi-profile-extras-catalog.js"></script><script src="/komi-profile-extras.js"></script></body></html>';
 async function install(page){
  await page.route('**/*',route=>{
   const u=new URL(route.request().url()),f=u.pathname.slice(1);
   if(u.origin!==origin)return route.abort();
-  if(u.pathname==='/fixture')return route.fulfill({contentType:'text/html',body:html});
+  if(u.pathname==='/fixture')return route.fulfill({contentType:'text/html; charset=utf-8',body:html});
   if(!/^(?:komi-profile-extras(?:-catalog)?\.(?:js|css)|assets\/profile-(?:medals|cursors)\/[a-z0-9_-]+\.svg|icon\.svg)$/.test(f))return route.abort();
-  return route.fulfill({contentType:f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(root,f),'utf8')});
+  return route.fulfill({contentType:f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css; charset=utf-8':'application/javascript; charset=utf-8',body:fs.readFileSync(path.join(root,f),'utf8')});
  });
  await page.goto(origin+'/fixture');
  await page.evaluate(()=>{
@@ -55,7 +55,7 @@ test('all medal SVGs decode, award animation and one-time claim, own editor, fri
    await page.locator('.kpe-editor').getByRole('button',{name:'Сохранить мини-карточку'}).click();
    await page.getByText('Мини-карточка сохранена.').waitFor();
    assert.equal(await page.evaluate(()=>fixture.calls.filter(x=>x.a==='save_card').length),1);
-   await page.waitForFunction(()=>document.querySelector('[data-kpe-friend=beta]')?.dataset.kpeBg==='moon');
+   await page.waitForFunction(()=>document.querySelector('[data-kpe-friend]')?.dataset.kpeBg==='moon');
    assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    await page.evaluate(()=>{document.querySelector('#mainContainer').innerHTML='<section id="shop"><header class="sv3-topbar">Магазин</header></section>';KomiProfileExtras.mountShop(document.querySelector('#mainContainer'),{owner:'alpha',avatar:originForFixture(),name:'Komi'});function originForFixture(){return location.origin+'/icon.svg';}});
    await page.locator('.kpe-shop summary').click();

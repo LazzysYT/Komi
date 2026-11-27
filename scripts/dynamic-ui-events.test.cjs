@@ -13,7 +13,7 @@ test('no dynamic HTML template emits raw inline event handlers',()=>{
      file+' still emits executable HTML attributes');
    total+=(source.match(/\bdata-komi-on(?:click|input|change|keydown|error)=/g)||[]).length;
  }
- assert.ok(total>=100,'All existing dynamic HTML event attributes should be replaced');
+ assert.ok(total>=99,'Existing delegated event patterns remain covered after consolidating the watch loading template');
  const html=fs.readFileSync(path.join(root,'index.html'),'utf8');
  assert.match(html,/<script defer src="\.\/dynamic-ui-events\.js(?:\?v=[\w-]+)?"><\/script>/);
 });

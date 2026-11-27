@@ -150,9 +150,11 @@ begin
  if p_action='cards' then
   if jsonb_typeof(args->'handles') is distinct from 'array' then raise exception 'Handles required' using errcode='22023'; end if;
   if jsonb_array_length(args->'handles')>60 then raise exception 'Too many handles' using errcode='22023'; end if;
-  return coalesce((select jsonb_agg(jsonb_build_object('username',p.username,'background',a.background,'avatar_path',a.avatar_path,'background_path',a.background_path,'effect_id',a.effect_id,'medal_id',a.medal_id))
+  return coalesce((select jsonb_agg(jsonb_build_object('username',k.h,'background',a.background,'avatar_path',a.avatar_path,'background_path',a.background_path,'effect_id',a.effect_id,'medal_id',a.medal_id))
     from public.komi_profiles p join komi_profile_extras_private.appearance a using(user_id)
-    where a.card_enabled and p.username in(select h from jsonb_array_elements_text(args->'handles') as x(h) where length(h) between 1 and 64)
+    cross join lateral (select distinct h from jsonb_array_elements_text(args->'handles') as x(h)
+      where length(h) between 1 and 64 and (h=p.user_id::text or h=p.username)) k
+    where a.card_enabled
     and public.komi_is_profile_visible(p.user_id)
     and (p.user_id=actor or exists(select 1 from public.komi_friendships f where (f.user_a=actor and f.user_b=p.user_id) or (f.user_b=actor and f.user_a=p.user_id)))), '[]'::jsonb);
  elsif p_action='public_medal' then

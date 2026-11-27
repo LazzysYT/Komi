@@ -242,7 +242,7 @@ function layout(ctx){
  const options=availableCategories(ctx).map(([id,label])=>'<option value="'+id+'"'+(state.category===id?' selected':'')+'>'+esc(label)+' · '+counts[id]+'</option>').join('');
  const reaction=find(state.reactionPreview);
  const allowedCategories=availableCategories(ctx);
- const fastCategories=['all','title','frame','banner','name'].map(id=>allowedCategories.find(([key])=>key===id)).filter(Boolean);
+ const fastCategories=['all','frame','title','name'].map(id=>allowedCategories.find(([key])=>key===id)).filter(Boolean);
  const filterCount=Number(state.sort!=='default')+Number(state.affordableOnly)+Number(state.hideOwned&&state.view!=='owned')+Number(!fastCategories.some(([id])=>id===state.category));
  const hasContent=!!(items.length||reaction||(state.sheetOpen&&(state.busy||ctx.busy||state.status||ctx.shopStatus||ctx.retryApplyItem)));
  const showGallery=state.view==='catalog'&&state.category==='title'&&!state.query&&!state.affordableOnly&&!state.hideOwned&&state.sort==='default'&&state.limit===PAGE_SIZE;

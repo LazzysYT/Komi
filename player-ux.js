@@ -149,19 +149,23 @@
     function showPlaybackStatus(context, text) {
         if (context?.note) context.note.textContent = text;
     }
-    function updateSkip(context) {
-        if (!context?.skip || !context.video) return;
-        const video = context.video;
-        const duration = video.duration;
+    function currentIntro(context) {
+        const video = context?.video;
+        if (!video || video.ended || video.seeking || video.komiMediaFailed) return null;
+        const meta = context.episodeMeta || {};
+        const intro = validSegment(meta.introStart, meta.introEnd, video.duration);
         const time = video.currentTime;
-        context.skip.hidden = !(Number.isFinite(duration) && duration > 100 &&
-            Number.isFinite(time) && time >= 0 && time < 95 && !video.ended);
+        return intro && Number.isFinite(time) && time >= intro.start && time < intro.end ? intro : null;
+    }
+    function updateSkip(context) {
+        if (context?.skip) context.skip.hidden = !currentIntro(context);
     }
 
-    // Only verified episode metadata can authorize skipping OP/ED. No fixed-duration guessing.
+    // Only validated episode metadata can authorize skipping OP/ED.
     function validSegment(start, end, duration) {
-        if (start == null || end == null || !Number.isFinite(Number(start)) ||
-            !Number.isFinite(Number(end)) || !Number.isFinite(duration)) return null;
+        const isTimecode = value => (typeof value === 'number' ||
+            (typeof value === 'string' && value.trim() !== '')) && Number.isFinite(Number(value));
+        if (!isTimecode(start) || !isTimecode(end) || !Number.isFinite(duration)) return null;
         const a = Number(start), b = Number(end);
         return a >= 0 && b > a && b <= duration && b - a <= 210 ? {start:a,end:b} : null;
     }
@@ -221,7 +225,7 @@
         const title = document.createElement('span');
         title.className = 'komi-next-countdown-title';
         const watch = makeButton('Смотреть сейчас', 'komi-next-now', 'Смотреть следующую серию сейчас');
-        const cancel = makeButton('Отмена', 'komi-next-cancel', 'Отменить автоматический переход');
+        const cancel = makeButton('Остаться', 'komi-next-cancel', 'Остаться на этой серии');
         const actions = document.createElement('div');
         actions.className = 'komi-next-countdown-actions';
         actions.append(watch,cancel);
@@ -236,7 +240,7 @@
         function advance() {
             if (!stillCurrent()) { clearNextCountdown(context); return; }
             clearNextCountdown(context);
-            root.openWatchModal(context.animeId, context.season, context.index + 1);
+            root.openWatchModal(context.animeId, context.season, context.index + 1, null, null, {playNative:true});
         }
         watch.addEventListener('click', advance);
         cancel.addEventListener('click', () => {
@@ -299,14 +303,15 @@
         if (modal.classList.contains('komi-lights-off')) lights.textContent = '◑ Вернуть интерфейс';
         bar.append(lights);
         if (video) {
-            const skip = makeButton('⏭ +85 секунд', 'komi-cinema-skip',
-                'Перемотать видео вперёд на 85 секунд. Это не точный таймкод опенинга.');
+            const skip = makeButton('Пропустить заставку', 'komi-cinema-skip', 'Пропустить заставку по таймкоду серии');
             skip.hidden = true;
-            skip.title = 'Условный пропуск: продолжительность опенинга отличается между сериями.';
             skip.addEventListener('click', () => {
                 if (active !== context || !video.isConnected) return;
-                video.currentTime = seekTarget(video.currentTime, 85, video.duration);
-                showPlaybackStatus(context, 'Перемотка +85 секунд. Проверьте, не пропущена ли часть сюжета.');
+                const intro = currentIntro(context);
+                if (!intro) { updateSkip(context); return; }
+                context.skippedOpening = true;
+                video.currentTime = intro.end;
+                showPlaybackStatus(context, 'Заставка пропущена.');
                 updateSkip(context);
             });
             context.skip = skip;
@@ -342,7 +347,22 @@
             explanation.textContent = 'Пробел — пауза, ← / → — 10 сек, ↑ / ↓ — громкость, F — полный экран, M — звук, Shift+N — следующая серия.';
             help.append(summary, explanation);
             bar.append(help);
-            video.addEventListener('loadedmetadata', () => updateSkip(context));
+            for (const event of ['loadedmetadata', 'durationchange', 'seeking', 'seeked', 'ended', 'emptied', 'error'])
+                video.addEventListener(event, () => updateSkip(context));
+            video.addEventListener('komi:autoplay-blocked', () => {
+                if (active !== context || !modal.classList.contains('active') || !video.isConnected) return;
+                showPlaybackStatus(context, 'Серия готова. Нажми «Воспроизвести», чтобы начать.');
+                const focused = document.activeElement;
+                if (!focused || focused === document.body || wrapper.contains(focused)) {
+                    const play = wrapper.querySelector('[data-control="play"]');
+                    if (play && !play.disabled) play.focus({preventScroll:true});
+                    else if (video.controls) video.focus({preventScroll:true});
+                }
+            });
+            video.addEventListener('playing', () => {
+                if (active === context && context.note?.textContent.startsWith('Серия готова.'))
+                    showPlaybackStatus(context, '');
+            });
             video.addEventListener('timeupdate', () => {
                 if (active !== context) return;
                 updateSkip(context);
@@ -353,8 +373,7 @@
             video.addEventListener('ended', () => markCurrentWatched(context));
             video.addEventListener('ended', () => {
                 if (active !== context || !video.isConnected) return;
-                if (context.autoNext && context.hasNext) nextEpisodeCountdown(context);
-                else if (context.hasNext) nextEpisodeCountdown(context); // Manual action, no timer.
+                if (context.hasNext) nextEpisodeCountdown(context); // With autoplay off, manual action only.
             });
             video.addEventListener('playing', () => clearNextCountdown(context));
             video.addEventListener('seeking', () => clearNextCountdown(context));
@@ -425,7 +444,10 @@
             if (!context.hasNext) return;
             event.preventDefault();
             if (typeof root.openWatchModal === 'function') {
-                root.openWatchModal(context.animeId, context.season, context.index + 1);
+                if (context.video?.isConnected) {
+                    clearNextCountdown(context);
+                    root.openWatchModal(context.animeId, context.season, context.index + 1, null, null, {playNative:true});
+                } else root.openWatchModal(context.animeId, context.season, context.index + 1);
             }
             return;
         }

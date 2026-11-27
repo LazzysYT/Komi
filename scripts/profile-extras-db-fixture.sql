@@ -82,6 +82,7 @@ do $$declare r jsonb;begin
  begin perform public.komi_profile_extras('equip','{"item_id":"cursor_katana"}');raise exception 'foreign ownership accepted';exception when insufficient_privilege then null;end;
  begin perform public.komi_profile_extras('buy','{"item_id":"cursor_katana","expected_cost":10}');raise exception 'negative wallet allowed';exception when invalid_parameter_value then null;end;
  r:=public.komi_profile_extras('cards','{"handles":["alpha","gamma"]}');if jsonb_array_length(r)<>1 or r->0->>'username'<>'alpha' or r->0->>'effect_id'<>'friend_fx_sakura' then raise exception 'friend card missing %',r;end if;
+ r:=public.komi_profile_extras('cards','{"handles":["00000000-0000-0000-0000-000000000001"]}');if jsonb_array_length(r)<>1 or r->0->>'username'<>'00000000-0000-0000-0000-000000000001' then raise exception 'verified ID friend card missing';end if;
  r:=public.komi_profile_extras('public_medal','{"username":"alpha"}');if r->>'medal_id'<>'watched_1' then raise exception 'public pin missing';end if;
 end$$;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000003',false);

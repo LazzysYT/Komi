@@ -81,7 +81,7 @@ function disposeKomiMedia(video) {
     video.querySelectorAll('source').forEach(source => source.remove());
     video.load();
 }
-function bindKomiPlayer(animeId, season, index, raw, progressIndex = index) {
+function bindKomiPlayer(animeId, season, index, raw, progressIndex = index, playNative = false) {
     const video = document.getElementById('animeVideoPlayer');
     if (!video) return;
     Object.assign(video.dataset, {animeId: String(animeId), season: String(season), episode: String(progressIndex), owner: currentUser?.authUserId || currentUser?.username || ''});
@@ -96,6 +96,24 @@ function bindKomiPlayer(animeId, season, index, raw, progressIndex = index) {
     // Never jump immediately on ended: that bypasses the user's cancel action.
     video.addEventListener('ended', () => saveProgress(animeId, video, true));
     video.komiControls = window.mountKomiPlaybackControls?.(video);
+    if (playNative) {
+        // Metadata arrives for direct videos and HLS alike, after progress restoration.
+        // No autoplay attribute and no muting: respect browser and viewer preferences.
+        video.addEventListener('loadedmetadata', () => {
+            const token = video.komiMediaToken;
+            const current = () => !!token && video.komiMediaToken === token && video.isConnected &&
+                document.getElementById('animeVideoPlayer') === video &&
+                document.getElementById('watchModal')?.classList.contains('active') &&
+                !video.komiMediaFailed;
+            if (!current() || !video.paused) return;
+            const handleBlocked = error => {
+                if (!current() || !video.paused || error?.name === 'AbortError') return;
+                video.dispatchEvent(new Event('komi:autoplay-blocked'));
+            };
+            try { Promise.resolve(video.play()).catch(handleBlocked); }
+            catch (error) { handleBlocked(error); }
+        }, {once:true});
+    }
     const showError = () => {
         showKomiPlayerError(video);
         video.komiControls?.showError();

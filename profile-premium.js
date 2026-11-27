@@ -210,7 +210,7 @@
       var p=userProfiles[name]||{};
       var label=typeof komiVisibleUsername==='function'
         ? komiVisibleUsername(name,p,false) : String(p.displayName||name);
-      return '<button type="button" data-kpe-friend="'+escapeText(name)+'" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
+      return '<button type="button" data-kpe-friend data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
         friendAvatarMarkup(name,p,label)+'<span><strong>'+escapeText(label)+'</strong><small>Открыть профиль</small></span></button>';
     }).join('');
   }
@@ -219,7 +219,7 @@
       var profile=userProfiles[name]||{};
       var label=typeof komiVisibleUsername==='function'
         ? komiVisibleUsername(name,profile,false) : String(profile.displayName||name);
-      return '<button type="button" class="komi-profile-friend" data-kpe-friend="'+escapeText(name)+'" style="display:inline-flex;align-items:center;gap:10px;min-width:185px;max-width:100%;text-align:left;margin:4px" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
+      return '<button type="button" class="komi-profile-friend" data-kpe-friend style="display:inline-flex;align-items:center;gap:10px;min-width:185px;max-width:100%;text-align:left;margin:4px" data-komi-onclick="openProfile(window.komiProfileFriendNames['+i+'])">'+
         friendAvatarMarkup(name,profile,label)+'<span style="min-width:0"><strong style="display:block;overflow-wrap:anywhere">'+escapeText(label)+'</strong>'+
         '<small style="display:block;color:#999;font-size:10px">Открыть профиль</small></span></button>';
     }).join('');

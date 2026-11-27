@@ -17,7 +17,8 @@ test('only bounded metadata can define an intro or ending segment',()=>{
 test('only Premium native playback receives automatic OP/ED skip; no iframe playback control',()=>{
   assert.match(src,/KomiPremium\?\.isActiveId\?\.\(context\.authId\)/);
   assert.match(src,/if \(video\) \{/);
-  assert.match(src,/context\.autoNext && context\.hasNext/);
+  assert.match(src,/if \(context\.hasNext\) nextEpisodeCountdown\(context\)/);
+  assert.match(src,/if \(!context\.autoNext\) \{[\s\S]*?return;[\s\S]*?context\.nextTimer = setInterval/);
   assert.match(src,/if \(active !== context \|\| !video\.isConnected\) return/);
-  assert.match(src,/root\.openWatchModal\(context\.animeId, context\.season, context\.index \+ 1\)/);
+  assert.match(src,/root\.openWatchModal\(context\.animeId, context\.season, context\.index \+ 1, null, null, \{playNative:true\}\)/);
 });

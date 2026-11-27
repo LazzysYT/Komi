@@ -142,7 +142,7 @@ async function upload(blob,uid){
 }
 function editor(node,data,uid,baseAvatar,name,profile){
  node.replaceChildren();const a=data.appearance;
- node.append(el('h4','','Моя мини-карточка'),el('p','kpe-notice','Так тебя увидят друзья. Фон и аватар — бесплатно, эффекты можно купить в магазине. Карточка не меняет основной профиль.'));
+ node.append(el('h4','','Моя мини-карточка'),el('p','kpe-notice','Так тебя увидят друзья. Фон и аватар — бесплатно, эффекты можно купить в магазине. Карточка не меняет основной профиль. Загруженные картинки используют публичные ссылки, как обычная аватарка.'));
  const preview=miniCard(a,baseAvatar,name);node.append(preview);
  const form=el('div','kpe-editor-grid'),check=el('input');check.type='checkbox';check.checked=a.card_enabled===true;const cl=el('label','kpe-check');cl.append(check,document.createTextNode(' Показывать карточку друзьям'));
  const bg=el('select','kpe-select');for(const [id,label] of cat.backgrounds){const o=el('option','',label);o.value=id;bg.append(o);}bg.value=bgSet.has(a.background)?a.background:'noir';
@@ -198,6 +198,7 @@ async function mountProfile(profile,opts){
  }
  void decorateFriends(profile);
 }
+function friendKey(node){const img=node.querySelector('img[data-komi-friend-avatar]');return img?.getAttribute('data-komi-friend-avatar-id')||img?.getAttribute('data-komi-friend-avatar')||'';}
 function cleanCard(node){delete node.dataset.kpeBg;delete node.dataset.kpeEffect;node.classList.remove('kpe-friend-card');for(const n of node.querySelectorAll('.kpe-friend-bg,.kpe-friend-custom-avatar,.kpe-friend-medal'))n.remove();for(const n of node.querySelectorAll('.kpe-base-avatar-hidden'))n.classList.remove('kpe-base-avatar-hidden');}
 function paintFriend(node,row){
  cleanCard(node);if(!row)return;
@@ -221,7 +222,7 @@ async function decorateFriends(scope){
  const nodes=[...scope.querySelectorAll('[data-kpe-friend]')].filter(n=>n.isConnected).slice(0,120);
  if(!uid||!client){for(const node of nodes)cleanCard(node);return;}
  if(!nodes.length)return;style();
- const names=[...new Set(nodes.map(n=>n.dataset.kpeFriend).filter(s=>s&&s.length<=64))];
+ const names=[...new Set(nodes.map(friendKey).filter(s=>s&&s.length<=64))];for(const n of nodes)if(!names.includes(friendKey(n)))cleanCard(n);
  if(friendsCache.get('viewer')!==uid){for(const node of nodes)cleanCard(node);friendsCache.clear();friendsCache.set('viewer',uid);}
  const stale=names.filter(n=>!friendsCache.has(n)||Date.now()-friendsCache.get(n).at>15000);
  try{
@@ -234,7 +235,7 @@ async function decorateFriends(scope){
    for(const n of part)friendsCache.set(n,{at:Date.now(),row:found.get(n)||null});
   }
   if(viewer()!==uid)return;
-  for(const n of nodes)if(active(n,uid)&&names.includes(n.dataset.kpeFriend))paintFriend(n,friendsCache.get(n.dataset.kpeFriend)?.row);
+  for(const n of nodes)if(active(n,uid)&&names.includes(friendKey(n)))paintFriend(n,friendsCache.get(friendKey(n))?.row);
  }catch{if(viewer()===uid)for(const n of nodes)if(active(n,uid))cleanCard(n);}
 }
 function confirmBuy(p,data,uid){

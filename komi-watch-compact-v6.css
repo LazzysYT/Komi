@@ -1210,3 +1210,248 @@
 }
 #watchModal .komi-episode-link-status > :is(h2,p) {margin:0 0 12px;}
 #watchModal .komi-episode-link-status > div {display:flex;flex-wrap:wrap;gap:8px;}
+
+/* Cinema Room: a compact show header, the full 16:9 frame, one control strip. */
+#watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7 {
+  grid-template-columns:minmax(0,1fr) minmax(265px,27%)!important;
+  grid-template-rows:auto auto auto auto auto auto!important;
+  gap:10px clamp(14px,2vw,26px)!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading {
+  grid-column:1!important;grid-row:1!important;gap:0!important;
+  min-height:56px;margin:0!important;padding:0 1px 3px!important;align-items:center!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading > div:first-child{min-width:0}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading h1 {
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;
+  max-width:none;font-size:clamp(21px,2.1vw,30px)!important;line-height:1.1!important;
+  text-wrap:initial;letter-spacing:-.035em;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading p {margin:5px 0 0;font-size:12px!important;line-height:1.3}
+#watchModal .komi-cinema-kicker,#watchModal .komi-cinema-pending > span{
+  display:flex;align-items:center;gap:7px;margin-bottom:5px;color:#b1b1b9;
+  font:750 10px/1.1 Manrope,Inter,sans-serif;letter-spacing:.13em;text-transform:uppercase
+}
+#watchModal .komi-cinema-kicker::before,#watchModal .komi-cinema-pending > span::before{
+  content:"";display:block;width:6px;height:6px;border-radius:50%;background:#f0f0f3;
+  box-shadow:0 0 0 3px #f0f0f319
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-main > .player-wrapper{
+  grid-column:1!important;grid-row:2!important;aspect-ratio:16/9!important;
+  border-radius:13px!important;background:#030304;box-shadow:0 14px 35px #0006;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-player-support {
+  grid-column:1!important;grid-row:3!important;display:flex!important;
+  flex-wrap:nowrap;justify-content:flex-start;align-items:center;gap:7px;
+  margin:0!important;padding:5px;border:1px solid #242428;border-radius:13px;background:#111114
+}
+#watchModal .komi-cinema-v7 .komi-player-support > .komi-watch-source{
+  align-items:stretch;gap:0;max-width:none;min-height:44px;position:relative;margin-right:auto;
+}
+#watchModal .komi-cinema-v7 .komi-player-support .komi-watch-source label{
+  position:absolute;top:5px;left:11px;color:#b5b5bf;pointer-events:none;font:700 10px/1.1 Manrope,Inter,sans-serif;
+}
+#watchModal .komi-cinema-v7 .komi-player-support .komi-watch-source select{
+  border-radius:8px!important;border:1px solid #28282d!important;background:#19191d!important;
+  padding:16px 25px 4px 10px!important;color:#f0f0f3;font-size:13px!important;font-weight:750;
+}
+#watchModal .komi-cinema-v7 .komi-player-support .komi-episode-navigation{
+  display:flex!important;align-items:stretch;justify-content:flex-end;gap:5px;width:auto!important;
+  flex:0 0 auto;border:0!important;padding:0!important;background:none!important;
+}
+#watchModal .komi-cinema-v7 .komi-player-support :is(.komi-watch-navbtn,.komi-player-help,.komi-mobile-watch-source,.komi-mobile-watch-episodes){
+  display:inline-flex;align-items:center;justify-content:center;gap:5px;min-width:44px;min-height:44px!important;
+  height:auto!important;flex:0 0 auto;padding:4px 11px!important;
+  border:1px solid #303035!important;border-radius:8px!important;background:#19191d!important;
+  color:#ececef;font:750 12px/1.05 Manrope,Inter,sans-serif;
+  box-shadow:none!important;transform:none!important;white-space:nowrap;
+}
+#watchModal .komi-cinema-v7 .komi-player-support .komi-watch-navbtn:first-child{padding-inline:9px!important}
+#watchModal .komi-cinema-v7 .komi-player-support .komi-watch-navbtn.primary:not(:disabled){
+  background:#f4f4f6!important;border-color:#f4f4f6!important;color:#101013!important
+}
+#watchModal .komi-cinema-v7 .komi-player-support :is(button,select):is(:hover,:focus-visible):enabled{border-color:#92929f!important}
+#watchModal .komi-cinema-v7 .komi-player-support :is(button,select):focus-visible{outline-offset:1px!important}
+#watchModal .komi-cinema-v7 .komi-watch-navbtn:disabled{opacity:.42}
+#watchModal .komi-cinema-v7 .komi-cinema-nav-glyph{font-size:24px;line-height:.8;font-weight:400}
+#watchModal .komi-cinema-v7 .komi-player-help .komi-cinema-help-icon{border-color:#aaaab5}
+#watchModal #watchModalContent .komi-cinema-v7 > #komiPlayerRecovery:not([hidden]) {
+  grid-column:1!important;grid-row:4!important;margin:0!important
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions{
+  grid-column:1!important;grid-row:5!important;margin:0!important;gap:6px!important;
+  padding:4px 0!important;background:transparent!important;border:0!important;box-shadow:none!important
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > :is(button,details>summary){
+  border-color:#26262a!important;background:#111114!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > #komiAnimeComments{grid-column:1!important;grid-row:6!important;margin-inline:0!important}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-sidebar {
+  grid-column:2!important;grid-row:1 / span 6!important;margin:0!important;
+  border-radius:13px!important;border-color:#242428!important;background:#101013!important;
+}
+#watchModal .komi-cinema-extra-count{
+  display:inline-block;margin-left:4px;color:#c5c5cf;border:1px solid #414148;
+  border-radius:999px;padding:3px 6px;line-height:1;font-size:10px;font-weight:750;
+}
+#watchModal .komi-cinema-extra-divider{
+  grid-column:1/-1;display:none;margin-top:7px;padding:6px 0;
+  border-top:1px solid #37373f;color:#bfbfca;font-size:11px;font-weight:750;
+}
+#watchModal .komi-cinema-extra-divider:has(~ button[data-supplemental-label]:not([data-supplemental-label=""]):not([hidden])){display:block}
+#watchModal .komi-watch-sidebar .komi-episode-list .komi-episode-number{
+  min-height:58px!important;background:#141417!important;border-color:#222226!important;
+}
+#watchModal .komi-watch-sidebar .komi-episode-list .komi-episode-number.active{
+  background:#242427!important;border-color:#ccccd0!important;
+}
+#watchModal .komi-watch-sidebar .komi-episode-list .komi-episode-thumb[data-preview-kind="unavailable"]{
+  background:radial-gradient(ellipse at 28% 25%,#2a2a30,#141417 75%)!important;
+  border-color:#2f2f36!important;
+}
+#watchModal .komi-episode-thumb[data-preview-kind="unavailable"] .komi-episode-thumb-badge{color:#dedee7}
+#watchModal .komi-cinema-progress{
+  display:block;position:absolute;z-index:2;inset:auto 3px 3px;width:calc(100% - 6px);height:3px;
+  border:0;border-radius:3px;background:#25252b;accent-color:#efeff2;
+}
+#watchModal .komi-cinema-progress[hidden]{display:none}
+#watchModal .komi-cinema-progress::-webkit-progress-bar{background:#25252b;border-radius:3px}
+#watchModal .komi-cinema-progress::-webkit-progress-value{background:#efeff2;border-radius:3px}
+#watchModal .komi-cinema-progress::-moz-progress-bar{background:#efeff2;border-radius:3px}
+#watchModal .komi-cinema-pending{width:100%;max-width:min(1120px,73vw);padding:18px 24px}
+#watchModal .komi-cinema-pending-screen{
+  display:grid;place-items:center;aspect-ratio:16/9;min-width:0;border-radius:13px;
+  border:1px solid #2b2b31;background:radial-gradient(ellipse at center,#222229,#09090c 75%);color:#e0e0e5
+}
+#watchModal .komi-cinema-pending-screen p{padding:12px;text-align:center}
+#watchModal.komi-episodes-collapsed #watchModalContent .komi-watch-stage.komi-cinema-v7{grid-template-columns:minmax(0,1fr)!important}
+#watchModal.komi-episodes-collapsed #watchModalContent .komi-cinema-v7 > .komi-watch-sidebar{grid-column:1!important;grid-row:7!important}
+@media(max-width:1050px){
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7{grid-template-columns:minmax(0,1fr)!important}
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-sidebar{grid-column:1!important;grid-row:7!important}
+ #watchModal .komi-cinema-pending{max-width:none}
+}
+@media(max-width:767px){
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading{margin:0 12px!important;padding:4px 0 0!important;min-height:57px}
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-main > .player-wrapper{border-radius:0!important}
+ #watchModal #watchModalContent .komi-cinema-v7 :is(.komi-player-support,.komi-watch-quick-actions,#komiPlayerRecovery:not([hidden]),#komiAnimeComments){margin-inline:10px!important}
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-support{gap:4px;padding:4px}
+ #watchModal .komi-cinema-v7 .komi-player-support > .komi-watch-source{display:none!important}
+ #watchModal .komi-cinema-v7 .komi-player-support > .komi-mobile-watch-source{
+  flex:1 1 0;display:flex!important;flex-direction:column;gap:3px;align-items:flex-start;min-width:0;
+  overflow:hidden;padding-inline:6px!important;
+ }
+ #watchModal .komi-cinema-v7 .komi-cinema-dock-caption{font-size:9px;color:#b9b9c3}
+ #watchModal .komi-cinema-v7 .komi-cinema-dock-value{overflow:hidden;text-overflow:ellipsis;max-width:100%}
+ #watchModal .komi-cinema-v7 .komi-player-support .komi-episode-navigation{gap:4px}
+ #watchModal .komi-cinema-v7 .komi-player-support :is(.komi-watch-navbtn,.komi-player-help,.komi-mobile-watch-episodes){padding-inline:6px!important}
+ #watchModal .komi-cinema-v7 .komi-player-support .komi-watch-navbtn.primary .komi-cinema-nav-glyph{font-size:20px}
+ #watchModal .komi-cinema-pending{padding:16px 12px}
+}
+@media(max-width:365px){
+ #watchModal .komi-cinema-v7 .komi-player-support .komi-watch-navbtn.primary .komi-cinema-nav-glyph{display:none}
+ #watchModal .komi-cinema-v7 .komi-player-support .komi-watch-navbtn.primary{padding-inline:5px!important}
+}
+@media(prefers-reduced-motion:no-preference){
+ #watchModal .komi-cinema-pending-screen p{animation:komi-cinema-status-in .16s ease-out both}
+ @keyframes komi-cinema-status-in{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:none}}
+}
+/* Explicit widths supersede the old 46px icon-only navigation rule. */
+#watchModal #watchModalContent .komi-cinema-v7 .komi-player-support .komi-watch-navbtn {
+  display:inline-flex!important;width:44px!important;max-width:none!important;justify-content:center!important;
+  font-size:12px!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 .komi-player-support .komi-watch-navbtn.primary{
+  width:auto!important;min-width:106px!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 .komi-cinema-next-text{font:inherit!important;flex:none}
+#watchModal #watchModalContent .komi-cinema-v7:not(:has(> #komiPlayerRecovery:not([hidden]))) > .komi-watch-quick-actions{grid-row:4!important}
+#watchModal #watchModalContent .komi-cinema-v7:not(:has(> #komiPlayerRecovery:not([hidden]))) > #komiAnimeComments{grid-row:5!important}
+#watchModal #watchModalContent .komi-cinema-v7 .komi-player-heading .komi-cinema-kicker{font-size:10px!important;color:#b6b6bf}
+@media(max-width:767px){
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > :is(.komi-mobile-watch-episodes,.komi-player-help){flex:0 0 auto}
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > .komi-player-help{width:44px}
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support .komi-watch-navbtn.primary{min-width:92px!important}
+}
+@media(max-width:365px){
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support .komi-watch-navbtn.primary{min-width:79px!important}
+}
+@media(max-width:767px){
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > .komi-mobile-watch-source{flex:1 1 0!important}
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > .komi-mobile-watch-episodes{flex:0 0 54px!important}
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > .komi-player-help{flex:0 0 44px!important;max-width:44px!important}
+}
+/* On wide displays the dock must not fall below a short desktop viewport. */
+@media(min-width:1051px) and (min-height:650px){
+ #watchModal:not(.komi-episodes-collapsed):not(.komi-watch-fullscreen) #watchModalContent .komi-watch-stage.komi-cinema-v7{
+  grid-template-columns:minmax(0,min(71%,calc((100dvh - 258px)*16/9))) minmax(265px,27%)!important;
+  justify-content:center;
+ }
+}
+
+/* Reference pass: quieter surfaces, stronger picture hierarchy, readable discussion. */
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-sidebar{
+  background:#111113!important;border-color:#202024!important;
+}
+#watchModal :is(.komi-cinema-v7,#komiMobileSheet) .komi-watch-sidebar .komi-episode-list .komi-episode-number:not(.active):not(:hover):not(:focus-visible){
+  border-color:transparent!important;background:transparent!important;
+}
+#watchModal :is(.komi-cinema-v7,#komiMobileSheet) .komi-watch-sidebar .komi-episode-list .komi-episode-thumb{
+  border-color:#29292c;border-radius:9px!important;
+}
+#watchModal :is(.komi-cinema-v7,#komiMobileSheet) .komi-episode-list .komi-episode-number.active .komi-list-label small:not(.komi-episode-supplemental){
+  color:#f0eef3!important;font-weight:650;
+}
+#watchModal .komi-cinema-v7 .player-wrapper .komi-playback {
+  background:linear-gradient(transparent,#0b0b1090 50%,#09090def);
+}
+#watchModal .komi-cinema-v7 .player-wrapper .komi-playback-row > button,
+#watchModal .komi-cinema-v7 .player-wrapper .komi-playback-settings > summary{
+  border:1px solid #ffffff24;background:#16161dcc;color:#f7f7fa;
+}
+#watchModal .komi-cinema-v7 .player-wrapper .komi-playback-row > [data-control="play"]:not(:disabled){
+  background:#f7f7fa;color:#131316;border-color:#f7f7fa;
+}
+#watchModal .komi-cinema-v7 .player-wrapper .komi-playback-row > button:not([data-control="play"]):enabled:hover,
+#watchModal .komi-cinema-v7 .player-wrapper .komi-playback-settings > summary:hover{
+  background:#303037;border-color:#ffffff54;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > #komiAnimeComments{
+  margin-top:8px!important;padding:clamp(16px,2vw,25px) 2px 0!important;
+  background:transparent!important;border:0!important;border-top:1px solid #262629!important;
+  border-radius:0!important;box-shadow:none!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-heading h2{
+  font-size:clamp(19px,1.5vw,23px)!important;letter-spacing:-.025em;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-form{
+  border-color:#252529;border-radius:13px;background:#111114;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-input{
+  background:#151518!important;border-color:#27272b!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comment:not(.komi-comment-promoted):not([class*="komi-store-"]){
+  margin:0!important;padding:16px 2px!important;border:0!important;border-bottom:1px solid #242427!important;
+  background:transparent!important;border-radius:0!important;box-shadow:none!important;
+}
+#watchModal .komi-cinema-v7 #komiAnimeComments .komi-comment-body{max-width:74ch;line-height:1.65;overflow-wrap:anywhere}
+
+/* Final reference layout: the desktop cinema opens on the image, not a header block. */
+@media(min-width:1051px){
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-main > .player-wrapper{
+  grid-row:1!important;border-radius:19px!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading{
+  grid-row:2!important;min-height:49px;padding:2px 1px 0!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-heading .komi-cinema-kicker{display:none}
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-sidebar{
+  border-radius:19px!important;background:#161618!important;
+ }
+ #watchModal .komi-cinema-v7 .komi-watch-sidebar .komi-episode-list .komi-episode-preview.komi-episode-thumb{
+  width:clamp(86px,30%,132px)!important;flex-basis:clamp(86px,30%,132px)!important;
+ }
+ #watchModal .komi-cinema-v7 .komi-watch-sidebar .komi-episode-list .komi-episode-number{
+  min-height:64px!important;
+ }
+}
