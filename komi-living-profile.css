@@ -280,3 +280,11 @@ button.komi-comment-fx-chip{cursor:pointer}.komi-comment-fx-chip[aria-pressed="t
 .komi-entry-flash{animation:komi-entry-reveal 1s ease-out both}.komi-party-arrival{animation:komi-party-arrive 2.2s ease both}
 .kc-page:is([data-komi-aura="aura-crimson"],[data-komi-aura="aura-starlight"]) .kc-owned:is(:hover,:focus-within):not(.kc-flipped) .kc-art::after{animation:komi-ornament-breathe 3s ease-in-out infinite}}
 @media(prefers-reduced-motion:reduce){.komi-entry-flash,.komi-party-arrival{display:none}.sv-fx-sample b,.komi-comment-fx-chip{animation:none!important}}
+
+/* Keep themed bundles compact on phones instead of stacking four cards before the store. */
+@media(max-width:700px){
+ #shop .sv-animated-set-grid{display:grid;grid-auto-flow:column;grid-template-columns:none;grid-auto-columns:min(78%,280px);overflow-x:auto;scroll-snap-type:x mandatory;overscroll-behavior-inline:contain;padding:3px 1px 9px;scrollbar-width:thin}
+ #shop .sv-animated-set{scroll-snap-align:start}
+ #shop .sv-animated-set-art{min-height:76px;padding:12px}
+}
+@media(prefers-reduced-motion:reduce){#shop .sv-animated-set-grid{scroll-behavior:auto}}

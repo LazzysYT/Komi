@@ -10,7 +10,7 @@ test('new animated cosmetics are unique and preview-only until the second server
  await c.checkPricing({rpc:async name=>name==='komi_shop_living_revision'?{data:c.revision}:{error:{message:'not deployed'}}});
  assert.equal(c.canCheckout(),true);assert.equal(c.isOnSale('frame_ghoul_seal'),true);
  assert.ok(items.every(x=>!c.isOnSale(x.id)));
- await c.checkPricing({rpc:async name=>({data:name==='komi_shop_living_revision'?c.revision:c.animatedRevision})});
+ await c.checkAnimatedPricing({rpc:async name=>{assert.equal(name,'komi_shop_animated_revision');return {data:c.animatedRevision};}});
  assert.ok(items.every(x=>c.isOnSale(x.id)));
  assert.equal(c.isOnSale('frame_moon'),false);
  assert.equal(p.canCheckout(),false);

@@ -2090,7 +2090,7 @@ const preview=()=>Boolean(root.location?.hostname&&root.location.hostname!=='kom
 let pricingConfirmed=false,checking=null;
 function checkPricing(client){
  if(preview()||!client?.rpc)return Promise.resolve(false);
- if(pricingConfirmed&&animatedPricingConfirmed)return Promise.resolve(true);
+ if(pricingConfirmed)return Promise.resolve(true);
  if(checking)return checking;
  checking=Promise.resolve().then(()=>client.rpc('komi_shop_living_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;

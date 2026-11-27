@@ -337,6 +337,8 @@ async function checkout(ctx){
 function mount(section,ctx){
  for(const img of section.querySelectorAll('[data-sv3-user-avatar]'))img.addEventListener('error',()=>{img.hidden=true;if(img.nextElementSibling)img.nextElementSibling.hidden=false;},{once:true});
  section.addEventListener('click',async event=>{
+  const summary=event.target.closest?.('.sv14-filters > summary');
+  if(summary?.parentElement){event.preventDefault();const details=summary.parentElement;details.open=!details.open;state.filtersOpen=details.open;return;}
   const t=event.target.closest('button');if(!t||t.disabled)return;
   if(t.hasAttribute('data-shop-item-action')){state.status='';if(ctx.owner)state.sheetOpen=true;return;}
   if((state.busy||ctx.busy)&&['data-v3-try','data-v3-remove','data-v3-reset'].some(attr=>t.hasAttribute(attr)))return;
@@ -366,6 +368,7 @@ function mount(section,ctx){
  section.addEventListener('input',search);section.addEventListener('compositionend',search);
  section.addEventListener('change',event=>{
   const t=event.target;
+  const details=section.querySelector?.('.sv14-filters');if(details)state.filtersOpen=!!details.open;
   if(t.matches('[data-v3-sort]')){state.sort=sorts.some(s=>s[0]===t.value)?t.value:'default';filterChanged('[data-v3-sort]');}
   else if(t.matches('[data-v7-category-select]')){state.category=categories.some(c=>c[0]===t.value&&availableCategories(latestCtx).some(([id])=>id===t.value))?t.value:'all';filterChanged('[data-v7-category-select]');}
   else if(t.matches('[data-v3-hide-owned]')){state.hideOwned=t.checked;filterChanged('[data-v3-hide-owned]');}
