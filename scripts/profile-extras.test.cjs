@@ -33,3 +33,14 @@ test('optional loader is inert on home, deduplicates requests and ignores stale 
  const second=proxy.mountProfile({isConnected:true},{viewer:'b'});await Promise.all([first,second]);
  assert.equal(requests.length,2);assert.deepEqual(calls,[['configure','b'],['profile','b']]);
 });
+
+test('catalog normalization yields between batches without losing, duplicating or exposing episode data',async()=>{
+ const app=read('app-main.js');const start=app.indexOf('function komiCatalogYield()'),end=app.indexOf('async function komiLoadCatalogPages',start);
+ assert.ok(start>=0&&end>start);
+ let yields=0;const fn=vm.runInNewContext(app.slice(start,end)+'\nkomiNormalizeCatalogRows',{window:{scheduler:{yield:async()=>{yields++;}}},setTimeout});
+ const rows=Array.from({length:288},(_,i)=>({shikimori_id:i+1,data:{title:'Title '+i,genres:['Drama'],episodeCount:12,episodes:[{source:'private'}]},updated_at:'v1'}));
+ const out=[];await fn(rows,out);
+ assert.equal(out.length,rows.length);assert.equal(yields,3);assert.equal(new Set(out.map(x=>x.id)).size,rows.length);
+ assert.ok(out.every(x=>x.episodes.length===0&&x.komiCardUpdatedAt==='v1'));
+ const html=read('index.html');assert.match(html,/komi-living-profile\.css\?v=[^"]+" media="print" data-komi-deferred-style="living"/);
+});

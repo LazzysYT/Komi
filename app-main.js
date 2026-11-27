@@ -296,6 +296,32 @@ function loadDataFromCloud(attempt = 0) {
     komiCatalogLoadPending = komiLoadCatalogPages(attempt).finally(() => { komiCatalogLoadPending = null; });
     return komiCatalogLoadPending;
 }
+// Keep catalog normalization cooperative on low-powered devices. The public
+// home preview remains interactive while complete catalog data arrives.
+function komiCatalogYield() {
+    if (typeof window.scheduler?.yield === 'function') return window.scheduler.yield();
+    return new Promise(resolve => setTimeout(resolve, 0));
+}
+async function komiNormalizeCatalogRows(rows, catalog) {
+    let batch = 0;
+    for (const row of rows) {
+        if (++batch % 96 === 0) await komiCatalogYield();
+        const anime = row.data;
+        if (!anime || typeof anime !== 'object') continue;
+        catalog.push({
+            ...anime,
+            id: String(row.shikimori_id),
+            shikimoriId: Number(row.shikimori_id),
+            title: anime.title || anime.originalTitle || 'Без названия',
+            poster: anime.poster || '',
+            shikiRating: anime.shikiRating || 0,
+            genres: Array.isArray(anime.genres) ? anime.genres : [],
+            episodeCount: Math.max(0, Number(anime.episodeCount) || 0),
+            komiCardUpdatedAt: row.updated_at,
+            episodes: []
+        });
+    }
+}
 async function komiLoadCatalogPages(attempt = 0) {
     catalogInitialLoadFailed = false;
     // Public-only IndexedDB snapshot may paint the complete catalog immediately
@@ -344,23 +370,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const { data: rows, error } = result;
             if (error) throw error;
             if (!rows || rows.length === 0) break;
-            for (const row of rows) {
-                const anime = row.data;
-                if (!anime || typeof anime !== 'object') continue;
-                catalog.push({
-                    ...anime,
-                    id: String(row.shikimori_id),
-                    shikimoriId: Number(row.shikimori_id),
-                    title: anime.title || anime.originalTitle || 'Без названия',
-                    poster: anime.poster || '',
-                    shikiRating: anime.shikiRating || 0,
-                    genres: Array.isArray(anime.genres) ? anime.genres : [],
-                    episodeCount: Math.max(0, Number(anime.episodeCount) || 0),
-                    komiCardUpdatedAt: row.updated_at,
-                    // Full episode sources are fetched only when opening a title.
-                    episodes: []
-                });
-            }
+            await komiNormalizeCatalogRows(rows, catalog);
             const nextId = Number(rows[rows.length - 1].shikimori_id);
             if (!Number.isSafeInteger(nextId) || nextId <= lastId)
                 throw new Error('Некорректная пагинация каталога');
@@ -379,6 +389,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 }
             }
             // PostgREST may cap rows below our request; continue by last ID until empty.
+            await komiCatalogYield();
         }
         // Keep already loaded title details only if the public card version still matches.
         const existing = new Map(animeList.filter(item => item.komiDetailsLoaded && item.komiCardUpdatedAt && item.komiDetailsLoadedAt === item.komiCardUpdatedAt).map(item => [String(item.id), item]));
@@ -398,8 +409,9 @@ async function komiLoadCatalogPages(attempt = 0) {
         };
         if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(writeSnapshot,{timeout:8000});
         else setTimeout(writeSnapshot,1500);
-        // Persist only the public, view-projected fields. Account data is never cached.
-        void window.KomiPublicCatalogCache?.write(catalog);
+        // Persist only public, view-projected fields. Account data is never cached.
+        // Start cache projection after yielding the visible final render.
+        void komiCatalogYield().then(() => window.KomiPublicCatalogCache?.write(catalog)).catch(()=>{});
         komiStoreReadyResume();
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
