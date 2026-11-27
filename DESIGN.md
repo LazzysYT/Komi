@@ -309,3 +309,7 @@ The Collections tab owns the series albums, silhouettes, filters and journal. Pa
 ### Shop fitting refresh
 
 The general catalog has no promotional hero before products. Quick categories show only available inventory; all categories, price filters, and sort share one native disclosure. The anime-title shelf is an optional compact preview in Titles only. Cards use the existing renderers and distinct in-context displays, not stock art. The fitting room compares confirmed equipped slots with temporary trial slots without mutating either set; reaction previews remain separate from profile cosmetics. Empty fitting rooms no longer occupy screen space. Existing checkout, ownership, gifting, inventory, CSS token ownership, and verified server prices are retained.
+
+### Collector foils
+
+Six twenty-character albums share the same neutral rounded black surfaces. Illustrated fronts use a calm background from their own world and one foil edge keyed to rarity. Locked cards retain a fully black silhouette; the portrait viewer shows full-body artwork, series/rarity, stable catalogue code and position without spoiling unopened art. Pack and album shelves stay separate. A paid pack still awards exactly one server-confirmed missing card at 50 AniCoin. After opening, three identical backs offer a strictly decorative choice, with a separate reveal atmosphere per series. A skip and reduced-motion mode remain available; replay cannot buy or reveal another prize.

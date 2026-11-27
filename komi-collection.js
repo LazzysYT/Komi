@@ -1,12 +1,12 @@
 /* KomiAnime collection: catalog is public; ownership and paid openings are server-authoritative. */
 (function(root){
 'use strict';
-const rarityById=Object.freeze({kaneki:'legendary',eto:'legendary',arima:'legendary',touka:'epic',juuzou:'epic',rize:'epic',furuta:'epic',uta:'rare',tsukiyama:'rare',ayato:'rare',yoshimura:'rare',takizawa:'rare',hide:'common',hinami:'common',amon:'common',nishiki:'common',yomo:'common',akira:'common'});
+const rarityById=Object.freeze({kaneki:'legendary',eto:'legendary',arima:'legendary',touka:'epic',juuzou:'epic',rize:'epic',furuta:'epic',uta:'rare',tsukiyama:'rare',ayato:'rare',yoshimura:'rare',takizawa:'rare',mado:'rare',irimi:'rare',hide:'common',hinami:'common',amon:'common',nishiki:'common',yomo:'common',akira:'common'});
 const rarityNames=Object.freeze({common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'});
 const rarityRank=Object.freeze({legendary:0,epic:1,rare:2,common:3});
 // Sort display copies only: catalog serials and server rewards remain unchanged.
 const byRarity=items=>[...items].sort((a,b)=>rarityRank[a.rarity]-rarityRank[b.rarity]);
-const ghoulRoster=[["kaneki","Кэн Канэки","Ken Kaneki"],["touka","Тока Кирисима","Touka Kirishima"],["juuzou","Дзюдзо Судзуя","Juuzou Suzuya"],["uta","Ута","Uta"],["tsukiyama","Сю Цукияма","Shuu Tsukiyama"],["hide","Хидэёси Нагатика","Hideyoshi Nagachika"],["rize","Ридзэ Камисиро","Rize Kamishiro"],["arima","Кисё Арима","Kishou Arima"],["eto","Это Ёсимура","Eto Yoshimura"],["ayato","Аято Кирисима","Ayato Kirishima"],["hinami","Хинами Фуэгути","Hinami Fueguchi"],["amon","Котаро Амон","Koutarou Amon"],["nishiki","Нисики Нисио","Nishiki Nishio"],["yomo","Рэндзи Ёмо","Renji Yomo"],["yoshimura","Ёсимура","Kuzen Yoshimura"],["akira","Акира Мадо","Akira Mado"],["furuta","Нимура Фурута","Nimura Furuta"],["takizawa","Сэйдо Такидзава","Seidou Takizawa"]].map(([id,name,query])=>Object.freeze({id,name,query,rarity:rarityById[id]}));
+const ghoulRoster=[["kaneki","Кэн Канэки","Ken Kaneki"],["touka","Тока Кирисима","Touka Kirishima"],["juuzou","Дзюдзо Судзуя","Juuzou Suzuya"],["uta","Ута","Uta"],["tsukiyama","Сю Цукияма","Shuu Tsukiyama"],["hide","Хидэёси Нагатика","Hideyoshi Nagachika"],["rize","Ридзэ Камисиро","Rize Kamishiro"],["arima","Кисё Арима","Kishou Arima"],["eto","Это Ёсимура","Eto Yoshimura"],["ayato","Аято Кирисима","Ayato Kirishima"],["hinami","Хинами Фуэгути","Hinami Fueguchi"],["amon","Котаро Амон","Koutarou Amon"],["nishiki","Нисики Нисио","Nishiki Nishio"],["yomo","Рэндзи Ёмо","Renji Yomo"],["yoshimura","Ёсимура","Kuzen Yoshimura"],["akira","Акира Мадо","Akira Mado"],["furuta","Нимура Фурута","Nimura Furuta"],["takizawa","Сэйдо Такидзава","Seidou Takizawa"],["mado","Курэо Мадо","Kureo Mado"],["irimi","Кая Ирими","Kaya Irimi"]].map(([id,name,query])=>Object.freeze({id,name,query,rarity:rarityById[id]}));
 const seriesList=Object.freeze({
  ghoul:{title:'Токийский гуль',pack:'Токийский гуль',edition:'01',code:'TG',script:'東京喰種',album:'Альбом 01',dossier:'Досье CCG',world:'Ночной Токио',roster:ghoulRoster},
  jujutsu:{title:'Магическая битва',pack:'Печати проклятий',edition:'02',code:'JK',script:'呪術廻戦',album:'Альбом печатей',dossier:'Архив печатей',world:'Токийская школа магии',rows:[
@@ -19,7 +19,17 @@ const seriesList=Object.freeze({
   ["toge","Тогэ Инумаки","rare","Токийская школа магии","Осторожно выбирает слова. В обычном разговоре прячется за названиями начинок для онигири.","Эхо слова","ring","#b3b6ff"],
   ["panda","Панда","rare","Токийская школа магии","Энергичный и заботливый однокурсник, который разбирается в чужих чувствах лучше, чем кажется.","Отпечаток лапы","spark","#e5cbb5"],
   ["nanami","Кэнто Нанами","epic","Маги","Методичный колдун, для которого работа должна заканчиваться вовремя.","Соотношение 7:3","streak","#e9b87b"],
-  ["yuta","Юта Оккоцу","legendary","Токийская школа магии","Вежливый и нерешительный на первый взгляд, но стойкий, когда на кону безопасность друзей.","Тихий обет","orbit","#a9d3f6"]
+  ["yuta","Юта Оккоцу","legendary","Токийская школа магии","Вежливый и нерешительный на первый взгляд, но стойкий, когда на кону безопасность друзей.","Тихий обет","orbit","#a9d3f6"],
+  ["shoko","Сёко Иэири","rare","Токийская школа магии","Врач школы, которая лечит ранения обратной проклятой техникой.","Обратная техника","ring","#a7d9c7"],
+  ["geto","Сугуру Гэто","legendary","Колдуны","Маг с техникой управления проклятыми духами.","Сфера духа","orbit","#9d85e1"],
+  ["toji","Тодзи Фусигуро","legendary","Вольные бойцы","Наёмник, который полагается на скорость и острое чутьё.","Разрыв контура","streak","#83b6a2"],
+  ["choso","Тёсо","epic","Утробные картины","Владеет манипуляцией кровью; сильнее всего дорожит братьями.","Багровая нить","claw","#ef6688"],
+  ["mahito","Махито","epic","Проклятия","Проклятие, одержимое формой человеческой души.","Контур души","orbit","#8ca3ff"],
+  ["todo","Аой Тодо","rare","Киотская школа магии","Прямолинейный ученик с необычной техникой смены позиций.","Хлопок","spark","#deb47a"],
+  ["meimei","Мэй Мэй","rare","Маги","Независимая волшебница, использующая в бою ворон.","Перо ворона","claw","#cae3eb"],
+  ["utahime","Утахимэ Иори","rare","Киотская школа магии","Преподавательница, которая заботится о своих учениках.","Ритуальный круг","seal","#e6a1b6"],
+  ["miwa","Касуми Мива","common","Киотская школа магии","Серьёзная ученица, тренирующаяся обращаться с мечом.","Синяя черта","streak","#8ccdff"],
+  ["kusakabe","Ацуя Кусакабэ","rare","Токийская школа магии","Опытный преподаватель и мастер простого домена.","Граница домена","seal","#d6cca7"]
  ]},
  frieren:{title:'Фрирен',pack:'Дневник пути',edition:'03',code:'FR',script:'葬送のフリーレン',album:'Альбом путника',dossier:'Запись путника',world:'Дорога на север',rows:[
   ['frieren','Фрирен','legendary','Маги','Эльфийка, для которой десятилетие может пролететь за миг. Собирает необычные заклинания.','Малое чудо','orbit','#d8b865'],
@@ -31,7 +41,17 @@ const seriesList=Object.freeze({
   ["flamme","Фламме","legendary","Маги","Наставница, которая учит смотреть на магию шире привычных правил.","Поле цветов","orbit","#e6ac82"],
   ["serie","Зериэ","legendary","Маги","Эльфийская волшебница, для которой знания важнее званий.","Круг гримуара","seal","#f4df8d"],
   ["denken","Денкен","epic","Маги","Опытный имперский маг. В трудной ситуации рассчитывает и на заклинания, и на здравый смысл.","Порыв ветра","claw","#b0dbcd"],
-  ["ubel","Юбель","epic","Маги","Наблюдательная и непредсказуемая волшебница. Полагается на интуицию.","Тонкий разрез","streak","#7cd7a0"]
+  ["ubel","Юбель","epic","Маги","Наблюдательная и непредсказуемая волшебница. Полагается на интуицию.","Тонкий разрез","streak","#7cd7a0"],
+  ["lawine","Лавине","rare","Экзамен магов","Волшебница, работающая со льдом. Часто спорит с Каннэ.","Ледяная грань","seal","#96d8ef"],
+  ["kanne","Каннэ","rare","Экзамен магов","Волшебница воды. Лучше всего раскрывается, когда рядом есть источник.","Дождевая дуга","orbit","#87c1ed"],
+  ["land","Ланд","epic","Экзамен магов","Спокойный маг, которому удобно действовать через двойников.","Двойной след","ring","#beabec"],
+  ["methode","Методэ","epic","Экзамен магов","Внимательная волшебница, умеющая анализировать чары и лечить.","Свет маны","spark","#f2d7a6"],
+  ["wirbel","Вирбель","epic","Северные земли","Маг, привыкший быстро оценивать противника и ситуацию.","Узел заклинания","seal","#c5d6e5"],
+  ["ehre","Эрэ","rare","Экзамен магов","Коллега Вирбеля. Использует простые заклинания с большой точностью.","Каменная искра","spark","#dabd9b"],
+  ["scharf","Шарф","common","Экзамен магов","Участник экзамена, превращающий лепестки в острые снаряды.","Рой лепестков","claw","#d88daa"],
+  ["laufen","Лауфен","rare","Экзамен магов","Подвижная волшебница, неожиданно быстро сокращающая расстояние.","Быстрый шаг","streak","#edba84"],
+  ["richter","Рихтер","rare","Экзамен магов","Маг земли и владелец лавки. Предпочитает надёжные решения.","Каменный пласт","seal","#c0a381"],
+  ["lernen","Лернен","epic","Ассоциация магов","Опытный маг и ученик Зериэ. Изучает устройство големов.","Контур голема","ring","#a4c7a7"]
  ]},
  alchemist:{title:'Стальной алхимик',pack:'Архив Аместриса',edition:'04',code:'FA',script:'鋼の錬金術師',album:'Альбом Аместриса',dossier:'Личное дело',world:'Аместрис',rows:[
   ['edward','Эдвард Элрик','legendary','Государственные алхимики','Молодой алхимик, упрямый даже перед старшими по званию. Путешествует вместе с братом.','Круг трансмутации','seal','#ffc977'],
@@ -43,7 +63,59 @@ const seriesList=Object.freeze({
   ["maes","Маэс Хьюз","rare","Армия Аместриса","Наблюдательный офицер. С удовольствием рассказывает коллегам о своей семье.","Лист из дела","streak","#bad5ef"],
   ["scar","Шрам","legendary","Ишвар","Молчаливый странник. Заметнее всего его шрам и узор на правой руке.","Трещина на камне","claw","#db9d83"],
   ["olivier","Оливия Мира Армстронг","legendary","Бриггс","Командир северной крепости, требовательная к себе и тем, кто ей подчиняется.","Северный иней","ring","#a0ddf5"],
-  ["lanfan","Лан Фан","epic","Син","Преданная телохранительница, привыкшая наблюдать прежде, чем действовать.","Тень маски","eye","#d7a9bd"]
+  ["lanfan","Лан Фан","epic","Син","Преданная телохранительница, привыкшая наблюдать прежде, чем действовать.","Тень маски","eye","#d7a9bd"],
+  ["ling","Лин Яо","epic","Син","Принц из Сина, который отправился в Аместрис за знаниями об алхимии.","Императорская дуга","orbit","#e9d096"],
+  ["mei","Мэй Чан","rare","Син","Юная путешественница с маленькой пандой. Практикует восточную алхимию.","Рисунок на земле","seal","#e3a7d1"],
+  ["greed","Грид","epic","Гомункулы","Считает свободу важнее приказов и жаждет собрать всё, что ценит.","Углеродная броня","seal","#b193dd"],
+  ["lust","Ласт","epic","Гомункулы","Хладнокровная гомункул, чьё главное оружие скрыто в пальцах.","Алый росчерк","streak","#ef849a"],
+  ["envy","Энви","epic","Гомункулы","Меняет облик и использует это, чтобы сбивать людей с толку.","Сломанный контур","claw","#a5d484"],
+  ["gluttony","Глаттони","rare","Гомункулы","Гомункул с голодом, который невозможно утолить.","Круг пустоты","ring","#dac4a3"],
+  ["wrath","Рэт","legendary","Гомункулы","Мастер клинка, который замечает мельчайшие движения.","Линия клинка","streak","#92d8ed"],
+  ["pride","Прайд","legendary","Гомункулы","За спокойным голосом скрывается власть над тенями.","Глаза в тени","eye","#cbb0f4"],
+  ["hohenheim","Ван Хоэнхайм","legendary","Путешественники","Странствующий алхимик, который видел куда больше, чем рассказывает.","Круг памяти","ring","#e4c57b"],
+  ["izumi","Идзуми Кёртис","epic","Наставники","Обучила братьев Элриков алхимии и умению полагаться на себя.","Удар земли","spark","#a9ded6"]
+ ]},
+ demon:{title:"Клинок, рассекающий демонов",pack:"Дыхание воды",edition:"05",code:"DS",script:"鬼滅の刃",album:"Альбом истребителей",dossier:"Запись корпуса",world:"Эпоха Тайсё",rows:[["tanjiro","Тандзиро Камадо","legendary","Корпус истребителей","Старший брат Нэдзуко. Находит след демонов по запаху и не теряет сострадания.","Дыхание воды","orbit","#82d8f2"],
+  ["nezuko","Нэдзуко Камадо","legendary","Семья Камадо","Сестра Тандзиро. Даже изменившись, защищает близких.","Розовые угли","spark","#f8a1be"],
+  ["zenitsu","Дзэницу Агацума","epic","Корпус истребителей","Ученик Громового дыхания. Слышит то, что ускользает от остальных.","Громовой шаг","streak","#ffd773"],
+  ["inosuke","Иноскэ Хасибира","epic","Корпус истребителей","Вырос в горах. Носит маску кабана и привык первым бросаться вперёд.","След зверя","claw","#9cc8e7"],
+  ["giyu","Гию Томиока","epic","Столпы","Немногословный Столп Воды. Оценивает поступки, а не громкие слова.","Водяной круг","ring","#88d8f5"],
+  ["shinobu","Синобу Котё","epic","Столпы","Столп Насекомого. Использует знания о ядах и быстрые выпады.","След бабочки","orbit","#ce9af6"],
+  ["rengoku","Кёдзюро Рэнгоку","legendary","Столпы","Жизнерадостный Столп Пламени, который ставит безопасность других на первое место.","Кольцо пламени","ring","#ffb967"],
+  ["tengen","Тэнгэн Удзуй","epic","Столпы","Столп Звука, любящий всё заметное и громкое.","Перекрёстный ритм","spark","#a6dbdd"],
+  ["mitsuri","Мицури Канродзи","epic","Столпы","Добрая Столп Любви. За мягкими манерами скрывается невероятная сила.","Розовая лента","orbit","#fcb3d4"],
+  ["muichiro","Муитиро Токито","epic","Столпы","Юный Столп Тумана с рассеянным взглядом и точными движениями.","Туманная дуга","claw","#a3e7da"],
+  ["gyomei","Гёмэй Химэдзима","epic","Столпы","Сдержанный Столп Камня. Носит чётки и не любит ненужных слов.","Каменный круг","seal","#cabf9e"],
+  ["sanemi","Санэми Синадзугава","epic","Столпы","Резкий и прямой Столп Ветра. Относится к тренировкам без поблажек.","Резкий ветер","claw","#a4dcb5"],
+  ["obanai","Обанай Игуро","rare","Столпы","Столп Змеи. Его неизменный спутник Кабурамару сидит на плечах.","Змеиная петля","orbit","#c8df9d"],
+  ["kanao","Канао Цуюри","rare","Корпус истребителей","Молчаливая ученица сестёр Котё. В начале пути часто доверяет выбор монете.","Лепесток","spark","#f2bbeb"],
+  ["genya","Гэнъя Синадзугава","rare","Корпус истребителей","Упрямый новичок, который ищет собственный способ сражаться.","Тёмный след","streak","#b3a2e5"],
+  ["muzan","Мудзан Кибуцудзи","legendary","Демоны","Скрытный предводитель демонов. Умеет теряться среди обычных людей.","Багровый глаз","eye","#f87583"],
+  ["akaza","Акадза","legendary","Двенадцать лун","Демон, который ценит мастерство сильного соперника.","Ледяная печать","seal","#9fd7fd"],
+  ["doma","Дома","epic","Двенадцать лун","Демон с неизменной улыбкой. В бою использует веера и лёд.","Хрустальный веер","spark","#9ee8f1"],
+  ["kokushibo","Кокушибо","legendary","Двенадцать лун","Молчаливый демон-мечник с необычными глазами.","Лунные дуги","claw","#c797f7"],
+  ["daki","Даки","rare","Двенадцать лун","Демон, которая использует длинные пояса как часть своей техники.","Узор пояса","orbit","#ef8fb9"]
+ ]},
+ aot:{title:"Атака титанов",pack:"За стеной",edition:"06",code:"AT",script:"進撃の巨人",album:"Альбом разведкорпуса",dossier:"Досье разведкорпуса",world:"Город за стенами",rows:[["eren","Эрен Йегер","legendary","Разведкорпус","Решительный кадет, мечтающий увидеть мир за стенами.","За стеной","spark","#ecc989"],
+  ["mikasa","Микаса Аккерман","legendary","Разведкорпус","Собранная и быстрая кадетка. Узнаваема по красному шарфу.","Красная нить","streak","#f0878b"],
+  ["armin","Армин Арлерт","epic","Разведкорпус","Любознательный кадет, которому помогают наблюдательность и воображение.","Линия горизонта","orbit","#b9dff0"],
+  ["levi","Леви Аккерман","legendary","Разведкорпус","Капитан с безупречной техникой и очень высокими требованиями к порядку.","Стальной скос","streak","#c5e0e8"],
+  ["erwin","Эрвин Смит","legendary","Разведкорпус","Командир, который способен принимать сложные решения под давлением.","Сигнал разведки","seal","#e3cfaa"],
+  ["hange","Ханджи Зоэ","epic","Разведкорпус","Исследователь, чей азарт и дотошность пугают даже соратников.","Запись опыта","orbit","#b6d4ac"],
+  ["jean","Жан Кирштайн","rare","Разведкорпус","Практичный кадет с резким языком и хорошим чувством обстановки.","Линия строя","streak","#cdd6a3"],
+  ["connie","Конни Спрингер","common","Разведкорпус","Быстрый и открытый кадет из деревни Рагако.","Короткий рывок","spark","#cbdabd"],
+  ["sasha","Саша Браус","rare","Разведкорпус","Кадетка с отличным слухом и аппетитом. Выросла в семье охотников.","Лесной след","orbit","#dfbc88"],
+  ["reiner","Райнер Браун","epic","Кадеты","Физически сильный кадет, которому однокурсники привыкли доверять.","Тяжёлая грань","seal","#e5ce9a"],
+  ["bertholdt","Бертольд Гувер","rare","Кадеты","Высокий и тихий кадет, часто оставляющий разговор другим.","Дальний силуэт","ring","#b7c6b4"],
+  ["annie","Энни Леонхарт","epic","Кадеты","Сдержанная кадетка с отточенной техникой рукопашного боя.","Ледяной след","streak","#b7dcf8"],
+  ["historia","Хистория Рейсс","rare","Кадеты","Внимательная и приветливая кадетка, которая учится делать собственный выбор.","Лента света","ring","#ecce9f"],
+  ["ymir","Имир","rare","Кадеты","Остроумная кадетка, которая не любит раскрывать свои мотивы.","Лунный излом","claw","#bdd7c9"],
+  ["zeke","Зик Йегер","epic","Марлия","Спокойный воин с привычкой взвешивать каждое слово.","Разлёт искр","spark","#e1bd85"],
+  ["pieck","Пик Фингер","rare","Марлия","Наблюдательная воительница, умеющая видеть ситуацию целиком.","След на карте","orbit","#a5cbb9"],
+  ["porco","Порко Галлиард","rare","Марлия","Гордый воин, которому трудно оставаться в стороне.","Рваная черта","claw","#dbc092"],
+  ["gabi","Габи Браун","rare","Кандидаты в воины","Упорная кандидатка, привыкшая доказывать своё место в команде.","Сигнальная вспышка","spark","#f0bb90"],
+  ["falco","Фалько Грайс","common","Кандидаты в воины","Добрый кандидат в воины, который внимательно относится к окружающим.","Лёгкое крыло","orbit","#c5dcb9"],
+  ["moblit","Моблит Бернер","common","Разведкорпус","Помощник Ханджи. Ведёт записи и напоминает о полевой безопасности.","Чернила отчёта","seal","#c1cfad"]
  ]}
 });
 for(const v of Object.values(seriesList)){if(v.rows)v.roster=v.rows.map(([id,name,rarity,group,intro,reveal,fx,tint])=>Object.freeze({id,name,rarity,group,intro,reveal,fx,tint}));Object.freeze(v.roster);Object.freeze(v);}
@@ -53,7 +125,7 @@ const ghoulFx=Object.freeze({
  rize:['Багровые ленты','claw','#fa557e'],arima:['Холодный импульс','streak','#c1eaff'],eto:['За архивной печатью','seal','#7dd8b8'],
  ayato:['Сечение крыла','claw','#b18afa'],hinami:['Хрупкий цветок','orbit','#ffc59b'],amon:['Стальная дуга','ring','#92baf1'],
  nishiki:['Спираль хвоста','orbit','#f5ae7a'],yomo:['Крыло в тумане','claw','#8ab1c4'],yoshimura:['Кольца кофе','ring','#e7b588'],
- akira:['Сетка отчёта','seal','#f1d48f'],furuta:['Раскол грима','streak','#f779a4'],takizawa:['Сигнальная искра','spark','#ece398']
+ akira:['Сетка отчёта','seal','#f1d48f'],furuta:['Раскол грима','streak','#f779a4'],takizawa:['Сигнальная искра','spark','#ece398'],mado:["Лезвие отчёта","streak","#c7d7ec"],irimi:["Тень чёрной собаки","claw","#af91d1"]
 });
 let seriesKey='ghoul', series=seriesList.ghoul, roster=series.roster, ids=new Set(roster.map(c=>c.id));
 // Original, spoiler-free copy; groups refer to the character's early appearance.
@@ -75,7 +147,7 @@ const dossier=Object.freeze({
  yoshimura:['Антэйку','Хозяин кафе, где за чашкой кофе всегда найдётся место.'],
  akira:['CCG','Собранная следовательница с аналитическим складом ума.'],
  furuta:['CCG','Вежливый сотрудник, которого трудно прочитать.'],
- takizawa:['CCG','Молодой следователь, стремящийся проявить себя.']
+ takizawa:['CCG','Молодой следователь, стремящийся проявить себя.'],mado:["CCG","Опытный следователь. Ведёт расследования вместе с Котаро Амоном."],irimi:["Антэйку","Официантка «Антэйку», внимательная к гостям и своим товарищам."]
 });
 const CASE_PRICE=50;
 const purchaseIds=new Map();
@@ -108,13 +180,14 @@ function heroInfo(c){
  return c;
 }
 const chapterSets={
- ghoul:[['Антэйку',['kaneki','touka','yomo','yoshimura']],['Следствие CCG',['arima','amon','akira','juuzou']],['Город после заката',['uta','rize','tsukiyama','nishiki']]],
- jujutsu:[['Первый курс',['itadori','fushiguro','kugisaki']],['Второй курс',['maki','toge','panda','yuta']],['Мастера и легенды',['gojo','sukuna','nanami']]],
- frieren:[['Старый отряд',['himmel','heiter','eisen','frieren']],['Новый путь',['frieren','fern','stark']],['Школа магии',['flamme','serie','denken','ubel']]],
- alchemist:[['Резембул',['edward','alphonse','winry']],['Штаб',['roy','riza','maes','alex']],['Другие дороги',['scar','olivier','lanfan']]]
+ ghoul:[['Антэйку',['kaneki','touka','yomo','yoshimura']],['Следствие CCG',['arima','amon','akira','juuzou']],['Город после заката',['uta','rize','tsukiyama','nishiki']],['Антэйку и следователи',['irimi','mado']]],
+ jujutsu:[['Первый курс',['itadori','fushiguro','kugisaki']],['Второй курс',['maki','toge','panda','yuta']],['Мастера и легенды',['gojo','sukuna','nanami']],['Киотская школа',['todo','utahime','miwa']],['В старых записях',['shoko','geto','toji']]],
+ frieren:[['Старый отряд',['himmel','heiter','eisen','frieren']],['Новый путь',['frieren','fern','stark']],['Школа магии',['flamme','serie','denken','ubel']],['Практический экзамен',['lawine','kanne','land','methode']],['Северный отряд',['wirbel','ehre','scharf']]],
+ alchemist:[['Резембул',['edward','alphonse','winry']],['Штаб',['roy','riza','maes','alex']],['Другие дороги',['scar','olivier','lanfan']],['Путь из Сина',['ling','mei','lanfan']],['Гомункулы',['greed','lust','envy','gluttony','wrath','pride']]],
+ demon:[['Камадо',['tanjiro','nezuko','zenitsu','inosuke']],['Столпы',['giyu','shinobu','rengoku','tengen','mitsuri']],['Кандидаты',['kanao','genya']],['Двенадцать лун',['muzan','akaza','doma','kokushibo','daki']]],
+ aot:[['Три кадета',['eren','mikasa','armin']],['Командование',['levi','erwin','hange','moblit']],['Из одного выпуска',['jean','connie','sasha','historia','ymir']],['Воины Марлии',['reiner','bertholdt','annie','zeke','pieck','porco','gabi','falco']]]
 };
-const pageMaterial={ghoul:'Тёмная бумага',jujutsu:'Тушь на талисмане',frieren:'Лист дневника',alchemist:'Чертёж'};
-const posterTones={ghoul:['#180d18','#63263a','#f3a4b9'],jujutsu:['#151021','#453363','#c6b0fc'],frieren:['#201809','#5b4726','#f2d198'],alchemist:['#0d1820','#284b62','#a6d9e7']};
+const posterTones={ghoul:['#180d18','#63263a','#f3a4b9'],jujutsu:['#151021','#453363','#c6b0fc'],frieren:['#201809','#5b4726','#f2d198'],alchemist:['#0d1820','#284b62','#a6d9e7'],demon:['#08151f','#184266','#8adcf1'],aot:['#16160f','#393b24','#d5d6a1']};
 function collectorProgress(s,owned,known){
  const count=owned.size,missing=roster.length-count;
  const label=!known?'Прогресс появится после входа и загрузки коллекции.':missing
@@ -169,9 +242,8 @@ function startReplay(id){
  const s=state;
  if(!current(s)||s.status!=='ready'||s.reel||!s.owned.includes(id)||!s.journalRows?.some(x=>x.id===id))return;
  s.replayResult=null;tab='cases';
- if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){s.replayResult=id;paint('result');return;}
- s.reel={payload:{result:id},isReplay:true,phase:'seal',started:0,detail:false,timer:null,detailTimer:null};
- peelReel();
+ s.reel={payload:{result:id},isReplay:true,phase:'choose',timer:null};
+ paint('pick-card-1');
 }
 function albumFinalMarkup(s,owned){
  if(!s.finalUnlock||s.replayResult||owned.size!==roster.length)return '';
@@ -210,7 +282,7 @@ async function downloadMiniPoster(c,asset,button,status){
  finally{if(valid())button.disabled=false;}
 }
 // Promotional portraits are separate from the ownership-controlled album cards.
-const shelfHeroes=Object.freeze({ghoul:'kaneki',jujutsu:'gojo',frieren:'frieren',alchemist:'edward'});
+const shelfHeroes=Object.freeze({ghoul:'kaneki',jujutsu:'gojo',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren'});
 function shelfHero(id,cssClass){
  const folder=id==='ghoul'?'ghoul-cel':id;
  return '<img class="'+cssClass+'" src="/assets/collection/'+folder+'/'+shelfHeroes[id]+'.webp" width="432" height="648" alt="" aria-hidden="true" decoding="async">';
@@ -249,7 +321,7 @@ function fresh(id){return {owner:id,seriesKey,status:id?'idle':'guest',owned:[],
 // A request may finish after navigating away; keep the same account's result,
 // but paint() only touches the DOM when collection is the active route.
 function current(s){return !!s&&state===s&&owner()===s.owner&&s.seriesKey===seriesKey;}
-function authChanged(id){observedOwner=id||'';if(state&&state.owner!==observedOwner){if(state.reel){clearTimeout(state.reel.timer);clearTimeout(state.reel.detailTimer);}closeViewer(false);resetFilters();state=fresh(owner());if(active())paint();}}
+function authChanged(id){observedOwner=id||'';if(state&&state.owner!==observedOwner){if(state.reel){clearTimeout(state.reel.timer);}closeViewer(false);resetFilters();state=fresh(owner());if(active())paint();}}
 function rarityLabel(c){return '<span class="kc-rarity kc-rarity-'+c.rarity+'"><i aria-hidden="true"></i>'+rarityNames[c.rarity]+'</span>';}
 function art(c,opened){
  const image=artworkRoot()+(opened?'':'locked/')+c.id+'.webp';
@@ -339,7 +411,7 @@ function openViewer(id,trigger){
  const dialog=document.createElement('dialog');
  dialog.className='kc-hero-view kc-theme-'+seriesKey;
  dialog.setAttribute('aria-labelledby','kc-hero-title');
- dialog.innerHTML='<div class="kc-hero-layout"><button type="button" class="kc-view-close" autofocus aria-label="Закрыть просмотр">×</button><div class="kc-hero-stage">'+signatureMarkup(c)+'<img src="'+asset+'" width="400" height="720" alt="'+esc(c.name)+', в полный рост" decoding="async"><p class="kc-image-unavailable" hidden>Не удалось загрузить иллюстрацию.</p></div><div class="kc-hero-info"><p class="kc-view-code">'+esc(series.title)+' · '+number+'</p><h2 id="kc-hero-title">'+esc(c.name)+'</h2>'+rarityLabel(c)+'<dl><dt>Фракция или роль</dt><dd>'+esc(info.group)+'</dd><dt>Мир</dt><dd>'+esc(series.world)+'</dd><dt>Фирменный эффект</dt><dd>'+esc(info.reveal)+'</dd></dl><p class="kc-view-intro">'+esc(info.intro)+'</p><div class="kc-hero-actions"><button type="button" class="kc-view-signature">Показать эффект</button><button type="button" class="kc-view-poster">Скачать постер</button></div><p class="kc-poster-status" role="status"></p></div></div>';
+ dialog.innerHTML='<div class="kc-hero-layout"><button type="button" class="kc-view-close" autofocus aria-label="Закрыть просмотр">×</button><div class="kc-hero-stage kc-tier-'+c.rarity+'"><span class="kc-hero-art-serial">'+number+'</span>'+signatureMarkup(c)+'<img src="'+asset+'" width="400" height="720" alt="'+esc(c.name)+', в полный рост" decoding="async"><p class="kc-image-unavailable" hidden>Не удалось загрузить иллюстрацию.</p></div><div class="kc-hero-info"><div class="kc-view-meta">'+rarityLabel(c)+'<span>'+esc(series.title)+'</span></div><h2 id="kc-hero-title">'+esc(c.name)+'</h2><div class="kc-hero-metrics"><div><small>Карточка</small><strong>'+number+'</strong></div><div><small>В альбоме</small><strong>'+(roster.indexOf(c)+1)+' / '+roster.length+'</strong></div></div>'+'<dl><dt>Фракция или роль</dt><dd>'+esc(info.group)+'</dd><dt>Мир</dt><dd>'+esc(series.world)+'</dd><dt>Фирменный эффект</dt><dd>'+esc(info.reveal)+'</dd></dl><p class="kc-view-intro">'+esc(info.intro)+'</p><div class="kc-hero-actions"><button type="button" class="kc-view-signature">Показать эффект</button><button type="button" class="kc-view-poster">Скачать постер</button></div><p class="kc-poster-status" role="status"></p></div></div>';
  const dismiss=dialog.querySelector('.kc-view-close');
  const stage=dialog.querySelector('.kc-hero-stage');
  const illustration=stage.querySelector('img');
@@ -371,27 +443,53 @@ function makeReel(prize,owned,random=Math.random){
  const candidates=pool.length?pool:roster;
  return Array.from({length:REEL_LENGTH},(_,i)=>i===REEL_WIN?prize:candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))].id);
 }
-const MANGA_DURATION=1320;
+// A pick is presentation only. The buy/read response supplies the single card.
+const PICK_DURATION=950;
+const pickThemes=Object.freeze({
+ ghoul:{scene:'Ночной Токио',sigil:'M10 40Q50 9 90 40Q50 72 10 40ZM50 25Q40 40 50 55Q60 40 50 25ZM24 25 18 17M73 55 82 64',effects:'<path class="kc-pick-strokes" d="M34 29Q35 50 47 53T60 69Q49 63 42 63 24 64 22 57 18 49 34 29ZM91 5Q89 16 85 24 102 16 91 5ZM147 57Q150 38 163 42 166 50 147 57ZM235 32Q219 59 231 63 240 73 244 53ZM277 9Q265 24 266 36 280 28 277 9ZM316 54Q299 56 301 64 305 71 316 54ZM38 139Q50 113 59 114 64 126 38 139ZM86 130Q86 142 72 155 67 157 67 151ZM264 117Q252 133 260 140 274 144 273 130ZM324 120Q308 143 319 146 329 151 324 120Z"/><path class="kc-pick-trace" d="M15 120Q65 18 163 28T323 141M54 16Q122-2 171 32T321 61M21 162q73 20 151 2t150-11"/>'},
+ jujutsu:{scene:'Печати проклятий',sigil:'M30 11 69 16 75 66 33 70ZM22 30 72 33M24 54l54-20M44 19l12 42m-9-33 20 12M17 57 85 24',effects:'<path class="kc-pick-trace" d="M43 18 86 35 74 72 30 60ZM127 124 156 108 185 143 162 161ZM229 25 277 38 266 89 215 77ZM284 119 305 101 336 134 311 154ZM22 107 315 24M49 147 293 46M87 160 317 68"/><path class="kc-pick-strokes" d="m33 97 38-12-21 8Zm102-63 44-11-21 10Zm84 88 40-16-13 10Zm-12-35 63-20-26 12Z"/>'},
+ frieren:{scene:'Дневник пути',sigil:'M19 40a31 28 0 1 0 62 0 31 28 0 1 0-62 0m9 0a22 19 0 1 0 44 0 22 19 0 1 0-44 0M50 18v44m-14-22h28m-25-11 22 22M61 29 39 51',effects:'<path class="kc-pick-trace" d="M19 112Q53 48 117 65t100-18 90-15M42 140q38-53 75-10t96-9 91-20M91 92a79 43 0 1 1 158 0 79 43 0 1 1-158 0M66 92a104 63 0 1 1 208 0 104 63 0 1 1-208 0"/><path class="kc-pick-strokes" d="m38 63 3 9 9 3-9 3-3 9-3-9-9-3 9-3Zm91 53 3 10 10 3-10 3-3 10-3-10-10-3 10-3Zm89-98 2 8 8 2-8 2-2 8-2-8-8-2 8-2Zm85 89 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/>'},
+ alchemist:{scene:'Архив Аместриса',sigil:'M50 9 82 26v28L50 71 18 54V26ZM50 9v62M18 26l64 28m0-28L18 54M50 15 24 53h52Z',effects:'<path class="kc-pick-trace" d="M64 14h212v154H64ZM85 35h170v112H85ZM170 20v140M70 91h200M170 26l65 112H105ZM170 157l65-112H105ZM97 91a73 63 0 1 0 146 0 73 63 0 1 0-146 0M20 25h40m-20-8v16m239 122h44m-22-8v16"/><path class="kc-pick-strokes" d="M127 91l7-7 7 7-7 7Zm66 0 7-7 7 7-7 7Zm-35-34 7-7 7 7-7 7Zm3 65 7-7 7 7-7 7Z"/>'},
+ demon:{scene:'Клинок рассвета',sigil:'M21 57Q54 25 80 11Q67 43 37 63M21 57l-5 5m10-11 11 13M18 37Q25 25 33 18Q28 28 30 39M64 68Q67 54 78 44Q74 55 78 59',effects:'<path class="kc-pick-strokes" d="M5 158Q58 147 92 89 83 127 54 151 63 148 91 137 73 160 40 175ZM117 137Q165 100 179 42 195 75 174 108 207 80 242 57 220 90 195 116 163 148 108 174ZM243 148Q287 124 311 65 321 98 287 132 312 125 334 108 308 160 258 172Z"/><path class="kc-pick-trace" d="M8 145Q111 121 131 20M35 167Q173 129 207 24M95 173Q239 133 279 39M202 168q85-18 125-95"/>'},
+ aot:{scene:'За стеной',sigil:'M19 16l29 16v37L18 53V41l17 10V29M81 16 52 32v37l30-16V41L65 51V29M23 16 48 28m29-12L52 28',effects:'<path class="kc-pick-trace" d="M21 156V85l27-18 22 14 30-21 17 14v82M129 161V69l22-17 23 16 28-21 20 15v99M232 156V95l31-22 22 15 26-18 13 14v72M17 159h306M3 40q35-18 91 0t82 1 96 1 64 4M13 118q53-11 115 7t127-1 84 1"/><path class="kc-pick-strokes" d="m8 122 126-44-41 27Zm77 30 128-42-63 31Zm67-125 122-25-48 18Zm52 127 130-42-35 21Z"/>'}
+});
+function pickScene(reel,theme){
+ const choose=reel.phase==='choose',reveal=reel.phase==='reveal';
+ const prize=reveal?roster.find(c=>c.id===reel.payload.result):null;
+ const emblem='<svg viewBox="0 0 100 80" aria-hidden="true" focusable="false"><path d="'+theme.sigil+'"/></svg>';
+ const particles='<svg class="kc-pick-atmosphere" viewBox="0 0 340 180" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+theme.effects+'</svg>';
+ const elapsed=reveal?Math.max(0,Date.now()-reel.started):0;
+ const cards=[1,2,3].map(n=>{
+  const selected=reveal&&reel.chosen===n;
+  const result=selected&&prize?'<span class="kc-pick-front kc-tier-'+prize.rarity+'" aria-hidden="true"><span class="kc-art">'+art(prize,true)+'</span><span class="kc-pick-front-rarity">'+rarityLabel(prize)+'</span></span>':'';
+  return '<button type="button" class="kc-pick-card'+(selected?' is-chosen':'')+'" data-kc-action="pick-card-'+n+'" aria-label="Открыть карточку '+n+' из 3"'+(choose?'':' disabled')+'><span class="kc-pick-back" aria-hidden="true">'+emblem+'</span>'+result+'</button>';
+ }).join('');
+ return '<div class="kc-pick-arena'+(reveal?' is-revealing kc-pick-position-'+reel.chosen:'')+'" data-kc-pick-world="'+seriesKey+'"'+(reveal?' style="--kc-pick-elapsed:-'+elapsed+'ms"':'')+'>'+particles+'<div class="kc-pick-card-row" role="group" aria-label="Три рубашки карточек">'+cards+'</div></div>';
+}
 function reelMarkup(s){
- if(!s.reel)return '';
- const c=roster.find(x=>x.id===s.reel.payload.result);
- const info=heroInfo(c), turn=s.reel.phase==='manga';
- const tone=seriesKey==='frieren'?'Дневник пути':seriesKey==='jujutsu'?'Печати проклятий':seriesKey==='alchemist'?'Архив Аместриса':'Ночной Токио';
- const scene=turn?'<div class="kc-manga-strip" aria-hidden="true" data-kc-material="'+seriesKey+'" data-kc-motif="'+info.fx+'" style="--kc-frame-delay:-'+Math.max(0,Date.now()-s.reel.started)+'ms"><div class="kc-manga-frame kc-manga-first"><span>01 · СИЛУЭТ</span><div class="kc-art">'+art(c,false)+'</div></div><div class="kc-manga-frame kc-manga-second"><span>02 · '+esc(pageMaterial[seriesKey])+'</span>'+(s.reel.detail?'<div class="kc-art kc-manga-detail">'+art(c,true)+'</div>':'')+signatureMarkup(c)+'</div></div>'
-  :'<button type="button" class="kc-peel" data-kc-action="peel" aria-label="Сорвать печать с бустера"><span class="kc-peel-pack" aria-hidden="true">'+packArt()+'</span><span class="kc-peel-tab" aria-hidden="true">⟶</span><span>Сорвать печать</span></button><small class="kc-peel-help">Потяни за край или нажми кнопку.</small>';
- return '<section class="kc-reel-panel kc-manga-panel" aria-label="Открытие бустера" aria-busy="true"><div class="kc-reel-heading"><div><div class="kc-kicker">'+esc(tone)+' · Открытие</div><h3>'+(s.reel.isReplay?'Повтор сцены':turn?'Кто внутри?':'Пак запечатан')+'</h3></div><span role="status">'+(turn?'Раскрываем карточку…':'Карточка получена. Осталось открыть пак.')+'</span></div>'+scene+button('Показать результат','skip-reel')+'</section>';
+ const reel=s.reel;
+ if(!reel)return '';
+ const theme=pickThemes[seriesKey]||pickThemes.ghoul;
+ const seal=reel.phase==='seal',reveal=reel.phase==='reveal';
+ const heading=seal?'Пак запечатан':reveal?'Кто внутри?':'Выбери одну из трёх карточек';
+ const hint=seal?'Карточка получена. Осталось открыть пак.':reveal?'Раскрываем карточку…':reel.isReplay?'Это повтор уже полученной карточки.':'Карточка уже определена. Выбор меняет только сцену.';
+ const scene=seal?'<button type="button" class="kc-peel" data-kc-action="peel" aria-label="Сорвать печать с бустера"><span class="kc-peel-pack" aria-hidden="true">'+packArt()+'</span><span class="kc-peel-tab" aria-hidden="true">⟶</span><span>Сорвать печать</span></button><small class="kc-peel-help">Потяни за край или нажми кнопку.</small>':pickScene(reel,theme);
+ return '<section class="kc-reel-panel kc-manga-panel kc-pick-panel" aria-label="Открытие бустера"'+(reveal?' aria-busy="true"':'')+'><div class="kc-reel-heading"><div><div class="kc-kicker">'+esc(theme.scene)+' · '+(reel.isReplay?'Повтор сцены':'Открытие')+'</div><h3>'+heading+'</h3></div><span role="status">'+hint+'</span></div>'+scene+button('Показать результат','skip-reel')+'</section>';
 }
 function peelReel(){
  const s=state,reel=s?.reel;
  if(!current(s)||!reel||reel.phase!=='seal')return;
- reel.phase='manga';reel.started=Date.now();
+ reel.phase='choose';
+ paint('pick-card-1');
+}
+function chooseCard(n){
+ const s=state,reel=s?.reel;
+ if(!current(s)||!reel||reel.phase!=='choose'||![1,2,3].includes(n))return;
+ // The choice is never transmitted and does not select, redraw or buy a reward.
+ if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){finishReel(s,reel,true);return;}
+ reel.chosen=n;reel.phase='reveal';reel.started=Date.now();
  paint('skip-reel');
- reel.detailTimer=setTimeout(()=>{
-  if(!current(s)||s.reel!==reel)return;
-  reel.detail=true;paint();
-  if(active())playSignature(host.querySelector('.kc-manga-second'));
- },385);
- reel.timer=setTimeout(()=>finishReel(s,reel),MANGA_DURATION);
+ reel.timer=setTimeout(()=>finishReel(s,reel),PICK_DURATION);
 }
 let peelPointer=null;
 function pointerStart(event){
@@ -420,15 +518,15 @@ function pointerEnd(event){
 }
 function finishReel(s,reel=s?.reel,manual=false){
  if(!current(s)||!reel||s.reel!==reel)return;
- clearTimeout(reel.timer);clearTimeout(reel.detailTimer);
+ clearTimeout(reel.timer);
  const payload=reel.payload;
  s.reel=null;
  if(reel.isReplay){s.replayResult=payload.result;paint('result');}
- else{Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint(manual?'result':null);if(s.journalOpen)void readJournal(s);}if(active()&&!reel.detail)playSignature(host?.querySelector('.kc-result'));
+ else{Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint(manual?'result':null);if(s.journalOpen)void readJournal(s);}if(active())playSignature(host?.querySelector('.kc-result'));
 }
 function showReel(s,payload){
- if(!active()||root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint();if(s.journalOpen)void readJournal(s);return;}
- const reel={payload,phase:'seal',started:0,detail:false,timer:null,detailTimer:null};
+ if(!active()){Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint();if(s.journalOpen)void readJournal(s);return;}
+ const reel={payload,phase:'seal',timer:null};
  s.reel=reel;paint();
 }
 function button(label,action,options={}){
@@ -535,7 +633,7 @@ function paint(nextFocus=null){
  const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true}):s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>':button(retryPurchase?'Повторить покупку':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
  const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
  const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">'+esc(series.script)+'</span><small>СЕРИЯ '+series.edition+'</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h2>Бустер «'+esc(series.pack)+'»</h2><p class="kc-muted">Карточек в серии: '+roster.length+'. В каждом бустере одна новая карточка. Шансы равные, повторов нет.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
- const prize=roster.find(c=>c.id===(s.replayResult||s.result));
+ const prize=s.reel?null:roster.find(c=>c.id===(s.replayResult||s.result));
  const reward=prize&&known?'<div class="kc-result" role="status">'+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','collection',{primary:true,focus:'result-collection'}))+'</div></div>':'';
  if(inAlbum){
   const extras='<section class="kc-extras"><button type="button" class="kc-extras-toggle" data-kc-action="album-details" aria-expanded="'+s.extrasOpen+'" aria-controls="kc-extras-body"><span>Альбом и журнал</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div id="kc-extras-body"'+(s.extrasOpen?'':' hidden')+'>'+album(owned,known)+collectorProgress(s,owned,known)+journalMarkup(s)+'</div></section>';
@@ -558,14 +656,14 @@ function paint(nextFocus=null){
  // if the viewer has already moved to another control.
  let focus=nextFocus||previous;
  if(focus==='case-status'){
-  if(s.reel)focus='skip-reel';
+  if(s.reel)focus=s.reel.phase==='seal'?'peel':s.reel.phase==='choose'?'pick-card-1':'skip-reel';
   else if(s.status==='error')focus='retry';
   else if(prize&&known)focus='result';
   else if(canBuy)focus='confirm-buy';
  }else if(focus==='skip-reel'&&!s.reel&&prize&&known)focus='result';
  if(focus){
   const target=[...host.querySelectorAll('[data-kc-action],[data-kc-focus]')].find(el=>focusKey(el)===focus&&!el.disabled);
-  target?.focus({preventScroll:focus===previous||!['result','skip-reel'].includes(focus)});
+  target?.focus({preventScroll:focus===previous||!['result','skip-reel','peel','pick-card-1'].includes(focus)});
   if(selection&&focus==='album-search'&&target)target.setSelectionRange(...selection);
  }
 }
@@ -583,8 +681,8 @@ async function request(action){
   if(!current(s))return;
   if(sessionError||sessionData?.session?.user?.id!==s.owner)throw new Error('Session changed');
   const {data,error}=seriesKey==='ghoul'
-   ?(action==='buy'?await _supabase.rpc('komi_collection_buy',{p_request_id:purchaseId}):await _supabase.rpc('komi_collection_action',{p_action:action}))
-   :(action==='buy'?await _supabase.rpc('komi_collection_series_buy',{p_series_id:s.seriesKey,p_request_id:purchaseId}):await _supabase.rpc('komi_collection_series_read',{p_series_id:s.seriesKey}));
+   ?(action==='buy'?await _supabase.rpc('komi_collection_ghoul_buy_v2',{p_request_id:purchaseId}):await _supabase.rpc('komi_collection_action',{p_action:action}))
+   :(action==='buy'?await _supabase.rpc('komi_collection_series_buy_v2',{p_series_id:s.seriesKey,p_request_id:purchaseId}):await _supabase.rpc('komi_collection_series_read',{p_series_id:s.seriesKey}));
   if(!current(s))return;
   if(error)throw error;
   const payload=normalizePayload(data);
@@ -597,7 +695,9 @@ function click(event){if(!active())return;const b=event.target.closest?.('.kc-pa
  state.journalOpen=a==='journal-retry'||!state.journalOpen;paint('journal');if(state.journalOpen)void readJournal(state);return;
  }if(a.startsWith('replay-')){startReplay(a.slice(7));return;}
  if(a==='leave-replay'){state.replayResult=null;state.extrasOpen=true;tab='collection';paint('journal');return;}
- if(a==='peel'){peelReel();return;}if(a==='skip-reel'){finishReel(state,state.reel,true);return;}if(a==='collection'||a==='cases'){if(tab!==a){state.confirmBuy=false;state.replayResult=null;state.inspected='';}tab=a;paint(a);}else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
+ if(a==='peel'){peelReel();return;}
+ if(a.startsWith('pick-card-')){chooseCard(Number(a.slice(10)));return;}
+ if(a==='skip-reel'){finishReel(state,state.reel,true);return;}if(a==='collection'||a==='cases'){if(tab!==a){state.confirmBuy=false;state.replayResult=null;state.inspected='';}tab=a;paint(a);}else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
  const query=host.querySelector('#kc-album-search');
  if(query){if(a==='reset-album-filters')resetFilters();updateSearch(query,true);query.focus({preventScroll:true});}
  }else if(a==='login'){if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');}else if(a==='retry')void request('read');else if(a==='confirm-buy'){state.confirmBuy=true;paint('cancel-buy');}else if(a==='cancel-buy'){cancelPurchase();}else if(a==='buy')void request('buy');}
@@ -609,6 +709,9 @@ function keydown(event){
   if(event.isComposing||searchComposing)return;
   if(!event.target.value)return;
   event.preventDefault();event.stopPropagation();updateSearch(event.target,true);return;
+ }
+ if(state.reel&&event.target.closest?.('.kc-pick-panel')){
+  event.preventDefault();event.stopPropagation();finishReel(state,state.reel,true);return;
  }
  const inspectButton=event.target.closest?.('.kc-inspect[aria-expanded="true"]');
  if(inspectButton){event.preventDefault();event.stopPropagation();inspect(inspectButton);return;}
@@ -624,7 +727,7 @@ function render(container){
   for(const [name,handle] of Object.entries(listeners)){host?.removeEventListener(name,handle);container.addEventListener(name,handle);}
   host=container;
  }
- const id=owner();if(!state||state.owner!==id){if(state?.reel){clearTimeout(state.reel.timer);clearTimeout(state.reel.detailTimer);}resetFilters();state=fresh(id);}
+ const id=owner();if(!state||state.owner!==id){if(state?.reel){clearTimeout(state.reel.timer);}resetFilters();state=fresh(id);}
  paint();if(state.status==='idle')void request('read');
  if(id)void loadOwnedAura(id);
 }

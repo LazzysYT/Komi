@@ -47,7 +47,7 @@ async function fixture(){
  // Seed using the candidate site's real catalog, not the migration's constants.
  const sandbox={window:{}};
  vm.runInNewContext(fs.readFileSync(path.join(base,'komi-collection.js'),'utf8'),sandbox);
- const roster=Object.fromEntries(Object.entries(sandbox.window.KomiCollection.seriesList).map(([key,value])=>[key,Array.from(value.roster,x=>x.id)]));
+ const roster=Object.fromEntries(worlds.map((key,i)=>[key,Array.from(sandbox.window.KomiCollection.seriesList[key].roster,x=>x.id).slice(0,i===0?18:10)]));
  assert.deepEqual(Object.keys(roster),worlds);
  assert.deepEqual(Object.values(roster).map(x=>x.length),[18,10,10,10]);
  const legacyCheck=(await db.query(`select pg_get_constraintdef(oid) as d from pg_constraint

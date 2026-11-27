@@ -486,3 +486,5 @@ body:has(#profile.komi-profile-studio) #sideFriendsBtn{width:44px!important;min-
 .profile-cover[data-kcs-wallpaper=frieren]{background-image:url("/assets/collection/deluxe-wallpapers/frieren.svg")}
 .profile-cover[data-kcs-wallpaper=alchemist]{background-image:url("/assets/collection/deluxe-wallpapers/alchemist.svg")}
 .profile-cover[data-kcs-wallpaper]{background-position:center;background-size:cover}
+.profile-cover[data-kcs-wallpaper=demon]{background-image:url("/assets/collection/deluxe-wallpapers/demon.svg")}
+.profile-cover[data-kcs-wallpaper=aot]{background-image:url("/assets/collection/deluxe-wallpapers/aot.svg")}

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 440" preserveAspectRatio="xMidYMid slice">
+<defs><linearGradient id="s" x2="0" y2="1"><stop stop-color="#333b2d"/><stop offset="1" stop-color="#161913"/></linearGradient><pattern id="b" width="64" height="32" patternUnits="userSpaceOnUse"><path d="M0 16h64M0 0h64M16 0v16m32 0v16" stroke="#d5c7a0" opacity=".4" stroke-width="1"/></pattern></defs>
+<path fill="url(#s)" d="M0 0h1300v440H0z"/><circle cx="836" cy="112" r="76" fill="#e3bf84" opacity=".53"/><path fill="#414637" d="m0 232 234-107 161 109 125-46 170 69 146-102 158 70 163-96 143 98v213H0z"/>
+<path id="fort" fill="#24281e" d="M0 246h87v-31h27v15h27v-15h27v32h130v-46h26v16h27v-16h25v46h260v-60h27v16h25v-16h27v60h148v-36h25v14h26v-14h28v36h158v-40h26v15h26v-15h26v40h95v193H0Z"/>
+<path fill="url(#b)" opacity=".43" d="M0 246h87v-31h27v15h27v-15h27v32h130v-46h26v16h27v-16h25v46h260v-60h27v16h25v-16h27v60h148v-36h25v14h26v-14h28v36h158v-40h26v15h26v-15h26v40h95v193H0Z"/>
+<path fill="#161914" d="M0 386q220-40 340-5t320-10 330 11 310-11v69H0z"/>
+</svg>
