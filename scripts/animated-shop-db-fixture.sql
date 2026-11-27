@@ -128,7 +128,12 @@ set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
 select public.komi_premium_store('buy_equip','banner_blood_moon');
 reset role;
+-- Simulate a historical giftable price and check retirement keeps receipts resolvable.
+update komi_private.shop_item_prices set giftable=true where item_id='banner_blood_moon';
 \ir ../docs/frame-atelier-v2.sql
+do $ begin
+ if not exists(select 1 from komi_private.shop_item_prices where item_id='banner_blood_moon' and cost=35 and giftable=false) then raise exception 'banner price history or gift retirement incorrect'; end if;
+end $;
 set role authenticated;
 select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
 do $$ declare r jsonb; begin

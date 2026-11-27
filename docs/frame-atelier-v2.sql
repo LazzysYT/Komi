@@ -49,8 +49,8 @@ revoke all on function komi_private.block_retired_banner_purchase() from public,
 drop trigger if exists block_retired_banner_purchase on komi_private.premium_store_purchases;
 create trigger block_retired_banner_purchase before insert on komi_private.premium_store_purchases
 for each row when (split_part(new.item_id,'_',1)='banner') execute function komi_private.block_retired_banner_purchase();
-delete from komi_private.shop_item_prices s where split_part(s.item_id,'_',1)='banner'
- and not exists(select 1 from komi_private.premium_store_purchases p where p.item_id=s.item_id);
+-- Retain historical price rows (also referenced by gift receipts), but prohibit new gifts.
+update komi_private.shop_item_prices set giftable=false where split_part(item_id,'_',1)='banner' and giftable;
 create or replace function public.komi_shop_frame_atelier_revision() returns text
 language sql immutable set search_path='' as $$ select '20261127-frame-atelier-v2'::text $$;
 revoke all on function public.komi_shop_frame_atelier_revision() from public,anon,authenticated;
