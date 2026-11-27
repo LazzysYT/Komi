@@ -2,6 +2,9 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+// Use the same valid video fixture as the dedicated native player tests.
+const tinyVideo=Buffer.from(fs.readFileSync(path.join(__dirname,'player-ux-browser.cjs'),'utf8')
+  .match(/body:Buffer\.from\('([A-Za-z0-9+/=]+)','base64'\)/)[1],'base64');
 
 async function checkCommentCooldown(page) {
  await page.evaluate(() => {
@@ -152,6 +155,9 @@ async function checkNotifications(page) {
      localStorage.setItem('komi_current_user', JSON.stringify({username:'legacy',authUserId:'forged-id'}));
    });
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+   await page.route(/^https:\/\/media\.test\/[ab]\.webm$/,route=>route.fulfill({
+     status:200,contentType:'video/webm',headers:{'access-control-allow-origin':'*'},body:tinyVideo
+   }));
    // The daily hero waits for a decoded wide still before changing frames.
    // Keep that browser path real while making remote artwork deterministic.
    await page.route(/\/assets\/hero\/daily\/[1-9]\d{0,11}-[A-Za-z0-9]+\.webp$/,route=>route.fulfill({
@@ -481,7 +487,7 @@ async function checkNotifications(page) {
     const hostileMetadata = '<img data-komi-injected src=x>';
     const watchFixture={id:'1',title:'Проверка аниме '+hostileMetadata,originalTitle:'Test',poster:'https://media.test/poster.jpg',
       genres:[hostileMetadata],year:'2026',shikiRating:8.2,type:'Сериал',episodeCount:3,
-      episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true};
+      episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.webm'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.webm'}}],komiDetailsLoaded:true};
     // The editorial hero only selects curated IDs. Preserve id 1 for the
     // watch/source/progress checks and exercise the same hostile data in its lead.
     animeList=[watchFixture,{...watchFixture,id:window.KomiHeroDaily.first}];
@@ -603,6 +609,9 @@ async function checkNotifications(page) {
 
 
    await page.waitForSelector('#animeVideoPlayer');
+   // Measure healthy playback before deliberately inducing the recovery state.
+   await page.waitForFunction(()=>document.querySelector('#animeVideoPlayer')?.readyState>=1);
+   assert.equal(await page.locator('#komiPlayerRecovery').isVisible(),false);
    const playback = page.getByRole('group',{name:'Управление видео'});
    assert.equal(await playback.count(),1);
    assert.equal(await page.locator('#animeVideoPlayer').evaluate(video=>video.controls),false);
@@ -665,7 +674,7 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-native-hud').count(),1);
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
-   assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
+   assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'A single-file native stream must not promise unavailable quality levels');
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
    await page.screenshot({path:path.join(output,`cinema-room-${width}.png`)});
    if (width <= 767) {
