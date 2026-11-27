@@ -626,7 +626,7 @@ async function checkNotifications(page) {
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       supportGap:support.top-(innerWidth>1050?heading.bottom:player.bottom),titleGap:innerWidth>1050?heading.top-player.bottom:player.top-heading.bottom, nextInDock:!!stage.querySelector(".komi-player-support .komi-watch-navbtn.primary"),
+       supportGap:support.top-(innerWidth>1050?heading.bottom:player.bottom),titleGap:innerWidth>1050?heading.top-player.bottom:player.top-heading.bottom, nextInDock:!!stage.querySelector((innerWidth>1050?".komi-player-heading":".komi-player-support")+" .komi-watch-navbtn.primary"),
        sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
@@ -652,7 +652,7 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-watch-rail .komi-rail-bell, .komi-watch-rail [aria-label="Уведомления"]').count(),0,'Guest watch rail must not expose notifications');
    assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),width>1050,
      'The overlay source control is shown only for a wide native player');
-   assert.equal(await page.locator(width<=767 ? '.komi-mobile-watch-source' : '#komiWatchSourceSelect').isVisible(),true,
+   assert.equal(await page.locator(width<=767 ? '.komi-mobile-watch-source' : width>1050 ? '.komi-v4-source-trigger' : '#komiWatchSourceSelect').isVisible(),true,
      'Voice selection must remain visible in the desktop support bar or phone sheet control');
    assert.equal(await page.getByRole('button',{name:'Видео не работает?',exact:true}).isVisible(),true,
      'Player help must be reachable without opening overflow actions');
