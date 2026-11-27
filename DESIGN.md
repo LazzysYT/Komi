@@ -313,3 +313,10 @@ The general catalog has no promotional hero before products. Quick categories sh
 ### Collector foils
 
 Six twenty-character albums share the same neutral rounded black surfaces. Illustrated fronts use a calm background from their own world and one foil edge keyed to rarity. Locked cards retain a fully black silhouette; the portrait viewer shows full-body artwork, series/rarity, stable catalogue code and position without spoiling unopened art. Pack and album shelves stay separate. A paid pack still awards exactly one server-confirmed missing card at 50 AniCoin. After opening, three identical backs offer a strictly decorative choice, with a separate reveal atmosphere per series. A skip and reduced-motion mode remain available; replay cannot buy or reveal another prize.
+
+### Animated character backgrounds
+
+Use scene motifs, not clips or heavy full-bleed videos. Selected heroes have individual art direction; every owned face has an inherited series/character pattern. In the collection grid use one light, finite CSS cue after hover or focus, and never render any scene for an undiscovered card. The full-body viewer uses one custom SVG behind the hero, the existing world artwork, and a single short sequence with an explicit replay button. Retain the composed still for reduced-motion users, avoid flashes, and keep all artwork out of text and hit-target layers. The themed pack reveal and existing shop auras remain independent.
+
+### Physical opening and places behind heroes
+Use the actual wrapper print on both the crimp strip and pouch. Show a short pull and recoil, exposed lining, a stack sliding out, then the three identical backs. The optional drag is not required; button, keyboard, and skip reach the same issued reward. Under reduced motion, jump straight to the choice. Character effects should imply a recognizable place (rain beyond the café windows, water winding through a mountain valley, tiled rooftops under the wall) before adding a personal mark. Only owned/revealed artwork gets the panorama; keep the collection grid static at rest.
