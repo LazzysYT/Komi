@@ -1,12 +1,12 @@
 /* KomiAnime collection: catalog is public; ownership and paid openings are server-authoritative. */
 (function(root){
 'use strict';
-const rarityById=Object.freeze({kaneki:'legendary',eto:'legendary',arima:'legendary',touka:'epic',juuzou:'epic',rize:'epic',furuta:'epic',uta:'rare',tsukiyama:'rare',ayato:'rare',yoshimura:'rare',takizawa:'rare',mado:'rare',irimi:'rare',hide:'common',hinami:'common',amon:'common',nishiki:'common',yomo:'common',akira:'common'});
+const rarityById=Object.freeze({kaneki:'legendary',eto:'legendary',arima:'legendary',touka:'epic',juuzou:'epic',rize:'epic',furuta:'epic',uta:'rare',tsukiyama:'rare',ayato:'rare',yoshimura:'rare',takizawa:'rare',mado:'rare',irimi:'rare',hide:'common',hinami:'common',amon:'common',nishiki:'common',yomo:'common',akira:'common',yamori:"epic",naki:"rare",koma:"rare",tatara:"epic"});
 const rarityNames=Object.freeze({common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'});
 const rarityRank=Object.freeze({legendary:0,epic:1,rare:2,common:3});
 // Sort display copies only: catalog serials and server rewards remain unchanged.
 const byRarity=items=>[...items].sort((a,b)=>rarityRank[a.rarity]-rarityRank[b.rarity]);
-const ghoulRoster=[["kaneki","Кэн Канэки","Ken Kaneki"],["touka","Тока Кирисима","Touka Kirishima"],["juuzou","Дзюдзо Судзуя","Juuzou Suzuya"],["uta","Ута","Uta"],["tsukiyama","Сю Цукияма","Shuu Tsukiyama"],["hide","Хидэёси Нагатика","Hideyoshi Nagachika"],["rize","Ридзэ Камисиро","Rize Kamishiro"],["arima","Кисё Арима","Kishou Arima"],["eto","Это Ёсимура","Eto Yoshimura"],["ayato","Аято Кирисима","Ayato Kirishima"],["hinami","Хинами Фуэгути","Hinami Fueguchi"],["amon","Котаро Амон","Koutarou Amon"],["nishiki","Нисики Нисио","Nishiki Nishio"],["yomo","Рэндзи Ёмо","Renji Yomo"],["yoshimura","Ёсимура","Kuzen Yoshimura"],["akira","Акира Мадо","Akira Mado"],["furuta","Нимура Фурута","Nimura Furuta"],["takizawa","Сэйдо Такидзава","Seidou Takizawa"],["mado","Курэо Мадо","Kureo Mado"],["irimi","Кая Ирими","Kaya Irimi"]].map(([id,name,query])=>Object.freeze({id,name,query,rarity:rarityById[id]}));
+const ghoulRoster=[["kaneki","Кэн Канэки","Ken Kaneki"],["touka","Тока Кирисима","Touka Kirishima"],["juuzou","Дзюдзо Судзуя","Juuzou Suzuya"],["uta","Ута","Uta"],["tsukiyama","Сю Цукияма","Shuu Tsukiyama"],["hide","Хидэёси Нагатика","Hideyoshi Nagachika"],["rize","Ридзэ Камисиро","Rize Kamishiro"],["arima","Кисё Арима","Kishou Arima"],["eto","Это Ёсимура","Eto Yoshimura"],["ayato","Аято Кирисима","Ayato Kirishima"],["hinami","Хинами Фуэгути","Hinami Fueguchi"],["amon","Котаро Амон","Koutarou Amon"],["nishiki","Нисики Нисио","Nishiki Nishio"],["yomo","Рэндзи Ёмо","Renji Yomo"],["yoshimura","Ёсимура","Kuzen Yoshimura"],["akira","Акира Мадо","Akira Mado"],["furuta","Нимура Фурута","Nimura Furuta"],["takizawa","Сэйдо Такидзава","Seidou Takizawa"],["mado","Курэо Мадо","Kureo Mado"],["irimi","Кая Ирими","Kaya Irimi"],["yamori","Ямори","Yakumo Oomori"],["naki","Наки","Naki"],["koma","Эндзи Кома","Enji Koma"],["tatara","Татара","Tatara"]].map(([id,name,query])=>Object.freeze({id,name,query,rarity:rarityById[id]}));
 const seriesList=Object.freeze({
  ghoul:{title:'Токийский гуль',pack:'Токийский гуль',edition:'01',code:'TG',script:'東京喰種',album:'Альбом 01',dossier:'Досье CCG',world:'Ночной Токио',roster:ghoulRoster},
  jujutsu:{title:'Магическая битва',pack:'Печати проклятий',edition:'02',code:'JK',script:'呪術廻戦',album:'Альбом печатей',dossier:'Архив печатей',world:'Токийская школа магии',rows:[
@@ -29,7 +29,11 @@ const seriesList=Object.freeze({
   ["meimei","Мэй Мэй","rare","Маги","Независимая волшебница, использующая в бою ворон.","Перо ворона","claw","#cae3eb"],
   ["utahime","Утахимэ Иори","rare","Киотская школа магии","Преподавательница, которая заботится о своих учениках.","Ритуальный круг","seal","#e6a1b6"],
   ["miwa","Касуми Мива","common","Киотская школа магии","Серьёзная ученица, тренирующаяся обращаться с мечом.","Синяя черта","streak","#8ccdff"],
-  ["kusakabe","Ацуя Кусакабэ","rare","Токийская школа магии","Опытный преподаватель и мастер простого домена.","Граница домена","seal","#d6cca7"]
+  ["kusakabe","Ацуя Кусакабэ","rare","Токийская школа магии","Опытный преподаватель и мастер простого домена.","Граница домена","seal","#d6cca7"],
+  ["jogo","Дзёго","epic","Проклятия","Вспыльчивое проклятие с вулканом на голове. Тяжело переносит недооценку.","Кромка вулкана","spark","#ed9167"],
+  ["hanami","Ханами","epic","Проклятия","Проклятие, чьи техники связаны с растениями. Узнаваемо по ветвям на лице.","Росток под камнем","orbit","#9fd6a5"],
+  ["dagon","Дагон","rare","Проклятия","Проклятие, связанное с морем. Его облик напоминает обитателя глубин.","Отзвук глубины","ring","#df8884"],
+  ["higuruma","Хироми Хигурума","epic","Маги","Адвокат, привыкший замечать, где показания расходятся с фактами.","Контур весов","seal","#d8cbb4"]
  ]},
  frieren:{title:'Фрирен',pack:'Дневник пути',edition:'03',code:'FR',script:'葬送のフリーレン',album:'Альбом путника',dossier:'Запись путника',world:'Дорога на север',rows:[
   ['frieren','Фрирен','legendary','Маги','Эльфийка, для которой десятилетие может пролететь за миг. Собирает необычные заклинания.','Малое чудо','orbit','#d8b865'],
@@ -51,7 +55,11 @@ const seriesList=Object.freeze({
   ["scharf","Шарф","common","Экзамен магов","Участник экзамена, превращающий лепестки в острые снаряды.","Рой лепестков","claw","#d88daa"],
   ["laufen","Лауфен","rare","Экзамен магов","Подвижная волшебница, неожиданно быстро сокращающая расстояние.","Быстрый шаг","streak","#edba84"],
   ["richter","Рихтер","rare","Экзамен магов","Маг земли и владелец лавки. Предпочитает надёжные решения.","Каменный пласт","seal","#c0a381"],
-  ["lernen","Лернен","epic","Ассоциация магов","Опытный маг и ученик Зериэ. Изучает устройство големов.","Контур голема","ring","#a4c7a7"]
+  ["lernen","Лернен","epic","Ассоциация магов","Опытный маг и ученик Зериэ. Изучает устройство големов.","Контур голема","ring","#a4c7a7"],
+  ["sein","Зайн","rare","Путешественники","Священник с талантом к исцелению. Наблюдательнее и заботливее, чем старается показать.","Свет в дороге","ring","#a89edc"],
+  ["aura","Аура","epic","Демоны","Властная волшебница с необычными весами, которые служат её магии.","Весы маны","seal","#d993d0"],
+  ["lugner","Люгнер","rare","Демоны","Учтивый собеседник, который тщательно подбирает слова и не спешит раскрывать намерения.","Бархатная черта","streak","#c38da8"],
+  ["linie","Линиэ","rare","Демоны","Молчаливая спутница Люгнера. Умеет в точности повторять движения, за которыми наблюдала.","Отпечаток движения","claw","#bda4e7"]
  ]},
  alchemist:{title:'Стальной алхимик',pack:'Архив Аместриса',edition:'04',code:'FA',script:'鋼の錬金術師',album:'Альбом Аместриса',dossier:'Личное дело',world:'Аместрис',rows:[
   ['edward','Эдвард Элрик','legendary','Государственные алхимики','Молодой алхимик, упрямый даже перед старшими по званию. Путешествует вместе с братом.','Круг трансмутации','seal','#ffc977'],
@@ -73,7 +81,11 @@ const seriesList=Object.freeze({
   ["wrath","Рэт","legendary","Гомункулы","Мастер клинка, который замечает мельчайшие движения.","Линия клинка","streak","#92d8ed"],
   ["pride","Прайд","legendary","Гомункулы","За спокойным голосом скрывается власть над тенями.","Глаза в тени","eye","#cbb0f4"],
   ["hohenheim","Ван Хоэнхайм","legendary","Путешественники","Странствующий алхимик, который видел куда больше, чем рассказывает.","Круг памяти","ring","#e4c57b"],
-  ["izumi","Идзуми Кёртис","epic","Наставники","Обучила братьев Элриков алхимии и умению полагаться на себя.","Удар земли","spark","#a9ded6"]
+  ["izumi","Идзуми Кёртис","epic","Наставники","Обучила братьев Элриков алхимии и умению полагаться на себя.","Удар земли","spark","#a9ded6"],
+  ["pinako","Пинако Рокбелл","rare","Механики","Ветеран автомейла и бабушка Уинри. Предпочитает точную работу долгим объяснениям.","Контур шестерни","seal","#c6a6a0"],
+  ["havoc","Жан Хавок","common","Армия Аместриса","Офицер команды Мустанга с лёгкой манерой говорить и практичным взглядом на службу.","Синий штрих","streak","#95b5e7"],
+  ["kimblee","Сольф Дж. Кимбли","epic","Государственные алхимики","Алхимик в белом костюме, чья вежливость не делает его намерения понятнее.","Багровая искра","spark","#ed9a88"],
+  ["buccaneer","Бакканир","rare","Бриггс","Капитан северной крепости. Оливия доверяет ему руководство гарнизоном.","Лязг автомейла","ring","#a5c3df"]
  ]},
  demon:{title:"Клинок, рассекающий демонов",pack:"Дыхание воды",edition:"05",code:"DS",script:"鬼滅の刃",album:"Альбом истребителей",dossier:"Запись корпуса",world:"Эпоха Тайсё",rows:[["tanjiro","Тандзиро Камадо","legendary","Корпус истребителей","Старший брат Нэдзуко. Находит след демонов по запаху и не теряет сострадания.","Дыхание воды","orbit","#82d8f2"],
   ["nezuko","Нэдзуко Камадо","legendary","Семья Камадо","Сестра Тандзиро. Даже изменившись, защищает близких.","Розовые угли","spark","#f8a1be"],
@@ -94,7 +106,11 @@ const seriesList=Object.freeze({
   ["akaza","Акадза","legendary","Двенадцать лун","Демон, который ценит мастерство сильного соперника.","Ледяная печать","seal","#9fd7fd"],
   ["doma","Дома","epic","Двенадцать лун","Демон с неизменной улыбкой. В бою использует веера и лёд.","Хрустальный веер","spark","#9ee8f1"],
   ["kokushibo","Кокушибо","legendary","Двенадцать лун","Молчаливый демон-мечник с необычными глазами.","Лунные дуги","claw","#c797f7"],
-  ["daki","Даки","rare","Двенадцать лун","Демон, которая использует длинные пояса как часть своей техники.","Узор пояса","orbit","#ef8fb9"]
+  ["daki","Даки","rare","Двенадцать лун","Демон, которая использует длинные пояса как часть своей техники.","Узор пояса","orbit","#ef8fb9"],
+  ["sabito","Сабито","rare","Ученики Урокодаки","Юный мечник в лисьей маске. Не даёт Тандзиро довольствоваться половинчатым усилием.","След лисьей маски","streak","#e4a384"],
+  ["makomo","Макомо","rare","Ученики Урокодаки","Спокойная ученица Урокодаки, которая замечает мелкие ошибки в тренировке.","Цветок на маске","orbit","#e2a5b5"],
+  ["tamayo","Тамаё","epic","Демоны","Врач, которая изучает природу демонов и помогает Тандзиро искать ответы.","Лепестковое кольцо","ring","#c894bc"],
+  ["yushiro","Юсиро","rare","Союзники Тамаё","Нелюдимый помощник Тамаё. В его технике важны зрение и незаметность.","Печать взгляда","eye","#a5d7c4"]
  ]},
  aot:{title:"Атака титанов",pack:"За стеной",edition:"06",code:"AT",script:"進撃の巨人",album:"Альбом разведкорпуса",dossier:"Досье разведкорпуса",world:"Город за стенами",rows:[["eren","Эрен Йегер","legendary","Разведкорпус","Решительный кадет, мечтающий увидеть мир за стенами.","За стеной","spark","#ecc989"],
   ["mikasa","Микаса Аккерман","legendary","Разведкорпус","Собранная и быстрая кадетка. Узнаваема по красному шарфу.","Красная нить","streak","#f0878b"],
@@ -115,7 +131,55 @@ const seriesList=Object.freeze({
   ["porco","Порко Галлиард","rare","Марлия","Гордый воин, которому трудно оставаться в стороне.","Рваная черта","claw","#dbc092"],
   ["gabi","Габи Браун","rare","Кандидаты в воины","Упорная кандидатка, привыкшая доказывать своё место в команде.","Сигнальная вспышка","spark","#f0bb90"],
   ["falco","Фалько Грайс","common","Кандидаты в воины","Добрый кандидат в воины, который внимательно относится к окружающим.","Лёгкое крыло","orbit","#c5dcb9"],
-  ["moblit","Моблит Бернер","common","Разведкорпус","Помощник Ханджи. Ведёт записи и напоминает о полевой безопасности.","Чернила отчёта","seal","#c1cfad"]
+  ["moblit","Моблит Бернер","common","Разведкорпус","Помощник Ханджи. Ведёт записи и напоминает о полевой безопасности.","Чернила отчёта","seal","#c1cfad"],
+  ["hannes","Ханнес","common","Гарнизон","Солдат гарнизона и давний знакомый семьи Йегеров. Охотно шутит, когда обстановка позволяет.","Медный отблеск","spark","#d8b775"],
+  ["kenny","Кенни Аккерман","epic","Военная полиция","Высокий человек в широкополой шляпе. Запоминается сухим юмором и привычкой контролировать разговор.","Тень полей шляпы","claw","#bf9e8a"],
+  ["petra","Петра Рал","rare","Разведкорпус","Боец отряда Леви. Говорит мягко, но серьёзно относится к работе команды.","Крыло разведки","streak","#acd59f"],
+  ["yelena","Елена","rare","Добровольцы","Высокая и собранная доброволица, которая внимательно взвешивает слова.","Белая дуга","ring","#ddcfaf"]
+ ]},
+ naruto:{title:"Наруто",pack:"Путь шиноби",edition:"07",code:"NR",script:"忍",album:"Альбом шиноби",dossier:"Досье шиноби",world:"Деревня Скрытого Листа",rows:[
+  ["naruto","Наруто Удзумаки","legendary","Коноха · Команда 7","Неугомонный ниндзя, который мечтает стать хокаге и держит слово даже в трудных миссиях.","Спираль Расэнгана","orbit","#ffac58"],
+  ["sasuke","Саскэ Утиха","legendary","Клан Утиха","Сдержанный ученик с острым взглядом и редким даром. Он привык добиваться цели своим путём.","Молния Тидори","spark","#9db7ff"],
+  ["sakura","Сакура Харуно","epic","Коноха · Команда 7","Учится медицинскому ниндзюцу и умеет направлять чакру с высокой точностью.","Сила цветущей сакуры","orbit","#f2a2c0"],
+  ["kakashi","Какаси Хатакэ","epic","Коноха · Наставник","Руководит Командой 7. За рассеянным видом скрывает привычку замечать мелочи и защищать товарищей.","Серебряная вспышка","streak","#add8ff"],
+  ["shikamaru","Сикамару Нара","rare","Коноха · Клан Нара","Не любит суеты, зато быстро читает обстановку и находит неожиданный ход.","Ход тени","claw","#a9b6c3"],
+  ["hinata","Хината Хюга","rare","Коноха · Клан Хюга","Спокойная наследница клана с Бьякуганом. Упорно работает над техниками мягкого кулака.","Мягкий круг чакры","ring","#c2b8ed"],
+  ["gaara","Гаара","epic","Суна","Ниндзя Песка, которого легко узнать по большой тыкве за спиной. Управляет песком, как продолжением руки.","Песчаный вихрь","orbit","#eac586"],
+  ["lee","Рок Ли","rare","Коноха · Команда Гая","Изо дня в день оттачивает тайдзюцу и верит, что дисциплина может поспорить с врождённым талантом.","Зелёная скорость","streak","#8edba9"],
+  ["neji","Нэдзи Хюга","rare","Коноха · Клан Хюга","Точный и собранный боец клана Хюга, который привык читать движения раньше соперника.","Восемь триграмм","seal","#b3daf1"],
+  ["temari","Тэмари","common","Суна","Рассудительная ниндзя из Песка. Использует большой веер и рассчитывает дистанцию перед ударом.","Дуга ветра","streak","#abeece"],
+  ["itachi","Итати Утиха","legendary","Акацуки","Молчаливый мастер гендзюцу из клана Утиха. Его трудно вывести из равновесия.","Алое отражение","eye","#f66a83"],
+  ["pain","Пэйн","legendary","Акацуки","Скрытный лидер Акацуки с глазами, похожими на расходящиеся круги.","Круги Риннэгана","ring","#c7adf5"],
+  ["konan","Конан","rare","Акацуки","Спокойная и наблюдательная. Превращает бумагу в фигуры, крылья и оружие.","Бумажные крылья","orbit","#b8bdff"],
+  ["deidara","Дэйдара","common","Акацуки","Любит мимолётное искусство и лепит из глины фигуры, которые может оживлять.","Глиняная искра","spark","#f4d48d"],
+  ["kisame","Кисамэ Хосигаки","common","Акацуки","Узнаваем по резким, почти акульим чертам и перевязанному мечу Самэхада.","Прилив Самэхада","claw","#79cee5"],
+  ["jiraiya","Дзирайя","epic","Коноха · Саннин","Странствующий наставник. Пишет книги, любит независимость и знает техники призыва жаб.","Печать призыва","seal","#ea9274"],
+  ["tsunade","Цунадэ","epic","Коноха · Саннин","Медик и боец с исключительным контролем чакры. Принимает решения быстро и не прощает халатности.","Ромб на печати","seal","#e7b5f3"],
+  ["orochimaru","Орочимару","epic","Скрытый Звук · Саннин","Ниндзя-исследователь, которого интересуют необычные техники и пределы человеческих возможностей.","Змеиное кольцо","ring","#c3a7f6"],
+  ["minato","Минато Намикадзэ","legendary","Коноха · Хокаге","Мастер мгновенных перемещений. Славится скоростью и привычкой сохранять ясную голову.","Жёлтая вспышка","streak","#ffe68e"],
+  ["madara","Мадара Утиха","legendary","Клан Утиха","Легендарный боец клана, чьё имя знают и союзники, и противники.","Багровый веер","claw","#f0848e"]
+ ]},
+ bleach:{title:"Блич",pack:"Лунный разрез",edition:"08",code:"BL",script:"死神",album:"Альбом проводников душ",dossier:"Архив Сэйрэтэя",world:"Общество душ",rows:[
+  ["ichigo","Итиго Куросаки","legendary","Каракура · Заместитель синигами","Старшеклассник, который видит духов. Берётся защищать близких даже тогда, когда не знает всех правил этого мира.","Лунный разрез","streak","#e99b71"],
+  ["rukia","Рукия Кутику","epic","Общество душ","Синигами из знатного дома. Сдержанная и требовательная, но умеет заботиться о тех, кого обучает.","Белый танец снега","orbit","#cbf0ff"],
+  ["renji","Рэндзи Абараи","rare","Общество душ · 6-й отряд","Прямолинейный лейтенант, который не скрывает соперничества и ценит старых друзей.","Зубцы Дзабимару","claw","#ee8a98"],
+  ["byakuya","Бякуя Кутику","legendary","Общество душ · Дом Кутику","Хладнокровный капитан. Ставит долг высоко и почти никогда не выдаёт своих чувств.","Вихрь тысячи лепестков","orbit","#f5a7d5"],
+  ["toshiro","Тосиро Хицугая","epic","Общество душ · 10-й отряд","Юный капитан, который серьёзно относится к порядку на службе и владеет ледяным клинком.","Ледяное дыхание","ring","#9de2fb"],
+  ["orihime","Орихимэ Иноуэ","rare","Каракура","Добрая одноклассница Итиго. Старается защищать окружающих, даже когда сама напугана.","Шесть лепестков","seal","#f5c3a1"],
+  ["uryu","Урю Исида","epic","Каракура · Квинси","Привычно держится особняком. Стреляет из духовного лука и замечает детали, которые другие пропускают.","Световая стрела","streak","#9accff"],
+  ["chad","Ясутора Садо","common","Каракура","Тихий и надёжный друг Итиго. Не ищет драки и использует силу, когда кому-то нужна помощь.","Тяжёлый импульс","spark","#efbd84"],
+  ["urahara","Кискэ Урахара","legendary","Каракура · Лавка Урахары","Хозяин небольшой лавки в полосатой панаме. Разбирается в устройствах, печатях и необычных свойствах духовной силы.","Круг под тростью","seal","#b8df9f"],
+  ["yoruichi","Ёруити Сихоин","legendary","Общество душ · Дом Сихоин","Свободолюбивая наставница и мастер скоростных перемещений. Предпочитает действовать, а не спорить.","Фиолетовый рывок","streak","#c69cf5"],
+  ["kenpachi","Кэмпати Дзараки","legendary","Общество душ · 11-й отряд","Могучий капитан в повязке на глазу. Рад встретить противника, который не сдаётся после первого удара.","Искры стального удара","spark","#f9d186"],
+  ["rangiku","Рангику Мацумото","common","Общество душ · 10-й отряд","Общительная лейтенантка, которая легко отвлекает сослуживцев от рутины, но выручает их в трудный момент.","Ветер серого пепла","orbit","#e1b4cc"],
+  ["soifon","Сой Фон","rare","Общество душ · 2-й отряд","Строгая командир скрытного подразделения. Рассчитывает шаги и не любит лишнего шума.","Двойная метка","eye","#b8d995"],
+  ["shunsui","Сюнсуй Кёраку","epic","Общество душ","Капитан в цветочном хаори. В разговоре кажется беззаботным, но внимательно следит за настроением собеседника.","Цветы на ветру","orbit","#e9a3cc"],
+  ["yamamoto","Гэнрюсай Ямамото","legendary","Общество душ · 1-й отряд","Ветеран с длинной белой бородой, для которого порядок и ответственность важнее красивых слов.","Кольцо древнего огня","ring","#ffb17a"],
+  ["aizen","Сосукэ Айдзэн","legendary","Уэко Мундо","Уравновешенный и проницательный противник. Предпочитает управлять ходом событий, не повышая голоса.","Разбитое отражение","eye","#deabf7"],
+  ["gin","Гин Итимару","rare","Общество душ","Синигами с неизменной улыбкой и тихой манерой говорить. За его вежливостью непросто разглядеть намерения.","Блик короткого клинка","streak","#d7dff6"],
+  ["ulquiorra","Улькиорра Сифер","epic","Уэко Мундо · Арранкары","Молчаливый арранкар с зелёными линиями под глазами. Наблюдает за чувствами людей с холодным любопытством.","Изумрудная вспышка","spark","#9feadd"],
+  ["grimmjow","Гриммджоу Джагерджак","epic","Уэко Мундо · Арранкары","Гордый и порывистый арранкар. Соревнование и собственная сила значат для него больше, чем титулы.","Коготь Пантеры","claw","#83cfff"],
+  ["nelliel","Нэлиэль Ту Одершванк","rare","Уэко Мундо · Арранкары","Благородная арранкарка. Не считает бой самоцелью и не бросает того, кто оказался под её защитой.","Бирюзовая спираль","ring","#95e2c0"]
  ]}
 });
 for(const v of Object.values(seriesList)){if(v.rows)v.roster=v.rows.map(([id,name,rarity,group,intro,reveal,fx,tint])=>Object.freeze({id,name,rarity,group,intro,reveal,fx,tint}));Object.freeze(v.roster);Object.freeze(v);}
@@ -125,7 +189,8 @@ const ghoulFx=Object.freeze({
  rize:['Багровые ленты','claw','#fa557e'],arima:['Холодный импульс','streak','#c1eaff'],eto:['За архивной печатью','seal','#7dd8b8'],
  ayato:['Сечение крыла','claw','#b18afa'],hinami:['Хрупкий цветок','orbit','#ffc59b'],amon:['Стальная дуга','ring','#92baf1'],
  nishiki:['Спираль хвоста','orbit','#f5ae7a'],yomo:['Крыло в тумане','claw','#8ab1c4'],yoshimura:['Кольца кофе','ring','#e7b588'],
- akira:['Сетка отчёта','seal','#f1d48f'],furuta:['Раскол грима','streak','#f779a4'],takizawa:['Сигнальная искра','spark','#ece398'],mado:["Лезвие отчёта","streak","#c7d7ec"],irimi:["Тень чёрной собаки","claw","#af91d1"]
+ akira:['Сетка отчёта','seal','#f1d48f'],furuta:['Раскол грима','streak','#f779a4'],takizawa:['Сигнальная искра','spark','#ece398'],mado:["Лезвие отчёта","streak","#c7d7ec"],irimi:["Тень чёрной собаки","claw","#af91d1"],
+ yamori:["Белая трещина","claw","#e4d6cb"], naki:["Ломаный шаг","streak","#e8b66f"], koma:["Пар над чашкой","ring","#e3a985"], tatara:["Багровая завеса","spark","#ed665e"]
 });
 let seriesKey='ghoul', series=seriesList.ghoul, roster=series.roster, ids=new Set(roster.map(c=>c.id));
 // Original, spoiler-free copy; groups refer to the character's early appearance.
@@ -147,7 +212,8 @@ const dossier=Object.freeze({
  yoshimura:['Антэйку','Хозяин кафе, где за чашкой кофе всегда найдётся место.'],
  akira:['CCG','Собранная следовательница с аналитическим складом ума.'],
  furuta:['CCG','Вежливый сотрудник, которого трудно прочитать.'],
- takizawa:['CCG','Молодой следователь, стремящийся проявить себя.'],mado:["CCG","Опытный следователь. Ведёт расследования вместе с Котаро Амоном."],irimi:["Антэйку","Официантка «Антэйку», внимательная к гостям и своим товарищам."]
+ takizawa:['CCG','Молодой следователь, стремящийся проявить себя.'],mado:["CCG","Опытный следователь. Ведёт расследования вместе с Котаро Амоном."],irimi:["Антэйку","Официантка «Антэйку», внимательная к гостям и своим товарищам."],
+ yamori:["Аогири","Внушительный гуль из «Аогири». Его спокойный голос плохо сочетается с репутацией."], naki:["Аогири","Вспыльчивый и удивительно открытый гуль, который всерьёз дорожит товарищами."], koma:["Антэйку","Общительный работник «Антэйку», который умеет разговорить даже молчаливого гостя."], tatara:["Аогири","Немногословный участник «Аогири», которого легко узнать по багровой маске."]
 });
 const CASE_PRICE=50;
 const purchaseIds=new Map();
@@ -200,7 +266,9 @@ const sceneProfiles=Object.freeze({
  frieren:{frieren:['petals','#f1d894'],fern:['circles','#c0a0ff'],stark:['flame','#f4a079'],himmel:['petals','#a9dbfd'],flamme:['flame','#fac28a'],serie:['circles','#f5dc91'],lawine:['frost','#abe4ff'],kanne:['water','#94dcff'],scharf:['petals','#e8a3c0']},
  alchemist:{edward:['circles','#f2bb71'],alphonse:['circles','#aaceef'],roy:['flame','#ff9d6e'],riza:['wires','#e9d59c'],lust:['crimson','#ed7a9e'],hohenheim:['circles','#e1bc68'],envy:['shadow','#9bd37f'],olivier:['frost','#a8d9f8']},
  demon:{tanjiro:['water','#7ee6ec'],giyu:['water','#65b7f5'],zenitsu:['thunder','#f9d56b'],rengoku:['flame','#ffad65'],nezuko:['flame','#ee91c7'],inosuke:['wires','#a6c9e8'],shinobu:['moth','#c2a3ff'],kanao:['petals','#f4b8d9'],mitsuri:['ribbon','#edb9d9'],muichiro:['water','#a0dec8'],sanemi:['wires','#a5e2be'],obanai:['ribbon','#d1e6a9'],akaza:['frost','#a5e5ff'],doma:['frost','#a6e2ee'],kokushibo:['crimson','#bf9afa'],muzan:['shadow','#ed697f']},
- aot:{eren:['horizon','#e4a572'],armin:['horizon','#a2d0df'],mikasa:['ribbon','#e66d7e'],levi:['wires','#b9dce8'],erwin:['horizon','#e0c08b'],hange:['circles','#b6d6aa'],annie:['frost','#b8dcf3'],reiner:['horizon','#c5ad83'],ymir:['shadow','#9ec2b0']}
+ aot:{eren:['horizon','#e4a572'],armin:['horizon','#a2d0df'],mikasa:['ribbon','#e66d7e'],levi:['wires','#b9dce8'],erwin:['horizon','#e0c08b'],hange:['circles','#b6d6aa'],annie:['frost','#b8dcf3'],reiner:['horizon','#c5ad83'],ymir:['shadow','#9ec2b0']},
+ naruto:{"naruto":["flame","#ffb65f"],"sasuke":["thunder","#a0b6ff"],"sakura":["petals","#f8aaba"],"kakashi":["thunder","#a5d2f3"],"gaara":["ribbon","#dec188"],"konan":["petals","#d1c2ed"]},
+ bleach:{"ichigo":["flame","#f9b77a"],"rukia":["frost","#c6e7ff"],"byakuya":["petals","#f7a5c5"],"toshiro":["frost","#99e7fa"],"aizen":["circles","#cbb9f0"],"ulquiorra":["shadow","#9de0ba"]}
 });
 const ambientFallback=Object.freeze({eye:'crimson',claw:'wires',streak:'ribbon',orbit:'petals',ring:'circles',spark:'thunder',seal:'circles'});
 function heroScene(c,info){
@@ -219,7 +287,9 @@ const sceneSets=Object.freeze({
  frieren:{meadow:'frieren himmel heiter eisen stark flamme',library:'fern serie lernen land methode denken',ravine:'ubel lawine kanne wirbel ehre scharf'},
  alchemist:{workshop:'edward alphonse winry pinako',archive:'roy riza maes alex olivier',ravine:'scar ling mei lanfan',underworld:'greed lust envy gluttony wrath pride hohenheim'},
  demon:{river:'tanjiro giyu muichiro sanemi inosuke',rail:'rengoku zenitsu tengen',courtyard:'shinobu kanao mitsuri obanai nezuko genya',underworld:'muzan akaza doma kokushibo daki'},
- aot:{roofs:'mikasa levi eren jean connie sasha erwin hange moblit historia ymir',coast:'armin',fortress:'reiner bertholdt annie zeke pieck porco gabi falco'}
+ aot:{roofs:'mikasa levi eren jean connie sasha erwin hange moblit historia ymir',coast:'armin',fortress:'reiner bertholdt annie zeke pieck porco gabi falco'},
+ naruto:{"village":"naruto sasuke sakura kakashi shikamaru hinata lee neji jiraiya tsunade minato","dunes":"gaara temari","rainvillage":"itachi pain konan deidara kisame orochimaru madara"},
+ bleach:{"seireitei":"rukia renji byakuya toshiro kenpachi rangiku soifon shunsui yamamoto aizen gin","suburb":"ichigo orihime uryu chad urahara yoruichi","dunes":"ulquiorra grimmjow nelliel"}
 });
 const scenery=Object.freeze({
  cafe:['#312030','#b46e52','#080b14',
@@ -285,9 +355,14 @@ const scenery=Object.freeze({
  coast:['#273e54','#92bfc9','#102333',
   '<path d="M0 216q149-30 256 5l144-12v241H0Z"/><path d="M0 345q101 19 200 0t200-3v108H0Z"/>',
   '<circle cx="187" cy="161" r="68"/><path d="M0 262q126 14 217 0t183 0v13q-78-4-177 7T0 277Z"/>',
-  '<path d="M0 309q127 19 211 5t189 0M0 349q127 19 211 5t189 0M0 390q127 19 211 5t189 0M12 187l32-14 22 5m224 3 37-15 28 8"/>','water']
+  '<path d="M0 309q127 19 211 5t189 0M0 349q127 19 211 5t189 0M0 390q127 19 211 5t189 0M12 187l32-14 22 5m224 3 37-15 28 8"/>','water'],
+ village:["#35243a","#f0b269","#15141c","M0 261 34 215 65 230 120 147 164 169 200 151 264 211 308 177 352 212 400 183V450H0Z","<path d=\"M0 279 52 242l42 37H0m85 32 51-45 55 45H85m101-34 42-38 45 38h-87m79 39 51-46 48 46h-99m62-49 38-38 45 38\"/>","<path d=\"M21 279v42h50v-42m32 34v49h67v-49m28-34v47h60v-47m25 39v49h64v-49M18 354h65m276 17h41M137 146v59m19-43v56m24-57v50\"/>","gust"],
+ dunes:["#352330","#e9ac86","#121521","M0 224Q85 176 175 238T400 208V450H0Z","<path d=\"M0 289q94-73 206-27t194-9M0 352q120-54 213-15t187-16\"/>","<path d=\"M16 284q51-28 92-21m164 22q62 2 113-17M20 359q83-23 155-10m101 16q58 4 103-21\"/>","gust"],
+ rainvillage:["#252738","#94a0bb","#10131d","M0 278V164h36v74h34V99h28v188h56V132h33v140h41V191h45v75h52V111h22v154h53v185H0Z","<path d=\"M0 292h400M42 176h30m19-62v151m91-127v129m84-66v59m74-134v126\"/>","<path d=\"M9 328h379m-333 48h301M51 174v61m118-57v89m213 17V153\"/>","rain"],
+ seireitei:["#243043","#bdd7f2","#101521","M0 300 51 267 89 288 139 220 183 258 228 196 263 233 316 255 355 219 400 249V450H0Z","<path d=\"M33 300h334M45 310h306M85 286l50-36 48 36m-87 8h75m21-26 37-48 39 48m-67 9h57m29 20 54-36 50 36\"/>","<path d=\"M121 289v37m31-37v37m63-48v44m30-44v44m74-22v33m30-33v33M22 369q81-20 153-14m49 5q110 12 166-6\"/>","petals"],
+ suburb:["#263746","#9ed1ed","#131623","M0 280V204h68v39h29v39h38V166h45v61h44V201h52v-49h34v95h28v-50h62v253H0Z","<path d=\"M12 226h43m94-43h20m61 39h36m16-50h20m45 50h38M0 294h400\"/>","<path d=\"M23 326h333M20 373h115m130 0h112M123 303 80 450m212-147 52 147\"/>","motes"]
 });
-const backdropFallback={ghoul:'alley',jujutsu:'shrine',frieren:'meadow',alchemist:'archive',demon:'courtyard',aot:'roofs'};
+const backdropFallback={ghoul:'alley',jujutsu:'shrine',frieren:'meadow',alchemist:'archive',demon:'courtyard',aot:'roofs',naruto:'village',bleach:'seireitei'};
 const sceneMotion=Object.freeze({
  rain:'M28 61l-21 49m54-7-19 48m295-74-22 54m51-15-25 63m54 31-20 51M30 270l-18 40m68-14-15 33m260-45-12 37',
  papers:'M31 148l24-12 11 24-24 13Zm295-39 20 11-13 23-21-12ZM42 300l11 22-14 5-12-21ZM349 280l25 8-6 14-25-7Z',
@@ -309,14 +384,17 @@ function stageScenery(c,info){
 }
 
 const chapterSets={
- ghoul:[['Антэйку',['kaneki','touka','yomo','yoshimura']],['Следствие CCG',['arima','amon','akira','juuzou']],['Город после заката',['uta','rize','tsukiyama','nishiki']],['Антэйку и следователи',['irimi','mado']]],
- jujutsu:[['Первый курс',['itadori','fushiguro','kugisaki']],['Второй курс',['maki','toge','panda','yuta']],['Мастера и легенды',['gojo','sukuna','nanami']],['Киотская школа',['todo','utahime','miwa']],['В старых записях',['shoko','geto','toji']]],
- frieren:[['Старый отряд',['himmel','heiter','eisen','frieren']],['Новый путь',['frieren','fern','stark']],['Школа магии',['flamme','serie','denken','ubel']],['Практический экзамен',['lawine','kanne','land','methode']],['Северный отряд',['wirbel','ehre','scharf']]],
- alchemist:[['Резембул',['edward','alphonse','winry']],['Штаб',['roy','riza','maes','alex']],['Другие дороги',['scar','olivier','lanfan']],['Путь из Сина',['ling','mei','lanfan']],['Гомункулы',['greed','lust','envy','gluttony','wrath','pride']]],
- demon:[['Камадо',['tanjiro','nezuko','zenitsu','inosuke']],['Столпы',['giyu','shinobu','rengoku','tengen','mitsuri']],['Кандидаты',['kanao','genya']],['Двенадцать лун',['muzan','akaza','doma','kokushibo','daki']]],
- aot:[['Три кадета',['eren','mikasa','armin']],['Командование',['levi','erwin','hange','moblit']],['Из одного выпуска',['jean','connie','sasha','historia','ymir']],['Воины Марлии',['reiner','bertholdt','annie','zeke','pieck','porco','gabi','falco']]]
+ ghoul:[['Антэйку',['kaneki','touka','yomo','yoshimura']],['Следствие CCG',['arima','amon','akira','juuzou']],['Город после заката',['uta','rize','tsukiyama','nishiki']],['Антэйку и следователи',['irimi','mado']],["Новая глава",["yamori","naki","koma","tatara"]]],
+ jujutsu:[['Первый курс',['itadori','fushiguro','kugisaki']],['Второй курс',['maki','toge','panda','yuta']],['Мастера и легенды',['gojo','sukuna','nanami']],['Киотская школа',['todo','utahime','miwa']],['В старых записях',['shoko','geto','toji']],["Новая глава",["jogo","hanami","dagon","higuruma"]]],
+ frieren:[['Старый отряд',['himmel','heiter','eisen','frieren']],['Новый путь',['frieren','fern','stark']],['Школа магии',['flamme','serie','denken','ubel']],['Практический экзамен',['lawine','kanne','land','methode']],['Северный отряд',['wirbel','ehre','scharf']],["Новая глава",["sein","aura","lugner","linie"]]],
+ alchemist:[['Резембул',['edward','alphonse','winry']],['Штаб',['roy','riza','maes','alex']],['Другие дороги',['scar','olivier','lanfan']],['Путь из Сина',['ling','mei','lanfan']],['Гомункулы',['greed','lust','envy','gluttony','wrath','pride']],["Новая глава",["pinako","havoc","kimblee","buccaneer"]]],
+ demon:[['Камадо',['tanjiro','nezuko','zenitsu','inosuke']],['Столпы',['giyu','shinobu','rengoku','tengen','mitsuri']],['Кандидаты',['kanao','genya']],['Двенадцать лун',['muzan','akaza','doma','kokushibo','daki']],["Новая глава",["sabito","makomo","tamayo","yushiro"]]],
+ aot:[['Три кадета',['eren','mikasa','armin']],['Командование',['levi','erwin','hange','moblit']],['Из одного выпуска',['jean','connie','sasha','historia','ymir']],['Воины Марлии',['reiner','bertholdt','annie','zeke','pieck','porco','gabi','falco']],["Новая глава",["hannes","kenny","petra","yelena"]]],
+ naruto:[["Команда № 7",["naruto","sasuke","sakura","kakashi"]],["Экзамен на тюнина",["gaara","lee","neji","temari","shikamaru","hinata"]],["Саннины",["jiraiya","tsunade","orochimaru"]],["Акацуки",["itachi","pain","konan","deidara","kisame"]],["Имена из легенд",["minato","madara"]]],
+ bleach:[["Каракура",["ichigo","orihime","uryu","chad"]],["Врата Сэйрэтэя",["rukia","renji","byakuya","toshiro"]],["Двенадцать отрядов",["kenpachi","rangiku","soifon","shunsui","yamamoto"]],["Старая гвардия",["urahara","yoruichi","aizen","gin"]],["Под белой луной",["ulquiorra","grimmjow","nelliel"]]],
+
 };
-const posterTones={ghoul:['#180d18','#63263a','#f3a4b9'],jujutsu:['#151021','#453363','#c6b0fc'],frieren:['#201809','#5b4726','#f2d198'],alchemist:['#0d1820','#284b62','#a6d9e7'],demon:['#08151f','#184266','#8adcf1'],aot:['#16160f','#393b24','#d5d6a1']};
+const posterTones={ghoul:['#180d18','#63263a','#f3a4b9'],jujutsu:['#151021','#453363','#c6b0fc'],frieren:['#201809','#5b4726','#f2d198'],alchemist:['#0d1820','#284b62','#a6d9e7'],demon:['#08151f','#184266','#8adcf1'],aot:['#16160f','#393b24','#d5d6a1'],naruto:['#21150e','#59342a','#ffcf8a'],bleach:['#0c1721','#294755','#ccedfa']};
 function collectorProgress(s,owned,known){
  const count=owned.size,missing=roster.length-count;
  const label=!known?'Прогресс появится после входа и загрузки коллекции.':missing
@@ -359,7 +437,7 @@ async function readJournal(s){
   if(!current(s))return;
   if(error||!Array.isArray(data))throw Error('Invalid journal');
   const seen=new Set(),owned=new Set(s.owned);
-  s.journalRows=data.slice(0,20).flatMap(row=>{
+  s.journalRows=data.slice(0,24).flatMap(row=>{
    const id=row?.character_id,date=new Date(row?.opened_at||'');
    if(!owned.has(id)||!ids.has(id)||seen.has(id)||!Number.isFinite(date.valueOf()))return [];
    seen.add(id);return [{id,date}];
@@ -411,7 +489,7 @@ async function downloadMiniPoster(c,asset,button,status){
  finally{if(valid())button.disabled=false;}
 }
 // Promotional portraits are separate from the ownership-controlled album cards.
-const shelfHeroes=Object.freeze({ghoul:'kaneki',jujutsu:'gojo',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren'});
+const shelfHeroes=Object.freeze({ghoul:'kaneki',jujutsu:'gojo',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren',naruto:'naruto',bleach:'ichigo'});
 function shelfHero(id,cssClass){
  const folder=id==='ghoul'?'ghoul-cel':id;
  return '<img class="'+cssClass+'" src="/assets/collection/'+folder+'/'+shelfHeroes[id]+'.webp" width="432" height="648" alt="" aria-hidden="true" decoding="async">';
@@ -582,7 +660,9 @@ const pickThemes=Object.freeze({
  frieren:{scene:'Дневник пути',sigil:'M19 40a31 28 0 1 0 62 0 31 28 0 1 0-62 0m9 0a22 19 0 1 0 44 0 22 19 0 1 0-44 0M50 18v44m-14-22h28m-25-11 22 22M61 29 39 51',effects:'<path class="kc-pick-trace" d="M19 112Q53 48 117 65t100-18 90-15M42 140q38-53 75-10t96-9 91-20M91 92a79 43 0 1 1 158 0 79 43 0 1 1-158 0M66 92a104 63 0 1 1 208 0 104 63 0 1 1-208 0"/><path class="kc-pick-strokes" d="m38 63 3 9 9 3-9 3-3 9-3-9-9-3 9-3Zm91 53 3 10 10 3-10 3-3 10-3-10-10-3 10-3Zm89-98 2 8 8 2-8 2-2 8-2-8-8-2 8-2Zm85 89 3 8 8 3-8 3-3 8-3-8-8-3 8-3Z"/>'},
  alchemist:{scene:'Архив Аместриса',sigil:'M50 9 82 26v28L50 71 18 54V26ZM50 9v62M18 26l64 28m0-28L18 54M50 15 24 53h52Z',effects:'<path class="kc-pick-trace" d="M64 14h212v154H64ZM85 35h170v112H85ZM170 20v140M70 91h200M170 26l65 112H105ZM170 157l65-112H105ZM97 91a73 63 0 1 0 146 0 73 63 0 1 0-146 0M20 25h40m-20-8v16m239 122h44m-22-8v16"/><path class="kc-pick-strokes" d="M127 91l7-7 7 7-7 7Zm66 0 7-7 7 7-7 7Zm-35-34 7-7 7 7-7 7Zm3 65 7-7 7 7-7 7Z"/>'},
  demon:{scene:'Клинок рассвета',sigil:'M21 57Q54 25 80 11Q67 43 37 63M21 57l-5 5m10-11 11 13M18 37Q25 25 33 18Q28 28 30 39M64 68Q67 54 78 44Q74 55 78 59',effects:'<path class="kc-pick-strokes" d="M5 158Q58 147 92 89 83 127 54 151 63 148 91 137 73 160 40 175ZM117 137Q165 100 179 42 195 75 174 108 207 80 242 57 220 90 195 116 163 148 108 174ZM243 148Q287 124 311 65 321 98 287 132 312 125 334 108 308 160 258 172Z"/><path class="kc-pick-trace" d="M8 145Q111 121 131 20M35 167Q173 129 207 24M95 173Q239 133 279 39M202 168q85-18 125-95"/>'},
- aot:{scene:'За стеной',sigil:'M19 16l29 16v37L18 53V41l17 10V29M81 16 52 32v37l30-16V41L65 51V29M23 16 48 28m29-12L52 28',effects:'<path class="kc-pick-trace" d="M21 156V85l27-18 22 14 30-21 17 14v82M129 161V69l22-17 23 16 28-21 20 15v99M232 156V95l31-22 22 15 26-18 13 14v72M17 159h306M3 40q35-18 91 0t82 1 96 1 64 4M13 118q53-11 115 7t127-1 84 1"/><path class="kc-pick-strokes" d="m8 122 126-44-41 27Zm77 30 128-42-63 31Zm67-125 122-25-48 18Zm52 127 130-42-35 21Z"/>'}
+ aot:{scene:'За стеной',sigil:'M19 16l29 16v37L18 53V41l17 10V29M81 16 52 32v37l30-16V41L65 51V29M23 16 48 28m29-12L52 28',effects:'<path class="kc-pick-trace" d="M21 156V85l27-18 22 14 30-21 17 14v82M129 161V69l22-17 23 16 28-21 20 15v99M232 156V95l31-22 22 15 26-18 13 14v72M17 159h306M3 40q35-18 91 0t82 1 96 1 64 4M13 118q53-11 115 7t127-1 84 1"/><path class="kc-pick-strokes" d="m8 122 126-44-41 27Zm77 30 128-42-63 31Zm67-125 122-25-48 18Zm52 127 130-42-35 21Z"/>'},
+ naruto:{scene:'Путь шиноби',sigil:'M19 52Q38 24 60 20q29-3 20 19-8 17-28 19-16 0-15-12 2-11 16-7m-30 6L12 33m17 13L17 34',effects:'<path class="kc-pick-trace" d="M11 138Q98 55 200 65t133-37M7 158Q130 85 238 94t96-20M34 161q76-38 170-36"/><path class="kc-pick-strokes" d="M32 48q15-24 29-12-11 14-29 12Zm51 52q22-17 37-5-18 10-37 5Zm155-55q15-25 32-9-17 13-32 9Zm47 102q15-22 39-19-7 17-39 19Z"/>'},
+ bleach:{scene:'Лунный разрез',sigil:'M50 9 86 40 50 71 14 40ZM50 19 74 40 50 61 26 40ZM11 64 89 16',effects:'<path class="kc-pick-trace" d="M12 135 135 40l30 18 48-28 114 118M28 151 173 64 312 145M109 153 281 37M41 145 268 15"/><path class="kc-pick-strokes" d="m35 87 26-15-13 18Zm202-51 31-22-20 27Zm38 107 32-28-9 23Zm-168 13 36-15-12 16Z"/>'}
 });
 function pickScene(reel,theme){
  const choose=reel.phase==='choose',reveal=reel.phase==='reveal';
@@ -828,8 +908,8 @@ async function request(action){
   if(!current(s))return;
   if(sessionError||sessionData?.session?.user?.id!==s.owner)throw new Error('Session changed');
   const {data,error}=seriesKey==='ghoul'
-   ?(action==='buy'?await _supabase.rpc('komi_collection_ghoul_buy_v2',{p_request_id:purchaseId}):await _supabase.rpc('komi_collection_action',{p_action:action}))
-   :(action==='buy'?await _supabase.rpc('komi_collection_series_buy_v2',{p_series_id:s.seriesKey,p_request_id:purchaseId}):await _supabase.rpc('komi_collection_series_read',{p_series_id:s.seriesKey}));
+   ?(action==='buy'?await _supabase.rpc('komi_collection_ghoul_buy_v3',{p_request_id:purchaseId}):await _supabase.rpc('komi_collection_action',{p_action:action}))
+   :(action==='buy'?await _supabase.rpc('komi_collection_series_buy_v3',{p_series_id:s.seriesKey,p_request_id:purchaseId}):await _supabase.rpc('komi_collection_series_read',{p_series_id:s.seriesKey}));
   if(!current(s))return;
   if(error)throw error;
   const payload=normalizePayload(data);

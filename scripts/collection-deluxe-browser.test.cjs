@@ -24,7 +24,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
    auth:{getSession:async()=>({data:{session:{user:{id:currentUser?.authUserId}}}})},
    rpc:async(name,args)=>{
     if(name==='komi_collection_journal_read'){journalLoads++;return {data:[{character_id:'fern',opened_at:'2026-11-26T04:03:02Z'},{character_id:'foreign',opened_at:'2026-11-26T01:00:00Z'}]};}
-    if(name==='komi_collection_series_buy_v2'){buys++;saved=true;return {data:{owned:all,price:50,balance:0,result:all.at(-1),purchase_status:'ok'}};}
+    if(name==='komi_collection_series_buy_v3'){buys++;saved=true;return {data:{owned:all,price:50,balance:0,result:all.at(-1),purchase_status:'ok'}};}
     return {data:{owned:args.p_series_id==='frieren'?(saved?all:all.slice(0,-1)):[],price:50,balance:saved?0:50}};
    }
   };window.KomiCollection.render(document.querySelector('#mainContainer'));
@@ -33,7 +33,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  const extras=p.getByRole('button',{name:'Альбом и журнал'});
  assert.equal(await extras.getAttribute('aria-expanded'),'false');
  await extras.click();
- await p.getByText('Осталось: 1 из 20 · 1 × 50 = 50 AniCoin.').waitFor();
+ await p.getByText('Осталось: 1 из 24 · 1 × 50 = 50 AniCoin.').waitFor();
  assert.ok(await p.getByText('Печать получена').count());
  assert.equal(await p.evaluate(()=>journalLoads),0);
  await p.getByRole('button',{name:'Посмотреть',exact:true}).click();
@@ -65,7 +65,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  await p.getByRole('button',{name:'Открыть карточку 2 из 3'}).click();
  await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
  await p.getByRole('region',{name:'Серия собрана'}).waitFor();
- assert.equal(await p.locator('.kc-album-finale img').count(),20);
+ assert.equal(await p.locator('.kc-album-finale img').count(),24);
  assert.equal(await p.evaluate(()=>buys),1);
  assert.equal(await p.locator('.kc-album-finale').evaluate(el=>getComputedStyle(el).animationName),width===390?'kc-finale-open':'none');
  if(width===390)await p.locator('.kc-album-finale').screenshot({path:path.join(root,'browser-test-results','deluxe-finale.png'),animations:'disabled'});

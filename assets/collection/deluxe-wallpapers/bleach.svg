@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450">
+<defs><linearGradient id="night" x2="0" y2="1"><stop stop-color="#0a1020"/><stop offset=".7" stop-color="#293c50"/><stop offset="1" stop-color="#171a2a"/></linearGradient><radialGradient id="glow"><stop stop-color="#dbeeff" stop-opacity=".55"/><stop offset="1" stop-color="#dbeeff" stop-opacity="0"/></radialGradient><pattern id="paper" width="40" height="30" patternUnits="userSpaceOnUse"><path d="M2 20h25m5-14h5M0 29h4" stroke="#c2d8ee" stroke-opacity=".07"/></pattern></defs>
+<rect width="1200" height="450" fill="url(#night)"/><circle cx="826" cy="140" r="216" fill="url(#glow)"/><circle cx="826" cy="146" r="62" fill="#e2f1fa"/><circle cx="851" cy="126" r="65" fill="#40536b"/>
+<path d="M0 235 126 213 266 257 402 192 534 237 658 183 757 251 904 214l95-57 201 76v217H0Z" fill="#35465b"/>
+<path d="M0 357h1200v93H0ZM60 365l117-87 130 87Zm174-19 142-113 127 113Zm196 6 118-88 139 88Zm179 7 83-67 109 67Zm171-7 142-123 121 123Zm215 0 116-88 89 72v44h-205Z" fill="#151c2b"/>
+<path d="M75 362h219m-186 5h159m-22-25h248m-207 7h161m-2-4h226m-194 9h175m-38 0h174m15-6h229m-207 8h181m-12-12h170M183 365v46m173-63v63m193-64v64m148-61v50m210-50v61m181-64v59" fill="none" stroke="#91b7d9" stroke-opacity=".44" stroke-width="3"/>
+<path d="M0 383 234 157M243 450 529 183M735 450l465-340M1000 420l200-178" fill="none" stroke="#accfe8" stroke-opacity=".13" stroke-width="2"/>
+<g fill="#e6acbc" opacity=".68"><path d="M84 161q14-12 26-8-2 11-26 8Zm447 5q14-12 23-6-3 9-23 6Zm527 73q15-8 27-1-3 6-27 1Zm88-138q15-10 30-3-7 9-30 3Z"/></g>
+<rect width="1200" height="450" fill="url(#paper)"/>
+</svg>

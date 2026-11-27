@@ -177,3 +177,43 @@ localTest('late reward failure rolls back the wallet and ownership with no consu
  await as(db,'authenticated',bob);
  assert.equal((await buyV2(db,'aot',id(1))).balance,950);
 });
+
+localTest('wave two preserves owned cards and old completion, isolates cached v2 draws, and issues each new pack reward once',async t=>{
+ const db=await fixture();t.after(()=>db.close());
+ const migrate=fs.readFileSync(path.join(here,'supabase/migrations/20261127143000_komi_collection_second_wave.sql'),'utf8');
+ await db.exec('reset role');
+ const prior=(await db.query("select character_id from komi_collection_private.series_roster where series_id='demon'")).rows.map(r=>r.character_id);
+ for(const [i,c] of prior.entries())await db.query(
+  "insert into komi_collection_private.series_unlocks(user_id,series_id,character_id,paid_request_id) values($1,'demon',$2,$3)",
+  [alice,c,id(801+i)]);
+ await as(db,'authenticated',alice);
+ assert.equal((await rpc(db,'wallpaper_set','demon')).series_id,'demon');
+ assert.equal((await read(db,'demon')).balance,2500);
+ await db.exec('reset role');await db.exec(migrate);
+ const rows=(await db.query("select series_id,count(*)::int as n from komi_collection_private.series_roster group by series_id")).rows;
+ assert.equal(rows.length,7);
+ assert.ok(rows.every(r=>r.n=== (['naruto','bleach'].includes(r.series_id)?20:24)));
+ assert.equal((await db.query("select count(*)::int as n from komi_collection_private.ghoul_roster")).rows[0].n,24);
+ await as(db,'authenticated',alice);
+ assert.equal((await read(db,'demon')).owned.length,20);
+ assert.equal((await rpc(db,'wallpaper_read')).series_id,'demon');
+ assert.equal((await buyV2(db,'demon',id(850))).purchase_status,'complete');
+ assert.equal((await read(db,'demon')).balance,2500);
+ const d=await rpc(db,'series_buy_v3','demon',id(851));
+ assert.ok(!prior.includes(d.result));assert.equal(d.owned.length,21);assert.equal(d.balance,2450);
+ assert.equal((await rpc(db,'journal_read','demon')).length,21);
+ assert.equal((await rpc(db,'wallpaper_read')).series_id,'demon');
+ for(const [i,s] of ['naruto','bleach'].entries()){
+  assert.equal((await buyV2(db,s,id(862+i))).purchase_status,'complete');
+  const got=await rpc(db,'series_buy_v3',s,id(870+i));
+  assert.equal(got.owned.length,1);assert.equal(got.balance,2400-i*50);
+  assert.deepEqual(await rpc(db,'series_buy_v3',s,id(870+i)),got);
+  await assert.rejects(rpc(db,'ghoul_buy_v3',id(870+i)),{code:'22023'});
+  const shown=[{series_id:s,character_id:got.result}];
+  assert.deepEqual(await rpc(db,'showcase_set',JSON.stringify(shown)),shown);
+ }
+ await as(db,'authenticated',poor);
+ assert.equal((await rpc(db,'series_buy_v3','naruto',id(1))).purchase_status,'insufficient');
+ await as(db,'anon');
+ await assert.rejects(rpc(db,'series_buy_v3','bleach',id(1)),{code:'42501'});
+});

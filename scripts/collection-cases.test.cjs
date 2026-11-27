@@ -3,7 +3,7 @@ const root=path.resolve(__dirname,'..');
 const read=p=>fs.readFileSync(path.join(root,p),'utf8');
 const context={window:{}};vm.runInNewContext(read('komi-collection-art.js'),context);vm.runInNewContext(read('komi-collection.js'),context);
 const c=context.window.KomiCollection;
-test('catalog unique, no duplicate characters and same IDs in DB',()=>{assert.equal(c.roster.length,20);assert.equal(new Set(c.roster.map(r=>r.id)).size,20);const sql=read('supabase/migrations/20261126193000_komi_collection_cases.sql');for(const ch of c.roster.slice(0,18))assert.ok(sql.includes("'"+ch.id+"'"));assert.match(sql,/unique \(user_id, opened_on\)/);assert.match(sql,/pg_advisory_xact_lock/);assert.match(sql,/enable row level security/);});
+test('catalog unique, no duplicate characters and same IDs in DB',()=>{assert.equal(c.roster.length,24);assert.equal(new Set(c.roster.map(r=>r.id)).size,24);const sql=read('supabase/migrations/20261126193000_komi_collection_cases.sql');for(const ch of c.roster.slice(0,18))assert.ok(sql.includes("'"+ch.id+"'"));assert.match(sql,/unique \(user_id, opened_on\)/);assert.match(sql,/pg_advisory_xact_lock/);assert.match(sql,/enable row level security/);});
 test('payload rejects corrupt data and unknown/duplicate IDs',()=>{assert.throws(()=>c.normalizePayload({}));const v=c.normalizePayload({owned:['kaneki','kaneki','fake'],can_open:true,result:'fake'});assert.equal(JSON.stringify(v.owned),'["kaneki"]');assert.equal(v.result,null);assert.equal(v.canOpen,undefined);assert.equal(c.normalizePayload({owned:c.roster.map(x=>x.id),can_open:true}).canOpen,undefined);});
 test('route, assets and navigation wiring',()=>{const html=read('index.html');assert.match(html,/id="sideCollectionBtn"/);assert.match(html,/data-komi-mobile-extra="collection"/);assert.ok(html.indexOf('komi-collection.js')<html.indexOf('app-main.js'));assert.ok(JSON.parse(read('vercel.json')).rewrites.some(r=>r.source==='/collection'&&r.destination==='/index.html'));assert.match(read('app-main.js'),/KomiCollection\?\.render/);assert.match(read('komi-collection.css'),/kc-silhouette/);});
 
@@ -13,7 +13,7 @@ test('paid case is fixed, transactional, idempotent and does not use earned-coin
 
 test('paid-only release blocks old free action on the server and removes it from UI',()=>{const sql=read('supabase/migrations/20261126195100_komi_collection_paid_only.sql');assert.match(sql,/p_action is distinct from 'read'/);assert.match(sql,/'can_open',false/);assert.doesNotMatch(sql,/\b(?:insert|delete|update)\b/i);const js=read('komi-collection.js');assert.doesNotMatch(js,/бесплатн|раз в день|request\('open'\)/i);assert.match(js,/Купить за 50 AniCoin/);assert.doesNotMatch(read('komi-page-meta.js'),/ежедневный бесплатный кейс/);});
 
-test('R5 rarity grades and reel winner, no client-side payout selection',()=>{const counts={common:6,rare:7,epic:4,legendary:3};for(const [r,n] of Object.entries(counts))assert.equal(c.roster.filter(x=>x.rarity===r).length,n);const ids=new Set(c.roster.map(x=>x.id));for(const winner of c.roster){const items=c.makeReel(winner.id,[],()=>.42);assert.equal(items.length,29);assert.equal(items[23],winner.id);assert.ok(items.every(x=>ids.has(x)));}assert.match(read('komi-collection.js'),/showReel\(s,payload\)/);assert.match(read('komi-collection.css'),/prefers-reduced-motion/);const vector=read('assets/collection/tokyo-ghoul-case-r5.svg');assert.match(vector,/<svg[^>]*viewBox="0 0 1000 720"/);});
+test('R5 rarity grades and reel winner, no client-side payout selection',()=>{const counts={common:6,rare:7,epic:4,legendary:3};for(const [r,n] of Object.entries(counts))assert.equal(c.roster.slice(0,20).filter(x=>x.rarity===r).length,n);const ids=new Set(c.roster.map(x=>x.id));for(const winner of c.roster){const items=c.makeReel(winner.id,[],()=>.42);assert.equal(items.length,29);assert.equal(items[23],winner.id);assert.ok(items.every(x=>ids.has(x)));}assert.match(read('komi-collection.js'),/showReel\(s,payload\)/);assert.match(read('komi-collection.css'),/prefers-reduced-motion/);const vector=read('assets/collection/tokyo-ghoul-case-r5.svg');assert.match(vector,/<svg[^>]*viewBox="0 0 1000 720"/);});
 
 
 test('all 18 portraits and black cutouts are local WebP, responsive chest has two sizes',()=>{
@@ -52,21 +52,21 @@ test('booster keeps small transparent assets and a matching vector fallback',()=
 });
 
 test('new series rosters and presentation match the migration contract',()=>{
- const sql=read('supabase/migrations/20261127080152_komi_collection_series.sql')+read('supabase/migrations/20261127110000_komi_collection_series_expansion.sql');
- assert.deepEqual(Object.keys(c.seriesList),['ghoul','jujutsu','frieren','alchemist','demon','aot']);
- assert.equal(c.seriesList.ghoul.roster.length,20);
+ const sql=read('supabase/migrations/20261127080152_komi_collection_series.sql')+read('supabase/migrations/20261127110000_komi_collection_series_expansion.sql')+read('supabase/migrations/20261127143000_komi_collection_second_wave.sql');
+ assert.deepEqual(Object.keys(c.seriesList),['ghoul','jujutsu','frieren','alchemist','demon','aot','naruto','bleach']);
+ assert.equal(c.seriesList.ghoul.roster.length,24);
  const effects=new Set(Object.values(c.ghoulFx).map(x=>x[0]));
- assert.equal(effects.size,20);
+ assert.equal(effects.size,24);
  for(const [id,series] of Object.entries(c.seriesList)){
   if(id==='ghoul')continue;
-  assert.equal(series.roster.length,20);
+  assert.equal(series.roster.length,['naruto','bleach'].includes(id)?20:24);
   for(const row of series.roster){
    assert.ok(sql.includes("('"+id+"','"+row.id+"')"),row.id);
    assert.ok(row.group&&row.intro&&row.fx&&row.reveal&&/^#[\da-f]{6}$/.test(row.tint));
    effects.add(row.reveal);
   }
  }
- assert.equal(effects.size>108,true);
+ assert.equal(effects.size>165,true);
 });
 
 test('every collectible has a local cel illustration and a separate lock silhouette',()=>{

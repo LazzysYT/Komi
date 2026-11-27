@@ -994,3 +994,18 @@
  content:"";position:absolute;inset:1.5% 6% 1.5%;border:1px solid var(--kc-open);border-radius:6px;
  background:repeating-linear-gradient(98deg,transparent 0 2px,#f2e7f43b 3px,transparent 4px) top/100% 12% no-repeat,linear-gradient(125deg,var(--kc-open-ink),var(--kc-open-dark),var(--kc-open-ink));
 }
+
+/* Second wave: warm scroll paper for the Leaf, blade-lit porcelain for Seireitei. */
+.kc-theme-naruto{--kc-world:#fac389;--kc-world-dark:#56352d;--kc-world-ink:#211720;--kc-folio:url("/assets/collection/deluxe-wallpapers/naruto.svg")}
+.kc-theme-bleach{--kc-world:#c0def2;--kc-world-dark:#30465e;--kc-world-ink:#121b2c;--kc-folio:url("/assets/collection/deluxe-wallpapers/bleach.svg")}
+@media(min-width:1050px){.kc-page .kc-world-shelves{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.kc-pick-arena[data-kc-pick-world=naruto] .kc-pick-strokes{fill:#f2b57c}
+.kc-pick-arena[data-kc-pick-world=bleach] .kc-pick-strokes{fill:#c9e6f8}
+@media(prefers-reduced-motion:no-preference) {
+ .kc-pick-arena.is-revealing[data-kc-pick-world=naruto] .kc-pick-strokes{animation-name:kc-pick-leaves}
+ .kc-pick-arena.is-revealing[data-kc-pick-world=bleach] .kc-pick-strokes{animation-name:kc-pick-blade}
+}
+@keyframes kc-pick-leaves{0%{opacity:0;transform:translate(-14%,12%) rotate(-4deg)}55%{opacity:.67}to{opacity:.38;transform:translate(5%,-3%) rotate(3deg)}}
+@keyframes kc-pick-blade{0%{opacity:0;transform:scale(.82) skewY(7deg)}43%{opacity:.72}to{opacity:.35;transform:none}}
+.kc-world-window.kc-theme-naruto > .kc-window-motif,.kc-page.kc-theme-naruto .kc-feature-motif{background:radial-gradient(ellipse at 75% 63%,#e7884c5c 0 13%,transparent 46%),repeating-linear-gradient(160deg,transparent 0 15px,#f4bc763d 16px 17px,transparent 18px 33px)}
+.kc-world-window.kc-theme-bleach > .kc-window-motif,.kc-page.kc-theme-bleach .kc-feature-motif{background:linear-gradient(138deg,transparent 50%,#d7edff54 51% 52%,transparent 54%),radial-gradient(ellipse at 78% 30%,#bcd8f454,transparent 50%)}
