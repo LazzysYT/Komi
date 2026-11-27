@@ -616,7 +616,10 @@ async function checkNotifications(page) {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
-     const support=stage.querySelector(':scope > .komi-player-support').getBoundingClientRect();
+     const dock=stage.querySelector(':scope > .komi-player-support');
+      const supportHidden=getComputedStyle(dock).display==='none';
+      const strip=supportHidden?stage.querySelector(':scope > .komi-watch-quick-actions'):dock;
+      const support=strip.getBoundingClientRect();
      const heading=stage.querySelector(':scope > .komi-player-heading').getBoundingClientRect();
      const sidebarNode=stage.querySelector('.komi-watch-sidebar');
      const sidebar=sidebarNode.getBoundingClientRect();
@@ -626,7 +629,8 @@ async function checkNotifications(page) {
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       supportGap:support.top-(innerWidth>1050?heading.bottom:player.bottom),titleGap:innerWidth>1050?heading.top-player.bottom:player.top-heading.bottom, nextInDock:!!stage.querySelector((innerWidth>1050?".komi-player-heading":".komi-player-support")+" .komi-watch-navbtn.primary"),
+       supportHidden,supportWidth:support.width,supportHeight:support.height,
+        supportGap:support.top-(innerWidth>1050?heading.bottom:player.bottom),titleGap:innerWidth>1050?heading.top-player.bottom:player.top-heading.bottom, nextInDock:!!stage.querySelector((innerWidth>1050?".komi-player-heading":".komi-player-support")+" .komi-watch-navbtn.primary"),
        sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
@@ -637,7 +641,9 @@ async function checkNotifications(page) {
    assert.ok(cinema.height >= 800, 'Cinema modal should use the full viewport height');
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
-   assert.ok(cinema.supportGap>=-2 && cinema.supportGap<=48,JSON.stringify(cinema));
+   assert.equal(cinema.supportHidden,width>1050,'Native wide playback uses the quick-action shelf instead of the support dock');
+    assert.ok(cinema.supportWidth>0 && cinema.supportHeight>0,'The active playback action strip must be visible');
+    assert.ok(cinema.supportGap>=-2 && cinema.supportGap<=48,JSON.stringify(cinema));
    assert.equal(cinema.nextInDock,true,'Next must be in the playback strip');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
    // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
