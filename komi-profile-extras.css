@@ -55,8 +55,11 @@
 [data-kpe-bg=gold]{--kpe-card-bg:linear-gradient(135deg,#685138,#211e1c)}
 [data-kpe-bg=custom]{--kpe-card-bg:#24242c}
 .kpe-custom-bg,.kpe-friend-bg{position:absolute!important;inset:0;width:100%!important;height:100%!important;object-fit:cover!important;filter:brightness(.52);z-index:-1!important;border-radius:inherit!important;pointer-events:none}
-.kpe-friend-card .kpe-friend-custom-avatar{position:absolute!important;left:8px;top:50%;transform:translateY(-50%);width:34px!important;height:34px!important;border-radius:50%;object-fit:cover;z-index:2;pointer-events:none}
-.kpe-friend-card.sidebar-friend-item .kpe-friend-custom-avatar{width:24px!important;height:24px!important;left:4px}
+.kpe-friend-card .kpe-base-avatar-hidden{display:none!important}
+.kpe-friend-card .kpe-friend-custom-avatar{width:34px;height:34px;border-radius:50%;object-fit:cover;flex-shrink:0;pointer-events:none}
+.kpe-friend-card .kpe-friend-custom-avatar[hidden]{display:none!important}
+.kpe-friend-card .kpe-friend-custom-avatar.kpe-in-avatar{position:absolute!important;inset:0;width:100%!important;height:100%!important;z-index:2}
+.kpe-friend-card.sidebar-friend-item .kpe-friend-custom-avatar{width:24px;height:24px}
 .kpe-friend-medal{margin-left:auto;flex-shrink:0;pointer-events:none}
 [data-kpe-effect]:not([data-kpe-effect=none]){--kpe-fx:#aaa}
 [data-kpe-effect=sakura]{--kpe-fx:#ed9abf}[data-kpe-effect=neon]{--kpe-fx:#9bc0ff}[data-kpe-effect=moon]{--kpe-fx:#bfb2ef}[data-kpe-effect=ghoul]{--kpe-fx:#fa748a}[data-kpe-effect=stars]{--kpe-fx:#c4afff}[data-kpe-effect=royal]{--kpe-fx:#e8c47a}
@@ -79,3 +82,20 @@
 @media(hover:hover) and (pointer:fine){#profile[data-profile-owner=true][data-profile-preview=false][data-kpe-cursor="shadow"],.kpe-cursor-sample[data-kpe-cursor="shadow"]{cursor:url("/assets/profile-cursors/shadow.svg") 2 2,auto}#profile[data-kpe-cursor="shadow"] button,#profile[data-kpe-cursor="shadow"] a{cursor:pointer}#profile[data-kpe-cursor="shadow"] input,#profile[data-kpe-cursor="shadow"] textarea{cursor:text}}
 @media(hover:hover) and (pointer:fine){#profile[data-profile-owner=true][data-profile-preview=false][data-kpe-cursor="kitsune"],.kpe-cursor-sample[data-kpe-cursor="kitsune"]{cursor:url("/assets/profile-cursors/kitsune.svg") 2 2,auto}#profile[data-kpe-cursor="kitsune"] button,#profile[data-kpe-cursor="kitsune"] a{cursor:pointer}#profile[data-kpe-cursor="kitsune"] input,#profile[data-kpe-cursor="kitsune"] textarea{cursor:text}}
 @media(hover:hover) and (pointer:fine){#profile[data-profile-owner=true][data-profile-preview=false][data-kpe-cursor="star"],.kpe-cursor-sample[data-kpe-cursor="star"]{cursor:url("/assets/profile-cursors/star.svg") 2 2,auto}#profile[data-kpe-cursor="star"] button,#profile[data-kpe-cursor="star"] a{cursor:pointer}#profile[data-kpe-cursor="star"] input,#profile[data-kpe-cursor="star"] textarea{cursor:text}}
+/* Six effects have different silhouettes and motion, not just different colors. */
+:is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=sakura]::before{background:radial-gradient(ellipse 5px 9px at 12% 20%,#eea1c3b0 0 60%,transparent 68%),radial-gradient(ellipse 4px 7px at 82% 30%,#ffe1edc0 0 60%,transparent 70%),radial-gradient(ellipse 3px 6px at 67% 84%,#e5a2c5 0 60%,transparent 70%);transform:rotate(-8deg)}
+:is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=neon]::after{background:linear-gradient(90deg,transparent 20%,#6ae9ee55 48%,#a86bf44a 52%,transparent 73%);box-shadow:inset 0 0 0 1px #98bfff65}
+:is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=moon]::before{background:radial-gradient(circle at 85% 18%,#d8d0ff75 0 6%,#c7b6f32a 8%,transparent 45%)}
+:is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=ghoul]::before{background:radial-gradient(ellipse at 92% 28%,#ed5a7950,transparent 45%),linear-gradient(130deg,transparent 60%,#a8194b35 80%,transparent)}
+:is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=stars]::before{background:radial-gradient(circle at 8% 17%,#f7ebff 0 1px,transparent 2px),radial-gradient(circle at 31% 78%,#c9b5ff 0 1.5px,transparent 2.5px),radial-gradient(circle at 62% 11%,#fff 0 1px,transparent 2px),radial-gradient(circle at 80% 67%,#e1cfff 0 1px,transparent 2px),radial-gradient(circle at 93% 16%,#fff 0 1.5px,transparent 2.5px)}
+:is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=royal]::after{border:2px double #d9b96f;box-shadow:inset 0 0 16px #eed29c38;background:linear-gradient(120deg,transparent 20%,#ffe6b44d 42%,transparent 62%);background-size:230% 100%}
+@media(prefers-reduced-motion:no-preference){
+ :is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=sakura]:is(:hover,:focus-within)::before{animation:kpe-petals 4s ease-in-out infinite alternate}
+ :is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=neon]:is(:hover,:focus-within)::after{animation:kpe-card-sweep 2.1s linear infinite}
+ :is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=moon]:is(:hover,:focus-within)::before{animation:kpe-moon 4.8s ease-in-out infinite alternate}
+ :is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=ghoul]:is(:hover,:focus-within)::before{animation:kpe-moon 3.8s ease-in-out infinite alternate}
+ :is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=stars]:is(:hover,:focus-within)::before{animation:kpe-card-stars 3.1s ease-in-out infinite alternate}
+ :is(.kpe-mini-card,.kpe-friend-card)[data-kpe-effect=royal]:is(:hover,:focus-within)::after{animation:kpe-card-sweep 4.2s ease-in-out infinite}
+}
+@keyframes kpe-petals{from{transform:translate(-3px,-5px) rotate(-8deg);opacity:.65}to{transform:translate(8px,7px) rotate(5deg);opacity:1}}
+@keyframes kpe-moon{from{opacity:.32;transform:scale(.96)}to{opacity:.85;transform:scale(1.08)}}

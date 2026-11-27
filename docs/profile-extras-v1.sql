@@ -131,7 +131,7 @@ $$;
 revoke all on function komi_profile_extras_private.stats(uuid) from public,anon,authenticated;
 create function komi_profile_extras_private.valid_photo(actor uuid,photo text)
 returns boolean language sql stable set search_path='' as $$
- select photo is null or (photo ~ ('^'||actor::text||'/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\\.jpg$')
+ select photo is null or (photo ~ ('^'||actor::text||'/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}[.]jpg$')
  and exists(select 1 from storage.objects o where o.bucket_id='avatars' and o.name=photo))
 $$;
 revoke all on function komi_profile_extras_private.valid_photo(uuid,text) from public,anon,authenticated;
@@ -141,7 +141,7 @@ declare
  actor uuid:=auth.uid(); args jsonb:=coalesce(p_args,'{}'::jsonb); item text; price integer; item_kind text;
  stats jsonb; ap komi_profile_extras_private.appearance%rowtype; balance bigint;
  medal komi_profile_extras_private.medal_catalog%rowtype; changed integer; awarded text:=null;
- bg text; av text; bp text; enabled boolean; result jsonb;
+ bg text; av text; bp text; enabled boolean; selected_cursor text; selected_effect text;
 begin
  if actor is null or not exists(select 1 from auth.users u where u.id=actor and u.deleted_at is null and u.is_anonymous is not true) then
   raise exception 'Verified account required' using errcode='42501';
@@ -175,6 +175,10 @@ begin
    select p.cost,p.kind into price,item_kind from komi_profile_extras_private.products p where p.id=item;
    if price is null then raise exception 'Unknown cosmetic' using errcode='22023'; end if;
    if p_action='buy' then
+    if jsonb_typeof(args->'expected_cost') is distinct from 'number'
+       or (args->>'expected_cost')::numeric is distinct from price::numeric then
+     raise exception 'Price changed; confirm again' using errcode='22023';
+    end if;
     insert into public.komi_anicoin_wallets(user_id) values(actor) on conflict do nothing;
     select w.balance into balance from public.komi_anicoin_wallets w where w.user_id=actor for update;
     if not exists(select 1 from komi_profile_extras_private.purchases p where p.user_id=actor and p.item_id=item) then
@@ -196,7 +200,20 @@ begin
    raise exception 'Invalid card settings' using errcode='22023';
   end if;
   enabled:=(args->>'card_enabled')::boolean;
-  update komi_profile_extras_private.appearance set background=bg,avatar_path=av,background_path=bp,card_enabled=enabled where user_id=actor;
+  selected_cursor:=nullif(args->>'cursor_id','');
+  selected_effect:=nullif(args->>'effect_id','');
+  if selected_cursor is not null and not exists(select 1 from komi_profile_extras_private.purchases p
+    join komi_profile_extras_private.products c on c.id=p.item_id
+    where p.user_id=actor and p.item_id=selected_cursor and c.kind='cursor') then
+   raise exception 'Cursor not owned' using errcode='42501';
+  end if;
+  if selected_effect is not null and not exists(select 1 from komi_profile_extras_private.purchases p
+    join komi_profile_extras_private.products c on c.id=p.item_id
+    where p.user_id=actor and p.item_id=selected_effect and c.kind='effect') then
+   raise exception 'Card effect not owned' using errcode='42501';
+  end if;
+  update komi_profile_extras_private.appearance set background=bg,avatar_path=av,background_path=bp,card_enabled=enabled,
+    cursor_id=selected_cursor,effect_id=selected_effect where user_id=actor;
  elsif p_action='claim' then
   select * into medal from komi_profile_extras_private.medal_catalog m where m.id=args->>'medal_id';
   stats:=komi_profile_extras_private.stats(actor);

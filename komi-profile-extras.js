@@ -5,7 +5,7 @@ const cat=root.KomiExtrasCatalog;
 if(!cat)return;
 const byId=new Map(cat.products.map(p=>[p.id,p])),medalById=new Map(cat.medals.map(m=>[m.id,m]));
 const bgSet=new Set(cat.backgrounds.map(x=>x[0]));
-let client=null,getViewer=()=>'',onWallet=()=>{},cache=null,readPending=null,mutation=null,shopOwner='',shopOpen=false,friendEpoch=0;
+let client=null,getViewer=()=>'',onWallet=()=>{},cache=null,readPending=null,mutation=null,shopOwner='',shopOpen=false,stateEpoch=0;
 const friendsCache=new Map(),friendRequests=new Map();
 function configure(opts){client=opts.client;getViewer=opts.getViewer;onWallet=opts.onWallet||(()=>{});}
 const viewer=()=>String(getViewer()||'');
@@ -29,8 +29,8 @@ async function read(uid=viewer(),force=false){
  if(cache?.uid!==uid){cache=null;friendsCache.clear();}
  if(!force&&cache&&Date.now()-cache.at<12000)return cache.data;
  if(readPending?.uid===uid)return readPending.promise;
- const entry={uid,promise:null};readPending=entry;
- entry.promise=rpc('read',{},uid).then(raw=>{const data=normal(raw);if(viewer()===uid)cache={uid,data,at:Date.now()};return data;}).finally(()=>{if(readPending===entry)readPending=null;});
+ const entry={uid,promise:null,epoch:stateEpoch};readPending=entry;
+ entry.promise=rpc('read',{},uid).then(raw=>{const data=normal(raw);if(viewer()!==uid)throw Error('Аккаунт изменился.');if(entry.epoch!==stateEpoch&&cache?.uid===uid)return cache.data;cache={uid,data,at:Date.now()};return data;}).finally(()=>{if(readPending===entry)readPending=null;});
  return entry.promise;
 }
 async function change(action,args,uid){
@@ -41,7 +41,7 @@ async function change(action,args,uid){
  try{
   const raw=await rpc(action,args,uid),data=normal(raw);
   if(viewer()!==uid)throw Error('Аккаунт изменился.');
-  cache={uid,data,at:Date.now()};friendsCache.clear();
+  stateEpoch++;cache={uid,data,at:Date.now()};friendsCache.clear();
   return data;
  }finally{if(mutation===entry)mutation=null;}
 }
@@ -64,7 +64,7 @@ function cardFace(card,appearance,baseAvatar,name){
  const backdrop=bg==='custom'?pathUrl(appearance.background_path):'';
  if(backdrop){const i=el('img','kpe-custom-bg');i.src=backdrop;i.alt='';i.loading='lazy';card.prepend(i);}
  const pic=card.querySelector('.kpe-card-avatar');
- if(pic){const url=pathUrl(appearance.avatar_path)||safeImage(baseAvatar);if(url)pic.src=url;else pic.removeAttribute('src');pic.hidden=!url;}
+ if(pic){const url=pathUrl(appearance.avatar_path)||safeImage(baseAvatar)||'/icon.svg';if(url)pic.src=url;else pic.removeAttribute('src');pic.hidden=!url;}
  const label=card.querySelector('.kpe-card-name');if(label&&name)label.textContent=String(name).slice(0,50);
  const medal=card.querySelector('.kpe-card-medal');if(medal){medal.replaceChildren();const m=medalById.get(appearance.medal_id);if(m){medal.append(medalImage(m));medal.title=m.label;}else medal.removeAttribute('title');}
 }
@@ -177,9 +177,7 @@ function editor(node,data,uid,baseAvatar,name,profile){
   try{
    if(avatarBlob){avatarPath=await upload(avatarBlob,uid);avatarBlob=null;}
    if(bg.value==='custom'&&backgroundBlob){backgroundPath=await upload(backgroundBlob,uid);backgroundBlob=null;}
-   let next=await change('save_card',{background:bg.value,avatar_path:avatarPath,background_path:bg.value==='custom'?backgroundPath:null,card_enabled:check.checked},uid);
-   if((next.appearance.effect_id||'')!==fx.value)next=await change('equip',{item_id:fx.value||null,kind:'effect'},uid);
-   if((next.appearance.cursor_id||'')!==cursor.value)next=await change('equip',{item_id:cursor.value||null,kind:'cursor'},uid);
+   const next=await change('save_card',{background:bg.value,avatar_path:avatarPath,background_path:bg.value==='custom'?backgroundPath:null,card_enabled:check.checked,effect_id:fx.value||null,cursor_id:cursor.value||null},uid);
    if(active(node,uid)){editor(node,next,uid,baseAvatar,name,profile);setCursor(profile,next,uid);node.querySelector('.kpe-status').textContent='Мини-карточка сохранена.';void decorateFriends(document);}
   }catch(e){if(active(node,uid)){status.textContent=e.message;save.disabled=false;for(const input of form.querySelectorAll('input,select,button'))input.disabled=false;}}
  },'kpe-button kpe-primary');
@@ -200,21 +198,31 @@ async function mountProfile(profile,opts){
  }
  void decorateFriends(profile);
 }
-function cleanCard(node){delete node.dataset.kpeBg;delete node.dataset.kpeEffect;node.classList.remove('kpe-friend-card');for(const n of node.querySelectorAll('.kpe-friend-bg,.kpe-friend-custom-avatar,.kpe-friend-medal'))n.remove();}
+function cleanCard(node){delete node.dataset.kpeBg;delete node.dataset.kpeEffect;node.classList.remove('kpe-friend-card');for(const n of node.querySelectorAll('.kpe-friend-bg,.kpe-friend-custom-avatar,.kpe-friend-medal'))n.remove();for(const n of node.querySelectorAll('.kpe-base-avatar-hidden'))n.classList.remove('kpe-base-avatar-hidden');}
 function paintFriend(node,row){
  cleanCard(node);if(!row)return;
  node.classList.add('kpe-friend-card');node.dataset.kpeBg=bgSet.has(row.background)?row.background:'noir';const fx=byId.get(row.effect_id);node.dataset.kpeEffect=fx?.kind==='effect'?fx.art:'none';
  const bg=row.background==='custom'?pathUrl(row.background_path):'';if(bg){const i=el('img','kpe-friend-bg');i.src=bg;i.alt='';i.loading='lazy';node.prepend(i);}
- const av=pathUrl(row.avatar_path);if(av){const img=el('img','kpe-friend-custom-avatar');img.src=av;img.alt='';img.loading='lazy';img.addEventListener('error',()=>img.remove(),{once:true});node.append(img);}
+ const av=pathUrl(row.avatar_path);if(av){
+  const base=node.querySelector('img[data-komi-friend-avatar]'),wrap=node.querySelector('.profile-friend-avatar');
+  if(base){
+   const img=el('img','kpe-friend-custom-avatar');img.alt='';img.hidden=true;
+   if(wrap){img.classList.add('kpe-in-avatar');wrap.append(img);}
+   else {img.classList.add(...base.classList);base.before(img);}
+   img.addEventListener('load',()=>{if(img.isConnected){img.hidden=false;base.classList.add('kpe-base-avatar-hidden');}},{once:true});
+   img.addEventListener('error',()=>{img.remove();base.classList.remove('kpe-base-avatar-hidden');},{once:true});
+   img.src=av;
+  }
+ }
  const medal=medalById.get(row.medal_id);if(medal){const box=el('span','kpe-friend-medal');box.title=medal.label;box.append(medalImage(medal));node.append(box);}
 }
 async function decorateFriends(scope){
- const uid=viewer();if(!uid||!client||!scope?.querySelectorAll)return;
+ const uid=viewer();if(!scope?.querySelectorAll)return;
  const nodes=[...scope.querySelectorAll('[data-kpe-friend]')].filter(n=>n.isConnected).slice(0,120);
+ if(!uid||!client){for(const node of nodes)cleanCard(node);return;}
  if(!nodes.length)return;style();
  const names=[...new Set(nodes.map(n=>n.dataset.kpeFriend).filter(s=>s&&s.length<=64))];
- const epoch=++friendEpoch;
- if(friendsCache.get('viewer')!==uid){friendsCache.clear();friendsCache.set('viewer',uid);}
+ if(friendsCache.get('viewer')!==uid){for(const node of nodes)cleanCard(node);friendsCache.clear();friendsCache.set('viewer',uid);}
  const stale=names.filter(n=>!friendsCache.has(n)||Date.now()-friendsCache.get(n).at>15000);
  try{
   for(let offset=0;offset<stale.length;offset+=60){
@@ -228,7 +236,6 @@ async function decorateFriends(scope){
   if(viewer()!==uid)return;
   for(const n of nodes)if(active(n,uid)&&names.includes(n.dataset.kpeFriend))paintFriend(n,friendsCache.get(n.dataset.kpeFriend)?.row);
  }catch{if(viewer()===uid)for(const n of nodes)if(active(n,uid))cleanCard(n);}
- void epoch;
 }
 function confirmBuy(p,data,uid){
  return new Promise(resolve=>{
@@ -255,15 +262,16 @@ function renderShop(details,data,uid,opts){
    tile.append(el('strong','',p.label),el('small','',owned?'Уже куплено':p.cost+' AniCoin'));
    const b=button(equipped?'Снять':owned?'Надеть':!uid?'Войти, чтобы купить':!verified||!prod()?'Только примерка':'Купить и надеть',async()=>{
     if(!uid){opts.login?.();return;}if(!verified||!prod()||!active(details,uid))return;
-    for(const btn of content.querySelectorAll('button'))btn.disabled=true;
+    const oldControls=[...content.querySelectorAll('button')].map(btn=>[btn,btn.disabled]);for(const [btn] of oldControls)btn.disabled=true;
     try{
      if(!owned&&!await confirmBuy(p,data,uid))return;
      if(!active(details,uid))return;
-     const next=await change(owned?'equip':'buy',{item_id:equipped?null:p.id,kind:p.kind},uid);
+     const next=await change(owned?'equip':'buy',{item_id:equipped?null:p.id,kind:p.kind,...(!owned?{expected_cost:p.cost}:{})},uid);
+     if(!owned&&viewer()===uid)void Promise.resolve(onWallet(uid,next.balance)).catch(()=>{});
      if(!active(details,uid))return;
-     renderShop(details,next,uid,opts);if(!owned)void onWallet(uid,next.balance);
+     renderShop(details,next,uid,opts);
     }catch(e){if(active(details,uid))status.textContent=e.message;}
-    finally{if(active(details,uid))for(const btn of content.querySelectorAll('button'))btn.disabled=false;}
+    finally{if(active(details,uid))for(const [btn,wasDisabled] of oldControls)if(btn.isConnected)btn.disabled=wasDisabled;}
    },'kpe-button kpe-primary');
    b.disabled=!!uid&&(!verified||!prod()||!owned&&data.balance<p.cost);tile.append(b);grid.append(tile);
   }
@@ -278,7 +286,7 @@ function mountShop(container,opts){
  const panel=el('details','kpe-shop');panel.dataset.kpeShop='';panel.open=shopOpen||new URL(root.location.href).searchParams.get('profile_extras')==='1';
  const summary=el('summary','','Курсоры и мини-карточки');summary.append(el('span','kpe-count','16 предметов'));
  const content=el('div','kpe-shop-content');panel.append(summary,content);const header=shop.querySelector('.sv3-topbar');if(header)header.after(panel);else shop.prepend(panel);
- let loaded=false;function load(){if(loaded)return;loaded=true;renderShop(panel,null,uid,opts);if(uid)void read(uid).then(data=>{if(active(panel,uid))renderShop(panel,data,uid,opts);}).catch(()=>{});}
+ let loaded=false;function load(){if(loaded)return;loaded=true;renderShop(panel,null,uid,opts);if(uid)void read(uid).then(data=>{if(active(panel,uid))renderShop(panel,data,uid,opts);}).catch(()=>{if(active(panel,uid)){loaded=false;panel.querySelector('.kpe-shop-content')?.append(button('Повторить загрузку',load));}});}
  panel.addEventListener('toggle',()=>{shopOpen=panel.open;if(panel.open)load();});if(panel.open)load();
 }
 root.KomiProfileExtras=Object.freeze({configure,mountProfile,mountShop,decorateFriends});
