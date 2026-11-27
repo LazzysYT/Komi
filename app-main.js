@@ -1064,6 +1064,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                     if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
                     event.preventDefault();
                 }
+                const genreMenu = mood.closest('details.komi-moods-all');
+                if (genreMenu) genreMenu.open = false;
                 komiApplyMoodGenre(mood.dataset.komiMoodGenre); return;
             }
             const quickSort = event.target.closest?.('[data-komi-quick-sort]');
@@ -1073,6 +1075,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const year = quickYear?.dataset.komiQuickYear;
                 if (sort && !['popular','updated','rating','year','alphabet'].includes(sort)) return;
                 if (year && year !== 'Все' && !/^\d{4}$/.test(year)) return;
+                // Deliberate selection closes its menu; unrelated refreshes
+                // preserve menu state and keyboard focus.
+                const chosenMenu = (quickSort || quickYear).closest('details');
+                if (chosenMenu) chosenMenu.open = false;
                 if (sort) catalogSort = sort;
                 if (year) catalogFilterYear = year;
                 if (currentView === 'catalog') komiCatalogStateChanged();
@@ -2032,6 +2038,15 @@ async function komiLoadCatalogPages(attempt = 0) {
                 ])).slice(0,11);
                 if (catalogFilterGenre !== 'Все' && !quickGenreNames.includes(catalogFilterGenre))
                     quickGenreNames.push(catalogFilterGenre);
+                const menuSelector = '#catalog details.komi-tool-menu, #catalog details.komi-moods-all';
+                const menuKey = node => node.matches('.komi-moods-all') ? 'genre' :
+                    node.querySelector('[data-komi-quick-sort]') ? 'sort' : 'year';
+                const oldMenus = [...container.querySelectorAll(menuSelector)];
+                const openMenus = new Set(oldMenus.filter(node=>node.open).map(menuKey));
+                const oldMenuFocus = document.activeElement?.closest(menuSelector);
+                const focusedMenu = oldMenuFocus ? menuKey(oldMenuFocus) : null;
+                const focusedOption = focusedMenu && document.activeElement?.matches('button') ?
+                    ['komiQuickSort','komiQuickYear','komiMoodGenre'].map(key=>[key,document.activeElement.dataset[key]]).find(([,value])=>value!==undefined) : null;
                 const searchPreviouslyFocused = document.activeElement?.id === 'komiCatalogSearchInput';
                 const previousSearchCaret = searchPreviouslyFocused
                     ? document.activeElement.selectionStart : null;
@@ -2086,6 +2101,17 @@ async function komiLoadCatalogPages(attempt = 0) {
                       ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
                     </div>
                 `;
+                // Live catalog hydration may render while a visitor is
+                // choosing an option. Restore the exact menu and its focus.
+                for (const menu of container.querySelectorAll(menuSelector)) {
+                    const key = menuKey(menu);
+                    menu.open = openMenus.has(key);
+                    if (focusedMenu === key && !komiCatalogFocusPending) {
+                        const target = menu.open && focusedOption ?
+                            [...menu.querySelectorAll('button')].find(button=>button.dataset[focusedOption[0]]===focusedOption[1]) : null;
+                        (target || menu.querySelector('summary'))?.focus({preventScroll:true});
+                    }
+                }
                 const catalogField = document.getElementById('komiCatalogSearchInput');
                 const clearCatalogSearch = () => {
                     if (!catalogField) return;

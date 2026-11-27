@@ -427,12 +427,17 @@ async function checkNotifications(page) {
    assert.equal(new URL(page.url()).searchParams.get('year'),'2026','Clearing text must preserve the year filter');
 
    await page.locator('#catalog .komi-tool-menu').first().locator('summary').click();
+   await page.locator('#catalog [data-komi-quick-sort="rating"]').focus();
+   await page.evaluate(()=>render());
+   assert.equal(await page.locator('#catalog .komi-tool-menu').first().getAttribute('open'),'');
+   assert.equal(await page.locator('#catalog [data-komi-quick-sort="rating"]').evaluate(el=>el===document.activeElement),true);
    await page.locator('#catalog [data-komi-quick-sort="rating"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogSort==='rating');
    assert.equal(await page.evaluate(()=>catalogFilterYear),'2026',
      'Sorting must preserve the previously chosen year');
    assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1);
    assert.equal(new URL(page.url()).searchParams.get('sort'),'rating');
+   assert.equal(await page.locator('#catalog .komi-tool-menu').first().getAttribute('open'),null,'Selecting an option closes its menu');
 
    await page.locator('#catalog [data-komi-category="movies"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogCategory==='movies');
