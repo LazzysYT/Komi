@@ -30,6 +30,9 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
   };window.KomiCollection.render(document.querySelector('#mainContainer'));
  });
  await p.locator('[data-kc-action="series-frieren"]').click();
+ const extras=p.getByRole('button',{name:'Альбом и журнал'});
+ assert.equal(await extras.getAttribute('aria-expanded'),'false');
+ await extras.click();
  await p.getByText('Осталось: 1 из 10 · 1 × 50 = 50 AniCoin.').waitFor();
  assert.ok(await p.getByText('Печать получена').count());
  assert.equal(await p.evaluate(()=>journalLoads),0);
@@ -46,6 +49,8 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  assert.equal(await p.evaluate(()=>buys),0);
  assert.equal(await p.locator('.kc-case,.kc-album').count(),0);
  await p.getByRole('button',{name:'К журналу'}).click();
+ assert.equal(await extras.getAttribute('aria-expanded'),'true');
+ assert.ok(await journal.isVisible());
  await p.locator('.kc-grid [data-kc-card="fern"] .kc-view-hero').click();
  const viewer=p.getByRole('dialog');
  const downloading=p.waitForEvent('download');

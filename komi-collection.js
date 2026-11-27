@@ -3,6 +3,9 @@
 'use strict';
 const rarityById=Object.freeze({kaneki:'legendary',eto:'legendary',arima:'legendary',touka:'epic',juuzou:'epic',rize:'epic',furuta:'epic',uta:'rare',tsukiyama:'rare',ayato:'rare',yoshimura:'rare',takizawa:'rare',hide:'common',hinami:'common',amon:'common',nishiki:'common',yomo:'common',akira:'common'});
 const rarityNames=Object.freeze({common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'});
+const rarityRank=Object.freeze({legendary:0,epic:1,rare:2,common:3});
+// Sort display copies only: catalog serials and server rewards remain unchanged.
+const byRarity=items=>[...items].sort((a,b)=>rarityRank[a.rarity]-rarityRank[b.rarity]);
 const ghoulRoster=[["kaneki","Кэн Канэки","Ken Kaneki"],["touka","Тока Кирисима","Touka Kirishima"],["juuzou","Дзюдзо Судзуя","Juuzou Suzuya"],["uta","Ута","Uta"],["tsukiyama","Сю Цукияма","Shuu Tsukiyama"],["hide","Хидэёси Нагатика","Hideyoshi Nagachika"],["rize","Ридзэ Камисиро","Rize Kamishiro"],["arima","Кисё Арима","Kishou Arima"],["eto","Это Ёсимура","Eto Yoshimura"],["ayato","Аято Кирисима","Ayato Kirishima"],["hinami","Хинами Фуэгути","Hinami Fueguchi"],["amon","Котаро Амон","Koutarou Amon"],["nishiki","Нисики Нисио","Nishiki Nishio"],["yomo","Рэндзи Ёмо","Renji Yomo"],["yoshimura","Ёсимура","Kuzen Yoshimura"],["akira","Акира Мадо","Akira Mado"],["furuta","Нимура Фурута","Nimura Furuta"],["takizawa","Сэйдо Такидзава","Seidou Takizawa"]].map(([id,name,query])=>Object.freeze({id,name,query,rarity:rarityById[id]}));
 const seriesList=Object.freeze({
  ghoul:{title:'Токийский гуль',pack:'Токийский гуль',edition:'01',code:'TG',script:'東京喰種',album:'Альбом 01',dossier:'Досье CCG',world:'Ночной Токио',roster:ghoulRoster},
@@ -240,7 +243,7 @@ function matchesAlbum(c,owned,term=normalizedName(searchQuery)){
 function hasFilters(){return filter!=='all'||rarityFilter!=='all'||searchQuery.length>0;}
 function active(){return typeof currentView==='string'&&currentView==='collection'&&host?.isConnected;}
 function owner(){const id=typeof currentUser==='undefined'?'':currentUser?.authUserId||'';return observedOwner===undefined||observedOwner===id?id:'';}
-function fresh(id){return {owner:id,seriesKey,status:id?'idle':'guest',owned:[],result:null,balance:null,price:null,confirmBuy:false,purchaseStatus:null,reel:null,inspected:'',journalOpen:false,journalRows:[],journalStatus:'idle',finalUnlock:false,replayResult:null};}
+function fresh(id){return {owner:id,seriesKey,status:id?'idle':'guest',owned:[],result:null,balance:null,price:null,confirmBuy:false,purchaseStatus:null,reel:null,inspected:'',extrasOpen:false,journalOpen:false,journalRows:[],journalStatus:'idle',finalUnlock:false,replayResult:null};}
 // A request may finish after navigating away; keep the same account's result,
 // but paint() only touches the DOM when collection is the active route.
 function current(s){return !!s&&state===s&&owner()===s.owner&&s.seriesKey===seriesKey;}
@@ -265,8 +268,8 @@ function card(c,opened,place='grid'){
  return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'"'+(opened?' style="--kc-character-fx:'+tint+'"':'')+' data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong><div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+back+viewer+control+'</article>';
 }
 function album(owned,known){
- const slots=roster.map((c,i)=>{
-  const open=owned.has(c.id),num=serial(i);
+ const slots=byRarity(roster).map(c=>{
+  const open=owned.has(c.id),num=serial(roster.indexOf(c));
   const image=artworkRoot()+(open?'':'locked/')+c.id+'.webp';
   return '<li><button type="button" class="kc-slot kc-tier-'+c.rarity+(open?' kc-slot-owned':'')+'" data-kc-action="slot-'+c.id+'" aria-label="'+num+' · '+(open?esc(c.name):'не открыта')+'"><span class="kc-slot-art" aria-hidden="true"><img class="kc-album-image" src="'+image+'" width="80" height="80" alt="" loading="lazy" decoding="async"></span><span aria-hidden="true">'+num.slice(3)+'</span></button></li>';
  }).join('');
@@ -296,7 +299,7 @@ function inspect(button){
 function jumpToCard(id){
  if(!ids.has(id)||!current(state)||tab!=='collection')return;
  const item=roster.find(c=>c.id===id),owned=new Set(state.owned);
- // Album slots are always visible. Clear conflicting filters before jumping.
+ // The optional index remains accessible. Clear conflicting filters before jumping.
  if(!item||!matchesAlbum(item,owned)){resetFilters();paint();}
  const target=host.querySelector('.kc-grid [data-kc-card="'+id+'"]');
  if(!target)return;
@@ -438,9 +441,9 @@ function notice(s){
 const searchIcon='<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="5.75"/><path d="m15 15 4.5 4.5"/></svg>';
 const clearSearchIcon='<svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><path d="m7 7 10 10M17 7 7 17"/></svg>';
 function albumTools(){
- const rareOptions=[['all','Любая редкость'],...Object.entries(rarityNames)].map(([id,label])=>'<option value="'+id+'"'+(rarityFilter===id?' selected':'')+'>'+esc(label)+'</option>').join('');
+ const rareOptions=[['all','Любая редкость'],...Object.entries(rarityNames).reverse()].map(([id,label])=>'<option value="'+id+'"'+(rarityFilter===id?' selected':'')+'>'+esc(label)+'</option>').join('');
  return '<div class="kc-tools kc-album-tools" role="search" aria-label="Поиск по альбому">'
-  +'<div class="kc-tools-head"><h3>Карточки серии</h3><span class="kc-muted" data-kc-result-count role="status" aria-live="polite" aria-atomic="true"></span></div>'
+  +'<div class="kc-tools-head"><h3>Персонажи <span class="kc-order-note">По редкости</span></h3><span class="kc-muted" data-kc-result-count role="status" aria-live="polite" aria-atomic="true"></span></div>'
   +'<div class="kc-tools-controls"><div class="kc-search-control"><label for="kc-album-search">Имя персонажа</label><div class="kc-search-field">'+searchIcon
   +'<input id="kc-album-search" type="search" placeholder="Имя или фамилия" maxlength="80" autocomplete="off" autocorrect="off" spellcheck="false" aria-controls="kc-album-results" aria-describedby="kc-search-help" data-kc-focus="album-search" value="'+esc(searchQuery)+'">'
   +'<button type="button" aria-label="Очистить поиск" data-kc-action="clear-search"'+(searchQuery?'':' hidden')+'>'+clearSearchIcon+'</button></div></div>'
@@ -469,7 +472,7 @@ function refreshAlbumResults(){
  const panel=host.querySelector('#kc-album-results');
  if(!panel)return;
  const owned=new Set(state.owned),term=normalizedName(searchQuery);
- const visible=roster.filter(c=>matchesAlbum(c,owned,term));
+ const visible=byRarity(roster.filter(c=>matchesAlbum(c,owned,term)));
  panel.innerHTML=visible.length?'<div class="kc-grid">'+visible.map(c=>card(c,owned.has(c.id))).join('')+'</div>'
   :'<p class="kc-empty">'+(term?'Среди открытых карточек совпадений нет.':'Пока нет персонажей с такими фильтрами.')+'</p>';
  bindArtwork(panel);
@@ -519,7 +522,7 @@ function paint(nextFocus=null){
  const selection=previous==='album-search'?[document.activeElement.selectionStart,document.activeElement.selectionEnd]:null;
  if(activeDialog&&(!current(activeDialog.state)||!owned.has(activeDialog.id)))closeViewer(false);
  const inAlbum=tab==='collection',tabBusy=s.status==='opening'||!!s.reel;
- const header='<header class="kc-header"><div><div class="kc-kicker">KomiAnime / Коллекционные карточки</div><h1>'+(inAlbum?'Коллекции':'Паки')+'</h1><p class="kc-muted">'+(inAlbum?'Выбери альбом, чтобы посмотреть персонажей и свой прогресс.':'Выбери пак, чтобы открыть новую карточку.')+'</p></div>'+(inAlbum?'<div class="kc-count"><strong>'+(known?count+' / '+roster.length:s.status==='guest'?'— / '+roster.length:'…')+'</strong><small>Персонажей собрано</small></div>':'')+'</header>';
+ const header=inAlbum?'<header class="kc-header"><h1>Коллекции</h1></header>':'<header class="kc-header"><div><div class="kc-kicker">KomiAnime / Коллекционные карточки</div><h1>Паки</h1><p class="kc-muted">Выбери пак, чтобы открыть новую карточку.</p></div></header>';
  const tabs='<nav class="kc-tabs" aria-label="Коллекции и паки">'+button('Коллекции','collection',{pressed:inAlbum,unavailable:tabBusy&&!inAlbum})+button('Паки','cases',{pressed:!inAlbum,unavailable:tabBusy&&inAlbum})+'</nav>';
  let body='';
  const complete=known&&count===roster.length;
@@ -533,11 +536,12 @@ function paint(nextFocus=null){
  const prize=roster.find(c=>c.id===(s.replayResult||s.result));
  const reward=prize&&known?'<div class="kc-result" role="status">'+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','collection',{primary:true,focus:'result-collection'}))+'</div></div>':'';
  if(inAlbum){
-  body=albumFinalMarkup(s,owned)+'<div class="kc-series"><div class="kc-series-info"><div class="kc-kicker">Коллекция '+series.edition+'</div><h2>'+esc(series.title)+'</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к пакам','cases',{primary:true})+'</div>'+album(owned,known)+collectorProgress(s,owned,known)+journalMarkup(s)+albumTools();
+  const extras='<section class="kc-extras"><button type="button" class="kc-extras-toggle" data-kc-action="album-details" aria-expanded="'+s.extrasOpen+'" aria-controls="kc-extras-body"><span>Альбом и журнал</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div id="kc-extras-body"'+(s.extrasOpen?'':' hidden')+'>'+album(owned,known)+collectorProgress(s,owned,known)+journalMarkup(s)+'</div></section>';
+  body=albumFinalMarkup(s,owned)+'<div class="kc-series"><div class="kc-series-info"><h2>'+esc(series.title)+'</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к пакам','cases',{primary:true})+'</div>'+albumTools()+extras;
  }else{
   body=(s.reel||s.replayResult?'':feature)+reelMarkup(s)+reward;
  }
- const markup='<section class="kc-page kc-theme-'+seriesKey+'" aria-label="Коллекции и паки">'+header+tabs+seriesPicker()+notice(s)+body+'</section>';
+ const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':'')+'" aria-label="Коллекции и паки">'+header+tabs+seriesPicker()+notice(s)+body+'</section>';
  if(activeDialog?.dialog.isConnected){
   const template=document.createElement('template');template.innerHTML=markup;
   host.querySelector('.kc-page').replaceWith(template.content);
@@ -587,10 +591,10 @@ async function request(action){
   if(action==='buy'&&payload.purchaseStatus==='ok'&&typeof aniCoinRequest==='function')void Promise.resolve().then(()=>aniCoinRequest('read',{},s.owner)).catch(()=>{});
  }catch{if(current(s)){s.status='error';s.owned=[];s.result=null;paint();}}
 }
-function click(event){if(!active())return;const b=event.target.closest?.('.kc-page [data-kc-action]');if(!b||b.disabled||b.getAttribute('aria-disabled')==='true')return;const a=b.dataset.kcAction;if(a.startsWith('series-')){selectSeries(a.slice(7));return;}if(a.startsWith('view-')){openViewer(a.slice(5),b);return;}if(a==='inspect'){inspect(b);return;}if(a.startsWith('slot-')){jumpToCard(a.slice(5));return;}if(a==='journal'||a==='journal-retry'){
+function click(event){if(!active())return;const b=event.target.closest?.('.kc-page [data-kc-action]');if(!b||b.disabled||b.getAttribute('aria-disabled')==='true')return;const a=b.dataset.kcAction;if(a.startsWith('series-')){selectSeries(a.slice(7));return;}if(a.startsWith('view-')){openViewer(a.slice(5),b);return;}if(a==='inspect'){inspect(b);return;}if(a.startsWith('slot-')){jumpToCard(a.slice(5));return;}if(a==='album-details'&&tab==='collection'){state.extrasOpen=!state.extrasOpen;paint('album-details');return;}if(a==='journal'||a==='journal-retry'){
  state.journalOpen=a==='journal-retry'||!state.journalOpen;paint('journal');if(state.journalOpen)void readJournal(state);return;
  }if(a.startsWith('replay-')){startReplay(a.slice(7));return;}
- if(a==='leave-replay'){state.replayResult=null;tab='collection';paint('journal');return;}
+ if(a==='leave-replay'){state.replayResult=null;state.extrasOpen=true;tab='collection';paint('journal');return;}
  if(a==='peel'){peelReel();return;}if(a==='skip-reel'){finishReel(state,state.reel,true);return;}if(a==='collection'||a==='cases'){if(tab!==a){state.confirmBuy=false;state.replayResult=null;state.inspected='';}tab=a;paint(a);}else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
  const query=host.querySelector('#kc-album-search');
  if(query){if(a==='reset-album-filters')resetFilters();updateSearch(query,true);query.focus({preventScroll:true});}

@@ -50,6 +50,18 @@ test('four worlds: separate album, full-body view, one-time reveal and safe purc
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    assert.ok(await p.locator('.kc-grid .kc-owned').first().evaluate(el=>!!el.style.getPropertyValue('--kc-character-fx')));
    assert.equal(await p.locator('.kc-grid .kc-locked[style*="--kc-character-fx"]').count(),0);
+   const order=await p.locator('.kc-grid .kc-card').evaluateAll(els=>els.map(el=>el.className.match(/kc-tier-(\w+)/)[1]));
+   const rank={legendary:0,epic:1,rare:2,common:3};
+   assert.deepEqual(order,[...order].sort((a,b)=>rank[a]-rank[b]),'descending rarity in all series');
+   assert.equal(order.length,size);
+   assert.equal(await p.locator('#kc-extras-body').isVisible(),false);
+   assert.equal(await p.locator('.kc-grid .kc-card-register').first().isVisible(),false);
+   assert.equal(await p.locator('.kc-grid .kc-locked .kc-card-info strong').first().evaluate(el=>el.getBoundingClientRect().width<=1),true);
+   assert.ok(await p.locator('.kc-grid .kc-card-details .kc-rarity').first().isVisible());
+   await p.getByRole('button',{name:'Закрытые',exact:true}).click();
+   const filtered=await p.locator('.kc-grid .kc-card').evaluateAll(els=>els.map(el=>el.className.match(/kc-tier-(\w+)/)[1]));
+   assert.deepEqual(filtered,[...filtered].sort((a,b)=>rank[a]-rank[b]),'rarity order preserved under ownership filter');
+   await p.getByRole('button',{name:'Все',exact:true}).click();
    await p.getByRole('button',{name:'Паки',exact:true}).click();
    assert.equal(await p.locator('.kc-case h2').textContent(),title);
    assert.equal(await p.locator('.kc-album,.kc-grid').count(),0);

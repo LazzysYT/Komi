@@ -53,6 +53,11 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  await p.waitForFunction(()=>document.querySelector('.kc-grid .kc-portrait')?.naturalWidth>0);
  await p.getByRole('button',{name:'Закрытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),17);
  await p.getByRole('button',{name:'Все',exact:true}).click();
+ const extras=p.getByRole('button',{name:'Альбом и журнал'});
+ assert.equal(await extras.getAttribute('aria-expanded'),'false');
+ assert.equal(await p.locator('.kc-album').isVisible(),false);
+ await extras.click();
+ assert.equal(await p.locator('.kc-album').isVisible(),true);
  const slot=p.getByRole('button',{name:'TG-01 · Кэн Канэки',exact:true});
  const lockedSlot=p.getByRole('button',{name:'TG-03 · не открыта',exact:true});
  const gridCard=id=>p.locator('.kc-grid [data-kc-card="'+id+'"]');
@@ -64,6 +69,7 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  assert.equal(await gridCard('juuzou').locator('.kc-card-back,.kc-inspect').count(),0);
  await slot.click();
  assert.equal(await gridCard('kaneki').evaluate(el=>el===document.activeElement),true);
+ assert.equal(await extras.getAttribute('aria-expanded'),'true','optional index stays open across filter reset');
  await inspection('kaneki').press('Enter');
  const back=gridCard('kaneki').locator('.kc-card-back');
  assert.equal(await inspection('kaneki').getAttribute('aria-expanded'),'true');
