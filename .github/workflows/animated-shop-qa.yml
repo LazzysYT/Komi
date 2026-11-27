@@ -8,6 +8,7 @@ on:
       - 'komi-living-profile.css'
       - 'komi-premium-store.js'
       - 'docs/animated-shop-catalog.sql'
+      - 'docs/animated-shop-retirement.sql'
       - 'scripts/*animated*'
       - '.github/workflows/animated-shop-qa.yml'
 permissions:

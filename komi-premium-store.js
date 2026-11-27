@@ -4,8 +4,7 @@
 const products=root.KomiShopCatalog?.items||[];
 let client=null,publicItems=new Map(),wallet=null,owner='',busy=false;
 let xpMotion=null;
-const extraSlots=['entry','aura','commentfx','party'];
-const entrySeen=new WeakMap();
+const extraSlots=['aura','commentfx'];
 function updateStoryRhythm(levelNode,user,enabled){
  const track=levelNode?.querySelector('.profile-xp-progress-track');
  const meter=track?.querySelector('progress');
@@ -108,10 +107,6 @@ function apply(){
  }
  const header=profile.querySelector('.profile-header-card');
  if(header){
-  const entry=products.find(x=>x.type==='entry'&&x.id===item?.entry_id);
-  const key=entry&&id?id+':'+entry.id:'';
-  if(key&&entrySeen.get(header)!==key){entrySeen.set(header,key);if(!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches){const fx=document.createElement('span');fx.className='komi-entry-flash komi-fx-'+entry.cosmeticClass;fx.setAttribute('aria-hidden','true');header.append(fx);setTimeout(()=>fx.remove(),1100);}}
-  else if(!key)entrySeen.delete(header);
   let mascotNode=header.querySelector('[data-komi-shop-mascot]');
   const mascot=products.find(x=>x.id===item?.mascot_id);
   if(mascot){
@@ -149,7 +144,7 @@ function apply(){
 async function refresh(){
  if(!client)return;
  const fields='user_id,frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id,shape_id,plate_id,mascot_id,xp_id,name_id';
- let result=await client.from('komi_premium_cosmetic_equips').select(fields+',entry_id,aura_id,commentfx_id,party_id').limit(1000);
+ let result=await client.from('komi_premium_cosmetic_equips').select(fields+',aura_id,commentfx_id').limit(1000);
  if(result.error)result=await client.from('komi_premium_cosmetic_equips').select(fields).limit(1000);
  const {data,error}=result;
  if(error){console.warn('Premium store items unavailable:',error.message);return;}

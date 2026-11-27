@@ -16,7 +16,7 @@ test('shop: products first, accessible filters, current/trial comparison and no 
    const request=route.request(),u=new URL(request.url()),f=u.pathname.slice(1);
    if(u.origin!==origin||request.method()!=='GET')return route.abort();
    if(u.pathname==='/shop')return route.fulfill({contentType:'text/html',body:html});
-   if(!styles.includes(f)&&!scripts.includes(f)&&!/^assets\/shop-(?:title-(?:foil|cast)|station)\/[a-z-]+\.svg$/.test(f))return route.abort();
+   if(!styles.includes(f)&&!scripts.includes(f)&&!/^assets\/shop-frames-atelier\/[a-z-]+\.svg$/.test(f)&&!/^assets\/shop-(?:title-(?:foil|cast)|station)\/[a-z-]+\.svg$/.test(f))return route.abort();
    return route.fulfill({path:path.join(root,f),contentType:f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript'});
   });
   await page.goto(origin+'/shop');

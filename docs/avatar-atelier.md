@@ -1,0 +1,2 @@
+# Avatar Atelier
+13 frame designs with independently animated SVG ornaments; 12 animated shop frames and Ghoul Seal. Art is transparent and keeps the avatar face clear. Desktop motion on hover/focus and fitting, phone card motion and profile motion; reduced-motion uses static art. Four arrival effects removed from the catalog and render hooks, with server retirement migration requiring no purchases. Existing frame IDs and prices, standard Party and comment reactions retained.
