@@ -5489,7 +5489,10 @@ async function komiLoadCatalogPages(attempt = 0) {
             if(button) button.textContent=document.fullscreenElement === content?'Обычный размер':'На весь экран';
         }
         function closeWatchModal(keepWatchRoute = false, keepSurface = false) {
-            if (keepWatchRoute !== true) komiWatchSourceIntent = null;
+            if (keepWatchRoute !== true) {
+                komiWatchSourceIntent = null;
+                komiUnverifiedSourceConsent = null;
+            }
             if (keepWatchRoute !== true && /^\/anime\/[1-9][0-9]{0,11}$/.test(location.pathname) && location.hash === '#player') {
                 history.replaceState(null, '', '/');
             }
@@ -5510,13 +5513,14 @@ async function komiLoadCatalogPages(attempt = 0) {
             document.getElementById('watchModalContent').replaceChildren();
         }
 
-        const KOMI_ADFREE_ONLY_KEY = 'komi_adfree_only_v1';
-        function komiAdFreeOnly() {
-            try { return localStorage.getItem(KOMI_ADFREE_ONLY_KEY) === 'true'; }
-            catch { return false; }
+        // Permission for unverified streams lasts only for this open episode.
+        // An old saved dub cannot authorize an embed.
+        let komiUnverifiedSourceConsent = null;
+        function komiAdFreeOnly(animeId, season, index) {
+            return komiUnverifiedSourceConsent !== [String(animeId), season, index].join(':');
         }
-        function setKomiAdFreeOnly(enabled) {
-            try { localStorage.setItem(KOMI_ADFREE_ONLY_KEY, String(Boolean(enabled))); } catch {}
+        function setKomiAdFreeOnly(animeId, season, index, enabled) {
+            komiUnverifiedSourceConsent = enabled ? null : [String(animeId), season, index].join(':');
         }
         // Every supported anime can request a *fresh* signed AniVibe iframe on
         // demand. Never store temporary partner URLs in Supabase or localStorage.
@@ -5744,7 +5748,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                 animeId: anime.id, season: activeSeason, number: displayNumber
             });
             const removedUnavailableSource = Object.keys(sources).length < Object.keys(currentEp.sources).length;
-            const adFreeOnly = komiAdFreeOnly();
+            const adFreeOnly = komiAdFreeOnly(anime.id, activeSeason, activeIndex);
+            if (adFreeOnly) komiUnverifiedSourceConsent = null;
             let preferredSource = sourceRequest;
             if (preferredSource === null) {
                 preferredSource = window.KomiSourcePrefs?.preferredFor(anime.id, Object.keys(sources))?.name || null;
@@ -5807,8 +5812,11 @@ async function komiLoadCatalogPages(attempt = 0) {
             const progressIndex = resuming ? previousProgress.index : currentEp.slots[0];
             // Selecting a blocked ad-supported source is not a watch event.
             if (activeUrl) saveKomiEpisode(String(anime.id),activeSeason,progressIndex,resuming ? previousProgress.time : 0,resuming ? previousProgress.duration : 0);
+            const mayOfferExternal = Object.keys(sources).length > 0 || removedUnavailableSource;
             const playerHtml = sourcePlan.strictBlocked
-                ? '<div class="komi-adfree-empty" role="status"><strong>Безрекламный источник пока недоступен</strong><p>Для этой серии нет проверенного прямого потока. Обычные плееры останутся доступны, если выключить режим.</p></div>'
+                ? '<div class="komi-adfree-empty komi-cinema-source-gate" role="region" aria-labelledby="komiSourceGateTitle"><strong id="komiSourceGateTitle">Нет проверенного потока без рекламы</strong><p>Komi не открывает непроверенные плееры автоматически.</p>' +
+                    (mayOfferExternal ? '<button id="komiAllowUnverifiedSource" type="button" aria-describedby="komiExternalSourceWarning">Открыть другой источник</button><small id="komiExternalSourceWarning">Он может показать рекламу.</small>' : '') +
+                    '</div>'
                 : komiPlayerHtml(activeUrl);
             const hasPrevious = activeIndex > 0;
             const hasNext = activeIndex + 1 < currentSeasonEpisodes.length;
@@ -5874,8 +5882,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     </select>
                                 </div>
                                 <div class="komi-adfree-option">
-                                    <button type="button" id="komiAdFreeOnlyToggle" class="komi-adfree-toggle ${adFreeOnly ? 'is-active' : ''}" aria-pressed="${adFreeOnly}" title="В строгом режиме включаются только одобренные прямые источники">
-                                        ${adFreeOnly ? '✓ Только без рекламы' : '◇ Только без рекламы'}
+                                    <button type="button" id="komiAdFreeOnlyToggle" ${adFreeOnly ? 'hidden' : ''} class="komi-adfree-toggle ${adFreeOnly ? 'is-active' : ''}" aria-pressed="${adFreeOnly}" title="В строгом режиме включаются только одобренные прямые источники">
+                                        Только проверенные источники
                                     </button>
                                     <span class="komi-adfree-caption" role="status">${sourcePlan.approvedCount > 0 ? 'Для этой серии есть одобренный прямой поток' : 'Проверенного источника без рекламы пока нет'}</span>
                                 </div>
@@ -5934,8 +5942,13 @@ async function komiLoadCatalogPages(attempt = 0) {
                 search.focus();
             });
             document.getElementById('komiAdFreeOnlyToggle')?.addEventListener('click', () => {
-                setKomiAdFreeOnly(!adFreeOnly);
+                if (adFreeOnly) return;
+                setKomiAdFreeOnly(anime.id, activeSeason, activeIndex, true);
                 openWatchModal(anime.id, activeSeason, activeIndex);
+            });
+            document.getElementById('komiAllowUnverifiedSource')?.addEventListener('click', () => {
+                setKomiAdFreeOnly(anime.id, activeSeason, activeIndex, false);
+                void openWatchModal(anime.id, activeSeason, activeIndex, requestedSource);
             });
             document.getElementById('komiRetryPlayer')?.addEventListener('click', () =>
                 openWatchModal(anime.id, activeSeason, activeIndex, selectedSource));

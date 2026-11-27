@@ -66,10 +66,10 @@ function watchFixture(episodes, options = {}) {
     animeList: [{ id: 5114, title: 'Стальной алхимик', poster: 'https://image.test/poster.jpg', genres: [],
       komiDetailsLoaded: true, komiDetailsLoadedAt: 'ready', komiCardUpdatedAt: 'ready', episodes },
       ...(options.moreAnime || [])],
-    siteStats: { views: 0 }, saveData() {}, komiDetailOpenToken: 0, komiWatchSourceIntent: null,
+    siteStats: { views: 0 }, saveData() {}, komiDetailOpenToken: 0, komiWatchSourceIntent: null, komiUnverifiedSourceConsent: null,
     KomiPlayerCore: core,
     komiAdFreeOnly: () => !!options.strict,
-    setKomiAdFreeOnly: enabled => { options.strict = enabled; },
+    setKomiAdFreeOnly: (_id, _season, _index, enabled) => { options.strict = enabled; },
     KOMI_ANIVIBE_LABEL: 'AniVibe · партнёрский',
     komiAniVibeEpisodeSource: async () => options.partnerUrl || '',
     getKomiProgress: () => options.progress || null,
@@ -89,7 +89,7 @@ function watchFixture(episodes, options = {}) {
   });
   context.window = context;
   vm.runInContext(read('player-source-preferences.js'), context);
-  vm.runInContext(section(app, 'function closeWatchModal(', 'const KOMI_ADFREE_ONLY_KEY'), context);
+  vm.runInContext(section(app, 'function closeWatchModal(', '// Permission for unverified streams'), context);
   vm.runInContext(section(app, 'function komiPlayerKind(', 'function restoreKomiVideo('), context);
   vm.runInContext(section(app, 'function komiWatchEpisodePresentation(', '// Follows are stored per verified account'), context);
   return { context, elements, storage, mounts, bindings, comments, saved, modal,
@@ -181,7 +181,7 @@ test('full episode mapping preserves all 68 rows, supplemental sources, progress
   assert.equal(settings.episodeSlots.length, 68);
   assert.deepEqual(JSON.parse(JSON.stringify(settings.episodeSlots.flat())), Array.from({ length: 68 }, (_, index) => index));
   assert.equal(settings.episodeMeta.filter(item => item.supplementalLabel).length, 4);
-  assert.match(settings.episodeSummary, /64 серии \+ 4 дополнительных/);
+  assert.match(settings.episodeSummary, /64 основные серии · 4 доп\. выпуска/);
   assert.equal(f.context.lastUrl, '/anime/5114?season=1&episode=68#player');
   assert.deepEqual(JSON.parse(JSON.stringify(f.comments.at(-1))), [5114, { season: 1, episodeNumber: 68 }]);
   assert.match(f.markup, /Дополнительный выпуск 68/);
@@ -281,7 +281,7 @@ test('selecting the current voice closes the mobile sheet with focus restoration
   await context.openSource({}); body.at(-1).children[0].listeners.click();
   assert.deepEqual(closes, [true]); assert.deepEqual(changed, []);
   await context.openSource({}); body.at(-1).children[1].listeners.click();
-  assert.deepEqual(closes, [true, false]); assert.deepEqual(changed, [['change', 'B']]);
+  assert.deepEqual(closes, [true, true]); assert.deepEqual(changed, [['change', 'B']]);
 });
 
 test('switch teardown saves and clears playback without hiding the watch surface',async()=>{
