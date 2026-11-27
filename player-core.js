@@ -119,6 +119,22 @@
             strictBlocked: Boolean(options.adFreeOnly && !approved.length)
         };
     }
+    // Never offer a second label pointing at the same failed media URL.
+    // The same strict-mode policy applies to recovery as to initial playback.
+    function fallbackPlaybackSource(sources, activeName, options = {}) {
+        const active = source(sources?.[activeName]).url;
+        const seen = new Set(active ? [active] : []);
+        const alternatives = Object.create(null);
+        const entries = Object.entries(sources || {}).sort(([a, av], [b, bv]) =>
+            Number(verifiedAdFree(b, bv)) - Number(verifiedAdFree(a, av)));
+        for (const [name, raw] of entries) {
+            const parsed = source(raw);
+            if (!parsed.url || name === activeName || seen.has(parsed.url)) continue;
+            seen.add(parsed.url);
+            alternatives[name] = parsed.url;
+        }
+        return selectPlaybackSource(alternatives, {adFreeOnly: Boolean(options.adFreeOnly)});
+    }
     // This precise embed displayed «Данного сезона не существует» in Kodik.
     // Keep the catalog, dub names and original episode/Party indices untouched;
     // a corrected URL, a neighboring episode or a different title stays eligible.
@@ -158,7 +174,7 @@
             flush() { return Promise.all([...entries.values()].map(entry => entry.promise)); }
         };
     }
-    const api = {source, finite, episodeSeason, episodeNumber, seasonEpisodes, verifiedAdFree, selectPlaybackSource, watchEpisodeSources, createWriter};
+    const api = {source, finite, episodeSeason, episodeNumber, seasonEpisodes, verifiedAdFree, selectPlaybackSource, fallbackPlaybackSource, watchEpisodeSources, createWriter};
     if (typeof module === 'object' && module.exports) module.exports = api;
     else root.KomiPlayerCore = api;
 })(globalThis);

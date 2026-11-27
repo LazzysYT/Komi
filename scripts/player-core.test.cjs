@@ -126,3 +126,23 @@ test('a lookalike external host cannot be selected as AniVibe partner priority',
     const s={'AniVibe · партнёрский':'https://anivibe.pro.evil.example/embed',Direct:'https://safe.example/x.mp4'};
     assert.equal(selectPlaybackSource(s,{partnerPreferred:'AniVibe · партнёрский'}).name,'Direct');
 });
+
+test('recovery skips aliases of failed media and preserves strict ad-free policy', () => {
+    const {fallbackPlaybackSource} = require('../player-core');
+    const sources = {
+        'Без рекламы · A':'https://media.example/a.mp4',
+        'Без рекламы · Alias':'https://media.example/a.mp4',
+        'Без рекламы · B':'https://media.example/b.m3u8',
+        External:'https://player.example/episode/1'
+    };
+    assert.equal(fallbackPlaybackSource(sources,'Без рекламы · A',{adFreeOnly:true}).name,'Без рекламы · B');
+    delete sources['Без рекламы · B'];
+    assert.equal(fallbackPlaybackSource(sources,'Без рекламы · A',{adFreeOnly:true}).name,'');
+    assert.equal(fallbackPlaybackSource(sources,'Без рекламы · A').name,'External');
+});
+test('recovery never hides an approved alias behind an unverified label', () => {
+    const {fallbackPlaybackSource} = require('../player-core');
+    const sources = {Current:'https://example.test/old', Generic:'https://example.test/new.mp4',
+        'Без рекламы · Verified':'https://example.test/new.mp4'};
+    assert.equal(fallbackPlaybackSource(sources,'Current',{adFreeOnly:true}).name,'Без рекламы · Verified');
+});

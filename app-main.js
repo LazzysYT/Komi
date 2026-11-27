@@ -5843,10 +5843,9 @@ async function komiLoadCatalogPages(attempt = 0) {
             const selectedSource = activePlayerSource;
             komiWatchSourceIntent = {animeId:String(id), name:sourceRequest || selectedSource};
             const sourceOrigin = currentEp.origins[selectedSource] || {index:currentEp.originalIdx, name:selectedSource};
-            const activeOrigin = activeUrl ? new URL(activeUrl).origin : '';
-            const alternateSource = directSources.find(name => name !== selectedSource) ||
-                sourceNames.find(name => name !== selectedSource && sources[name] && new URL(sources[name]).origin !== activeOrigin) ||
-                sourceNames.find(name => name !== selectedSource && sources[name]);
+            const alternateSource = KomiPlayerCore.fallbackPlaybackSource(sources, selectedSource, {adFreeOnly}).name;
+            const unverifiedFallback = adFreeOnly && !alternateSource
+                ? KomiPlayerCore.fallbackPlaybackSource(sources, selectedSource).name : '';
             const isExternalPlayer = komiPlayerKind(activeUrl) === 'embed';
             window.komiActiveAnimeId=String(anime.id);
             window.komiActiveSeason=Number(activeSeason);
@@ -5938,6 +5937,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
                                         <button id="komiRetryPlayer" type="button" class="btn-secondary">Повторить</button>
                                         ${alternateSource ? '<button id="komiAlternatePlayer" type="button" class="btn-secondary">Другой источник</button>' : ''}
+                                        ${unverifiedFallback ? '<button id="komiFallbackExternal" type="button" class="btn-secondary">Другой источник (возможна реклама)</button>' : ''}
                                         ${isExternalPlayer ? '<a class="btn-secondary" target="_blank" rel="noopener" href="' + escapeFriendHtml(activeUrl) + '">Открыть у провайдера ↗</a>' : ''}
                                     </div>
                                 </div>
@@ -5998,6 +5998,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                 openWatchModal(anime.id, activeSeason, activeIndex, selectedSource));
             document.getElementById('komiAlternatePlayer')?.addEventListener('click', () =>
                 changePlayerSource(anime.id, activeSeason, activeIndex, alternateSource));
+            document.getElementById('komiFallbackExternal')?.addEventListener('click', () => {
+                setKomiAdFreeOnly(anime.id, activeSeason, activeIndex, false);
+                void openWatchModal(anime.id, activeSeason, activeIndex, unverifiedFallback);
+            });
             document.getElementById('komiPlayerHelp')?.addEventListener('click', () => {
                 const recovery = document.getElementById('komiPlayerRecovery');
                 const help = document.getElementById('komiPlayerHelp');
