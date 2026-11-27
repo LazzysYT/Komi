@@ -21,7 +21,7 @@ function load(hostname='komianime.online'){
  return context.window.KomiShopCatalog;
 }
 const catalog=load();
-const historic=catalog.items.filter(item=>item.collection!=='station-0017'&&!item.introducedAt?.startsWith('2026-11-26'));
+const historic=catalog.items.filter(item=>!item.animatedShop&&item.collection!=='station-0017'&&!item.introducedAt?.startsWith('2026-11-26'));
 const historicCollections=catalog.collections.filter(collection=>collection.id!=='station-0017');
 const additions=catalog.items.filter(item=>item.introducedAt==='2026-11-25');
 const priceRows=text=>Array.from(text.matchAll(/\('([a-z_0-9]+)',(\d+),true\)/g),match=>[match[1],Number(match[2])]);

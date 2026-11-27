@@ -12,9 +12,9 @@ const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&
 const foilTitle=p=>root.KomiShopCatalog?.titleText?.(p)||p?.title||p?.label||'';
 const fmt=x=>Number(x||0).toLocaleString('ru-RU');
 const icon=(name,size=18)=>root.KomiShopIcons?.solid?.(name,size)||root.KomiShopIcons?.svg(name,size)||'';
-const rarityLabels={common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'};
-const rarityOrder={legendary:0,epic:1,rare:2,common:3};
-const categories=[['all','Всё'],['frame','Рамки'],['banner','Обложки'],['name','Ники'],['title','Титулы'],['overlay','Эффекты'],['shape','Формы аватара'],['plate','Комментарии'],['icon','Значки'],['xp','Полоски XP'],['mascot','Маскоты'],['showcase','Витрины топ-3'],['card','Карточки'],['reaction','Реакции']];
+const rarityLabels={common:'Обычный',uncommon:'Необычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный',mythic:'Мифический'};
+const rarityOrder={mythic:0,legendary:1,epic:2,rare:3,uncommon:4,common:5};
+const categories=[['all','Всё'],['frame','Рамки и эффекты аватара'],['banner','Обложки'],['name','Никнеймы'],['title','Титулы'],['overlay','Эффекты'],['shape','Формы аватара'],['plate','Комментарии'],['icon','Значки'],['xp','Полоски XP'],['mascot','Маскоты'],['showcase','Витрины топ-3'],['card','Карточки'],['reaction','Реакции']];
 const sorts=[['default','Подборка Komi'],['new','Сначала новые'],['price-up','Сначала недорогие'],['price-down','Сначала дорогие'],['rarity','По редкости']];
 const categoryName=type=>categories.find(c=>c[0]===type)?.[1]||'Оформление';
 const canCheckout=()=>root.KomiShopCatalog?.canCheckout?.()===true;
@@ -68,7 +68,7 @@ function currentItems(ctx){
   (!query||normalized([p.label,p.title,p.description,p.character,p.anime,categoryName(p.type)].join(' ')).includes(query)));
  if(state.sort==='price-up')return items.sort((a,b)=>a.cost-b.cost||a.label.localeCompare(b.label,'ru'));
  if(state.sort==='price-down')return items.sort((a,b)=>b.cost-a.cost||a.label.localeCompare(b.label,'ru'));
- if(state.sort==='rarity')return items.sort((a,b)=>(rarityOrder[a.rarity]??4)-(rarityOrder[b.rarity]??4)||a.cost-b.cost);
+ if(state.sort==='rarity')return items.sort((a,b)=>(rarityOrder[a.rarity]??6)-(rarityOrder[b.rarity]??6)||a.cost-b.cost);
  if(state.sort==='new')return items.sort((a,b)=>String(b.introducedAt||'').localeCompare(String(a.introducedAt||'')));
  // Alternate supported slots so the first page shows complete looks, not only frames.
  const ordered=[],groups=categories.slice(1).map(([type])=>items.filter(p=>p.type===type).sort((a,b)=>String(b.introducedAt||'').localeCompare(String(a.introducedAt||''))));
@@ -113,6 +113,11 @@ function visual(product,avatar,name,favorites){
  return '<span>KOMI</span>';
 }
 // The same renderer still owns card actions and purchase confirmation.
+const animeSets=()=> (root.KomiShopCatalog?.animatedSets||[]).filter(set=>set.items.every(id=>onSale(find(id))));
+function setGallery(ctx,avatar,name){
+ const sets=animeSets();if(!sets.length)return '';
+ return '<section class="sv-animated-sets" aria-label="Аниме-наборы"><h2>Аниме-наборы</h2><p>Готовый образ из трёх предметов. Уже купленное не оплачивается повторно.</p><div class="sv-animated-set-grid">'+sets.map(set=>{const products=set.items.map(find);return '<article class="sv-animated-set '+esc(set.className)+'"><div class="sv-animated-set-art">'+visual(products[0],avatar,name)+visual(products[2],avatar,name)+'</div><h3>'+esc(set.label)+'</h3><p>'+esc(products.map(p=>p.label).join(' · '))+'</p><button type="button" data-animated-set="'+esc(set.id)+'"'+(ctx.busy||state.busy?' disabled':'')+'>Примерить набор · '+fmt(priceOf(products,ctx.store))+' AC</button></article>';}).join('')+'</div></section>';
+}
 const sceneLabels=Object.freeze({
  frame:'Профиль · рамка аватара',banner:'Профиль · обложка',name:'Профиль · стиль ника',
  title:'Профиль · титул',overlay:'Профиль · эффект обложки',shape:'Профиль · форма аватара',
@@ -167,7 +172,7 @@ function preview(store,avatar,name,favorites){
  const selectedIcon=current('icon'),xp=current('xp'),mascot=current('mascot'),
  showcase=current('showcase'),cardStyle=current('card');
  const sets=root.KomiShopCatalog?.activeSets?.(Object.fromEntries(
-   ['frame','shape','title','plate','mascot'].map(t=>[t+'_id',current(t)?.id||null])
+   ['frame','shape','title','plate','mascot','name'].map(t=>[t+'_id',current(t)?.id||null])
  ))||[];
  return '<div class="sv7-preview-panel" id="sv7ProfilePreview"'+(state.previewMode==='profile'?'':' hidden')+'><div class="sv3-profile">'+
  '<div class="sv3-profile-cover '+(banner?'komi-store-'+esc(banner.bannerClass):'')+'">'+
@@ -201,10 +206,10 @@ function card(p,ctx,avatar,name){
  const label=locked?'Только примерка':!owner?'Войти':!store?(ctx.failedFor?'Нет данных':'Загрузка…'):ctx.busy||state.busy?'Подождите…':reaction&&owned?'Куплено':equipped?'Снять':owned?'Надеть':affordable?(reaction?'Купить':'Купить и надеть'):'Не хватает '+fmt(diff)+' AniCoin';
  const disabled=locked||!!owner&&(!store||ctx.busy||state.busy||reaction&&owned||!owned&&!affordable);
  const action=label+(owner||locked?': ':', чтобы купить: ')+p.label;
- const badge=equipped?'<span class="sv3-owned">Надето</span>':owned?'<span class="sv3-owned">Куплено</span>':p.rarity&&p.rarity!=='common'?'<span class="komi-shop-rarity">'+esc(rarityLabels[p.rarity]||rarityLabels.common)+'</span>':p.introducedAt?'<span class="sv7-new">Новое</span>':'';
+ const badge=equipped?'<span class="sv3-owned">Надето</span>':owned?'<span class="sv3-owned">Куплено</span>':'';
  const context=(sceneLabels[p.type]||'Профиль')+(!onSale(p)?' · Архив':'');
  return '<article class="komi-coin-card sv3-item '+(equipped?'is-equipped ':'')+(chosen?'is-trying':'')+'" data-rarity="'+esc(p.rarity||'common')+'" data-item-id="'+esc(p.id)+'" data-item-type="'+esc(p.type)+'">'+
- (badge?'<div class="sv3-item-badges">'+badge+'</div>':'')+
+ '<div class="sv3-item-badges"><span class="komi-shop-rarity">'+esc(rarityLabels[p.rarity]||rarityLabels.common)+'</span>'+badge+'</div>'+
  '<button type="button" class="komi-coin-sample sv3-item-scene sv5-preview-button" data-v3-try="'+esc(p.id)+'" aria-pressed="'+String(chosen)+'" aria-label="Примерить '+esc(p.label)+'"'+(state.busy||ctx.busy?' disabled':'')+'>'+cardArtwork(p,avatar,name)+
  '<span class="sv7-try-label">'+icon(chosen?'check':'eye',14)+' '+(chosen?'В примерочной':'Примерить')+'</span></button>'+
  '<div class="sv3-item-copy"><h3>'+esc(p.label)+'</h3><p class="sv7-item-kind">'+esc(context)+'</p>'+
@@ -252,6 +257,7 @@ function layout(ctx){
  '<label class="sv7-select sv7-sort-select"><span class="sv7-sr-only">Сортировка</span><select data-v3-sort aria-label="Сортировка">'+sorts.map(([id,label])=>'<option value="'+id+'"'+(state.sort===id?' selected':'')+'>'+label+'</option>').join('')+'</select>'+icon('chevron',14)+'</label>'+
  '<div class="sv7-toggles"><label class="sv3-hide-toggle"><input type="checkbox" data-v7-affordable'+(state.affordableOnly?' checked':'')+(!owner||!store?' disabled':'')+'><span>По моему балансу</span></label><label class="sv3-hide-toggle"><input type="checkbox" data-v3-hide-owned'+(state.hideOwned&&state.view!=='owned'?' checked':'')+(!owner||!store||state.view==='owned'?' disabled':'')+'><span>Скрыть купленные</span></label></div></div></details></div></div>'+
  (showGallery?titleGallery(ctx.busy||state.busy):'')+
+ (state.view==='catalog'&&state.category==='all'&&!state.query&&!state.affordableOnly&&!state.hideOwned&&state.sort==='default'?setGallery(ctx,avatar,name):'')+
  '<div class="sv3-layout"><div class="sv3-market"><div class="sv3-market-caption"><h2>'+(state.view==='owned'?'Твои предметы':state.query?'Результаты поиска':state.category==='all'?'Всё оформление':esc(categoryName(state.category)))+'</h2><span role="status" aria-live="polite">'+(state.view==='owned'?products.length+' в коллекции':'Товаров: '+products.length)+'</span>'+
  (state.query||state.category!=='all'||state.affordableOnly||state.hideOwned?'<button type="button" data-v3-reset-filters>Сбросить фильтры</button>':'')+'</div>'+
  '<div class="komi-coin-grid sv3-product-grid">'+(visible.length?visible.map(p=>card(p,ctx,avatar,name)).join(''):'<div class="sv3-no-results">'+icon('palette',28)+'<h3>'+esc(empty)+'</h3><p>'+(state.view==='owned'?'Посмотри, что есть в каталоге.':'Попробуй другое название или убери фильтры.')+'</p><button type="button" '+(state.view==='owned'&&!owner?'data-v7-login':'data-v7-browse')+'>'+(state.view==='owned'&&!owner?'Войти':'Открыть весь каталог')+'</button></div>')+'</div>'+
@@ -335,6 +341,7 @@ function mount(section,ctx){
   if(t.hasAttribute('data-sv14-compare')){state.comparison=t.dataset.sv14Compare==='current'?'current':'trial';refresh('[data-sv14-compare="'+state.comparison+'"]');return;}
   if(t.hasAttribute('data-v7-view')){state.view=t.dataset.v7View==='owned'?'owned':'catalog';resetFilters();filterChanged('[data-v7-view="'+state.view+'"]');return;}
   if(t.hasAttribute('data-v3-sort')){if(sorts.some(s=>s[0]===t.dataset.v3Sort))state.sort=t.dataset.v3Sort;filterChanged('[data-v3-sort]');return;}
+  if(t.hasAttribute('data-animated-set')){if(state.busy||ctx.busy)return;const set=animeSets().find(s=>s.id===t.dataset.animatedSet);if(!set)return;state.trial=Object.create(null);for(const id of set.items){const p=find(id);state.trial[p.type]=id;}state.reactionPreview=null;state.comparison='trial';state.previewMode='profile';state.sheetOpen=true;state.status='';resetPreviewScroll=true;lastTrySelector='[data-animated-set="'+set.id+'"]';refresh(narrow()?'[data-v3-sheet]':lastTrySelector);return;}
   if(t.hasAttribute('data-v3-try')){tryItem(t.dataset.v3Try,t);return;}
   if(t.hasAttribute('data-v7-preview')){const mode=t.dataset.v7Preview;state.previewMode=mode==='reaction'&&state.reactionPreview?'reaction':mode==='comment'?'comment':'profile';resetPreviewScroll=true;refresh('[data-v7-preview="'+state.previewMode+'"]');return;}
   if(t.hasAttribute('data-v3-remove')){delete state.trial[t.dataset.v3Remove];if(!selected().length&&!state.reactionPreview){state.sheetOpen=false;state.status='';}refresh(narrow()&&!selected().length&&!state.reactionPreview?'[data-v7-search]':'[data-v3-reset]');return;}
