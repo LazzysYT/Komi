@@ -55,3 +55,13 @@ test('SQL grants no direct equipment writes and validates reactions against equi
 test('retired effects never appear in UI or trigger Party/profile animations',()=>{assert.doesNotMatch(read('komi-shop-v3.js'),/Эффекты входа|Эффекты Party/);assert.doesNotMatch(read('watch-party.js'),/animatePartyArrivals/);assert.doesNotMatch(read('komi-premium-store.js'),/entrySeen/);});
 
 test('all 13 frame designs have two separate small transparent vector assets',()=>{const css=read('komi-living-profile.css'),dir='assets/shop-frames-atelier/';const frames=load().items.filter(p=>p.type==='frame'&&(p.animatedShop||p.id==='frame_ghoul_seal'));assert.equal(frames.length,13);for(const p of frames){const name=p.frameClass.replace(/^frame-/,'');for(const suffix of ['rim','fx']){const file=dir+name+'-'+suffix+'.svg',svg=read(file);assert.match(svg,/^<svg [\s\S]+<\/svg>$/);assert.match(svg,/viewBox=['"]0 0 240 240['"]/);assert.doesNotMatch(svg,/<(?:script|image|foreignObject)\b|https?:\/\/(?!www\.w3\.org\/2000\/svg)/);assert.ok(svg.length<18000,p.id);assert.ok(css.includes('/'+file));}}});
+
+
+test('all existing covers have independent static and motion illustrations',()=>{
+ const css=read('komi-shop-v6-goods.css'),banners=load().items.filter(p=>p.type==='banner');
+ assert.equal(banners.length,20);const unique=new Set();
+ for(const p of banners){const name=p.bannerClass.replace(/^banner-/,'');const still=['last-train','moon-platform'].includes(name)?'assets/shop-station/'+name+'.svg':'assets/shop-covers-atelier/'+name+'.svg';const motion='assets/shop-covers-atelier/motion/'+name+'.svg';
+  for(const file of [still,motion]){const svg=read(file).trim();assert.match(svg,/^<svg [\s\S]+<\/svg>$/);assert.doesNotMatch(svg,/<(?:script|image|foreignObject)\b|https?:\/\/(?!www\.w3\.org\/2000\/svg)/);assert.ok(svg.length<43000,file);assert.ok(css.includes('/'+file),file);unique.add(file);}
+  assert.doesNotMatch(read(still),/@keyframes ka-/);assert.match(read(motion),/prefers-reduced-motion:no-preference/);assert.match(read(motion),/@keyframes ka-/);
+ }assert.equal(unique.size,40);assert.match(css,/prefers-reduced-motion:reduce/);
+});

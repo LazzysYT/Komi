@@ -458,3 +458,43 @@
 }
 @keyframes komi-cast-thought{0%,16%{background-position:17% 50%,19% 50%;transform:scale(.74);opacity:.28}45%{background-position:54% 50%,68% 36%;transform:scale(1.18);opacity:.83}78%,100%{background-position:87% 50%,93% 23%;transform:scale(1.43);opacity:.13}}
 /* Existing reduced-motion and forced-colors rules continue to override these effects. */
+
+
+/* COVER ATELIER: existing IDs, static shop cards and contextual motion. */
+:is(.komi-store-banner-blood-moon,.banner-blood-moon){--komi-cover-still:url('/assets/shop-covers-atelier/blood-moon.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/blood-moon.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-noir,.banner-noir){--komi-cover-still:url('/assets/shop-covers-atelier/noir.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/noir.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-stars,.banner-stars){--komi-cover-still:url('/assets/shop-covers-atelier/stars.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/stars.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-grid,.banner-grid){--komi-cover-still:url('/assets/shop-covers-atelier/grid.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/grid.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-moon,.banner-moon){--komi-cover-still:url('/assets/shop-covers-atelier/moon.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/moon.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-aurora,.banner-aurora){--komi-cover-still:url('/assets/shop-covers-atelier/aurora.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/aurora.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-frost,.banner-frost){--komi-cover-still:url('/assets/shop-covers-atelier/frost.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/frost.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-glitch,.banner-glitch){--komi-cover-still:url('/assets/shop-covers-atelier/glitch.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/glitch.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-eclipse,.banner-eclipse){--komi-cover-still:url('/assets/shop-covers-atelier/eclipse.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/eclipse.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-projection,.banner-projection){--komi-cover-still:url('/assets/shop-covers-atelier/projection.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/projection.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-citylight,.banner-citylight){--komi-cover-still:url('/assets/shop-covers-atelier/citylight.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/citylight.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-panels,.banner-panels){--komi-cover-still:url('/assets/shop-covers-atelier/panels.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/panels.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-synthwave,.banner-synthwave){--komi-cover-still:url('/assets/shop-covers-atelier/synthwave.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/synthwave.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-orbit,.banner-orbit){--komi-cover-still:url('/assets/shop-covers-atelier/orbit.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/orbit.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-silverscreen,.banner-silverscreen){--komi-cover-still:url('/assets/shop-covers-atelier/silverscreen.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/silverscreen.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-contactsheet,.banner-contactsheet){--komi-cover-still:url('/assets/shop-covers-atelier/contactsheet.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/contactsheet.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-botanical,.banner-botanical){--komi-cover-still:url('/assets/shop-covers-atelier/botanical.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/botanical.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-petal,.banner-petal){--komi-cover-still:url('/assets/shop-covers-atelier/petal.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/petal.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-last-train,.banner-last-train){--komi-cover-still:url('/assets/shop-station/last-train.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/last-train.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+:is(.komi-store-banner-moon-platform,.banner-moon-platform){--komi-cover-still:url('/assets/shop-station/moon-platform.svg');--komi-cover-motion:url('/assets/shop-covers-atelier/motion/moon-platform.svg');--komi-cover-art:var(--komi-cover-still);--komi-banner-pattern:#101018 var(--komi-cover-art) center/cover no-repeat}
+/* Independent cover and overlay slots; never intercept user input. */
+:is(.sv3-profile-cover,.store-banner-swatch,.preview-cover)[class*="banner-"]{background:var(--komi-banner-pattern)!important;position:relative;isolation:isolate;overflow:hidden}
+:is(.sv3-profile-cover,.store-banner-swatch,.preview-cover):is(.komi-store-banner-blood-moon,.banner-blood-moon)::after{content:none!important;animation:none!important}
+[data-profile-cover][class*="komi-store-banner-"]:not([data-kcs-wallpaper])::after,
+#profile.komi-profile-premium-mono .profile-header-card .profile-cover[data-profile-cover][class*="komi-store-banner-"]:not([data-kcs-wallpaper])::after{content:"";display:block;position:absolute;inset:0;z-index:3;pointer-events:none;opacity:1;background:var(--komi-banner-pattern);animation:none!important;transform:none!important}
+.sv3-profile-cover[class*="komi-store-banner-"] .sv3-cover-word{z-index:5;color:#fff;text-shadow:0 1px 6px #09090b;opacity:.62}
+.sv3-profile-cover[class*="komi-store-banner-"] .komi-shop-overlay-layer{z-index:4;pointer-events:none}
+@media(prefers-reduced-motion:no-preference) and (forced-colors:none){
+ #profile [data-profile-cover][class*="komi-store-banner-"]:not([data-kcs-wallpaper]),
+ .sv3-fitting .sv3-profile-cover[class*="komi-store-banner-"],
+ .komi-shop-dialog .store-banner-swatch[class*="banner-"],
+ .sv3-item:focus-within .store-banner-swatch[class*="banner-"]{--komi-cover-art:var(--komi-cover-motion)}
+}
+@media(prefers-reduced-motion:no-preference) and (hover:hover) and (forced-colors:none){
+ .sv3-item:hover .store-banner-swatch[class*="banner-"]{--komi-cover-art:var(--komi-cover-motion)}
+}
+@media(prefers-reduced-motion:reduce){[class*="komi-store-banner-"],[class*="banner-"]{--komi-cover-art:var(--komi-cover-still)}}
