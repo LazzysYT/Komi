@@ -122,3 +122,28 @@ do $$ declare id text; receipt jsonb; begin
 end $$;
 reset role;
 select 'PASS: retired auras cannot be purchased; historical ownership and normal checkout remain intact' as result;
+
+-- Seed a historical cover owner before withdrawing the entire category.
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+select public.komi_premium_store('buy_equip','banner_blood_moon');
+reset role;
+\ir ../docs/frame-atelier-v2.sql
+set role authenticated;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000001',false);
+do $$ declare r jsonb; begin
+ perform public.komi_premium_store('unequip','banner_blood_moon');
+ r:=public.komi_shop_cart_buy_equip(array['banner_blood_moon']);
+ if r->>'banner_id'<>'banner_blood_moon' or (r->>'spent')::integer<>0 then raise exception 'owned banner no longer works'; end if;
+end $$;
+select set_config('request.jwt.claim.sub','00000000-0000-0000-0000-000000000002',false);
+do $$ declare r jsonb; begin
+ begin perform public.komi_premium_store('buy','banner_blood_moon'); raise exception 'retired banner direct buy accepted'; exception when invalid_parameter_value then null; end;
+ begin perform public.komi_shop_cart_buy_equip(array['banner_blood_moon']); raise exception 'retired banner cart accepted'; exception when invalid_parameter_value then null; end;
+ r:=public.komi_shop_cart_buy_equip(array['frame_silver_bloom']);
+ if r->>'frame_id'<>'frame_silver_bloom' or (r->>'spent')::integer<>25 or (r->>'balance')::integer<>55 then raise exception 'new frame checkout wrong %',r; end if;
+ r:=public.komi_shop_cart_buy_equip(array['frame_silver_bloom']);
+ if (r->>'spent')::integer<>0 or (r->>'balance')::integer<>55 then raise exception 'repeat charge'; end if;
+end $$;
+reset role;
+select 'PASS: frame atelier purchase, free re-equip, no new banner purchases, historical banners retained' as result;

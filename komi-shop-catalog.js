@@ -2,6 +2,84 @@
 (function(root){
 'use strict';
 const items=Object.freeze([
+{
+  "id": "frame_silver_bloom",
+  "type": "frame",
+  "label": "Серебряный расцвет",
+  "cost": 25,
+  "rarity": "rare",
+  "description": "Серебряные лепестки и бегущий по ободу лунный блик.",
+  "frameClass": "frame-silver-bloom",
+  "giftable": false,
+  "animatedShop": true,
+  "frameAtelier": true,
+  "introducedAt": "2026-11-27T12:05:00Z"
+},
+{
+  "id": "frame_crimson_sakura",
+  "type": "frame",
+  "label": "Багровая сакура",
+  "cost": 30,
+  "rarity": "rare",
+  "description": "Ветви багровой сакуры с летящими лепестками.",
+  "frameClass": "frame-crimson-sakura",
+  "giftable": false,
+  "animatedShop": true,
+  "frameAtelier": true,
+  "introducedAt": "2026-11-27T12:05:00Z"
+},
+{
+  "id": "frame_neon_rift",
+  "type": "frame",
+  "label": "Неоновый разлом",
+  "cost": 35,
+  "rarity": "epic",
+  "description": "Неоновые фрагменты скользят по цифровому кольцу.",
+  "frameClass": "frame-neon-rift",
+  "giftable": false,
+  "animatedShop": true,
+  "frameAtelier": true,
+  "introducedAt": "2026-11-27T12:05:00Z"
+},
+{
+  "id": "frame_lunar_crescent",
+  "type": "frame",
+  "label": "Лунная корона",
+  "cost": 40,
+  "rarity": "epic",
+  "description": "Серебряный полумесяц, облака и звёздные блики.",
+  "frameClass": "frame-lunar-crescent",
+  "giftable": false,
+  "animatedShop": true,
+  "frameAtelier": true,
+  "introducedAt": "2026-11-27T12:05:00Z"
+},
+{
+  "id": "frame_obsidian_crown",
+  "type": "frame",
+  "label": "Обсидиановая корона",
+  "cost": 55,
+  "rarity": "legendary",
+  "description": "Тёмная корона с гранёным аметистом и светящимися цепями.",
+  "frameClass": "frame-obsidian-crown",
+  "giftable": false,
+  "animatedShop": true,
+  "frameAtelier": true,
+  "introducedAt": "2026-11-27T12:05:00Z"
+},
+{
+  "id": "frame_spirit_kitsune",
+  "type": "frame",
+  "label": "Дух кицунэ",
+  "cost": 45,
+  "rarity": "epic",
+  "description": "Две миниатюрные маски кицунэ и танцующие огоньки.",
+  "frameClass": "frame-spirit-kitsune",
+  "giftable": false,
+  "animatedShop": true,
+  "frameAtelier": true,
+  "introducedAt": "2026-11-27T12:05:00Z"
+},
   {
     "id": "aura_crimson",
     "type": "aura",
@@ -2017,6 +2095,7 @@ const collections=Object.freeze([
 ].map(collection=>Object.freeze({...collection,items:Object.freeze(collection.items),preview:Object.freeze(collection.preview)})));
 const revision='20261126-living-profile';
 const animatedRevision='20261127-animated-shop';
+const frameAtelierRevision='20261127-frame-atelier-v2';
 const animatedSets=Object.freeze([{"id":"anime-ghoul","label":"Токийский гуль — Пробуждение","items":["frame_kakugan","name_crimson_reflection","title_one_eyed_king"],"className":"komi-set-anime-ghoul"},{"id":"anime-jujutsu","label":"Магическая битва — Бесконечность","items":["frame_cursed_energy","name_infinity_light","title_gojo_infinity"],"className":"komi-set-anime-jujutsu"},{"id":"anime-shadow","label":"Поднятие уровня в одиночку — Монарх теней","items":["frame_shadow_monarch","name_shadow_glow","title_shadow_sovereign"],"className":"komi-set-anime-shadow"},{"id":"anime-demon","label":"Клинок, рассекающий демонов — Дыхание стихии","items":["frame_water_breath","name_wave_glimmer","title_tanjiro_current"],"className":"komi-set-anime-demon"}].map(set=>Object.freeze({...set,items:Object.freeze(set.items)})));
 let animatedPricingConfirmed=false,animatedChecking=null;
 const animatedPreview=()=>preview()&&/(?:^|[?&])animated_shop=1(?:&|$)/.test(root.location?.search||'');
@@ -2026,6 +2105,14 @@ function checkAnimatedPricing(client){
  if(animatedChecking)return animatedChecking;
  animatedChecking=Promise.resolve().then(()=>client.rpc('komi_shop_animated_revision')).then(r=>{animatedPricingConfirmed=!r?.error&&r?.data===animatedRevision;return animatedPricingConfirmed;},()=>false).finally(()=>{animatedChecking=null;});
  return animatedChecking;
+}
+let frameAtelierConfirmed=false,frameAtelierChecking=null;
+function checkFrameAtelierPricing(client){
+ if(preview()||!client?.rpc)return Promise.resolve(false);
+ if(frameAtelierConfirmed)return Promise.resolve(true);
+ if(frameAtelierChecking)return frameAtelierChecking;
+ frameAtelierChecking=Promise.resolve().then(()=>client.rpc('komi_shop_frame_atelier_revision')).then(r=>{frameAtelierConfirmed=!r?.error&&r?.data===frameAtelierRevision;return frameAtelierConfirmed;},()=>false).finally(()=>{frameAtelierChecking=null;});
+ return frameAtelierChecking;
 }
 const titleText=p=>String(p?.title||p?.label||'').replace(/^[✧✦◇✳⌁☾✶▣↗◈◆✎▰▤▸❧❀]+\s+/u,'');
 // Hide from new discovery only. IDs and ownership continue to resolve.
@@ -2040,14 +2127,14 @@ function checkPricing(client){
  checking=Promise.resolve().then(()=>client.rpc('komi_shop_living_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;
   if(!pricingConfirmed)return false;
-  return checkAnimatedPricing(client).then(()=>pricingConfirmed);
+  return checkAnimatedPricing(client).then(()=>checkFrameAtelierPricing(client)).then(()=>pricingConfirmed);
  },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});
  return checking;
 }
 const livingProfileIds=new Set(["frame_ghoul_seal", "name_mangaka_ink", "xp_story_rhythm", "showcase_personal_cinema"]);
 const retiredFromSale=new Set(['aura_crimson','aura_starlight']);
-const isOnSale=id=>!retiredFromSale.has(id)&&items.some(p=>p.id===id&&(p.animatedShop?(animatedPreview()||animatedPricingConfirmed):(p.type==='title'||livingProfileIds.has(id))))&&!isArchived(id);
+const isOnSale=id=>!retiredFromSale.has(id)&&items.some(p=>p.id===id&&p.type!=='banner'&&(p.frameAtelier?(animatedPreview()||frameAtelierConfirmed):p.animatedShop?(animatedPreview()||animatedPricingConfirmed):(p.type==='title'||livingProfileIds.has(id))))&&!isArchived(id);
 const isGiftable=id=>isOnSale(id)&&items.find(p=>p.id===id)?.giftable!==false;
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,animatedSets,collections,revision,animatedRevision,checkAnimatedPricing,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return [...sets,...animatedSets].filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,animatedSets,collections,revision,animatedRevision,frameAtelierRevision,checkAnimatedPricing,checkFrameAtelierPricing,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return [...sets,...animatedSets].filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);
