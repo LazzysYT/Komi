@@ -4,14 +4,14 @@ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const script=fs.readFileSync(path.join(__dirname,'../komi-ads-loader.js'),'utf8');
 const SDK='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4262066374546613';
 const flush=async()=>{for(let i=0;i<4;i++)await Promise.resolve();};
-function fixture({state='interactive',hero=true,raf=true,idle=true,existing=false}={}) {
+function fixture({state='interactive',hero=true,raf=true,idle=true,existing=false,home=false}={}) {
  const documentEvents=new Map(),windowEvents=new Map(),timers=new Map(),frames=new Map(),idles=new Map();
  const scripts=existing?[{src:SDK}]:[],inserted=[];
  let sequence=0,resolveImage,rejectImage;
  const image=new Promise((resolve,reject)=>{resolveImage=resolve;rejectImage=reject;});
  const listen=(map,name,fn)=>{if(!map.has(name))map.set(name,new Set());map.get(name).add(fn);};
  const remove=(map,name,fn)=>map.get(name)?.delete(fn);
- const emit=(map,name)=>{for(const fn of [...(map.get(name)||[])])fn();};
+ const emit=(map,name,event={type:name})=>{for(const fn of [...(map.get(name)||[])])fn(event);};
  const document={readyState:state,baseURI:'https://komi.example/',
   querySelectorAll:()=>scripts,createElement:tag=>({tag}),
   head:{append(node){scripts.push(node);inserted.push(node);}},
@@ -22,6 +22,7 @@ function fixture({state='interactive',hero=true,raf=true,idle=true,existing=fals
   removeEventListener:(name,fn)=>remove(windowEvents,name,fn),
   setTimeout:(fn,delay)=>{const id=++sequence;timers.set(id,{fn,delay});return id;},
   clearTimeout:id=>timers.delete(id)};
+ if(home)scope.location={pathname:'/',hash:'',search:''};
  if(hero)scope.KomiHeroDaily={firstImage:{promise:image}};
  if(raf){scope.requestAnimationFrame=fn=>{const id=++sequence;frames.set(id,fn);return id;};scope.cancelAnimationFrame=id=>frames.delete(id);}
  if(idle){scope.requestIdleCallback=(fn,options)=>{const id=++sequence;idles.set(id,{fn,options});return id;};scope.cancelIdleCallback=id=>idles.delete(id);}
@@ -29,6 +30,7 @@ function fixture({state='interactive',hero=true,raf=true,idle=true,existing=fals
  const run=()=>vm.runInContext(script,scope);
  run();
  return {scope,inserted,scripts,timers,frames,idles,resolveImage,rejectImage,run,
+  interact(name,event={type:name}){emit(windowEvents,name,event);},
   dom(){emit(documentEvents,'DOMContentLoaded');},
   loaded(){emit(windowEvents,'load');},
   frame(){const pending=[...frames];frames.clear();for(const [,fn] of pending)fn();},
@@ -104,4 +106,22 @@ test('existing or concurrently inserted SDK and repeated loader execution never 
  concurrent.scripts.push({src:SDK});concurrent.idle();
  assert.equal(concurrent.inserted.length,0);assert.equal(concurrent.scripts.length,1);
  assert.equal(concurrent.timers.size,0);assert.equal(concurrent.frames.size,0);assert.equal(concurrent.idles.size,0);
+});
+
+test('home browsing keeps ads out of initial content work, then loads unchanged SDK once on real engagement',async()=>{
+ for(const event of ['pointerdown','keydown','scroll','hashchange']){
+  const f=fixture({home:true});f.dom();f.resolveImage(true);await flush();
+  f.frame();f.frame();f.idle();assert.equal(f.inserted.length,0);
+  f.scope.scrollY=0;f.interact('scroll');f.interact('keydown',{type:'keydown',key:'Shift'});
+  assert.equal(f.frames.size,0);
+  if(event==='scroll')f.scope.scrollY=180;
+  if(event==='hashchange')f.scope.location.hash='#catalog';
+  f.interact(event,{type:event,key:'Enter'});f.frame();f.frame();f.idle();assertSDK(f);
+  f.interact('pointerdown');f.idle();assertSDK(f);
+ }
+});
+test('early home engagement still waits for app startup and first image',async()=>{
+ const f=fixture({home:true});f.interact('pointerdown');
+ assert.equal(f.frames.size,0);f.dom();assert.equal(f.frames.size,0);
+ f.resolveImage(true);await flush();f.frame();f.frame();f.idle();assertSDK(f);
 });

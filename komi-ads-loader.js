@@ -18,6 +18,31 @@
   }
   if (hasSDK()) return;
 
+  // Home is a browse-first surface: defer third-party auto-ad setup until
+  // a visitor actually engages with the page. Other entry routes retain the
+  // ordinary after-paint startup. No audit/browser-specific behavior.
+  function isHomeEntry() {
+    const loc=root.location;
+    return !!loc && /^\/(?:index\.html)?$/.test(loc.pathname||'') &&
+      (!loc.hash || loc.hash==='#home') && !/(?:^|[?&])anime=/.test(loc.search||'');
+  }
+  let engaged = !isHomeEntry();
+  const engagementEvents=['pointerdown','keydown','scroll','popstate','hashchange'];
+  function removeEngagementListeners() {
+    for(const name of engagementEvents)root.removeEventListener(name,onEngagement,true);
+  }
+  function onEngagement(event) {
+    if(engaged)return;
+    if(event?.type==='scroll' && Math.abs(root.scrollY||0)<120)return;
+    if(event?.type==='keydown' && ['Shift','Control','Alt','Meta','Escape'].includes(event.key))return;
+    if((event?.type==='popstate'||event?.type==='hashchange')&&isHomeEntry())return;
+    engaged=true;
+    removeEngagementListeners();
+    preparePaint();
+  }
+  if(!engaged)for(const name of engagementEvents)
+    root.addEventListener(name,onEngagement,{capture:true,passive:true});
+
   let domReady = false, imageReady = false, framesStarted = false;
   let paintReady = false, inserted = false;
   let domTimer = null, frameTimer = null, firstFrame = null, secondFrame = null;
@@ -36,6 +61,7 @@
     if (inserted) return;
     inserted = true;
     removeDOMListeners();
+    removeEngagementListeners();
     clearFrames();
     if (idle !== null) { root.cancelIdleCallback?.(idle); idle = null; }
     if (task !== null) { root.clearTimeout(task); task = null; }
@@ -55,7 +81,7 @@
     else task = root.setTimeout(loadSDK,0);
   }
   function preparePaint() {
-    if (framesStarted || !domReady || !imageReady) return;
+    if (framesStarted || !domReady || !imageReady || !engaged) return;
     framesStarted = true;
     // Hidden documents can suspend RAF; this fallback never waits indefinitely.
     frameTimer = root.setTimeout(afterPaint,1000);
