@@ -155,7 +155,7 @@
             view.body.append(empty);
         } else view.body.append(list);
         const originalAdFree = document.getElementById('komiAdFreeOnlyToggle');
-        if (originalAdFree) {
+        if (originalAdFree && !originalAdFree.hidden) {
             const strict = button(originalAdFree.textContent.trim(), 'komi-mobile-sheet-strict');
             strict.setAttribute('aria-pressed', String(originalAdFree.getAttribute('aria-pressed') === 'true'));
             strict.addEventListener('click', () => {

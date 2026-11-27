@@ -499,6 +499,7 @@ async function checkNotifications(page) {
      localStorage.setItem('komi_source_1','Embed');
      return openWatchModal('1');
    });
+   await page.getByRole('button',{name:'Открыть другой источник',exact:true}).click();
    assert.equal(await page.locator('#komiWatchSourceSelect').inputValue(),'Direct');
    assert.equal(await page.locator('#watchModal .komi-watch-quick-actions > .komi-deck-more').count(),1,
      'Compact player must mount exactly one overflow menu');
@@ -649,8 +650,8 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-cinema-topbar').count(),1);
    assert.equal(await page.locator('.komi-watch-rail').isVisible(),width>820);
    assert.equal(await page.locator('.komi-watch-rail .komi-rail-bell, .komi-watch-rail [aria-label="Уведомления"]').count(),0,'Guest watch rail must not expose notifications');
-   assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),false,
-     'The persistent source controls replace the hover-only picker outside fullscreen');
+   assert.equal(await page.locator('.komi-v4-source-trigger').isVisible(),width>1050,
+     'The overlay source control is shown only for a wide native player');
    assert.equal(await page.locator(width<=767 ? '.komi-mobile-watch-source' : '#komiWatchSourceSelect').isVisible(),true,
      'Voice selection must remain visible in the desktop support bar or phone sheet control');
    assert.equal(await page.getByRole('button',{name:'Видео не работает?',exact:true}).isVisible(),true,

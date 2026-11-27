@@ -16,10 +16,20 @@ test('60 independently illustrated medals and 16 fixed-price cosmetics match the
 test('optional profile, friends and shop integration stays scoped to the logged-in viewer',()=>{
  for(const p of ['komi-profile-extras.js','app-main.js','profile-premium.js','anicoin.js'])assert.doesNotThrow(()=>new vm.Script(read(p),{filename:p}));
  const app=read('app-main.js'),index=read('index.html'),js=read('komi-profile-extras.js'),css=read('komi-profile-extras.css');
- assert.ok(index.indexOf('komi-profile-extras-catalog.js?')<index.indexOf('komi-profile-extras.js?'));
- assert.ok(index.indexOf('komi-profile-extras.js?')<index.indexOf('app-main.js?'));
+ assert.doesNotMatch(index,/<script[^>]*src=["'][^"']*komi-profile-extras(?:-catalog)?\.js\?/);
+ assert.ok(index.includes('komi-profile-extras-loader.js?')&&index.indexOf('komi-profile-extras-loader.js?')<index.indexOf('app-main.js?'));
  assert.match(app,/KomiProfileExtras\?\.mountProfile/);assert.match(app,/data-kpe-editor/);assert.match(app,/data-kpe-medals/);
  assert.match(read('anicoin.js'),/KomiProfileExtras\?\.mountShop/);
  assert.match(js,/viewer\(\)===uid/);assert.match(js,/hostname==='komianime.online'/);assert.match(js,/textContent=text/);assert.doesNotMatch(js,/\.innerHTML\s*=/);
  assert.match(css,/prefers-reduced-motion:reduce/);assert.match(css,/pointer:fine/);assert.match(css,/#profile\[data-profile-owner=true\]\[data-profile-preview=false\]/);
+});
+
+test('optional loader is inert on home, deduplicates requests and ignores stale profile mounts',async()=>{
+ const requests=[],calls=[],win={},doc={createElement:()=>({remove(){}}),head:{append(s){requests.push(s.src);queueMicrotask(()=>{if(s.src.includes('-catalog.js'))win.KomiExtrasCatalog={};else win.KomiProfileExtras={configure:o=>calls.push(['configure',o.getViewer()]),mountProfile:(n,o)=>calls.push(['profile',o.viewer]),mountShop:()=>calls.push(['shop']),decorateFriends:()=>calls.push(['friends'])};s.onload();});}}};
+ vm.runInNewContext(read('komi-profile-extras-loader.js'),{window:win,document:doc});
+ let uid='a';const proxy=win.KomiProfileExtras;proxy.configure({getViewer:()=>uid});
+ await proxy.decorateFriends({querySelector:()=>null});assert.equal(requests.length,0);
+ const first=proxy.mountProfile({isConnected:true},{viewer:'a'});uid='b';
+ const second=proxy.mountProfile({isConnected:true},{viewer:'b'});await Promise.all([first,second]);
+ assert.equal(requests.length,2);assert.deepEqual(calls,[['configure','b'],['profile','b']]);
 });

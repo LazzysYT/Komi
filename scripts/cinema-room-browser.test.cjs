@@ -33,11 +33,18 @@ test('cinema room stacks title, video and playback strip; extras and iframe reco
    }));
    const demo={...base,id:'61967',shikimoriId:61967,title:'Чёрный клевер 2',year:2026,shikiRating:8.9,episodeCount:12,episodes:base.episodes.slice(0,12)};
    animeList=[base,demo];
+   localStorage.setItem('komi_adfree_only_v1','false');
+   localStorage.setItem('komi_source_5114','Озвучка AniLibria');
    await openWatchModal('5114',1,0,'Озвучка AniLibria');
   });
   const dock=p.locator('.komi-cinema-v7 .komi-player-support'),heading=p.locator('.komi-cinema-v7 > .komi-player-heading'),frame=p.locator('.komi-cinema-v7 iframe');
   await dock.getByRole('button',{name:'Следующая серия',exact:true}).waitFor();
   await p.waitForFunction(()=>document.querySelector('link[data-komi-deferred-style="watch"]')?.sheet);
+  const allow=p.getByRole('button',{name:'Открыть другой источник',exact:true});
+  await allow.waitFor();
+  assert.equal(await frame.count(),0,'saved source and legacy preference must not load an unverified iframe');
+  assert.equal(await p.locator('video#animeVideoPlayer').count(),0);
+  await allow.click();
   const [head,player,strip]=await Promise.all([heading.evaluate(layout),frame.evaluate(layout),dock.evaluate(layout)]);
   const layoutInOrder=width>1050 ? player.bottom<=head.top+1&&head.bottom<=strip.top+1
                                   : head.bottom<=player.top+1&&player.bottom<=strip.top+1;
@@ -71,10 +78,22 @@ test('cinema room stacks title, video and playback strip; extras and iframe reco
   assert.match(await frame.getAttribute('src'),/sub=1/);
   assert.ok(Math.abs((await frame.evaluate(layout)).h-player.h)<=1);
   await dock.getByRole('button',{name:'Следующая серия',exact:true}).click();
+  await allow.waitFor();
+  assert.equal(await frame.count(),0,'consent does not carry to the next episode');
+  await allow.click();
   assert.match(await frame.getAttribute('src'),/sub=2/);
+  await p.evaluate(async()=>{
+    const anime=animeList.find(x=>x.id==='5114');
+    anime.episodes[0].sources['Без рекламы · Тест']='https://media.test/approved.mp4';
+    closeWatchModal();
+    await openWatchModal('5114',1,0,'Озвучка AniLibria');
+  });
+  assert.equal(await frame.count(),0,'an approved stream outranks the old external preference');
+  assert.equal(await p.locator('#komiWatchSourceSelect').inputValue(),'Без рекламы · Тест');
   assert.deepEqual(errors,[]);
   if(process.env.KOMI_CINEMA_OUTPUT&&[1440,390].includes(width)){
    await p.evaluate(async()=>openWatchModal('61967',1,1,'Озвучка AniLibria'));
+   await allow.click();
    await p.locator('.komi-cinema-v7 iframe').waitFor();
    await p.locator('.komi-cinema-v7 iframe').contentFrame().getByRole('button',{name:'Начать просмотр'}).waitFor();
    await p.screenshot({...(width===390?{clip:{x:0,y:0,width:390,height:750}}:{}),path:path.join(process.env.KOMI_CINEMA_OUTPUT,width===1440?'Komi-Cinema-PC.png':'Komi-Cinema-Mobile.png'),animations:'disabled'});
