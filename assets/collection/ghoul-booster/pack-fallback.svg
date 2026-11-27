@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 1024">
+ <defs>
+  <linearGradient id="foil" x2="100%" y2="100%"><stop stop-color="#e86b7b"/><stop offset=".22" stop-color="#671126"/><stop offset=".48" stop-color="#252127"/><stop offset=".78" stop-color="#100c12"/><stop offset="1" stop-color="#a72942"/></linearGradient>
+  <pattern id="seal" width="12" height="34" patternUnits="userSpaceOnUse"><path d="M2 0v34m5-34v34" stroke="#fff" stroke-opacity=".22" stroke-width="2"/></pattern>
+  <radialGradient id="eye"><stop stop-color="#ffb6ab"/><stop offset=".4" stop-color="#dc3453"/><stop offset="1" stop-color="#610e26"/></radialGradient>
+ </defs>
+ <path d="M50 40 70 25 90 40 110 25 130 40 150 25 170 40 190 25 210 40 230 25 250 40 270 25 290 40 310 25 330 40 350 25 370 40 390 25 410 40 430 25 450 40 470 25 490 40 510 25 530 40 550 25 570 40 590 25 586 992 566 1007 546 992 526 1007 506 992 486 1007 466 992 446 1007 426 992 406 1007 386 992 366 1007 346 992 326 1007 306 992 286 1007 266 992 246 1007 226 992 206 1007 186 992 166 1007 146 992 126 1007 106 992 86 1007 66 992 46 1007Z" fill="url(#foil)" stroke="#ac465c" stroke-width="4"/>
+ <path d="M51 43h537v46H51zm-4 899h539v48H47z" fill="url(#seal)"/>
+ <path d="M74 104h488v813H74z" fill="#140e15" stroke="#a65565" stroke-width="2"/>
+ <path d="M75 734 562 214M75 756 562 237M75 782 562 263" stroke="#80223b" stroke-opacity=".77" stroke-width="6"/>
+ <path d="M129 488Q318 279 513 488Q320 671 129 488Z" fill="url(#eye)" stroke="#d96375" stroke-width="5"/>
+ <path d="M320 377q-43 110 0 220 43-110 0-220Z" fill="#160d15"/>
+ <text x="320" y="182" text-anchor="middle" fill="#faf1ed" font-family="sans-serif" font-size="24" letter-spacing="7" font-weight="bold">KOMIANIME</text>
+ <text x="320" y="823" text-anchor="middle" fill="#f7e9e6" font-family="sans-serif" font-size="49" letter-spacing="2" font-weight="bold">TOKYO GHOUL</text>
+ <text x="320" y="859" text-anchor="middle" fill="#e391a1" font-family="sans-serif" font-size="18" letter-spacing="6">SERIES 01</text>
+</svg>

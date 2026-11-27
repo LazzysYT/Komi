@@ -241,3 +241,13 @@ the name or use flashing, imported assets or franchise logos.
 
 ### Live profile cosmetics
 The catalog deliberately reopens four slots for four new IDs only. Retired inventory and refunds are not reversed, and the 40 existing title treatments keep their prices. The four physical motifs are lacquer with a restrained crimson crack, a stroked ink signature, a strip of print panels, and a warm pool of cinema lamplight. Animate only the relevant component; honor reduced motion and avoid movement on initial XP hydration. A cinematic showcase displays at most three actually saved favorites, and does not grant access to private data. A neutral poster sample appears in a fitting room with no favorites. The new cosmetics are direct purchases; the existing gift list continues to show eligible titles only.
+
+## Tokyo Ghoul collection · foil booster
+
+The package is a single, crimped foil object, not a full-bleed banner or a
+chest. Komi's neutral navigation/actions stay intact. In the collection only:
+ink #151217, oxblood #411C2B, foil #7B263B, silver-pink #E4C5C9. Use a framed
+2:3 collectible face, a real roster number, and the existing rarity colors.
+Names sit above the lower foil edge; locked art stays solid black, with no
+visible name or color image before a reveal. Maintain the same purchase,
+confirmation, price, odds and keyboard/reduced-motion behavior.

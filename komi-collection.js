@@ -13,7 +13,8 @@ function remember(owner,id){if(id)purchaseIds.set(owner,id);else purchaseIds.del
 const portraitFallback=c=>root.KomiCollectionArt?.silhouette(c.id)||'';
 const lock='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></svg>';
 const artRoot='/assets/collection/ghoul-noir/';
-const caseArt='<img class="kc-case-image" src="'+artRoot+'case-640.webp" srcset="'+artRoot+'case-640.webp 640w, '+artRoot+'case-1200.webp 1200w" sizes="(max-width: 767px) calc(100vw - 26px), min(620px, 50vw)" width="1200" height="800" alt="Кейс «Токийский гуль»: чёрная сталь, цепь и маска с красным глазом" decoding="async">';
+const boosterRoot='/assets/collection/ghoul-booster/';
+const caseArt='<div class="kc-pack"><img class="kc-case-image" src="'+boosterRoot+'pack-320.webp" srcset="'+boosterRoot+'pack-320.webp 320w, '+boosterRoot+'pack-640.webp 640w" sizes="(max-width: 900px) 180px, 235px" width="640" height="1024" alt="Запечатанный бустер «Токийский гуль» с Кэном Канэки на упаковке" decoding="async"></div>';
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function normalizePayload(data){
  if(!data||!Array.isArray(data.owned))throw new Error('Invalid collection response');
@@ -37,7 +38,7 @@ function art(c,opened){
 }
 function card(c,opened){
  const number=String(roster.indexOf(c)+1).padStart(2,'0');
- return '<article class="kc-card kc-tier-'+c.rarity+(opened?'':' kc-locked')+'"><div class="kc-art">'+art(c,opened)+'<span class="kc-number">#'+number+'</span>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info">'+rarityLabel(c)+'<strong>'+(opened?esc(c.name):'Неизвестный персонаж')+'</strong><small>'+(opened?'В коллекции':'Не открыт')+'</small></div></article>';
+ return '<article class="kc-card kc-tier-'+c.rarity+(opened?'':' kc-locked')+'"><div class="kc-art">'+art(c,opened)+'<div class="kc-card-register" aria-hidden="true"><span class="kc-number">TG-'+number+'</span><span class="kc-card-edition">01</span></div>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info"><strong>'+(opened?esc(c.name):'Неизвестный персонаж')+'</strong><div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div></article>';
 }
 const REEL_DURATION=4400,REEL_STEP=124,REEL_WIN=23,REEL_LENGTH=29;
 function makeReel(prize,owned,random=Math.random){
@@ -48,7 +49,7 @@ function makeReel(prize,owned,random=Math.random){
 function reelMarkup(s){
  if(!s.reel)return '';
  const elapsed=Math.max(0,Math.min(REEL_DURATION,Date.now()-s.reel.started));
- return '<section class="kc-reel-panel" aria-label="Открытие кейса" aria-busy="true"><div class="kc-reel-heading"><div><div class="kc-kicker">Tokyo Ghoul · Открытие</div><h3>Кто внутри?</h3></div><span role="status">Результат получен, открываем…</span></div><div class="kc-reel-window" aria-hidden="true"><div class="kc-reel-track" style="--kc-stop:-'+(REEL_WIN*REEL_STEP+56)+'px;--kc-delay:-'+elapsed+'ms">'+s.reel.items.map(id=>{const c=roster.find(x=>x.id===id);return '<div class="kc-reel-tile kc-tier-'+c.rarity+'"><div class="kc-art">'+art(c,true)+'</div>'+rarityLabel(c)+'</div>';}).join('')+'</div><div class="kc-reel-marker"></div></div>'+button('Показать результат','skip-reel')+'</section>';
+ return '<section class="kc-reel-panel" aria-label="Открытие бустера" aria-busy="true"><div class="kc-reel-heading"><div><div class="kc-kicker">Tokyo Ghoul · Открытие</div><h3>Кто внутри?</h3></div><span role="status">Результат получен, открываем…</span></div><div class="kc-reel-window" aria-hidden="true"><div class="kc-reel-track" style="--kc-stop:-'+(REEL_WIN*REEL_STEP+56)+'px;--kc-delay:-'+elapsed+'ms">'+s.reel.items.map(id=>{const c=roster.find(x=>x.id===id);return '<div class="kc-reel-tile kc-tier-'+c.rarity+'"><div class="kc-art">'+art(c,false)+'</div>'+rarityLabel(c)+'</div>';}).join('')+'</div><div class="kc-reel-marker"></div></div>'+button('Показать результат','skip-reel')+'</section>';
 }
 function finishReel(s,reel=s?.reel,manual=false){
  if(!current(s)||!reel||s.reel!==reel)return;
@@ -82,25 +83,25 @@ function paint(nextFocus=null){
  const complete=known&&count===roster.length;
  const retryPurchase=!!s.owner&&!!pending(s.owner);
  const canBuy=s.status==='ready'&&s.price===CASE_PRICE&&(retryPurchase||!complete&&s.balance>=CASE_PRICE);
- const description=complete?'Все персонажи уже собраны!':s.status==='guest'?'Войди, чтобы купить кейс.':s.status==='opening'?'Открываем кейс…':'Гарантированно новый персонаж в каждом кейсе.';
+ const description=complete?'Все персонажи уже собраны!':s.status==='guest'?'Войди, чтобы купить бустер.':s.status==='opening'?'Открываем бустер…':'В бустере всегда новый персонаж.';
  const balanceText=known&&s.balance!==null?'Баланс: '+s.balance.toLocaleString('ru-RU')+' AniCoin':'Цена: 50 AniCoin';
  const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true}):s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>':button(retryPurchase?'Повторить покупку':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
  const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
- const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual">'+caseArt+'<div class="kc-case-edition"><span>東京喰種</span><small>01 / GHOUL SERIES</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">Tokyo Ghoul · Коллекция 01</div><h2>Кейс «Токийский гуль»</h2><p class="kc-muted">18 героев в четырёх классах редкости. Каждый кейс содержит одного нового персонажа с равными шансами — без повторов.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
+ const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual">'+caseArt+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">東京喰種</span><small>СЕРИЯ 01</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">Tokyo Ghoul · Коллекция 01</div><h2>Бустер «Токийский гуль»</h2><p class="kc-muted">18 героев в четырёх классах редкости. В каждом бустере одна новая карточка. Шансы равные, повторов нет.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
  const prize=roster.find(c=>c.id===s.result);
  const reward=prize&&known?'<div class="kc-result" role="status">'+card(prize,true)+'<div class="kc-result-copy"><div class="kc-kicker">Новый персонаж</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+button('В мою коллекцию','collection',{primary:true,focus:'result-collection'})+'</div></div>':'';
  if(tab==='collection'){
   const visible=roster.filter(c=>filter==='all'||filter==='owned'&&owned.has(c.id)||filter==='locked'&&!owned.has(c.id));
   body=feature+reelMarkup(s)+reward+'<div class="kc-series"><div class="kc-series-info"><div class="kc-kicker">Коллекция 01</div><h2>Токийский гуль</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к кейсам','cases',{primary:true})+'</div><div class="kc-tools"><span class="kc-muted">Все персонажи Tokyo Ghoul</span><div class="kc-filters" aria-label="Фильтр персонажей">'+[['all','Все'],['owned','Открытые'],['locked','Закрытые']].map(([id,title])=>button(title,'filter-'+id,{pressed:filter===id})).join('')+'</div></div>'+(visible.length?'<div class="kc-grid">'+visible.map(c=>card(c,owned.has(c.id))).join('')+'</div>':'<p class="kc-empty">Пока нет персонажей в этой категории.</p>');
  }else{
-  body=feature+reelMarkup(s)+reward+'<div class="kc-case-details"><h2>Что внутри?</h2><p class="kc-muted">18 персонажей. Каждый кейс стоит 50 AniCoin. Без повторов.</p><div class="kc-grid">'+roster.map(c=>card(c,owned.has(c.id))).join('')+'</div></div>';
+  body=feature+reelMarkup(s)+reward+'<div class="kc-case-details"><h2>Что внутри?</h2><p class="kc-muted">18 персонажей. Бустер стоит 50 AniCoin. Без повторов.</p><div class="kc-grid">'+roster.map(c=>card(c,owned.has(c.id))).join('')+'</div></div>';
  }
  host.innerHTML='<section class="kc-page" aria-label="Коллекция и кейсы">'+header+tabs+notice(s)+body+'</section>';
  host.querySelectorAll('.kc-portrait,.kc-case-image').forEach(img=>{
   const ready=()=>{if(img.naturalWidth>0)img.setAttribute('data-kc-art-ready','');};
   const failed=()=>{
    if(img.classList.contains('kc-case-image')&&img.hasAttribute('srcset')){
-    img.removeAttribute('srcset');img.src='/assets/collection/tokyo-ghoul-case-r5.svg';return;
+    img.removeAttribute('srcset');img.src=boosterRoot+'pack-fallback.svg';return;
    }
    img.hidden=true;
   };

@@ -27,3 +27,19 @@ test('all 18 portraits and black cutouts are local WebP, responsive chest has tw
  const js=read('komi-collection.js');assert.doesNotMatch(js,/graphql\.anilist|loadImages/);
  assert.match(js,/opened\?'':'locked\//);
 });
+
+test('booster keeps small transparent assets and a matching vector fallback',()=>{
+ const dir='assets/collection/ghoul-booster/';
+ for (const [width,limit] of [[320,52000],[640,160000]]) {
+  const data=fs.readFileSync(path.join(root,dir+'pack-'+width+'.webp'));
+  assert.equal(data.toString('ascii',8,12),'WEBP');
+  assert.ok(data.length<limit && data.length>100);
+  assert.ok(data.includes(Buffer.from('ALPH')) || data.includes(Buffer.from('VP8L')));
+ }
+ const svg=read(dir+'pack-fallback.svg');
+ assert.match(svg,/viewBox="0 0 640 1024"/);
+ assert.match(svg,/TOKYO GHOUL/);
+ assert.doesNotMatch(svg,/<image|<script/);
+ const html=read('index.html');
+ assert.equal((html.match(/v=20261127-ghoul-booster/g)||[]).length,2);
+});
