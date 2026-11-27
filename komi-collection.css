@@ -709,7 +709,7 @@
 .kc-extras #kc-extras-body{padding:10px 12px 0}
 .kc-extras #kc-extras-body[hidden]{display:none!important}
 @media(max-width:600px){
- .kc-page.kc-clean-album .kc-world-shelves .kc-world-window{min-height:94px;border-radius:16px}
+ .kc-page.kc-clean-album .kc-world-shelves .kc-world-window{min-height:94px;border-radius:18px}
  .kc-page.kc-clean-album .kc-world-window .kc-shelf-hero{width:70%;right:-8%}
  .kc-page.kc-clean-album .kc-series{padding:10px 12px}
  .kc-page.kc-clean-album .kc-series .kc-primary{font-size:11px;padding:8px 11px}
