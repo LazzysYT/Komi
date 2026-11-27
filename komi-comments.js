@@ -152,7 +152,7 @@
             if(canUse){chip.type='button';chip.setAttribute('aria-pressed',String(selected));chip.addEventListener('click',async()=>{
                 if(chip.disabled||currentUser?.authUserId!==viewerId)return;chip.disabled=true;
                 try{const {data:{user},error:authError}=await _supabase.auth.getUser();if(authError||user?.id!==viewerId||currentUser?.authUserId!==viewerId)throw Error('Повторно войди в аккаунт.');
-                    const response=selected?await _supabase.from('komi_comment_animated_reactions').delete().eq('comment_id',id).eq('user_id',viewerId):await _supabase.from('komi_comment_animated_reactions').upsert({comment_id:id,user_id:viewerId,effect_id:p.id},{onConflict:'comment_id,user_id'});
+                    const response=selected?await _supabase.from('komi_comment_animated_reactions').delete().eq('comment_id',id).eq('user_id',viewerId):own?await _supabase.from('komi_comment_animated_reactions').update({effect_id:p.id}).eq('comment_id',id).eq('user_id',viewerId):await _supabase.from('komi_comment_animated_reactions').insert({comment_id:id,user_id:viewerId,effect_id:p.id});
                     if(response.error)throw response.error;if(currentUser?.authUserId===viewerId)await refreshScope(scope,true);
                 }catch(error){statusMessage(currentSection(scope),error?.message||'Реакция недоступна.');chip.disabled=false;}
             });}

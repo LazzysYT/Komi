@@ -36,3 +36,16 @@ test('four anime sets contain three distinct equipment slots and use normal serv
 });
 
 test('new slots have distinct frontend surfaces and syntax',()=>{for(const type of ['entry','aura','commentfx','party'])assert.ok(read('komi-shop-v3.js').includes("['"+type+"',"));for(const [file,marker] of [['komi-comments.js','renderAnimatedReactions'],['watch-party.js','animatePartyArrivals'],['komi-collection.js','loadOwnedAura'],['komi-premium-store.js','entrySeen']]){assert.ok(read(file).includes(marker));assert.doesNotThrow(()=>new vm.Script(read(file)));}});
+
+test('SQL grants no direct equipment writes and validates reactions against equipped items',()=>{
+ const sql=read('docs/animated-shop-catalog.sql');
+ for(const type of ['entry','aura','commentfx','party']){
+  assert.ok(sql.includes('add column if not exists '+type+'_id text'));
+  assert.ok(sql.includes("elsif kind='"+type+"' then"));
+  assert.ok(sql.includes("elsif v_kind='"+type+"' then"));
+ }
+ assert.match(sql,/enable row level security/);
+ assert.match(sql,/animated_reactions_insert[^;]+e\.commentfx_id=effect_id/);
+ assert.match(sql,/animated_reactions_delete[^;]+auth\.uid\(\)/);
+ assert.doesNotMatch(sql,/grant (?:all|insert|update|delete)[^;]+on public\.komi_premium_cosmetic_equips/i);
+});

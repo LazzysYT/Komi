@@ -118,7 +118,7 @@ function apply(){
    if(!mascotNode){mascotNode=document.createElement('span');mascotNode.dataset.komiShopMascot='';mascotNode.setAttribute('aria-hidden','true');header.append(mascotNode);}
    mascotNode.className='komi-profile-mascot komi-store-'+mascot.cosmeticClass;
   }else mascotNode?.remove();
-  const allSets=root.KomiShopCatalog?.sets||[];
+  const allSets=[...(root.KomiShopCatalog?.sets||[]),...(root.KomiShopCatalog?.animatedSets||[])];
   header.classList.remove(...allSets.map(set=>set.className));
   const active=root.KomiShopCatalog?.activeSets?.(item)||[];
   for(const set of active)header.classList.add(set.className);
