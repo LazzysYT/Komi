@@ -366,6 +366,10 @@ function mount(section,ctx){
 }
 function render(container,ctx){
  if(!container)return;latestCtx=ctx;
+ // Native details toggle events are queued. Read the live disclosure before
+ // replacing it so a fast sort/filter or hydration cannot lose its state.
+ const liveFilters=container.querySelector?.('#shop .sv14-filters');
+ if(liveFilters&&typeof liveFilters.open==='boolean')state.filtersOpen=liveFilters.open;
  if(!state.routeRead||(root.location?.href&&root.location.href!==state.routeSignature)){route(true);state.routeRead=true;}
  const owner=ctx.owner||'';
  const previousSearch=container.querySelector?.('#shop [data-v7-search]');
