@@ -8,7 +8,7 @@ test('animated shop: rarity, sets, dedicated slots and responsive layout',async(
  try{for(const width of [1440,390,320]){
   const page=await browser.newPage({viewport:{width,height:950},serviceWorkers:'block',reducedMotion:'reduce'});
   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-  await page.route('**/*',route=>{const u=new URL(route.request().url()),f=u.pathname.slice(1);if(u.origin!==origin)return route.abort();if(u.pathname==='/shop')return route.fulfill({contentType:'text/html',body:html});if(![...styles,...scripts].includes(f)&&!/^assets\/shop-frames-atelier\/[a-z-]+\.svg$/.test(f)&&!/^assets\/shop-title-(?:foil|cast)\/[a-z]+\.svg$/.test(f))return route.abort();return route.fulfill({contentType:f.endsWith('.css')?'text/css':f.endsWith('.svg')?'image/svg+xml':'application/javascript',body:fs.readFileSync(path.join(root,f),'utf8')});});
+  await page.route('**/*',route=>{const u=new URL(route.request().url()),f=u.pathname.slice(1);if(u.origin!==origin)return route.abort();if(u.pathname==='/shop')return route.fulfill({contentType:'text/html',body:html});if(![...styles,...scripts].includes(f)&&!/^assets\/shop-frames-atelier\/[a-z-]+\.svg$/.test(f)&&!/^assets\/shop-title-(?:foil|cast)\/[a-z]+\.svg$/.test(f)&&!/^assets\/shop-(?:covers-atelier\/(?:motion\/)?|station\/)[a-z-]+\.svg$/.test(f))return route.abort();return route.fulfill({contentType:f.endsWith('.css')?'text/css':f.endsWith('.svg')?'image/svg+xml':'application/javascript',body:fs.readFileSync(path.join(root,f),'utf8')});});
   await page.goto(origin+'/shop');await page.evaluate(async()=>{window.currentView='shop';window.KomiPremium={idForUsername:()=> 'fixture'};await window.KomiShopCatalog.checkPricing({rpc:async name=>({data:name==='komi_shop_living_revision'?window.KomiShopCatalog.revision:window.KomiShopCatalog.animatedRevision})});window.renderAniCoinShop=()=>window.KomiShopV3.render(document.querySelector('#mainContainer'),{owner:'fixture',store:{owned:[],balance:500},displayName:'Komi'});window.renderAniCoinShop();});
   const shop=page.locator('#shop');assert.equal(await shop.locator('.sv-animated-set').count(),4);
   await shop.locator('[data-animated-set="anime-ghoul"]').click();assert.deepEqual((await page.evaluate(()=>window.KomiShopV3.selected())).sort(),['frame_kakugan','name_crimson_reflection','title_one_eyed_king'].sort());
@@ -39,6 +39,26 @@ test('animated shop: rarity, sets, dedicated slots and responsive layout',async(
     }mount.remove();return {count:ids.length,failures,motions:motions.size};
   });
   assert.equal(audit.count,13);assert.deepEqual(audit.failures,[]);assert.ok(audit.motions>=10);
+  assert.deepEqual(errors,[]);await page.close();
+ }}finally{await browser.close();}
+});
+
+test('cover atelier: every banner decodes on desktop and mobile, motion is contextual',async()=>{
+ const browser=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
+ try{for(const width of [1440,390,320]){
+  const page=await browser.newPage({viewport:{width,height:800},serviceWorkers:'block',reducedMotion:'reduce'});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  await page.route('**/*',route=>{const u=new URL(route.request().url()),f=u.pathname.slice(1);if(u.origin!==origin)return route.abort();if(u.pathname==='/shop')return route.fulfill({contentType:'text/html',body:html});if(![...styles,...scripts].includes(f)&&!/^assets\/shop-(?:covers-atelier\/(?:motion\/)?|station\/)[a-z-]+\.svg$/.test(f))return route.abort();return route.fulfill({contentType:f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript',body:fs.readFileSync(path.join(root,f),'utf8')});});
+  await page.goto(origin+'/shop');
+  await page.evaluate(()=>{document.querySelector('#mainContainer').innerHTML='<section id="shop" class="komi-shop-studio"><div class="sv3-fitting"><div class="sv3-profile-cover"></div></div><div class="sv3-item"><div class="store-banner-swatch">KOMI</div></div></section><section id="profile" class="komi-profile-premium-mono"><div class="profile-header-card"><div class="profile-cover" data-profile-cover></div></div></section>';});
+  for(const mode of ['reduce','no-preference']){
+   await page.emulateMedia({reducedMotion:mode});
+   const result=await page.evaluate(async mode=>{const products=KomiShopCatalog.items.filter(p=>p.type==='banner'),preview=document.querySelector('.sv3-profile-cover'),swatch=document.querySelector('.store-banner-swatch'),profile=document.querySelector('[data-profile-cover]'),failures=[];
+    for(const p of products){preview.className='sv3-profile-cover komi-store-'+p.bannerClass;swatch.className='store-banner-swatch '+p.bannerClass;profile.className='profile-cover komi-store-'+p.bannerClass;
+     for(const [n,pseudo,active] of [[preview,null,true],[swatch,null,false],[profile,'::after',true]]){const style=getComputedStyle(n,pseudo),match=style.backgroundImage.match(/url\(["']?(.*?)["']?\)/),expected=mode==='no-preference'&&active;if(!match){failures.push(p.id+' missing background '+n.className);continue;}if(match[1].includes('/motion/')!==expected)failures.push(p.id+' wrong motion '+n.className);const img=new Image();img.src=match[1];try{await img.decode();if(!img.naturalWidth)failures.push(p.id+' empty');}catch{failures.push(p.id+' decode error');}if(pseudo&&style.pointerEvents!=='none')failures.push(p.id+' intercepts input');}
+    }return {count:products.length,failures};},mode);
+   assert.equal(result.count,20);assert.deepEqual(result.failures,[]);
+  }
   assert.deepEqual(errors,[]);await page.close();
  }}finally{await browser.close();}
 });
