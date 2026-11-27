@@ -14,7 +14,7 @@ const fmt=x=>Number(x||0).toLocaleString('ru-RU');
 const icon=(name,size=18)=>root.KomiShopIcons?.solid?.(name,size)||root.KomiShopIcons?.svg(name,size)||'';
 const rarityLabels={common:'Обычный',uncommon:'Необычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный',mythic:'Мифический'};
 const rarityOrder={mythic:0,legendary:1,epic:2,rare:3,uncommon:4,common:5};
-const categories=[['all','Всё'],['frame','Рамки и эффекты аватара'],['banner','Обложки'],['name','Никнеймы'],['title','Титулы'],['overlay','Эффекты'],['shape','Формы аватара'],['plate','Комментарии'],['icon','Значки'],['xp','Полоски XP'],['mascot','Маскоты'],['showcase','Витрины топ-3'],['card','Карточки'],['reaction','Реакции']];
+const categories=[['all','Всё'],['frame','Рамки и эффекты аватара'],['banner','Обложки'],['name','Никнеймы'],['title','Титулы'],['overlay','Эффекты'],['shape','Формы аватара'],['plate','Комментарии'],['icon','Значки'],['xp','Полоски XP'],['mascot','Маскоты'],['showcase','Витрины топ-3'],['card','Карточки'],['reaction','Реакции Party'],['entry','Эффекты входа'],['aura','Ауры персонажей'],['commentfx','Реакции комментариев'],['party','Эффекты Party']];
 const sorts=[['default','Подборка Komi'],['new','Сначала новые'],['price-up','Сначала недорогие'],['price-down','Сначала дорогие'],['rarity','По редкости']];
 const categoryName=type=>categories.find(c=>c[0]===type)?.[1]||'Оформление';
 const canCheckout=()=>root.KomiShopCatalog?.canCheckout?.()===true;
@@ -96,6 +96,7 @@ function initialAvatar(avatar,name){
 }
 function visual(product,avatar,name,favorites){
  const cls=esc(product.cosmeticClass||'');
+ if(['entry','aura','commentfx','party'].includes(product.type))return '<span class="sv-fx-sample komi-fx-'+cls+'"><b>'+esc(product.symbol||'✧')+'</b><small>'+esc(categoryName(product.type))+'</small></span>';
  if(product.type==='frame')return '<span class="komi-coin-frame komi-store-'+esc(product.frameClass)+'">'+initialAvatar(avatar,name)+'</span>';
  if(product.type==='shape')return '<span class="sv3-shape komi-store-'+cls+'">'+initialAvatar(avatar,name)+'</span>';
  if(product.type==='title')return '<span class="sv3-title-sample" data-komi-title-id="'+esc(product.id)+'">'+esc(foilTitle(product))+'</span>';
@@ -123,7 +124,7 @@ const sceneLabels=Object.freeze({
  title:'Профиль · титул',overlay:'Профиль · эффект обложки',shape:'Профиль · форма аватара',
  plate:'Под аниме · комментарий',icon:'Профиль · значок рядом с ником',xp:'Профиль · полоска XP',
  mascot:'Профиль · маскот',showcase:'Профиль · витрина избранного',card:'Профиль · карточка при наведении',
- reaction:'Watch Party · реакции'
+ reaction:'Watch Party · реакции',entry:'Профиль · эффект открытия',aura:'Коллекция · открытые герои',commentfx:'Под аниме · реакция',party:'Watch Party · эффект входа'
 });
 function portrait(avatar,name){
  return '<span class="sv7-card-avatar">'+initialAvatar(avatar,name)+'</span>';
@@ -167,6 +168,7 @@ function cardArtwork(p,avatar,name){
 
 function preview(store,avatar,name,favorites){
  const current=type=>find((state.comparison==='trial'?state.trial[type]:null)||store?.[type+'_id'])||null;
+ const entry=current('entry'),aura=current('aura'),commentfx=current('commentfx'),party=current('party');
  const frame=current('frame'),shape=current('shape'),title=current('title'),
  banner=current('banner'),overlay=current('overlay'),plate=current('plate'),nameStyle=current('name');
  const selectedIcon=current('icon'),xp=current('xp'),mascot=current('mascot'),
@@ -189,12 +191,13 @@ function preview(store,avatar,name,favorites){
  (sets.length?'<p class="sv3-set-active">✦ Сет: '+sets.map(x=>esc(x.label)).join(', ')+'</p>':'')+
  ((showcase||cardStyle)?'<div class="sv3-extra-samples">'+(showcase?'<div><small>Витрина топ-3</small>'+visual(showcase,avatar,name,favorites)+'</div>':'')+
  (cardStyle?'<div><small>Карточка профиля</small>'+visual(cardStyle,avatar,name)+'</div>':'')+'</div>':'')+
+ ([entry,aura,party].some(Boolean)?'<div class="sv-fx-preview-grid">'+[entry,aura,party].filter(Boolean).map(p=>visual(p,avatar,name)).join('')+'</div>':'')+
  '</div></div></div>'+
  '<div class="sv7-preview-panel" id="sv7CommentPreview"'+(state.previewMode==='comment'?'':' hidden')+'><div class="sv3-comment '+(plate?'komi-store-'+esc(plate.cosmeticClass):'')+'">'+
  '<span class="sv3-comment-label">'+icon('movie',13)+' В обсуждении аниме</span>'+
  '<div class="sv3-comment-row"><span class="sv3-comment-avatar '+(shape?'komi-store-'+esc(shape.cosmeticClass):'')+'">'+initialAvatar(avatar,name)+'</span>'+
  '<span><strong class="'+(nameStyle?'komi-store-'+esc(nameStyle.cosmeticClass):'')+'">'+esc(name)+'</strong>'+
- '<small>Эта серия просто невероятная!</small></span></div></div><p class="sv7-context-note">Так будут выглядеть твои сообщения под аниме.</p></div>';
+ '<small>Эта серия просто невероятная!</small></span></div>'+(commentfx?visual(commentfx,avatar,name):'')+'</div><p class="sv7-context-note">Так будут выглядеть твои сообщения под аниме.</p></div>';
 }
 
 function card(p,ctx,avatar,name){
@@ -217,7 +220,7 @@ function card(p,ctx,avatar,name){
  '<p class="sv3-unit-price">'+icon('coins',16)+' <strong>'+fmt(p.cost)+'</strong> <span>AniCoin</span></p></div>'+
  '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+(owned?' is-owned-action':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(action)+'"'+(disabled?' disabled':'')+'>'+esc(label)+'</button></div></article>';
 }
-function descriptionFor(type){return {frame:'Обрамление твоей аватарки.',banner:'Фон шапки твоего профиля.',name:'Оформление имени в профиле.',title:'Небольшая подпись под именем.',shape:'Новый силуэт твоей аватарки.',overlay:'Атмосфера поверх обложки.',plate:'Оформление твоих комментариев.',icon:'Значок рядом с именем.',xp:'Оформление полоски опыта.',mascot:'Компаньон в твоём профиле.',showcase:'Оформление любимой тройки аниме.',card:'Стиль карточки профиля.',reaction:'Реакции для совместного просмотра.'}[type]||'Предмет для твоего профиля.';}
+function descriptionFor(type){return {frame:'Обрамление твоей аватарки.',banner:'Фон шапки твоего профиля.',name:'Оформление имени в профиле.',title:'Небольшая подпись под именем.',shape:'Новый силуэт твоей аватарки.',overlay:'Атмосфера поверх обложки.',plate:'Оформление твоих комментариев.',icon:'Значок рядом с именем.',xp:'Оформление полоски опыта.',mascot:'Компаньон в твоём профиле.',showcase:'Оформление любимой тройки аниме.',card:'Стиль карточки профиля.',reaction:'Реакции для совместного просмотра.',entry:'Один эффект при открытии профиля.',aura:'Аура для открытых героев коллекции.',commentfx:'Нажимаемая реакция под комментарием.',party:'Короткая анимация при появлении в комнате.'}[type]||'Предмет для твоего профиля.';}
 function titleGallery(busy){
  const picks=['title_gojo_infinity','title_tanjiro_current','title_frieren_bloom'].map(find).filter(onSale);
  if(!picks.length)return '';
@@ -285,7 +288,7 @@ function tryItem(id,trigger){
  else{state.trial[p.type]=state.trial[p.type]===id?null:id;}
  lastTrySelector=(trigger?.closest?.('.sv12-gallery')?'.sv12-gallery ':'.sv3-item ')+'[data-v3-try="'+id+'"]';state.comparison='trial';
  const chosen=p.type==='reaction'?state.reactionPreview===id:state.trial[p.type]===id;
- state.previewMode=chosen?(p.type==='reaction'?'reaction':p.type==='plate'?'comment':'profile'):(state.reactionPreview?'reaction':state.trial.plate?'comment':'profile');
+ state.previewMode=chosen?(p.type==='reaction'?'reaction':['plate','commentfx'].includes(p.type)?'comment':'profile'):(state.reactionPreview?'reaction':(state.trial.plate||state.trial.commentfx)?'comment':'profile');
  state.status='';resetPreviewScroll=true;
  state.sheetOpen=!!(selected().length||state.reactionPreview);
  refresh(narrow()&&state.sheetOpen?'[data-v3-sheet]':lastTrySelector);

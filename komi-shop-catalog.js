@@ -3,6 +3,110 @@
 'use strict';
 const items=Object.freeze([
 {
+  "id": "entry_moonrise",
+  "type": "entry",
+  "label": "Лунное пробуждение",
+  "cost": 20,
+  "rarity": "uncommon",
+  "description": "Серебряная волна при открытии профиля.",
+  "symbol": "☾",
+  "cosmeticClass": "entry-moonrise",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "entry_neon_gate",
+  "type": "entry",
+  "label": "Неоновый портал",
+  "cost": 30,
+  "rarity": "rare",
+  "description": "Фиолетовый портал при открытии профиля.",
+  "symbol": "✧",
+  "cosmeticClass": "entry-neon-gate",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "aura_crimson",
+  "type": "aura",
+  "label": "Багровая аура",
+  "cost": 25,
+  "rarity": "rare",
+  "description": "Алый ореол открытых героев коллекции.",
+  "symbol": "✦",
+  "cosmeticClass": "aura-crimson",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "aura_starlight",
+  "type": "aura",
+  "label": "Звёздная аура",
+  "cost": 35,
+  "rarity": "epic",
+  "description": "Сияние звёзд на открытых карточках коллекции.",
+  "symbol": "✧",
+  "cosmeticClass": "aura-starlight",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "commentfx_hype",
+  "type": "commentfx",
+  "label": "Восторг",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Анимированная реакция «Огонь» под комментариями.",
+  "symbol": "🔥",
+  "cosmeticClass": "commentfx-hype",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "commentfx_heart",
+  "type": "commentfx",
+  "label": "Сердце",
+  "cost": 15,
+  "rarity": "uncommon",
+  "description": "Анимированная реакция «Сердце» под комментариями.",
+  "symbol": "♥",
+  "cosmeticClass": "commentfx-heart",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "party_comet",
+  "type": "party",
+  "label": "Комета",
+  "cost": 20,
+  "rarity": "uncommon",
+  "description": "Комета при появлении участника в Watch Party.",
+  "symbol": "✦",
+  "cosmeticClass": "party-comet",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
+  "id": "party_portal",
+  "type": "party",
+  "label": "Теневой портал",
+  "cost": 30,
+  "rarity": "rare",
+  "description": "Портал при появлении участника в Watch Party.",
+  "symbol": "◈",
+  "cosmeticClass": "party-portal",
+  "giftable": false,
+  "animatedShop": true,
+  "introducedAt": "2026-11-27T10:30:00Z"
+},
+{
   "id": "frame_black_flame",
   "type": "frame",
   "label": "Чёрное пламя",
@@ -1969,7 +2073,15 @@ const collections=Object.freeze([
 const revision='20261126-living-profile';
 const animatedRevision='20261127-animated-shop';
 const animatedSets=Object.freeze([{"id":"anime-ghoul","label":"Токийский гуль — Пробуждение","items":["frame_kakugan","name_crimson_reflection","title_one_eyed_king"],"className":"komi-set-anime-ghoul"},{"id":"anime-jujutsu","label":"Магическая битва — Бесконечность","items":["frame_cursed_energy","name_infinity_light","title_gojo_infinity"],"className":"komi-set-anime-jujutsu"},{"id":"anime-shadow","label":"Поднятие уровня в одиночку — Монарх теней","items":["frame_shadow_monarch","name_shadow_glow","title_shadow_sovereign"],"className":"komi-set-anime-shadow"},{"id":"anime-demon","label":"Клинок, рассекающий демонов — Дыхание стихии","items":["frame_water_breath","name_wave_glimmer","title_tanjiro_current"],"className":"komi-set-anime-demon"}].map(set=>Object.freeze({...set,items:Object.freeze(set.items)})));
-let animatedPricingConfirmed=false;
+let animatedPricingConfirmed=false,animatedChecking=null;
+const animatedPreview=()=>preview()&&/(?:^|[?&])animated_shop=1(?:&|$)/.test(root.location?.search||'');
+function checkAnimatedPricing(client){
+ if(preview()||!client?.rpc)return Promise.resolve(false);
+ if(animatedPricingConfirmed)return Promise.resolve(true);
+ if(animatedChecking)return animatedChecking;
+ animatedChecking=Promise.resolve().then(()=>client.rpc('komi_shop_animated_revision')).then(r=>{animatedPricingConfirmed=!r?.error&&r?.data===animatedRevision;return animatedPricingConfirmed;},()=>false).finally(()=>{animatedChecking=null;});
+ return animatedChecking;
+}
 const titleText=p=>String(p?.title||p?.label||'').replace(/^[✧✦◇✳⌁☾✶▣↗◈◆✎▰▤▸❧❀]+\s+/u,'');
 // Hide from new discovery only. IDs and ownership continue to resolve.
 const archived=new Set(['banner_grid','frame_pixel','xp_hatch','xp_dots']);
@@ -1982,14 +2094,14 @@ function checkPricing(client){
  if(checking)return checking;
  checking=Promise.resolve().then(()=>client.rpc('komi_shop_living_revision')).then(result=>{
   pricingConfirmed=!result?.error&&result?.data===revision;
-  if(!pricingConfirmed){animatedPricingConfirmed=false;return false;}
-  return Promise.resolve().then(()=>client.rpc('komi_shop_animated_revision')).then(result=>{animatedPricingConfirmed=!result?.error&&result?.data===animatedRevision;return pricingConfirmed;},()=>{animatedPricingConfirmed=false;return pricingConfirmed;});
- },()=>{pricingConfirmed=false;animatedPricingConfirmed=false;return false;}).finally(()=>{checking=null;});
+  if(!pricingConfirmed)return false;
+  return checkAnimatedPricing(client).then(()=>pricingConfirmed);
+ },()=>{pricingConfirmed=false;return false;}).finally(()=>{checking=null;});
  return checking;
 }
 const livingProfileIds=new Set(["frame_ghoul_seal", "name_mangaka_ink", "xp_story_rhythm", "showcase_personal_cinema"]);
-const isOnSale=id=>items.some(p=>p.id===id&&(p.animatedShop?(preview()||animatedPricingConfirmed):(p.type==='title'||livingProfileIds.has(id))))&&!isArchived(id);
+const isOnSale=id=>items.some(p=>p.id===id&&(p.animatedShop?(animatedPreview()||animatedPricingConfirmed):(p.type==='title'||livingProfileIds.has(id))))&&!isArchived(id);
 const isGiftable=id=>isOnSale(id)&&items.find(p=>p.id===id)?.giftable!==false;
 const canCheckout=()=>!preview()&&pricingConfirmed;
-root.KomiShopCatalog=Object.freeze({items,sets,animatedSets,collections,revision,animatedRevision,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return [...sets,...animatedSets].filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
+root.KomiShopCatalog=Object.freeze({items,sets,animatedSets,collections,revision,animatedRevision,checkAnimatedPricing,titleText,isArchived,isOnSale,isGiftable,isPreview:preview,checkPricing,canCheckout,find(id){return items.find(item=>item.id===id)||null;},rarityFor(id){return items.find(x=>x.id===id)?.rarity||'common';},activeSets(equip){return [...sets,...animatedSets].filter(set=>set.items.every(id=>equip?.[id.split('_',1)[0]+'_id']===id));}});
 })(window);

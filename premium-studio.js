@@ -386,7 +386,7 @@
     const balance=Number(wallet?.balance);
     message('store-balance',wallet && Number.isFinite(balance)
       ? '◈ '+balance.toLocaleString('ru-RU')+' AniCoin' : '◈ — AniCoin');
-    products.filter(p=>storeCategory==='owned'?owns(p.id):window.KomiShopCatalog?.isOnSale?.(p.id)&&(storeCategory==='all'||p.type===storeCategory)).forEach(product => {
+    products.filter(p=>!['entry','aura','commentfx','party'].includes(p.type)&&(storeCategory==='owned'?owns(p.id):window.KomiShopCatalog?.isOnSale?.(p.id)&&(storeCategory==='all'||p.type===storeCategory))).forEach(product => {
       const item=document.createElement('article');
       item.className='store-item';
       item.dataset.rarity=product.rarity||'common';
@@ -464,7 +464,7 @@
       action.addEventListener('click',event=>{event.stopPropagation();void storeAction(product,owned?(currentlyEquipped?'unequip':'equip'):(product.type==='reaction'?'buy':'buy_equip'));});
       controls.append(preview,action);
       const rarity=document.createElement('span');rarity.className='komi-shop-rarity';
-      rarity.textContent=({common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'})[product.rarity]||'Обычный';
+      rarity.textContent=({common:'Обычный',uncommon:'Необычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный',mythic:'Мифический'})[product.rarity]||'Обычный';
       item.append(rarity,top,heading,subtitle,controls);
       item.addEventListener('click',event=>{if(!event.target.closest('button'))tryOn(product);});
       item.addEventListener('keydown',event=>{

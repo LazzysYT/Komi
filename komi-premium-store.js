@@ -4,6 +4,8 @@
 const products=root.KomiShopCatalog?.items||[];
 let client=null,publicItems=new Map(),wallet=null,owner='',busy=false;
 let xpMotion=null;
+const extraSlots=['entry','aura','commentfx','party'];
+const entrySeen=new WeakMap();
 function updateStoryRhythm(levelNode,user,enabled){
  const track=levelNode?.querySelector('.profile-xp-progress-track');
  const meter=track?.querySelector('progress');
@@ -106,6 +108,10 @@ function apply(){
  }
  const header=profile.querySelector('.profile-header-card');
  if(header){
+  const entry=products.find(x=>x.type==='entry'&&x.id===item?.entry_id);
+  const key=entry&&id?id+':'+entry.id:'';
+  if(key&&entrySeen.get(header)!==key){entrySeen.set(header,key);if(!root.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches){const fx=document.createElement('span');fx.className='komi-entry-flash komi-fx-'+entry.cosmeticClass;fx.setAttribute('aria-hidden','true');header.append(fx);setTimeout(()=>fx.remove(),1100);}}
+  else if(!key)entrySeen.delete(header);
   let mascotNode=header.querySelector('[data-komi-shop-mascot]');
   const mascot=products.find(x=>x.id===item?.mascot_id);
   if(mascot){
@@ -142,8 +148,10 @@ function apply(){
 }
 async function refresh(){
  if(!client)return;
- const {data,error}=await client.from('komi_premium_cosmetic_equips')
-  .select('user_id,frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id,shape_id,plate_id,mascot_id,xp_id,name_id').limit(1000);
+ const fields='user_id,frame_id,title_id,banner_id,overlay_id,showcase_id,card_id,icon_id,shape_id,plate_id,mascot_id,xp_id,name_id';
+ let result=await client.from('komi_premium_cosmetic_equips').select(fields+',entry_id,aura_id,commentfx_id,party_id').limit(1000);
+ if(result.error)result=await client.from('komi_premium_cosmetic_equips').select(fields).limit(1000);
+ const {data,error}=result;
  if(error){console.warn('Premium store items unavailable:',error.message);return;}
  publicItems=new Map((data||[]).map(x=>[String(x.user_id),x]));
  apply();
@@ -188,6 +196,7 @@ function mount(container,id,active){
  const balance=document.createElement('p');balance.dataset.premiumStoreBalance='';balance.textContent='Проверяем баланс…';
  const grid=document.createElement('div');grid.className='komi-premium-store-grid';
  for(const product of products){
+  if(extraSlots.includes(product.type))continue;
   const item=document.createElement('article');item.className='komi-premium-store-item';
   if(root.KomiShopCatalog?.isOnSale?.(product.id)!==true)item.hidden=true;
   const label=document.createElement('h3');label.textContent=product.label;
@@ -227,7 +236,7 @@ function mount(container,id,active){
    sample.append(preview);
   }
   const rarity=document.createElement('span');rarity.className='komi-shop-rarity';
-  rarity.textContent={common:'Обычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный'}[product.rarity]||'Обычный';item.dataset.rarity=product.rarity;item.prepend(rarity);
+  rarity.textContent={common:'Обычный',uncommon:'Необычный',rare:'Редкий',epic:'Эпический',legendary:'Легендарный',mythic:'Мифический'}[product.rarity]||'Обычный';item.dataset.rarity=product.rarity;item.prepend(rarity);
   item.append(sample,label,button);grid.append(item);
  }
  const status=document.createElement('p');status.setAttribute('role','status');status.setAttribute('aria-live','polite');

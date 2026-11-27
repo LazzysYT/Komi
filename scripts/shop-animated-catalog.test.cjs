@@ -1,10 +1,10 @@
 'use strict';
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
 const root=path.join(__dirname,'..'),read=p=>fs.readFileSync(path.join(root,p),'utf8');
-function load(hostname='komianime.online'){const window={location:{hostname}};vm.runInNewContext(read('komi-shop-catalog.js'),{window});return window.KomiShopCatalog;}
+function load(hostname='komianime.online'){const window={location:{hostname,search:hostname==='komianime.online'?'':'?animated_shop=1'}};vm.runInNewContext(read('komi-shop-catalog.js'),{window});return window.KomiShopCatalog;}
 test('new animated cosmetics are unique and preview-only until the second server revision is confirmed',async()=>{
  const c=load(),p=load('preview.example'),items=c.items.filter(x=>x.animatedShop);
- assert.equal(items.length,20);
+ assert.equal(items.length,28);
  assert.equal(new Set(c.items.map(x=>x.id)).size,c.items.length);
  assert.ok(items.every(x=>!c.isOnSale(x.id)&&p.isOnSale(x.id)&&!p.isGiftable(x.id)));
  await c.checkPricing({rpc:async name=>name==='komi_shop_living_revision'?{data:c.revision}:{error:{message:'not deployed'}}});
@@ -34,3 +34,5 @@ test('four anime sets contain three distinct equipment slots and use normal serv
   assert.ok(s.items.every(id=>c.isOnSale(id)));
  }
 });
+
+test('new slots have distinct frontend surfaces and syntax',()=>{for(const type of ['entry','aura','commentfx','party'])assert.ok(read('komi-shop-v3.js').includes("['"+type+"',"));for(const [file,marker] of [['komi-comments.js','renderAnimatedReactions'],['watch-party.js','animatePartyArrivals'],['komi-collection.js','loadOwnedAura'],['komi-premium-store.js','entrySeen']]){assert.ok(read(file).includes(marker));assert.doesNotThrow(()=>new vm.Script(read(file)));}});

@@ -53,7 +53,7 @@ function eventButton(name,id){
 const countCards=html=>(html.match(/data-shop-item-action=/g)||[]).length;
 test('shop v3 JavaScript parses without frameworks and is initialized from the catalog',()=>{
  assert.doesNotThrow(()=>new vm.Script(js));
- assert.equal(products.length,162);
+ assert.equal(products.filter(p=>!p.animatedShop).length,162);
  assert.match(html,/src="\.\/komi-shop-v3\.js\?v=/);
  assert.match(html,/komi\.production\.css\?v=/);
  assert.match(core,/window\.KomiShopV3\?\.render/);

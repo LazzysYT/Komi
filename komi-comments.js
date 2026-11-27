@@ -139,6 +139,26 @@
         if (status) status.textContent = message;
     }
 
+    function renderAnimatedReactions(card,item,scope,cacheEntry,viewerId){
+        const id=Number(item.id),r=cacheEntry?.animatedReactions;
+        if(!Number.isSafeInteger(id)||id<=0||!item.user_id||!r)return;
+        const catalog=window.KomiShopCatalog,own=r.viewer===viewerId?r.mine.get(id):null,active=r.viewer===viewerId?r.equipped:null;
+        const row=element('div','komi-comment-fx-row');
+        for(const p of (catalog?.items||[]).filter(p=>p.type==='commentfx')){
+            const n=r.counts.get(id)?.get(p.id)||0,selected=own===p.id,canUse=!!viewerId&&(active===p.id||selected);
+            if(!n&&!canUse)continue;
+            const chip=element(canUse?'button':'span','komi-comment-fx-chip komi-fx-'+p.cosmeticClass,p.symbol+' '+n);
+            chip.setAttribute('aria-label',p.label+': '+n);
+            if(canUse){chip.type='button';chip.setAttribute('aria-pressed',String(selected));chip.addEventListener('click',async()=>{
+                if(chip.disabled||currentUser?.authUserId!==viewerId)return;chip.disabled=true;
+                try{const {data:{user},error:authError}=await _supabase.auth.getUser();if(authError||user?.id!==viewerId||currentUser?.authUserId!==viewerId)throw Error('Повторно войди в аккаунт.');
+                    const response=selected?await _supabase.from('komi_comment_animated_reactions').delete().eq('comment_id',id).eq('user_id',viewerId):await _supabase.from('komi_comment_animated_reactions').upsert({comment_id:id,user_id:viewerId,effect_id:p.id},{onConflict:'comment_id,user_id'});
+                    if(response.error)throw response.error;if(currentUser?.authUserId===viewerId)await refreshScope(scope,true);
+                }catch(error){statusMessage(currentSection(scope),error?.message||'Реакция недоступна.');chip.disabled=false;}
+            });}
+            row.append(chip);
+        }if(row.childNodes.length)card.append(row);
+    }
     function redraw(scope) {
         const section = currentSection(scope);
         if (!section) return;
@@ -200,6 +220,7 @@
             const body = element('p', 'komi-comment-body');
             appendSpoilerAware(body, item.body);
             card.append(head, body);
+            renderAnimatedReactions(card,item,scope,cacheEntry,viewerId);
             list.append(card);
         }
     }
@@ -268,7 +289,17 @@
                 } catch { /* Public cosmetics are not required to read text. */ }
             }
             if (!isLatest()) return;
-            cache.set(scope.key, { rows, highlights, decorations, loadedAt: Date.now() });
+            let animatedReactions=null;
+            const viewer=(typeof currentUser!=='undefined'&&currentUser?.authUserId)||'';
+            try{if(ids.length&&await window.KomiShopCatalog?.checkAnimatedPricing?.(_supabase)){
+                const [react,equip]=await Promise.all([
+                    _supabase.from('komi_comment_animated_reactions').select('comment_id,user_id,effect_id').in('comment_id',ids).limit(1000),
+                    viewer?_supabase.from('komi_premium_cosmetic_equips').select('commentfx_id').eq('user_id',viewer).maybeSingle():Promise.resolve({data:null})]);
+                if(!react.error){const counts=new Map(),mine=new Map();for(const r of react.data||[]){const id=Number(r.comment_id);if(!ids.includes(id)||window.KomiShopCatalog.find(r.effect_id)?.type!=='commentfx')continue;if(!counts.has(id))counts.set(id,new Map());const n=counts.get(id);n.set(r.effect_id,(n.get(r.effect_id)||0)+1);if(viewer&&r.user_id===viewer)mine.set(id,r.effect_id);}
+                animatedReactions={viewer,counts,mine,equipped:equip.error?null:equip.data?.commentfx_id};}
+            }}catch{/* Optional decoration never blocks discussion. */}
+            if(!isLatest())return;
+            cache.set(scope.key, { rows, highlights, decorations, animatedReactions, loadedAt: Date.now() });
             if (currentSection(scope) === section) {
                 statusMessage(section, '');
                 section?.removeAttribute('aria-busy');
