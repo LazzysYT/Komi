@@ -110,6 +110,12 @@ test('cinema room stacks title, video and playback strip; extras and iframe reco
   assert.equal(await hud.isVisible(),width>1050);
   assert.equal(await p.locator('#komiWatchSourceSelect').isVisible(),false);
   assert.equal(await native.count(),1);
+  if(width>1050){
+    const title=await heading.evaluate(layout);
+    const actions=await p.locator('.komi-cinema-v7 > .komi-watch-quick-actions').evaluate(layout);
+    const gap=actions.top-title.bottom;
+    assert.ok(gap>=-2&&gap<=48,JSON.stringify({width,title,actions,gap}));
+  }
   const shelf=p.locator('.komi-cinema-v7 > .komi-watch-quick-actions');
   const list=shelf.locator('.komi-status-picker > summary');
   const favorite=shelf.getByRole('button',{name:'В избранное',exact:true});

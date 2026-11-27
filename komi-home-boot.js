@@ -142,13 +142,16 @@
     if (/^\/(?:shop|profile)$/.test(location.pathname)||/^#(?:shop|profile)$/.test(location.hash.toLowerCase())) {
       const link=document.querySelector('link[data-komi-deferred-style="cosmetics"]');
       if (link) link.media='all';
+      const living=document.querySelector('link[data-komi-deferred-style="living"]');
+      if(living) living.media='all';
     }
   };
   const styleObserver=new MutationObserver(()=>{
     ensureShopStyle();
     if(document.querySelector('link[data-komi-deferred-style="shop"]')&&
        document.querySelector('link[data-komi-deferred-style="profile"]')&&
-       document.querySelector('link[data-komi-deferred-style="cosmetics"]'))styleObserver.disconnect();
+       document.querySelector('link[data-komi-deferred-style="cosmetics"]')&&
+       document.querySelector('link[data-komi-deferred-style="living"]'))styleObserver.disconnect();
   });
   styleObserver.observe(document.head,{childList:true});
   window.addEventListener('popstate',ensureShopStyle);

@@ -2,6 +2,9 @@ const {chromium}=require('playwright');
 const assert=require('node:assert/strict');
 const fs=require('node:fs');
 const path=require('node:path');
+// Use the same valid video fixture as the dedicated native player tests.
+const tinyVideo=Buffer.from(fs.readFileSync(path.join(__dirname,'player-ux-browser.cjs'),'utf8')
+  .match(/body:Buffer\.from\('([A-Za-z0-9+/=]+)','base64'\)/)[1],'base64');
 
 async function checkCommentCooldown(page) {
  await page.evaluate(() => {
@@ -152,6 +155,9 @@ async function checkNotifications(page) {
      localStorage.setItem('komi_current_user', JSON.stringify({username:'legacy',authUserId:'forged-id'}));
    });
    await page.route('https://**/*',route=>route.fulfill({status:200,contentType:'application/json',body:'{}'}));
+   await page.route(/^https:\/\/media\.test\/[ab]\.webm$/,route=>route.fulfill({
+     status:200,contentType:'video/webm',headers:{'access-control-allow-origin':'*'},body:tinyVideo
+   }));
    // The daily hero waits for a decoded wide still before changing frames.
    // Keep that browser path real while making remote artwork deterministic.
    await page.route(/\/assets\/hero\/daily\/[1-9]\d{0,11}-[A-Za-z0-9]+\.webp$/,route=>route.fulfill({
@@ -421,12 +427,17 @@ async function checkNotifications(page) {
    assert.equal(new URL(page.url()).searchParams.get('year'),'2026','Clearing text must preserve the year filter');
 
    await page.locator('#catalog .komi-tool-menu').first().locator('summary').click();
+   await page.locator('#catalog [data-komi-quick-sort="rating"]').focus();
+   await page.evaluate(()=>render());
+   assert.equal(await page.locator('#catalog .komi-tool-menu').first().getAttribute('open'),'');
+   assert.equal(await page.locator('#catalog [data-komi-quick-sort="rating"]').evaluate(el=>el===document.activeElement),true);
    await page.locator('#catalog [data-komi-quick-sort="rating"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogSort==='rating');
    assert.equal(await page.evaluate(()=>catalogFilterYear),'2026',
      'Sorting must preserve the previously chosen year');
    assert.equal(await page.locator('#komiCatalogGrid .komi-catalog-card').count(),1);
    assert.equal(new URL(page.url()).searchParams.get('sort'),'rating');
+   assert.equal(await page.locator('#catalog .komi-tool-menu').first().getAttribute('open'),null,'Selecting an option closes its menu');
 
    await page.locator('#catalog [data-komi-category="movies"]').click();
    await page.waitForFunction(()=>currentView==='catalog' && catalogCategory==='movies');
@@ -481,7 +492,7 @@ async function checkNotifications(page) {
     const hostileMetadata = '<img data-komi-injected src=x>';
     const watchFixture={id:'1',title:'Проверка аниме '+hostileMetadata,originalTitle:'Test',poster:'https://media.test/poster.jpg',
       genres:[hostileMetadata],year:'2026',shikiRating:8.2,type:'Сериал',episodeCount:3,
-      episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.mp4'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.mp4'}}],komiDetailsLoaded:true};
+      episodes:[{season:1,number:'1',sources:{Direct:'https://media.test/a.webm'}},{season:1,number:'01',sources:{Embed:'<iframe src="https://media.test/player?a=1&amp;b=2"></iframe>'}},{season:1,number:2,sources:{Direct:'https://media.test/b.webm'}}],komiDetailsLoaded:true};
     // The editorial hero only selects curated IDs. Preserve id 1 for the
     // watch/source/progress checks and exercise the same hostile data in its lead.
     animeList=[watchFixture,{...watchFixture,id:window.KomiHeroDaily.first}];
@@ -603,6 +614,9 @@ async function checkNotifications(page) {
 
 
    await page.waitForSelector('#animeVideoPlayer');
+   // Measure healthy playback before deliberately inducing the recovery state.
+   await page.waitForFunction(()=>document.querySelector('#animeVideoPlayer')?.readyState>=1);
+   assert.equal(await page.locator('#komiPlayerRecovery').isVisible(),false);
    const playback = page.getByRole('group',{name:'Управление видео'});
    assert.equal(await playback.count(),1);
    assert.equal(await page.locator('#animeVideoPlayer').evaluate(video=>video.controls),false);
@@ -616,7 +630,10 @@ async function checkNotifications(page) {
      const modal=document.getElementById('watchModalContent');
      const stage=document.querySelector('#watchModal .komi-watch-stage');
      const player=stage.querySelector('.player-wrapper').getBoundingClientRect();
-     const support=stage.querySelector(':scope > .komi-player-support').getBoundingClientRect();
+     const dock=stage.querySelector(':scope > .komi-player-support');
+      const supportHidden=getComputedStyle(dock).display==='none';
+      const strip=supportHidden?stage.querySelector(':scope > .komi-watch-quick-actions'):dock;
+      const support=strip.getBoundingClientRect();
      const heading=stage.querySelector(':scope > .komi-player-heading').getBoundingClientRect();
      const sidebarNode=stage.querySelector('.komi-watch-sidebar');
      const sidebar=sidebarNode.getBoundingClientRect();
@@ -626,7 +643,8 @@ async function checkNotifications(page) {
      const rect=modal.getBoundingClientRect();
      const radius=parseFloat(getComputedStyle(modal).borderTopLeftRadius);
      return { width:rect.width,height:rect.height,radius,stageDisplay:getComputedStyle(stage).display,
-       supportGap:support.top-(innerWidth>1050?heading.bottom:player.bottom),titleGap:innerWidth>1050?heading.top-player.bottom:player.top-heading.bottom, nextInDock:!!stage.querySelector((innerWidth>1050?".komi-player-heading":".komi-player-support")+" .komi-watch-navbtn.primary"),
+       supportHidden,supportWidth:support.width,supportHeight:support.height,
+        supportGap:support.top-(innerWidth>1050?heading.bottom:player.bottom),titleGap:innerWidth>1050?heading.top-player.bottom:player.top-heading.bottom, nextInDock:!!stage.querySelector((innerWidth>1050?".komi-player-heading":".komi-player-support")+" .komi-watch-navbtn.primary"),
        sidebarHidden,sidebarAfterVideo:sidebar.top>=player.bottom,
        sidebarBesideVideo:sidebar.left>=player.right && Math.abs(sidebar.top-player.top)<3,
        color:active.color,border:active.borderColor,
@@ -637,7 +655,9 @@ async function checkNotifications(page) {
    assert.ok(cinema.height >= 800, 'Cinema modal should use the full viewport height');
    assert.ok(cinema.radius <= 1, 'Cinema modal should have no outside rounded frame');
    assert.equal(cinema.stageDisplay,'grid');
-   assert.ok(cinema.supportGap>=-2 && cinema.supportGap<=48,JSON.stringify(cinema));
+   assert.equal(cinema.supportHidden,width>1050,'Native wide playback uses the quick-action shelf instead of the support dock');
+    assert.ok(cinema.supportWidth>0 && cinema.supportHeight>0,'The active playback action strip must be visible');
+    assert.ok(cinema.supportGap>=-2 && cinema.supportGap<=48,JSON.stringify(cinema));
    assert.equal(cinema.nextInDock,true,'Next must be in the playback strip');
    assert.ok(cinema.titleGap>=-2 && cinema.titleGap<=48,JSON.stringify(cinema));
    // On narrow screens episodes intentionally move into a mobile Bottom Sheet.
@@ -659,7 +679,7 @@ async function checkNotifications(page) {
    assert.equal(await page.locator('.komi-native-hud').count(),1);
    assert.equal(await page.locator('.komi-cinema-bigplay').count(),1);
    assert.equal(await page.locator('.komi-source-tabs button').count(),2,'Only real fixture sources should be offered');
-   assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'MP4 must not promise unavailable quality levels');
+   assert.equal(await page.locator('.komi-quality-control select').isDisabled(),true,'A single-file native stream must not promise unavailable quality levels');
    assert.equal(await page.locator('.komi-episodes-toggle').getAttribute('aria-expanded'),'true');
    await page.screenshot({path:path.join(output,`cinema-room-${width}.png`)});
    if (width <= 767) {

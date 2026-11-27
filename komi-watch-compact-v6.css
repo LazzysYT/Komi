@@ -1689,3 +1689,24 @@
 @media(max-width:450px) {
   #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > .komi-cinema-party {flex:1 0 100%}
 }
+
+/* Native desktop playback has no visible source dock. Keep compact rows above
+   discussion; absorb surplus sidebar height below the controls. */
+@media(min-width:1051px){
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)){
+  grid-template-rows:max-content max-content max-content minmax(min-content,1fr)!important;
+  align-content:start!important;
+ }
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)) > .komi-watch-quick-actions{grid-row:3!important}
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)) > #komiAnimeComments{grid-row:4!important}
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)) > .komi-watch-sidebar{grid-row:1 / span 4!important}
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)):has(> #komiPlayerRecovery:not([hidden])){
+  grid-template-rows:max-content max-content max-content max-content minmax(min-content,1fr)!important;
+ }
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)) > #komiPlayerRecovery:not([hidden]){grid-row:3!important}
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)):has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-quick-actions{grid-row:4!important}
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)):has(> #komiPlayerRecovery:not([hidden])) > #komiAnimeComments{grid-row:5!important}
+ #watchModal #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)):has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:1 / span 5!important}
+ #watchModal.komi-episodes-collapsed #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)) > .komi-watch-sidebar{grid-row:5!important}
+ #watchModal.komi-episodes-collapsed #watchModalContent .komi-watch-stage.komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)):has(> #komiPlayerRecovery:not([hidden])) > .komi-watch-sidebar{grid-row:6!important}
+}

@@ -35,7 +35,7 @@ function fixture(secondValue){
    komiCatalogLoadPending:null,animeList:[],catalogInitialLoadComplete:false,catalogInitialLoadFailed:false,komiCatalogRevision:0,
    komiHomeCatalogReady:false,komiHomePreviewCatalog:null,currentView:'home',
    komiStoreReadyResume(){},
-   window:{KomiHomeSnapshot:{write(){}}},komiAnimeYear:a=>a.year,komiCatalogType:a=>a.type,
+   window:{scheduler:{yield:()=>Promise.resolve()},KomiHomeSnapshot:{write(){}}},komiAnimeYear:a=>a.year,komiCatalogType:a=>a.type,
    currentUser:null,animeComments:{},userProfiles:{},userAnimeStatuses:{},
    userFriends:{},userNotifications:{},localStorage:{getItem(){return null;}},
    render(){renders.push({loaded:context.catalogInitialLoadComplete,count:context.animeList.length,ready:context.komiHomeCatalogReady})},

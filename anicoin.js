@@ -213,7 +213,7 @@ function renderAniCoinShop(container) {
     const store=id && id===aniCoinShopOwner ? aniCoinShopWallet : null;
     const items=window.KomiShopCatalog?.items || [];
     if(window.KomiShopV3?.render){
-        if(!aniCoinAnimatedPricingChecked&&!aniCoinAnimatedPricingRequest&&typeof _supabase!=='undefined'&&_supabase&&window.KomiShopCatalog?.isPreview?.()!==true&&window.KomiShopCatalog?.checkAnimatedPricing){aniCoinAnimatedPricingRequest=window.KomiShopCatalog.checkAnimatedPricing(_supabase).then(ready=>{aniCoinAnimatedPricingChecked=true;if(ready&&currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));}).catch(()=>{}).finally(()=>{aniCoinAnimatedPricingRequest=null;});}
+        if(!aniCoinAnimatedPricingChecked&&!aniCoinAnimatedPricingRequest&&typeof _supabase!=='undefined'&&_supabase&&window.KomiShopCatalog?.isPreview?.()!==true&&window.KomiShopCatalog?.checkAnimatedPricing){aniCoinAnimatedPricingRequest=window.KomiShopCatalog.checkAnimatedPricing(_supabase).then(async ready=>{await window.KomiShopCatalog?.checkFrameAtelierPricing?.(_supabase);aniCoinAnimatedPricingChecked=true;if(ready&&currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));}).catch(()=>{}).finally(()=>{aniCoinAnimatedPricingRequest=null;});}
         window.KomiShopV3.render(container,{
             owner:id||'',wallet,store,
             avatar:id===aniCoinShopOwner?aniCoinShopAvatar:'',
@@ -225,6 +225,7 @@ function renderAniCoinShop(container) {
             loading:aniCoinShopLoading,busy:aniCoinShopBusy,
             failedFor:aniCoinShopFailedFor===id&&id
         });
+        window.KomiProfileExtras?.mountShop(container,{owner:id||'',avatar:id===aniCoinShopOwner?aniCoinShopAvatar:'',name:aniCoinShopDisplayName,login:()=>openAuthModal('login')});
         if(window.KomiShopSocial?.mount)
             window.KomiShopSocial.mount(container,{userId:id,store,wallet,products:items});
         if(id&&!store&&!aniCoinShopLoading&&aniCoinShopFailedFor!==id)

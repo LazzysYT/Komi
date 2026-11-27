@@ -16,6 +16,7 @@
 
         window.KomiPremium?.setClient(_supabase);
         window.KomiPremiumMedia?.setClient(_supabase);
+        window.KomiProfileExtras?.configure({client:_supabase,getViewer:()=>currentUser?.authUserId,onWallet:async(uid)=>{if(currentUser?.authUserId!==uid)return;try{await window.komiShopReloadStore?.();}catch{}}});
         const availableGenresList = ['Экшен', 'Романтика', 'Фэнтези', 'Киберпанк', 'Комедия', 'Хоррор', 'Приключения', 'Драма', 'Мистика', 'Меха', 'Спорт', 'Детектив', 'Повседневность', 'Исекай', 'Исэкай', 'Ужасы', 'Психологическое'];
         let audioCtx = null; // Create only after a user gesture; audio support is optional.
         
@@ -295,6 +296,32 @@ function loadDataFromCloud(attempt = 0) {
     komiCatalogLoadPending = komiLoadCatalogPages(attempt).finally(() => { komiCatalogLoadPending = null; });
     return komiCatalogLoadPending;
 }
+// Keep catalog normalization cooperative on low-powered devices. The public
+// home preview remains interactive while complete catalog data arrives.
+function komiCatalogYield() {
+    if (typeof window.scheduler?.yield === 'function') return window.scheduler.yield();
+    return new Promise(resolve => setTimeout(resolve, 0));
+}
+async function komiNormalizeCatalogRows(rows, catalog) {
+    let batch = 0;
+    for (const row of rows) {
+        if (++batch % 96 === 0) await komiCatalogYield();
+        const anime = row.data;
+        if (!anime || typeof anime !== 'object') continue;
+        catalog.push({
+            ...anime,
+            id: String(row.shikimori_id),
+            shikimoriId: Number(row.shikimori_id),
+            title: anime.title || anime.originalTitle || 'Без названия',
+            poster: anime.poster || '',
+            shikiRating: anime.shikiRating || 0,
+            genres: Array.isArray(anime.genres) ? anime.genres : [],
+            episodeCount: Math.max(0, Number(anime.episodeCount) || 0),
+            komiCardUpdatedAt: row.updated_at,
+            episodes: []
+        });
+    }
+}
 async function komiLoadCatalogPages(attempt = 0) {
     catalogInitialLoadFailed = false;
     // Public-only IndexedDB snapshot may paint the complete catalog immediately
@@ -343,23 +370,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const { data: rows, error } = result;
             if (error) throw error;
             if (!rows || rows.length === 0) break;
-            for (const row of rows) {
-                const anime = row.data;
-                if (!anime || typeof anime !== 'object') continue;
-                catalog.push({
-                    ...anime,
-                    id: String(row.shikimori_id),
-                    shikimoriId: Number(row.shikimori_id),
-                    title: anime.title || anime.originalTitle || 'Без названия',
-                    poster: anime.poster || '',
-                    shikiRating: anime.shikiRating || 0,
-                    genres: Array.isArray(anime.genres) ? anime.genres : [],
-                    episodeCount: Math.max(0, Number(anime.episodeCount) || 0),
-                    komiCardUpdatedAt: row.updated_at,
-                    // Full episode sources are fetched only when opening a title.
-                    episodes: []
-                });
-            }
+            await komiNormalizeCatalogRows(rows, catalog);
             const nextId = Number(rows[rows.length - 1].shikimori_id);
             if (!Number.isSafeInteger(nextId) || nextId <= lastId)
                 throw new Error('Некорректная пагинация каталога');
@@ -378,6 +389,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 }
             }
             // PostgREST may cap rows below our request; continue by last ID until empty.
+            await komiCatalogYield();
         }
         // Keep already loaded title details only if the public card version still matches.
         const existing = new Map(animeList.filter(item => item.komiDetailsLoaded && item.komiCardUpdatedAt && item.komiDetailsLoadedAt === item.komiCardUpdatedAt).map(item => [String(item.id), item]));
@@ -397,8 +409,9 @@ async function komiLoadCatalogPages(attempt = 0) {
         };
         if (typeof window.requestIdleCallback === 'function') window.requestIdleCallback(writeSnapshot,{timeout:8000});
         else setTimeout(writeSnapshot,1500);
-        // Persist only the public, view-projected fields. Account data is never cached.
-        void window.KomiPublicCatalogCache?.write(catalog);
+        // Persist only public, view-projected fields. Account data is never cached.
+        // Start cache projection after yielding the visible final render.
+        void komiCatalogYield().then(() => window.KomiPublicCatalogCache?.write(catalog)).catch(()=>{});
         komiStoreReadyResume();
         console.log(`Komi Anime Hub: загружено ${animeList.length} аниме из anime_catalog`);
     } catch (err) {
@@ -635,9 +648,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const isFriend = friends.includes(name);
                 const isPending = pendingNames.has(name);
                 const canRequest = Boolean(currentUser?.authUserId && komiCommunityVerifiedNames.has(name) && name !== me);
-                return '<div class="komi-friends-person"><button class="komi-friends-identity" data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-friend-avatar="'+escapeFriendHtml(profile.publicAvatarUserId?'':name)+'" data-komi-friend-avatar-id="'+escapeFriendHtml(profile.publicAvatarUserId||'')+'" data-komi-friend-avatar-placeholder><span><strong data-komi-premium-username="'+escapeFriendHtml(name)+'">'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
+                return '<div class="komi-friends-person"><button class="komi-friends-identity"'+(isFriend?' data-kpe-friend':'')+' data-komi-onclick="openCommunityProfile(window.komiFriendNames['+index+'])"><img src="'+avatar+'" alt="" loading="lazy" data-komi-friend-avatar="'+escapeFriendHtml(profile.publicAvatarUserId?'':name)+'" data-komi-friend-avatar-id="'+escapeFriendHtml(profile.publicAvatarUserId||'')+'" data-komi-friend-avatar-placeholder><span><strong data-komi-premium-username="'+escapeFriendHtml(name)+'">'+safeName+'</strong><small>'+(isFriend?'✓ В друзьях':isPending?' Заявка отправлена':(canRequest?'Участник Komi':'Старый профиль · без привязки'))+'</small></span></button>'+(isFriend?'<span class="komi-friends-added">✓</span>':isPending?'<span class="komi-friends-pending">Ожидание</span>' : canRequest ? '<button class="komi-friends-add" data-komi-onclick="requestCommunityFriend(window.komiFriendNames['+index+'])" title="Добавить в друзья">＋</button>' : '<span class="komi-friends-unavailable" title="Для заявок нужен аккаунт Supabase у обоих пользователей">Недоступно</span>')+'</div>';
             }).join('');
             window.komiFriendNames = unique;
+            void window.KomiProfileExtras?.decorateFriends(list);
         }
         document.addEventListener('keydown', e => { if (e.key === 'Escape') closeFriendsDrawer(); });
 
@@ -713,7 +727,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     const safeName = escapeFriendHtml(typeof komiVisibleUsername === 'function' ? komiVisibleUsername(name, profile, false) : (profile.displayName || name));
                     const safeAvatar = escapeFriendHtml(profile.avatar || '/icon.svg');
                     return `
-                        <button type="button" class="sidebar-friend-item"
+                        <button type="button" class="sidebar-friend-item" data-kpe-friend
                             data-komi-onclick="playSound();openProfile(window.komiSidebarFriendNames[${index}])">
                             <img src="${safeAvatar}" class="sidebar-friend-avatar" alt="" loading="lazy"
                                 data-komi-friend-avatar="${escapeFriendHtml(profile.publicAvatarUserId?'':name)}" data-komi-friend-avatar-id="${escapeFriendHtml(profile.publicAvatarUserId||'')}" data-komi-friend-avatar-placeholder>
@@ -725,6 +739,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 friendsHtml += '<span style="color:var(--text-muted);font-size:11px;padding:4px;">Список друзей пуст. Введите ник выше для поиска.</span>';
             }
             friendsContainer.innerHTML = friendsHtml;
+            void window.KomiProfileExtras?.decorateFriends(friendsContainer);
         }
 
         let accountNotifications = { owner: null, rows: [], count: 0 };
@@ -1049,6 +1064,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                     if (event.defaultPrevented || event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
                     event.preventDefault();
                 }
+                const genreMenu = mood.closest('details.komi-moods-all');
+                if (genreMenu) genreMenu.open = false;
                 komiApplyMoodGenre(mood.dataset.komiMoodGenre); return;
             }
             const quickSort = event.target.closest?.('[data-komi-quick-sort]');
@@ -1058,6 +1075,10 @@ async function komiLoadCatalogPages(attempt = 0) {
                 const year = quickYear?.dataset.komiQuickYear;
                 if (sort && !['popular','updated','rating','year','alphabet'].includes(sort)) return;
                 if (year && year !== 'Все' && !/^\d{4}$/.test(year)) return;
+                // Deliberate selection closes its menu; unrelated refreshes
+                // preserve menu state and keyboard focus.
+                const chosenMenu = (quickSort || quickYear).closest('details');
+                if (chosenMenu) chosenMenu.open = false;
                 if (sort) catalogSort = sort;
                 if (year) catalogFilterYear = year;
                 if (currentView === 'catalog') komiCatalogStateChanged();
@@ -2017,6 +2038,15 @@ async function komiLoadCatalogPages(attempt = 0) {
                 ])).slice(0,11);
                 if (catalogFilterGenre !== 'Все' && !quickGenreNames.includes(catalogFilterGenre))
                     quickGenreNames.push(catalogFilterGenre);
+                const menuSelector = '#catalog details.komi-tool-menu, #catalog details.komi-moods-all';
+                const menuKey = node => node.matches('.komi-moods-all') ? 'genre' :
+                    node.querySelector('[data-komi-quick-sort]') ? 'sort' : 'year';
+                const oldMenus = [...container.querySelectorAll(menuSelector)];
+                const openMenus = new Set(oldMenus.filter(node=>node.open).map(menuKey));
+                const oldMenuFocus = document.activeElement?.closest(menuSelector);
+                const focusedMenu = oldMenuFocus ? menuKey(oldMenuFocus) : null;
+                const focusedOption = focusedMenu && document.activeElement?.matches('button') ?
+                    ['komiQuickSort','komiQuickYear','komiMoodGenre'].map(key=>[key,document.activeElement.dataset[key]]).find(([,value])=>value!==undefined) : null;
                 const searchPreviouslyFocused = document.activeElement?.id === 'komiCatalogSearchInput';
                 const previousSearchCaret = searchPreviouslyFocused
                     ? document.activeElement.selectionStart : null;
@@ -2071,6 +2101,17 @@ async function komiLoadCatalogPages(attempt = 0) {
                       ${filtered.length > catalogVisibleCount ? `<button class="btn-glow" data-komi-onclick="showMoreCatalog()">Показать ещё · ${Math.min(catalogVisibleCount, filtered.length)} из ${filtered.length}</button>` : ''}
                     </div>
                 `;
+                // Live catalog hydration may render while a visitor is
+                // choosing an option. Restore the exact menu and its focus.
+                for (const menu of container.querySelectorAll(menuSelector)) {
+                    const key = menuKey(menu);
+                    menu.open = openMenus.has(key);
+                    if (focusedMenu === key && !komiCatalogFocusPending) {
+                        const target = menu.open && focusedOption ?
+                            [...menu.querySelectorAll('button')].find(button=>button.dataset[focusedOption[0]]===focusedOption[1]) : null;
+                        (target || menu.querySelector('summary'))?.focus({preventScroll:true});
+                    }
+                }
                 const catalogField = document.getElementById('komiCatalogSearchInput');
                 const clearCatalogSearch = () => {
                     if (!catalogField) return;
@@ -2954,6 +2995,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                                     </div>
                                     <button class="btn-glow" style="padding: 7px 14px; align-self:flex-end;" data-komi-onclick="playSound(); updateUserProfile(this)">Сохранить</button>
                                 </div>
+                                <section class="kpe-editor" data-kpe-editor aria-label="Мини-карточка и курсор"></section>
                                 <div class="profile-settings-session-actions">
                                     <button type="button" class="btn-secondary profile-settings-logout" data-komi-onclick="logoutUser('local')">Выйти из аккаунта</button>
                                     <button type="button" class="btn-secondary" data-komi-onclick="logoutUser('global')">Выйти на всех устройствах</button>
@@ -2966,6 +3008,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     <div id="komiProfilePanel" class="komi-profile-panel">
                     ${profilePageSection==='overview' && isMe && currentUser?.authUserId ? '<section class="kcs-wallpaper" data-kcs-wallpaper-panel hidden aria-label="Фон за полный альбом"></section>' : ''}
                     ${profilePageSection==='overview' && currentUser?.authUserId ? '<section class="kcs-showcase" data-kcs-profile hidden aria-label="Витрина персонажей"></section>' : ''}
+                    ${!isPreview && currentUser?.authUserId && ['overview','achievements'].includes(profilePageSection) ? '<section class="kpe-panel" data-kpe-medals'+(isMe?'':' hidden')+' aria-label="Коллекционные медали"></section>' : ''}
                     ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,preview:isPreview,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity,activityOwner:canSeeProfileActivity?currentUser.authUserId:'',resumeReady:!currentUser?.authUserId||komiResumeReadyUid===currentUser.authUserId,resumeFailed:Boolean(isMe&&currentUser?.authUserId&&komiResumeLoadError?.owner===currentUser.authUserId&&komiResumeLoadError.username===username)}) : ''}
                     ${canSeeProfileActivity && profilePageSection === 'activity' ? `
                     <section class="profile-activity-card" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
@@ -3131,6 +3174,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                     </div>
                 </section>
             `;
+            if(currentUser?.authUserId)void window.KomiProfileExtras?.mountProfile(container.querySelector('#profile'),{viewer:currentUser.authUserId,username,isMe,preview:isPreview,full:profilePageSection==='achievements',avatar:komiSafeUrl(p.avatar),name:p.displayName||username});
             if(currentUser?.authUserId && window.KomiCollectorShowcase && typeof _supabase!=='undefined' && _supabase){
                 const cover=container.querySelector('[data-profile-cover]');
                 const opts={client:_supabase,viewer:currentUser.authUserId,getViewer:()=>currentUser?.authUserId,username,isMe};

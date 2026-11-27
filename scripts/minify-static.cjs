@@ -8,7 +8,7 @@ const path=require('node:path');
 const cp=require('node:child_process');
 const vm=require('node:vm');
 const root=path.join(__dirname,'..');
-const names=['komi.production.css','app-main.js','komi-home-boot.js','komi-ads-loader.js','komi-watch-compact-v6.css','komi-hero-senku.css','komi-icon-rail.css','komi-pill-system.css','home-discovery.js','home-release-shelves.js','komi-home-seed.js'];
+const names=['komi.production.css','app-main.js','komi-home-boot.js','komi-ads-loader.js','komi-watch-compact-v6.css','komi-hero-senku.css','komi-icon-rail.css','komi-pill-system.css','home-discovery.js','home-release-shelves.js','komi-home-seed.js','komi-living-profile.css','komi-shop-catalog.js','komi-shop-v3.js','komi-profile-extras-loader.js','komi-profile-extras.js','komi-profile-extras-catalog.js'];
 const pending=[];
 try {
   const startup=require('./build-startup.cjs').prepareStartup(root);
@@ -24,7 +24,8 @@ try {
     pending.push({input,output});
     const minified=fs.readFileSync(output);
     if(name.endsWith('.js'))new vm.Script(minified.toString('utf8'),{filename:name});
-    if(!minified.length || minified.length>=original.length)throw Error('Minification produced no savings: '+name);
+    if(!minified.length)throw Error('Empty minification output: '+name);
+    if(!generated&&minified.length>=original.length){fs.writeFileSync(output,original);console.log(name+': already compact; retained source');continue;}
     console.log(name+': '+original.length+' -> '+minified.length+' bytes');
   }
   const index=path.join(root,'index.html'),builtIndex=index+'.komi-min.tmp';

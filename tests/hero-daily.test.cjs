@@ -213,6 +213,10 @@ test('non-home and direct watch routes skip daily preview and profile CSS activa
  const cosmetics=new BootNode('link',{'data-komi-deferred-style':'cosmetics'});cosmetics.media='print';
  f.head.append(cosmetics);styles.callback();
  assert.equal(cosmetics.media,'all');
+ assert.ok(!styles.disconnected,'The new living-profile stylesheet must also be discovered');
+ const living=new BootNode('link',{'data-komi-deferred-style':'living'});living.media='print';
+ f.head.append(living);styles.callback();
+ assert.equal(living.media,'all');
  assert.equal(styles.disconnected,true);
 });
 test('fonts loaded before the daily preview wait until its second animation frame',async()=>{
