@@ -52,21 +52,21 @@ test('booster keeps small transparent assets and a matching vector fallback',()=
 });
 
 test('new series rosters and presentation match the migration contract',()=>{
- const sql=read('supabase/migrations/20261127080152_komi_collection_series.sql')+read('supabase/migrations/20261127110000_komi_collection_series_expansion.sql')+read('supabase/migrations/20261127143000_komi_collection_second_wave.sql');
- assert.deepEqual(Object.keys(c.seriesList),['ghoul','jujutsu','frieren','alchemist','demon','aot','naruto','bleach']);
+ const sql=read('supabase/migrations/20261127080152_komi_collection_series.sql')+read('supabase/migrations/20261127110000_komi_collection_series_expansion.sql')+read('supabase/migrations/20261127143000_komi_collection_second_wave.sql')+read('supabase/migrations/20261127144500_komi_collection_third_wave.sql');
+ assert.deepEqual(Object.keys(c.seriesList),['ghoul','jujutsu','frieren','alchemist','demon','aot','naruto','bleach','onepiece','chainsaw','hunter']);
  assert.equal(c.seriesList.ghoul.roster.length,24);
  const effects=new Set(Object.values(c.ghoulFx).map(x=>x[0]));
  assert.equal(effects.size,24);
  for(const [id,series] of Object.entries(c.seriesList)){
   if(id==='ghoul')continue;
-  assert.equal(series.roster.length,['naruto','bleach'].includes(id)?20:24);
+  assert.equal(series.roster.length,['naruto','bleach','onepiece','chainsaw','hunter'].includes(id)?20:24);
   for(const row of series.roster){
    assert.ok(sql.includes("('"+id+"','"+row.id+"')"),row.id);
    assert.ok(row.group&&row.intro&&row.fx&&row.reveal&&/^#[\da-f]{6}$/.test(row.tint));
    effects.add(row.reveal);
   }
  }
- assert.equal(effects.size>165,true);
+ assert.equal(effects.size>220,true);
 });
 
 test('every collectible has a local cel illustration and a separate lock silhouette',()=>{

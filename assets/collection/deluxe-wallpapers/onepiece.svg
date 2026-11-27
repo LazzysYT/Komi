@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#133144"/><stop offset="1" stop-color="#52665b"/></linearGradient><radialGradient id="lit"><stop stop-color="#ead59f" stop-opacity=".50"/><stop offset="1" stop-color="#ead59f" stop-opacity="0"/></radialGradient><pattern id="grain" width="17" height="19" patternUnits="userSpaceOnUse"><path d="M0 3h7m-2 13h8" stroke="#ead59f" stroke-opacity=".09"/></pattern></defs>
+<rect width="1200" height="450" fill="url(#sky)"/><circle cx="887" cy="140" r="270" fill="url(#lit)"/>
+<path d="M0 283Q149 220 282 282t248-14 212 21 458-37V450H0Z" fill="#0b2331"/><path d="M0 320q111-53 237-21t243-2 227-4 212 10 281-28M0 365q181-67 361-14t324-19 280 6 235-22M0 410q195-66 408-27t302-24 490-3" fill="none" stroke="#ead59f" stroke-opacity=".27" stroke-width="3"/>
+<path d="M775 149 765 289h158L839 260l9-96h-11l-3 88-49-8 8-95Zm24 11q126-12 124 76-57-18-124-5zM782 162q-69 8-86 83 47-17 80-7z" fill="none" stroke="#ead59f" stroke-opacity=".63" stroke-width="3" stroke-linejoin="round"/>
+<path d="M88 137h140m-70-70v140m-45-114 90 90m0-90-90 90M134 160l18-34 28-18-18 35Z" fill="none" stroke="#ead59f" stroke-opacity=".49" stroke-width="2" stroke-dasharray="4 5"/>
+<rect width="1200" height="450" fill="url(#grain)"/>
+</svg>

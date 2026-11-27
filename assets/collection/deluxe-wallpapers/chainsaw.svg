@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="450" viewBox="0 0 1200 450">
+<defs><linearGradient id="sky" x2="0" y2="1"><stop stop-color="#172925"/><stop offset="1" stop-color="#513b31"/></linearGradient><radialGradient id="lit"><stop stop-color="#e99174" stop-opacity=".50"/><stop offset="1" stop-color="#e99174" stop-opacity="0"/></radialGradient><pattern id="grain" width="17" height="19" patternUnits="userSpaceOnUse"><path d="M0 3h7m-2 13h8" stroke="#e99174" stroke-opacity=".09"/></pattern></defs>
+<rect width="1200" height="450" fill="url(#sky)"/><circle cx="887" cy="140" r="270" fill="url(#lit)"/>
+<path d="M0 314V246h80v-43h67v82h75V124h56v193h79v-69h42v-57h67v68h126V155h90v151h74v-53h123v-64h102v101h92v-90h122v250H0Z" fill="#141a21"/><path d="M43 377h1120M73 414h1077M310 304 142 450M770 305l173 145M19 149h112m647-6h275M490 79h126" fill="none" stroke="#e99174" stroke-opacity=".27" stroke-width="3"/>
+<path d="M705 125h343a19 19 0 0 1 19 19v151a19 19 0 0 1-19 19H705a19 19 0 0 1-19-19V144a19 19 0 0 1 19-19zm43 34h259v75H748zM785 192h183m-223 89h264" fill="none" stroke="#e99174" stroke-opacity=".63" stroke-width="3" stroke-linejoin="round"/>
+<path d="M165 80h104v13H178v72h-13Zm39 12 23 18-23 18ZM162 345h122m492-41h253" fill="none" stroke="#e99174" stroke-opacity=".49" stroke-width="2" stroke-dasharray="4 5"/>
+<rect width="1200" height="450" fill="url(#grain)"/>
+</svg>

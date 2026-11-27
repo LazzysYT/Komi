@@ -3,9 +3,9 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 let chromium;try{({chromium}=require('playwright'));}catch{}
 const source=path.resolve(__dirname,'..'),origin='http://localhost:8767';
 const fixture='<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/komi-collection.css"><body style="background:#09090b"><main id="mainContainer"></main><script src="/komi-collection-art.js"></script><script src="/komi-collection.js"></script></body></html>';
-const wanted={ghoul:['kaneki',24,'Бустер «Токийский гуль»'],jujutsu:['itadori',24,'Бустер «Печати проклятий»'],frieren:['frieren',24,'Бустер «Дневник пути»'],alchemist:['edward',24,'Бустер «Архив Аместриса»'],demon:['tanjiro',24,'Бустер «Дыхание воды»'],aot:['eren',24,'Бустер «За стеной»'],naruto:['naruto',20,'Бустер «Путь шиноби»'],bleach:['ichigo',20,'Бустер «Лунный разрез»']};
+const wanted={ghoul:['kaneki',24,'Бустер «Токийский гуль»'],jujutsu:['itadori',24,'Бустер «Печати проклятий»'],frieren:['frieren',24,'Бустер «Дневник пути»'],alchemist:['edward',24,'Бустер «Архив Аместриса»'],demon:['tanjiro',24,'Бустер «Дыхание воды»'],aot:['eren',24,'Бустер «За стеной»'],naruto:['naruto',20,'Бустер «Путь шиноби»'],bleach:['ichigo',20,'Бустер «Лунный разрез»'],onepiece:['luffy',20,'Бустер «Капитанский журнал»'],chainsaw:['denji',20,'Бустер «Кассета Бюро»'],hunter:['gon',20,'Бустер «Лицензия охотника»']};
 
-test('eight worlds: separate album, full-body view, one-time reveal and safe purchase', {skip:!chromium,timeout:55000},async()=>{
+test('eleven worlds: separate album, full-body view, one-time reveal and safe purchase', {skip:!chromium,timeout:75000},async()=>{
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{for(const width of [1440,390,320]){
   const p=await b.newPage({viewport:{width,height:850},reducedMotion:width===320?'reduce':'no-preference'}),errors=[];
@@ -14,7 +14,7 @@ test('eight worlds: separate album, full-body view, one-time reveal and safe pur
    const u=new URL(r.request().url()),f=u.pathname.slice(1);
    if(u.origin!==origin)return r.abort();
    if(f==='collection')return r.fulfill({contentType:'text/html',body:fixture});
-   if(!/^(?:komi-collection(?:-art)?\.(?:js|css)|assets\/collection\/(?:ghoul-cel|ghoul-booster|deluxe-packs|deluxe-wallpapers|jujutsu|frieren|alchemist|demon|aot|naruto|bleach)\/(?:locked\/)?[a-z0-9-]+\.(?:webp|svg))$/.test(f))return r.abort();
+   if(!/^(?:komi-collection(?:-art)?\.(?:js|css)|assets\/collection\/(?:ghoul-cel|ghoul-booster|deluxe-packs|deluxe-wallpapers|jujutsu|frieren|alchemist|demon|aot|naruto|bleach|onepiece|chainsaw|hunter)\/(?:locked\/)?[a-z0-9-]+\.(?:webp|svg))$/.test(f))return r.abort();
    const dest=path.join(source,f);
    if(!fs.existsSync(dest))return r.abort();
    return r.fulfill({path:dest,contentType:f.endsWith('.webp')?'image/webp':f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript'});
@@ -26,7 +26,7 @@ test('eight worlds: separate album, full-body view, one-time reveal and safe pur
     auth:{getSession:async()=>({data:{session:{user:{id:window.currentUser?.authUserId}}}})},
     rpc:async(name,args)=>{
      window.calls.push({name,args,owner:window.currentUser?.authUserId});
-     const series=args.p_series_id||'ghoul',first={ghoul:'kaneki',jujutsu:'itadori',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren',naruto:'naruto',bleach:'ichigo'}[series];
+     const series=args.p_series_id||'ghoul',first={ghoul:'kaneki',jujutsu:'itadori',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren',naruto:'naruto',bleach:'ichigo',onepiece:'luffy',chainsaw:'denji',hunter:'gon'}[series];
      if(series===window.holdSeries&&name.endsWith('_read')) await new Promise(resolve=>{window.finishHeld=resolve;});
      if(name==='komi_collection_series_buy_v3')return {data:{owned:[first,'fern'],result:'fern',balance:0,price:50,purchase_status:'ok'}};
      return {data:{owned:window.currentUser?.authUserId==='qa-a'?[first]:[],balance:50,price:50,result:null}};
@@ -39,12 +39,12 @@ test('eight worlds: separate album, full-body view, one-time reveal and safe pur
    await p.waitForFunction(id=>document.querySelector('.kc-grid [data-kc-card="'+id+'"].kc-owned'),id);
    assert.equal(await p.locator('.kc-case').count(),0);
    const windows=p.locator('.kc-world-shelves .kc-world-window');
-   assert.equal(await windows.count(),8);
-   assert.equal(await windows.locator('.kc-shelf-hero[aria-hidden="true"]').count(),8);
+   assert.equal(await windows.count(),11);
+   assert.equal(await windows.locator('.kc-shelf-hero[aria-hidden="true"]').count(),11);
    await p.waitForFunction(()=>[...document.querySelectorAll('.kc-shelf-hero')].every(img=>img.naturalWidth>0));
    assert.equal(await p.locator('.kc-world-window[aria-pressed=true]').getAttribute('data-kc-action'),'series-'+series);
    const motifs=await windows.locator('.kc-window-motif').evaluateAll(els=>els.map(el=>getComputedStyle(el).backgroundImage));
-   assert.equal(new Set(motifs).size,8,'each world retains its own art effect when another is selected');
+   assert.equal(new Set(motifs).size,11,'each world retains its own art effect when another is selected');
    assert.ok(await windows.evaluateAll(els=>els.every(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('.kc-window-copy').getBoundingClientRect();return b.left>=a.left&&b.right<=a.right+1&&b.bottom<=a.bottom+1;})),'world labels fit within windows');
    assert.ok(await windows.first().evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius)>=18));
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
@@ -65,7 +65,7 @@ test('eight worlds: separate album, full-body view, one-time reveal and safe pur
    await p.getByRole('button',{name:'Паки',exact:true}).click();
    assert.equal(await p.locator('.kc-case h2').textContent(),title);
    assert.equal(await p.locator('.kc-album,.kc-grid').count(),0);
-   assert.equal(await p.locator('.kc-world-shelves .kc-pack-thumb').count(),8);
+   assert.equal(await p.locator('.kc-world-shelves .kc-pack-thumb').count(),11);
    await p.waitForFunction(()=>document.querySelector('.kc-feature-hero')?.naturalWidth>0);
    assert.ok(await p.locator('.kc-case').evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius)>=20));
    if(series==='ghoul'&&(width===1440||width===390)){

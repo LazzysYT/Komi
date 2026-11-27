@@ -1009,3 +1009,22 @@
 @keyframes kc-pick-blade{0%{opacity:0;transform:scale(.82) skewY(7deg)}43%{opacity:.72}to{opacity:.35;transform:none}}
 .kc-world-window.kc-theme-naruto > .kc-window-motif,.kc-page.kc-theme-naruto .kc-feature-motif{background:radial-gradient(ellipse at 75% 63%,#e7884c5c 0 13%,transparent 46%),repeating-linear-gradient(160deg,transparent 0 15px,#f4bc763d 16px 17px,transparent 18px 33px)}
 .kc-world-window.kc-theme-bleach > .kc-window-motif,.kc-page.kc-theme-bleach .kc-feature-motif{background:linear-gradient(138deg,transparent 50%,#d7edff54 51% 52%,transparent 54%),radial-gradient(ellipse at 78% 30%,#bcd8f454,transparent 50%)}
+
+/* Third wave: chart paper, analog tape and field maps. */
+.kc-theme-onepiece{--kc-world:#e9c685;--kc-world-dark:#2f5863;--kc-world-ink:#142530;--kc-folio:url("/assets/collection/deluxe-wallpapers/onepiece.svg")}
+.kc-theme-chainsaw{--kc-world:#f0a288;--kc-world-dark:#453a35;--kc-world-ink:#191f1e;--kc-folio:url("/assets/collection/deluxe-wallpapers/chainsaw.svg")}
+.kc-theme-hunter{--kc-world:#bfdca1;--kc-world-dark:#425a47;--kc-world-ink:#192920;--kc-folio:url("/assets/collection/deluxe-wallpapers/hunter.svg")}
+.kc-world-window.kc-theme-onepiece > .kc-window-motif,.kc-page.kc-theme-onepiece .kc-feature-motif{background:repeating-radial-gradient(ellipse at 99% 90%,transparent 0 11px,#d6e5c149 12px 13px,transparent 14px 25px)}
+.kc-world-window.kc-theme-chainsaw > .kc-window-motif,.kc-page.kc-theme-chainsaw .kc-feature-motif{background:linear-gradient(155deg,#dd694a46,transparent 52%,#78a99542),repeating-linear-gradient(0deg,transparent 0 5px,#d1ffc926 6px 7px)}
+.kc-world-window.kc-theme-hunter > .kc-window-motif,.kc-page.kc-theme-hunter .kc-feature-motif{background:repeating-radial-gradient(ellipse at 85% 48%,transparent 0 23px,#bae38038 24px 25px,transparent 26px 37px),linear-gradient(145deg,transparent,#566f4a75)}
+.kc-pick-arena[data-kc-pick-world=onepiece] .kc-pick-strokes{fill:#f1d097}
+.kc-pick-arena[data-kc-pick-world=chainsaw] .kc-pick-strokes{fill:#ecc4a6}
+.kc-pick-arena[data-kc-pick-world=hunter] .kc-pick-strokes{fill:#dded96}
+@media(prefers-reduced-motion:no-preference) {
+ .kc-pick-arena.is-revealing[data-kc-pick-world=onepiece] .kc-pick-strokes{animation-name:kc-pick-swell}
+ .kc-pick-arena.is-revealing[data-kc-pick-world=chainsaw] .kc-pick-strokes{animation-name:kc-pick-tape}
+ .kc-pick-arena.is-revealing[data-kc-pick-world=hunter] .kc-pick-strokes{animation-name:kc-pick-inkmap}
+}
+@keyframes kc-pick-swell{0%{opacity:0;transform:translateY(22%) rotate(-5deg)}58%{opacity:.65}to{opacity:.33;transform:translateY(-1%) rotate(1deg)}}
+@keyframes kc-pick-tape{0%{opacity:0;transform:translateX(-13%) scaleY(.96)}40%{opacity:.62;transform:translateX(1%)}to{opacity:.36;transform:none}}
+@keyframes kc-pick-inkmap{0%{opacity:0;transform:scale(.86)}58%{opacity:.66}to{opacity:.3;transform:scale(1.04)}}

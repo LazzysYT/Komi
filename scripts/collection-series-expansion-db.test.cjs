@@ -217,3 +217,29 @@ localTest('wave two preserves owned cards and old completion, isolates cached v2
  await as(db,'anon');
  await assert.rejects(rpc(db,'series_buy_v3','bleach',id(1)),{code:'42501'});
 });
+
+localTest('third wave adds three equal pools without changing any existing serial pool or balance', async t=>{
+ const db=await fixture();t.after(()=>db.close());
+ const apply=async n=>db.exec(fs.readFileSync(path.join(here,'supabase/migrations/'+n),'utf8'));
+ await apply('20261127143000_komi_collection_second_wave.sql');
+ const before=(await db.query("select series_id,array_agg(character_id order by character_id) ids from komi_collection_private.series_roster group by 1 order by 1")).rows;
+ await apply('20261127144500_komi_collection_third_wave.sql');
+ const after=(await db.query("select series_id,array_agg(character_id order by character_id) ids from komi_collection_private.series_roster group by 1 order by 1")).rows;
+ assert.equal(after.length,10);
+ assert.deepEqual(after.filter(r=>before.some(b=>b.series_id===r.series_id)),before);
+ const keys=['onepiece','chainsaw','hunter'];
+ for(const key of keys)assert.equal(after.find(r=>r.series_id===key).ids.length,20);
+ await as(db,'authenticated',alice);
+ assert.equal((await read(db,'naruto')).balance,2500);
+ for(const [i,key] of keys.entries()){
+   const tx=id(940+i);
+   const award=await rpc(db,'series_buy_v3',key,tx);
+   assert.equal(award.balance,2500-50*(i+1));
+   assert.equal(award.owned.length,1);
+   assert.equal(award.owned[0],award.result);
+   assert.deepEqual(await rpc(db,'series_buy_v3',key,tx),award);
+   assert.equal((await rpc(db,'journal_read',key)).length,1);
+ }
+ await as(db,'anon');
+ await assert.rejects(rpc(db,'series_buy_v3','hunter',id(950)),{code:'42501'});
+});

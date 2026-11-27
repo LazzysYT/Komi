@@ -336,3 +336,6 @@ Under-player controls use the picture HUD's round hit targets and graphitic pill
 
 ### Collection: second wave
 Наруто is a dusk-colored paper scroll; Блич is porcelain, cold ink and a diagonal blade of light. Both earn their own stage and wallpaper. Keep eight worlds on one shelf, four across on wide screens and two on a phone. Each of the six earlier albums gets a new optional group of four heroes at the end of its original serial order. Earlier cards, receipts, completed pages, earned profile backgrounds and the 50 AniCoin price stay intact. Pre-expansion clients draw only from the roster they know; new packs use the next purchase API. Rarity changes presentation, not the fairness of the missing-card pool.
+
+### Collection: third wave
+The Captain's Log is chart paper with a brass compass and a tide of ink; Bureau Tape is a red-green VHS sleeve with one modest tracking pass and no flashes; Hunter License is a moss-colored expedition folio, a contour map and field stamps. Each contributes a 20-card album with separate lock silhouettes, one look for its pack tear/pick moment, personal scene accents in the viewer, and a wallpaper for completing the album. No new currency, purchase type or positional odds.

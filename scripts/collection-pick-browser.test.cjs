@@ -3,8 +3,8 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 let chromium;try{({chromium}=require('playwright'));}catch{}
 const source=path.resolve(__dirname,'..'),origin='http://localhost:8767';
 const fixture='<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/komi-collection.css"><body style="background:#09090b"><main id="mainContainer"></main><script src="/komi-collection.js"></script></body></html>';
-const motion={ghoul:'kc-pick-splash',jujutsu:'kc-pick-skew',frieren:'kc-pick-orbit',alchemist:'kc-pick-register',demon:'kc-pick-crest',aot:'kc-pick-gust',naruto:'kc-pick-leaves',bleach:'kc-pick-blade'};
-test('themed identical backs reveal one server-issued card without another purchase', {skip:!chromium,timeout:120000},async()=>{
+const motion={ghoul:'kc-pick-splash',jujutsu:'kc-pick-skew',frieren:'kc-pick-orbit',alchemist:'kc-pick-register',demon:'kc-pick-crest',aot:'kc-pick-gust',naruto:'kc-pick-leaves',bleach:'kc-pick-blade',onepiece:'kc-pick-swell',chainsaw:'kc-pick-tape',hunter:'kc-pick-inkmap'};
+test('themed identical backs reveal one server-issued card without another purchase', {skip:!chromium,timeout:175000},async()=>{
  const browser=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{for(const [width,reduced] of [[1440,false],[320,false],[320,true]]){
   const p=await browser.newPage({viewport:{width,height:820},reducedMotion:reduced?'reduce':'no-preference'}),errors=[];
@@ -43,7 +43,7 @@ test('themed identical backs reveal one server-issued card without another purch
   const keys=await p.evaluate(()=>Object.keys(window.KomiCollection.seriesList));
   assert.deepEqual(keys,Object.keys(motion));
   for(let i=0;i<keys.length;i++){
-   const key=keys[i];assert.equal(await p.evaluate(k=>KomiCollection.seriesList[k].roster.length,key),['naruto','bleach'].includes(key)?20:24);
+   const key=keys[i];assert.equal(await p.evaluate(k=>KomiCollection.seriesList[k].roster.length,key),['naruto','bleach','onepiece','chainsaw','hunter'].includes(key)?20:24);
    const name=await p.evaluate(k=>window.KomiCollection.seriesList[k].roster[1].name,key);
    await p.locator('[data-kc-action="series-'+key+'"]').click();
    await p.locator('.kc-page.kc-theme-'+key).waitFor();

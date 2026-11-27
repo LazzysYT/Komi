@@ -4,7 +4,7 @@ const test=require('node:test'),assert=require('node:assert/strict'),fs=require(
 let chromium;
 try{({chromium}=require('playwright'));}catch{}
 const root=path.resolve(__dirname,'..'),origin='http://localhost:8767';
-const assets=['assets/collection/jujutsu/gojo.webp','assets/collection/frieren/frieren.webp','assets/collection/alchemist/edward.webp','assets/collection/demon/tanjiro.webp','assets/collection/aot/eren.webp','assets/collection/naruto/naruto.webp','assets/collection/bleach/ichigo.webp',...['ghoul','jujutsu','frieren','alchemist','demon','aot','naruto','bleach'].map(id=>'assets/collection/deluxe-packs/'+id+'.webp'),'komi-collection-art.js','komi-collection.js','komi-collection.css','assets/collection/ghoul-booster/pack-320.webp','assets/collection/ghoul-booster/pack-640.webp','assets/collection/ghoul-booster/pack-fallback.svg','komi.production.css'];
+const assets=['assets/collection/jujutsu/gojo.webp','assets/collection/frieren/frieren.webp','assets/collection/alchemist/edward.webp','assets/collection/demon/tanjiro.webp','assets/collection/aot/eren.webp','assets/collection/naruto/naruto.webp','assets/collection/bleach/ichigo.webp','assets/collection/onepiece/luffy.webp','assets/collection/chainsaw/denji.webp','assets/collection/hunter/gon.webp',...['ghoul','jujutsu','frieren','alchemist','demon','aot','naruto','bleach','onepiece','chainsaw','hunter'].map(id=>'assets/collection/deluxe-packs/'+id+'.webp'),'komi-collection-art.js','komi-collection.js','komi-collection.css','assets/collection/ghoul-booster/pack-320.webp','assets/collection/ghoul-booster/pack-640.webp','assets/collection/ghoul-booster/pack-fallback.svg','komi.production.css'];
 const fixture='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/komi.production.css"><link rel="stylesheet" href="/komi-collection.css"></head><body style="background:#09090b;color:white"><main id="mainContainer"></main><script src="/komi-collection-art.js"></script><script src="/komi-collection.js"></script></body></html>';
 test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},async()=>{
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
@@ -39,8 +39,8 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  assert.ok(await p.locator('.kc-case-image').evaluate(el=>el.naturalHeight>el.naturalWidth),'pack has tall art');
  assert.ok(await p.evaluate(()=>{const a=document.querySelector('.kc-case-visual').getBoundingClientRect(),b=document.querySelector('.kc-case-copy').getBoundingClientRect();return a.right<=b.left+1||a.bottom<=b.top+1;}),'case art overlaps text at '+width);
  assert.equal(await p.locator('.kc-album,.kc-grid,.kc-album-tools').count(),0);
- assert.equal(await p.locator('.kc-pack-shelves button').count(),8);
- await p.waitForFunction(()=>[...document.querySelectorAll('.kc-pack-thumb')].length===8&&[...document.querySelectorAll('.kc-pack-thumb')].every(img=>img.naturalWidth>0));
+ assert.equal(await p.locator('.kc-pack-shelves button').count(),11);
+ await p.waitForFunction(()=>[...document.querySelectorAll('.kc-pack-thumb')].length===11&&[...document.querySelectorAll('.kc-pack-thumb')].every(img=>img.naturalWidth>0));
  assert.equal(await p.locator('.kc-case h2').textContent(),'Бустер «Токийский гуль»');await p.locator('.kc-case').getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).click();assert.equal(await p.evaluate(()=>window.loginCalled),true);
  await p.evaluate(()=>{window.currentUser={authUserId:'qa-user-a'};window.openCalls=0;window.buyCalls=0;window._supabase={auth:{getSession:async()=>({data:{session:{user:{id:window.currentUser.authUserId}}}})},rpc:async(name,args)=>{if(name==='komi_collection_ghoul_buy_v3'){window.buyCalls++;return {data:{owned:['kaneki','touka'],can_open:false,result:'touka',next_at:'2099-01-01T00:00:00Z',balance:0,price:50,purchase_status:'ok'}}}if(args.p_action!=='read'){window.openCalls++;throw Error('Only read or paid buy allowed');}return {data:{owned:['kaneki'],can_open:false,balance:50,price:50}};}};window.KomiCollection.authChanged('qa-user-a');window.KomiCollection.render(document.querySelector('#mainContainer'));});
  await p.waitForFunction(()=>document.querySelector('.kc-wallet')?.textContent==='Баланс: 50 AniCoin');
@@ -178,8 +178,8 @@ test('booster still shows a tall foil pack when its WebP fails', {skip:!chromium
   await p.getByRole('button',{name:'Паки',exact:true}).click();
   await p.waitForFunction(()=>{const i=document.querySelector('.kc-case-image');return i?.currentSrc.endsWith('/pack-fallback.svg')&&i.naturalHeight>i.naturalWidth&&!i.hidden;});
   assert.equal(await p.locator('.kc-case h2').textContent(),'Бустер «Токийский гуль»');
-  assert.equal(await p.locator('.kc-pack-thumb[hidden]').count(),8);
-  assert.equal(await p.locator('.kc-world-window').count(),8);
+  assert.equal(await p.locator('.kc-pack-thumb[hidden]').count(),11);
+  assert.equal(await p.locator('.kc-world-window').count(),11);
   await p.waitForFunction(()=>[...document.querySelectorAll('.kc-shelf-hero,.kc-feature-hero')].every(img=>img.hidden));
  }finally{await b.close();}
 });
