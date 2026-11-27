@@ -4747,7 +4747,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             const next = userFavorites[user.username]?.[id] === category ? null : category;
             const favoriteButtons = [...document.querySelectorAll('#watchModalContent .komi-compact-favorite')];
             const paintFavorite = enabled => favoriteButtons.forEach(button => {
-                button.textContent = enabled ? '♥ В избранном' : '♡ В избранное';
+                button.textContent = enabled ? 'В избранном' : 'В избранное';
                 button.setAttribute('aria-pressed', String(Boolean(enabled)));
             });
             paintFavorite(Boolean(next));
@@ -5695,8 +5695,8 @@ async function komiLoadCatalogPages(attempt = 0) {
             const sourceRequest = requestedSource ?? continuingSource;
             const previousControl = document.activeElement;
             const returnWatchFocus = previousControl?.closest('#watchModal') &&
-                (previousControl.matches('.komi-watch-navbtn.primary') ? '.komi-player-support .komi-watch-navbtn.primary' :
-                previousControl.matches('.komi-watch-navbtn') ? '.komi-player-support .komi-watch-navbtn:not(.primary)' :
+                (previousControl.matches('.komi-watch-navbtn.primary') ? '.komi-episode-navigation .komi-watch-navbtn.primary' :
+                previousControl.matches('.komi-watch-navbtn') ? '.komi-episode-navigation .komi-watch-navbtn:not(.primary)' :
                 previousControl.matches('#komiWatchSourceSelect') ? '#komiWatchSourceSelect' :
                 previousControl.matches('.komi-mobile-watch-source') ? '.komi-mobile-watch-source' :
                 previousControl.matches('.komi-episode-number') ? (previousControl.closest('#komiMobileSheet')

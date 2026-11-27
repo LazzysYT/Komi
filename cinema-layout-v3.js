@@ -596,7 +596,16 @@
 
     if (context.video) {
       const video = context.video;
-      const play = button('▶','komi-cinema-bigplay','Воспроизвести видео');
+      const play = button('','komi-cinema-bigplay','Воспроизвести видео');
+      const icon = document.createElementNS('http://www.w3.org/2000/svg','svg');
+      icon.setAttribute('viewBox','0 0 24 24');
+      icon.setAttribute('aria-hidden','true');
+      icon.setAttribute('focusable','false');
+      const triangle = document.createElementNS('http://www.w3.org/2000/svg','path');
+      triangle.setAttribute('d','M8 5.7a1 1 0 0 0-1.5.9v10.8a1 1 0 0 0 1.5.9l9.4-5.4a1 1 0 0 0 0-1.8Z');
+      triangle.setAttribute('fill','currentColor');
+      icon.append(triangle);
+      play.append(icon);
       wrapper.append(play);
       const paint = () => {
         play.hidden = !video.paused || video.ended;

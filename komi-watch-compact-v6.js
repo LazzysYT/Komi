@@ -53,22 +53,22 @@
     if (status) {
       status.classList.add('komi-compact-list');
       actions.append(status);
-      // A direct child is the favorite control; nested status buttons must stay
-      // in the status picker. Move the *original* button, retaining its handler.
-      if (favorite) {
-        favorite.classList.add('komi-compact-favorite');
-        favorite.setAttribute('aria-pressed', String(/В избранном/.test(favorite.textContent)));
-        actions.append(favorite);
-      }
-    } else if (favorite) {
+    }
+    // Move the original favorite button, retaining its handler. The icon is
+    // decorative CSS; the text is the accessible label.
+    if (favorite) {
       favorite.classList.add('komi-compact-favorite');
+      favorite.setAttribute('aria-pressed', String(/В избранном/.test(favorite.textContent)));
+      favorite.textContent = favorite.textContent.replace(/^[★♥♡]\s*/u, '');
       actions.append(favorite);
     }
 
     const party = controls.querySelector('.komi-cinema-party');
     if (party) {
       party.textContent = 'Смотреть вместе';
-      actions.append(party);
+      party.removeAttribute('aria-label');
+      party.title = 'Создать комнату на текущей серии';
+      party.remove();
     }
 
     let more = controls.querySelector('.komi-deck-more');
@@ -99,23 +99,55 @@
       const sourceButton = mobileDock.querySelector('.komi-mobile-watch-source');
       const selected = source?.querySelector('select')?.selectedOptions[0]?.textContent.trim();
       if (sourceButton && selected) {
-        const studio = selected.replace(/^Озвучка\s+/u,'');
+        const studio = selected.replace(/^(?:Озвучка\s+|Без рекламы\s*·\s*)/u,'');
         sourceButton.replaceChildren(create('span','komi-cinema-dock-caption','Озвучка'),create('strong','komi-cinema-dock-value',studio));
         sourceButton.setAttribute('aria-label','Озвучка: '+studio);
       }
-      if (navigation) mobileDock.append(navigation);
       const help = mobileDock.querySelector('#komiPlayerHelp');
       if (help) {
         help.setAttribute('aria-label','Видео не работает?');
         help.title='Видео не работает?';
         help.replaceChildren(create('span','komi-cinema-help-icon','?'));
         help.firstChild.setAttribute('aria-hidden','true');
-        mobileDock.append(help);
       }
+      const wide = root.matchMedia?.('(min-width:1051px)');
+      const placeControls = () => {
+        if (!stage.isConnected) return;
+        const focused = document.activeElement;
+        const move = (control,target) => {
+          if (!control || control.parentElement === target) return;
+          if (target === actions && party?.parentElement === actions) party.before(control);
+          else target.append(control);
+          if (control.contains(focused)) focused?.focus({preventScroll:true});
+        };
+        move(navigation, wide?.matches ? heading : mobileDock);
+        move(help, wide?.matches && context.video ? actions : mobileDock);
+      };
+      placeControls();
+      wide?.addEventListener?.('change',placeControls,context.abort?.signal ? {signal:context.abort.signal} : undefined);
       const playerRow = wrapper.parentElement === stage ? wrapper : wrapper.closest('.komi-watch-main');
       if (playerRow?.parentElement === stage) playerRow.after(mobileDock);
       else stage.append(mobileDock);
     } else { if (source && menu) menu.append(source); if (navigation) heading.append(navigation); }
+    const gate = wrapper.querySelector('.komi-cinema-source-gate');
+    if (gate) {
+      const fallback = content.querySelector('.crunchy-hero-poster')?.src;
+      const art = settings.watchStill || settings.watchBanner || fallback;
+      let backdrop;
+      try {
+        backdrop = art ? new URL(art,location.href) : null;
+        if (backdrop && (!['https:','http:'].includes(backdrop.protocol) || backdrop.username || backdrop.password ||
+            (backdrop.protocol==='http:' && backdrop.origin!==location.origin))) backdrop=null;
+      } catch {}
+      if (backdrop) {
+        const image = create('img','komi-source-gate-backdrop');
+        image.alt = ''; image.setAttribute('aria-hidden','true'); image.referrerPolicy='no-referrer';
+        image.decoding='async';
+        image.addEventListener('error',()=>image.remove(),{once:true});
+        image.src=backdrop.href;
+        gate.prepend(image);
+      }
+    }
     const adfree = controls.querySelector('.komi-adfree-option');
     if (adfree && menu) menu.append(adfree);
     const recovery = content.querySelector('#komiPlayerRecovery');
@@ -146,13 +178,14 @@
     if (menu) {
       const leftovers = [...controls.children];
       leftovers.forEach(el => {
-        if (el === more || el === source || el === adfree || el.contains(menu) || el.classList.contains('komi-cinema-action-status')) return;
+        if (el === more || el === source || el === navigation || el === adfree || el.contains(menu) || el.classList.contains('komi-cinema-action-status')) return;
         // Move each complete control group: labels, hidden state and nested menus stay intact.
         if (el.matches('button,a,details,select,label') || el.querySelector('button,a,details,select')) menu.append(el);
       });
     }
     more.querySelector('summary')?.setAttribute('title', 'Дополнительно');
     if (more.parentElement !== actions) actions.append(more);
+    if (party) actions.append(party);
     const feedback = controls.querySelector('.komi-cinema-action-status');
     if (feedback) actions.append(feedback);
 

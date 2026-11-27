@@ -1485,3 +1485,207 @@
 @media (max-width:420px){
  #watchModal #watchModalContent .komi-cinema-v7 .komi-cinema-source-gate{gap:5px;padding:8px 12px}
 }
+
+/* Use the same cinema chrome for the verified pause/ready states and own menus. */
+#watchModal #watchModalContent .komi-cinema-v7 .komi-cinema-source-gate{isolation:isolate}
+#watchModal #watchModalContent .komi-cinema-v7 .komi-source-gate-backdrop{
+ position:absolute;z-index:-1;inset:0;width:100%;height:100%;object-fit:cover;
+ opacity:.24;pointer-events:none;filter:brightness(.78);
+ mask-image:radial-gradient(ellipse at center,#000 0%,#000d 68%,#0007 100%);
+}
+#watchModal .komi-cinema-v7 .komi-cinema-source-gate button{background:#24242b;border-radius:999px}
+#watchModal .komi-cinema-v7 .komi-cinema-source-gate button:hover{background:#34343d}
+#watchModal .komi-cinema-v7 .komi-playback-time{font-variant-numeric:tabular-nums;font-weight:750;white-space:nowrap}
+@media(min-width:1051px){
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading{
+  display:flex!important;align-items:center!important;justify-content:space-between!important;
+  gap:14px!important;padding:4px 0 0!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading h1{
+  font-size:clamp(21px,1.75vw,29px)!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading > .komi-episode-navigation{
+  flex:0 0 auto;display:flex!important;gap:6px!important;padding:0!important;
+  border:0!important;border-radius:0!important;background:none!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading .komi-watch-navbtn{
+  min-height:44px!important;min-width:44px!important;width:auto!important;
+  padding:0 11px!important;border-radius:999px!important;background:#17171b!important;
+  border:1px solid #2b2b30!important;font-size:12px!important;color:#f6f6fa!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading .komi-watch-navbtn.primary:not(:disabled){
+  background:#25252a!important;color:#fafafb!important;border-color:#38383e!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading .komi-watch-navbtn:not(:disabled):hover{
+  background:#35353c!important;border-color:#58585f!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading .komi-watch-navbtn::before,
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-heading .komi-watch-navbtn::after{display:none!important}
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-heading .komi-cinema-nav-glyph{
+  color:currentColor!important;font-size:23px!important;line-height:.8;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-heading .komi-cinema-next-text{color:currentColor!important;font-size:12px!important}
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-player-support{
+  display:flex!important;justify-content:flex-start;gap:6px;padding:0;
+  border:0;background:transparent;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > .komi-watch-source{
+  flex:0 1 240px;margin:0;max-width:65%;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > .komi-watch-source select{
+  border-radius:999px!important;padding-inline-start:14px!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > .komi-watch-source label{left:15px}
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-player-support > #komiPlayerHelp{border-radius:999px!important}
+ #watchModal #watchModalContent .komi-cinema-v7:has(.komi-cinema-source-gate) > .komi-player-support{display:none!important}
+ #watchModal #watchModalContent .komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)) > .komi-player-support > .komi-watch-source{display:none!important}
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-v4-surface:not(.komi-v4-external) .komi-v4-source-trigger{
+  border-radius:999px;border:1px solid #ffffff26;background:#161619f2;font-size:clamp(13px,1vw,17px);
+ }
+}
+#watchModal .komi-cinema-v7 .komi-cinema-bigplay svg{width:57%;height:57%;pointer-events:none}
+@media(min-width:1051px){
+ #watchModal #watchModalContent .komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)) > .komi-player-support{display:none!important}
+ #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > #komiPlayerHelp{
+  display:inline-flex;align-items:center;justify-content:center;min-width:44px;min-height:44px;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7 .komi-v4-source-trigger:disabled{
+  opacity:1;color:#efeff2;cursor:default;
+ }
+}
+@media(min-width:1051px){
+ #watchModal #watchModalContent .komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)):not(:has(> #komiPlayerRecovery:not([hidden]))) > .komi-watch-quick-actions{
+  grid-row:3!important;
+ }
+ #watchModal #watchModalContent .komi-cinema-v7:has(.komi-v4-surface:not(.komi-v4-external)):not(:has(> #komiPlayerRecovery:not([hidden]))) > #komiAnimeComments{
+  grid-row:4!important;
+ }
+}
+
+/* Below the picture: use the same round controls as the cinema HUD.
+   Keep utility actions grouped and put the shared session at the far edge on desktop. */
+#watchModal #watchModalContent .komi-cinema-v7 {
+  --shelf-control:#1c1c20;
+  --shelf-strong:#252529;
+  --shelf-hover:#303035;
+  --shelf-edge:#2c2c31;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions {
+  gap:8px!important;
+  padding-block:5px 3px!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > button:not([hidden]),
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > details > summary {
+  box-sizing:border-box;
+  display:inline-flex!important;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  height:44px!important;
+  min-height:44px!important;
+  border:1px solid var(--shelf-edge)!important;
+  border-radius:999px!important;
+  background:var(--shelf-control)!important;
+  color:#f4f4f6!important;
+  transform:none!important;
+  box-shadow:none!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > :is(.komi-compact-list,.komi-deck-more)[open] > summary,
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > :is(button:not(:disabled):hover,details>summary:hover) {
+  background:var(--shelf-hover)!important;
+  border-color:#45454c!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > :is(.komi-compact-favorite[aria-pressed="true"],.komi-compact-list:has([data-watch-status][aria-pressed="true"])>summary) {
+  background:var(--shelf-strong)!important;
+  border-color:#606069!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > :is(#komiPlayerHelp,.komi-cinema-share,.komi-deck-more>summary) {
+  flex:0 0 44px!important;
+  width:44px!important;
+  min-width:44px!important;
+  padding:0!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > .komi-cinema-party {
+  background:var(--shelf-strong)!important;
+  padding-inline:15px!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > .komi-cinema-party:hover {background:var(--shelf-hover)!important}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > :is(.komi-deck-more,.komi-compact-list) > div {
+  border-radius:18px!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions :is(.komi-deck-menu,.komi-compact-list>div) :is(button,a) {
+  border-radius:999px!important;
+  min-height:44px!important;
+}
+#watchModal .komi-cinema-v7 .komi-watch-quick-actions :is(.komi-compact-list>summary,.komi-compact-favorite,.komi-cinema-party)::before {
+  content:'';
+  display:block;
+  flex:0 0 16px;
+  width:16px;
+  height:16px;
+  background:currentColor;
+  mask:var(--shelf-icon) center/contain no-repeat;
+}
+#watchModal .komi-cinema-v7 .komi-watch-quick-actions .komi-compact-list > summary {
+  --shelf-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linejoin='round'%3E%3Cpath d='M6 4h12v16l-6-4-6 4z'/%3E%3C/svg%3E");
+}
+#watchModal .komi-cinema-v7 .komi-compact-favorite {
+  --shelf-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75'%3E%3Cpath d='M12 20.5 4.4 13a4.65 4.65 0 0 1 6.6-6.55l1 1 1-1A4.65 4.65 0 0 1 19.6 13z'/%3E%3C/svg%3E");
+}
+#watchModal .komi-cinema-v7 .komi-compact-favorite[aria-pressed="true"] {
+  --shelf-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 21 4 13a5 5 0 0 1 7-7l1 1 1-1a5 5 0 0 1 7 7z'/%3E%3C/svg%3E");
+}
+#watchModal .komi-cinema-v7 .komi-cinema-party {
+  --shelf-icon:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round'%3E%3Ccircle cx='9' cy='7' r='3'/%3E%3Cpath d='M3 19v-2a5 5 0 0 1 5-5h2a5 5 0 0 1 5 5v2m3-7a4.8 4.8 0 0 1 3 4.5V19M17 4a3 3 0 0 1 0 6'/%3E%3C/svg%3E");
+}
+
+#watchModal #watchModalContent .komi-cinema-v7 > #komiAnimeComments {
+  --discussion-border:#29292f;
+  margin-top:15px!important;
+  padding-top:clamp(16px,2.2vw,28px)!important;
+  row-gap:12px;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-heading h2 {
+  font-size:clamp(21px,1.7vw,26px)!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments :is(.komi-comments-thread-switch,.komi-comments-thread-switch button,.komi-comments-actions button[type=submit]) {
+  border-radius:999px!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-thread-switch {
+  background:#17171b;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-thread-switch button {
+  min-height:38px;
+  padding-inline:13px;
+  border-color:transparent!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-form {
+  border:0!important;
+  border-radius:0!important;
+  padding:0!important;
+  background:transparent;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comment-compose-avatar {
+  margin-top:8px;
+  border-radius:50%!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-input {
+  border-radius:22px!important;
+  padding:13px 16px!important;
+  background:#19191c!important;
+  color:#f4f4f6!important;
+}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-input::placeholder {color:#aaaab3;opacity:1}
+#watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-empty {border-radius:16px}
+
+@media(min-width:1051px) {
+  #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > .komi-cinema-party {margin-inline-start:auto!important}
+}
+@media(max-width:767px) {
+  #watchModal #watchModalContent .komi-cinema-v7 #komiAnimeComments .komi-comments-thread-switch button {min-height:44px}
+  #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > button.komi-episodes-toggle {display:none!important}
+}
+
+@media(max-width:450px) {
+  #watchModal #watchModalContent .komi-cinema-v7 > .komi-watch-quick-actions > .komi-cinema-party {flex:1 0 100%}
+}
