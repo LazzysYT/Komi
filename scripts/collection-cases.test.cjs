@@ -41,7 +41,14 @@ test('booster keeps small transparent assets and a matching vector fallback',()=
  assert.match(svg,/TOKYO GHOUL/);
  assert.doesNotMatch(svg,/<image|<script/);
  const html=read('index.html');
- assert.equal((html.match(/v=20261127-collector-deluxe/g)||[]).length,4);
+ const revision=html.match(/<meta name="komi-collection-revision" content="([^"]+)"/)?.[1];
+ assert.match(revision,/^\d{8}-collection-[\w-]+$/);
+ for(const file of ['komi-collection.css','komi-collection.js','komi-collector-showcase.js']){
+  const version=html.match(new RegExp(file.replace('.','\\.')+'\\?v=([^"]+)'))?.[1];
+  assert.equal(version,revision,file+' must use the collection revision');
+ }
+ const appVersion=html.match(/app-main\.js\?v=([^"]+)/)?.[1];
+ assert.ok(appVersion.endsWith('-'+revision.replace(/^\d{8}-/,'')));
 });
 
 test('new series rosters and presentation match the migration contract',()=>{

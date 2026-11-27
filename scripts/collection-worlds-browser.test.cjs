@@ -38,9 +38,28 @@ test('four worlds: separate album, full-body view, one-time reveal and safe purc
    await p.locator('[data-kc-action="series-'+series+'"]').click();
    await p.waitForFunction(id=>document.querySelector('.kc-grid [data-kc-card="'+id+'"].kc-owned'),id);
    assert.equal(await p.locator('.kc-case').count(),0);
+   const windows=p.locator('.kc-world-shelves .kc-world-window');
+   assert.equal(await windows.count(),4);
+   assert.equal(await windows.locator('.kc-shelf-hero[aria-hidden="true"]').count(),4);
+   await p.waitForFunction(()=>[...document.querySelectorAll('.kc-shelf-hero')].every(img=>img.naturalWidth>0));
+   assert.equal(await p.locator('.kc-world-window[aria-pressed=true]').getAttribute('data-kc-action'),'series-'+series);
+   const motifs=await windows.locator('.kc-window-motif').evaluateAll(els=>els.map(el=>getComputedStyle(el).backgroundImage));
+   assert.equal(new Set(motifs).size,4,'each world retains its own art effect when another is selected');
+   assert.ok(await windows.evaluateAll(els=>els.every(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('.kc-window-copy').getBoundingClientRect();return b.left>=a.left&&b.right<=a.right+1&&b.bottom<=a.bottom+1;})),'world labels fit within windows');
+   assert.ok(await windows.first().evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius)>=18));
+   assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
+   assert.ok(await p.locator('.kc-grid .kc-owned').first().evaluate(el=>!!el.style.getPropertyValue('--kc-character-fx')));
+   assert.equal(await p.locator('.kc-grid .kc-locked[style*="--kc-character-fx"]').count(),0);
    await p.getByRole('button',{name:'Паки',exact:true}).click();
    assert.equal(await p.locator('.kc-case h2').textContent(),title);
    assert.equal(await p.locator('.kc-album,.kc-grid').count(),0);
+   assert.equal(await p.locator('.kc-world-shelves .kc-pack-thumb').count(),4);
+   await p.waitForFunction(()=>document.querySelector('.kc-feature-hero')?.naturalWidth>0);
+   assert.ok(await p.locator('.kc-case').evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius)>=20));
+   if(series==='ghoul'&&(width===1440||width===390)){
+    const out=path.join(source,'browser-test-results');fs.mkdirSync(out,{recursive:true});
+    await p.locator('.kc-page').screenshot({path:path.join(out,'world-view-pack-'+width+'.png'),animations:'disabled'});
+   }
    if(series!=='ghoul')await p.waitForFunction(()=>document.querySelector('.kc-case-image')?.naturalWidth>0);
    await p.getByRole('button',{name:'Коллекции',exact:true}).click();
    assert.equal(await p.locator('.kc-album .kc-slot').count(),size);

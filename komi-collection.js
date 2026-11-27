@@ -206,10 +206,15 @@ async function downloadMiniPoster(c,asset,button,status){
  }catch{if(valid())status.textContent='Не удалось скачать постер. Попробуй ещё раз.';}
  finally{if(valid())button.disabled=false;}
 }
+// Promotional portraits are separate from the ownership-controlled album cards.
+const shelfHeroes=Object.freeze({ghoul:'kaneki',jujutsu:'gojo',frieren:'frieren',alchemist:'edward'});
+function shelfHero(id,cssClass){
+ const folder=id==='ghoul'?'ghoul-cel':id;
+ return '<img class="'+cssClass+'" src="/assets/collection/'+folder+'/'+shelfHeroes[id]+'.webp" width="432" height="648" alt="" aria-hidden="true" decoding="async">';
+}
 function seriesPicker(){
- const busy=state?.status==='opening'||!!state?.reel;
- if(tab==='collection')return '<nav class="kc-shelves" aria-label="Коллекции">'+Object.entries(seriesList).map(([id,v])=>button(v.title,'series-'+id,{pressed:seriesKey===id,disabled:busy})).join('')+'</nav>';
- return '<nav class="kc-shelves kc-pack-shelves" aria-label="Выбор пака">'+Object.entries(seriesList).map(([id,v])=>'<button type="button" data-kc-action="series-'+id+'" aria-pressed="'+(seriesKey===id)+'"'+(busy?' disabled':'')+'><img class="kc-pack-thumb" src="/assets/collection/deluxe-packs/'+id+'.webp" alt="" width="26" height="45" decoding="async"><span>'+esc(v.title)+'</span></button>').join('')+'</nav>';
+ const busy=state?.status==='opening'||!!state?.reel,inAlbum=tab==='collection';
+ return '<nav class="kc-shelves kc-world-shelves'+(inAlbum?' kc-album-shelves':' kc-pack-shelves')+'" aria-label="'+(inAlbum?'Коллекции':'Выбор пака')+'">'+Object.entries(seriesList).map(([id,v])=>'<button type="button" class="kc-world-window kc-theme-'+id+'" data-kc-action="series-'+id+'" aria-label="'+esc(v.title)+'" aria-pressed="'+(seriesKey===id)+'"'+(busy?' disabled':'')+'><span class="kc-window-motif" aria-hidden="true"></span>'+shelfHero(id,'kc-shelf-hero')+'<span class="kc-window-shade" aria-hidden="true"></span><span class="kc-window-copy">'+(inAlbum?'':'<img class="kc-pack-thumb" src="/assets/collection/deluxe-packs/'+id+'.webp" alt="" width="26" height="45" decoding="async">')+'<span class="kc-window-label"><strong>'+esc(v.title)+'</strong><small aria-hidden="true">'+(inAlbum?v.roster.length+' персонажей':'Серия '+v.edition)+'</small></span></span></button>').join('')+'</nav>';
 }
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function normalizePayload(data){
@@ -253,11 +258,11 @@ function card(c,opened,place='grid'){
  const key=place+'-'+c.id, backId='kc-back-'+key;
  const flipped=opened&&state?.inspected===key;
  const label=opened?c.name:'Неизвестный персонаж';
- const {group,intro}=heroInfo(c);
+ const {group,intro,tint}=heroInfo(c);
  const back=opened?'<div class="kc-card-back" id="'+backId+'"'+(flipped?'':' hidden')+'><div class="kc-file-code">'+esc(seriesKey==='ghoul'?'CCG':series.code)+' · '+number+'</div><h4>'+esc(c.name)+'</h4><p class="kc-file-group">'+esc(group)+'</p><p class="kc-file-intro">'+esc(intro)+'</p><div class="kc-file-footer">'+rarityLabel(c)+'</div></div>':'';
  const viewer=opened?'<button type="button" '+(flipped?'hidden ':'')+'class="kc-view-hero" data-kc-action="view-'+c.id+'" data-kc-focus="view-'+key+'" aria-label="Открыть персонажа: '+esc(c.name)+'"><span>В полный рост</span></button>':'';
  const control=opened?'<button type="button" class="kc-inspect" data-kc-action="inspect" data-kc-focus="inspect-'+key+'" aria-controls="'+backId+'" aria-expanded="'+flipped+'" aria-label="'+esc(series.dossier)+': '+esc(c.name)+'">'+flipIcon+'<span>'+(flipped?'Лицевая':'Досье')+'</span></button>':'';
- return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'" data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong><div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+back+viewer+control+'</article>';
+ return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'"'+(opened?' style="--kc-character-fx:'+tint+'"':'')+' data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong><div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+back+viewer+control+'</article>';
 }
 function album(owned,known){
  const slots=roster.map((c,i)=>{
@@ -446,7 +451,7 @@ function albumTools(){
   +'</div><section class="kc-album-results" id="kc-album-results" aria-label="Карточки серии"></section>';
 }
 function bindArtwork(container){
- for(const img of container.querySelectorAll('.kc-portrait,.kc-case-image,.kc-album-image,.kc-pack-thumb')){
+ for(const img of container.querySelectorAll('.kc-portrait,.kc-case-image,.kc-album-image,.kc-pack-thumb,.kc-shelf-hero,.kc-feature-hero')){
   const ready=()=>{if(img.naturalWidth>0)img.setAttribute('data-kc-art-ready','');};
   const failed=()=>{
    if(img.classList.contains('kc-case-image')&&img.hasAttribute('data-kc-pack-fallback')){
@@ -524,7 +529,7 @@ function paint(nextFocus=null){
  const balanceText=known&&s.balance!==null?'Баланс: '+s.balance.toLocaleString('ru-RU')+' AniCoin':'Цена: 50 AniCoin';
  const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true}):s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>':button(retryPurchase?'Повторить покупку':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
  const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
- const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual">'+packArt()+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">'+esc(series.script)+'</span><small>СЕРИЯ '+series.edition+'</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h2>Бустер «'+esc(series.pack)+'»</h2><p class="kc-muted">Карточек в серии: '+roster.length+'. В каждом бустере одна новая карточка. Шансы равные, повторов нет.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
+ const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">'+esc(series.script)+'</span><small>СЕРИЯ '+series.edition+'</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h2>Бустер «'+esc(series.pack)+'»</h2><p class="kc-muted">Карточек в серии: '+roster.length+'. В каждом бустере одна новая карточка. Шансы равные, повторов нет.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
  const prize=roster.find(c=>c.id===(s.replayResult||s.result));
  const reward=prize&&known?'<div class="kc-result" role="status">'+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','collection',{primary:true,focus:'result-collection'}))+'</div></div>':'';
  if(inAlbum){
