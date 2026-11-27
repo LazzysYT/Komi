@@ -164,7 +164,7 @@ test('shop avatars match verified Premium GIF rather than stale normal photo',()
 
 test('title gallery replaces mixed collections while purchase and gifting controls stay',()=>{
  reset();const output=container.innerHTML;
- assert.match(output,/sv12-gallery/);
+ assert.doesNotMatch(output,/sv12-gallery/);
  assert.doesNotMatch(output,/data-v7-collection=|data-v7-look=|sv7-starter/);
  assert.match(output,/class="sv7-toolbar" role="search"/);
  assert.match(output,/data-v3-checkout/);

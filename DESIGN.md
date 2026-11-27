@@ -305,3 +305,7 @@ includes only game artwork, character name, series, rarity and catalogue code.
 
 ### Collector navigation
 The Collections tab owns the series albums, silhouettes, filters and journal. Packs owns the pack shelf and checkout; only the opening or its result may show a character on that tab. Both use the same active series; switching tabs never starts a purchase. Journal replays return to the album.
+
+### Shop fitting refresh
+
+The general catalog has no promotional hero before products. Quick categories show only available inventory; all categories, price filters, and sort share one native disclosure. The anime-title shelf is an optional compact preview in Titles only. Cards use the existing renderers and distinct in-context displays, not stock art. The fitting room compares confirmed equipped slots with temporary trial slots without mutating either set; reaction previews remain separate from profile cosmetics. Empty fitting rooms no longer occupy screen space. Existing checkout, ownership, gifting, inventory, CSS token ownership, and verified server prices are retained.
