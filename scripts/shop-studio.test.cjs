@@ -265,8 +265,9 @@ test('legacy collection links still show the current assortment instead of an em
  assert.doesNotMatch(f.html,/data-v7-collection=|data-v7-look=/);
 });
 
-test('editorial title gallery is available without reviving mixed collections',()=>{
- const f=fixture();
+test('editorial title gallery only appears with the title category',()=>{
+ assert.doesNotMatch(fixture().html,/sv12-gallery/);
+ const f=fixture({url:'https://komianime.online/shop?shop_category=title'});
  assert.match(f.html,/sv12-gallery/);
  assert.doesNotMatch(f.html,/sv7-collections|sv7-starter|sv10-station/);
 });

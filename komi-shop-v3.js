@@ -2,8 +2,8 @@
 (function(root){
 'use strict';
 const PAGE_SIZE=24;
-const state={owner:null,view:'catalog',category:'all',sort:'default',query:'',affordableOnly:false,hideOwned:false,limit:PAGE_SIZE,trial:Object.create(null),sheetOpen:false,previewMode:'profile',reactionPreview:null,busy:false,status:'',routeRead:false,routeSignature:''};
-let latestCtx=null,pendingConfirmation=null,resetPreviewScroll=false;
+const state={owner:null,view:'catalog',category:'all',sort:'default',query:'',affordableOnly:false,hideOwned:false,limit:PAGE_SIZE,trial:Object.create(null),sheetOpen:false,filtersOpen:false,comparison:'trial',previewMode:'profile',reactionPreview:null,busy:false,status:'',routeRead:false,routeSignature:''};
+let latestCtx=null,pendingConfirmation=null,resetPreviewScroll=false,lastTrySelector=null;
 const catalog=()=>root.KomiShopCatalog?.items||[];
 const find=id=>root.KomiShopCatalog?.find(id)||null;
 const onSale=p=>!!p&&root.KomiShopCatalog?.isOnSale?.(p.id)===true;
@@ -138,7 +138,7 @@ function cardArtwork(p,avatar,name){
   case 'overlay':
    content='<span class="sv9-cover-shot">'+artwork+contextStrip(avatar,name,'Обложка с эффектом')+'</span>';break;
   case 'title':
-   content='<span class="sv11-title-stage">'+artwork+'</span>';break;
+   content='<span class="sv11-title-stage"><span class="sv14-profile-sign">'+portrait(avatar,name)+'<b>'+esc(name)+'</b></span>'+artwork+'</span>';break;
   case 'name':
    content='<span class="sv9-name-shot">'+portrait(avatar,name)+artwork+'</span>';break;
   case 'icon':
@@ -161,7 +161,7 @@ function cardArtwork(p,avatar,name){
 }
 
 function preview(store,avatar,name,favorites){
- const current=type=>find(state.trial[type]||store?.[type+'_id'])||null;
+ const current=type=>find((state.comparison==='trial'?state.trial[type]:null)||store?.[type+'_id'])||null;
  const frame=current('frame'),shape=current('shape'),title=current('title'),
  banner=current('banner'),overlay=current('overlay'),plate=current('plate'),nameStyle=current('name');
  const selectedIcon=current('icon'),xp=current('xp'),mascot=current('mascot'),
@@ -209,7 +209,7 @@ function card(p,ctx,avatar,name){
  '<span class="sv7-try-label">'+icon(chosen?'check':'eye',14)+' '+(chosen?'В примерочной':'Примерить')+'</span></button>'+
  '<div class="sv3-item-copy"><h3>'+esc(p.label)+'</h3><p class="sv7-item-kind">'+esc(context)+'</p>'+
  (p.character&&p.anime?'<p class="sv13-title-origin">'+esc(p.character)+' <span>· '+esc(p.anime)+'</span></p>':'')+
- '<p class="sv7-item-description">'+esc(p.description||descriptionFor(p.type))+'</p><p class="sv3-unit-price">'+icon('coins',16)+' <strong>'+fmt(p.cost)+'</strong> <span>AniCoin</span></p></div>'+
+ '<p class="sv3-unit-price">'+icon('coins',16)+' <strong>'+fmt(p.cost)+'</strong> <span>AniCoin</span></p></div>'+
  '<div class="komi-coin-actions sv3-item-actions"><button type="button" class="sv3-primary-buy'+(!owned&&!affordable&&store?' is-insufficient':'')+(owned?' is-owned-action':'')+'" data-shop-item-action="'+esc(p.id)+'" data-shop-operation="'+operation+'" aria-label="'+esc(action)+'"'+(disabled?' disabled':'')+'>'+esc(label)+'</button></div></article>';
 }
 function descriptionFor(type){return {frame:'Обрамление твоей аватарки.',banner:'Фон шапки твоего профиля.',name:'Оформление имени в профиле.',title:'Небольшая подпись под именем.',shape:'Новый силуэт твоей аватарки.',overlay:'Атмосфера поверх обложки.',plate:'Оформление твоих комментариев.',icon:'Значок рядом с именем.',xp:'Оформление полоски опыта.',mascot:'Компаньон в твоём профиле.',showcase:'Оформление любимой тройки аниме.',card:'Стиль карточки профиля.',reaction:'Реакции для совместного просмотра.'}[type]||'Предмет для твоего профиля.';}
@@ -233,8 +233,11 @@ function layout(ctx){
  const counts=Object.fromEntries(categories.map(([id])=>[id,countable.filter(p=>id==='all'||p.type===id).length]));
  const options=availableCategories(ctx).map(([id,label])=>'<option value="'+id+'"'+(state.category===id?' selected':'')+'>'+esc(label)+' · '+counts[id]+'</option>').join('');
  const reaction=find(state.reactionPreview);
+ const allowedCategories=availableCategories(ctx);
+ const fastCategories=['all','title','frame','banner','name'].map(id=>allowedCategories.find(([key])=>key===id)).filter(Boolean);
+ const filterCount=Number(state.sort!=='default')+Number(state.affordableOnly)+Number(state.hideOwned&&state.view!=='owned')+Number(!fastCategories.some(([id])=>id===state.category));
  const hasContent=!!(items.length||reaction||(state.sheetOpen&&(state.busy||ctx.busy||state.status||ctx.shopStatus||ctx.retryApplyItem)));
- const showGallery=state.view==='catalog'&&(state.category==='all'||state.category==='title')&&!state.query&&!state.affordableOnly&&!state.hideOwned&&state.sort==='default'&&state.limit===PAGE_SIZE;
+ const showGallery=state.view==='catalog'&&state.category==='title'&&!state.query&&!state.affordableOnly&&!state.hideOwned&&state.sort==='default'&&state.limit===PAGE_SIZE;
  const sheetSummary=reaction?(items.length?items.length+' выбрано · '+fmt(total)+' AC + реакции':'Реакции · отдельно'):items.length+' выбрано · '+fmt(total)+' AC';
  return '<section id="shop" class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5 komi-shop-studio" data-fitting-active="'+String(hasContent)+'" aria-labelledby="anicoin-title">'+
  '<header class="sv3-topbar"><div class="sv3-heading"><h1 id="anicoin-title">Магазин оформления</h1><p>Примерь титулы, рамки и другие эффекты на своём профиле.</p></div>'+
@@ -243,19 +246,21 @@ function layout(ctx){
  (notice?'<p class="sv3-price-notice" role="status">'+esc(notice)+'</p>':'')+
  '<div class="sv7-toolbar" role="search" aria-label="Поиск товаров"><div class="sv7-browse-head"><div class="sv7-view-tabs" role="group" aria-label="Раздел магазина"><button type="button" data-v7-view="catalog" aria-pressed="'+String(state.view==='catalog')+'">Каталог <span>'+forSale().length+'</span></button><button type="button" data-v7-view="owned" aria-pressed="'+String(state.view==='owned')+'">Мои предметы <span>'+ownedCount+'</span></button></div>'+
  '<div class="sv7-search"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sv7-sr-only" for="sv7Search">Найти оформление</label><input type="search" id="sv7Search" data-v7-search placeholder="'+(state.view==='owned'?'Поиск предметов':'Поиск оформления')+'" maxlength="100" autocomplete="off" value="'+esc(state.query)+'">'+(state.query?'<button type="button" data-v7-clear-search aria-label="Очистить поиск">×</button>':'')+'</div></div>'+
+ '<div class="sv14-controls"><div class="sv14-categories" role="group" aria-label="Быстрые категории">'+fastCategories.map(([id,label])=>'<button type="button" data-sv14-category="'+id+'" aria-pressed="'+String(state.category===id)+'">'+esc(label)+'</button>').join('')+'</div>'+
+ '<details class="sv14-filters"'+(state.filtersOpen?' open':'')+'><summary>'+icon('sliders',15)+' Фильтры'+(filterCount?' <span>'+filterCount+'</span>':'')+'</summary>'+
  '<div class="sv7-filter-row" data-title-gallery-view="'+state.view+'">'+('<label class="sv7-select sv7-category-select"><span class="sv7-sr-only">Все категории</span><select data-v7-category-select aria-label="Все категории">'+options+'</select>'+icon('chevron',14)+'</label>')+
  '<label class="sv7-select sv7-sort-select"><span class="sv7-sr-only">Сортировка</span><select data-v3-sort aria-label="Сортировка">'+sorts.map(([id,label])=>'<option value="'+id+'"'+(state.sort===id?' selected':'')+'>'+label+'</option>').join('')+'</select>'+icon('chevron',14)+'</label>'+
- '<div class="sv7-toggles"><label class="sv3-hide-toggle"><input type="checkbox" data-v7-affordable'+(state.affordableOnly?' checked':'')+(!owner||!store?' disabled':'')+'><span>По моему балансу</span></label><label class="sv3-hide-toggle"><input type="checkbox" data-v3-hide-owned'+(state.hideOwned&&state.view!=='owned'?' checked':'')+(!owner||!store||state.view==='owned'?' disabled':'')+'><span>Скрыть купленные</span></label></div></div></div>'+
+ '<div class="sv7-toggles"><label class="sv3-hide-toggle"><input type="checkbox" data-v7-affordable'+(state.affordableOnly?' checked':'')+(!owner||!store?' disabled':'')+'><span>По моему балансу</span></label><label class="sv3-hide-toggle"><input type="checkbox" data-v3-hide-owned'+(state.hideOwned&&state.view!=='owned'?' checked':'')+(!owner||!store||state.view==='owned'?' disabled':'')+'><span>Скрыть купленные</span></label></div></div></details></div></div>'+
  (showGallery?titleGallery(ctx.busy||state.busy):'')+
  '<div class="sv3-layout"><div class="sv3-market"><div class="sv3-market-caption"><h2>'+(state.view==='owned'?'Твои предметы':state.query?'Результаты поиска':state.category==='all'?'Всё оформление':esc(categoryName(state.category)))+'</h2><span role="status" aria-live="polite">'+(state.view==='owned'?products.length+' в коллекции':'Товаров: '+products.length)+'</span>'+
  (state.query||state.category!=='all'||state.affordableOnly||state.hideOwned?'<button type="button" data-v3-reset-filters>Сбросить фильтры</button>':'')+'</div>'+
  '<div class="komi-coin-grid sv3-product-grid">'+(visible.length?visible.map(p=>card(p,ctx,avatar,name)).join(''):'<div class="sv3-no-results">'+icon('palette',28)+'<h3>'+esc(empty)+'</h3><p>'+(state.view==='owned'?'Посмотри, что есть в каталоге.':'Попробуй другое название или убери фильтры.')+'</p><button type="button" '+(state.view==='owned'&&!owner?'data-v7-login':'data-v7-browse')+'>'+(state.view==='owned'&&!owner?'Войти':'Открыть весь каталог')+'</button></div>')+'</div>'+
  (products.length>visible.length?'<div class="sv7-load-more"><button type="button" data-v7-more>Показать ещё '+Math.min(PAGE_SIZE,products.length-visible.length)+'</button><span>Показано '+visible.length+' из '+products.length+'</span></div>':'')+'</div>'+
  '<aside class="sv3-fitting'+(hasContent?' has-content':'')+(state.sheetOpen&&hasContent?' is-open':'')+'" aria-label="Примерочная"><button type="button" class="sv3-sheet-toggle" aria-controls="sv7FittingBody" aria-expanded="'+String(state.sheetOpen&&hasContent)+'" data-v3-sheet><span>'+icon('palette',20)+' Примерочная <small>'+esc(sheetSummary)+'</small></span><span class="sv3-sheet-chevron">'+icon('chevron',18)+'</span></button>'+
- '<div class="sv3-fitting-body" id="sv7FittingBody"><div class="sv7-fitting-header"><div class="sv3-fitting-head"><h2 tabindex="-1">Примерочная</h2><button type="button" class="sv3-reset" data-v3-reset aria-label="Сбросить примерку"'+(!items.length&&!reaction||state.busy||ctx.busy?' disabled':'')+'>'+icon('reset',16)+'</button></div>'+
+ '<div class="sv3-fitting-body" id="sv7FittingBody"><div class="sv7-fitting-header"><div class="sv3-fitting-head"><h2 tabindex="-1">Примерочная</h2><div class="sv14-fit-actions"><button type="button" class="sv3-reset sv14-close" data-sv14-close aria-label="Свернуть примерочную">×</button><button type="button" class="sv3-reset" data-v3-reset aria-label="Сбросить примерку"'+(!items.length&&!reaction||state.busy||ctx.busy?' disabled':'')+'>'+icon('reset',16)+'</button></div></div>'+
  '<div class="sv7-preview-tabs" role="group" aria-label="Где посмотреть оформление"><button type="button" data-v7-preview="profile" aria-controls="sv7ProfilePreview" aria-pressed="'+String(state.previewMode==='profile')+'">Профиль</button><button type="button" data-v7-preview="comment" aria-controls="sv7CommentPreview" aria-pressed="'+String(state.previewMode==='comment')+'">Комментарий</button>'+(reaction?'<button type="button" data-v7-preview="reaction" aria-controls="sv7ReactionPreview" aria-pressed="'+String(state.previewMode==='reaction')+'">Реакции</button>':'')+'</div></div>'+
- '<div class="sv7-fitting-scroll" tabindex="0" role="region" aria-label="Предпросмотр и выбранные предметы"><p class="sv7-preview-note">Примерка не меняет твой профиль.</p>'+preview(store,avatar,name,ctx.favorites)+(reaction?'<div class="sv7-preview-panel" id="sv7ReactionPreview"'+(state.previewMode==='reaction'?'':' hidden')+'><div class="sv5-reaction-preview"><strong>Реакции Watch Party</strong><div class="sv8-party-context"><span class="sv8-party-screen">'+icon('movie',25)+'<small>Совместный просмотр</small></span><span class="sv8-party-chat"><strong>'+esc(name)+'</strong><small>Вот это момент!</small></span>'+visual(reaction,avatar,name)+'</div><small>'+(store?.owned?.includes(reaction.id)?'Набор уже в коллекции.':fmt(reaction.cost)+' AC · Покупаются отдельно на карточке.')+'</small></div></div>':'')+
- (items.length?'<div class="sv3-selection"><strong>В образе <span>'+items.length+'</span></strong>'+selectedList(store,state.busy||ctx.busy)+'</div>':'')+'</div><div class="sv7-checkout-footer">'+'<p class="sv3-status" role="status" aria-live="polite">'+esc(state.status||ctx.shopStatus||'')+'</p>'+(ctx.retryApplyItem?'<button type="button" class="sv3-retry" data-shop-item-action="'+esc(ctx.retryApplyItem)+'" data-shop-operation="equip">Применить купленный предмет</button>':'')+
+ '<div class="sv7-fitting-scroll" tabindex="0" role="region" aria-label="Предпросмотр и выбранные предметы">'+(items.length&&state.previewMode!=='reaction'?'<div class="sv14-compare" role="group" aria-label="Сравнить оформление"><button type="button" data-sv14-compare="current" aria-pressed="'+String(state.comparison==='current')+'">Сейчас</button><button type="button" data-sv14-compare="trial" aria-pressed="'+String(state.comparison==='trial')+'">С новым оформлением</button></div>':'')+'<p class="sv7-preview-note">Примерка не меняет твой профиль.</p>'+preview(store,avatar,name,ctx.favorites)+(reaction?'<div class="sv7-preview-panel" id="sv7ReactionPreview"'+(state.previewMode==='reaction'?'':' hidden')+'><div class="sv5-reaction-preview"><strong>Реакции Watch Party</strong><div class="sv8-party-context"><span class="sv8-party-screen">'+icon('movie',25)+'<small>Совместный просмотр</small></span><span class="sv8-party-chat"><strong>'+esc(name)+'</strong><small>Вот это момент!</small></span>'+visual(reaction,avatar,name)+'</div><p class="sv14-item-note">'+esc(reaction.description||descriptionFor(reaction.type))+'</p><small>'+(store?.owned?.includes(reaction.id)?'Набор уже в коллекции.':fmt(reaction.cost)+' AC · Покупаются отдельно на карточке.')+'</small></div></div>':'')+
+ (items.length?'<div class="sv3-selection"><strong>В образе <span>'+items.length+'</span></strong>'+selectedList(store,state.busy||ctx.busy)+'<details class="sv14-selection-details"><summary>О выбранных предметах</summary>'+items.map(p=>'<p><strong>'+esc(p.label)+'</strong><br>'+esc(p.description||descriptionFor(p.type))+'</p>').join('')+'</details></div>':'')+'</div><div class="sv7-checkout-footer">'+'<p class="sv3-status" role="status" aria-live="polite">'+esc(state.status||ctx.shopStatus||'')+'</p>'+(ctx.retryApplyItem?'<button type="button" class="sv3-retry" data-shop-item-action="'+esc(ctx.retryApplyItem)+'" data-shop-operation="equip">Применить купленный предмет</button>':'')+
  (items.length?'<div class="sv3-checkout-info"><span>'+(total===0?'Уже в коллекции':'К оплате')+'</span><strong class="sv3-tabular">'+fmt(total)+' <small>AniCoin</small></strong></div>':'<p class="sv3-empty-selection">Нажми «Примерить» на понравившемся товаре.</p>')+
  '<button class="sv3-checkout" type="button" data-v3-checkout'+(!items.length?' hidden':'')+(disabled?' disabled':'')+'>'+icon('bag',18)+' '+esc(action)+'</button>'+(items.length?'<p class="sv3-checkout-note">'+(owner&&store&&total<=Number(store.balance)?'Останется '+fmt(Number(store.balance)-total)+' AniCoin · списание после подтверждения':'Списание только после подтверждения.')+'</p>':'')+'</div></div></aside></div>'+
  (ctx.failedFor?'<button type="button" data-shop-retry class="sv3-retry">Повторить загрузку баланса и покупок</button>':'')+
@@ -267,16 +272,17 @@ function refresh(selector){
  if(selector)focusCurrent(selector);
 }
 function filterChanged(selector){state.limit=PAGE_SIZE;route();refresh(selector);}
-function tryItem(id){
+function tryItem(id,trigger){
  if(state.busy||latestCtx?.busy)return;
  const p=find(id);if(!p||(!onSale(p)&&!latestCtx?.store?.owned?.includes(id)))return;
  if(p.type==='reaction'){state.reactionPreview=state.reactionPreview===id?null:id;}
  else{state.trial[p.type]=state.trial[p.type]===id?null:id;}
+ lastTrySelector=(trigger?.closest?.('.sv12-gallery')?'.sv12-gallery ':'.sv3-item ')+'[data-v3-try="'+id+'"]';state.comparison='trial';
  const chosen=p.type==='reaction'?state.reactionPreview===id:state.trial[p.type]===id;
  state.previewMode=chosen?(p.type==='reaction'?'reaction':p.type==='plate'?'comment':'profile'):(state.reactionPreview?'reaction':state.trial.plate?'comment':'profile');
  state.status='';resetPreviewScroll=true;
  state.sheetOpen=!!(selected().length||state.reactionPreview);
- refresh(narrow()&&state.sheetOpen?'[data-v3-sheet]':'[data-v3-try="'+id+'"]');
+ refresh(narrow()&&state.sheetOpen?'[data-v3-sheet]':lastTrySelector);
 }
 function confirmPurchase(quote){
  if(pendingConfirmation||!quote?.items?.length||!Number.isSafeInteger(quote.total)||quote.total<0||!Number.isSafeInteger(quote.balance)||quote.balance<quote.total||quote.owner!==latestCtx?.owner)return Promise.resolve(false);
@@ -323,18 +329,20 @@ function mount(section,ctx){
  for(const img of section.querySelectorAll('[data-sv3-user-avatar]'))img.addEventListener('error',()=>{img.hidden=true;if(img.nextElementSibling)img.nextElementSibling.hidden=false;},{once:true});
  section.addEventListener('click',async event=>{
   const t=event.target.closest('button');if(!t||t.disabled)return;
-  if(t.hasAttribute('data-shop-item-action')){state.status='';if(narrow()&&ctx.owner)state.sheetOpen=true;return;}
+  if(t.hasAttribute('data-shop-item-action')){state.status='';if(ctx.owner)state.sheetOpen=true;return;}
   if((state.busy||ctx.busy)&&['data-v3-try','data-v3-remove','data-v3-reset'].some(attr=>t.hasAttribute(attr)))return;
+  if(t.hasAttribute('data-sv14-category')){const id=t.dataset.sv14Category;if(availableCategories(ctx).some(([key])=>key===id)){state.category=id;filterChanged('[data-sv14-category="'+id+'"]');}return;}
+  if(t.hasAttribute('data-sv14-compare')){state.comparison=t.dataset.sv14Compare==='current'?'current':'trial';refresh('[data-sv14-compare="'+state.comparison+'"]');return;}
   if(t.hasAttribute('data-v7-view')){state.view=t.dataset.v7View==='owned'?'owned':'catalog';resetFilters();filterChanged('[data-v7-view="'+state.view+'"]');return;}
   if(t.hasAttribute('data-v3-sort')){if(sorts.some(s=>s[0]===t.dataset.v3Sort))state.sort=t.dataset.v3Sort;filterChanged('[data-v3-sort]');return;}
-  if(t.hasAttribute('data-v3-try')){tryItem(t.dataset.v3Try);return;}
+  if(t.hasAttribute('data-v3-try')){tryItem(t.dataset.v3Try,t);return;}
   if(t.hasAttribute('data-v7-preview')){const mode=t.dataset.v7Preview;state.previewMode=mode==='reaction'&&state.reactionPreview?'reaction':mode==='comment'?'comment':'profile';resetPreviewScroll=true;refresh('[data-v7-preview="'+state.previewMode+'"]');return;}
   if(t.hasAttribute('data-v3-remove')){delete state.trial[t.dataset.v3Remove];if(!selected().length&&!state.reactionPreview){state.sheetOpen=false;state.status='';}refresh(narrow()&&!selected().length&&!state.reactionPreview?'[data-v7-search]':'[data-v3-reset]');return;}
   if(t.hasAttribute('data-v3-reset')){state.trial=Object.create(null);state.reactionPreview=null;state.previewMode='profile';state.sheetOpen=false;state.status='';resetPreviewScroll=true;refresh(narrow()?'[data-v7-search]':'[data-v7-preview="profile"]');return;}
   if(t.hasAttribute('data-v3-reset-filters')||t.hasAttribute('data-v7-browse')){if(t.hasAttribute('data-v7-browse'))state.view='catalog';resetFilters();route();refresh('[data-v7-search]');return;}
   if(t.hasAttribute('data-v7-clear-search')){state.query='';filterChanged('[data-v7-search]');return;}
   if(t.hasAttribute('data-v7-more')){const nextId=currentItems(ctx)[state.limit]?.id;state.limit+=PAGE_SIZE;route();refresh(nextId?'[data-v3-try="'+nextId+'"]':'[data-v7-more]');return;}
-  if(t.hasAttribute('data-v3-sheet')){state.sheetOpen=!state.sheetOpen;refresh('[data-v3-sheet]');return;}
+  if(t.hasAttribute('data-v3-sheet')||t.hasAttribute('data-sv14-close')){state.sheetOpen=t.hasAttribute('data-v3-sheet')&&!state.sheetOpen;refresh(!state.sheetOpen&&lastTrySelector?lastTrySelector:'[data-v3-sheet]');return;}
   if(t.hasAttribute('data-v7-login')){if(typeof openAuthModal==='function')openAuthModal('login');return;}
   if(t.hasAttribute('data-v3-promo')){section.querySelector('#sv3PromoDialog')?.showModal();return;}
   if(t.hasAttribute('data-v3-promo-close')){section.querySelector('#sv3PromoDialog')?.close();return;}
@@ -353,7 +361,8 @@ function mount(section,ctx){
   else if(t.matches('[data-v3-hide-owned]')){state.hideOwned=t.checked;filterChanged('[data-v3-hide-owned]');}
   else if(t.matches('[data-v7-affordable]')){state.affordableOnly=t.checked;filterChanged('[data-v7-affordable]');}
  });
- section.addEventListener('keydown',event=>{if(event.key==='Escape'&&state.sheetOpen&&narrow()){state.sheetOpen=false;refresh('[data-v3-sheet]');}});
+ section.querySelector?.('.sv14-filters')?.addEventListener('toggle',event=>{if(section.isConnected)state.filtersOpen=event.currentTarget.open;});
+ section.addEventListener('keydown',event=>{if(event.key==='Escape'&&state.sheetOpen&&narrow()){state.sheetOpen=false;refresh(lastTrySelector||'[data-v3-sheet]');}});
 }
 function render(container,ctx){
  if(!container)return;latestCtx=ctx;
@@ -362,7 +371,7 @@ function render(container,ctx){
  const previousSearch=container.querySelector?.('#shop [data-v7-search]');
  const searchFocus=state.owner===owner&&previousSearch&&document.activeElement===previousSearch
   ?{start:previousSearch.selectionStart,end:previousSearch.selectionEnd,direction:previousSearch.selectionDirection}:null;
- if(state.owner!==owner){if(pendingConfirmation&&pendingConfirmation.owner!==owner)pendingConfirmation.cancel();state.owner=owner;state.trial=Object.create(null);state.reactionPreview=null;state.previewMode='profile';state.sheetOpen=false;state.busy=false;state.status='';resetPreviewScroll=true;}
+ if(state.owner!==owner){if(pendingConfirmation&&pendingConfirmation.owner!==owner)pendingConfirmation.cancel();state.owner=owner;state.comparison='trial';lastTrySelector=null;state.trial=Object.create(null);state.reactionPreview=null;state.previewMode='profile';state.sheetOpen=false;state.busy=false;state.status='';resetPreviewScroll=true;}
  const previewScroll=resetPreviewScroll?0:container.querySelector?.('.sv7-fitting-scroll')?.scrollTop||0;
  resetPreviewScroll=false;
  container.innerHTML=layout(ctx);const section=container.querySelector('#shop.komi-shop-v3');
