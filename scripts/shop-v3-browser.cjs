@@ -20,11 +20,17 @@ const expectedIds=['title_gojo_infinity','title_tanjiro_current','title_frieren_
    await shop.waitFor({timeout:20000});
    const cards=shop.locator('.sv3-item');
    assert.equal(await cards.count(),24);
-   assert.equal(await shop.locator('.sv12-gallery').count(),1);
+   assert.equal(await shop.locator('.sv12-gallery').count(),0,'no gallery in the general catalog');
    assert.equal(await shop.locator('[data-v7-category-select]').count(),1);
    for(const id of expectedIds)assert.equal(await shop.locator('[data-item-id="'+id+'"]').count(),1);
    assert.equal(await shop.locator('.sv3-item:not([data-item-type="title"])').count(),4);
    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+   await shop.locator('[data-sv14-category="title"]').click();
+   assert.equal(await shop.locator('.sv12-gallery').count(),1,'gallery is shown in Titles');
+   assert.equal(await shop.locator('.sv3-item:not([data-item-type="title"])').count(),0);
+   await shop.locator('[data-sv14-category="all"]').click();
+   assert.equal(await cards.count(),24);
+   assert.equal(await shop.locator('.sv12-gallery').count(),0);
    await shop.locator('[data-v7-more]').click();
    assert.equal(await cards.count(),44);
    assert.equal(await shop.locator('.sv12-gallery').count(),0);
