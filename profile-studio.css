@@ -437,3 +437,52 @@ body:has(#profile.komi-profile-studio) #sideFriendsBtn{width:44px!important;min-
  #profile.komi-profile-studio .profile-section-layout .profile-bento-side{display:flex!important;flex-direction:column;min-width:0}
 }
 @media(max-width:1099px){#profile.komi-profile-studio .profile-section-layout .profile-premium-tabs{flex-wrap:wrap;overflow:visible!important;justify-content:flex-start!important}}
+
+/* Opt-in collectible display, scoped to the profile. */
+.kcs-showcase[hidden]{display:none!important}
+.kcs-showcase{margin:16px 0;padding:17px;border-radius:15px;background:linear-gradient(125deg,#251921,#17151a 66%);border:1px solid #b78b9c55;color:#f5edf2;min-width:0}
+.kcs-showcase h3,.kcs-showcase p,.kcs-editor h3,.kcs-editor p{margin:0}
+.kcs-head{display:flex;gap:9px;align-items:center;justify-content:space-between;flex-wrap:wrap;margin-bottom:12px}
+.kcs-head h3{font-size:clamp(17px,3vw,24px);letter-spacing:-.035em}
+.kcs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.kcs-tile{display:grid;align-items:end;position:relative;min-width:0;overflow:hidden;aspect-ratio:3/4;border:1px solid var(--kcs-tier,#837381);border-radius:9px;background:radial-gradient(ellipse at 50% 35%,#63354b,#17151a 76%)}
+.kcs-rare{--kcs-tier:#7cb9e8}.kcs-epic{--kcs-tier:#b696e8}.kcs-legendary{--kcs-tier:#e0bd80}
+.kcs-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;object-position:center 0}
+.kcs-card-text{position:relative;z-index:1;display:grid;gap:4px;padding:22px 6px 8px;background:linear-gradient(transparent,#111015ed 68%);font-size:clamp(10px,2vw,14px);overflow-wrap:anywhere}
+.kcs-card-text small{font-size:clamp(9px,1.6vw,11px);color:#e1cad7}
+.kcs-button{border:1px solid #fff4;border-radius:9px;min-height:42px;padding:7px 11px;background:#302432;color:#fff5fa;font:700 12px Inter,system-ui,sans-serif;cursor:pointer}
+.kcs-button:hover:not(:disabled){background:#473144}
+.kcs-button:disabled{opacity:.55;cursor:default}
+.kcs-button:focus-visible,.kcs-choice input:focus-visible{outline:2px solid #fff;outline-offset:3px}
+.kcs-muted,.kcs-feedback{font-size:13px;color:#e0cbd8;line-height:1.4}
+.kcs-feedback:not(:empty){margin-top:8px}
+.kcs-editor{position:fixed;inset:0;width:min(580px,calc(100% - 24px));max-height:calc(100dvh - 28px);margin:auto;padding:16px;background:#1a151f;border:1px solid #ad788f;color:#faf0f6;border-radius:15px;overflow:auto;overscroll-behavior:contain}
+.kcs-editor::backdrop{background:#07050bd4}
+.kcs-edit-body{display:grid;gap:6px;margin-top:12px}
+.kcs-fieldset{display:grid;gap:3px;border:1px solid #e5bbcc35;border-radius:8px;margin:0 0 6px;padding:7px 9px;min-width:0}
+.kcs-fieldset legend{padding:0 4px;font-weight:800;color:#ffb9d1}
+.kcs-choice{display:flex;align-items:center;min-height:43px;gap:9px;padding:4px;cursor:pointer}
+.kcs-choice input{height:17px;width:17px;accent-color:#e1a3bf}
+.kcs-choice:has(input:disabled){opacity:.57;cursor:default}
+.kcs-editor .kcs-save{background:#fff1f8;color:#201521;margin-top:9px;width:100%}
+.kcs-editor .kcs-save:hover:not(:disabled){background:#e8cfdf}
+.kcs-showcase,.kcs-editor{font-family:Inter,Manrope,system-ui,sans-serif}
+
+/* Optional collection backgrounds never replace a saved custom banner. */
+.kcs-wallpaper[hidden]{display:none!important}
+.kcs-wallpaper{margin:12px 0;padding:15px;border:1px solid #bb8ba454;border-radius:14px;background:#1c161e;color:#f7e7ef}
+.kcs-wallpaper h3{font-size:18px;margin:0 0 7px}
+.kcs-wallpaper label{display:block;font-size:12px;color:#e8d3e0;margin-bottom:5px}
+.kcs-wallpaper-field{display:flex;gap:8px;flex-wrap:wrap}
+.kcs-wallpaper-field select{min-height:44px;flex:1;min-width:145px;color:#f6e6ef;background:#211922;border:1px solid #f3beda55;border-radius:8px;padding:7px}
+.profile-cover[data-kcs-wallpaper]>img{visibility:hidden}
+.profile-cover[data-kcs-wallpaper]{background-color:#18141d!important}
+.profile-cover[data-kcs-wallpaper=ghoul]{background-image:radial-gradient(circle at 72% 29%,#c45568 0 9%,#6e2b4870 9.3% 12%,transparent 14%),linear-gradient(170deg,#49152e,#160d1a 65%)}
+.profile-cover[data-kcs-wallpaper=jujutsu]{background-image:repeating-linear-gradient(138deg,transparent 0 38px,#ad96d430 39px 40px,transparent 41px 82px),radial-gradient(ellipse at 66% 16%,#7955a0,#1d1429 65%)}
+.profile-cover[data-kcs-wallpaper=frieren]{background-image:repeating-radial-gradient(ellipse at 65% 30%,#be996b50 0 1px,transparent 2px 27px),linear-gradient(145deg,#604728,#261d19 70%)}
+.profile-cover[data-kcs-wallpaper=alchemist]{background-image:repeating-linear-gradient(90deg,transparent 0 29px,#77aabd43 30px 31px),repeating-linear-gradient(0deg,transparent 0 29px,#77aabd38 30px 31px),radial-gradient(circle at 72% 29%,#244e67,#102331 68%)}
+.profile-cover[data-kcs-wallpaper=ghoul]{background-image:url("/assets/collection/deluxe-wallpapers/ghoul.svg")}
+.profile-cover[data-kcs-wallpaper=jujutsu]{background-image:url("/assets/collection/deluxe-wallpapers/jujutsu.svg")}
+.profile-cover[data-kcs-wallpaper=frieren]{background-image:url("/assets/collection/deluxe-wallpapers/frieren.svg")}
+.profile-cover[data-kcs-wallpaper=alchemist]{background-image:url("/assets/collection/deluxe-wallpapers/alchemist.svg")}
+.profile-cover[data-kcs-wallpaper]{background-position:center;background-size:cover}

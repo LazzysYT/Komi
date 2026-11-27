@@ -251,3 +251,57 @@ ink #151217, oxblood #411C2B, foil #7B263B, silver-pink #E4C5C9. Use a framed
 Names sit above the lower foil edge; locked art stays solid black, with no
 visible name or color image before a reveal. Maintain the same purchase,
 confirmation, price, odds and keyboard/reduced-motion behavior.
+
+### Series 01: field dossier and album
+
+Owners open one dossier at a time using a real button on a card. The reverse
+uses an ink archive grid, original spoiler-free notes and existing roster
+numbers; it is absent, not merely hidden, on unowned cards. One short glint
+emphasizes existing rarity labels. Reduced motion swaps the sides instantly.
+The compact 18-slot album links to the matching card, revealing its grid slot
+if a filter hides it. Neither inspection nor album navigation uses the network
+to mutate ownership, coins or progress.
+
+### Collection worlds
+
+Four shelves (Ghoul, Jujutsu, Frieren, Alchemist) share the same ownership rules
+but use burgundy ink, violet seals, warm parchment and brass-blue respectively.
+Use full-body art only when inspecting an owned card. The native viewer places
+the full illustration left and a compact spoiler-free dossier right. At phone
+width they stack; Escape closes and restores focus. A pull uses one short,
+non-flashing motif specific to the character, stopped entirely by reduced
+motion. Keep new booster storage separate and always use the existing wallet.
+
+### Cel-art expansion
+
+Keep outlines dark and expressive, with flat two-tone cel shadows and no
+photographic smudging or synthetic bloom. Each character gets a distinctive
+pose and faithful silhouette. The card print crops closer than the archival
+full-body viewer. The three newer shelves each carry ten characters; the
+original eighteen and their collection identifiers do not change.
+
+### Collector interaction
+
+A trusted purchase produces the card before any visual step. The peel stage is
+a regular button with an optional horizontal gesture and a dedicated skip.
+Result silhouettes open a two-panel manga strip, then the color detail and
+series motif appear briefly once. Reduced motion skips these decorations.
+Search matches names only for owned cards; rarity is available for locked
+slots without exposing identities. The profile showcase is off by default and
+publishes only an owner's three intentionally saved, server-verified card picks
+to visitors able to see that profile. No inventory, transaction or wallet
+metadata is part of the showcase.
+
+### Collector deluxe
+
+Each world uses a distinct physical wrapper and manga paper treatment. Twelve
+selected hero assets were replaced after comparative review, not the existing
+ownership IDs. Arcs and completion stamps are informational; the final slot
+shows a quiet recap and does not add further card rewards. Private opening
+history reads server timestamps and can repeat the scene without a purchase.
+A completed series can optionally supply an authored profile background
+without deleting the existing custom banner. A manually requested poster
+includes only game artwork, character name, series, rarity and catalogue code.
+
+### Collector navigation
+The Collections tab owns the series albums, silhouettes, filters and journal. Packs owns the pack shelf and checkout; only the opening or its result may show a character on that tab. Both use the same active series; switching tabs never starts a purchase. Journal replays return to the album.

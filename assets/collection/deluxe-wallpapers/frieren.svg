@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1300 440" preserveAspectRatio="xMidYMid slice">
+<rect width="1300" height="440" fill="#55442e"/>
+<g fill="none" stroke="#c3a472" opacity=".5" stroke-width="2"><path d="M-70 257Q127 144 298 250T625 201Q752 55 945 144T1350 48M-70 289Q131 156 310 278T650 223Q764 96 945 167T1350 85M-70 315Q129 193 310 299T684 254Q763 113 945 193T1350 113M-70 346Q126 224 310 319T703 279Q760 137 945 210T1350 143M-70 372Q119 256 310 342T723 300Q797 162 945 227T1350 168"/></g>
+<path d="M129 344q130 12 204-73t181-16q95 60 151-27t124-36q80 82 193-3t210-36" fill="none" stroke="#f4d092" stroke-width="3" stroke-dasharray="4 9"/>
+<g fill="#e7c583"><circle cx="129" cy="344" r="6"/><circle cx="514" cy="255" r="5"/><circle cx="789" cy="192" r="6"/><circle cx="1192" cy="153" r="8"/></g>
+<g fill="none" stroke="#e7c583" opacity=".8"><circle cx="1084" cy="282" r="53"/><circle cx="1084" cy="282" r="44"/><path d="m1084 222 10 50 49 10-49 10-10 50-10-50-50-10 50-10z"/></g>
+<path d="M17 17h1266v406H17z" fill="none" stroke="#c3a472" opacity=".5"/>
+</svg>

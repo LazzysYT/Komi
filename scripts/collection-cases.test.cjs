@@ -41,5 +41,36 @@ test('booster keeps small transparent assets and a matching vector fallback',()=
  assert.match(svg,/TOKYO GHOUL/);
  assert.doesNotMatch(svg,/<image|<script/);
  const html=read('index.html');
- assert.equal((html.match(/v=20261127-ghoul-booster/g)||[]).length,2);
+ assert.equal((html.match(/v=20261127-collector-deluxe/g)||[]).length,4);
+});
+
+test('new series rosters and presentation match the migration contract',()=>{
+ const sql=read('supabase/migrations/20261127080152_komi_collection_series.sql');
+ assert.deepEqual(Object.keys(c.seriesList),['ghoul','jujutsu','frieren','alchemist']);
+ assert.equal(c.seriesList.ghoul.roster.length,18);
+ const effects=new Set(Object.values(c.ghoulFx).map(x=>x[0]));
+ assert.equal(effects.size,18);
+ for(const [id,series] of Object.entries(c.seriesList)){
+  if(id==='ghoul')continue;
+  assert.equal(series.roster.length,10);
+  for(const row of series.roster){
+   assert.ok(sql.includes("('"+id+"','"+row.id+"')"),row.id);
+   assert.ok(row.group&&row.intro&&row.fx&&row.reveal&&/^#[\da-f]{6}$/.test(row.tint));
+   effects.add(row.reveal);
+  }
+ }
+ assert.equal(effects.size,48);
+});
+
+test('every collectible has a local cel illustration and a separate lock silhouette',()=>{
+ const directory=path.join(root,'assets/collection');
+ for(const [key,set] of Object.entries(c.seriesList)){
+  const dir=path.join(directory,key==='ghoul'?'ghoul-cel':key);
+  for(const {id} of set.roster)for(const rel of [id+'.webp','locked/'+id+'.webp']){
+   const content=fs.readFileSync(path.join(dir,rel));
+   assert.equal(content.toString('ascii',8,12),'WEBP',key+'/'+rel);
+   assert.ok(content.length>100&&content.length<80000,key+'/'+rel+' '+content.length);
+   assert.ok(content.includes(Buffer.from('ALPH'))||content.includes(Buffer.from('VP8L')),key+'/'+rel);
+  }
+ }
 });

@@ -2166,7 +2166,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 else if (!container.querySelector('.komi-static-shop')) container.innerHTML = '<section id="shop" class="komi-catalog-empty" role="status"><h1>Магазин AniCoin</h1><p>Загружаем магазин…</p></section>';
             } else if (currentView === 'collection') {
                 if (window.KomiCollection?.render) window.KomiCollection.render(container);
-                else container.innerHTML = '<section class="kc-page"><h1>Коллекция и кейсы</h1><p>Не удалось загрузить раздел.</p></section>';
+                else container.innerHTML = '<section class="kc-page"><h1>Коллекции и паки</h1><p>Не удалось загрузить раздел.</p></section>';
             } else if (currentView === 'premium') {
                 if (window.KomiPremium?.renderPage) window.KomiPremium.renderPage(container);
                 else container.innerHTML = '<section class="komi-premium-page"><h1>Komi Premium</h1><p>Загрузка раздела Premium…</p></section>';
@@ -2964,6 +2964,8 @@ async function komiLoadCatalogPages(attempt = 0) {
                     <div class="profile-section-layout">
                     ${KomiProfileUI.navigation(profilePageSection, isMe?myFriends.length:null, isPreview?null:Object.keys(userStatuses).length, isPreview?null:profileExperience.badges.length, canSeeProfileActivity, isMe)}
                     <div id="komiProfilePanel" class="komi-profile-panel">
+                    ${profilePageSection==='overview' && isMe && currentUser?.authUserId ? '<section class="kcs-wallpaper" data-kcs-wallpaper-panel hidden aria-label="Фон за полный альбом"></section>' : ''}
+                    ${profilePageSection==='overview' && currentUser?.authUserId ? '<section class="kcs-showcase" data-kcs-profile hidden aria-label="Витрина персонажей"></section>' : ''}
                     ${['overview','history','achievements'].includes(profilePageSection) ? KomiProfileUI.content({username,isMe,preview:isPreview,statsCounts,profileAnimeById,topGenres,myFriends,section:profilePageSection,canSeeProfileActivity,activityOwner:canSeeProfileActivity?currentUser.authUserId:'',resumeReady:!currentUser?.authUserId||komiResumeReadyUid===currentUser.authUserId,resumeFailed:Boolean(isMe&&currentUser?.authUserId&&komiResumeLoadError?.owner===currentUser.authUserId&&komiResumeLoadError.username===username)}) : ''}
                     ${canSeeProfileActivity && profilePageSection === 'activity' ? `
                     <section class="profile-activity-card" data-komi-daily-activity="${safeProfileText(currentUser.authUserId)}" aria-label="Ежедневная активность">
@@ -3129,6 +3131,12 @@ async function komiLoadCatalogPages(attempt = 0) {
                     </div>
                 </section>
             `;
+            if(currentUser?.authUserId && window.KomiCollectorShowcase && typeof _supabase!=='undefined' && _supabase){
+                const cover=container.querySelector('[data-profile-cover]');
+                const opts={client:_supabase,viewer:currentUser.authUserId,getViewer:()=>currentUser?.authUserId,username,isMe};
+                window.KomiCollectorShowcase?.mount(container.querySelector('[data-kcs-profile]'),opts);
+                window.KomiCollectorShowcase?.mountWallpaper(container.querySelector('[data-kcs-wallpaper-panel]')||cover,cover,opts);
+            }
             if (canSeeProfileActivity) {
                 void komiDailyActivityRead();
                 if(profilePageSection==='overview') {
