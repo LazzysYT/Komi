@@ -414,7 +414,41 @@ const motifPaths={
  seal:'M150 28L227 73v76l-77 45-77-45V73Z M150 194V28 M73 73l154 76m0-76L73 149'
 };
 function artworkRoot(){return seriesKey==='ghoul'?artRoot:'/assets/collection/'+seriesKey+'/';}
+
+const packPreferenceKey='komi.collection.pack-preferences';
+const wrapperNames={
+ ghoul:['Досье CCG','Печать Антэйку'],jujutsu:['Конверт с талисманом','Печать школы'],
+ frieren:['Путевое письмо','Печать мага'],alchemist:['Полевой конверт','Печать Аместриса'],
+ demon:['Конверт корпуса','Печать глицинии'],aot:['Приказ за стеной','Печать разведкорпуса'],
+ naruto:['Свиток миссии','Печать Листа'],bleach:['Послание Сэйрэтэя','Печать отряда'],
+ onepiece:['Письмо в порту','Печать капитана'],chainsaw:['Архивный конверт','Печать Бюро'],
+ hunter:['Письмо охотника','Печать экзамена'],deathnote:['Конверт с уликами','Печать «Дело Киры»'],
+ heroacademia:['Личное дело','Печать Юэй'],sololeveling:['Досье рейда','Печать врат']
+};
+const packPreferences={completed:false,quick:false,sound:true,wrappers:{}};
+try{
+ const saved=JSON.parse(root.localStorage?.getItem(packPreferenceKey)||'null');
+ if(saved){
+  packPreferences.completed=saved.completed===true;
+  packPreferences.quick=packPreferences.completed&&saved.quick===true;
+  packPreferences.sound=saved.sound!==false;
+  for(const key of Object.keys(wrapperNames))if(['envelope','stamp'].includes(saved.wrappers?.[key]))packPreferences.wrappers[key]=saved.wrappers[key];
+ }
+}catch{/* Preferences remain available for the session. */}
+function savePackPreferences(){
+ try{root.localStorage?.setItem(packPreferenceKey,JSON.stringify(packPreferences));}catch{}
+}
+function packWrapper(){return packPreferences.wrappers[seriesKey]||'original';}
+function wrapFace(variant){
+ const label=wrapperNames[seriesKey][variant==='envelope'?0:1];
+ return '<span class="kc-wrap-face" data-kc-wrapper="'+variant+'" aria-hidden="true"><span class="kc-wrap-crimp"></span><span class="kc-wrap-rule"></span><span class="kc-wrap-emblem"><svg viewBox="0 0 100 80" focusable="false"><path d="'+pickThemes[seriesKey].sigil+'"/></svg></span><span class="kc-wrap-series">'+esc(series.title)+'</span><strong>'+esc(label)+'</strong><small>KOMI ANIME · '+series.edition+'</small></span>';
+}
+function packCue(cue,strength){
+ if(packPreferences.sound)root.KomiUISound?.playPackCue?.(seriesKey,cue,strength);
+}
 function packArt(){
+ const variant=packWrapper();
+ if(variant!=='original')return '<div class="kc-pack kc-pack-variant" role="img" aria-label="'+esc(wrapperNames[seriesKey][variant==='envelope'?0:1])+'">'+wrapFace(variant)+'</div>';
  return '<div class="kc-pack"><img class="kc-case-image" src="/assets/collection/deluxe-packs/'+seriesKey+'.webp"'+(seriesKey==='ghoul'?' data-kc-pack-fallback="1"':'')+' width="360" height="640" alt="Бустер «'+esc(series.pack)+'»" decoding="async"><span class="kc-pack-fallback" aria-hidden="true">'+esc(series.pack)+'</span></div>';
 }
 function heroInfo(c){
@@ -570,8 +604,11 @@ const sceneMotion=Object.freeze({
  gust:'M0 152q47-14 84 2m237-14q36-12 79 2M0 299q73-27 112-18m208-6q40-16 80-13M0 381q58-22 100-15m186-6q50-13 114-21',
  motes:'M35 140h1m29 71h1m-18 101h1m281-155h1m52 60h1m-32 93h1m-37 42h1'
 });
+function sceneLocation(c,key=seriesKey){
+ return Object.entries(sceneSets[key]).find(([,cast])=>(' '+cast+' ').includes(' '+c.id+' '))?.[0]||backdropFallback[key];
+}
 function landscapeMarkup(c,kind){
- const location=Object.entries(sceneSets[seriesKey]).find(([,cast])=>(' '+cast+' ').includes(' '+c.id+' '))?.[0]||backdropFallback[seriesKey];
+ const location=sceneLocation(c);
  const [sky,light,ink,depth,lit,lines,weather]=scenery[location];
  return '<svg class="kc-world-backdrop" data-kc-location="'+location+'" data-kc-weather="'+weather+'" style="--kc-scene-sky:'+sky+';--kc-scene-light:'+light+';--kc-scene-depth:'+ink+'" viewBox="0 0 400 450" preserveAspectRatio="xMidYMid slice" focusable="false"><g class="kc-land-planes">'+depth+'</g><g class="kc-land-lit">'+lit+'</g><g class="kc-land-ink">'+lines+'</g><path class="kc-land-motion" d="'+sceneMotion[weather]+'"/><path class="kc-land-hero" pathLength="1" transform="matrix(1.33 0 0 1.33 0 82)" d="'+atmospherePaths[kind]+'"/></svg><span class="kc-weather-flow" data-kc-weather="'+weather+'"></span>';
 }
@@ -601,14 +638,26 @@ const chapterSets={
  sololeveling:[["Рейдовая группа",["jinwoo","jinho","joohee","song"]],["Гильдии",["chae","baek","choi","kimchul"]],["Ассоциация",["woo","gunhee"]],["За вратами",["igris","esil"]]]
 };
 const posterTones={ghoul:['#180d18','#63263a','#f3a4b9'],jujutsu:['#151021','#453363','#c6b0fc'],frieren:['#201809','#5b4726','#f2d198'],alchemist:['#0d1820','#284b62','#a6d9e7'],demon:['#08151f','#184266','#8adcf1'],aot:['#16160f','#393b24','#d5d6a1'],naruto:['#21150e','#59342a','#ffcf8a'],bleach:['#0c1721','#294755','#ccedfa'],onepiece:['#132e3f','#406468','#ebc780'],chainsaw:['#1b2926','#5a3936','#efb797'],hunter:['#1b3026','#47694a','#dbe7a8'],deathnote:['#161421','#65233e','#e8b6cb'],heroacademia:['#0d2236','#216678','#f5dc7e'],sololeveling:['#121530','#4d3c7b','#c1b1ff']};
+function seriesChapters(){
+ const chapters=chapterSets[seriesKey].slice();
+ if(additionalCast[seriesKey])chapters.push(['Новые персонажи',additionalCast[seriesKey].map(([id])=>id)]);
+ return chapters;
+}
+function resultChapters(s,prize,owned){
+ const chapters=seriesChapters().filter(([,cards])=>cards.includes(prize.id));
+ const pages=chapters.length?chapters:[[series.album,roster.map(card=>card.id)]];
+ return '<ul class="kc-result-pages" aria-label="Прогресс страниц">'+pages.map(([name,cards])=>{
+  const count=cards.filter(id=>owned.has(id)).length;
+  const sealed=count===cards.length&&s.rewardAdded;
+  return '<li><span>'+esc(name)+'</span><strong>'+count+' из '+cards.length+'</strong>'+(sealed?'<small class="kc-earned-stamp"><span aria-hidden="true">✦</span> Страница собрана</small>':'')+'</li>';
+ }).join('')+'</ul>';
+}
 function collectorProgress(s,owned,known){
  const count=owned.size,missing=roster.length-count;
  const label=!known?'Прогресс появится после входа и загрузки коллекции.':missing
   ?'Осталось: '+missing+' из '+roster.length+' · '+missing+' × 50 = '+(missing*CASE_PRICE)+' AniCoin.'
   :'Серия собрана. Можно выбрать её фон в профиле.';
- const chapters=chapterSets[seriesKey].slice();
- if(additionalCast[seriesKey])chapters.push(['Новые персонажи',additionalCast[seriesKey].map(([id])=>id)]);
- const stamps=chapters.map(([name,cards])=>{
+ const stamps=seriesChapters().map(([name,cards])=>{
   const n=cards.filter(id=>owned.has(id)).length,done=known&&n===cards.length;
   return '<li class="'+(done?'kc-page-stamped':'')+'"><strong>'+esc(name)+'</strong><span>'+(known?n+' / '+cards.length:'— / '+cards.length)+'</span>'+(done?'<small>Печать получена</small>':'')+'</li>';
  }).join('');
@@ -665,22 +714,41 @@ function albumFinalMarkup(s,owned){
  const animated=!s.finalAnimated;s.finalAnimated=true;
  return '<section class="kc-album-finale'+(animated?' kc-finale-playing':'')+'" aria-label="Серия собрана"><div class="kc-kicker">Последний слот</div><h3>Альбом собран</h3><p>'+roster.length+' / '+roster.length+' · '+esc(series.title)+'</p><div class="kc-finale-tiles" aria-hidden="true">'+roster.map(c=>'<img src="'+artworkRoot()+c.id+'.webp" alt="" width="48" height="68" loading="lazy">').join('')+'</div><span class="kc-finale-stamp">Коллекция завершена</span></section>';
 }
-async function downloadMiniPoster(c,asset,button,status){
- const v=activeDialog,vSeries=seriesKey,plate=series.title,serialCode=serial(roster.indexOf(c)),tones=posterTones[vSeries];
- const valid=()=>v&&activeDialog===v&&active()&&current(v.state)&&v.state.owned.includes(c.id);
+async function downloadMiniPoster(c,asset,button,status,postcardState=null){
+ const v=activeDialog,s=postcardState||v?.state,vSeries=seriesKey,plate=series.title,serialCode=serial(roster.indexOf(c)),tones=posterTones[vSeries];
+ const valid=()=>active()&&current(s)&&s.owned.includes(c.id)&&button.isConnected&&
+  (postcardState?s.result===c.id&&!s.reel:activeDialog===v);
+ const location=sceneLocation(c,vSeries);
+ const world=vSeries==='bleach'&&location==='dunes'?'hueco':vSeries==='deathnote'&&location==='dncase'?'deathstudy':vSeries;
  if(!valid()||button.disabled)return;
- button.disabled=true;status.textContent='Готовим постер…';
+ const noun=postcardState?'открытку':'постер';
+ button.disabled=true;status.textContent='Готовим '+noun+'…';
  try{
   const artwork=new Image();
-  artwork.src=asset;await artwork.decode();
+  artwork.src=asset;
+  const background=postcardState?new Image():null;
+  let instance='';
+  if(background){
+   background.src='/assets/collection/worlds/'+world+'.webp';
+   [instance]=await Promise.all([issuedNumber(s,c.id),artwork.decode(),background.decode()]);
+   if(!instance)throw Error('Number unavailable');
+  }else await artwork.decode();
   if(!valid())return;
   const canvas=document.createElement('canvas');canvas.width=720;canvas.height=1000;
   const ctx=canvas.getContext('2d');
   if(!ctx)throw Error('Canvas unavailable');
   const fade=ctx.createRadialGradient(360,400,25,360,455,530);
   fade.addColorStop(0,tones[1]);fade.addColorStop(1,tones[0]);ctx.fillStyle=fade;ctx.fillRect(0,0,720,1000);
+  if(background){
+   const scale=Math.max(720/background.naturalWidth,1000/background.naturalHeight);
+   const w=background.naturalWidth*scale,h=background.naturalHeight*scale;
+   ctx.drawImage(background,(720-w)/2,(1000-h)/2,w,h);
+   const shade=ctx.createLinearGradient(0,0,0,1000);
+   shade.addColorStop(0,'#0b0a15cb');shade.addColorStop(.25,'transparent');shade.addColorStop(.63,'#0b0a1530');shade.addColorStop(.89,'#0b0a15f5');
+   ctx.fillStyle=shade;ctx.fillRect(0,0,720,1000);
+  }
   ctx.strokeStyle=tones[2];ctx.lineWidth=4;ctx.strokeRect(22,22,676,956);ctx.lineWidth=1;ctx.strokeRect(35,35,650,930);
-  ctx.fillStyle=tones[2];ctx.font='bold 22px sans-serif';ctx.textAlign='center';ctx.fillText('KOMIANIME · '+serialCode,360,80,620);
+  ctx.fillStyle=tones[2];ctx.font='bold 22px sans-serif';ctx.textAlign='center';ctx.fillText('KOMIANIME · '+(instance||serialCode),360,80,620);
   const ratio=Math.min(595/artwork.naturalWidth,705/artwork.naturalHeight);
   const w=artwork.naturalWidth*ratio,h=artwork.naturalHeight*ratio;
   ctx.drawImage(artwork,(720-w)/2,98+(705-h)/2,w,h);
@@ -690,10 +758,10 @@ async function downloadMiniPoster(c,asset,button,status){
   if(!valid())return;
   if(!blob)throw Error('Export unavailable');
   const url=URL.createObjectURL(blob),a=document.createElement('a');
-  a.href=url;a.download='komianime-'+vSeries+'-'+c.id+'.png';a.click();
+  a.href=url;a.download='komianime-'+vSeries+'-'+c.id+(postcardState?'-postcard':'')+'.png';a.click();
   setTimeout(()=>URL.revokeObjectURL(url),60000);
-  status.textContent='Постер готов.';
- }catch{if(valid())status.textContent='Не удалось скачать постер. Попробуй ещё раз.';}
+  status.textContent=postcardState?'Открытка готова.':'Постер готов.';
+ }catch{if(valid())status.textContent='Не удалось скачать '+noun+'. Попробуй ещё раз.';}
  finally{if(valid())button.disabled=false;}
 }
 // Promotional portraits are separate from the ownership-controlled album cards.
@@ -773,11 +841,11 @@ function card(c,opened,place='grid'){
  const control=opened?'<button type="button" class="kc-inspect" data-kc-action="inspect" data-kc-focus="inspect-'+key+'" aria-controls="'+backId+'" aria-expanded="'+flipped+'" aria-label="'+esc(series.dossier)+': '+esc(c.name)+'">'+flipIcon+'<span>'+(flipped?'Лицевая':'Досье')+'</span></button>':'';
  return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'"'+(opened?sceneAttributes(c,info,true):'')+' data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+(opened?cardBackdrop(c,info):'')+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'<b aria-hidden="true">?</b></span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong>'+(opened?'<span class="kc-card-group">'+esc(group)+'</span>':'')+'<div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+(opened?'<div class="kc-card-glare" aria-hidden="true"></div>':'')+back+viewer+control+'</article>';
 }
-function album(owned,known){
+function album(owned,known,arriving){
  const slots=byRarity(roster).map(c=>{
-  const open=owned.has(c.id),num=serial(roster.indexOf(c));
+  const open=owned.has(c.id),num=serial(roster.indexOf(c)),animate=open&&arriving===c.id&&!reducedMotion();
   const image=artworkRoot()+(open?'':'locked/')+c.id+'.webp';
-  return '<li><button type="button" class="kc-slot kc-tier-'+c.rarity+(open?' kc-slot-owned':'')+'" data-kc-action="slot-'+c.id+'" aria-label="'+num+' · '+(open?esc(c.name):'не открыта')+'"><span class="kc-slot-art" aria-hidden="true"><img class="kc-album-image" src="'+image+'" width="80" height="80" alt="" loading="lazy" decoding="async"></span><span aria-hidden="true">'+num.slice(3)+'</span></button></li>';
+  return '<li><button type="button" class="kc-slot kc-tier-'+c.rarity+(open?' kc-slot-owned':'')+(animate?' kc-slot-arriving':'')+'" data-kc-action="slot-'+c.id+'" aria-label="'+num+' · '+(open?esc(c.name):'не открыта')+'"><span class="kc-slot-art" aria-hidden="true"><img class="kc-album-image" src="'+image+'" width="80" height="80" alt="" loading="lazy" decoding="async">'+(animate?'<img class="kc-slot-previous" src="'+artworkRoot()+'locked/'+c.id+'.webp" width="80" height="80" alt="">':'')+'</span><span aria-hidden="true">'+num.slice(3)+'</span></button></li>';
  }).join('');
  return '<section class="kc-album" aria-label="'+esc(series.album)+'"><div class="kc-album-heading"><div><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h3>'+esc(series.album)+'</h3></div><span class="kc-album-count">'+(known?owned.size+' / '+roster.length:roster.length+' слотов')+'</span></div><p class="kc-muted">Выбери слот, чтобы перейти к карточке.</p><ol class="kc-album-grid">'+slots+'</ol></section>';
 }
@@ -801,6 +869,27 @@ function inspect(button){
  for(const old of host.querySelectorAll('.kc-card.kc-flipped'))if(old!==el)setInspection(old,false);
  state.inspected=open?key:'';
  setInspection(el,open,true);
+}
+function placeRewardInAlbum(s){
+ const id=s.result;
+ if(!id||!s.owned.includes(id)||s.reel)return;
+ packSheetOpen=false;
+ s.confirmBuy=false;
+ s.extrasOpen=true;
+ s.inspected='';
+ tab='mine';
+ resetFilters();
+ s.arriving=id;
+ paint('slot-'+id);
+ s.arriving=null;
+ const slot=host.querySelector('[data-kc-action="slot-'+id+'"]');
+ if(!slot)return;
+ slot.scrollIntoView({block:'center',behavior:'instant'});
+ if(slot.classList.contains('kc-slot-arriving')){
+  const image=slot.querySelector('.kc-album-image');
+  const settle=()=>{if(slot.isConnected)slot.classList.add('kc-slot-settled');};
+  if(image.decode)void image.decode().then(settle,settle);else settle();
+ }
 }
 function jumpToCard(id){
  if(!ids.has(id)||!current(state)||!albumTab())return;
@@ -900,11 +989,15 @@ function leaveGridTilt(event){
  const card=event.target.closest?.('.kc-grid .kc-owned');
  if(card&&!card.contains(event.relatedTarget))setTilt(card,0,0);
 }
+async function issuedNumber(s,id){
+ const {data,error}=await packRequest('komi_collection_card_number',{p_series_id:s.seriesKey,p_character_id:id});
+ if(error||!current(s)||!Number.isSafeInteger(data?.serial)||!Number.isSafeInteger(data?.issued)||data.serial<1||data.issued<data.serial)return '';
+ return '#'+String(data.serial).padStart(4,'0')+' / '+data.issued.toLocaleString('ru-RU');
+}
 async function readCardNumber(viewer){
  try{
-  const {data,error}=await packRequest('komi_collection_card_number',{p_series_id:viewer.state.seriesKey,p_character_id:viewer.id});
-  if(error||activeDialog!==viewer||!current(viewer.state)||!Number.isSafeInteger(data?.serial)||!Number.isSafeInteger(data?.issued)||data.serial<1||data.issued<data.serial)return;
-  const label='#'+String(data.serial).padStart(4,'0')+' / '+data.issued.toLocaleString('ru-RU');
+  const label=await issuedNumber(viewer.state,viewer.id);
+  if(!label||activeDialog!==viewer)return;
   for(const field of viewer.dialog.querySelectorAll('[data-kc-instance]'))field.textContent=label;
  }catch{/* Keep the catalogue code when the issue number is unavailable. */}
 }
@@ -964,7 +1057,7 @@ function makeReel(prize,owned,random=Math.random){
  return Array.from({length:REEL_LENGTH},(_,i)=>i===REEL_WIN?prize:candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))].id);
 }
 // Existing purchase receipts and journal replays can still play the original reveal.
-const PICK_DURATION=3550;
+const PICK_DURATION=3550,QUICK_PICK_DURATION=820,QUICK_DEAL_DURATION=620;
 const REVEAL_LANES={2:[-.8],3:[-1.04,1.04],4:[-1.55,-.82,1.55],5:[-2.05,-1.12,1.12,2.05]};
 const pickThemes=Object.freeze({
  ghoul:{scene:'Ночной Токио',sigil:'M10 40Q50 9 90 40Q50 72 10 40ZM50 25Q40 40 50 55Q60 40 50 25ZM24 25 18 17M73 55 82 64',effects:'<path class="kc-pick-strokes" d="M34 29Q35 50 47 53T60 69Q49 63 42 63 24 64 22 57 18 49 34 29ZM91 5Q89 16 85 24 102 16 91 5ZM147 57Q150 38 163 42 166 50 147 57ZM235 32Q219 59 231 63 240 73 244 53ZM277 9Q265 24 266 36 280 28 277 9ZM316 54Q299 56 301 64 305 71 316 54ZM38 139Q50 113 59 114 64 126 38 139ZM86 130Q86 142 72 155 67 157 67 151ZM264 117Q252 133 260 140 274 144 273 130ZM324 120Q308 143 319 146 329 151 324 120Z"/><path class="kc-pick-trace" d="M15 120Q65 18 163 28T323 141M54 16Q122-2 171 32T321 61M21 162q73 20 151 2t150-11"/>'},
@@ -1000,16 +1093,18 @@ function pickScene(reel,theme){
   return '<button type="button" class="kc-pick-card'+(selected?' is-chosen':'')+'" style="--kc-fan-offset:'+offset+';--kc-deal-index:'+index+';--kc-reveal-shift:'+(lane-offset)+'" data-kc-action="pick-card-'+option.slot+'" aria-label="'+esc(label)+'"'+(unavailable?' disabled':'')+'>'+(reel.offer?'<span class="kc-pick-turntable">'+faces+'</span>':faces)+'</button>';
  }).join('');
  const burst=reveal&&reel.offer?'<span class="kc-pick-burst" aria-hidden="true">'+Array.from({length:18},(_,i)=>'<i style="--kc-ray:'+i+'"></i>').join('')+'</span>':'';
+ const light=reveal?'<span class="kc-world-opening" aria-hidden="true"></span>':'';
  const opening=dealing?wrapperMarkup(true,reel)+'<span class="kc-deal-light" aria-hidden="true"></span>':'';
- return '<div class="kc-pick-arena'+(reel.offer?' kc-real-pick':'')+(dealing?' is-dealing':'')+(reveal?' is-revealing kc-pick-position-'+reel.chosen:'')+'" data-kc-pick-world="'+seriesKey+'" style="--kc-fan-count:'+options.length+';--kc-pick-elapsed:-'+elapsed+'ms">'+particles+opening+'<div class="kc-pick-card-row" role="group" aria-label="Карточки из пака">'+cards+'</div>'+burst+'</div>';
+ return '<div class="kc-pick-arena'+(reel.offer?' kc-real-pick':'')+(reel.quick?' kc-quick-pick':'')+(dealing?' is-dealing':'')+(reveal?' is-revealing kc-pick-position-'+reel.chosen:'')+'" data-kc-pick-world="'+seriesKey+'" style="--kc-fan-count:'+options.length+';--kc-pick-elapsed:-'+elapsed+'ms">'+particles+opening+light+'<div class="kc-pick-card-row" role="group" aria-label="Карточки из пака">'+cards+'</div>'+burst+'</div>';
 }
 const FOIL_DURATION=980;
 const PACK_DEAL_DURATION=2110;
 const sealEdge='0 14%,7% 13%,12% 15%,19% 13%,24% 14%,31% 12%,38% 14%,46% 12%,54% 14%,62% 12%,69% 14%,76% 13%,82% 15%,90% 12%,96% 15%,100% 13%';
 function wrapperMarkup(animated,reel){
  const art='/assets/collection/deluxe-packs/'+seriesKey+'.webp';
- const image='<img class="kc-foil-print" src="'+art+'" width="360" height="640" alt="" draggable="false" decoding="async">';
- return '<span class="kc-foil-table'+(animated?' is-tearing':'')+'" aria-hidden="true" style="--kc-foil-start:'+(animated?reel.dragStart:0)+';--kc-foil-elapsed:-'+(animated?Math.max(0,Date.now()-reel.started):0)+'ms;--kc-seal-edge:'+sealEdge+'"><span class="kc-foil-object"><span class="kc-foil-lining"></span><span class="kc-foil-deck"></span><span class="kc-foil-shell">'+image+'</span><span class="kc-foil-strip">'+image+'</span><span class="kc-foil-rip"></span><span class="kc-foil-tab"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M5 18 18 5M9 5h9v9"/></svg></span></span></span>';
+ const variant=reel.wrapper||'original';
+ const image=variant!=='original'?wrapFace(variant):'<img class="kc-foil-print" src="'+art+'" width="360" height="640" alt="" draggable="false" decoding="async">';
+ return '<span class="kc-foil-table'+(animated?' is-tearing':'')+(variant==='original'?'':' kc-foil-variant')+'" aria-hidden="true" style="--kc-foil-start:'+(animated?reel.dragStart:0)+';--kc-foil-elapsed:-'+(animated?Math.max(0,Date.now()-reel.started):0)+'ms;--kc-seal-edge:'+sealEdge+'"><span class="kc-foil-object"><span class="kc-foil-lining"></span><span class="kc-foil-deck"></span><span class="kc-foil-shell">'+image+'</span><span class="kc-foil-strip">'+image+'</span><span class="kc-foil-rip"></span><span class="kc-foil-tab"><svg viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="M5 18 18 5M9 5h9v9"/></svg></span></span></span>';
 }
 function reelMarkup(s){
  const reel=s.reel;
@@ -1031,15 +1126,19 @@ function peelReel(progress=0){
   reel.timer=null;reel.phase='choose';
   paint(firstChoice(reel));
  };
- if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){showChoices();return;}
+ packCue('tear');
+ if(reducedMotion()){showChoices();return;}
  reel.phase='tear';reel.started=Date.now();reel.dragStart=progress;
  paint(reel.offer?'pack-heading':'skip-reel');
- reel.timer=setTimeout(showChoices,reel.offer?PACK_DEAL_DURATION:FOIL_DURATION);
+ reel.timer=setTimeout(showChoices,reel.quick?QUICK_DEAL_DURATION:reel.offer?PACK_DEAL_DURATION:FOIL_DURATION);
 }
 function chooseCard(n){
  const s=state,reel=s?.reel;
  if(!current(s)||!reel||reel.phase!=='choose')return;
- if(reel.offer){if(!reel.error&&reel.choices.some(choice=>choice.slot===n&&choice.available))void claimPack(s,reel,n);return;}
+ if(reel.offer){
+  if(!reel.error&&reel.choices.some(choice=>choice.slot===n&&choice.available)){packCue('place');void claimPack(s,reel,n);}
+  return;
+ }
  if(![1,2,3].includes(n))return;
  if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){finishReel(s,reel,true);return;}
  reel.chosen=n;reel.phase='reveal';reel.started=Date.now();
@@ -1064,10 +1163,10 @@ function parsePack(data){
 }
 function revealPack(s,reel,pack){
  Object.assign(reel,{...pack,chosen:pack.slot,phase:'reveal',started:Date.now(),error:''});
- if(active())root.playSound?.();
- if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){finishReel(s,reel,true);return;}
+ if(reducedMotion()){if(active())packCue('flip');finishReel(s,reel,true);return;}
  paint('pack-heading');
- reel.timer=setTimeout(()=>finishReel(s,reel),PICK_DURATION);
+ reel.audioTimer=setTimeout(()=>{if(active()&&current(s)&&s.reel===reel)packCue('flip');},reel.quick?250:1130);
+ reel.timer=setTimeout(()=>finishReel(s,reel),reel.quick?QUICK_PICK_DURATION:PICK_DURATION);
 }
 function closePack(s){
  const reel=s?.reel;
@@ -1116,7 +1215,8 @@ function pointerStart(event){
  const target=event.target.closest?.('.kc-peel');
  if(!active()||!target||!event.isPrimary||event.button!==0)return;
  suppressPeelClickUntil=0;
- peelPointer={target,id:event.pointerId,x:event.clientX,y:event.clientY};
+ peelPointer={target,id:event.pointerId,x:event.clientX,y:event.clientY,crease:0};
+ target.classList.add('kc-peel-dragging');
  try{target.setPointerCapture(event.pointerId);}catch{}
 }
 function pointerMove(event){
@@ -1126,10 +1226,13 @@ function pointerMove(event){
  const dx=event.clientX-p.x,dy=event.clientY-p.y;
  if(Math.hypot(dx,dy)>12)suppressPeelClickUntil=performance.now()+500;
  if(Math.abs(dy)>Math.max(20,dx)&&dy!==0){pointerCancel(event);return;}
- p.target.style.setProperty('--kc-peel-progress',String(Math.max(0,Math.min(1,dx/85))));
+ const progress=Math.max(0,Math.min(1,dx/85)),crease=Math.floor(progress*4);
+ if(crease>p.crease){p.crease=crease;packCue('crease',progress);}
+ p.target.style.setProperty('--kc-peel-progress',String(progress));
 }
 function pointerCancel(event){
  if(peelPointer?.id!==event.pointerId)return;
+ peelPointer.target.classList.remove('kc-peel-dragging');
  peelPointer.target.style.removeProperty('--kc-peel-progress');peelPointer=null;
 }
 function pointerEnd(event){
@@ -1141,15 +1244,25 @@ function pointerEnd(event){
 }
 function finishReel(s,reel=s?.reel,manual=false){
  if(!current(s)||!reel||s.reel!==reel)return;
- clearTimeout(reel.timer);
+ clearTimeout(reel.timer);clearTimeout(reel.audioTimer);
  const payload=reel.payload;
  s.reel=null;
  if(reel.isReplay){s.replayResult=payload.result;paint('result');}
- else{packSheetOpen=false;if(reel.offer)storedOffer(s,null);Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint(manual?'result':null);if(s.journalOpen)void readJournal(s);}if(active())playSignature(host?.querySelector('.kc-result'));
+ else{
+  packSheetOpen=false;
+  if(reel.offer)storedOffer(s,null);
+  s.rewardAdded=!Boolean(reel.alreadyOwned??s.owned.includes(payload.result));
+  Object.assign(s,payload,{status:'ready'});
+  s.finalUnlock=s.owned.length===roster.length;
+  if(payload.result&&!packPreferences.completed){packPreferences.completed=true;savePackPreferences();}
+  paint(manual?'result':null);
+  if(s.journalOpen)void readJournal(s);
+ }
+ if(active())playSignature(host?.querySelector('.kc-result'));
 }
 function showReel(s,payload){
  if(!active()){packSheetOpen=false;Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint();if(s.journalOpen)void readJournal(s);return;}
- const reel={payload,phase:'seal',timer:null};
+ const reel={payload,wrapper:packWrapper(),quick:packPreferences.quick,phase:'seal',timer:null};
  s.reel=reel;paint();
 }
 function button(label,action,options={}){
@@ -1248,6 +1361,29 @@ function endSearchComposition(event){
  searchComposing=false;updateSearch(event.target);
  if(deferredPaint){deferredPaint=false;paint();}
 }
+function packSettings(s){
+ const wrapper=packWrapper(),disabled=s.status==='opening'?' disabled':'';
+ const options=[['original',series.pack],['envelope',wrapperNames[seriesKey][0]],['stamp',wrapperNames[seriesKey][1]]]
+  .map(([id,label])=>'<option value="'+id+'"'+(id===wrapper?' selected':'')+'>'+esc(label)+'</option>').join('');
+ const checkbox=(id,label,checked)=>'<label class="kc-pack-check"><input type="checkbox" data-kc-pack-setting="'+id+'" data-kc-focus="pack-'+id+'"'+(checked?' checked':'')+disabled+'> '+esc(label)+'</label>';
+ return '<div class="kc-pack-settings"><label class="kc-pack-wrap-label"><span>Обёртка</span><select data-kc-pack-setting="wrapper" data-kc-focus="pack-wrapper"'+disabled+'>'+options+'</select></label><div class="kc-pack-toggles">'+
+  checkbox('sound','Звук открытия',packPreferences.sound)+(packPreferences.completed?checkbox('quick','Быстрое открытие',packPreferences.quick):'')+'</div></div>';
+}
+function changeCollectionControl(event){
+ const control=event.target.closest?.('[data-kc-pack-setting]');
+ if(!control){changeRarity(event);return;}
+ if(!active()||!current(state)||state.reel||state.status==='opening')return;
+ const setting=control.dataset.kcPackSetting;
+ if(setting==='wrapper'){
+  if(!['original','envelope','stamp'].includes(control.value))return;
+  packPreferences.wrappers[seriesKey]=control.value;
+  savePackPreferences();
+  paint('pack-wrapper');
+ }else if(setting==='sound'||setting==='quick'&&packPreferences.completed){
+  packPreferences[setting]=control.checked;
+  savePackPreferences();
+ }
+}
 function focusKey(el){return el?.dataset.kcFocus||el?.dataset.kcAction||null;}
 const sheetCloseIcon='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10m0-10L7 17"/></svg>';
 const packCheckIcon='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 4.5 4.5L19.5 7"/></svg>';
@@ -1266,7 +1402,7 @@ function packDetails(s,owned,known,complete,canBuy,retryPurchase,resumeOffer){
  return '<article class="kc-case" aria-labelledby="kc-selected-pack-title"'+(s.status==='opening'||loading?' aria-busy="true"':'')+'>'
  +'<div class="kc-pack-detail-head"><span>Выбранный пак</span><button type="button" class="kc-sheet-close" data-kc-action="dismiss-pack-details" aria-label="Закрыть сведения о паке"'+(s.status==='opening'?' disabled':'')+'>'+sheetCloseIcon+'</button></div>'
  +'<div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-pack-title"><span>'+esc(series.title)+'</span><h2 id="kc-selected-pack-title" data-kc-focus="pack-title" tabindex="-1">'+esc(series.pack)+'</h2></div></div>'
- +'<div class="kc-case-copy">'+progress+(!complete?'<p class="kc-pack-guarantee">'+packCheckIcon+'Одна новая карточка, без повторов</p>':'')
+ +'<div class="kc-case-copy">'+progress+(!s.confirmBuy&&!complete?packSettings(s):'')+(!complete?'<p class="kc-pack-guarantee">'+packCheckIcon+'Одна новая карточка, без повторов</p>':'')
  +'<p class="kc-case-status'+(status?'':' kc-pack-sr')+'" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(status)+'</p>'
  +(offerCopy?'<p class="kc-pack-billing">'+esc(offerCopy)+'</p>':'')
  +(notice?'<p class="kc-pack-message" role="status">'+esc(notice)+'</p>':'')
@@ -1309,9 +1445,9 @@ function paint(nextFocus=null){
  const resumeOffer=!!s.owner&&!!storedOffer(s);
  const canBuy=s.status==='ready'&&!s.reel&&s.price===CASE_PRICE&&(retryPurchase||resumeOffer&&!s.offerNeedsBalance||!complete&&s.balance>=CASE_PRICE);
  const prize=s.reel?null:roster.find(c=>c.id===(s.replayResult||s.result));
- const reward=prize&&known?'<div class="kc-result" role="status"'+sceneAttributes(prize,heroInfo(prize))+'>'+stageScenery(prize,heroInfo(prize))+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','mine',{primary:true,focus:'result-collection'})+(canBuy?button('Открыть ещё','confirm-buy-next'):''))+'</div></div>':'';
+ const reward=prize&&known?'<div class="kc-result" role="status"'+sceneAttributes(prize,heroInfo(prize))+'>'+stageScenery(prize,heroInfo(prize))+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):resultChapters(s,prize,owned)+'<div class="kc-result-actions">'+button('На место в альбоме','place-reward',{primary:true})+button('Скачать открытку','postcard')+(canBuy?button('Открыть ещё','confirm-buy-next'):'')+'</div><p class="kc-postcard-status" aria-live="polite"></p>')+'</div></div>':'';
  if(inAlbum){
-  const extras='<section class="kc-extras"><button type="button" class="kc-extras-toggle" data-kc-action="album-details" aria-expanded="'+s.extrasOpen+'" aria-controls="kc-extras-body"><span>Альбом и журнал</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div id="kc-extras-body"'+(s.extrasOpen?'':' hidden')+'>'+album(owned,known)+collectorProgress(s,owned,known)+journalMarkup(s)+'</div></section>';
+  const extras='<section class="kc-extras"><button type="button" class="kc-extras-toggle" data-kc-action="album-details" aria-expanded="'+s.extrasOpen+'" aria-controls="kc-extras-body"><span>Альбом и журнал</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div id="kc-extras-body"'+(s.extrasOpen?'':' hidden')+'>'+album(owned,known,s.arriving)+collectorProgress(s,owned,known)+journalMarkup(s)+'</div></section>';
   body=albumFinalMarkup(s,owned)+'<div class="kc-series"><div class="kc-series-info"><h2>'+esc(series.title)+'</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к пакам','album-packs',{primary:true})+'</div>'+albumTools()+extras;
  }else{
   const showDetails=!s.reel&&!s.replayResult;
@@ -1323,7 +1459,7 @@ function paint(nextFocus=null){
   body=reelMarkup(s)+reward+'<div class="kc-pack-browser'+(showDetails?' kc-pack-browser-detail':'')+'">'+seriesPicker()+panel+'</div>';
  }
  const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':' kc-packs-page')+(tab==='mine'?' kc-my-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+tabs+(inAlbum?seriesPicker()+notice(s):'')+body+'</section>';
- const sheetWasOpen=!!packSheet?.open;
+ const sheetWasOpen=!!packSheet?.open, sheetScroll=packSheet?.scrollTop||0;
  if(sheetWasOpen&&typeof packSheet.close==='function')packSheet.close();
  packSheet=null;
  if(activeDialog?.dialog.isConnected){
@@ -1331,6 +1467,7 @@ function paint(nextFocus=null){
   host.querySelector('.kc-page').replaceWith(template.content);
  }else host.innerHTML=markup;
  openPackSheet(!sheetWasOpen);
+ if(sheetWasOpen&&packSheet)packSheet.scrollTop=sheetScroll;
  bindArtwork(host);
  refreshAlbumResults();
  if(!inAlbum)cardSceneObserver?.disconnect();
@@ -1372,11 +1509,11 @@ async function request(action){
    const {data,error}=await packRequest('komi_collection_pack_open_v3',{p_series_id:s.seriesKey,p_offer_id:saved});
    if(!current(s))return;
    if(error){if(saved&&error.code==='22023')storedOffer(s,null);throw error;}
-   const pack=parsePack(data);
+   const pack=parsePack(data),alreadyOwned=s.owned.includes(pack.payload.result);
    Object.assign(s,pack.payload,{status:'ready',offerNeedsBalance:pack.status==='insufficient',purchaseStatus:pack.status});
    if(pack.offer)storedOffer(s,pack.offer);
    if(pack.status==='ready'||pack.status==='claimed'){
-    const reel={...pack,phase:saved===pack.offer?'choose':'seal',timer:null};
+    const reel={...pack,alreadyOwned:pack.status==='claimed'?alreadyOwned:null,wrapper:packWrapper(),quick:packPreferences.quick,phase:saved===pack.offer?'choose':'seal',timer:null};
     s.reel=reel;
     if(pack.status==='claimed')revealPack(s,reel,pack);
     else paint(reel.phase==='seal'?'peel':firstChoice(reel));
@@ -1401,6 +1538,12 @@ function click(event){if(!active())return;const b=event.target.closest?.('.kc-pa
  state.journalOpen=a==='journal-retry'||!state.journalOpen;paint('journal');if(state.journalOpen)void readJournal(state);return;
  }if(a.startsWith('replay-')){startReplay(a.slice(7));return;}
  if(a==='leave-replay'){state.replayResult=null;state.extrasOpen=true;tab='collection';paint('journal');return;}
+ if(a==='place-reward'){placeRewardInAlbum(state);return;}
+ if(a==='postcard'){
+  const s=state,prize=roster.find(c=>c.id===s.result),status=b.closest('.kc-result')?.querySelector('.kc-postcard-status');
+  if(prize&&status)void downloadMiniPoster(prize,artworkRoot()+prize.id+'.webp',b,status,s);
+  return;
+ }
  if(a==='peel'){if(!event.detail||performance.now()>=suppressPeelClickUntil)peelReel();return;}
  if(a.startsWith('pick-card-')){chooseCard(Number(a.slice(10)));return;}
  if(a==='retry-pick'){void claimPack(state,state.reel,state.reel.attempt);return;}
@@ -1447,7 +1590,7 @@ function render(container){
  const style=document.querySelector('link[data-komi-collection-style]');if(style&&style.media!=='all')style.media='all';
  if(host!==container){
   closeViewer(false);searchComposing=false;deferredPaint=false;
-  const listeners={click,keydown,input:inputSearch,change:changeRarity,compositionstart:startSearchComposition,compositionend:endSearchComposition,pointerdown:pointerStart,pointermove:pointerMove,pointerout:leaveGridTilt,pointerup:pointerEnd,pointercancel:pointerCancel};
+  const listeners={click,keydown,input:inputSearch,change:changeCollectionControl,compositionstart:startSearchComposition,compositionend:endSearchComposition,pointerdown:pointerStart,pointermove:pointerMove,pointerout:leaveGridTilt,pointerup:pointerEnd,pointercancel:pointerCancel,lostpointercapture:pointerCancel};
   for(const [name,handle] of Object.entries(listeners)){host?.removeEventListener(name,handle);container.addEventListener(name,handle);}
   host=container;
  }

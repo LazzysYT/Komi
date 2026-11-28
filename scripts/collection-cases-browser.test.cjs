@@ -145,7 +145,7 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  const inspectReward=p.locator('.kc-result').getByRole('button',{name:/Досье CCG/});
  await inspectReward.click();
  assert.equal(await inspectReward.getAttribute('aria-expanded'),'true');
- await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
+ await p.getByRole('button',{name:'На место в альбоме',exact:true}).click();
  assert.equal(await p.locator('.kc-case,.kc-result').count(),0);
  assert.equal(await p.locator('.kc-grid .kc-owned').count(),2);
  await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();
