@@ -35,11 +35,11 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js; script-src-elem 'self' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; worker-src 'self' blob:"
+          "value": "base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; script-src 'self' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js https://challenges.cloudflare.com; script-src-elem 'self' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js https://challenges.cloudflare.com; script-src-attr 'none'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; worker-src 'self' blob:"
         },
         {
           "key": "Content-Security-Policy-Report-Only",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; media-src 'self' https: blob:; frame-src https:; worker-src 'self' blob:; connect-src 'self' https://xebglnnpoutmdcgukbxf.supabase.co wss://xebglnnpoutmdcgukbxf.supabase.co https://graphql.anilist.co https://api.allorigins.win https://cdn.jsdelivr.net"
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https: data: blob:; media-src 'self' https: blob:; frame-src https:; worker-src 'self' blob:; connect-src 'self' https://xebglnnpoutmdcgukbxf.supabase.co wss://xebglnnpoutmdcgukbxf.supabase.co https://graphql.anilist.co https://api.allorigins.win https://cdn.jsdelivr.net"
         }
       ]
     },
@@ -211,6 +211,14 @@
     {
       "source": "/contacts",
       "destination": "/contacts.html"
+    },
+    {
+      "source": "/security",
+      "destination": "/security.html"
+    },
+    {
+      "source": "/copyright",
+      "destination": "/copyright.html"
     }
   ],
   "redirects": [
@@ -244,6 +252,16 @@
     {
       "source": "/contacts.html",
       "destination": "/contacts",
+      "permanent": true
+    },
+    {
+      "source": "/security.html",
+      "destination": "/security",
+      "permanent": true
+    },
+    {
+      "source": "/copyright.html",
+      "destination": "/copyright",
       "permanent": true
     }
   ],

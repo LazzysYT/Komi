@@ -4696,9 +4696,10 @@ async function komiLoadCatalogPages(attempt = 0) {
             document.getElementById('authModal').classList.add('active');
         }
 
-        function closeAuthModal() { document.getElementById('authModal').classList.remove('active'); }
+        function closeAuthModal() { window.KomiAuthCaptcha?.cancel(); document.getElementById('authModal').classList.remove('active'); }
 
         function switchAuthTab(mode) {
+            window.KomiAuthCaptcha?.cancel();
             const loginBtn = document.getElementById('tabLoginBtn');
             const regBtn = document.getElementById('tabRegisterBtn');
             const loginForm = document.getElementById('loginFormContainer');
@@ -4723,7 +4724,15 @@ async function komiLoadCatalogPages(attempt = 0) {
             const password = document.getElementById("loginPassword").value;
             if (!email.includes("@") || !password) return;
             if (!_supabase) { alert("Сервис входа недоступен"); return; }
-            const { error } = await _supabase.auth.signInWithPassword({ email, password });
+            let attempt;
+            try {
+                const form=document.getElementById('loginFormContainer');
+                if (!window.KomiAuthCaptcha) throw Error('Модуль входа не загрузился. Обновите страницу.');
+                attempt=await window.KomiAuthCaptcha.run(form, captchaToken =>
+                    _supabase.auth.signInWithPassword({ email, password, options: captchaToken ? {captchaToken} : {} }));
+            } catch(error) { alert(error?.message || 'Не удалось выполнить вход.'); return; }
+            if (attempt.skipped) return;
+            const { error } = attempt.value;
             if (error) { alert("Не удалось войти: " + error.message); return; }
             await queueKomiSessionRestore();
         }
@@ -4738,10 +4747,18 @@ async function komiLoadCatalogPages(attempt = 0) {
             if (!/^[A-Za-z0-9_]{3,24}$/.test(username)) { alert('Никнейм: 3–24 символа, латиница, цифры и _'); return; }
             if (komiReservedAccountName(username)) { alert('Этот никнейм зарезервирован. Выбери другой.'); return; }
             if (passwordInput.length < 12) { alert('Используйте уникальный пароль минимум из 12 символов.'); return; }
-            const { data: signupData, error: signupError } = await _supabase.auth.signUp({
-                email, password: passwordInput,
-                options: { data: { username }, emailRedirectTo: 'https://komianime.online/' }
-            });
+            let attempt;
+            try {
+                const form=document.getElementById('registerFormContainer');
+                if (!window.KomiAuthCaptcha) throw Error('Модуль регистрации не загрузился. Обновите страницу.');
+                attempt=await window.KomiAuthCaptcha.run(form, captchaToken =>
+                    _supabase.auth.signUp({
+                        email, password: passwordInput,
+                        options: { data: { username }, emailRedirectTo: 'https://komianime.online/', ...(captchaToken ? {captchaToken} : {}) }
+                    }));
+            } catch(error) { alert(error?.message || 'Не удалось выполнить регистрацию.'); return; }
+            if (attempt.skipped) return;
+            const { data: signupData, error: signupError } = attempt.value;
             if (signupError) { alert('Не удалось зарегистрироваться: ' + signupError.message); return; }
             if (!signupData.session) {
                 closeAuthModal();

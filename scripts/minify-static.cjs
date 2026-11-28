@@ -29,7 +29,11 @@ try {
     console.log(name+': '+original.length+' -> '+minified.length+' bytes');
   }
   const index=path.join(root,'index.html'),builtIndex=index+'.komi-min.tmp';
-  fs.writeFileSync(builtIndex,startup.html);
+  const publicSiteKey=(process.env.KOMI_TURNSTILE_SITE_KEY||'').trim();
+  if(publicSiteKey&&!/^[A-Za-z0-9_-]{10,128}$/.test(publicSiteKey))throw Error('Invalid public Turnstile site key');
+  const marker='<meta name="komi-turnstile-sitekey" content="">';
+  if(startup.html.split(marker).length!==2)throw Error('Missing or duplicate Turnstile configuration');
+  fs.writeFileSync(builtIndex,startup.html.replace(marker,'<meta name="komi-turnstile-sitekey" content="'+publicSiteKey+'">'));
   pending.push({input:index,output:builtIndex});
   for(const {input,output} of pending)fs.renameSync(output,input);
   require('./build-first-paint.cjs').buildFirstPaint(root);

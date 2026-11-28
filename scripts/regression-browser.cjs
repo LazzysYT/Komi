@@ -484,7 +484,7 @@ async function checkNotifications(page) {
        duplicateNav:document.querySelectorAll('.komi-home-storefront .komi-home-support-links').length,
        horizontalOverflow:document.documentElement.scrollWidth>innerWidth+2};
    });
-   assert.equal(footerGeometry.links.length,7,JSON.stringify(footerGeometry));
+   assert.deepEqual(footerGeometry.links,['/','/catalog','/about','/contacts','/partners','/security','/copyright','https://www.tiktok.com/@komi_animeofficial','https://t.me/+X9yUQPEBldo2MzNi'],JSON.stringify(footerGeometry));
    assert.ok(!footerGeometry.clipped&&!footerGeometry.overlap&&!footerGeometry.duplicateNav&&!footerGeometry.horizontalOverflow,JSON.stringify(footerGeometry));
    await page.evaluate(()=>window.scrollTo(0,0));
 
