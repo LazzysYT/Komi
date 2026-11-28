@@ -5,10 +5,10 @@ function controller(db,uid,isCurrent){
   const ensure=()=>{if(!uid||!isCurrent())throw Error('Сеанс изменился. Откройте раздел заново.');};
   async function guard(){
     ensure();
-    const user=await db.auth.getUser();
+    let user;try{user=await db.auth.getUser();}catch{throw Error('Не удалось проверить сеанс.');}
     ensure();
     if(user.error||user.data?.user?.id!==uid)throw Error('Войдите в свой аккаунт повторно.');
-    const role=await db.rpc('komi_is_admin');
+    let role;try{role=await db.rpc('komi_is_admin');}catch{throw Error('Не удалось проверить права.');}
     ensure();
     if(role.error||role.data!==true)throw Error('Нет прав администратора.');
   }
@@ -42,7 +42,7 @@ function controller(db,uid,isCurrent){
   return {status,enroll,verify};
 }
 async function mount(content,db,back,getUid){
-  if(!db?.auth?.mfa)return;
+  if(!db?.auth?.mfa){content.textContent='Двухфакторная авторизация недоступна.';return;}
   const uid=getUid(),modal=content.closest('.modal-overlay');
   const panel=document.createElement('section');
   panel.style.cssText='display:grid;gap:12px;padding:4px 0;max-width:680px';
@@ -53,7 +53,7 @@ async function mount(content,db,back,getUid){
   const notice=el('p','Проверяем вход…');notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');
   const actions=el('div');actions.style.cssText='display:grid;gap:10px';
   const secretBox=el('div');secretBox.style.cssText='display:grid;gap:8px;overflow-wrap:anywhere';
-  const close=button('Назад в админ-панель',()=>{dispose();back();});
+  const close=button('Вернуться на сайт',()=>{dispose();back();});
   panel.append(heading,info,notice,actions,secretBox,close);
   content.replaceChildren(panel);
   let disposed=false,observer=null,subscription=null,busy=false;
@@ -61,6 +61,7 @@ async function mount(content,db,back,getUid){
   function dispose(){if(disposed)return;disposed=true;secretBox.replaceChildren();actions.replaceChildren();observer?.disconnect();subscription?.unsubscribe();}
   if(typeof MutationObserver==='function'){
     observer=new MutationObserver(()=>{if(!alive())dispose();});
+    observer.observe(content,{childList:true});
     if(modal)observer.observe(modal,{attributes:true,attributeFilter:['class'],childList:true,subtree:true});
     if(modal?.parentNode)observer.observe(modal.parentNode,{childList:true});
   }
