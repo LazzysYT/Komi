@@ -4231,7 +4231,10 @@ async function komiLoadCatalogPages(attempt = 0) {
             const premium = document.createElement('button');
             premium.className='btn-secondary';premium.textContent='✦ Выдать Premium';
             premium.onclick=()=>window.komiMountPremiumAdmin?.(content,_supabase,openAdminPanel);
-            actions.append(add,backup,referrals,premium);
+            const security = document.createElement('a');
+            security.className='btn-secondary';security.textContent='Безопасность (2FA)';
+            security.href='/admin-security.html';security.target='_blank';security.rel='noopener noreferrer';
+            actions.append(add,backup,referrals,premium,security);
             const input = document.createElement('input');
             input.type='search';input.className='form-control';
             input.placeholder='Поиск по названию или Shikimori ID';
