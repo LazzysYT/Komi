@@ -1439,7 +1439,6 @@ function paint(nextFocus=null){
  const inAlbum=albumTab(),tabBusy=s.status==='opening'||!!s.reel;
  const header='<header class="kc-header"><div><h1>'+(inAlbum?'Коллекция карточек':'Паки')+'</h1></div>'+(inAlbum?'<span class="kc-count" role="status">Собрано: '+(known?count+' / '+roster.length:'— / '+roster.length)+'</span>':known&&s.balance!==null?'<span class="kc-count kc-pack-header-wallet"><span aria-hidden="true">A</span>'+s.balance.toLocaleString('ru-RU')+' AniCoin</span>':'')+'</header>';
  const tabs='<nav class="kc-tabs" aria-label="Разделы коллекции">'+[['cases','Открыть пак'],['mine','Моя коллекция'],['collection','Все карты каталога']].map(([key,label])=>button(label,key,{pressed:tab===key,unavailable:tabBusy&&tab!==key})).join('')+'</nav>';
- const navigation='<div class="kc-collection-navigation">'+tabs+'<a class="kc-live-scenes-link" href="/collection-scenes.html">Живые сцены</a></div>';
  let body='';
  const complete=known&&count===roster.length;
  const retryPurchase=!!s.owner&&!!pending(s.owner);
@@ -1459,7 +1458,7 @@ function paint(nextFocus=null){
    :'<div class="kc-pack-inline"'+(mobile?' hidden':'')+'>'+detail+'</div>'):'';
   body=reelMarkup(s)+reward+'<div class="kc-pack-browser'+(showDetails?' kc-pack-browser-detail':'')+'">'+seriesPicker()+panel+'</div>';
  }
- const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':' kc-packs-page')+(tab==='mine'?' kc-my-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+navigation+(inAlbum?seriesPicker()+notice(s):'')+body+'</section>';
+ const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':' kc-packs-page')+(tab==='mine'?' kc-my-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+tabs+(inAlbum?seriesPicker()+notice(s):'')+body+'</section>';
  const sheetWasOpen=!!packSheet?.open, sheetScroll=packSheet?.scrollTop||0;
  if(sheetWasOpen&&typeof packSheet.close==='function')packSheet.close();
  packSheet=null;
