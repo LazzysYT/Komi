@@ -89,3 +89,25 @@ test('existing verified device requires step-up before enrolling even with pendi
  await assert.rejects(controller(m.db,'owner',()=>true).enroll(),/Сначала подтвердите вход/);
  assert.equal(m.calls.length,0);
 });
+
+test('admin panel requires AAL2 but membership discovery still works before verification',async()=>{
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+ const app=fs.readFileSync(path.join(__dirname,'..','app-main.js'),'utf8');
+ const source=app.slice(app.indexOf('async function requireServerAdmin('),app.indexOf('let komiAdminUiLoader'));
+ assert.match(source,/membershipOnly/);
+ const redirects=[],notices=[];
+ let level='aal1',role=true,reads=0;
+ const ctx=vm.createContext({currentUser:{authUserId:'fixture'},_supabase:{rpc:async()=>({data:role,error:null}),auth:{mfa:{getAuthenticatorAssuranceLevel:async()=>{reads++;return {data:{currentLevel:level},error:null};}}}},komiAdminVerified:false,renderHeaderUser(){},alert(message){notices.push(message)},console:{warn(){}},location:{assign(url){redirects.push(url)}}});
+ vm.runInContext(source,ctx);
+ assert.equal(await ctx.requireServerAdmin(true,true),true);
+ assert.equal(reads,0);
+ assert.equal(await ctx.requireServerAdmin(),false);
+ assert.deepEqual(redirects,['/admin-security.html']);
+ assert.equal(await ctx.requireServerAdmin(true),false);
+ level='aal2';
+ assert.equal(await ctx.requireServerAdmin(),true);
+ role=false;
+ assert.equal(await ctx.requireServerAdmin(true,true),false);
+ assert.equal(await ctx.requireServerAdmin(),false);
+ assert.equal(redirects.length,1);
+});

@@ -1,4 +1,4 @@
-/* Optional administrator MFA enrollment. AAL2 enforcement is enabled separately. */
+/* Administrator MFA enrollment and session verification; privileged operations require AAL2 on the server. */
 (function(root){
 'use strict';
 function controller(db,uid,isCurrent){
@@ -55,7 +55,7 @@ async function mount(content,db,back,getUid){
   const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text)node.textContent=text;if(cls)node.className=cls;return node;};
   const button=(label,fn)=>{const node=el('button',label,'btn-secondary');node.type='button';node.addEventListener('click',fn);return node;};
   const heading=el('h2','Безопасность администратора');
-  const info=el('p','Настройте одноразовые коды в приложении-аутентификаторе. Обязательная серверная проверка ещё не включена.');
+  const info=el('p','Для административных действий обязательно подтвердите второй фактор. Обычный вход и просмотр аниме остаются доступными. Рекомендуем подключить резервное устройство.');
   const notice=el('p','Проверяем вход…');notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');
   const actions=el('div');actions.style.cssText='display:grid;gap:10px';
   const secretBox=el('div');secretBox.style.cssText='display:grid;gap:8px;overflow-wrap:anywhere';
