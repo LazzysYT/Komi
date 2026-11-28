@@ -76,8 +76,8 @@ localTest('paid packs reveal only rarity before a pick; the first valid slot set
  }
  const vm=require('node:vm'),scope={window:{}};
  vm.runInNewContext(fs.readFileSync(path.join(here,'komi-collection.js'),'utf8'),scope);
- const expected=Object.entries(scope.window.KomiCollection.seriesList).flatMap(([series_id,group])=>
-  group.roster.map(({id,rarity})=>[series_id,id,rarity].join(':'))).sort();
+ const expected=Object.entries(scope.window.KomiCollection.seriesList).slice(0,11).flatMap(([series_id,group],index)=>
+  group.roster.slice(0,index<6?24:20).map(({id,rarity})=>[series_id,id,rarity].join(':'))).sort();
  const grades=(await db.query('select series_id,character_id,rarity from komi_collection_private.pack_rarity')).rows;
  assert.deepEqual(grades.map(x=>[x.series_id,x.character_id,x.rarity].join(':')).sort(),expected);
  const open=(series='bleach',offer=null)=>rpc(db,'pack_open',series,offer);
@@ -340,4 +340,132 @@ localTest('third wave adds three equal pools without changing any existing seria
  }
  await as(db,'anon');
  await assert.rejects(rpc(db,'series_buy_v3','hunter',id(950)),{code:'42501'});
+});
+
+localTest('v2 packs hide rarity, resume older offers and include every new character',async t=>{
+ const db=await fixture();t.after(()=>db.close());
+ const apply=name=>db.exec(fs.readFileSync(path.join(here,'supabase/migrations',name),'utf8'));
+ for(const name of ['20261127143000_komi_collection_second_wave.sql','20261127144500_komi_collection_third_wave.sql','20261127144501_komi_collection_pick_pack.sql'])await apply(name);
+ await db.query(`insert into komi_collection_private.series_unlocks (user_id,series_id,character_id,paid_request_id,paid_cost)
+   select $1,series_id,character_id,gen_random_uuid(),50 from komi_collection_private.series_roster where series_id='bleach'`,[alice]);
+ await as(db,'authenticated',alice);
+ assert.equal((await rpc(db,'wallpaper_set','bleach')).series_id,'bleach');
+ await as(db,'authenticated',bob);
+ const pending=await rpc(db,'pack_open','ghoul',null);
+ assert.ok(pending.choices.every(choice=>choice.rarity&&choice.available));
+
+ await db.exec('reset role');
+ await apply('20261128140830_komi_collection_world_art.sql');
+ const vm=require('node:vm'),scope={window:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(here,'komi-collection.js'),'utf8'),scope);
+ const expected=Object.entries(scope.window.KomiCollection.seriesList).slice(0,11).flatMap(([key,series],index)=>
+  series.roster.slice(0,index<6?26:22).map(({id,rarity})=>key+':'+id+':'+rarity)).sort();
+ const actual=(await db.query('select series_id,character_id,rarity from komi_collection_private.pack_rarity')).rows;
+ assert.equal(actual.length,266);
+ assert.deepEqual(actual.map(({series_id,character_id,rarity})=>series_id+':'+character_id+':'+rarity).sort(),expected);
+
+ await as(db,'anon');
+ await assert.rejects(rpc(db,'pack_open_v2','ghoul',null),{code:'42501'});
+ await as(db,'authenticated',bob);
+ const resumed=await rpc(db,'pack_open_v2','ghoul',pending.offer_id);
+ assert.equal(resumed.offer_id,pending.offer_id);
+ assert.equal(resumed.balance,1000);
+ const hidden=length=>Array.from({length},(_,index)=>({slot:index+1,available:true}));
+ assert.deepEqual(resumed.choices,hidden(5));
+ const paid=await rpc(db,'pack_claim_v2',resumed.offer_id,4);
+ assert.equal(paid.result,paid.choices[3].id);
+ assert.equal(paid.choices[3].rarity,pending.choices[3].rarity);
+ assert.equal(paid.balance,950);
+ assert.deepEqual(await rpc(db,'pack_claim_v2',resumed.offer_id,1),paid);
+ assert.deepEqual(await rpc(db,'pack_open_v2','ghoul',resumed.offer_id),paid);
+
+ await as(db,'authenticated',alice);
+ assert.equal((await rpc(db,'wallpaper_read')).series_id,'bleach');
+ assert.equal((await rpc(db,'series_buy_v3','bleach',id(901))).purchase_status,'complete');
+ assert.equal((await rpc(db,'pack_open','bleach',null)).pack_status,'complete');
+ const extended=await rpc(db,'pack_open_v2','bleach',null);
+ assert.equal(extended.owned.length,20);
+ assert.deepEqual(extended.choices,hidden(2));
+ await assert.rejects(rpc(db,'pack_open','bleach',extended.offer_id),{code:'22023'});
+ await assert.rejects(rpc(db,'pack_claim',extended.offer_id,1),{code:'22023'});
+ const first=await rpc(db,'pack_claim_v2',extended.offer_id,1);
+ assert.equal(first.owned.length,21);
+ assert.equal(first.balance,extended.balance-50);
+ assert.deepEqual(first.choices.map(choice=>choice.id).sort(),['ikkaku','unohana']);
+ assert.deepEqual(await rpc(db,'card_number','bleach',first.result),{serial:1,issued:1});
+ const last=await rpc(db,'pack_open_v2','bleach',null);
+ assert.deepEqual(last.choices,hidden(1));
+ const completed=await rpc(db,'pack_claim_v2',last.offer_id,1);
+ assert.equal(completed.owned.length,22);
+ assert.equal((await rpc(db,'pack_open_v2','bleach',null)).pack_status,'complete');
+});
+
+localTest('catalog v3 grants new series through hidden offers, journals, showcases and profile covers',async t=>{
+ const db=await fixture();t.after(()=>db.close());
+ const apply=name=>db.exec(fs.readFileSync(path.join(here,'supabase/migrations',name),'utf8'));
+ for(const name of ['20261127143000_komi_collection_second_wave.sql','20261127144500_komi_collection_third_wave.sql','20261127144501_komi_collection_pick_pack.sql'])await apply(name);
+ const giveSeries=async(owner,key,except)=>db.query(`insert into komi_collection_private.series_unlocks (user_id,series_id,character_id,paid_request_id,paid_cost)
+  select $1,series_id,character_id,gen_random_uuid(),50 from komi_collection_private.series_roster
+  where series_id=$2 and character_id<>$3 on conflict (user_id,series_id,character_id) do nothing`,[owner,key,except]);
+ await giveSeries(alice,'bleach','');
+ await apply('20261128140830_komi_collection_world_art.sql');
+ await giveSeries(alice,'naruto','');
+ await as(db,'authenticated',alice);
+ assert.equal((await rpc(db,'wallpaper_set','naruto')).series_id,'naruto');
+ await as(db,'authenticated',bob);
+ const pending=await rpc(db,'pack_open_v2','ghoul',null);
+ const buy=(offer,slot)=>rpc(db,'pack_claim_v3',offer,slot);
+ const open=(series,offer=null)=>rpc(db,'pack_open_v3',series,offer);
+ const slots=count=>Array.from({length:count},(_,index)=>({slot:index+1,available:true}));
+
+ await db.exec('reset role');
+ await apply('20261128142835_komi_collection_three_worlds.sql');
+ const vm=require('node:vm'),scope={window:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(here,'komi-collection.js'),'utf8'),scope);
+ const catalog=Object.entries(scope.window.KomiCollection.seriesList).flatMap(([series_id,series])=>
+  series.roster.map(({id,rarity})=>[series_id,id,rarity].join(':'))).sort();
+ const rows=(await db.query('select series_id,character_id,rarity from komi_collection_private.pack_rarity')).rows;
+ assert.equal(rows.length,314);
+ assert.deepEqual(rows.map(({series_id,character_id,rarity})=>[series_id,character_id,rarity].join(':')).sort(),catalog);
+ await giveSeries(alice,'deathnote','lawliet');
+
+ await as(db,'anon');
+ await assert.rejects(open('deathnote'),{code:'42501'});
+ await as(db,'authenticated',bob);
+ assert.deepEqual(await open('ghoul',pending.offer_id),pending);
+ assert.equal((await buy(pending.offer_id,3)).balance,950);
+ await assert.rejects(rpc(db,'pack_open_v2','heroacademia',null),{code:'22023'});
+ await assert.rejects(rpc(db,'wallpaper_set','heroacademia'),{code:'22023'});
+ for(const key of ['heroacademia','sololeveling']){
+  const offer=await open(key);
+  assert.deepEqual(offer.choices,slots(5));
+  await assert.rejects(rpc(db,'pack_claim_v2',offer.offer_id,2),{code:'22023'});
+  const card=await buy(offer.offer_id,2);
+  assert.equal(card.result,card.choices[1].id);
+  assert.deepEqual(card.owned,[card.result]);
+  assert.equal(card.balance,offer.balance-50);
+  assert.deepEqual(await buy(offer.offer_id,3),card);
+  assert.deepEqual(await rpc(db,'card_number',key,card.result),{serial:1,issued:1});
+  assert.deepEqual((await rpc(db,'journal_read',key)).map(row=>row.character_id),[card.result]);
+ }
+
+ await as(db,'authenticated',alice);
+ const before=await rpc(db,'wallpaper_read');
+ assert.equal(before.series_id,'naruto');
+ assert.ok(before.unlocked.includes('naruto')&&before.unlocked.includes('bleach'));
+ const expanded=await open('naruto');
+ assert.deepEqual(expanded.choices,slots(1));
+ const ino=await buy(expanded.offer_id,1);
+ assert.equal(ino.result,'ino');
+ assert.equal(ino.owned.length,23);
+ const death=await open('deathnote');
+ assert.deepEqual(death.choices,slots(1));
+ const saved=await buy(death.offer_id,1);
+ assert.equal(saved.result,'lawliet');
+ assert.equal(saved.owned.length,12);
+ const choice=[{series_id:'deathnote',character_id:'lawliet'}];
+ assert.deepEqual(await rpc(db,'showcase_set',JSON.stringify(choice)),choice);
+ assert.equal((await rpc(db,'wallpaper_set','deathnote')).series_id,'deathnote');
+ await as(db,'authenticated',bob);
+ assert.deepEqual(await rpc(db,'wallpaper_read_handle','Collector'),{series_id:'deathnote'});
 });

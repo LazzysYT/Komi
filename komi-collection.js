@@ -246,9 +246,115 @@ const seriesList=Object.freeze({
   ["feitan","Фэйтан Портор","rare","Призрачная труппа","Немногословный участник Труппы с быстрой и точной реакцией.","Тёмный росчерк: в тени проступает тонкая бордовая черта","claw","#bd8299"],
   ["machi","Мачи Комачине","common","Призрачная труппа","Хладнокровная участница Труппы с острым чутьём и твёрдой рукой.","Тонкая нить: розовая линия на мгновение стягивает края","streak","#e6a1cc"],
   ["shizuku","Сидзуку Мурасаки","common","Призрачная труппа","Рассеянная на вид участница Труппы умеет удивить практичным решением.","Без следа: блики тихо исчезают по спирали","orbit","#adc9e3"]
+ ]},
+ deathnote:{title:'Тетрадь смерти',pack:'Чёрный переплёт',edition:'12',code:'DN',script:'デスノート',album:'Альбом расследования',dossier:'Материалы дела',world:'Токио после полуночи',rows:[
+  ['light','Лайт Ягами','legendary','Токио','Одарённый ученик, который находит на школьном дворе загадочную тетрадь.','Страница в лунном свете','streak','#ef9e9f'],
+  ['lawliet','L','legendary','Расследование','Детектив с необычными привычками, который берётся за дело Киры.','Линия дедукции','seal','#d4def4'],
+  ['misa','Миса Аманэ','epic','Токио','Модель и актриса, которая привыкла появляться на публике в готических нарядах.','Вспышка камеры','spark','#f1a9ba'],
+  ['ryuk','Рюк','legendary','Боги смерти','Любопытный синигами с любовью к яблокам и человеческим загадкам.','Чёрное перо','claw','#bcb0ee'],
+  ['rem','Рэм','epic','Боги смерти','Синигами с суровым взглядом и редкой для её мира привязанностью к людям.','Бледное крыло','orbit','#ded3ef'],
+  ['near','Ниа','epic','Дом Вамми','Юный детектив, которому легче думать за головоломками.','Белый пазл','seal','#d4e8f6'],
+  ['mello','Мэлло','epic','Дом Вамми','Нетерпеливый соперник Ниа, который всегда держит при себе шоколад.','Золотой угол','streak','#eec585'],
+  ['matsuda','Тота Мацуда','common','Оперативная группа','Молодой полицейский, который стремится доказать, что может помочь следствию.','Сигнал рации','spark','#a3d6aa'],
+  ['soichiro','Соитиро Ягами','rare','Оперативная группа','Офицер полиции и отец Лайта. Ставит долг и безопасность семьи высоко.','Стекло кабинета','streak','#b3c4e3'],
+  ['watari','Ватари','rare','Дом Вамми','Доверенный помощник L, который отвечает за связь с внешним миром.','Дальний звонок','ring','#e6cd9b'],
+  ['mikami','Тэру Миками','rare','Токио','Прокурор с жёстким распорядком и собственным представлением о справедливости.','Поля тетради','seal','#dba7b0'],
+  ['naomi','Наоми Мисора','rare','Расследование','Опытная следовательница, привыкшая перепроверять детали самостоятельно.','Дождь на стекле','streak','#a6c9df']
+ ]},
+ heroacademia:{title:'Моя геройская академия',pack:'Стадион Юэй',edition:'13',code:'UA',script:'雄英',album:'Альбом Юэй',dossier:'Личное дело героя',world:'Стадион Юэй',rows:[
+  ['deku','Идзуку Мидория','legendary','Класс 1-А','Усердный ученик, который ведёт подробные записи о профессиональных героях.','Зелёный разряд','spark','#a4edc1'],
+  ['bakugo','Кацуки Бакуго','epic','Класс 1-А','Амбициозный ученик со взрывной причудой и острым тактическим чутьём.','Взрывная волна','spark','#ffc580'],
+  ['todoroki','Сёто Тодороки','epic','Класс 1-А','Сдержанный ученик, способный управлять льдом и огнём.','Лёд и пламя','claw','#d0dcff'],
+  ['uraraka','Отяко Урарака','rare','Класс 1-А','Дружелюбная ученица, чьё прикосновение лишает предметы веса.','Нулевая гравитация','orbit','#ffc2e4'],
+  ['allmight','Всемогущий','legendary','Профессиональные герои','Его улыбка и уверенность вдохновляют будущих героев.','Золотой импульс','ring','#f8dc91'],
+  ['aizawa','Сёта Айдзава','epic','Преподаватели Юэй','Строгий классный руководитель, способный подавлять чужие причуды взглядом.','Лента захвата','streak','#cbd7e4'],
+  ['endeavor','Старатель','epic','Профессиональные герои','Мастер огненной причуды, известный требовательностью к себе.','Огненный контур','spark','#f6a16e'],
+  ['hawks','Ястреб','epic','Профессиональные герои','Быстрый крылатый герой, который управляет каждым пером по отдельности.','Алые перья','claw','#f6968c'],
+  ['tsuyu','Цую Асуи','common','Класс 1-А','Прямолинейная ученица, которая хорошо ориентируется под водой.','Зелёная дуга','orbit','#a1d7a5'],
+  ['kirishima','Эйдзиро Кирисима','rare','Класс 1-А','Верный друг с причудой, которая позволяет делать тело твёрдым.','Красная грань','seal','#ee9e92'],
+  ['shigaraki','Томура Сигараки','legendary','Лига злодеев','Нетерпеливый противник героев, способный разрушать предметы прикосновением.','Трещина','claw','#acb7de'],
+  ['toga','Химико Тога','epic','Лига злодеев','Непредсказуемая участница Лиги с причудой превращения.','Розовый росчерк','streak','#f7a9bb']
+ ]},
+ sololeveling:{title:'Поднятие уровня в одиночку',pack:'Врата теней',edition:'14',code:'SL',script:'나 혼자만 레벨업',scriptLanguage:'ko',album:'Альбом охотников',dossier:'Досье рейда',world:'Двойное подземелье',rows:[
+  ['jinwoo','Сон Джину','legendary','Охотники','Начинает с самых опасных для себя заданий и шаг за шагом становится сильнее.','Фиолетовый разлом','claw','#ba9cff'],
+  ['chae','Чха Хэин','epic','Гильдия охотников','Мечница высокого ранга, которая замечает то, что ускользает от других охотников.','Серебряное остриё','streak','#ffdf9e'],
+  ['igris','Игрис','legendary','Тени','Молчаливый рыцарь в тёмных доспехах с алым плюмажем.','Алый плюмаж','streak','#ed8d9f'],
+  ['jinho','Ю Джинхо','rare','Охотники','Начинающий охотник с хорошим снаряжением и искренней преданностью друзьям.','Блик щита','ring','#f1cb92'],
+  ['baek','Пэк Юнхо','epic','Белый тигр','Глава гильдии, чья сила связана со звериной трансформацией.','След тигра','claw','#ffc8a0'],
+  ['choi','Чхве Чонин','epic','Гильдия охотников','Опытный руководитель и маг, известный огненными техниками.','Вспышка огня','spark','#f7b184'],
+  ['woo','У Джинчхоль','rare','Ассоциация охотников','Инспектор, который внимательно следит за безопасностью рейдов.','Отметка инспектора','seal','#a3cfe6'],
+  ['gunhee','Ко Гонхи','epic','Ассоциация охотников','Председатель Ассоциации с большим опытом и тонким чутьём к людям.','Свет заседания','ring','#dbd4a8'],
+  ['joohee','Ли Джухи','common','Охотники','Целительница, которая помогает раненым даже в тревожных рейдах.','Тёплый свет','ring','#f6bfbc'],
+  ['song','Сон Чхиюль','rare','Охотники','Ветеран рейдов, который сохраняет самообладание в подземельях.','Точная дуга','streak','#bab5e9'],
+  ['kimchul','Ким Чхоль','rare','Белый тигр','Уверенный в себе танк в тяжёлых доспехах.','Стальная печать','seal','#a8b5d2'],
+  ['esil','Эсиль Радиру','epic','Замок демонов','Наследница дома Радиру, которая хорошо знает пути по замку.','Пурпурный отблеск','orbit','#d3a2ed']
  ]}
 });
-for(const v of Object.values(seriesList)){if(v.rows)v.roster=v.rows.map(([id,name,rarity,group,intro,reveal,fx,tint])=>Object.freeze({id,name,rarity,group,intro,reveal,fx,tint}));Object.freeze(v.roster);Object.freeze(v);}
+const additionalCast={
+ ghoul:[
+  ['kanou','Акихиро Кано','rare','Лаборатория','Врач, чьи исследования связывают мир людей и гулей.','Свет лаборатории','seal','#a7cdc8'],
+  ['shinohara','Юкинори Синохара','epic','CCG','Опытный следователь с добродушием ветерана и твёрдым чувством долга.','Края брони','streak','#c4d4d9'],
+  ['saiko','Сайко Ёнобаяси','rare','Отряд Квинкс','Любит видеоигры и дорожит товарищами из отряда.','Лёгкий импульс','spark','#abbbf4']
+ ],
+ jujutsu:[
+  ['hakari','Киндзи Хакари','epic','Токийская школа магии','Любит рисковать и сам выбирает, на что ставить.','Вспышка удачи','orbit','#d5a2f9'],
+  ['takaba','Фумихико Такаба','rare','Участники Игр','Комик, который ищет повод для шутки даже в самый неловкий момент.','Зелёная искра','spark','#a1e8a4'],
+  ['uraume','Ураумэ','epic','Колдуны','Хладнокровный колдун, чьи техники превращают влагу в лёд.','Иней','streak','#d0ebff']
+ ],
+ frieren:[
+  ['kraft','Крафт','epic','Странствующие эльфы','Эльф-монах, которому есть что вспомнить у дорожного костра.','Тепло очага','ring','#b5d28a'],
+  ['genau','Генау','rare','Ассоциация магов','Сдержанный маг, привыкший внимательно следить за ходом испытаний.','Ночное крыло','claw','#b49dbf'],
+  ['edel','Эдель','rare','Маги','Внимательная волшебница, специализирующаяся на магии разума.','Нить мысли','ring','#e1b6f2']
+ ],
+ alchemist:[
+  ['trisha','Триша Элрик','rare','Резембул','Мать Эдварда и Альфонса. Дом в Резембуле хранит память о ней.','Свет в окне','orbit','#edc498'],
+  ['sigcurtis','Сиг Кёртис','rare','Резембул','Плечистый мясник, который всегда рядом с Идзуми.','Тепло мастерской','ring','#e1a186'],
+  ['barry','Барри Мясник','epic','Секретная лаборатория','За грозным стальным обликом скрывается на удивление говорливый противник.','Скрежет стали','spark','#b9d9da']
+ ],
+ demon:[
+  ['yahaba','Яхаба','rare','Демоны','Узнаваем по рисунку глаз на ладонях и неприязни к беспорядку.','Стрелы','streak','#eeb681'],
+  ['susamaru','Сусамару','rare','Демоны','Воспринимает бой как игру и всегда держит при себе тэмари.','Круг тэмари','orbit','#f29d6a'],
+  ['kaigaku','Кайгаку','epic','Дыхание грома','Мечник, для которого признание важнее всего.','Чёрная молния','spark','#92caf1']
+ ],
+ aot:[
+  ['pyxis','Дот Пиксис','epic','Гарнизон','Командир, который смотрит на город и людей за его стенами спокойно и трезво.','Свет над стеной','seal','#e7b787'],
+  ['marco','Марко Ботт','rare','104-й кадетский корпус','Внимательный кадет, умеющий увидеть хорошее в товарищах.','Ветер над крышами','streak','#caa794'],
+  ['floch','Флок Форстер','rare','Разведкорпус','Вступает в Разведкорпус и ищет того, за кем сможет пойти.','Порыв над стеной','streak','#efc38d']
+ ],
+ naruto:[
+  ['shino','Сино Абурамэ','rare','Коноха','Молчаливый шиноби, который работает в связке со своими насекомыми.','Рой в листве','spark','#98b994'],
+  ['kiba','Киба Инудзука','rare','Коноха','Прямолинейный ниндзя, особенно хорош в следопытстве.','След на земле','streak','#e3ab86'],
+  ['ino','Ино Яманака','rare','Команда № 10','Куноити из Скрытого Листа, выросшая в семье владельцев цветочной лавки.','Ветка сирени','orbit','#dfabed']
+ ],
+ bleach:[
+  ['unohana','Рэцу Унохана','legendary','Четвёртый отряд','Спокойный капитан, способный одним взглядом восстановить порядок в лазарете.','Белый шёлк','claw','#ead9cd'],
+  ['ikkaku','Иккаку Мадарамэ','epic','Одиннадцатый отряд','Боец, который бежит навстречу опасности и уважает достойного соперника.','Росчерк копья','streak','#d79292'],
+  ['ukitake','Дзюсиро Укитакэ','epic','Тринадцатый отряд','Мягкий в общении капитан, заслуживший доверие своего отряда.','Рябь на воде','ring','#a6e9e5']
+ ],
+ onepiece:[
+  ['perona','Перона','epic','Триллер Барк','Любит всё мрачное и милое, а свои призраки считает идеальными спутниками.','Розовый призрак','orbit','#eab0ce'],
+  ['kuzan','Кудзан','legendary','Морской дозор','Расслабленный на вид моряк, способный одним движением заморозить воду.','Лёд на горизонте','seal','#a2d7ed'],
+  ['yamato','Ямато','legendary','Страна Вано','Мечтает о свободном плавании и вдохновляется дневником Одэна.','Мороз Вано','claw','#a7e9ec']
+ ],
+ chainsaw:[
+  ['sawatari','Аканэ Саватари','epic','Охотники на демонов','Молчаливая охотница, которую легко узнать по красному худи.','Змеиный след','claw','#e699a8'],
+  ['tendo','Митико Тэндо','rare','Общественная безопасность','Высокая охотница из Киото со спокойным голосом и точными движениями.','Свет в коридоре','streak','#c4d2d0'],
+  ['barem','Барэм Бридж','epic','Гибриды','Говорит с подчеркнутой вежливостью и умеет держать собеседника в напряжении.','Жар фонарей','spark','#f7a278']
+ ],
+ hunter:[
+  ['alluka','Аллука Золдик','epic','Семья Золдиков','Любит яркие наряды и особенно дорожит встречами с Киллуа.','Огоньки','spark','#edd0e7'],
+  ['kalluto','Каллуто Золдик','rare','Семья Золдиков','Тихий член семьи Золдиков, который носит кимоно и работает с бумагой.','Бумажный веер','orbit','#e2acc7'],
+  ['melody','Мелоди','rare','Охотники','Музыкант с настолько тонким слухом, что различает биение сердца собеседника.','Звучание флейты','ring','#dfcb9a'],
+  ['ging','Джин Фрикс','legendary','Охотники','Редко задерживается на одном месте. Его привлекают древние руины и загадки.','Тропа к руинам','streak','#b9d397']
+ ]
+};
+const toCard=([id,name,rarity,group,intro,reveal,fx,tint])=>Object.freeze({id,name,rarity,group,intro,reveal,fx,tint});
+for(const [key,value] of Object.entries(seriesList)){
+ const additions=(additionalCast[key]||[]).map(toCard);
+ if(value.rows)value.roster=[...value.rows.map(toCard),...additions];
+ else value.roster.push(...additions);
+ Object.freeze(value.roster);Object.freeze(value);
+}
 const ghoulFx=Object.freeze({
  kaneki:['Красный глаз','eye','#fa466a'],touka:['Крыло ворона','claw','#e868a8'],juuzou:['Росчерк нитей','streak','#f4edea'],
  uta:['Контур маски','seal','#ca96f2'],tsukiyama:['Бархатная роза','orbit','#c671cb'],hide:['Лампа в окне','spark','#ffd58a'],
@@ -312,7 +418,7 @@ function packArt(){
  return '<div class="kc-pack"><img class="kc-case-image" src="/assets/collection/deluxe-packs/'+seriesKey+'.webp"'+(seriesKey==='ghoul'?' data-kc-pack-fallback="1"':'')+' width="360" height="640" alt="Бустер «'+esc(series.pack)+'»" decoding="async"><span class="kc-pack-fallback" aria-hidden="true">'+esc(series.pack)+'</span></div>';
 }
 function heroInfo(c){
- if(seriesKey==='ghoul'){
+ if(seriesKey==='ghoul'&&!c.group){
   const [group,intro]=dossier[c.id],[reveal,fx,tint]=ghoulFx[c.id];
   return {group,intro,reveal,fx,tint};
  }
@@ -358,17 +464,20 @@ function sceneAttributes(c,info,card=false){
 }
 // Original cel-style backgrounds. Each location is paired with a character's own motif.
 const sceneSets=Object.freeze({
- ghoul:{cafe:'kaneki touka yomo yoshimura hinami irimi hide',alley:'juuzou uta rize eto ayato nishiki tsukiyama',archive:'arima amon akira furuta takizawa mado'},
- jujutsu:{shrine:'fushiguro sukuna itadori geto choso yuta',metro:'gojo nanami kugisaki shoko toji',courtyard:'maki toge panda todo utahime miwa'},
- frieren:{meadow:'frieren himmel heiter eisen stark flamme',library:'fern serie lernen land methode denken',ravine:'ubel lawine kanne wirbel ehre scharf'},
- alchemist:{workshop:'edward alphonse winry pinako',archive:'roy riza maes alex olivier',ravine:'scar ling mei lanfan',underworld:'greed lust envy gluttony wrath pride hohenheim'},
- demon:{river:'tanjiro giyu muichiro sanemi inosuke',rail:'rengoku zenitsu tengen',courtyard:'shinobu kanao mitsuri obanai nezuko genya',underworld:'muzan akaza doma kokushibo daki'},
- aot:{roofs:'mikasa levi eren jean connie sasha erwin hange moblit historia ymir',coast:'armin',fortress:'reiner bertholdt annie zeke pieck porco gabi falco'},
- naruto:{"village":"naruto sasuke sakura kakashi shikamaru hinata lee neji jiraiya tsunade minato","dunes":"gaara temari","rainvillage":"itachi pain konan deidara kisame orochimaru madara"},
- bleach:{"seireitei":"rukia renji byakuya toshiro kenpachi rangiku soifon shunsui yamamoto aizen gin","suburb":"ichigo orihime uryu chad urahara yoruichi","dunes":"ulquiorra grimmjow nelliel"},
- onepiece:{"opdeck":"luffy zoro nami usopp sanji chopper robin franky brook jinbe","opharbor":"ace sabo shanks law hancock mihawk buggy smoker vivi crocodile"},
- chainsaw:{"csoffice":"aki makima kishibe himeno kobeni yoshida fumiko","csstreets":"denji power pochita reze quanxi angel beam galgali princi katana asa yoru nayuta"},
- hunter:{"hxforest":"gon killua bisky kite knuckle shoot morel palm","hxexam":"kurapika leorio hisoka chrollo illumi netero meruem pitou komugi feitan machi shizuku"}
+ ghoul:{cafe:'kaneki touka yomo yoshimura hinami irimi hide',alley:'juuzou uta rize eto ayato nishiki tsukiyama',archive:'arima amon akira furuta takizawa mado kanou shinohara saiko'},
+ jujutsu:{shrine:'fushiguro sukuna itadori geto choso yuta',metro:'gojo nanami kugisaki shoko toji hakari uraume',courtyard:'maki toge panda todo utahime miwa takaba'},
+ frieren:{meadow:'frieren himmel heiter eisen stark flamme kraft',library:'fern serie lernen land methode denken genau edel',ravine:'ubel lawine kanne wirbel ehre scharf'},
+ alchemist:{workshop:'edward alphonse winry pinako trisha sigcurtis',archive:'roy riza maes alex olivier',ravine:'scar ling mei lanfan',underworld:'greed lust envy gluttony wrath pride hohenheim barry'},
+ demon:{river:'tanjiro giyu muichiro sanemi inosuke',rail:'rengoku zenitsu tengen',courtyard:'shinobu kanao mitsuri obanai nezuko genya',underworld:'muzan akaza doma kokushibo daki yahaba susamaru kaigaku'},
+ aot:{roofs:'mikasa levi eren jean connie sasha erwin hange moblit historia ymir pyxis marco floch',coast:'armin',fortress:'reiner bertholdt annie zeke pieck porco gabi falco'},
+ naruto:{"village":"naruto sasuke sakura kakashi shikamaru hinata lee neji jiraiya tsunade minato shino kiba ino","dunes":"gaara temari","rainvillage":"itachi pain konan deidara kisame orochimaru madara"},
+ bleach:{"seireitei":"rukia renji byakuya toshiro kenpachi rangiku soifon shunsui yamamoto unohana ikkaku ukitake","suburb":"ichigo orihime uryu chad urahara yoruichi","dunes":"aizen gin ulquiorra grimmjow nelliel"},
+ onepiece:{"opdeck":"luffy zoro nami usopp sanji chopper robin franky brook jinbe","opharbor":"ace sabo shanks law hancock mihawk buggy smoker vivi crocodile perona kuzan yamato"},
+ chainsaw:{"csoffice":"aki makima kishibe himeno kobeni yoshida fumiko tendo","csstreets":"denji power pochita reze quanxi angel beam galgali princi katana asa yoru nayuta sawatari barem"},
+ hunter:{"hxforest":"gon killua bisky kite knuckle shoot morel palm alluka kalluto ging","hxexam":"kurapika leorio hisoka chrollo illumi netero meruem pitou komugi feitan machi shizuku melody"},
+ deathnote:{dnrooftop:'light misa ryuk rem',dncase:'lawliet near mello matsuda soichiro watari mikami naomi'},
+ heroacademia:{uarena:'deku bakugo todoroki uraraka allmight aizawa endeavor hawks tsuyu kirishima shigaraki toga'},
+ sololeveling:{shadowgate:'jinwoo chae igris jinho baek choi woo gunhee joohee song kimchul esil'}
 });
 const scenery=Object.freeze({
  cafe:['#312030','#b46e52','#080b14',
@@ -445,9 +554,13 @@ const scenery=Object.freeze({
  csoffice:["#33433e","#d3a698","#161e22","M0 300 40 230h315l45 70v150H0Z","<path d=\"M0 297h400M39 230V61h315v169M51 92h293m-293 28h293m-293 28h293m-293 28h293m-293 28h293m-146 10V63\"/>","<path d=\"M105 302 61 450m237-151 44 151M17 325h361m-319 68h281\"/>","motes"],
  csstreets:["#283533","#d08467","#192126","M0 296V124h45v82h32v88h81v-55h44v-93h49v154h44v-76h37v-58h62v284H0Z","<path d=\"M15 185h26m182-10h25m-25 26h25m70 25h69M14 319h372\"/>","<path d=\"M38 337h315m-297 40h290M145 340 87 450m165-110 58 110M63 126h69m147 18h62\"/>","rain"],
  hxforest:["#364939","#c5e1a1","#142521","M0 277 37 219 74 274 116 202 165 270 223 209 274 270 334 202 400 285V450H0Z","<path d=\"M29 300V107m6 55 39-35m-38 43-32-48m330 188V86m0 74 63-50m-63 68-44-46M155 359q20-21 67-44\"/>","<path d=\"M59 373q73-65 152 9m46 36q31-37 107-43M111 304q25 0 37 18\"/>","petals"],
- hxexam:["#384d46","#daebac","#172b26","M0 268 92 187l50 51 92-75 90 76 76-55V450H0Z","<path d=\"M53 306h306m-277-13h249M106 142h188l24 24v102H106zm183 0v29h29m-190 23h84m-111 20h112m-110 19h134\"/>","<path d=\"M22 347q90-28 171-2t185-12M11 383q104-29 195-4t169-8\"/>","gust"]
+ hxexam:["#384d46","#daebac","#172b26","M0 268 92 187l50 51 92-75 90 76 76-55V450H0Z","<path d=\"M53 306h306m-277-13h249M106 142h188l24 24v102H106zm183 0v29h29m-190 23h84m-111 20h112m-110 19h134\"/>","<path d=\"M22 347q90-28 171-2t185-12M11 383q104-29 195-4t169-8\"/>","gust"],
+ dnrooftop:["#252438","#976a91","#0f101b","<path d=\"M0 278v-71h48v39h38v-68h44v103h43v-48h65v-31h33v56h50v-98h49v89h30v201H0Z\"/>","<circle cx=\"288\" cy=\"81\" r=\"34\"/>","<path d=\"M20 269h325M58 236h24m69 35h22m151-70h27m-19 28h21\"/>","rain"],
+ dncase:["#252438","#b594b8","#10101c","<path d=\"M31 30h205v208H31ZM88 341l222-77 89 41v145H0Z\"/>","<path d=\"M107 30v210m55-210v210M31 109h205m-205 59h205\"/>","<path d=\"M137 329q36-31 83-11 43-45 95-31l-30 48q-40-4-77 35-40-30-97-11Z\"/>","papers"],
+ uarena:["#1b4d63","#e2c478","#102a3b","<path d=\"M0 186q200 95 400 0v264H0Z\"/>","<path d=\"M0 198q200 110 400 0M0 249q200 91 400 0M59 320h285\"/>","<path d=\"M0 80 138 210m262-131L260 206M0 284q200 85 400 0M55 407q140-101 290 0\"/>","gust"],
+ shadowgate:["#201a4d","#957cf8","#0f142c","<path d=\"M11 356V125L74 41l66 84v232Zm248 0V117l66-83 66 89v233Z\"/>","<path d=\"M127 342V144l73-108 73 108v198m-116-29V159l43-73 43 73v154\"/>","<path d=\"M90 358h220m-237 22h254m-281 26h307m-332 29h354\"/>","sparks"]
 });
-const backdropFallback={ghoul:'alley',jujutsu:'shrine',frieren:'meadow',alchemist:'archive',demon:'courtyard',aot:'roofs',naruto:'village',bleach:'seireitei',onepiece:'opdeck',chainsaw:'csstreets',hunter:'hxforest'};
+const backdropFallback={ghoul:'alley',jujutsu:'shrine',frieren:'meadow',alchemist:'archive',demon:'courtyard',aot:'roofs',naruto:'village',bleach:'seireitei',onepiece:'opdeck',chainsaw:'csstreets',hunter:'hxforest',deathnote:'dnrooftop',heroacademia:'uarena',sololeveling:'shadowgate'};
 const sceneMotion=Object.freeze({
  rain:'M28 61l-21 49m54-7-19 48m295-74-22 54m51-15-25 63m54 31-20 51M30 270l-18 40m68-14-15 33m260-45-12 37',
  papers:'M31 148l24-12 11 24-24 13Zm295-39 20 11-13 23-21-12ZM42 300l11 22-14 5-12-21ZM349 280l25 8-6 14-25-7Z',
@@ -482,19 +595,24 @@ const chapterSets={
  bleach:[["Каракура",["ichigo","orihime","uryu","chad"]],["Врата Сэйрэтэя",["rukia","renji","byakuya","toshiro"]],["Двенадцать отрядов",["kenpachi","rangiku","soifon","shunsui","yamamoto"]],["Старая гвардия",["urahara","yoruichi","aizen","gin"]],["Под белой луной",["ulquiorra","grimmjow","nelliel"]]],
  onepiece:[["Экипаж Луффи",["luffy","zoro","nami","usopp","sanji"]],["Команда на борту",["chopper","robin","franky","brook","jinbe"]],["Огонь и паруса",["ace","sabo","shanks","law"]],["За горизонтом",["hancock","mihawk","buggy","smoker","vivi","crocodile"]]],
  chainsaw:[["Особый отдел",["denji","power","aki","makima","pochita"]],["Бюро",["kishibe","himeno","kobeni","yoshida","fumiko"]],["Досье охотников",["reze","quanxi","angel","beam","galgali","princi","katana"]],["Городские истории",["asa","yoru","nayuta"]]],
- hunter:[["Экзамен",["gon","killua","kurapika","leorio","hisoka"]],["Следы Пауков",["chrollo","feitan","machi","shizuku"]],["Опытные охотники",["illumi","netero","bisky","kite","knuckle","shoot","morel","palm"]],["Доска и корона",["meruem","pitou","komugi"]]]
+ hunter:[["Экзамен",["gon","killua","kurapika","leorio","hisoka"]],["Следы Пауков",["chrollo","feitan","machi","shizuku"]],["Опытные охотники",["illumi","netero","bisky","kite","knuckle","shoot","morel","palm"]],["Доска и корона",["meruem","pitou","komugi"]]],
+ deathnote:[["Дело Киры",["light","lawliet","misa","naomi"]],["Оперативная группа",["matsuda","soichiro","mikami"]],["Дом Вамми",["near","mello","watari"]],["Боги смерти",["ryuk","rem"]]],
+ heroacademia:[["Класс 1-А",["deku","bakugo","todoroki","uraraka","tsuyu","kirishima"]],["Наставники",["allmight","aizawa","endeavor","hawks"]],["Лига злодеев",["shigaraki","toga"]]],
+ sololeveling:[["Рейдовая группа",["jinwoo","jinho","joohee","song"]],["Гильдии",["chae","baek","choi","kimchul"]],["Ассоциация",["woo","gunhee"]],["За вратами",["igris","esil"]]]
 };
-const posterTones={ghoul:['#180d18','#63263a','#f3a4b9'],jujutsu:['#151021','#453363','#c6b0fc'],frieren:['#201809','#5b4726','#f2d198'],alchemist:['#0d1820','#284b62','#a6d9e7'],demon:['#08151f','#184266','#8adcf1'],aot:['#16160f','#393b24','#d5d6a1'],naruto:['#21150e','#59342a','#ffcf8a'],bleach:['#0c1721','#294755','#ccedfa'],onepiece:['#132e3f','#406468','#ebc780'],chainsaw:['#1b2926','#5a3936','#efb797'],hunter:['#1b3026','#47694a','#dbe7a8']};
+const posterTones={ghoul:['#180d18','#63263a','#f3a4b9'],jujutsu:['#151021','#453363','#c6b0fc'],frieren:['#201809','#5b4726','#f2d198'],alchemist:['#0d1820','#284b62','#a6d9e7'],demon:['#08151f','#184266','#8adcf1'],aot:['#16160f','#393b24','#d5d6a1'],naruto:['#21150e','#59342a','#ffcf8a'],bleach:['#0c1721','#294755','#ccedfa'],onepiece:['#132e3f','#406468','#ebc780'],chainsaw:['#1b2926','#5a3936','#efb797'],hunter:['#1b3026','#47694a','#dbe7a8'],deathnote:['#161421','#65233e','#e8b6cb'],heroacademia:['#0d2236','#216678','#f5dc7e'],sololeveling:['#121530','#4d3c7b','#c1b1ff']};
 function collectorProgress(s,owned,known){
  const count=owned.size,missing=roster.length-count;
  const label=!known?'Прогресс появится после входа и загрузки коллекции.':missing
   ?'Осталось: '+missing+' из '+roster.length+' · '+missing+' × 50 = '+(missing*CASE_PRICE)+' AniCoin.'
   :'Серия собрана. Можно выбрать её фон в профиле.';
- const chapters=chapterSets[seriesKey].map(([name,cards])=>{
+ const chapters=chapterSets[seriesKey].slice();
+ if(additionalCast[seriesKey])chapters.push(['Новые персонажи',additionalCast[seriesKey].map(([id])=>id)]);
+ const stamps=chapters.map(([name,cards])=>{
   const n=cards.filter(id=>owned.has(id)).length,done=known&&n===cards.length;
   return '<li class="'+(done?'kc-page-stamped':'')+'"><strong>'+esc(name)+'</strong><span>'+(known?n+' / '+cards.length:'— / '+cards.length)+'</span>'+(done?'<small>Печать получена</small>':'')+'</li>';
  }).join('');
- return '<section class="kc-collector-progress" aria-label="Тематические страницы"><div class="kc-collector-head"><div><div class="kc-kicker">Страницы серии</div><h3>До полного альбома</h3></div><p>'+esc(label)+'</p></div><ul>'+chapters+'</ul></section>';
+ return '<section class="kc-collector-progress" aria-label="Тематические страницы"><div class="kc-collector-head"><div><div class="kc-kicker">Страницы серии</div><h3>До полного альбома</h3></div><p>'+esc(label)+'</p></div><ul>'+stamps+'</ul></section>';
 }
 function journalMarkup(s){
  if(!s.owner)return '';
@@ -579,7 +697,7 @@ async function downloadMiniPoster(c,asset,button,status){
  finally{if(valid())button.disabled=false;}
 }
 // Promotional portraits are separate from the ownership-controlled album cards.
-const shelfHeroes=Object.freeze({ghoul:'kaneki',jujutsu:'gojo',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren',naruto:'naruto',bleach:'ichigo',onepiece:'luffy',chainsaw:'denji',hunter:'gon'});
+const shelfHeroes=Object.freeze({ghoul:'kaneki',jujutsu:'gojo',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren',naruto:'naruto',bleach:'ichigo',onepiece:'luffy',chainsaw:'denji',hunter:'gon',deathnote:'light',heroacademia:'deku',sololeveling:'jinwoo'});
 function shelfHero(id,cssClass){
  const folder=id==='ghoul'?'ghoul-cel':id;
  return '<img class="'+cssClass+'" src="/assets/collection/'+folder+'/'+shelfHeroes[id]+'.webp" width="432" height="648" alt="" aria-hidden="true" decoding="async">';
@@ -846,7 +964,7 @@ function makeReel(prize,owned,random=Math.random){
  return Array.from({length:REEL_LENGTH},(_,i)=>i===REEL_WIN?prize:candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))].id);
 }
 // Existing purchase receipts and journal replays can still play the original reveal.
-const PICK_DURATION=2350;
+const PICK_DURATION=3550;
 const REVEAL_LANES={2:[-.8],3:[-1.04,1.04],4:[-1.55,-.82,1.55],5:[-2.05,-1.12,1.12,2.05]};
 const pickThemes=Object.freeze({
  ghoul:{scene:'Ночной Токио',sigil:'M10 40Q50 9 90 40Q50 72 10 40ZM50 25Q40 40 50 55Q60 40 50 25ZM24 25 18 17M73 55 82 64',effects:'<path class="kc-pick-strokes" d="M34 29Q35 50 47 53T60 69Q49 63 42 63 24 64 22 57 18 49 34 29ZM91 5Q89 16 85 24 102 16 91 5ZM147 57Q150 38 163 42 166 50 147 57ZM235 32Q219 59 231 63 240 73 244 53ZM277 9Q265 24 266 36 280 28 277 9ZM316 54Q299 56 301 64 305 71 316 54ZM38 139Q50 113 59 114 64 126 38 139ZM86 130Q86 142 72 155 67 157 67 151ZM264 117Q252 133 260 140 274 144 273 130ZM324 120Q308 143 319 146 329 151 324 120Z"/><path class="kc-pick-trace" d="M15 120Q65 18 163 28T323 141M54 16Q122-2 171 32T321 61M21 162q73 20 151 2t150-11"/>'},
@@ -859,33 +977,34 @@ const pickThemes=Object.freeze({
  bleach:{scene:'Лунный разрез',sigil:'M50 9 86 40 50 71 14 40ZM50 19 74 40 50 61 26 40ZM11 64 89 16',effects:'<path class="kc-pick-trace" d="M12 135 135 40l30 18 48-28 114 118M28 151 173 64 312 145M109 153 281 37M41 145 268 15"/><path class="kc-pick-strokes" d="m35 87 26-15-13 18Zm202-51 31-22-20 27Zm38 107 32-28-9 23Zm-168 13 36-15-12 16Z"/>'},
  onepiece:{"scene":"Капитанский журнал","sigil":"M18 40a32 30 0 1 0 64 0 32 30 0 1 0-64 0m31-23 11 29-22 13 11-42M50 6v11m0 47v11M15 40h12m47 0h12","effects":"<path class=\"kc-pick-trace\" d=\"M0 143q61-71 128-32t140-26 72-15M0 164q92-47 151-18t183-32M26 38l78-13 81 22 68-27 76 11\"/><path class=\"kc-pick-strokes\" d=\"M16 124q33-43 59-39-27 13-38 36Zm222-48q43-35 86-16-38 2-52 18Z\"/>"},
  chainsaw:{"scene":"Кассета Бюро","sigil":"M13 20h74v40H13Zm8 8h58v15H21Zm9 25h40m-32-17h8m10 0h8","effects":"<path class=\"kc-pick-trace\" d=\"M9 38h157m25 0h141M2 86h328M5 121h182m25 0h117M8 154h76m21 0h227M49 59h242v67H49Z\"/><path class=\"kc-pick-strokes\" d=\"M5 44h170v4H5ZM171 73h164v6H171ZM14 126h179v5H14Zm245 19h68v5h-68Z\"/>"},
- hunter:{"scene":"Лицензия охотника","sigil":"M13 20h74v40H13ZM25 29h17v15H25Zm23 3h27m-27 8h23m-49 9h51","effects":"<path class=\"kc-pick-trace\" d=\"M9 133q78-78 144-47t179-48M5 152q61-27 98-11t121-19 112-23M41 50l81-16 91 23 72-14M82 39v20m143-9v20\"/><path class=\"kc-pick-strokes\" d=\"M53 110l8-8 8 8-8 8Zm106-22 8-8 8 8-8 8Zm103-35 8-8 8 8-8 8Z\"/>"}
+ hunter:{"scene":"Лицензия охотника","sigil":"M13 20h74v40H13ZM25 29h17v15H25Zm23 3h27m-27 8h23m-49 9h51","effects":"<path class=\"kc-pick-trace\" d=\"M9 133q78-78 144-47t179-48M5 152q61-27 98-11t121-19 112-23M41 50l81-16 91 23 72-14M82 39v20m143-9v20\"/><path class=\"kc-pick-strokes\" d=\"M53 110l8-8 8 8-8 8Zm106-22 8-8 8 8-8 8Zm103-35 8-8 8 8-8 8Z\"/>"},
+ deathnote:{"scene":"Чёрный переплёт","sigil":"M25 10h50v60H25Zm10 0v60m9-42h22m-22 10h22m-22 10h12","effects":"<path class=\"kc-pick-trace\" d=\"M24 21h94v142H24ZM42 48h57m-57 18h57m-57 18h43M220 24a64 64 0 1 0 94 85M173 173q88-1 138-61\"/><path class=\"kc-pick-strokes\" d=\"M179 36q26-28 54-6-29 8-54 6Zm-23 98q13-25 51-28-23 27-51 28Zm124 15q13-17 37-18-11 15-37 18Z\"/>"},
+ heroacademia:{"scene":"Стадион Юэй","sigil":"M54 9 26 46h24l-5 25 30-38H52Z","effects":"<path class=\"kc-pick-trace\" d=\"M0 89q170 99 340 0M0 113q170 98 340 0M15 32 133 84m192-52L215 84M72 156q98-50 196 0\"/><path class=\"kc-pick-strokes\" d=\"m114 16-32 49h29l-9 31 39-42h-36l22-38Zm128 32-23 25h17l-7 18 29-24h-20Zm-66 48-28 33h23l-11 26 41-35h-27Z\"/>"},
+ sololeveling:{"scene":"Врата теней","sigil":"M25 67V32l25-22 25 22v35ZM34 61V36l16-15 16 15v25ZM13 70h74","effects":"<path class=\"kc-pick-trace\" d=\"M112 143V63l58-49 58 49v80ZM127 137V69l43-34 43 34v68ZM32 165h276m-249-13h222M28 142l54-69m230 71-54-71\"/><path class=\"kc-pick-strokes\" d=\"m80 34 5 10-5 10-5-10Zm173 4 4 8-4 8-4-8Zm-83 57 8 18-8 20-8-20ZM52 133l3 8-3 8-3-8Zm236-18 6 9-6 9-6-9Z\"/>"}
 });
 function pickScene(reel,theme){
  const choose=reel.phase==='choose',reveal=reel.phase==='reveal',dealing=reel.phase==='tear';
  const options=reel.choices||[1,2,3].map(slot=>({slot,available:true,id:reel.payload?.result}));
- const prize=reveal?roster.find(c=>c.id===reel.payload.result):null;
  const emblem='<svg viewBox="0 0 100 80" aria-hidden="true" focusable="false"><path d="'+theme.sigil+'"/></svg>';
  const particles='<svg class="kc-pick-atmosphere" viewBox="0 0 340 180" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+theme.effects+'</svg>';
  const elapsed=reveal||dealing?Math.max(0,Date.now()-reel.started):0;
  const cards=options.map((option,index)=>{
   const selected=reveal&&reel.chosen===option.slot;
   const c=reveal&&(reel.offer||selected)?roster.find(card=>card.id===option.id):null;
-  const result=c?'<span class="kc-pick-front kc-tier-'+c.rarity+'">'+cardBackdrop(c,heroInfo(c))+'<span class="kc-art" aria-hidden="true">'+art(c,true)+'</span><span class="kc-pick-front-rarity"><strong>'+esc(c.name)+'</strong>'+rarityLabel(c)+'</span></span>':'';
-  const rarity=option.rarity?' kc-choice-'+option.rarity:'';
-  const label=c?c.name:'Открыть карточку '+option.slot+' из '+options.length+(option.rarity?' · '+rarityNames[option.rarity]:'');
+  const result=c?'<span class="kc-pick-front">'+cardBackdrop(c,heroInfo(c))+'<span class="kc-art" aria-hidden="true">'+art(c,true)+'</span><strong class="kc-pick-front-name">'+esc(c.name)+'</strong></span>':'';
+  const label=c?c.name:'Открыть карточку '+option.slot+' из '+options.length;
   const unavailable=!choose||!option.available||!!reel.error;
   const faces='<span class="kc-pick-back" aria-hidden="true">'+emblem+'</span>'+result;
   const offset=index-(options.length-1)/2;
   const lane=reel.offer&&reveal&&!selected?REVEAL_LANES[options.length][index-(option.slot>reel.chosen?1:0)]:offset;
-  return '<button type="button" class="kc-pick-card'+rarity+(selected?' is-chosen':'')+'" style="--kc-fan-offset:'+offset+';--kc-deal-index:'+index+';--kc-reveal-shift:'+(lane-offset)+'" data-kc-action="pick-card-'+option.slot+'" aria-label="'+esc(label)+'"'+(unavailable?' disabled':'')+'>'+(reel.offer?'<span class="kc-pick-turntable">'+faces+'</span>':faces)+'</button>';
+  return '<button type="button" class="kc-pick-card'+(selected?' is-chosen':'')+'" style="--kc-fan-offset:'+offset+';--kc-deal-index:'+index+';--kc-reveal-shift:'+(lane-offset)+'" data-kc-action="pick-card-'+option.slot+'" aria-label="'+esc(label)+'"'+(unavailable?' disabled':'')+'>'+(reel.offer?'<span class="kc-pick-turntable">'+faces+'</span>':faces)+'</button>';
  }).join('');
- const burst=prize&&reel.offer?'<span class="kc-pick-burst kc-choice-'+prize.rarity+'" aria-hidden="true">'+Array.from({length:18},(_,i)=>'<i style="--kc-ray:'+i+'"></i>').join('')+'</span>':'';
+ const burst=reveal&&reel.offer?'<span class="kc-pick-burst" aria-hidden="true">'+Array.from({length:18},(_,i)=>'<i style="--kc-ray:'+i+'"></i>').join('')+'</span>':'';
  const opening=dealing?wrapperMarkup(true,reel)+'<span class="kc-deal-light" aria-hidden="true"></span>':'';
  return '<div class="kc-pick-arena'+(reel.offer?' kc-real-pick':'')+(dealing?' is-dealing':'')+(reveal?' is-revealing kc-pick-position-'+reel.chosen:'')+'" data-kc-pick-world="'+seriesKey+'" style="--kc-fan-count:'+options.length+';--kc-pick-elapsed:-'+elapsed+'ms">'+particles+opening+'<div class="kc-pick-card-row" role="group" aria-label="Карточки из пака">'+cards+'</div>'+burst+'</div>';
 }
 const FOIL_DURATION=980;
-const PACK_DEAL_DURATION=1160;
+const PACK_DEAL_DURATION=2110;
 const sealEdge='0 14%,7% 13%,12% 15%,19% 13%,24% 14%,31% 12%,38% 14%,46% 12%,54% 14%,62% 12%,69% 14%,76% 13%,82% 15%,90% 12%,96% 15%,100% 13%';
 function wrapperMarkup(animated,reel){
  const art='/assets/collection/deluxe-packs/'+seriesKey+'.webp';
@@ -937,10 +1056,11 @@ function parsePack(data){
   return {payload,status};
  }
  if(!/^[a-f0-9-]{36}$/i.test(offer)||!Array.isArray(choices)||choices.length<1||choices.length>5||
-    choices.some((choice,index)=>choice.slot!==index+1||!Object.hasOwn(rarityNames,choice.rarity)||
-      typeof choice.available!=='boolean'||(status==='claimed'&&roster.find(c=>c.id===choice.id)?.rarity!==choice.rarity))||
+    choices.some((choice,index)=>choice.slot!==index+1||typeof choice.available!=='boolean'||
+      (status==='claimed'&&(!Object.hasOwn(rarityNames,choice.rarity)||roster.find(c=>c.id===choice.id)?.rarity!==choice.rarity)))||
     (status==='claimed'&&(!payload.result||choices[slot-1]?.id!==payload.result)))throw Error('Invalid pack contents');
- return {payload,status,offer,choices,slot};
+ const publicChoices=status==='claimed'?choices:choices.map(({slot,available})=>({slot,available}));
+ return {payload,status,offer,choices:publicChoices,slot};
 }
 function revealPack(s,reel,pack){
  Object.assign(reel,{...pack,chosen:pack.slot,phase:'reveal',started:Date.now(),error:''});
@@ -965,7 +1085,7 @@ async function claimPack(s,reel,slot){
  if(reel.phase!=='choose')return;
  reel.phase='saving';reel.error='';reel.attempt=slot;paint('pack-heading');
  try{
-  const {data,error}=await packRequest('komi_collection_pack_claim',{p_offer_id:reel.offer,p_slot:slot});
+  const {data,error}=await packRequest('komi_collection_pack_claim_v3',{p_offer_id:reel.offer,p_slot:slot});
   if(!current(s)||s.reel!==reel)return;
   if(error)throw error;
   const pack=parsePack(data);
@@ -1249,7 +1369,7 @@ async function request(action){
   if(sessionError||sessionData?.session?.user?.id!==s.owner)throw new Error('Session changed');
   if(action==='buy'&&!purchaseId){
    const saved=storedOffer(s);
-   const {data,error}=await packRequest('komi_collection_pack_open',{p_series_id:s.seriesKey,p_offer_id:saved});
+   const {data,error}=await packRequest('komi_collection_pack_open_v3',{p_series_id:s.seriesKey,p_offer_id:saved});
    if(!current(s))return;
    if(error){if(saved&&error.code==='22023')storedOffer(s,null);throw error;}
    const pack=parsePack(data);

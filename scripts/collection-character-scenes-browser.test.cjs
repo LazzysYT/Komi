@@ -32,10 +32,10 @@ test('owned heroes have individualized static/animated backgrounds; locked heroe
   for(const [series,characters] of Object.entries(picks)){
    await p.locator('[data-kc-action="series-'+series+'"]').click();
    await p.locator('.kc-grid .kc-owned').first().waitFor();
-   assert.equal(await p.locator('.kc-grid .kc-owned[data-kc-scene]').count(),23);
+   assert.equal(await p.locator('.kc-grid .kc-owned[data-kc-scene]').count(),26);
    assert.equal(await p.locator('.kc-grid .kc-locked[data-kc-scene]').count(),0);
    assert.equal(await p.locator('.kc-grid .kc-scene,.kc-hero-view').count(),0);
-   assert.equal(await p.locator('.kc-grid .kc-owned .kc-card-ambient').count(),23);
+   assert.equal(await p.locator('.kc-grid .kc-owned .kc-card-ambient').count(),26);
    assert.equal(await p.locator('.kc-grid .kc-locked .kc-card-ambient').count(),0);
    await p.mouse.move(width-1,0);
    const animations=await p.locator('.kc-grid .kc-owned .kc-art').evaluateAll(nodes=>nodes.map(n=>getComputedStyle(n,'::before').animationName));

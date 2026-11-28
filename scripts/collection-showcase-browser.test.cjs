@@ -11,7 +11,7 @@ test('profile showcase shows explicit picks only, can hide them, guards stale ow
   const u=new URL(r.request().url()),f=u.pathname.slice(1);
   if(u.origin!==origin)return r.abort();
   if(f==='profile')return r.fulfill({contentType:'text/html',body:fixture});
-  if(!/^(?:komi-(?:collection\.js|collector-showcase\.js)|profile-studio\.css|assets\/collection\/(?:ghoul-cel|frieren|jujutsu|alchemist)\/[a-z0-9-]+\.webp)$/.test(f))return r.abort();
+  if(!/^(?:komi-(?:collection\.js|collector-showcase\.js)|profile-studio\.css|assets\/collection\/(?:ghoul-cel|frieren|jujutsu|alchemist|deathnote)\/[a-z0-9-]+\.webp)$/.test(f))return r.abort();
   return r.fulfill({path:path.join(root,f),contentType:f.endsWith('.webp')?'image/webp':f.endsWith('.css')?'text/css':'application/javascript'});
  });
  await p.goto(origin+'/profile');
@@ -23,7 +23,7 @@ test('profile showcase shows explicit picks only, can hide them, guards stale ow
     if(name==='komi_collection_showcase_read_handle')return {data:args.p_username==='Visible'?chosen:[]};
     if(name==='komi_collection_showcase_read')return {data:chosen};
     if(name==='komi_collection_action')return {data:{owned:['kaneki','touka']}};
-    return {data:{owned:{frieren:['fern'],jujutsu:['gojo'],alchemist:['edward'],demon:[],aot:[],naruto:[],bleach:[],onepiece:[],chainsaw:[],hunter:[]}[args.p_series_id]}};
+    return {data:{owned:{frieren:['fern'],jujutsu:['gojo'],alchemist:['edward'],demon:[],aot:[],naruto:[],bleach:[],onepiece:[],chainsaw:[],hunter:[],deathnote:['light'],heroacademia:[],sololeveling:[]}[args.p_series_id]}};
    }};
    window.reopen=(isMe,username='Owner')=>{
     const section=document.createElement('section');section.className='kcs-showcase';section.hidden=true;
@@ -35,7 +35,7 @@ test('profile showcase shows explicit picks only, can hide them, guards stale ow
  const edit=p.getByRole('button',{name:'Настроить'});
  await edit.click();
  const dialog=p.getByRole('dialog');
- await dialog.getByRole('checkbox',{name:'Ферн'}).check();
+ await dialog.getByRole('checkbox',{name:'Лайт Ягами'}).check();
  await dialog.getByRole('checkbox',{name:'Кэн Канэки'}).check();
  await dialog.getByRole('checkbox',{name:'Сатору Годзё'}).check();
  assert.equal(await dialog.getByRole('checkbox',{name:'Эдвард Элрик'}).isDisabled(),true);
@@ -45,10 +45,10 @@ test('profile showcase shows explicit picks only, can hide them, guards stale ow
  assert.equal(await edit.evaluate(el=>el===document.activeElement),true);
  assert.equal(await p.evaluate(()=>chosen.length),0);
  await edit.click();
- for(const name of ['Ферн','Кэн Канэки','Сатору Годзё'])await dialog.getByRole('checkbox',{name}).check();
+ for(const name of ['Лайт Ягами','Кэн Канэки','Сатору Годзё'])await dialog.getByRole('checkbox',{name}).check();
  await dialog.getByRole('button',{name:'Сохранить и показать'}).click();
  await p.getByText('Витрина сохранена.').waitFor();
- assert.deepEqual(await p.locator('.kcs-tile strong').allTextContents(),['Ферн','Кэн Канэки','Сатору Годзё']);
+ assert.deepEqual(await p.locator('.kcs-tile strong').allTextContents(),['Лайт Ягами','Кэн Канэки','Сатору Годзё']);
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
  if(width===390)await p.locator('.kcs-showcase').screenshot({path:path.join(root,'browser-test-results','collector-showcase-390.png')});
  await p.evaluate(()=>{viewer='guest-signed-in';return reopen(false,'Visible');});
@@ -63,7 +63,7 @@ test('profile showcase shows explicit picks only, can hide them, guards stale ow
  assert.equal(await p.evaluate(()=>calls.length),c);
  await p.evaluate(()=>{viewer='owner-a';return reopen(true);});
  await edit.click();
- for(const name of ['Ферн','Кэн Канэки','Сатору Годзё'])await dialog.getByRole('checkbox',{name}).uncheck();
+ for(const name of ['Лайт Ягами','Кэн Канэки','Сатору Годзё'])await dialog.getByRole('checkbox',{name}).uncheck();
  await dialog.getByRole('button',{name:'Скрыть витрину'}).click();
  await p.getByText('Витрина скрыта.').waitFor();
  assert.equal(await p.evaluate(()=>chosen.length),0);
