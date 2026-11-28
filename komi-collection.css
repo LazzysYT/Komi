@@ -794,8 +794,6 @@
 .kc-pick-front .kc-art{position:absolute;inset:7% 1% 11%;aspect-ratio:auto;background:none}
 .kc-pick-front .kc-art::after{content:none}
 .kc-pick-front .kc-art img{height:100%;object-fit:contain;object-position:center}
-.kc-pick-front-rarity{position:absolute;bottom:5px;left:3px;right:3px;z-index:1}
-.kc-pick-front-rarity .kc-rarity{font-size:clamp(7px,1.6vw,11px);max-width:100%;padding:3px;line-height:1.12;overflow:hidden;text-overflow:ellipsis}
 .kc-pick-panel [data-kc-action="skip-reel"]{min-height:44px}
 @media(prefers-reduced-motion:no-preference){
  .kc-pick-arena.is-revealing .kc-pick-card.is-chosen{animation:kc-pick-turn .66s cubic-bezier(.22,.63,.22,1) both}
@@ -942,7 +940,7 @@
 .kc-foil-tab{top:2%;right:-13%;z-index:6;min-width:35px;min-height:33px;padding:4px 7px;border-radius:6px;background:#f6eee9;color:#211821;font-size:17px;box-shadow:0 3px 12px #0009;transform:translateX(calc(var(--kc-foil-drag)*23px));text-align:center}
 .kc-foil-table.is-tearing .kc-foil-tab{display:none}
 @media(prefers-reduced-motion:no-preference){
- .kc-foil-table.is-tearing :is(.kc-foil-object,.kc-foil-strip,.kc-foil-shell,.kc-foil-deck,.kc-foil-lining,.kc-foil-rip){animation-duration:980ms;animation-delay:var(--kc-foil-elapsed,0ms);animation-timing-function:cubic-bezier(.22,.68,.3,1);animation-fill-mode:both}
+ .kc-foil-table.is-tearing :is(.kc-foil-object,.kc-foil-strip,.kc-foil-shell,.kc-foil-deck,.kc-foil-lining,.kc-foil-rip){animation-duration:var(--kc-foil-time,980ms);animation-delay:var(--kc-foil-elapsed,0ms);animation-timing-function:cubic-bezier(.22,.68,.3,1);animation-fill-mode:both}
  .kc-foil-table.is-tearing .kc-foil-object{animation-name:kc-foil-recoil}
  .kc-foil-table.is-tearing .kc-foil-strip{animation-name:kc-foil-away}
  .kc-foil-table.is-tearing .kc-foil-shell,.kc-foil-table.is-tearing .kc-foil-lining{animation-name:kc-foil-empty}
@@ -1061,9 +1059,10 @@
 }
 .kc-page .kc-pick-panel{background-color:var(--kc-collection-surface)}
 .kc-theme-ghoul .kc-pick-panel{--kc-open:#dcacff;--kc-open-dark:#351844;--kc-open-ink:#100d18;--kc-open-glow:#772881}
-.kc-pick-arena[data-kc-pick-world=ghoul].kc-real-pick{
- background:linear-gradient(0deg,#130d1aea,#130d1a4f 61%,#130d1aaf),
-  url('/assets/collection/tokyo-rain.webp') center 57% / cover,#160b1c
+.kc-pick-arena.kc-real-pick{
+ --kc-foil-time:1690ms;
+ background:linear-gradient(0deg,var(--kc-open-ink),#130d1a38 61%,#130d1a80),
+  var(--kc-world-plate,none) center 57% / cover,var(--kc-open-ink)
 }
 .kc-page .kc-real-pick .kc-pick-card-row{
  --kc-fan-gap:clamp(5px,2vw,22px);
@@ -1071,57 +1070,54 @@
  max-width:min(100%,calc(var(--kc-fan-count) * 158px + 42px));gap:var(--kc-fan-gap);
  padding:clamp(18px,5.3vw,58px) clamp(9px,4vw,48px)
 }
-.kc-choice-common{--kc-choice:#c9b7d0}
-.kc-choice-rare{--kc-choice:#6dd3ff}
-.kc-choice-epic{--kc-choice:#9147ff}
-.kc-choice-legendary{--kc-choice:#ff454f}
 .kc-page .kc-real-pick .kc-pick-card{
  --kc-fan-rest:translateY(calc(var(--kc-fan-offset) * var(--kc-fan-offset) * 3px)) rotate(calc(var(--kc-fan-offset) * 5deg));
  --kc-reveal-place:translateX(calc(var(--kc-reveal-shift) * (100% + var(--kc-fan-gap)))) var(--kc-fan-rest) scale(.91);
  min-height:0;transform:var(--kc-fan-rest);
- box-shadow:0 10px 23px #090509a3,0 0 16px color-mix(in srgb,var(--kc-choice),transparent 50%)
+ box-shadow:0 10px 23px #090509a3,0 0 14px color-mix(in srgb,var(--kc-open),transparent 74%)
 }
 .kc-page .kc-real-pick .kc-pick-card:not(:disabled):is(:hover,:focus-visible){
  z-index:3;transform:translateY(-11px) rotate(calc(var(--kc-fan-offset) * 3deg)) scale(1.06);
- box-shadow:0 13px 28px #090509a8,0 0 24px var(--kc-choice)
+ box-shadow:0 13px 28px #090509a8,0 0 19px color-mix(in srgb,var(--kc-open),transparent 50%)
 }
-.kc-real-pick .kc-pick-back{border-color:var(--kc-choice)}
+.kc-real-pick .kc-pick-back{border-color:color-mix(in srgb,var(--kc-open),transparent 24%)}
 .kc-pick-turntable{position:absolute;inset:0;display:block;border-radius:inherit;transform-style:preserve-3d}
 .kc-real-pick .kc-pick-back svg{width:57%;transform:translateY(-10%)}
 .kc-real-pick .kc-pick-back::after{
  content:'KOMI ANIME';inset:auto 0 16%;text-align:center;background:none;
  font:800 clamp(5px,1.25vw,11px)/1 var(--kc-collection-display);letter-spacing:.06em;opacity:.9
 }
-.kc-real-pick .kc-pick-front{border-color:var(--kc-choice);box-shadow:inset 0 0 15px color-mix(in srgb,var(--kc-choice),transparent 60%)}
-.kc-real-pick .kc-pick-front-rarity{display:grid;gap:3px;justify-items:center;bottom:4%;color:#fff;line-height:1.08}
-.kc-real-pick .kc-pick-front-rarity strong{
+.kc-real-pick .kc-pick-front{box-shadow:inset 0 0 15px color-mix(in srgb,var(--kc-open),transparent 72%)}
+.kc-pick-front-name{
+ position:absolute;inset:auto 4% 5%;z-index:2;color:#fff;text-align:center;
  font:900 clamp(7px,1.6vw,17px)/1.02 var(--kc-collection-display);text-shadow:0 1px 8px #080410;
  overflow-wrap:anywhere
 }
 .kc-pick-burst{position:absolute;inset:0;z-index:4;pointer-events:none}
 .kc-pick-burst i{
  position:absolute;top:50%;left:50%;width:4px;height:8px;border-radius:1px;
- background:var(--kc-choice);box-shadow:0 0 8px var(--kc-choice);opacity:0;
+ background:var(--kc-open);box-shadow:0 0 8px var(--kc-open);opacity:0;
  --kc-ray-angle:calc(var(--kc-ray) * 20deg)
 }
-.kc-pick-burst i:nth-child(3n){background:#ff8196}
-.kc-pick-burst i:nth-child(4n){background:#d5b1ff}
+.kc-pick-burst i:nth-child(3n){background:#f8ecd1}
+.kc-pick-burst i:nth-child(4n){background:color-mix(in srgb,var(--kc-open),white 35%)}
 .kc-pack-error{color:#ffc0c9}
 @media (prefers-reduced-motion:no-preference){
  .kc-pick-arena:not(.is-revealing) .kc-pick-card:not(:disabled) .kc-pick-back{
   animation:kc-fan-float 3.5s ease-in-out infinite;animation-delay:calc(var(--kc-fan-offset) * .21s)
  }
  .kc-pick-arena.kc-real-pick.is-revealing .kc-pick-card.is-chosen{
-  opacity:1;z-index:3;animation:kc-pick-promote .82s cubic-bezier(.18,.72,.25,1) both
+  opacity:1;z-index:3;animation:kc-pick-promote 1.48s cubic-bezier(.23,.61,.21,1) both
  }
  .kc-pick-arena.kc-real-pick.is-revealing .kc-pick-card:not(.is-chosen){
-  opacity:1;animation:kc-pick-other 2.30s ease both
+  opacity:1;animation:kc-pick-other 3.48s ease both
  }
  .kc-real-pick.is-revealing .kc-pick-turntable{
-  animation:kc-pick-flip .66s cubic-bezier(.22,.63,.22,1) both;
-  animation-delay:var(--kc-pick-elapsed,0ms)
+  animation:kc-pick-flip 1.16s cubic-bezier(.26,.58,.22,1) both;
+  animation-delay:calc(.39s + var(--kc-pick-elapsed,0ms))
  }
- .kc-real-pick .kc-pick-burst i{animation:kc-pick-burst .92s .46s ease-out both}
+ .kc-real-pick.is-revealing .is-chosen .kc-pick-turntable{animation-delay:calc(.17s + var(--kc-pick-elapsed,0ms))}
+ .kc-real-pick .kc-pick-burst i{animation:kc-pick-burst 1.2s calc(.91s + var(--kc-pick-elapsed,0ms)) ease-out both}
  .kc-foil-table.is-tearing{animation:kc-tear-impact .28s ease-out both}
 }
 @keyframes kc-fan-float{50%{translate:0 -4px}}
@@ -1211,7 +1207,6 @@
 @media (max-width:450px){
  .kc-page .kc-tabs{display:grid;grid-template-columns:.85fr 1fr 1.15fr}
  .kc-page .kc-tabs button{padding-inline:4px;font-size:11px;line-height:1.18}
- .kc-real-pick .kc-pick-front-rarity .kc-rarity{display:none}
 }
 @media (prefers-reduced-motion:reduce){
  .kc-inspect-frame,.kc-inspect-frame>div{transform:none}
@@ -1244,15 +1239,15 @@
  .kc-real-pick.kc-pick-arena:not(.is-revealing) .kc-pick-card{animation:none}
  .kc-real-pick.kc-pick-arena.is-dealing .kc-pick-card{
   --kc-deal-origin:calc(-1 * var(--kc-fan-offset) * (100% + var(--kc-fan-gap)));
-  animation:kc-deal-from-foil 690ms cubic-bezier(.19,.69,.29,1) both;
-  animation-delay:calc(235ms + var(--kc-deal-index) * 49ms + var(--kc-pick-elapsed,0ms))
+  animation:kc-deal-from-foil 1210ms cubic-bezier(.22,.56,.25,1) both;
+  animation-delay:calc(400ms + var(--kc-deal-index) * 112ms + var(--kc-pick-elapsed,0ms))
  }
  .kc-real-pick.is-dealing .kc-deal-light::before{animation:kc-deal-bloom .62s calc(.15s + var(--kc-pick-elapsed,0ms)) ease-out both}
  .kc-real-pick.is-dealing .kc-deal-light::after{animation:kc-deal-edge .59s calc(.17s + var(--kc-pick-elapsed,0ms)) ease-out both}
  .kc-real-pick.is-revealing .is-chosen .kc-pick-front::after{
   content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
   background:linear-gradient(128deg,transparent 25%,#fff0 40%,#fdf2ff9e 49%,transparent 63%);
-  animation:kc-reward-glint .68s calc(.42s + var(--kc-pick-elapsed,0ms)) ease-out both
+  animation:kc-reward-glint .94s calc(.99s + var(--kc-pick-elapsed,0ms)) ease-out both
  }
 }
 @keyframes kc-deal-from-foil{
@@ -1273,11 +1268,43 @@
 }
 .kc-card-ambient .kc-land-hero{opacity:.36}
 .kc-card-ambient .kc-land-ink{opacity:.64}
-.kc-theme-ghoul .kc-world-backdrop[data-kc-weather=rain]{
- background:linear-gradient(165deg,#1a101a3b,#140c18b8),url('/assets/collection/tokyo-rain.webp') 60% center / cover
+.kc-theme-ghoul{--kc-world-plate:url('/assets/collection/worlds/ghoul.webp')}
+.kc-theme-jujutsu{--kc-world-plate:url('/assets/collection/worlds/jujutsu.webp')}
+.kc-theme-frieren{--kc-world-plate:url('/assets/collection/worlds/frieren.webp')}
+.kc-theme-alchemist{--kc-world-plate:url('/assets/collection/worlds/alchemist.webp')}
+.kc-theme-demon{--kc-world-plate:url('/assets/collection/worlds/demon.webp')}
+.kc-theme-aot{--kc-world-plate:url('/assets/collection/worlds/aot.webp')}
+.kc-theme-naruto{--kc-world-plate:url('/assets/collection/worlds/naruto.webp')}
+.kc-theme-bleach{--kc-world-plate:url('/assets/collection/worlds/bleach.webp')}
+.kc-theme-onepiece{--kc-world-plate:url('/assets/collection/worlds/onepiece.webp')}
+.kc-theme-chainsaw{--kc-world-plate:url('/assets/collection/worlds/chainsaw.webp')}
+.kc-theme-hunter{--kc-world-plate:url('/assets/collection/worlds/hunter.webp')}
+.kc-theme-bleach .kc-world-backdrop[data-kc-location=dunes]{--kc-world-plate:url('/assets/collection/worlds/hueco.webp')}
+.kc-world-backdrop{
+ background:linear-gradient(168deg,#08071124,transparent 46%,#09081391),
+  var(--kc-world-plate,none) center 45% / cover,var(--kc-scene-depth)
 }
-.kc-theme-ghoul .kc-world-backdrop[data-kc-weather=rain] .kc-land-planes{opacity:.34}
-.kc-theme-ghoul .kc-world-backdrop[data-kc-weather=rain] .kc-land-lit{opacity:.25}
+.kc-world-backdrop .kc-land-planes{opacity:.18}
+.kc-world-backdrop .kc-land-lit{opacity:.16}
+.kc-world-backdrop .kc-land-ink{opacity:.23}
+.kc-world-backdrop .kc-land-hero{opacity:.31}
+.kc-card-ambient,.kc-real-pick .kc-pick-front .kc-card-ambient{opacity:.96}
+.kc-card-ambient .kc-land-hero{opacity:.17}
+.kc-card-ambient .kc-land-ink{opacity:.20}
+.kc-hero-stage .kc-scene-wash,.kc-result .kc-scene-wash{
+ background:radial-gradient(ellipse at 50% 48%,transparent 45%,#090912a6 94%)
+}
+.kc-hero-view .kc-inspect-portrait img{width:99%;height:87%}
+.kc-inspect-foil{
+ opacity:.36;
+ background:radial-gradient(circle at var(--kc-glare-x,50%) var(--kc-glare-y,50%),#fcdbff60,transparent 48%),
+  linear-gradient(132deg,transparent 31%,#a699d82b 43%,transparent 57%)
+}
+.kc-inspect-hud{
+ background:linear-gradient(#090714cb,transparent 21% 62%,#0a0818e5 92%);
+ text-shadow:0 2px 10px #090714
+}
+.kc-inspect-name{font-size:clamp(17px,2.6vw,33px);line-height:1.02}
 .kc-page .kc-card.kc-owned .kc-portrait,.kc-real-pick .kc-pick-front .kc-portrait{z-index:1}
 .kc-real-pick .kc-pick-front .kc-card-ambient{opacity:.75}
 .kc-weather-flow{
@@ -1344,6 +1371,50 @@
  54%{opacity:.65;transform:translate(6%,-4%) scale(1.12)}
 }
 @media(forced-colors:active){.kc-card-ambient,.kc-weather-flow,.kc-deal-light{display:none}}
+
+/* Painted stages and matching pack palettes for collections 12–14. */
+.kc-theme-deathnote{
+ --kc-world:#e3b1c9;--kc-world-dark:#4f2137;--kc-world-ink:#171220;
+ --kc-folio:url('/assets/collection/deluxe-wallpapers/deathnote.webp');
+ --kc-world-plate:url('/assets/collection/worlds/deathnote.webp')
+}
+.kc-theme-heroacademia{
+ --kc-world:#f6d781;--kc-world-dark:#205568;--kc-world-ink:#0c2231;
+ --kc-folio:url('/assets/collection/deluxe-wallpapers/heroacademia.webp');
+ --kc-world-plate:url('/assets/collection/worlds/heroacademia.webp')
+}
+.kc-theme-sololeveling{
+ --kc-world:#c2b2ff;--kc-world-dark:#38366b;--kc-world-ink:#10142b;
+ --kc-folio:url('/assets/collection/deluxe-wallpapers/sololeveling.webp');
+ --kc-world-plate:url('/assets/collection/worlds/sololeveling.webp')
+}
+.kc-theme-deathnote .kc-world-backdrop[data-kc-location=dncase]{
+ --kc-world-plate:url('/assets/collection/worlds/deathstudy.webp')
+}
+.kc-theme-deathnote .kc-pick-panel{
+ --kc-open:#e8bdcf;--kc-open-dark:#4a2537;--kc-open-ink:#180e19;--kc-open-ink2:#241626;--kc-open-glow:#6a284b;
+ --kc-open-pattern:repeating-linear-gradient(0deg,transparent 0 11px,#f1acc114 12px 13px)
+}
+.kc-theme-heroacademia .kc-pick-panel{
+ --kc-open:#ffe196;--kc-open-dark:#1d5268;--kc-open-ink:#0c1e2c;--kc-open-ink2:#153747;--kc-open-glow:#267587;
+ --kc-open-pattern:repeating-linear-gradient(135deg,transparent 0 9px,#73ead927 10px 11px,transparent 12px 27px)
+}
+.kc-theme-sololeveling .kc-pick-panel{
+ --kc-open:#cab7ff;--kc-open-dark:#383a71;--kc-open-ink:#11132b;--kc-open-ink2:#202348;--kc-open-glow:#493d91;
+ --kc-open-pattern:repeating-radial-gradient(ellipse at 50% 50%,transparent 0 11px,#a884ff1f 12px 13px,transparent 14px 23px)
+}
+:is(.kc-theme-deathnote,.kc-theme-heroacademia,.kc-theme-sololeveling) > .kc-window-motif,
+.kc-page:is(.kc-theme-deathnote,.kc-theme-heroacademia,.kc-theme-sololeveling) .kc-feature-motif{
+ background:linear-gradient(90deg,var(--kc-world-ink),transparent 85%),var(--kc-folio) center / cover
+}
+.kc-pick-arena:is([data-kc-pick-world=deathnote],[data-kc-pick-world=heroacademia],[data-kc-pick-world=sololeveling]) .kc-pick-strokes{
+ fill:var(--kc-open)
+}
+@media(prefers-reduced-motion:no-preference){
+ .kc-pick-arena.is-revealing[data-kc-pick-world=deathnote] .kc-pick-strokes{animation-name:kc-pick-tape}
+ .kc-pick-arena.is-revealing[data-kc-pick-world=heroacademia] .kc-pick-strokes{animation-name:kc-pick-crest}
+ .kc-pick-arena.is-revealing[data-kc-pick-world=sololeveling] .kc-pick-strokes{animation-name:kc-pick-orbit}
+}
 
 /* Packs is a compact shelf with a single selected foil; album styles stay separate. */
 .kc-packs-page .kc-header{align-items:center;justify-content:space-between;flex-wrap:nowrap;gap:8px}

@@ -493,3 +493,7 @@ body:has(#profile.komi-profile-studio) #sideFriendsBtn{width:44px!important;min-
 .profile-cover[data-kcs-wallpaper=onepiece]{background-image:url("/assets/collection/deluxe-wallpapers/onepiece.svg")}
 .profile-cover[data-kcs-wallpaper=chainsaw]{background-image:url("/assets/collection/deluxe-wallpapers/chainsaw.svg")}
 .profile-cover[data-kcs-wallpaper=hunter]{background-image:url("/assets/collection/deluxe-wallpapers/hunter.svg")}
+
+.profile-cover[data-kcs-wallpaper=deathnote]{background-image:url("/assets/collection/deluxe-wallpapers/deathnote.webp")}
+.profile-cover[data-kcs-wallpaper=heroacademia]{background-image:url("/assets/collection/deluxe-wallpapers/heroacademia.webp")}
+.profile-cover[data-kcs-wallpaper=sololeveling]{background-image:url("/assets/collection/deluxe-wallpapers/sololeveling.webp")}

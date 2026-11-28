@@ -53,7 +53,7 @@ test('pack tile opens mobile details immediately, owns focus, and exposes only t
   await sheet.getByText('Проверяем коллекцию…').waitFor();
   await p.waitForFunction(()=>typeof resolveRead==='function');
   await p.evaluate(()=>resolveRead());
-  await sheet.getByText('2 из 20').waitFor();
+  await sheet.getByText('2 из 23').waitFor();
   await sheet.getByText('Одна новая карточка, без повторов').waitFor();
   assert.equal(await progress.getAttribute('aria-valuenow'),'2');
   assert.equal(await sheet.locator('h2').evaluate(el=>document.activeElement===el),true,'async data does not steal focus');
@@ -98,7 +98,7 @@ test('pack tile opens mobile details immediately, owns focus, and exposes only t
   await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();
   assert.equal(await p.locator('.kc-pack-browser,.kc-pack-sheet,.kc-case').count(),0);
   assert.ok(await p.locator('.kc-grid').isVisible());
-  assert.equal(await p.evaluate(()=>calls.filter(c=>c.name.endsWith('_pack_open')||c.name.endsWith('_pack_claim')).length),0);
+  assert.equal(await p.evaluate(()=>calls.filter(c=>c.name.endsWith('_pack_open_v3')||c.name.endsWith('_pack_claim_v3')).length),0);
   assert.deepEqual(errors,[]);
  }finally{await b.close();}
 });
