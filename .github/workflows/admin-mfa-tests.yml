@@ -1,0 +1,30 @@
+name: Admin MFA enrollment tests
+on:
+  pull_request:
+    paths:
+      - 'komi-admin-mfa.js'
+      - 'admin-security.html'
+      - 'admin-security-entry.js'
+      - 'app-main.js'
+      - 'scripts/admin-mfa.test.cjs'
+      - '.github/workflows/admin-mfa-tests.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'komi-admin-mfa.js'
+      - 'admin-security.html'
+      - 'admin-security-entry.js'
+      - 'app-main.js'
+      - 'scripts/admin-mfa.test.cjs'
+      - '.github/workflows/admin-mfa-tests.yml'
+permissions:
+  contents: read
+jobs:
+  offline-mfa-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: node --test scripts/admin-mfa.test.cjs
