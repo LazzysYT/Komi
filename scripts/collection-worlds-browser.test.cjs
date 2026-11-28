@@ -3,7 +3,7 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 let chromium;try{({chromium}=require('playwright'));}catch{}
 const source=path.resolve(__dirname,'..'),origin='http://localhost:8767';
 const fixture='<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/komi-collection.css"><body style="background:#09090b"><main id="mainContainer"></main><script src="/komi-collection-art.js"></script><script src="/komi-collection.js"></script></body></html>';
-const wanted={ghoul:['kaneki',24,'Бустер «Токийский гуль»'],jujutsu:['itadori',24,'Бустер «Печати проклятий»'],frieren:['frieren',24,'Бустер «Дневник пути»'],alchemist:['edward',24,'Бустер «Архив Аместриса»'],demon:['tanjiro',24,'Бустер «Дыхание воды»'],aot:['eren',24,'Бустер «За стеной»'],naruto:['naruto',20,'Бустер «Путь шиноби»'],bleach:['ichigo',20,'Бустер «Лунный разрез»'],onepiece:['luffy',20,'Бустер «Капитанский журнал»'],chainsaw:['denji',20,'Бустер «Кассета Бюро»'],hunter:['gon',20,'Бустер «Лицензия охотника»']};
+const wanted={ghoul:['kaneki',24,'Токийский гуль'],jujutsu:['itadori',24,'Печати проклятий'],frieren:['frieren',24,'Дневник пути'],alchemist:['edward',24,'Архив Аместриса'],demon:['tanjiro',24,'Дыхание воды'],aot:['eren',24,'За стеной'],naruto:['naruto',20,'Путь шиноби'],bleach:['ichigo',20,'Лунный разрез'],onepiece:['luffy',20,'Капитанский журнал'],chainsaw:['denji',20,'Кассета Бюро'],hunter:['gon',20,'Лицензия охотника']};
 
 test('eleven worlds: separate album, full-body view, one-time reveal and safe purchase', {skip:!chromium,timeout:75000},async()=>{
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
@@ -68,6 +68,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    assert.deepEqual(filtered,[...filtered].sort((a,b)=>rank[a]-rank[b]),'rarity order preserved under ownership filter');
    await p.getByRole('button',{name:'Все',exact:true}).click();
    await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
+   if(width<=700)await p.locator('[data-kc-action=series-'+series+']').click();
    assert.equal(await p.locator('.kc-case h2').textContent(),title);
    assert.equal(await p.locator('.kc-album,.kc-grid').count(),0);
    assert.equal(await p.locator('.kc-world-shelves .kc-pack-thumb').count(),11);
@@ -78,6 +79,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
     await p.locator('.kc-page').screenshot({path:path.join(out,'world-view-pack-'+width+'.png'),animations:'disabled'});
    }
    if(series!=='ghoul')await p.waitForFunction(()=>document.querySelector('.kc-case-image')?.naturalWidth>0);
+   if(width<=700)await p.keyboard.press('Escape');
    await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();
    assert.equal(await p.locator('.kc-album .kc-slot').count(),size);
    assert.equal(await p.locator('.kc-album .kc-slot:not(.kc-slot-owned) img[src*="/locked/"]').count(),size-1);
@@ -114,6 +116,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
   await p.evaluate(()=>window.finishHeld());
   assert.equal(await p.locator('.kc-grid [data-kc-card="itadori"]').count(),0);
   await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
+  if(width<=700)await p.locator('[data-kc-action=series-frieren]').click();
   const buy=p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true});
   await buy.click();await p.getByRole('button',{name:'Отмена'}).click();
   assert.equal(await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_pack_claim')).length),0);
