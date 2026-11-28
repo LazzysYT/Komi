@@ -1,5 +1,6 @@
 // Komi Premium - Lava.top webhook, authenticated via X-Api-Key.
 // Key is configured ONLY in Supabase Edge Function Secrets. No key => HTTP 503.
+import {readWebhookJson} from './read-body.mjs';
 const offerId='f1b11818-74d5-4e94-a013-15d89a545cdd';
 const productId='b37a75ab-e500-4431-b61e-5c2a7e3edd8a';
 const recognized=new Set([
@@ -39,16 +40,11 @@ Deno.serve(async(req:Request)=>{
   return Response.json({error:'Integration not configured'},{status:503});
  if(!equal(req.headers.get('X-Api-Key')||'',secret))
   return Response.json({error:'Unauthorized'},{status:401});
- if(!(req.headers.get('content-type')||'').includes('application/json'))
+ if((req.headers.get('content-type')||'').split(';',1)[0].trim().toLowerCase()!=='application/json')
   return Response.json({error:'JSON required'},{status:415});
- if(Number(req.headers.get('content-length')||0)>32768)
-  return Response.json({error:'Too large'},{status:413});
- let b:Record<string,unknown>;
- try{
-  const raw=await req.text();
-  if(raw.length>32768)return Response.json({error:'Too large'},{status:413});
-  b=object(JSON.parse(raw));
- }catch{return Response.json({error:'Malformed JSON'},{status:400});}
+ const parsed=await readWebhookJson(req);
+ if(!parsed.ok)return Response.json({error:parsed.error},{status:parsed.status});
+ const b=object(parsed.value);
  const type=str(b.eventType||b.event_type);
  if(!recognized.has(type))return Response.json({ok:true,ignored:true});
  const data=object(b.data),buyer=object(b.buyer),product=object(data.product);
@@ -91,7 +87,7 @@ Deno.serve(async(req:Request)=>{
  if(!adminKey.startsWith('sb_secret_'))headers.authorization='Bearer '+adminKey;
  try{
   const res=await fetch(dbUrl+'/rest/v1/rpc/komi_apply_lava_premium_event',{
-    method:'POST',headers,body:JSON.stringify(params)
+    method:'POST',headers,body:JSON.stringify(params),signal:AbortSignal.timeout(10000)
   });
   if(!res.ok){console.error('Premium RPC unavailable',res.status);return Response.json({error:'Retry'},{status:503});}
   const result:unknown=await res.json();
@@ -111,7 +107,8 @@ Deno.serve(async(req:Request)=>{
       ['activated','payment_failed','revoked','duplicate_event','stale_event'].includes(result)){
     const finalResponse=await fetch(dbUrl+'/rest/v1/rpc/komi_finalize_checkout_payment',{
       method:'POST',headers,
-      body:JSON.stringify({p_invoice_id:invoice,p_status:paymentStatus[type],p_buyer_email:email||null})
+      body:JSON.stringify({p_invoice_id:invoice,p_status:paymentStatus[type],p_buyer_email:email||null}),
+      signal:AbortSignal.timeout(10000)
     });
     if(!finalResponse.ok){
       console.error('Checkout confirmation unavailable',finalResponse.status);
@@ -119,7 +116,7 @@ Deno.serve(async(req:Request)=>{
     }
   }
   return Response.json({ok:true,result});
- }catch(e){console.error('Premium webhook failed',String(e).slice(0,100));
+ }catch(e){console.error('Premium webhook failed',e instanceof Error?e.name:'UnknownError');
   return Response.json({error:'Unavailable'},{status:503});
  }
 });
