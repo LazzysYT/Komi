@@ -50,3 +50,25 @@ test('backup factor may be added at AAL2',async()=>{
  const m=mock({verified:[{id:'a',status:'verified'}],aal:'aal2'});
  assert.equal((await controller(m.db,'owner',()=>true).enroll()).id,'new-factor');
 });
+
+test('isolated page only loads the pinned SDK and dedicated first-party scripts',()=>{
+ const fs=require('node:fs'),path=require('node:path'),root=path.join(__dirname,'..');
+ const html=fs.readFileSync(path.join(root,'admin-security.html'),'utf8');
+ const sources=[...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"[^>]*>/gi)].map(m=>m[1].split('?')[0]);
+ assert.deepEqual(sources,['https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.119.0','/komi-admin-mfa.js','/admin-security-entry.js']);
+ assert.equal((html.match(/<script\b/gi)||[]).length,sources.length);
+ assert.doesNotMatch(html,/<iframe\b|<object\b|adsbygoogle|komi-ads-loader/i);
+ const config=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8'));
+ const headers=new Map(config.headers.find(h=>h.source==='/admin-security.html').headers.map(h=>[h.key.toLowerCase(),h.value]));
+ assert.match(headers.get('cache-control'),/\bno-store\b/);
+ assert.equal(headers.get('referrer-policy'),'no-referrer');
+ assert.equal(headers.get('cross-origin-opener-policy'),'same-origin');
+ assert.match(headers.get('x-robots-tag'),/\bnoindex\b/);
+ const csp=headers.get('content-security-policy');
+ assert.match(csp,/default-src 'none'/);
+ assert.match(csp,/frame-ancestors 'none'/);
+ assert.match(csp,/form-action 'none'/);
+ assert.match(csp,/script-src 'self' https:\/\/cdn\.jsdelivr\.net;/);
+ assert.match(csp,/script-src-attr 'none'/);
+ assert.doesNotMatch(csp,/googlesyndication|vercel\.live|'unsafe-eval'/);
+});

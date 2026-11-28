@@ -58,7 +58,7 @@ async function mount(content,db,back,getUid){
   content.replaceChildren(panel);
   let disposed=false,observer=null,subscription=null,busy=false;
   const alive=()=>!disposed&&content.isConnected&&content.contains(panel)&&(!modal||modal.classList.contains('active'))&&getUid()===uid;
-  function dispose(){if(disposed)return;disposed=true;secretBox.replaceChildren();actions.replaceChildren();observer?.disconnect();subscription?.unsubscribe();}
+  function dispose(message){if(disposed)return;disposed=true;secretBox.replaceChildren();actions.replaceChildren();if(message&&content.contains(panel))notice.textContent=message;observer?.disconnect();subscription?.unsubscribe();}
   if(typeof MutationObserver==='function'){
     observer=new MutationObserver(()=>{if(!alive())dispose();});
     observer.observe(content,{childList:true});
@@ -67,7 +67,7 @@ async function mount(content,db,back,getUid){
   }
   if(db.auth.onAuthStateChange){
     const sub=db.auth.onAuthStateChange((event,session)=>{
-      if(event==='SIGNED_OUT'||(session?.user?.id&&session.user.id!==uid))dispose();
+      if(event==='SIGNED_OUT'||(session?.user?.id&&session.user.id!==uid))dispose('Сеанс завершён или аккаунт изменился. Откройте раздел заново.');
     });
     subscription=sub?.data?.subscription;
     if(disposed)subscription?.unsubscribe();
