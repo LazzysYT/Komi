@@ -1,0 +1,19 @@
+# Defense in depth: never send local secrets or private audit artifacts to Vercel.
+.env
+.env.*
+.vercel/
+.supabase/
+supabase/.temp/
+*.pem
+*.key
+*.p12
+*.pfx
+*.sql.dump
+*.dump
+*.bak
+premium-audit.json
+browser-test-results/
+SECURITY.md
+docs/security-rollout.md
+docs/legal-review.md
+.github/
