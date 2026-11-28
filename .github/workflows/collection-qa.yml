@@ -9,6 +9,10 @@ on:
       - 'scripts/collection-search*'
       - 'scripts/collection-showcase*'
       - 'scripts/collection-deluxe*'
+      - 'scripts/collection-pick*'
+      - 'scripts/collection-character-scenes*'
+      - 'scripts/collection-series-expansion-db.test.cjs'
+      - 'supabase/migrations/*collection*.sql'
       - 'komi-collector-showcase.js'
       - 'profile-studio.css'
       - 'app-main.js'
@@ -30,13 +34,17 @@ jobs:
         run: node --test scripts/collection-cases.test.cjs
       - name: Install browser
         run: |
-          npm install --prefix "$RUNNER_TEMP/komi-collection-qa" --no-save --package-lock=false --ignore-scripts playwright@1.65.1
+          npm install --prefix "$RUNNER_TEMP/komi-collection-qa" --no-save --package-lock=false --ignore-scripts playwright@1.65.1 @electric-sql/pglite@0.6.0
           "$RUNNER_TEMP/komi-collection-qa/node_modules/.bin/playwright" install --with-deps chromium
+      - name: Collection purchase transaction checks
+        run: |
+          export NODE_PATH="$RUNNER_TEMP/komi-collection-qa/node_modules"
+          node --test scripts/collection-series-expansion-db.test.cjs
       - name: Collection browser checks (mock wallet)
         run: |
           export NODE_PATH="$RUNNER_TEMP/komi-collection-qa/node_modules"
           node -e "require('playwright')"
-          node --test scripts/collection-cases-browser.test.cjs scripts/collection-worlds-browser.test.cjs scripts/collection-search-browser.test.cjs scripts/collection-showcase-browser.test.cjs scripts/collection-deluxe-browser.test.cjs
+          node --test scripts/collection-cases-browser.test.cjs scripts/collection-worlds-browser.test.cjs scripts/collection-search-browser.test.cjs scripts/collection-showcase-browser.test.cjs scripts/collection-deluxe-browser.test.cjs scripts/collection-pick-browser.test.cjs scripts/collection-character-scenes-browser.test.cjs
       - name: Save collection screenshots
         if: always()
         uses: actions/upload-artifact@v4

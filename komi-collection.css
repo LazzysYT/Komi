@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600..900&display=swap');
 /* Collection: local, scoped styles. No shop or player overrides. */
 .kc-page{--kc-border:rgba(255,255,255,.085);width:100%;max-width:1250px;margin:0 auto;padding:clamp(16px,3vw,36px) clamp(12px,2vw,26px) 48px;box-sizing:border-box;color:#f7f7f8;font-family:Inter,Manrope,sans-serif;min-width:0}
 .kc-page *{box-sizing:border-box}
@@ -1028,3 +1029,318 @@
 @keyframes kc-pick-swell{0%{opacity:0;transform:translateY(22%) rotate(-5deg)}58%{opacity:.65}to{opacity:.33;transform:translateY(-1%) rotate(1deg)}}
 @keyframes kc-pick-tape{0%{opacity:0;transform:translateX(-13%) scaleY(.96)}40%{opacity:.62;transform:translateX(1%)}to{opacity:.36;transform:none}}
 @keyframes kc-pick-inkmap{0%{opacity:0;transform:scale(.86)}58%{opacity:.66}to{opacity:.3;transform:scale(1.04)}}
+
+/* Pick-and-keep and the layered card inspector are scoped to the collection. */
+.kc-page,.kc-hero-view{
+ --kc-collection-bg:#09090d;--kc-collection-surface:#12141d;
+ --kc-collection-violet:#9147ff;--kc-collection-red:#ff454f;
+ --kc-collection-display:Montserrat,Inter,sans-serif
+}
+.kc-page{background:var(--kc-collection-bg)}
+.kc-page .kc-header h1,.kc-reel-heading h3,.kc-page .kc-card-info strong,.kc-hero-view h2{
+ font-family:var(--kc-collection-display)
+}
+.kc-page .kc-header .kc-count{width:auto;display:inline-flex;white-space:nowrap}
+.kc-page .kc-tabs button{min-height:44px}
+.kc-page .kc-tabs button[aria-pressed=true]{border-color:#c28eff;box-shadow:inset 0 -2px 0 var(--kc-collection-violet)}
+.kc-my-album .kc-filters{display:none}
+.kc-page .kc-lock b{margin-left:.25em;font:800 13px/1 var(--kc-collection-display)}
+.kc-card-group{font-size:11px;line-height:1.25;color:#d2c9da;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.kc-page .kc-card-glare{
+ position:absolute;inset:0;z-index:3;pointer-events:none;border-radius:inherit;opacity:0;
+ background:radial-gradient(circle at var(--kc-glare-x,50%) var(--kc-glare-y,50%),#f6d3fc97 0,transparent 52%),
+  repeating-linear-gradient(123deg,transparent 0 10px,#985bdb32 11px,#8eebfd32 12px,transparent 14px 21px);
+ mix-blend-mode:screen;transition:opacity .22s ease
+}
+@media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+ .kc-page .kc-grid .kc-owned:not(.kc-flipped){transform:perspective(850px) rotateX(var(--kc-tilt-x,0deg)) rotateY(var(--kc-tilt-y,0deg))}
+ .kc-page .kc-grid .kc-owned:not(.kc-flipped):hover .kc-card-glare{opacity:.72}
+ .kc-page .kc-grid .kc-owned:not(.kc-flipped):hover .kc-portrait{
+  translate:calc((50% - var(--kc-glare-x,50%)) * .1) calc((50% - var(--kc-glare-y,50%)) * .08)
+ }
+}
+.kc-page .kc-pick-panel{background-color:var(--kc-collection-surface)}
+.kc-theme-ghoul .kc-pick-panel{--kc-open:#dcacff;--kc-open-dark:#351844;--kc-open-ink:#100d18;--kc-open-glow:#772881}
+.kc-pick-arena[data-kc-pick-world=ghoul].kc-real-pick{
+ background:linear-gradient(0deg,#130d1aea,#130d1a4f 61%,#130d1aaf),
+  url('/assets/collection/tokyo-rain.webp') center 57% / cover,#160b1c
+}
+.kc-page .kc-real-pick .kc-pick-card-row{
+ --kc-fan-gap:clamp(5px,2vw,22px);
+ grid-template-columns:repeat(var(--kc-fan-count),minmax(0,1fr));
+ max-width:min(100%,calc(var(--kc-fan-count) * 158px + 42px));gap:var(--kc-fan-gap);
+ padding:clamp(18px,5.3vw,58px) clamp(9px,4vw,48px)
+}
+.kc-choice-common{--kc-choice:#c9b7d0}
+.kc-choice-rare{--kc-choice:#6dd3ff}
+.kc-choice-epic{--kc-choice:#9147ff}
+.kc-choice-legendary{--kc-choice:#ff454f}
+.kc-page .kc-real-pick .kc-pick-card{
+ --kc-fan-rest:translateY(calc(var(--kc-fan-offset) * var(--kc-fan-offset) * 3px)) rotate(calc(var(--kc-fan-offset) * 5deg));
+ --kc-reveal-place:translateX(calc(var(--kc-reveal-shift) * (100% + var(--kc-fan-gap)))) var(--kc-fan-rest) scale(.91);
+ min-height:0;transform:var(--kc-fan-rest);
+ box-shadow:0 10px 23px #090509a3,0 0 16px color-mix(in srgb,var(--kc-choice),transparent 50%)
+}
+.kc-page .kc-real-pick .kc-pick-card:not(:disabled):is(:hover,:focus-visible){
+ z-index:3;transform:translateY(-11px) rotate(calc(var(--kc-fan-offset) * 3deg)) scale(1.06);
+ box-shadow:0 13px 28px #090509a8,0 0 24px var(--kc-choice)
+}
+.kc-real-pick .kc-pick-back{border-color:var(--kc-choice)}
+.kc-pick-turntable{position:absolute;inset:0;display:block;border-radius:inherit;transform-style:preserve-3d}
+.kc-real-pick .kc-pick-back svg{width:57%;transform:translateY(-10%)}
+.kc-real-pick .kc-pick-back::after{
+ content:'KOMI ANIME';inset:auto 0 16%;text-align:center;background:none;
+ font:800 clamp(5px,1.25vw,11px)/1 var(--kc-collection-display);letter-spacing:.06em;opacity:.9
+}
+.kc-real-pick .kc-pick-front{border-color:var(--kc-choice);box-shadow:inset 0 0 15px color-mix(in srgb,var(--kc-choice),transparent 60%)}
+.kc-real-pick .kc-pick-front-rarity{display:grid;gap:3px;justify-items:center;bottom:4%;color:#fff;line-height:1.08}
+.kc-real-pick .kc-pick-front-rarity strong{
+ font:900 clamp(7px,1.6vw,17px)/1.02 var(--kc-collection-display);text-shadow:0 1px 8px #080410;
+ overflow-wrap:anywhere
+}
+.kc-pick-burst{position:absolute;inset:0;z-index:4;pointer-events:none}
+.kc-pick-burst i{
+ position:absolute;top:50%;left:50%;width:4px;height:8px;border-radius:1px;
+ background:var(--kc-choice);box-shadow:0 0 8px var(--kc-choice);opacity:0;
+ --kc-ray-angle:calc(var(--kc-ray) * 20deg)
+}
+.kc-pick-burst i:nth-child(3n){background:#ff8196}
+.kc-pick-burst i:nth-child(4n){background:#d5b1ff}
+.kc-pack-error{color:#ffc0c9}
+@media (prefers-reduced-motion:no-preference){
+ .kc-pick-arena:not(.is-revealing) .kc-pick-card:not(:disabled) .kc-pick-back{
+  animation:kc-fan-float 3.5s ease-in-out infinite;animation-delay:calc(var(--kc-fan-offset) * .21s)
+ }
+ .kc-pick-arena.kc-real-pick.is-revealing .kc-pick-card.is-chosen{
+  opacity:1;z-index:3;animation:kc-pick-promote .82s cubic-bezier(.18,.72,.25,1) both
+ }
+ .kc-pick-arena.kc-real-pick.is-revealing .kc-pick-card:not(.is-chosen){
+  opacity:1;animation:kc-pick-other 2.30s ease both
+ }
+ .kc-real-pick.is-revealing .kc-pick-turntable{
+  animation:kc-pick-flip .66s cubic-bezier(.22,.63,.22,1) both;
+  animation-delay:var(--kc-pick-elapsed,0ms)
+ }
+ .kc-real-pick .kc-pick-burst i{animation:kc-pick-burst .92s .46s ease-out both}
+ .kc-foil-table.is-tearing{animation:kc-tear-impact .28s ease-out both}
+}
+@keyframes kc-fan-float{50%{translate:0 -4px}}
+@keyframes kc-pick-promote{
+ from{transform:var(--kc-fan-rest)}
+ 24%{transform:translateY(-16px) rotate(calc(var(--kc-fan-offset) * 7deg)) rotateX(-15deg) scale(.96)}
+ 74%{transform:translateX(calc(-1 * var(--kc-fan-offset) * (100% + var(--kc-fan-gap)))) translateY(-16px) translateZ(55px) scale(1.28)}
+ to{transform:translateX(calc(-1 * var(--kc-fan-offset) * (100% + var(--kc-fan-gap)))) translateZ(38px) scale(1.24)}
+}
+@keyframes kc-pick-flip{from{transform:rotateY(0deg)}to{transform:rotateY(180deg)}}
+@keyframes kc-pick-other{
+ 0%{opacity:1;filter:none;transform:var(--kc-fan-rest)}
+ 30%,55%{opacity:1;filter:none;transform:var(--kc-reveal-place)}
+ 73%{opacity:.35;filter:grayscale(1);transform:var(--kc-reveal-place)}
+ to{opacity:0;filter:grayscale(1);transform:var(--kc-reveal-place)}
+}
+@keyframes kc-pick-burst{
+ from{opacity:0;transform:rotate(var(--kc-ray-angle)) translateY(14px)}
+ 25%{opacity:1}
+ to{opacity:0;transform:rotate(var(--kc-ray-angle)) translateY(min(29vw,180px))}
+}
+@keyframes kc-tear-impact{22%{translate:-4px 2px}45%{translate:4px -2px}to{translate:0 0}}
+
+.kc-hero-view{
+ width:100%;height:100%;max-height:100dvh;margin:0;border:0;border-radius:0;
+ background:var(--kc-collection-bg);scrollbar-color:#64527a var(--kc-collection-bg)
+}
+.kc-hero-view .kc-hero-layout{max-width:1130px;min-height:100%;margin:auto;align-items:stretch}
+.kc-hero-view .kc-hero-stage{padding:36px 30px;isolation:auto;overflow:visible}
+.kc-hero-view .kc-hero-info{background:var(--kc-collection-surface);padding-block:60px 28px}
+.kc-hero-view .kc-hero-metrics{grid-template-columns:repeat(3,minmax(0,1fr))}
+.kc-inspect-control{
+ width:min(100%,35vh,358px);aspect-ratio:2/3;position:relative;
+ perspective:980px;touch-action:none;cursor:grab
+}
+.kc-inspect-control:active{cursor:grabbing}
+.kc-inspect-control:focus-visible{outline:2px solid #e7c5ff;outline-offset:8px;border-radius:16px}
+.kc-inspect-frame{
+ position:absolute;inset:0;transform-style:preserve-3d;
+ transform:rotateX(var(--kc-tilt-x,0deg)) rotateY(var(--kc-tilt-y,0deg));
+ background:var(--kc-collection-surface);border:1px solid var(--kc-tier);border-radius:16px;
+ box-shadow:0 14px 52px #06030dc9,0 0 25px color-mix(in srgb,var(--kc-tier),transparent 60%)
+}
+.kc-inspect-frame>div{position:absolute;inset:0;border-radius:inherit;pointer-events:none}
+.kc-inspect-scene{overflow:hidden;transform:translateZ(1px);background:radial-gradient(ellipse,var(--kc-world-dark),var(--kc-world-ink))}
+.kc-inspect-scene::before{
+ content:'';position:absolute;inset:-7%;opacity:.52;
+ background:radial-gradient(ellipse at 35% 44%,var(--kc-scene-ink),transparent 62%);
+ animation:kc-scene-drift 8s ease-in-out infinite alternate
+}
+.kc-theme-ghoul .kc-inspect-scene::before{
+ opacity:.67;background:url('/assets/collection/tokyo-rain.webp') 64% center / cover
+}
+.kc-inspect-portrait{display:grid;place-items:center;clip-path:inset(0 round 15px);transform:translateZ(30px)}
+.kc-hero-view .kc-inspect-portrait img{
+ width:94%;height:83%;object-fit:contain;
+ filter:drop-shadow(0 0 12px color-mix(in srgb,var(--kc-tier),transparent 52%));
+ animation:kc-portrait-breath 5s ease-in-out infinite alternate
+}
+.kc-inspect-foil{
+ transform:translateZ(32px);mix-blend-mode:color-dodge;opacity:.59;
+ background:radial-gradient(circle at var(--kc-glare-x,50%) var(--kc-glare-y,50%),#fcdbff6b,transparent 47%),
+  repeating-linear-gradient(127deg,transparent 0 11px,#8d66ed42 12px,#8be2ff36 13px,transparent 15px 23px)
+}
+.kc-inspect-hud{
+ transform:translateZ(36px);
+ background:linear-gradient(#0d081cd9,transparent 27% 59%,#0b0617ef 87%);
+ display:flex;flex-direction:column;justify-content:space-between;gap:6px;padding:6%
+}
+.kc-inspect-meta{display:flex;justify-content:space-between;gap:6px;font-size:11px;color:var(--kc-tier)}
+.kc-inspect-meta span{align-self:start;border:1px solid currentColor;border-radius:6px;padding:4px 8px}
+.kc-inspect-hud small{display:block;color:#e9dff1;font-size:clamp(8px,1vw,12px);line-height:1.24}
+.kc-inspect-name{
+ display:block;font:900 clamp(18px,3vw,39px)/.98 var(--kc-collection-display);text-transform:uppercase;overflow-wrap:anywhere;
+ color:#fff;background:linear-gradient(112deg,#fff,var(--kc-tier) 61%,#fff5fe 85%);background-clip:text;-webkit-text-fill-color:transparent
+}
+.kc-inspect-hud footer{display:flex;justify-content:space-between;align-items:center;gap:5px;margin-top:8px;padding-top:6px;border-top:1px solid #fff5;font-size:9px}
+.kc-inspect-hud footer .kc-rarity{font-size:8px}
+.kc-tilt-hint{color:#c7bad1;font-size:12px}
+@keyframes kc-scene-drift{to{transform:translate(3%,-2%) scale(1.08)}}
+@keyframes kc-portrait-breath{to{transform:translateY(-2%) scale(1.035)}}
+@media (max-width:650px){
+ .kc-hero-view .kc-hero-stage{min-height:auto;padding:54px 16px 24px}
+ .kc-hero-view .kc-hero-info{padding:18px 16px 24px}
+ .kc-inspect-control{width:min(62vw,35dvh,280px)}
+}
+@media (max-width:450px){
+ .kc-page .kc-tabs{display:grid;grid-template-columns:.85fr 1fr 1.15fr}
+ .kc-page .kc-tabs button{padding-inline:4px;font-size:11px;line-height:1.18}
+ .kc-real-pick .kc-pick-front-rarity .kc-rarity{display:none}
+}
+@media (prefers-reduced-motion:reduce){
+ .kc-inspect-frame,.kc-inspect-frame>div{transform:none}
+ .kc-inspect-scene::before,.kc-hero-view .kc-inspect-portrait img{animation:none}
+ .kc-pick-burst{display:none}
+}
+@media (forced-colors:active){
+ .kc-inspect-name{background:none;color:CanvasText;-webkit-text-fill-color:CanvasText}
+}
+
+/* The card backs share a stage with the foil as the packet opens. */
+.kc-real-pick{display:grid;align-items:center;min-height:clamp(242px,30vw,365px)}
+.kc-page .kc-real-pick .kc-pick-card-row{width:100%;z-index:3}
+.kc-real-pick .kc-foil-table{position:absolute;inset:0;z-index:2;height:100%;background:none}
+.kc-real-pick .kc-foil-deck,.kc-real-pick .kc-foil-table::after{display:none}
+.kc-deal-light{position:absolute;inset:0;z-index:2;pointer-events:none}
+.kc-deal-light::before,.kc-deal-light::after{
+ content:"";position:absolute;top:28%;left:50%;translate:-50% -50%;opacity:0
+}
+.kc-deal-light::before{
+ width:min(66%,350px);height:38%;
+ background:radial-gradient(ellipse,color-mix(in srgb,var(--kc-open),white 22%),transparent 68%)
+}
+.kc-deal-light::after{
+ width:min(73%,420px);height:2px;
+ background:linear-gradient(90deg,transparent,var(--kc-open) 35%,#fbecff 50%,var(--kc-open) 65%,transparent);
+ box-shadow:0 0 16px var(--kc-open)
+}
+@media(prefers-reduced-motion:no-preference){
+ .kc-real-pick.kc-pick-arena:not(.is-revealing) .kc-pick-card{animation:none}
+ .kc-real-pick.kc-pick-arena.is-dealing .kc-pick-card{
+  --kc-deal-origin:calc(-1 * var(--kc-fan-offset) * (100% + var(--kc-fan-gap)));
+  animation:kc-deal-from-foil 690ms cubic-bezier(.19,.69,.29,1) both;
+  animation-delay:calc(235ms + var(--kc-deal-index) * 49ms + var(--kc-pick-elapsed,0ms))
+ }
+ .kc-real-pick.is-dealing .kc-deal-light::before{animation:kc-deal-bloom .62s calc(.15s + var(--kc-pick-elapsed,0ms)) ease-out both}
+ .kc-real-pick.is-dealing .kc-deal-light::after{animation:kc-deal-edge .59s calc(.17s + var(--kc-pick-elapsed,0ms)) ease-out both}
+ .kc-real-pick.is-revealing .is-chosen .kc-pick-front::after{
+  content:"";position:absolute;inset:0;pointer-events:none;z-index:2;
+  background:linear-gradient(128deg,transparent 25%,#fff0 40%,#fdf2ff9e 49%,transparent 63%);
+  animation:kc-reward-glint .68s calc(.42s + var(--kc-pick-elapsed,0ms)) ease-out both
+ }
+}
+@keyframes kc-deal-from-foil{
+ 0%{opacity:0;transform:translateX(var(--kc-deal-origin)) translateY(41px) rotate(-12deg) rotateX(34deg) scale(.40)}
+ 20%{opacity:1;transform:translateX(calc(var(--kc-deal-origin) * .84)) translateY(-38px) rotate(-8deg) rotateX(20deg) scale(.65)}
+ 56%{opacity:1;transform:translateX(calc(var(--kc-deal-origin) * .2)) translateY(-25px) rotate(calc(var(--kc-fan-offset) * 7deg)) scale(1.045)}
+ 84%{transform:var(--kc-fan-rest) translateY(4px) scale(.994)}
+ to{opacity:1;transform:var(--kc-fan-rest)}
+}
+@keyframes kc-deal-bloom{0%{opacity:0;scale:.28}37%{opacity:.48;scale:.94}to{opacity:0;scale:1.34}}
+@keyframes kc-deal-edge{0%{opacity:0;scale:.1 1}34%{opacity:.78;scale:.86 1}to{opacity:0;scale:1.12 1}}
+@keyframes kc-reward-glint{0%{opacity:0;transform:translateX(-78%)}35%{opacity:.64}to{opacity:0;transform:translateX(83%)}}
+
+/* The scenery and weather sit underneath the foreground cutout. */
+.kc-card-ambient{
+ position:absolute;inset:0;pointer-events:none;overflow:hidden;color:var(--kc-scene-ink);opacity:.85;
+ mask-image:linear-gradient(#000 0 60%,#000b 81%,#0004)
+}
+.kc-card-ambient .kc-land-hero{opacity:.36}
+.kc-card-ambient .kc-land-ink{opacity:.64}
+.kc-theme-ghoul .kc-world-backdrop[data-kc-weather=rain]{
+ background:linear-gradient(165deg,#1a101a3b,#140c18b8),url('/assets/collection/tokyo-rain.webp') 60% center / cover
+}
+.kc-theme-ghoul .kc-world-backdrop[data-kc-weather=rain] .kc-land-planes{opacity:.34}
+.kc-theme-ghoul .kc-world-backdrop[data-kc-weather=rain] .kc-land-lit{opacity:.25}
+.kc-page .kc-card.kc-owned .kc-portrait,.kc-real-pick .kc-pick-front .kc-portrait{z-index:1}
+.kc-real-pick .kc-pick-front .kc-card-ambient{opacity:.75}
+.kc-weather-flow{
+ --kc-weather-ink:color-mix(in srgb,var(--kc-scene-ink),transparent 42%);
+ --kc-weather-marks:radial-gradient(circle at 15px 22px,var(--kc-weather-ink) 0 1px,transparent 1.8px),
+  radial-gradient(circle at 42px 51px,var(--kc-weather-ink) 0 1.2px,transparent 2px);
+ --kc-weather-size:64px 84px;--kc-weather-motion:18%,-24%,0;--kc-weather-speed:4.7s;
+ position:absolute;inset:0;pointer-events:none;overflow:hidden;opacity:.76;z-index:1;
+ mask-image:radial-gradient(ellipse at center,#0004 10%,#000 78%)
+}
+.kc-weather-flow::before,.kc-weather-flow::after{content:"";position:absolute;inset:-40%;pointer-events:none}
+.kc-weather-flow::before{background-image:var(--kc-weather-marks);background-size:var(--kc-weather-size)}
+.kc-weather-flow::after{
+ background:radial-gradient(ellipse at 67% 40%,color-mix(in srgb,var(--kc-scene-ink),transparent 60%),transparent 49%);
+ opacity:.42
+}
+.kc-weather-flow[data-kc-weather=rain]{
+ --kc-weather-marks:repeating-linear-gradient(117deg,transparent 0 15px,var(--kc-weather-ink) 15.5px,transparent 16.3px 31px);
+ --kc-weather-size:auto;--kc-weather-motion:-15%,31%,0;--kc-weather-speed:2.9s;
+ opacity:.61;mask-image:linear-gradient(#0007,#000 30%,#000a 80%,transparent)
+}
+.kc-weather-flow[data-kc-weather=rain]::before{
+ mask-image:repeating-linear-gradient(173deg,transparent 0 20px,#000 22px 38px,transparent 41px 67px)
+}
+.kc-weather-flow:is([data-kc-weather=petals],[data-kc-weather=papers]){
+ --kc-weather-marks:radial-gradient(ellipse 4px 2px at 18px 23px,var(--kc-weather-ink) 0 62%,transparent 93%),
+  radial-gradient(ellipse 2px 3px at 53px 57px,var(--kc-weather-ink) 0 62%,transparent 94%);
+ --kc-weather-size:86px 104px;--kc-weather-motion:29%,23%,0;--kc-weather-speed:4.6s
+}
+.kc-weather-flow[data-kc-weather=papers]{--kc-weather-motion:-24%,-14%,0}
+.kc-weather-flow:is([data-kc-weather=water],[data-kc-weather=gust]){
+ --kc-weather-marks:repeating-linear-gradient(-8deg,transparent 0 15px,var(--kc-weather-ink) 16px,transparent 17px 29px);
+ --kc-weather-size:auto;--kc-weather-motion:35%,-13%,0;--kc-weather-speed:4.5s;
+ mask-image:radial-gradient(ellipse at 60% 91%,#000 0,transparent 63%);opacity:.5
+}
+.kc-weather-flow[data-kc-weather=gust]{mask-image:linear-gradient(0deg,transparent 1%,#000 32%,transparent 94%)}
+.kc-weather-flow[data-kc-weather=sparks]{--kc-weather-size:43px 66px;--kc-weather-motion:8%,-35%,0;--kc-weather-speed:3.65s;opacity:.91}
+.kc-page .kc-card.kc-owned .kc-art:has(.kc-card-ambient)::before{opacity:.14}
+.kc-hero-view .kc-view-pause[aria-pressed=true]{border-color:#d6a9f3;background:#3a244b}
+
+@media(prefers-reduced-motion:no-preference){
+ .kc-page .kc-card.kc-ambient-visible:not(.kc-flipped) .kc-weather-flow::before,
+ .kc-result .kc-card-ambient .kc-weather-flow::before,
+ .kc-real-pick.is-revealing .kc-card-ambient .kc-weather-flow::before{
+  animation:kc-weather-travel var(--kc-weather-speed) linear both
+ }
+ .kc-page .kc-card.kc-ambient-visible:not(.kc-flipped) .kc-weather-flow::after,
+ .kc-real-pick.is-revealing .kc-card-ambient .kc-weather-flow::after{animation:kc-weather-light 4.6s ease-in-out both}
+ .kc-hero-stage .kc-weather-flow::before{animation:kc-weather-travel var(--kc-weather-speed) linear infinite}
+ .kc-hero-stage .kc-weather-flow::after{animation:kc-weather-light 6.4s ease-in-out infinite}
+ .kc-background-paused .kc-weather-flow::before,.kc-background-paused .kc-weather-flow::after,
+ .kc-background-paused .kc-inspect-scene::before,
+ .kc-background-paused :is(.kc-world-backdrop,.kc-land-motion,.kc-land-hero,.kc-scene-wash,.kc-scene-dust){
+  animation-play-state:paused
+ }
+}
+@keyframes kc-weather-travel{
+ from{opacity:.23;transform:translate3d(0,0,0)}
+ 18%,76%{opacity:.88}
+ to{opacity:.23;transform:translate3d(var(--kc-weather-motion))}
+}
+@keyframes kc-weather-light{
+ 0%,100%{opacity:.27;transform:translate(-3%,2%) scale(.96)}
+ 54%{opacity:.65;transform:translate(6%,-4%) scale(1.12)}
+}
+@media(forced-colors:active){.kc-card-ambient,.kc-weather-flow,.kc-deal-light{display:none}}

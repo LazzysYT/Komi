@@ -28,7 +28,12 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
      window.calls.push({name,args,owner:window.currentUser?.authUserId});
      const series=args.p_series_id||'ghoul',first={ghoul:'kaneki',jujutsu:'itadori',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren',naruto:'naruto',bleach:'ichigo',onepiece:'luffy',chainsaw:'denji',hunter:'gon'}[series];
      if(series===window.holdSeries&&name.endsWith('_read')) await new Promise(resolve=>{window.finishHeld=resolve;});
-     if(name==='komi_collection_series_buy_v3')return {data:{owned:[first,'fern'],result:'fern',balance:0,price:50,purchase_status:'ok'}};
+     if(name==='komi_collection_pack_open'||name==='komi_collection_pack_claim'){
+      const offer='10000000-0000-4000-8000-000000000001';
+      const choices=KomiCollection.seriesList.frieren.roster.slice(1,6).map((c,i)=>({slot:i+1,rarity:c.rarity,available:true,id:c.id}));
+      if(name.endsWith('_open'))return {data:{owned:['frieren'],balance:50,price:50,offer_id:offer,pack_status:'ready',choices:choices.map(({id,...choice})=>choice)}};
+      return {data:{owned:['frieren','fern'],result:'fern',balance:0,price:50,purchase_status:'ok',offer_id:offer,pack_status:'claimed',selected_slot:1,choices:choices.map(x=>({...x,available:false}))}};
+     }
      return {data:{owned:window.currentUser?.authUserId==='qa-a'?[first]:[],balance:50,price:50,result:null}};
     }
    };
@@ -62,7 +67,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    const filtered=await p.locator('.kc-grid .kc-card').evaluateAll(els=>els.map(el=>el.className.match(/kc-tier-(\w+)/)[1]));
    assert.deepEqual(filtered,[...filtered].sort((a,b)=>rank[a]-rank[b]),'rarity order preserved under ownership filter');
    await p.getByRole('button',{name:'Все',exact:true}).click();
-   await p.getByRole('button',{name:'Паки',exact:true}).click();
+   await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
    assert.equal(await p.locator('.kc-case h2').textContent(),title);
    assert.equal(await p.locator('.kc-album,.kc-grid').count(),0);
    assert.equal(await p.locator('.kc-world-shelves .kc-pack-thumb').count(),11);
@@ -73,7 +78,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
     await p.locator('.kc-page').screenshot({path:path.join(out,'world-view-pack-'+width+'.png'),animations:'disabled'});
    }
    if(series!=='ghoul')await p.waitForFunction(()=>document.querySelector('.kc-case-image')?.naturalWidth>0);
-   await p.getByRole('button',{name:'Коллекции',exact:true}).click();
+   await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();
    assert.equal(await p.locator('.kc-album .kc-slot').count(),size);
    assert.equal(await p.locator('.kc-album .kc-slot:not(.kc-slot-owned) img[src*="/locked/"]').count(),size-1);
    assert.equal(await p.locator('.kc-grid .kc-locked .kc-view-hero').count(),0);
@@ -89,7 +94,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    await p.evaluate(()=>window.KomiCollection.render(document.querySelector('#mainContainer')));
    assert.ok(await viewer.isVisible());
    assert.equal(await viewer.locator('.kc-view-close').evaluate(el=>el===document.activeElement),true);
-   assert.ok(await viewer.locator('.kc-rarity').isVisible());
+   assert.ok(await viewer.locator('.kc-view-meta .kc-rarity').isVisible());
    assert.equal(await viewer.locator('.kc-view-signature').isVisible(),width!==320);
    if(width!==320){await viewer.getByRole('button',{name:'Показать эффект'}).click();assert.equal(await viewer.locator('.kc-signature-play').count(),1);}
    assert.ok(await viewer.evaluate(el=>{const a=el.querySelector('.kc-hero-stage').getBoundingClientRect(),b=el.querySelector('.kc-hero-info').getBoundingClientRect();return innerWidth>650?a.right<=b.left+1:a.bottom<=b.top+1;}));
@@ -108,28 +113,29 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
   await p.waitForFunction(()=>document.querySelector('.kc-grid [data-kc-card="frieren"].kc-owned'));
   await p.evaluate(()=>window.finishHeld());
   assert.equal(await p.locator('.kc-grid [data-kc-card="itadori"]').count(),0);
-  await p.getByRole('button',{name:'Паки',exact:true}).click();
+  await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
   const buy=p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true});
   await buy.click();await p.getByRole('button',{name:'Отмена'}).click();
-  assert.equal(await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_buy_v3')).length),0);
+  assert.equal(await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_pack_claim')).length),0);
   await buy.click();await p.getByRole('button',{name:'Подтвердить · 50 AniCoin'}).click();
   {
-   await p.getByRole('button',{name:'Показать результат'}).waitFor();
+   await p.getByRole('button',{name:'Сорвать печать с бустера'}).waitFor();
    assert.equal(await p.locator('[data-kc-action="series-ghoul"]').isDisabled(),true);
    assert.equal(await p.getByRole('button',{name:'Сорвать печать с бустера'}).count(),1);
    assert.equal(await p.locator('.kc-result').count(),0);
-   await p.getByRole('button',{name:'Показать результат'}).click();
+   await p.getByRole('button',{name:'Сорвать печать с бустера'}).click();
+   await p.getByRole('button',{name:/Открыть карточку 1 из 5/}).click();
   }
   await p.waitForFunction(()=>document.querySelector('.kc-result h3')?.textContent==='Ферн');
   assert.equal(await p.locator('.kc-result .kc-signature-play').count(),width===320?0:1);
-  const purchases=await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_buy_v3')));
-  assert.equal(purchases.length,1);assert.equal(purchases[0].args.p_series_id,'frieren');
-  assert.match(purchases[0].args.p_request_id,/^[0-9a-f-]+$/);
+  const purchases=await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_pack_claim')));
+  assert.equal(purchases.length,1);assert.equal(purchases[0].args.p_slot,1);
+  assert.match(purchases[0].args.p_offer_id,/^[0-9a-f-]+$/);
   await p.locator('.kc-result .kc-view-hero').click();
   await p.getByRole('dialog').waitFor();
   await p.evaluate(()=>{window.currentUser={authUserId:'qa-b'};window.KomiCollection.authChanged('qa-b');window.KomiCollection.render(document.querySelector('#mainContainer'));});
   assert.equal(await p.getByRole('dialog').count(),0);
-  await p.getByRole('button',{name:'Коллекции',exact:true}).click();
+  await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();
   assert.equal(await p.locator('.kc-grid .kc-owned').count(),0);
   assert.deepEqual(errors,[]);
   await p.close();

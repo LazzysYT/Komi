@@ -140,3 +140,13 @@ uses the existing route state, prioritises exact title matches with the default
 sort, and clears text without resetting other filters. The player, purchases and persistence are unchanged.
 
 The catalogue search preserves keyboard focus feedback on the wrapper rather than drawing an inner ring. Search and clear icons cannot overlap the editable field. The native footer retains all informational, partner and social links without JavaScript, and the floating community launcher must not cover footer links at the end of the document.
+
+## Коллекционные паки
+
+The player confirms the price before opening a pack. Drawing and resuming the pack leave the wallet untouched. The server shows up to five missing cards from the selected series and hides their identities until the first valid slot is saved. If fewer than five cards remain, it offers every remaining card. The first valid pick adds one card and deducts 50 AniCoin in one transaction. Retrying the same offer reads the original result. The existing unlock tables, price and actor lock are defined by the collection migrations. The pending offer and selection contract is owned by `supabase/migrations/20261127144501_komi_collection_pick_pack.sql`.
+
+Closing an unclaimed pack or changing routes preserves the offer. While a claim is pending, every slot is disabled. If the response is interrupted, the retry uses the same slot. The keyboard can tear, pick, close and open the inspector. Its Escape action restores focus to the card that opened it. Reduced motion skips the fan and flip animations and preserves the same choice and result.
+
+The inspector reads the account's serial for the owned copy. The denominator is the number of copies issued to date. Existing copies are assigned numbers in acquisition order, and new numbers are issued with the ownership grant.
+
+The backs become selectable once the foil and the cards settle. The inspector offers a background pause; replay resumes the scene. Reduced motion shows the still scene and enables selection as soon as the seal is opened.

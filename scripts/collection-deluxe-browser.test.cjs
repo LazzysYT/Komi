@@ -16,7 +16,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{for(const width of [390,1280]){
  const p=await b.newPage({viewport:{width,height:930},reducedMotion:width===390?'no-preference':'reduce'});await route(p);await p.goto(origin+'/collection');
- await p.evaluate(()=>{
+ await p.evaluate(offer=>{
   window.currentView='collection';window.currentUser={authUserId:'qa-owner'};
   window.all=window.KomiCollection.seriesList.frieren.roster.map(x=>x.id);
   window.buys=0;window.saved=false;window.journalLoads=0;
@@ -24,11 +24,14 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
    auth:{getSession:async()=>({data:{session:{user:{id:currentUser?.authUserId}}}})},
    rpc:async(name,args)=>{
     if(name==='komi_collection_journal_read'){journalLoads++;return {data:[{character_id:'fern',opened_at:'2026-11-26T04:03:02Z'},{character_id:'foreign',opened_at:'2026-11-26T01:00:00Z'}]};}
-    if(name==='komi_collection_series_buy_v3'){buys++;saved=true;return {data:{owned:all,price:50,balance:0,result:all.at(-1),purchase_status:'ok'}};}
+    const last=KomiCollection.seriesList.frieren.roster.at(-1);
+    const slot={slot:1,rarity:last.rarity,available:true};
+    if(name==='komi_collection_pack_open')return {data:{owned:all.slice(0,-1),price:50,balance:50,offer_id:offer,pack_status:'ready',choices:[slot]}};
+    if(name==='komi_collection_pack_claim'){buys++;saved=true;return {data:{owned:all,price:50,balance:0,result:last.id,purchase_status:'ok',offer_id:offer,pack_status:'claimed',selected_slot:1,choices:[{...slot,available:false,id:last.id}]}};}
     return {data:{owned:args.p_series_id==='frieren'?(saved?all:all.slice(0,-1)):[],price:50,balance:saved?0:50}};
    }
   };window.KomiCollection.render(document.querySelector('#mainContainer'));
- });
+ },'10000000-0000-4000-8000-000000000001');
  await p.locator('[data-kc-action="series-frieren"]').click();
  const extras=p.getByRole('button',{name:'Альбом и журнал'});
  assert.equal(await extras.getAttribute('aria-expanded'),'false');
@@ -58,11 +61,11 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  assert.equal(picture.subarray(1,4).toString(),'PNG');
  assert.deepEqual([picture.readUInt32BE(16),picture.readUInt32BE(20)],[720,1000]);
  await viewer.getByRole('button',{name:'Закрыть просмотр'}).click();
- await p.getByRole('button',{name:'Паки',exact:true}).click();
+ await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
  await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).click();
  await p.getByRole('button',{name:'Подтвердить · 50 AniCoin'}).click();
  await p.getByRole('button',{name:'Сорвать печать с бустера'}).click();
- await p.getByRole('button',{name:'Открыть карточку 2 из 3'}).click();
+ await p.getByRole('button',{name:/Открыть карточку 1 из 1/}).click();
  await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
  await p.getByRole('region',{name:'Серия собрана'}).waitFor();
  assert.equal(await p.locator('.kc-album-finale img').count(),24);

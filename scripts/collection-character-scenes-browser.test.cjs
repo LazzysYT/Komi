@@ -35,12 +35,18 @@ test('owned heroes have individualized static/animated backgrounds; locked heroe
    assert.equal(await p.locator('.kc-grid .kc-owned[data-kc-scene]').count(),23);
    assert.equal(await p.locator('.kc-grid .kc-locked[data-kc-scene]').count(),0);
    assert.equal(await p.locator('.kc-grid .kc-scene,.kc-hero-view').count(),0);
+   assert.equal(await p.locator('.kc-grid .kc-owned .kc-card-ambient').count(),23);
+   assert.equal(await p.locator('.kc-grid .kc-locked .kc-card-ambient').count(),0);
    await p.mouse.move(width-1,0);
    const animations=await p.locator('.kc-grid .kc-owned .kc-art').evaluateAll(nodes=>nodes.map(n=>getComputedStyle(n,'::before').animationName));
    assert.ok(animations.every(a=>a==='none'));
    for(const [id,style] of Object.entries(characters)){
     const card=p.locator('.kc-grid [data-kc-card="'+id+'"]');
     assert.equal(await card.getAttribute('data-kc-scene'),style);
+    const cardWeather=card.locator('.kc-weather-flow');
+    await card.scrollIntoViewIfNeeded();
+    if(!reduced)await card.and(p.locator('.kc-ambient-visible')).waitFor();
+    assert.equal(await cardWeather.evaluate(el=>getComputedStyle(el,'::before').animationName),reduced?'none':'kc-weather-travel');
     await card.locator('.kc-view-hero').press('Enter');
     const dialog=p.getByRole('dialog'),stage=dialog.locator('.kc-hero-stage');
     assert.equal(await stage.getAttribute('data-kc-scene'),style);
@@ -55,8 +61,20 @@ test('owned heroes have individualized static/animated backgrounds; locked heroe
     const animation=()=>stage.locator('.kc-scene-wash').evaluate(n=>getComputedStyle(n).animationName);
     assert.equal(await animation(),reduced?'none':'kc-stage-wash');
     const replay=dialog.getByRole('button',{name:'Показать эффект'});
+    const pause=dialog.getByRole('button',{name:'Пауза фона'});
+    const weather=stage.locator('.kc-weather-flow');
+    assert.equal(await weather.getAttribute('data-kc-weather'),await panorama.getAttribute('data-kc-weather'));
+    assert.equal(await weather.evaluate(el=>getComputedStyle(el,'::before').animationName),reduced?'none':'kc-weather-travel');
     assert.equal(await replay.isVisible(),!reduced);
-    if(!reduced){await replay.press('Enter');assert.equal(await animation(),'kc-stage-wash');}
+    assert.equal(await pause.isVisible(),!reduced);
+    if(!reduced){
+     await pause.press('Enter');
+     assert.equal(await pause.getAttribute('aria-pressed'),'true');
+     assert.equal(await weather.evaluate(el=>getComputedStyle(el,'::before').animationPlayState),'paused');
+     await replay.press('Enter');
+     assert.equal(await pause.getAttribute('aria-pressed'),'false');
+     assert.equal(await animation(),'kc-stage-wash');
+    }
     assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     if(process.env.KOMI_SCENE_PREVIEWS&&((width===1440&&['kaneki','tanjiro','zenitsu'].includes(id))||(width===390&&id==='mikasa'))){
      const out=process.env.KOMI_SCENE_PREVIEWS;fs.mkdirSync(out,{recursive:true});

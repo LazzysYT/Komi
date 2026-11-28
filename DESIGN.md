@@ -282,10 +282,10 @@ original eighteen and their collection identifiers do not change.
 
 ### Collector interaction
 
-A trusted purchase produces the card before any visual step. The peel stage is
-a regular button with an optional horizontal gesture and a dedicated skip.
-Result silhouettes open a two-panel manga strip, then the color detail and
-series motif appear briefly once. Reduced motion skips these decorations.
+The server fixes a pack's slots before the peel. The peel uses a regular button
+and an optional horizontal gesture. Picking a slot commits the card and price
+together. The reveal shows every face briefly and keeps the chosen card in view.
+Reduced motion goes straight to the confirmed result.
 Search matches names only for owned cards; rarity is available for locked
 slots without exposing identities. The profile showcase is off by default and
 publishes only an owner's three intentionally saved, server-verified card picks
@@ -304,7 +304,7 @@ without deleting the existing custom banner. A manually requested poster
 includes only game artwork, character name, series, rarity and catalogue code.
 
 ### Collector navigation
-The Collections tab owns the series albums, silhouettes, filters and journal. Packs owns the pack shelf and checkout; only the opening or its result may show a character on that tab. Both use the same active series; switching tabs never starts a purchase. Journal replays return to the album.
+«Все карты каталога» shows the whole series, with silhouettes for locked cards. «Моя коллекция» shows the player's cards. «Открыть пак» owns the pack shelf and checkout. All three use the same active series. Journal replays return to the album.
 
 ### Shop fitting refresh
 
@@ -312,14 +312,14 @@ The general catalog has no promotional hero before products. Quick categories sh
 
 ### Collector foils
 
-Six twenty-character albums share the same neutral rounded black surfaces. Illustrated fronts use a calm background from their own world and one foil edge keyed to rarity. Locked cards retain a fully black silhouette; the portrait viewer shows full-body artwork, series/rarity, stable catalogue code and position without spoiling unopened art. Pack and album shelves stay separate. A paid pack still awards exactly one server-confirmed missing card at 50 AniCoin. After opening, three identical backs offer a strictly decorative choice, with a separate reveal atmosphere per series. A skip and reduced-motion mode remain available; replay cannot buy or reveal another prize.
+The eleven series share dark rounded surfaces. Illustrated fronts use the existing world art and a foil edge keyed to rarity. The fullscreen inspector has four planes for the scene, transparent character art, foil and metadata. Montserrat carries the character name and Inter carries the details. The top of the frame shows the copy's issue number and the number issued so far. The dossier also shows the stable catalogue code. The collection palette uses #09090D for the canvas, #12141D for surfaces, and #9147FF and #FF454F for epic and legendary effects. These tokens live in komi-collection.css. Locked slots keep black silhouettes. Journal replays use the card already in the album.
 
 ### Animated character backgrounds
 
-Use scene motifs, not clips or heavy full-bleed videos. Selected heroes have individual art direction; every owned face has an inherited series/character pattern. In the collection grid use one light, finite CSS cue after hover or focus, and never render any scene for an undiscovered card. The full-body viewer uses one custom SVG behind the hero, the existing world artwork, and a single short sequence with an explicit replay button. Retain the composed still for reduced-motion users, avoid flashes, and keep all artwork out of text and hit-target layers. The themed pack reveal and existing shop auras remain independent.
+Each location has its own moving weather behind the character cutout. The album plays one short pass as an owned card enters the viewport. Revealed cards carry the same scenery. In the full-screen viewer the weather loops and can be paused or replayed. The character, text and controls stay legible above it. Reduced-motion users see the composed still.
 
 ### Physical opening and places behind heroes
-Use the actual wrapper print on both the crimp strip and pouch. Show a short pull and recoil, exposed lining, a stack sliding out, then the three identical backs. The optional drag is not required; button, keyboard, and skip reach the same issued reward. Under reduced motion, jump straight to the choice. Character effects should imply a recognizable place (rain beyond the café windows, water winding through a mountain valley, tiled rooftops under the wall) before adding a personal mark. Only owned/revealed artwork gets the panorama; keep the collection grid static at rest.
+Use the actual wrapper print on the crimp strip and pouch. The strip tears away, light crosses the seam, and each card rises along its own path before settling into the fan. Only the aura indicates rarity before the choice. The chosen card lifts, turns and catches a glint at the centre. The other faces fade after the server confirms the chosen slot. Reduced motion shows the same choice and result without the transitions.
 
 ### Кинозал Komi
 The watch page keeps the moving frame as its only saturated surface. Use a short title and episode line above the frame, an adjacent playback strip with one white next action, and quieter list, Party and theater actions below it. Show source controls and recoverability outside an external iframe; do not imply we control it. The episode rail uses genuine frames or a deliberately numbered fallback, distinct special episodes and progress only from known timing.
