@@ -126,7 +126,7 @@ test('the server settles one selected slot and only then reveals five portraits'
    const claims=await p.evaluate(()=>calls.filter(call=>call.name.endsWith('_pack_claim_v3')).map(call=>call.args));
    assert.deepEqual(claims,[{p_offer_id:offer,p_slot:4},{p_offer_id:offer,p_slot:4}]);
    assert.match(await p.locator('.kc-wallet').textContent(),/Баланс: 50 AniCoin/);
-   await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
+   await p.getByRole('button',{name:'На место в альбоме',exact:true}).click();
    assert.equal(await p.locator('.kc-grid .kc-card').count(),1);
    await p.locator('.kc-grid .kc-view-hero').press('Enter');
    const viewer=p.getByRole('dialog');

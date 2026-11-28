@@ -67,7 +67,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  await p.getByRole('button',{name:'Подтвердить · 50 AniCoin'}).click();
  await p.getByRole('button',{name:'Сорвать печать с бустера'}).click();
  await p.getByRole('button',{name:/Открыть карточку 1 из 1/}).click();
- await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
+ await p.getByRole('button',{name:'На место в альбоме',exact:true}).click();
  await p.getByRole('region',{name:'Серия собрана'}).waitFor();
  assert.equal(await p.locator('.kc-album-finale img').count(),27);
  assert.equal(await p.evaluate(()=>buys),1);
