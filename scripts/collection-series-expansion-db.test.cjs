@@ -69,6 +69,104 @@ const buyOld=(db,s,r)=>s==='ghoul'?rpc(db,'buy',r):rpc(db,'series_buy',s,r);
 const buyV2=(db,s,r)=>s==='ghoul'?rpc(db,'ghoul_buy_v2',r):rpc(db,'series_buy_v2',s,r);
 const read=(db,s)=>s==='ghoul'?rpc(db,'action','read'):rpc(db,'series_read',s);
 
+localTest('paid packs reveal only rarity before a pick; the first valid slot settles once',async t=>{
+ const db=await fixture();t.after(()=>db.close());
+ for(const name of ['20261127143000_komi_collection_second_wave.sql','20261127144500_komi_collection_third_wave.sql','20261127144501_komi_collection_pick_pack.sql']){
+  await db.exec(fs.readFileSync(path.join(here,'supabase/migrations',name),'utf8'));
+ }
+ const vm=require('node:vm'),scope={window:{}};
+ vm.runInNewContext(fs.readFileSync(path.join(here,'komi-collection.js'),'utf8'),scope);
+ const expected=Object.entries(scope.window.KomiCollection.seriesList).flatMap(([series_id,group])=>
+  group.roster.map(({id,rarity})=>[series_id,id,rarity].join(':'))).sort();
+ const grades=(await db.query('select series_id,character_id,rarity from komi_collection_private.pack_rarity')).rows;
+ assert.deepEqual(grades.map(x=>[x.series_id,x.character_id,x.rarity].join(':')).sort(),expected);
+ const open=(series='bleach',offer=null)=>rpc(db,'pack_open',series,offer);
+ const claim=(offer,slot)=>rpc(db,'pack_claim',offer,slot);
+ await as(db,'anon');
+ await assert.rejects(open(),{code:'42501'});
+ await assert.rejects(rpc(db,'card_number','ghoul','kaneki'),{code:'42501'});
+ await as(db,'authenticated',anonActor);
+ await assert.rejects(open(),{code:'42501'});
+ await as(db,'authenticated',deletedActor);
+ await assert.rejects(open(),{code:'42501'});
+ await as(db,'authenticated',poor);
+ assert.equal((await open()).pack_status,'insufficient');
+ await as(db,'authenticated',bob);
+ assert.equal(await rpc(db,'card_number','ghoul','kaneki'),null);
+ const offer=await open();
+ assert.equal(offer.balance,1000);
+ assert.equal(offer.pack_status,'ready');
+ assert.deepEqual(offer.owned,[]);
+ assert.equal(offer.choices.length,5);
+ assert.ok(offer.choices.every((choice,i)=>choice.slot===i+1&&choice.available&&!Object.hasOwn(choice,'id')));
+ assert.deepEqual(await open(),offer);
+ await assert.rejects(claim(offer.offer_id,0),{code:'22023'});
+ await assert.rejects(claim(offer.offer_id,null),{code:'22023'});
+ await as(db,'authenticated',alice);
+ await assert.rejects(claim(offer.offer_id,2),{code:'22023'});
+ await assert.rejects(open('bleach',offer.offer_id),{code:'22023'});
+ await as(db,'authenticated',bob);
+ await assert.rejects(open('naruto',offer.offer_id),{code:'22023'});
+ const won=await claim(offer.offer_id,4);
+ assert.equal(won.pack_status,'claimed');
+ assert.equal(won.selected_slot,4);
+ assert.equal(won.result,won.choices[3].id);
+ assert.equal(new Set(won.choices.map(x=>x.id)).size,5);
+ assert.ok(won.choices.every(x=>!x.available));
+ assert.deepEqual(won.owned,[won.result]);
+ assert.equal(won.balance,950);
+ assert.deepEqual(await rpc(db,'card_number','bleach',won.result),{serial:1,issued:1});
+ assert.deepEqual(await claim(offer.offer_id,1),won);
+ assert.deepEqual(await open('bleach',offer.offer_id),won);
+ const newOffer=await open();
+ assert.notEqual(newOffer.offer_id,offer.offer_id);
+ assert.equal((await read(db,'bleach')).balance,950);
+ for(const series of ['onepiece','chainsaw','hunter']){
+  const draw=await open(series);
+  assert.equal(draw.choices.length,5);
+  const card=await claim(draw.offer_id,3);
+  assert.equal(card.result,card.choices[2].id);
+  assert.ok(scope.window.KomiCollection.seriesList[series].roster.some(item=>item.id===card.result));
+ }
+ const acl=(await db.query("select has_table_privilege(current_user,'komi_collection_private.pack_offers','select,insert,update') as ok")).rows[0];
+ assert.equal(acl.ok,false);
+});
+
+localTest('short packs stay completable and a rejected reward rolls back the charge and pending offer',async t=>{
+ const db=await fixture();t.after(()=>db.close());
+ for(const name of ['20261127143000_komi_collection_second_wave.sql','20261127144500_komi_collection_third_wave.sql','20261127144501_komi_collection_pick_pack.sql']){
+  await db.exec(fs.readFileSync(path.join(here,'supabase/migrations',name),'utf8'));
+ }
+ await db.query(`insert into komi_collection_private.unlocks(user_id,character_id,opened_on,paid_request_id,paid_cost)
+   select $1,r.character_id,'2026-11-25',gen_random_uuid(),50
+   from komi_collection_private.ghoul_roster r where r.character_id <> 'tatara'
+   on conflict (user_id,character_id) do nothing`,[alice]);
+ await db.exec(`create function komi_collection_private.reject_tatara_fixture() returns trigger language plpgsql as $$
+  begin raise exception 'forced rollback' using errcode='23514'; end; $$;
+  create trigger reject_tatara_fixture before insert on komi_collection_private.unlocks for each row
+  when (new.character_id='tatara') execute function komi_collection_private.reject_tatara_fixture();`);
+ await as(db,'authenticated',alice);
+ assert.deepEqual(await rpc(db,'card_number','ghoul','kaneki'),{serial:1,issued:1});
+ const offer=await rpc(db,'pack_open','ghoul',null);
+ assert.equal(offer.choices.length,1);
+ await assert.rejects(rpc(db,'pack_claim',offer.offer_id,2),{code:'22023'});
+ await assert.rejects(rpc(db,'pack_claim',offer.offer_id,1),{code:'23514'});
+ assert.deepEqual(await rpc(db,'pack_open','ghoul',offer.offer_id),offer);
+ await db.exec('reset role; drop trigger reject_tatara_fixture on komi_collection_private.unlocks;');
+ await as(db,'authenticated',alice);
+ const receipt=await rpc(db,'pack_claim',offer.offer_id,1);
+ assert.equal(receipt.result,'tatara');
+ assert.equal(receipt.owned.length,24);
+ assert.equal(receipt.balance,2450);
+ assert.deepEqual(await rpc(db,'card_number','ghoul','tatara'),{serial:1,issued:1});
+ assert.equal((await rpc(db,'pack_open','ghoul',null)).pack_status,'complete');
+ await as(db,'authenticated',bob);
+ const old=await rpc(db,'ghoul_buy_v3',id(901));
+ assert.deepEqual(await rpc(db,'card_number','ghoul',old.result),{serial:2,issued:2});
+ await as(db,'authenticated',alice);
+ assert.deepEqual(await rpc(db,'card_number','ghoul',old.result),{serial:1,issued:2});
+});
+
 localTest('migration creates exactly six 20-card pools; grandfather wallpaper remains and no balances or holdings change',async t=>{
  const db=await fixture();t.after(()=>db.close());
  const g=(await db.query("select array_agg(character_id order by character_id) as ids from komi_collection_private.ghoul_roster")).rows[0].ids;

@@ -5,6 +5,8 @@ let chromium;
 try{({chromium}=require('playwright'));}catch{}
 const root=path.resolve(__dirname,'..'),origin='http://localhost:8767';
 const assets=['assets/collection/jujutsu/gojo.webp','assets/collection/frieren/frieren.webp','assets/collection/alchemist/edward.webp','assets/collection/demon/tanjiro.webp','assets/collection/aot/eren.webp','assets/collection/naruto/naruto.webp','assets/collection/bleach/ichigo.webp','assets/collection/onepiece/luffy.webp','assets/collection/chainsaw/denji.webp','assets/collection/hunter/gon.webp',...['ghoul','jujutsu','frieren','alchemist','demon','aot','naruto','bleach','onepiece','chainsaw','hunter'].map(id=>'assets/collection/deluxe-packs/'+id+'.webp'),'komi-collection-art.js','komi-collection.js','komi-collection.css','assets/collection/ghoul-booster/pack-320.webp','assets/collection/ghoul-booster/pack-640.webp','assets/collection/ghoul-booster/pack-fallback.svg','komi.production.css'];
+const offer='10000000-0000-4000-8000-000000000001';
+
 const fixture='<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/komi.production.css"><link rel="stylesheet" href="/komi-collection.css"></head><body style="background:#09090b;color:white"><main id="mainContainer"></main><script src="/komi-collection-art.js"></script><script src="/komi-collection.js"></script></body></html>';
 test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},async()=>{
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
@@ -33,7 +35,7 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  assert.equal(await p.evaluate(()=>new Set([...document.querySelectorAll('.kc-grid .kc-portrait')].map(e=>e.src)).size),24);
  assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'horizontal overflow at '+width);
 
- await p.getByRole('button',{name:'Паки',exact:true}).click();
+ await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
  await p.waitForFunction(()=>document.querySelector('.kc-case-image')?.hasAttribute('data-kc-art-ready'));
  assert.match(await p.locator('.kc-case-image').evaluate(img=>img.currentSrc),/deluxe-packs\/ghoul\.webp$/);
  assert.ok(await p.locator('.kc-case-image').evaluate(el=>el.naturalHeight>el.naturalWidth),'pack has tall art');
@@ -42,10 +44,31 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  assert.equal(await p.locator('.kc-pack-shelves button').count(),11);
  await p.waitForFunction(()=>[...document.querySelectorAll('.kc-pack-thumb')].length===11&&[...document.querySelectorAll('.kc-pack-thumb')].every(img=>img.naturalWidth>0));
  assert.equal(await p.locator('.kc-case h2').textContent(),'Бустер «Токийский гуль»');await p.locator('.kc-case').getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).click();assert.equal(await p.evaluate(()=>window.loginCalled),true);
- await p.evaluate(()=>{window.currentUser={authUserId:'qa-user-a'};window.openCalls=0;window.buyCalls=0;window._supabase={auth:{getSession:async()=>({data:{session:{user:{id:window.currentUser.authUserId}}}})},rpc:async(name,args)=>{if(name==='komi_collection_ghoul_buy_v3'){window.buyCalls++;return {data:{owned:['kaneki','touka'],can_open:false,result:'touka',next_at:'2099-01-01T00:00:00Z',balance:0,price:50,purchase_status:'ok'}}}if(args.p_action!=='read'){window.openCalls++;throw Error('Only read or paid buy allowed');}return {data:{owned:['kaneki'],can_open:false,balance:50,price:50}};}};window.KomiCollection.authChanged('qa-user-a');window.KomiCollection.render(document.querySelector('#mainContainer'));});
+ await p.evaluate(offer=>{
+  window.currentUser={authUserId:'qa-user-a'};window.openCalls=0;window.buyCalls=0;
+  const base={owned:['kaneki'],balance:50,price:50};
+  const cards=KomiCollection.roster.slice(1,6);
+  window._supabase={
+   auth:{getSession:async()=>({data:{session:{user:{id:currentUser.authUserId}}}})},
+   rpc:async(name,args)=>{
+    const choices=cards.map((c,i)=>({slot:i+1,rarity:c.rarity,available:true}));
+    if(name==='komi_collection_pack_open'){
+     openCalls++;return {data:{...base,offer_id:offer,pack_status:'ready',choices}};
+    }
+    if(name==='komi_collection_pack_claim'){
+     buyCalls++;assertCall(args.p_offer_id===offer&&args.p_slot===1);
+     return {data:{...base,owned:['kaneki','touka'],balance:0,result:'touka',purchase_status:'ok',
+       offer_id:offer,pack_status:'claimed',selected_slot:1,choices:choices.map((c,i)=>({...c,available:false,id:cards[i].id}))}};
+    }
+    assertCall(args.p_action==='read');return {data:base};
+   }
+  };
+  function assertCall(condition){if(!condition)throw Error('Unexpected collection call');}
+  KomiCollection.authChanged('qa-user-a');KomiCollection.render(document.querySelector('#mainContainer'));
+ },offer);
  await p.waitForFunction(()=>document.querySelector('.kc-wallet')?.textContent==='Баланс: 50 AniCoin');
  assert.equal(await p.locator('[data-kc-action="open"]').count(),0);assert.doesNotMatch(await p.locator('.kc-page').textContent(),/бесплатн|раз в день/i);assert.equal(await p.evaluate(()=>window.openCalls),0);
- await p.getByRole('button',{name:'Коллекции',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-locked').count(),23);
+ await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-locked').count(),23);
  await p.getByRole('button',{name:'Открытые',exact:true}).click();assert.equal(await p.locator('.kc-grid .kc-card').count(),1);
  const ownedPortrait=p.locator('.kc-grid .kc-portrait');
  assert.match(await ownedPortrait.getAttribute('src'),/ghoul-cel\/kaneki\.webp$/);
@@ -95,7 +118,6 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  await p.keyboard.press('Enter');
 
  {
-  const skip=p.getByRole('button',{name:'Показать результат',exact:true});
   const peel=p.getByRole('button',{name:'Сорвать печать с бустера'});
   await peel.waitFor();assert.equal(await focused(peel),true);
   assert.equal(await p.locator('.kc-result,.kc-pick-arena').count(),0);
@@ -107,17 +129,16 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
    });
   }else await peel.press('Enter');
   const arena=p.locator('.kc-pick-arena');
-  await arena.waitFor();assert.equal(await arena.locator('.kc-pick-card').count(),3);
+  await arena.locator('.kc-pick-card:not(:disabled)').first().waitFor();assert.equal(await arena.locator('.kc-pick-card').count(),5);
   assert.equal(await arena.locator('img').count(),0);
-  if(width===390){await arena.screenshot({path:path.join(root,'browser-test-results','collector-pick-390.png'),animations:'disabled'});await skip.click();}
-  else {
-   await arena.getByRole('button',{name:'Открыть карточку 2 из 3'}).press('Enter');
-   if(width===1024)await p.getByRole('button',{name:'Паки',exact:true}).focus();
-  }
+  if(width===390)await arena.screenshot({path:path.join(root,'browser-test-results','collector-pick-390.png'),animations:'disabled'});
+  assert.equal(await p.evaluate(()=>buyCalls),0);
+  await arena.getByRole('button',{name:/Открыть карточку 1 из 5/}).press('Enter');
+  if(width===1024)await p.getByRole('button',{name:'Открыть пак',exact:true}).focus();
  }
  const result=p.locator('.kc-result h3');
  await p.waitForFunction(()=>document.querySelector('.kc-result h3')?.textContent==='Тока Кирисима');
- if(width===1024)assert.equal(await focused(p.getByRole('button',{name:'Паки',exact:true})),true);
+ if(width===1024)assert.equal(await focused(p.getByRole('button',{name:'Открыть пак',exact:true})),true);
  else assert.equal(await focused(result),true,'result receives keyboard focus');
  assert.equal(await p.locator('.kc-reel-panel').count(),0);assert.equal(await p.evaluate(()=>window.buyCalls),1);assert.equal(await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).isDisabled(),true);assert.equal(await p.locator('.kc-grid').count(),0);assert.match(await p.locator('.kc-wallet').textContent(),/Баланс: 0 AniCoin/);
  const inspectReward=p.locator('.kc-result').getByRole('button',{name:/Досье CCG/});
@@ -125,6 +146,8 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  assert.equal(await inspectReward.getAttribute('aria-expanded'),'true');
  await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
  assert.equal(await p.locator('.kc-case,.kc-result').count(),0);
+ assert.equal(await p.locator('.kc-grid .kc-owned').count(),2);
+ await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();
  assert.equal(await p.locator('.kc-grid .kc-locked').count(),22);
  assert.ok(await p.locator('.kc-grid .kc-card').evaluateAll(els=>els.every(el=>{
   const card=el.getBoundingClientRect(), info=el.querySelector('.kc-card-info').getBoundingClientRect();
@@ -136,12 +159,12 @@ test('Tokyo Ghoul collection desktop and phone', {skip:!chromium,timeout:90000},
  if([1440,390].includes(width)){
    fs.mkdirSync(path.join(root,'browser-test-results'),{recursive:true});
    const capture=async(selector,name)=>{await p.locator(selector).scrollIntoViewIfNeeded();await p.locator(selector).screenshot({path:path.join(root,'browser-test-results','booster-'+name+'-'+width+'.png'),animations:'disabled'});};
-   await p.getByRole('button',{name:'Паки',exact:true}).click();
+   await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
    await capture('.kc-case','pack');
    if(width===390){await p.locator('.kc-page').scrollIntoViewIfNeeded(); await p.evaluate(()=>window.scrollTo(0,0));
     await p.screenshot({path:path.join(root,'browser-test-results','booster-page-390.png'),animations:'disabled'});
    }
-   await p.getByRole('button',{name:'Коллекции',exact:true}).click();
+   await p.getByRole('button',{name:'Все карты каталога',exact:true}).click();
    await p.locator('.kc-grid .kc-card').first().scrollIntoViewIfNeeded();
    await p.waitForFunction(()=>Array.from(document.querySelectorAll('.kc-grid .kc-portrait')).slice(0,2).every(i=>i.complete&&i.naturalWidth));
    const row=p.locator('.kc-grid .kc-card').first();
@@ -175,7 +198,7 @@ test('booster still shows a tall foil pack when its WebP fails', {skip:!chromium
   });
   await p.goto(origin+'/collection');
   await p.evaluate(()=>{window.currentView='collection';window.currentUser=null;window.KomiCollection.render(document.querySelector('#mainContainer'));});
-  await p.getByRole('button',{name:'Паки',exact:true}).click();
+  await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
   await p.waitForFunction(()=>{const i=document.querySelector('.kc-case-image');return i?.currentSrc.endsWith('/pack-fallback.svg')&&i.naturalHeight>i.naturalWidth&&!i.hidden;});
   assert.equal(await p.locator('.kc-case h2').textContent(),'Бустер «Токийский гуль»');
   assert.equal(await p.locator('.kc-pack-thumb[hidden]').count(),11);

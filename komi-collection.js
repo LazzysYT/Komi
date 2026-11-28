@@ -286,6 +286,13 @@ const purchaseIds=new Map();
 function pendingKey(owner){return 'komi:collection:purchase:'+owner+(seriesKey==='ghoul'?'':':'+seriesKey);}
 function pending(owner){try{return purchaseIds.get(pendingKey(owner))||sessionStorage.getItem(pendingKey(owner))||null;}catch{return purchaseIds.get(pendingKey(owner))||null;}}
 function remember(owner,id){if(id)purchaseIds.set(pendingKey(owner),id);else purchaseIds.delete(pendingKey(owner));try{if(id)sessionStorage.setItem(pendingKey(owner),id);else sessionStorage.removeItem(pendingKey(owner));}catch{}}
+function storedOffer(s,id){
+ const key='komi:collection:offer:'+s.owner+':'+s.seriesKey;
+ try{
+  if(id!==undefined){if(id)sessionStorage.setItem(key,id);else sessionStorage.removeItem(key);}
+  return sessionStorage.getItem(key);
+ }catch{return null;}
+}
 const portraitFallback=c=>root.KomiCollectionArt?.silhouette(c.id)||'';
 const lock='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="3"/><path d="M8 10V7a4 4 0 0 1 8 0v3m-4 4v3"/></svg>';
 const artRoot='/assets/collection/ghoul-cel/';
@@ -453,12 +460,15 @@ const sceneMotion=Object.freeze({
 function landscapeMarkup(c,kind){
  const location=Object.entries(sceneSets[seriesKey]).find(([,cast])=>(' '+cast+' ').includes(' '+c.id+' '))?.[0]||backdropFallback[seriesKey];
  const [sky,light,ink,depth,lit,lines,weather]=scenery[location];
- return '<svg class="kc-world-backdrop" data-kc-location="'+location+'" data-kc-weather="'+weather+'" style="--kc-scene-sky:'+sky+';--kc-scene-light:'+light+';--kc-scene-depth:'+ink+'" viewBox="0 0 400 450" preserveAspectRatio="xMidYMid slice" focusable="false"><g class="kc-land-planes">'+depth+'</g><g class="kc-land-lit">'+lit+'</g><g class="kc-land-ink">'+lines+'</g><path class="kc-land-motion" d="'+sceneMotion[weather]+'"/><path class="kc-land-hero" pathLength="1" transform="matrix(1.33 0 0 1.33 0 82)" d="'+atmospherePaths[kind]+'"/></svg>';
+ return '<svg class="kc-world-backdrop" data-kc-location="'+location+'" data-kc-weather="'+weather+'" style="--kc-scene-sky:'+sky+';--kc-scene-light:'+light+';--kc-scene-depth:'+ink+'" viewBox="0 0 400 450" preserveAspectRatio="xMidYMid slice" focusable="false"><g class="kc-land-planes">'+depth+'</g><g class="kc-land-lit">'+lit+'</g><g class="kc-land-ink">'+lines+'</g><path class="kc-land-motion" d="'+sceneMotion[weather]+'"/><path class="kc-land-hero" pathLength="1" transform="matrix(1.33 0 0 1.33 0 82)" d="'+atmospherePaths[kind]+'"/></svg><span class="kc-weather-flow" data-kc-weather="'+weather+'"></span>';
 }
 function stageScenery(c,info){
  const {kind}=heroScene(c,info);
- // One small vector only in the full viewer, behind the actual character.
  return '<div class="kc-scene" aria-hidden="true">'+landscapeMarkup(c,kind)+'<span class="kc-scene-wash"></span><span class="kc-scene-dust"></span></div>';
+}
+function cardBackdrop(c,info){
+ const {kind,tone}=heroScene(c,info);
+ return '<span class="kc-card-ambient" aria-hidden="true" style="--kc-scene-ink:'+tone+'">'+landscapeMarkup(c,kind)+'</span>';
 }
 
 const chapterSets={
@@ -575,7 +585,7 @@ function shelfHero(id,cssClass){
  return '<img class="'+cssClass+'" src="/assets/collection/'+folder+'/'+shelfHeroes[id]+'.webp" width="432" height="648" alt="" aria-hidden="true" decoding="async">';
 }
 function seriesPicker(){
- const busy=state?.status==='opening'||!!state?.reel,inAlbum=tab==='collection';
+ const busy=state?.status==='opening'||!!state?.reel,inAlbum=albumTab();
  return '<nav class="kc-shelves kc-world-shelves'+(inAlbum?' kc-album-shelves':' kc-pack-shelves')+'" aria-label="'+(inAlbum?'Коллекции':'Выбор пака')+'">'+Object.entries(seriesList).map(([id,v])=>'<button type="button" class="kc-world-window kc-theme-'+id+'" data-kc-action="series-'+id+'" aria-label="'+esc(v.title)+'" aria-pressed="'+(seriesKey===id)+'"'+(busy?' disabled':'')+'><span class="kc-window-motif" aria-hidden="true"></span>'+shelfHero(id,'kc-shelf-hero')+'<span class="kc-window-shade" aria-hidden="true"></span><span class="kc-window-copy">'+(inAlbum?'':'<img class="kc-pack-thumb" src="/assets/collection/deluxe-packs/'+id+'.webp" alt="" width="26" height="45" decoding="async">')+'<span class="kc-window-label"><strong>'+esc(v.title)+'</strong><small aria-hidden="true">'+(inAlbum?v.roster.length+' персонажей':'Серия '+v.edition)+'</small></span></span></button>').join('')+'</nav>';
 }
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
@@ -587,6 +597,7 @@ function normalizePayload(data){
  return {owned,result,balance,price:data.price===CASE_PRICE?CASE_PRICE:null,purchaseStatus:['ok','insufficient','complete'].includes(data.purchase_status)?data.purchase_status:null};
 }
 let state=null,observedOwner,host=null,tab='collection';
+const albumTab=()=>tab!=='cases';
 let auraRequest=0;
 async function loadOwnedAura(id){const serial=++auraRequest;if(!id||typeof _supabase==='undefined'||!_supabase)return;try{const {data,error}=await _supabase.from('komi_premium_cosmetic_equips').select('aura_id').eq('user_id',id).maybeSingle();if(error||serial!==auraRequest||owner()!==id||!active()||state?.owner!==id)return;const p=root.KomiShopCatalog?.find(data?.aura_id);state.auraClass=p?.type==='aura'?p.cosmeticClass:'';const page=host?.querySelector('.kc-page');if(page)page.dataset.komiAura=state.auraClass;}catch{}}
 let filter='all',rarityFilter='all',searchQuery='',searchComposing=false,deferredPaint=false;
@@ -597,7 +608,7 @@ function resetFilters(){
 }
 function matchesAlbum(c,owned,term=normalizedName(searchQuery)){
  const opened=owned.has(c.id);
- if(filter==='owned'&&!opened||filter==='locked'&&opened||rarityFilter!=='all'&&c.rarity!==rarityFilter)return false;
+ if((tab==='mine'||filter==='owned')&&!opened||filter==='locked'&&opened||rarityFilter!=='all'&&c.rarity!==rarityFilter)return false;
  // Query text never participates in matching a locked card, even by its ID.
  return !term||opened&&term.split(' ').every(word=>normalizedName(c.name).includes(word));
 }
@@ -624,9 +635,9 @@ function card(c,opened,place='grid'){
  const label=opened?c.name:'Неизвестный персонаж';
  const info=heroInfo(c),{group,intro}=info;
  const back=opened?'<div class="kc-card-back" id="'+backId+'"'+(flipped?'':' hidden')+'><div class="kc-file-code">'+esc(seriesKey==='ghoul'?'CCG':series.code)+' · '+number+'</div><h4>'+esc(c.name)+'</h4><p class="kc-file-group">'+esc(group)+'</p><p class="kc-file-intro">'+esc(intro)+'</p><div class="kc-file-footer">'+rarityLabel(c)+'</div></div>':'';
- const viewer=opened?'<button type="button" '+(flipped?'hidden ':'')+'class="kc-view-hero" data-kc-action="view-'+c.id+'" data-kc-focus="view-'+key+'" aria-label="Открыть персонажа: '+esc(c.name)+'"><span>В полный рост</span></button>':'';
+ const viewer=opened?'<button type="button" '+(flipped?'hidden ':'')+'class="kc-view-hero" data-kc-action="view-'+c.id+'" data-kc-focus="view-'+key+'" aria-label="Открыть персонажа: '+esc(c.name)+'"><span>Рассмотреть карту</span></button>':'';
  const control=opened?'<button type="button" class="kc-inspect" data-kc-action="inspect" data-kc-focus="inspect-'+key+'" aria-controls="'+backId+'" aria-expanded="'+flipped+'" aria-label="'+esc(series.dossier)+': '+esc(c.name)+'">'+flipIcon+'<span>'+(flipped?'Лицевая':'Досье')+'</span></button>':'';
- return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'"'+(opened?sceneAttributes(c,info,true):'')+' data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'</span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong><div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+back+viewer+control+'</article>';
+ return '<article class="kc-card kc-tier-'+c.rarity+(opened?' kc-owned':' kc-locked')+(flipped?' kc-flipped':'')+'"'+(opened?sceneAttributes(c,info,true):'')+' data-kc-card="'+c.id+'" data-kc-place="'+place+'"'+(place==='grid'?' tabindex="-1" data-kc-focus="card-'+c.id+'" aria-label="'+number+' · '+esc(label)+'"':'')+'><div class="kc-art" aria-hidden="true">'+(opened?cardBackdrop(c,info):'')+art(c,opened)+'<div class="kc-card-register"><span class="kc-number">'+number+'</span>'+(!opened?'<span class="kc-card-edition">'+series.edition+'</span>':'')+'</div>'+(!opened?'<div class="kc-lock"><span>'+lock+'<b aria-hidden="true">?</b></span></div>':'')+'</div><div class="kc-card-info"'+(flipped?' aria-hidden="true"':'')+'><strong>'+esc(label)+'</strong>'+(opened?'<span class="kc-card-group">'+esc(group)+'</span>':'')+'<div class="kc-card-details">'+rarityLabel(c)+'<small>'+(opened?'В коллекции':'Не открыт')+'</small></div></div>'+(opened?'<div class="kc-card-glare" aria-hidden="true"></div>':'')+back+viewer+control+'</article>';
 }
 function album(owned,known){
  const slots=byRarity(roster).map(c=>{
@@ -658,7 +669,7 @@ function inspect(button){
  setInspection(el,open,true);
 }
 function jumpToCard(id){
- if(!ids.has(id)||!current(state)||tab!=='collection')return;
+ if(!ids.has(id)||!current(state)||!albumTab())return;
  const item=roster.find(c=>c.id===id),owned=new Set(state.owned);
  // The optional index remains accessible. Clear conflicting filters before jumping.
  if(!item||!matchesAlbum(item,owned)){resetFilters();paint();}
@@ -689,6 +700,80 @@ function signatureMarkup(c){
  const info=heroInfo(c);
  return '<div class="kc-signature kc-fx-'+info.fx+'" style="--kc-fx:'+info.tint+'" aria-hidden="true"><svg viewBox="0 0 300 220" fill="none" focusable="false"><path d="'+motifPaths[info.fx]+'"/></svg></div>';
 }
+function inspectorCard(c,info,asset,number){
+ return '<div class="kc-inspect-control" tabindex="0" aria-label="Повернуть карту стрелками"><div class="kc-inspect-frame">'+
+  '<div class="kc-inspect-scene" aria-hidden="true">'+stageScenery(c,info)+signatureMarkup(c)+'</div>'+
+  '<div class="kc-inspect-portrait"><img src="'+asset+'" width="400" height="720" alt="'+esc(c.name)+', в полный рост" decoding="async"><p class="kc-image-unavailable" hidden>Не удалось загрузить иллюстрацию.</p></div>'+
+  '<div class="kc-inspect-foil" aria-hidden="true"></div>'+
+  '<div class="kc-inspect-hud" aria-hidden="true"><div class="kc-inspect-meta"><div><strong data-kc-instance>'+number+'</strong><small>Коллекция '+series.edition+' · '+esc(series.title)+'</small></div><span>✦</span></div>'+
+  '<div><strong class="kc-inspect-name">'+esc(c.name)+'</strong><small>'+esc(info.group)+'</small><footer><span>'+esc(series.title)+'</span>'+rarityLabel(c)+'</footer></div></div></div></div>';
+}
+const reducedMotion=()=>root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+function setTilt(element,x,y,gx=50,gy=50){
+ element.style.setProperty('--kc-tilt-x',x+'deg');
+ element.style.setProperty('--kc-tilt-y',y+'deg');
+ element.style.setProperty('--kc-glare-x',gx+'%');
+ element.style.setProperty('--kc-glare-y',gy+'%');
+}
+function pointerRatio(element,event){
+ const rect=element.getBoundingClientRect();
+ const bound=value=>Math.max(0,Math.min(1,value));
+ return [bound((event.clientX-rect.left)/rect.width),bound((event.clientY-rect.top)/rect.height)];
+}
+function bindInspectorTilt(stage,reset){
+ const control=stage.querySelector('.kc-inspect-control');
+ const frame=control.firstElementChild;
+ let tilt=[0,0],drag=null;
+ const clamp=value=>Math.max(-58,Math.min(58,value));
+ const turn=(x,y,gx,gy)=>{
+  tilt=[clamp(x),clamp(y)];
+  setTilt(frame,...tilt,gx,gy);
+ };
+ const restore=()=>turn(0,0);
+ reset.addEventListener('click',restore);
+ control.addEventListener('pointerdown',event=>{
+  if(reducedMotion()||event.button!==0)return;
+  drag={id:event.pointerId,x:event.clientX,y:event.clientY,tilt:[...tilt]};
+  control.setPointerCapture(event.pointerId);
+ });
+ control.addEventListener('lostpointercapture',()=>{drag=null;});
+ control.addEventListener('pointermove',event=>{
+  if(reducedMotion())return;
+  const [x,y]=pointerRatio(control,event);
+  if(drag?.id===event.pointerId){
+   turn(drag.tilt[0]-(event.clientY-drag.y)*.46,drag.tilt[1]+(event.clientX-drag.x)*.46,x*100,y*100);
+  }else if(event.pointerType==='mouse'){
+   turn((.5-y)*30,(x-.5)*30,x*100,y*100);
+  }
+ });
+ control.addEventListener('pointerleave',()=>{if(!drag)restore();});
+ control.addEventListener('keydown',event=>{
+  const delta={ArrowUp:[8,0],ArrowDown:[-8,0],ArrowLeft:[0,-8],ArrowRight:[0,8]}[event.key];
+  if(!delta||reducedMotion())return;
+  event.preventDefault();
+  turn(tilt[0]+delta[0],tilt[1]+delta[1]);
+ });
+ if(reducedMotion()){reset.hidden=true;stage.closest('dialog').querySelector('.kc-tilt-hint').hidden=true;control.removeAttribute('tabindex');}
+}
+function moveGridTilt(event){
+ if(event.pointerType!=='mouse'||!active()||reducedMotion())return;
+ const card=event.target.closest?.('.kc-grid .kc-owned:not(.kc-flipped)');
+ if(!card)return;
+ const [x,y]=pointerRatio(card,event);
+ setTilt(card,(.5-y)*30,(x-.5)*30,x*100,y*100);
+}
+function leaveGridTilt(event){
+ const card=event.target.closest?.('.kc-grid .kc-owned');
+ if(card&&!card.contains(event.relatedTarget))setTilt(card,0,0);
+}
+async function readCardNumber(viewer){
+ try{
+  const {data,error}=await packRequest('komi_collection_card_number',{p_series_id:viewer.state.seriesKey,p_character_id:viewer.id});
+  if(error||activeDialog!==viewer||!current(viewer.state)||!Number.isSafeInteger(data?.serial)||!Number.isSafeInteger(data?.issued)||data.serial<1||data.issued<data.serial)return;
+  const label='#'+String(data.serial).padStart(4,'0')+' / '+data.issued.toLocaleString('ru-RU');
+  for(const field of viewer.dialog.querySelectorAll('[data-kc-instance]'))field.textContent=label;
+ }catch{/* Keep the catalogue code when the issue number is unavailable. */}
+}
 function openViewer(id,trigger){
  if(!current(state)||!state.owned.includes(id))return;
  const c=roster.find(x=>x.id===id);
@@ -699,9 +784,10 @@ function openViewer(id,trigger){
  const dialog=document.createElement('dialog');
  dialog.className='kc-hero-view kc-theme-'+seriesKey;
  dialog.setAttribute('aria-labelledby','kc-hero-title');
- dialog.innerHTML='<div class="kc-hero-layout"><button type="button" class="kc-view-close" autofocus aria-label="Закрыть просмотр">×</button><div class="kc-hero-stage kc-tier-'+c.rarity+'"'+sceneAttributes(c,info)+'>'+stageScenery(c,info)+'<span class="kc-hero-art-serial">'+number+'</span>'+signatureMarkup(c)+'<img src="'+asset+'" width="400" height="720" alt="'+esc(c.name)+', в полный рост" decoding="async"><p class="kc-image-unavailable" hidden>Не удалось загрузить иллюстрацию.</p></div><div class="kc-hero-info"><div class="kc-view-meta">'+rarityLabel(c)+'<span>'+esc(series.title)+'</span></div><h2 id="kc-hero-title">'+esc(c.name)+'</h2><div class="kc-hero-metrics"><div><small>Карточка</small><strong>'+number+'</strong></div><div><small>В альбоме</small><strong>'+(roster.indexOf(c)+1)+' / '+roster.length+'</strong></div></div>'+'<dl><dt>Фракция или роль</dt><dd>'+esc(info.group)+'</dd><dt>Мир</dt><dd>'+esc(series.world)+'</dd><dt>Фирменный эффект</dt><dd>'+esc(info.reveal)+'</dd></dl><p class="kc-view-intro">'+esc(info.intro)+'</p><div class="kc-hero-actions"><button type="button" class="kc-view-signature">Показать эффект</button><button type="button" class="kc-view-poster">Скачать постер</button></div><p class="kc-poster-status" role="status"></p></div></div>';
+ dialog.innerHTML='<div class="kc-hero-layout"><button type="button" class="kc-view-close" autofocus aria-label="Закрыть просмотр">×</button><div class="kc-hero-stage kc-tier-'+c.rarity+'"'+sceneAttributes(c,info)+'>'+inspectorCard(c,info,asset,number)+'</div><div class="kc-hero-info"><div class="kc-view-meta">'+rarityLabel(c)+'<span>'+esc(series.title)+'</span></div><h2 id="kc-hero-title">'+esc(c.name)+'</h2><div class="kc-hero-metrics"><div><small>Карточка</small><strong>'+number+'</strong></div><div><small>В альбоме</small><strong>'+(roster.indexOf(c)+1)+' / '+roster.length+'</strong></div><div><small>Экземпляр / выпущено</small><strong data-kc-instance role="status">—</strong></div></div>'+'<dl><dt>Фракция или роль</dt><dd>'+esc(info.group)+'</dd><dt>Мир</dt><dd>'+esc(series.world)+'</dd><dt>Фирменный эффект</dt><dd>'+esc(info.reveal)+'</dd></dl><p class="kc-view-intro">'+esc(info.intro)+'</p><p class="kc-tilt-hint">Перетащите карту или поверните её клавишами со стрелками.</p><div class="kc-hero-actions"><button type="button" class="kc-view-reset">Сбросить поворот</button><button type="button" class="kc-view-signature">Показать эффект</button><button type="button" class="kc-view-pause" aria-pressed="false">Пауза фона</button><button type="button" class="kc-view-poster">Скачать постер</button></div><p class="kc-poster-status" role="status"></p></div></div>';
  const dismiss=dialog.querySelector('.kc-view-close');
  const stage=dialog.querySelector('.kc-hero-stage');
+ bindInspectorTilt(stage,dialog.querySelector('.kc-view-reset'));
  const illustration=stage.querySelector('img');
  illustration.addEventListener('error',()=>{illustration.hidden=true;stage.querySelector('p').hidden=false;},{once:true});
  dismiss.addEventListener('click',()=>closeViewer());
@@ -709,11 +795,19 @@ function openViewer(id,trigger){
  dialog.addEventListener('click',event=>{if(event.target===dialog)closeViewer();});
  const effect=dialog.querySelector('.kc-view-signature');
  effect.hidden=!!root.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
- effect.addEventListener('click',()=>playSignature(stage));
+ const pause=dialog.querySelector('.kc-view-pause');
+ pause.hidden=effect.hidden;
+ function pauseBackground(paused){
+  dialog.classList.toggle('kc-background-paused',paused);
+  pause.setAttribute('aria-pressed',String(paused));
+ }
+ effect.addEventListener('click',()=>{pauseBackground(false);playSignature(stage);});
+ pause.addEventListener('click',()=>pauseBackground(pause.getAttribute('aria-pressed')!=='true'));
  const poster=dialog.querySelector('.kc-view-poster');
  poster.addEventListener('click',()=>void downloadMiniPoster(c,asset,poster,dialog.querySelector('.kc-poster-status')));
  host.append(dialog);
  activeDialog={dialog,trigger,state,id,key:focusKey(trigger)};
+ void readCardNumber(activeDialog);
  if(typeof dialog.showModal==='function')dialog.showModal();
  else dialog.setAttribute('open','');
  dismiss.focus({preventScroll:true});
@@ -732,8 +826,9 @@ function makeReel(prize,owned,random=Math.random){
  const candidates=pool.length?pool:roster;
  return Array.from({length:REEL_LENGTH},(_,i)=>i===REEL_WIN?prize:candidates[Math.min(candidates.length-1,Math.floor(random()*candidates.length))].id);
 }
-// A pick is presentation only. The buy/read response supplies the single card.
-const PICK_DURATION=950;
+// Existing purchase receipts and journal replays can still play the original reveal.
+const PICK_DURATION=2350;
+const REVEAL_LANES={2:[-.8],3:[-1.04,1.04],4:[-1.55,-.82,1.55],5:[-2.05,-1.12,1.12,2.05]};
 const pickThemes=Object.freeze({
  ghoul:{scene:'Ночной Токио',sigil:'M10 40Q50 9 90 40Q50 72 10 40ZM50 25Q40 40 50 55Q60 40 50 25ZM24 25 18 17M73 55 82 64',effects:'<path class="kc-pick-strokes" d="M34 29Q35 50 47 53T60 69Q49 63 42 63 24 64 22 57 18 49 34 29ZM91 5Q89 16 85 24 102 16 91 5ZM147 57Q150 38 163 42 166 50 147 57ZM235 32Q219 59 231 63 240 73 244 53ZM277 9Q265 24 266 36 280 28 277 9ZM316 54Q299 56 301 64 305 71 316 54ZM38 139Q50 113 59 114 64 126 38 139ZM86 130Q86 142 72 155 67 157 67 151ZM264 117Q252 133 260 140 274 144 273 130ZM324 120Q308 143 319 146 329 151 324 120Z"/><path class="kc-pick-trace" d="M15 120Q65 18 163 28T323 141M54 16Q122-2 171 32T321 61M21 162q73 20 151 2t150-11"/>'},
  jujutsu:{scene:'Печати проклятий',sigil:'M30 11 69 16 75 66 33 70ZM22 30 72 33M24 54l54-20M44 19l12 42m-9-33 20 12M17 57 85 24',effects:'<path class="kc-pick-trace" d="M43 18 86 35 74 72 30 60ZM127 124 156 108 185 143 162 161ZM229 25 277 38 266 89 215 77ZM284 119 305 101 336 134 311 154ZM22 107 315 24M49 147 293 46M87 160 317 68"/><path class="kc-pick-strokes" d="m33 97 38-12-21 8Zm102-63 44-11-21 10Zm84 88 40-16-13 10Zm-12-35 63-20-26 12Z"/>'},
@@ -748,19 +843,30 @@ const pickThemes=Object.freeze({
  hunter:{"scene":"Лицензия охотника","sigil":"M13 20h74v40H13ZM25 29h17v15H25Zm23 3h27m-27 8h23m-49 9h51","effects":"<path class=\"kc-pick-trace\" d=\"M9 133q78-78 144-47t179-48M5 152q61-27 98-11t121-19 112-23M41 50l81-16 91 23 72-14M82 39v20m143-9v20\"/><path class=\"kc-pick-strokes\" d=\"M53 110l8-8 8 8-8 8Zm106-22 8-8 8 8-8 8Zm103-35 8-8 8 8-8 8Z\"/>"}
 });
 function pickScene(reel,theme){
- const choose=reel.phase==='choose',reveal=reel.phase==='reveal';
+ const choose=reel.phase==='choose',reveal=reel.phase==='reveal',dealing=reel.phase==='tear';
+ const options=reel.choices||[1,2,3].map(slot=>({slot,available:true,id:reel.payload?.result}));
  const prize=reveal?roster.find(c=>c.id===reel.payload.result):null;
  const emblem='<svg viewBox="0 0 100 80" aria-hidden="true" focusable="false"><path d="'+theme.sigil+'"/></svg>';
  const particles='<svg class="kc-pick-atmosphere" viewBox="0 0 340 180" preserveAspectRatio="none" aria-hidden="true" focusable="false">'+theme.effects+'</svg>';
- const elapsed=reveal?Math.max(0,Date.now()-reel.started):0;
- const cards=[1,2,3].map(n=>{
-  const selected=reveal&&reel.chosen===n;
-  const result=selected&&prize?'<span class="kc-pick-front kc-tier-'+prize.rarity+'" aria-hidden="true"><span class="kc-art">'+art(prize,true)+'</span><span class="kc-pick-front-rarity">'+rarityLabel(prize)+'</span></span>':'';
-  return '<button type="button" class="kc-pick-card'+(selected?' is-chosen':'')+'" data-kc-action="pick-card-'+n+'" aria-label="Открыть карточку '+n+' из 3"'+(choose?'':' disabled')+'><span class="kc-pick-back" aria-hidden="true">'+emblem+'</span>'+result+'</button>';
+ const elapsed=reveal||dealing?Math.max(0,Date.now()-reel.started):0;
+ const cards=options.map((option,index)=>{
+  const selected=reveal&&reel.chosen===option.slot;
+  const c=reveal&&(reel.offer||selected)?roster.find(card=>card.id===option.id):null;
+  const result=c?'<span class="kc-pick-front kc-tier-'+c.rarity+'">'+cardBackdrop(c,heroInfo(c))+'<span class="kc-art" aria-hidden="true">'+art(c,true)+'</span><span class="kc-pick-front-rarity"><strong>'+esc(c.name)+'</strong>'+rarityLabel(c)+'</span></span>':'';
+  const rarity=option.rarity?' kc-choice-'+option.rarity:'';
+  const label=c?c.name:'Открыть карточку '+option.slot+' из '+options.length+(option.rarity?' · '+rarityNames[option.rarity]:'');
+  const unavailable=!choose||!option.available||!!reel.error;
+  const faces='<span class="kc-pick-back" aria-hidden="true">'+emblem+'</span>'+result;
+  const offset=index-(options.length-1)/2;
+  const lane=reel.offer&&reveal&&!selected?REVEAL_LANES[options.length][index-(option.slot>reel.chosen?1:0)]:offset;
+  return '<button type="button" class="kc-pick-card'+rarity+(selected?' is-chosen':'')+'" style="--kc-fan-offset:'+offset+';--kc-deal-index:'+index+';--kc-reveal-shift:'+(lane-offset)+'" data-kc-action="pick-card-'+option.slot+'" aria-label="'+esc(label)+'"'+(unavailable?' disabled':'')+'>'+(reel.offer?'<span class="kc-pick-turntable">'+faces+'</span>':faces)+'</button>';
  }).join('');
- return '<div class="kc-pick-arena'+(reveal?' is-revealing kc-pick-position-'+reel.chosen:'')+'" data-kc-pick-world="'+seriesKey+'"'+(reveal?' style="--kc-pick-elapsed:-'+elapsed+'ms"':'')+'>'+particles+'<div class="kc-pick-card-row" role="group" aria-label="Три рубашки карточек">'+cards+'</div></div>';
+ const burst=prize&&reel.offer?'<span class="kc-pick-burst kc-choice-'+prize.rarity+'" aria-hidden="true">'+Array.from({length:18},(_,i)=>'<i style="--kc-ray:'+i+'"></i>').join('')+'</span>':'';
+ const opening=dealing?wrapperMarkup(true,reel)+'<span class="kc-deal-light" aria-hidden="true"></span>':'';
+ return '<div class="kc-pick-arena'+(reel.offer?' kc-real-pick':'')+(dealing?' is-dealing':'')+(reveal?' is-revealing kc-pick-position-'+reel.chosen:'')+'" data-kc-pick-world="'+seriesKey+'" style="--kc-fan-count:'+options.length+';--kc-pick-elapsed:-'+elapsed+'ms">'+particles+opening+'<div class="kc-pick-card-row" role="group" aria-label="Карточки из пака">'+cards+'</div>'+burst+'</div>';
 }
 const FOIL_DURATION=980;
+const PACK_DEAL_DURATION=1160;
 const sealEdge='0 14%,7% 13%,12% 15%,19% 13%,24% 14%,31% 12%,38% 14%,46% 12%,54% 14%,62% 12%,69% 14%,76% 13%,82% 15%,90% 12%,96% 15%,100% 13%';
 function wrapperMarkup(animated,reel){
  const art='/assets/collection/deluxe-packs/'+seriesKey+'.webp';
@@ -771,11 +877,13 @@ function reelMarkup(s){
  const reel=s.reel;
  if(!reel)return '';
  const theme=pickThemes[seriesKey]||pickThemes.ghoul;
- const seal=reel.phase==='seal',tear=reel.phase==='tear',reveal=reel.phase==='reveal';
- const heading=seal?'Пак запечатан':tear?'Открываем пак':reveal?'Кто внутри?':'Выбери одну из трёх карточек';
- const hint=seal?'Возьмись за верхний край.':tear?'Карточки выходят из обёртки…':reveal?'Раскрываем карточку…':reel.isReplay?'Это повтор уже полученной карточки.':'Карточка уже определена. Выбор меняет только сцену.';
- const scene=seal?'<button type="button" class="kc-peel kc-foil-control" data-kc-action="peel" aria-label="Сорвать печать с бустера">'+wrapperMarkup(false,reel)+'<span class="kc-foil-label">Открыть пак</span></button><small class="kc-peel-help">Потяни край вправо или нажми «Открыть пак».</small>':tear?wrapperMarkup(true,reel):pickScene(reel,theme);
- return '<section class="kc-reel-panel kc-manga-panel kc-pick-panel" aria-label="Открытие бустера"'+(reveal||tear?' aria-busy="true"':'')+'><div class="kc-reel-heading"><div><div class="kc-kicker">'+esc(theme.scene)+' · '+(reel.isReplay?'Повтор сцены':'Открытие')+'</div><h3>'+heading+'</h3></div><span role="status">'+hint+'</span></div>'+scene+button('Показать результат','skip-reel')+'</section>';
+ const seal=reel.phase==='seal',tear=reel.phase==='tear',reveal=reel.phase==='reveal',saving=reel.phase==='saving';
+ const heading=seal?'Пак запечатан':tear?'Открываем пак':reveal?'Карта в коллекции':saving?'Сохраняем выбор…':'Выберите 1 карту';
+ const hint=seal?'Возьмись за верхний край.':tear?'Карточки выходят из обёртки…':reveal?'Все карты из этого пака.':reel.isReplay?'Это повтор уже полученной карточки.':reel.message|| (reel.offer?'Выберите 1 карту, чтобы забрать в коллекцию. При выборе спишется 50 AniCoin.':'Карточка уже определена. Выбор меняет только сцену.');
+ const scene=seal?'<button type="button" class="kc-peel kc-foil-control" data-kc-action="peel" aria-label="Сорвать печать с бустера">'+wrapperMarkup(false,reel)+'<span class="kc-foil-label">Открыть пак</span></button><small class="kc-peel-help">Потяни край вправо или нажми «Открыть пак».</small>':tear&&!reel.offer?wrapperMarkup(true,reel):pickScene(reel,theme);
+ const actions=!reel.offer||reveal?button('Показать результат','skip-reel'):button('Закрыть пак','close-pack',{unavailable:saving});
+ const recovery=reel.error?'<p class="kc-pack-error" role="alert">'+esc(reel.error)+'</p>'+button('Повторить сохранение','retry-pick',{primary:true}):'';
+ return '<section class="kc-reel-panel kc-manga-panel kc-pick-panel" aria-label="Открытие бустера"'+(reveal||tear?' aria-busy="true"':'')+'><div class="kc-reel-heading"><div><div class="kc-kicker">'+esc(theme.scene)+' · '+(reel.isReplay?'Повтор сцены':'Открытие')+'</div><h3 tabindex="-1" data-kc-focus="pack-heading">'+heading+'</h3></div><span role="status">'+hint+'</span></div>'+scene+recovery+actions+'</section>';
 }
 function peelReel(progress=0){
  const s=state,reel=s?.reel;
@@ -783,21 +891,86 @@ function peelReel(progress=0){
  const showChoices=()=>{
   if(!current(s)||s.reel!==reel)return;
   reel.timer=null;reel.phase='choose';
-  paint('pick-card-1');
+  paint(firstChoice(reel));
  };
  if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){showChoices();return;}
  reel.phase='tear';reel.started=Date.now();reel.dragStart=progress;
- paint('skip-reel');
- reel.timer=setTimeout(showChoices,FOIL_DURATION);
+ paint(reel.offer?'pack-heading':'skip-reel');
+ reel.timer=setTimeout(showChoices,reel.offer?PACK_DEAL_DURATION:FOIL_DURATION);
 }
 function chooseCard(n){
  const s=state,reel=s?.reel;
- if(!current(s)||!reel||reel.phase!=='choose'||![1,2,3].includes(n))return;
- // The choice is never transmitted and does not select, redraw or buy a reward.
+ if(!current(s)||!reel||reel.phase!=='choose')return;
+ if(reel.offer){if(!reel.error&&reel.choices.some(choice=>choice.slot===n&&choice.available))void claimPack(s,reel,n);return;}
+ if(![1,2,3].includes(n))return;
  if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){finishReel(s,reel,true);return;}
  reel.chosen=n;reel.phase='reveal';reel.started=Date.now();
  paint('skip-reel');
+ reel.timer=setTimeout(()=>finishReel(s,reel),950);
+}
+function firstChoice(reel){return 'pick-card-'+(reel.choices?.find(choice=>choice.available)?.slot||1);}
+function parsePack(data){
+ const payload=normalizePayload(data);
+ const {pack_status:status,offer_id:offer,choices,selected_slot:slot}=data;
+ if(!['ready','claimed','complete','insufficient','stale'].includes(status))throw Error('Invalid pack status');
+ if(!offer){
+  if(status!=='complete'&&status!=='insufficient')throw Error('Pack ID missing');
+  return {payload,status};
+ }
+ if(!/^[a-f0-9-]{36}$/i.test(offer)||!Array.isArray(choices)||choices.length<1||choices.length>5||
+    choices.some((choice,index)=>choice.slot!==index+1||!Object.hasOwn(rarityNames,choice.rarity)||
+      typeof choice.available!=='boolean'||(status==='claimed'&&roster.find(c=>c.id===choice.id)?.rarity!==choice.rarity))||
+    (status==='claimed'&&(!payload.result||choices[slot-1]?.id!==payload.result)))throw Error('Invalid pack contents');
+ return {payload,status,offer,choices,slot};
+}
+function revealPack(s,reel,pack){
+ Object.assign(reel,{...pack,chosen:pack.slot,phase:'reveal',started:Date.now(),error:''});
+ if(active())root.playSound?.();
+ if(root.matchMedia?.('(prefers-reduced-motion: reduce)').matches){finishReel(s,reel,true);return;}
+ paint('pack-heading');
  reel.timer=setTimeout(()=>finishReel(s,reel),PICK_DURATION);
+}
+function closePack(s){
+ const reel=s?.reel;
+ if(!current(s)||!reel?.offer||reel.phase==='saving'||reel.phase==='reveal')return;
+ clearTimeout(reel.timer);s.reel=null;paint('confirm-buy');
+}
+async function packRequest(name,args){
+ let timer;
+ try{
+  const expired=new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Pack request timed out')),12000);});
+  return await Promise.race([_supabase.rpc(name,args),expired]);
+ }finally{clearTimeout(timer);}
+}
+async function claimPack(s,reel,slot){
+ if(reel.phase!=='choose')return;
+ reel.phase='saving';reel.error='';reel.attempt=slot;paint('pack-heading');
+ try{
+  const {data,error}=await packRequest('komi_collection_pack_claim',{p_offer_id:reel.offer,p_slot:slot});
+  if(!current(s)||s.reel!==reel)return;
+  if(error)throw error;
+  const pack=parsePack(data);
+  if(pack.status==='claimed'){
+   revealPack(s,reel,pack);
+   refreshWallet(s);
+  }else if(pack.status==='stale'&&pack.choices.some(choice=>choice.available)){
+   reel.choices=pack.choices;reel.phase='choose';
+   reel.message='Эта карта уже получена. Выберите другую из пака.';
+   paint(firstChoice(reel));
+  }else{
+   if(pack.status==='stale')storedOffer(s,null);
+   s.reel=null;
+   Object.assign(s,pack.payload,{status:'ready',purchaseStatus:pack.status,offerNeedsBalance:pack.status==='insufficient'});
+   paint('confirm-buy');
+  }
+ }catch{
+  if(!current(s)||s.reel!==reel)return;
+  reel.phase='choose';reel.error='Не удалось подтвердить выбор. Повторите сохранение этой карты.';
+  paint('retry-pick');
+ }
+}
+function refreshWallet(s){
+ if(typeof aniCoinRequest==='function')void Promise.resolve().then(()=>aniCoinRequest('read',{},s.owner)).catch(()=>{});
 }
 let peelPointer=null,suppressPeelClickUntil=0;
 function pointerStart(event){
@@ -808,6 +981,7 @@ function pointerStart(event){
  try{target.setPointerCapture(event.pointerId);}catch{}
 }
 function pointerMove(event){
+ moveGridTilt(event);
  const p=peelPointer;
  if(!p||p.id!==event.pointerId||!p.target.isConnected)return;
  const dx=event.clientX-p.x,dy=event.clientY-p.y;
@@ -832,7 +1006,7 @@ function finishReel(s,reel=s?.reel,manual=false){
  const payload=reel.payload;
  s.reel=null;
  if(reel.isReplay){s.replayResult=payload.result;paint('result');}
- else{Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint(manual?'result':null);if(s.journalOpen)void readJournal(s);}if(active())playSignature(host?.querySelector('.kc-result'));
+ else{if(reel.offer)storedOffer(s,null);Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint(manual?'result':null);if(s.journalOpen)void readJournal(s);}if(active())playSignature(host?.querySelector('.kc-result'));
 }
 function showReel(s,payload){
  if(!active()){Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint();if(s.journalOpen)void readJournal(s);return;}
@@ -858,7 +1032,7 @@ function albumTools(){
   +'<input id="kc-album-search" type="search" placeholder="Имя или фамилия" maxlength="80" autocomplete="off" autocorrect="off" spellcheck="false" aria-controls="kc-album-results" aria-describedby="kc-search-help" data-kc-focus="album-search" value="'+esc(searchQuery)+'">'
   +'<button type="button" aria-label="Очистить поиск" data-kc-action="clear-search"'+(searchQuery?'':' hidden')+'>'+clearSearchIcon+'</button></div></div>'
   +'<div class="kc-rarity-control"><label for="kc-album-rarity">Редкость</label><select id="kc-album-rarity" aria-controls="kc-album-results" data-kc-focus="album-rarity">'+rareOptions+'</select></div></div>'
-  +'<div class="kc-tools-options"><div class="kc-filters" role="group" aria-label="Карточки по статусу">'+Object.entries(collectionFilters).map(([id,title])=>button(title,'filter-'+id,{pressed:filter===id})).join('')+'</div>'
+  +'<div class="kc-tools-options"><div class="kc-filters" role="group" aria-label="Карточки по статусу">'+(tab==='mine'?'':Object.entries(collectionFilters).map(([id,title])=>button(title,'filter-'+id,{pressed:filter===id})).join(''))+'</div>'
   +'<button type="button" class="kc-reset-filters" data-kc-action="reset-album-filters"'+(hasFilters()?'':' hidden')+'>Сбросить фильтры</button></div>'
   +'<p class="kc-muted kc-tools-hint" id="kc-search-help">Поиск по имени доступен только для открытых карточек.</p>'
   +'</div><section class="kc-album-results" id="kc-album-results" aria-label="Карточки серии"></section>';
@@ -877,15 +1051,28 @@ function bindArtwork(container){
   if(img.complete){if(img.naturalWidth)ready();else failed();}
  }
 }
+let cardSceneObserver;
+function watchCardBackdrops(panel){
+ cardSceneObserver?.disconnect();
+ if(!root.IntersectionObserver||reducedMotion())return;
+ cardSceneObserver??=new root.IntersectionObserver(entries=>{
+  for(const {target,isIntersecting} of entries){
+   if(!target.isConnected){cardSceneObserver.unobserve(target);continue;}
+   target.classList.toggle('kc-ambient-visible',isIntersecting);
+  }
+ },{threshold:.18});
+ for(const card of panel.querySelectorAll('.kc-owned'))cardSceneObserver.observe(card);
+}
 function refreshAlbumResults(){
- if(!active()||!current(state)||tab!=='collection')return;
+ if(!active()||!current(state)||!albumTab())return;
  const panel=host.querySelector('#kc-album-results');
  if(!panel)return;
  const owned=new Set(state.owned),term=normalizedName(searchQuery);
  const visible=byRarity(roster.filter(c=>matchesAlbum(c,owned,term)));
  panel.innerHTML=visible.length?'<div class="kc-grid">'+visible.map(c=>card(c,owned.has(c.id))).join('')+'</div>'
-  :'<p class="kc-empty">'+(term?'Среди открытых карточек совпадений нет.':'Пока нет персонажей с такими фильтрами.')+'</p>';
+  :'<p class="kc-empty">'+(term?'Среди открытых карточек совпадений нет.':tab==='mine'&&!owned.size?'В этой серии пока нет собранных карт.':'Пока нет персонажей с такими фильтрами.')+'</p>';
  bindArtwork(panel);
+ watchCardBackdrops(panel);
  const text='Найдено: '+visible.length;
  const count=host.querySelector('[data-kc-result-count]');
  if(count&&count.textContent!==text)count.textContent=text;
@@ -931,33 +1118,35 @@ function paint(nextFocus=null){
  const previous=host.contains(document.activeElement)?focusKey(document.activeElement):null;
  const selection=previous==='album-search'?[document.activeElement.selectionStart,document.activeElement.selectionEnd]:null;
  if(activeDialog&&(!current(activeDialog.state)||!owned.has(activeDialog.id)))closeViewer(false);
- const inAlbum=tab==='collection',tabBusy=s.status==='opening'||!!s.reel;
- const header=inAlbum?'<header class="kc-header"><h1>Коллекции</h1></header>':'<header class="kc-header"><div><div class="kc-kicker">KomiAnime / Коллекционные карточки</div><h1>Паки</h1><p class="kc-muted">Выбери пак, чтобы открыть новую карточку.</p></div></header>';
- const tabs='<nav class="kc-tabs" aria-label="Коллекции и паки">'+button('Коллекции','collection',{pressed:inAlbum,unavailable:tabBusy&&!inAlbum})+button('Паки','cases',{pressed:!inAlbum,unavailable:tabBusy&&inAlbum})+'</nav>';
+ const inAlbum=albumTab(),tabBusy=s.status==='opening'||!!s.reel;
+ const header='<header class="kc-header"><div><h1>Коллекция карточек</h1></div><span class="kc-count" role="status">Собрано: '+(known?count+' / '+roster.length:'— / '+roster.length)+'</span></header>';
+ const tabs='<nav class="kc-tabs" aria-label="Разделы коллекции">'+[['cases','Открыть пак'],['mine','Моя коллекция'],['collection','Все карты каталога']].map(([key,label])=>button(label,key,{pressed:tab===key,unavailable:tabBusy&&tab!==key})).join('')+'</nav>';
  let body='';
  const complete=known&&count===roster.length;
  const retryPurchase=!!s.owner&&!!pending(s.owner);
- const canBuy=s.status==='ready'&&!s.reel&&s.price===CASE_PRICE&&(retryPurchase||!complete&&s.balance>=CASE_PRICE);
- const description=complete?'Все персонажи уже собраны!':s.status==='guest'?'Войди, чтобы купить бустер.':s.status==='opening'?'Открываем бустер…':'В бустере всегда новый персонаж.';
+ const resumeOffer=!!s.owner&&!!storedOffer(s);
+ const canBuy=s.status==='ready'&&!s.reel&&s.price===CASE_PRICE&&(retryPurchase||resumeOffer&&!s.offerNeedsBalance||!complete&&s.balance>=CASE_PRICE);
+ const description=complete?'Все персонажи уже собраны!':s.status==='guest'?'Войди, чтобы купить бустер.':s.status==='opening'?'Открываем бустер…':'Оплата после выбора карты.';
  const balanceText=known&&s.balance!==null?'Баланс: '+s.balance.toLocaleString('ru-RU')+' AniCoin':'Цена: 50 AniCoin';
- const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true}):s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>':button(retryPurchase?'Повторить покупку':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
- const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
- const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">'+esc(series.script)+'</span><small>СЕРИЯ '+series.edition+'</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h2>Бустер «'+esc(series.pack)+'»</h2><p class="kc-muted">Карточек в серии: '+roster.length+'. В каждом бустере одна новая карточка. Шансы равные, повторов нет.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
+ const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true}):s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>':button(retryPurchase?'Повторить покупку':resumeOffer&&!s.offerNeedsBalance?'Продолжить открытие':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
+ const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':s.purchaseStatus==='stale'?'Состав пака изменился. Откройте новый пак.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
+ const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">'+esc(series.script)+'</span><small>СЕРИЯ '+series.edition+'</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h2>Бустер «'+esc(series.pack)+'»</h2><p class="kc-muted">Выберите одну из пяти карт. Когда в серии осталось меньше пяти новых карт, пак содержит все оставшиеся.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
  const prize=s.reel?null:roster.find(c=>c.id===(s.replayResult||s.result));
- const reward=prize&&known?'<div class="kc-result" role="status"'+sceneAttributes(prize,heroInfo(prize))+'>'+stageScenery(prize,heroInfo(prize))+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','collection',{primary:true,focus:'result-collection'}))+'</div></div>':'';
+ const reward=prize&&known?'<div class="kc-result" role="status"'+sceneAttributes(prize,heroInfo(prize))+'>'+stageScenery(prize,heroInfo(prize))+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','mine',{primary:true,focus:'result-collection'})+(canBuy?button('Открыть ещё','confirm-buy-next'):''))+'</div></div>':'';
  if(inAlbum){
   const extras='<section class="kc-extras"><button type="button" class="kc-extras-toggle" data-kc-action="album-details" aria-expanded="'+s.extrasOpen+'" aria-controls="kc-extras-body"><span>Альбом и журнал</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div id="kc-extras-body"'+(s.extrasOpen?'':' hidden')+'>'+album(owned,known)+collectorProgress(s,owned,known)+journalMarkup(s)+'</div></section>';
   body=albumFinalMarkup(s,owned)+'<div class="kc-series"><div class="kc-series-info"><h2>'+esc(series.title)+'</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к пакам','cases',{primary:true})+'</div>'+albumTools()+extras;
  }else{
   body=(s.reel||s.replayResult?'':feature)+reelMarkup(s)+reward;
  }
- const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+tabs+seriesPicker()+notice(s)+body+'</section>';
+ const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':'')+(tab==='mine'?' kc-my-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+tabs+seriesPicker()+notice(s)+body+'</section>';
  if(activeDialog?.dialog.isConnected){
   const template=document.createElement('template');template.innerHTML=markup;
   host.querySelector('.kc-page').replaceWith(template.content);
  }else host.innerHTML=markup;
  bindArtwork(host);
  refreshAlbumResults();
+ if(!inAlbum)cardSceneObserver?.disconnect();
  if(activeDialog?.dialog.isConnected){
   const matching=[...host.querySelectorAll('.kc-view-hero')].find(el=>focusKey(el)===activeDialog.key);
   if(matching)activeDialog.trigger=matching;
@@ -970,10 +1159,10 @@ function paint(nextFocus=null){
   else if(s.status==='error')focus='retry';
   else if(prize&&known)focus='result';
   else if(canBuy)focus='confirm-buy';
- }else if(focus==='skip-reel'&&!s.reel&&prize&&known)focus='result';
+ }else if(['skip-reel','pack-heading'].includes(focus)&&!s.reel&&prize&&known)focus='result';
  if(focus){
   const target=[...host.querySelectorAll('[data-kc-action],[data-kc-focus]')].find(el=>focusKey(el)===focus&&!el.disabled);
-  target?.focus({preventScroll:focus===previous||!['result','skip-reel','peel','pick-card-1'].includes(focus)});
+  target?.focus({preventScroll:focus===previous||!['result','skip-reel','peel','pack-heading','pick-card-1'].includes(focus)});
   if(selection&&focus==='album-search'&&target)target.setSelectionRange(...selection);
  }
 }
@@ -981,15 +1170,33 @@ async function request(action){
  const s=state;
  if(!active()||!current(s)||!s.owner||s.status==='loading'||s.status==='opening')return;
  if(action!=='read'&&action!=='buy')return;
- if(action==='buy'&&(tab!=='cases'||s.status!=='ready'||!!s.reel||s.price!==CASE_PRICE||!s.confirmBuy||(!pending(s.owner)&&(s.balance<CASE_PRICE||s.owned.length===roster.length))))return;
- let purchaseId=null;
- if(action==='buy'){try{purchaseId=pending(s.owner)||root.crypto.randomUUID();remember(s.owner,purchaseId);}catch{return;}}
+ if(action==='buy'&&(tab!=='cases'||s.status!=='ready'||!!s.reel||s.price!==CASE_PRICE||!s.confirmBuy||(!pending(s.owner)&&!storedOffer(s)&&(s.balance<CASE_PRICE||s.owned.length===roster.length))))return;
+ const purchaseId=action==='buy'?pending(s.owner):null;
  s.confirmBuy=false;s.status=action==='read'?'loading':'opening';if(action==='buy'){s.result=null;s.finalUnlock=false;s.finalAnimated=false;s.replayResult=null;}paint(action==='buy'?'case-status':null);
  try{
   if(typeof _supabase==='undefined'||!_supabase)throw new Error('Unavailable');
   const {data:sessionData,error:sessionError}=await _supabase.auth.getSession();
   if(!current(s))return;
   if(sessionError||sessionData?.session?.user?.id!==s.owner)throw new Error('Session changed');
+  if(action==='buy'&&!purchaseId){
+   const saved=storedOffer(s);
+   const {data,error}=await packRequest('komi_collection_pack_open',{p_series_id:s.seriesKey,p_offer_id:saved});
+   if(!current(s))return;
+   if(error){if(saved&&error.code==='22023')storedOffer(s,null);throw error;}
+   const pack=parsePack(data);
+   Object.assign(s,pack.payload,{status:'ready',offerNeedsBalance:pack.status==='insufficient',purchaseStatus:pack.status});
+   if(pack.offer)storedOffer(s,pack.offer);
+   if(pack.status==='ready'||pack.status==='claimed'){
+    const reel={...pack,phase:saved===pack.offer?'choose':'seal',timer:null};
+    s.reel=reel;
+    if(pack.status==='claimed')revealPack(s,reel,pack);
+    else paint(reel.phase==='seal'?'peel':firstChoice(reel));
+   }else{
+    if(pack.status==='stale')storedOffer(s,null);
+    paint('confirm-buy');
+   }
+   return;
+  }
   const {data,error}=seriesKey==='ghoul'
    ?(action==='buy'?await _supabase.rpc('komi_collection_ghoul_buy_v3',{p_request_id:purchaseId}):await _supabase.rpc('komi_collection_action',{p_action:action}))
    :(action==='buy'?await _supabase.rpc('komi_collection_series_buy_v3',{p_series_id:s.seriesKey,p_request_id:purchaseId}):await _supabase.rpc('komi_collection_series_read',{p_series_id:s.seriesKey}));
@@ -997,20 +1204,23 @@ async function request(action){
   if(error)throw error;
   const payload=normalizePayload(data);
   if(action==='buy'){if(!payload.purchaseStatus||payload.purchaseStatus==='ok'&&!payload.result)throw Error('Unconfirmed purchase');remember(s.owner,null);}
-  if(action==='buy'&&payload.purchaseStatus==='ok'&&payload.result){showReel(s,payload);}else{Object.assign(s,payload,{status:'ready'});paint();}
-  if(action==='buy'&&payload.purchaseStatus==='ok'&&typeof aniCoinRequest==='function')void Promise.resolve().then(()=>aniCoinRequest('read',{},s.owner)).catch(()=>{});
+  if(action==='buy'&&payload.purchaseStatus==='ok'&&payload.result){showReel(s,payload);}else{Object.assign(s,payload,{status:'ready'});if(s.balance>=CASE_PRICE)s.offerNeedsBalance=false;paint();}
+  if(action==='buy'&&payload.purchaseStatus==='ok')refreshWallet(s);
  }catch{if(current(s)){s.status='error';s.owned=[];s.result=null;paint();}}
 }
-function click(event){if(!active())return;const b=event.target.closest?.('.kc-page [data-kc-action]');if(!b||b.disabled||b.getAttribute('aria-disabled')==='true')return;const a=b.dataset.kcAction;if(a.startsWith('series-')){selectSeries(a.slice(7));return;}if(a.startsWith('view-')){openViewer(a.slice(5),b);return;}if(a==='inspect'){inspect(b);return;}if(a.startsWith('slot-')){jumpToCard(a.slice(5));return;}if(a==='album-details'&&tab==='collection'){state.extrasOpen=!state.extrasOpen;paint('album-details');return;}if(a==='journal'||a==='journal-retry'){
+function click(event){if(!active())return;const b=event.target.closest?.('.kc-page [data-kc-action]');if(!b||b.disabled||b.getAttribute('aria-disabled')==='true')return;const a=b.dataset.kcAction;if(a.startsWith('series-')){selectSeries(a.slice(7));return;}if(a.startsWith('view-')){openViewer(a.slice(5),b);return;}if(a==='inspect'){inspect(b);return;}if(a.startsWith('slot-')){jumpToCard(a.slice(5));return;}if(a==='album-details'&&albumTab()){state.extrasOpen=!state.extrasOpen;paint('album-details');return;}if(a==='journal'||a==='journal-retry'){
  state.journalOpen=a==='journal-retry'||!state.journalOpen;paint('journal');if(state.journalOpen)void readJournal(state);return;
  }if(a.startsWith('replay-')){startReplay(a.slice(7));return;}
  if(a==='leave-replay'){state.replayResult=null;state.extrasOpen=true;tab='collection';paint('journal');return;}
  if(a==='peel'){if(!event.detail||performance.now()>=suppressPeelClickUntil)peelReel();return;}
  if(a.startsWith('pick-card-')){chooseCard(Number(a.slice(10)));return;}
- if(a==='skip-reel'){finishReel(state,state.reel,true);return;}if(a==='collection'||a==='cases'){if(tab!==a){state.confirmBuy=false;state.replayResult=null;state.inspected='';}tab=a;paint(a);}else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
+ if(a==='retry-pick'){void claimPack(state,state.reel,state.reel.attempt);return;}
+ if(a==='close-pack'){closePack(state);return;}
+ if(a==='skip-reel'){if(!state.reel?.offer||state.reel.phase==='reveal')finishReel(state,state.reel,true);return;}
+ if(a==='collection'||a==='mine'||a==='cases'){if(tab!==a){state.confirmBuy=false;state.replayResult=null;state.inspected='';resetFilters();}tab=a;paint(a);}else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
  const query=host.querySelector('#kc-album-search');
  if(query){if(a==='reset-album-filters')resetFilters();updateSearch(query,true);query.focus({preventScroll:true});}
- }else if(a==='login'){if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');}else if(a==='retry')void request('read');else if(a==='confirm-buy'){state.confirmBuy=true;paint('cancel-buy');}else if(a==='cancel-buy'){cancelPurchase();}else if(a==='buy')void request('buy');}
+ }else if(a==='login'){if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');}else if(a==='retry')void request('read');else if(a==='confirm-buy'||a==='confirm-buy-next'){state.confirmBuy=true;paint('cancel-buy');}else if(a==='cancel-buy'){cancelPurchase();}else if(a==='buy')void request('buy');}
 function cancelPurchase(){state.confirmBuy=false;paint('confirm-buy');}
 function keydown(event){
  if(event.key!=='Escape'||event.defaultPrevented||!active()||!current(state)||
@@ -1021,7 +1231,8 @@ function keydown(event){
   event.preventDefault();event.stopPropagation();updateSearch(event.target,true);return;
  }
  if(state.reel&&event.target.closest?.('.kc-pick-panel')){
-  event.preventDefault();event.stopPropagation();finishReel(state,state.reel,true);return;
+  event.preventDefault();event.stopPropagation();
+  if(state.reel.offer&&state.reel.phase!=='reveal')closePack(state);else finishReel(state,state.reel,true);return;
  }
  const inspectButton=event.target.closest?.('.kc-inspect[aria-expanded="true"]');
  if(inspectButton){event.preventDefault();event.stopPropagation();inspect(inspectButton);return;}
@@ -1033,7 +1244,7 @@ function render(container){
  const style=document.querySelector('link[data-komi-collection-style]');if(style&&style.media!=='all')style.media='all';
  if(host!==container){
   closeViewer(false);searchComposing=false;deferredPaint=false;
-  const listeners={click,keydown,input:inputSearch,change:changeRarity,compositionstart:startSearchComposition,compositionend:endSearchComposition,pointerdown:pointerStart,pointermove:pointerMove,pointerup:pointerEnd,pointercancel:pointerCancel};
+  const listeners={click,keydown,input:inputSearch,change:changeRarity,compositionstart:startSearchComposition,compositionend:endSearchComposition,pointerdown:pointerStart,pointermove:pointerMove,pointerout:leaveGridTilt,pointerup:pointerEnd,pointercancel:pointerCancel};
   for(const [name,handle] of Object.entries(listeners)){host?.removeEventListener(name,handle);container.addEventListener(name,handle);}
   host=container;
  }
