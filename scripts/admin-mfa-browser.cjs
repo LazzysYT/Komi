@@ -15,17 +15,17 @@ window.supabase={createClient(){
  const state=window.__fixture;
  const ok=data=>({data,error:null});
  const callbacks=new Set();
- let verified=[],aal='aal1',user=state.role==='guest'?null:{id:'fixture-admin'};
+ let verified=[],pending=state.pending?[{id:'existing-totp',factor_type:'totp',status:'unverified'}]:[],aal='aal1',user=state.role==='guest'?null:{id:'fixture-admin'};
  const mock={calls:[],release:null,logout(){user=null;for(const cb of callbacks)cb('SIGNED_OUT',null);}};
  window.__mfaMock=mock;
  return {auth:{
    async getUser(){mock.calls.push('user');if(state.delay){state.delay=false;await new Promise(resolve=>{mock.release=resolve;});}return ok({user});},
    onAuthStateChange(cb){callbacks.add(cb);return {data:{subscription:{unsubscribe(){callbacks.delete(cb);}}}};},
    mfa:{
-     async listFactors(){mock.calls.push('list');return ok({totp:verified});},
+     async listFactors(){mock.calls.push('list');return ok({totp:verified,all:[...verified,...pending]});},
      async getAuthenticatorAssuranceLevel(){return ok({currentLevel:aal});},
-     async enroll(){mock.calls.push('enroll');return ok({id:'fixture-'+(verified.length+1),totp:{secret:'SYNTHETIC-KEY-DO-NOT-USE'}});},
-     async challengeAndVerify({factorId,code}){mock.calls.push('verify');if(code!=='123456')return {data:null,error:{message:'internal synthetic failure'}};if(!verified.some(f=>f.id===factorId))verified.push({id:factorId,status:'verified'});aal='aal2';return ok({});}
+     async enroll(){mock.calls.push('enroll');const id='fixture-'+(verified.length+pending.length+1);pending.push({id,status:'unverified',factor_type:'totp'});return ok({id,totp:{secret:'SYNTHETIC-KEY-DO-NOT-USE'}});},
+     async challengeAndVerify({factorId,code}){mock.calls.push('verify');if(code!=='123456')return {data:null,error:{message:'internal synthetic failure'}};if(!verified.some(f=>f.id===factorId)&&!pending.some(f=>f.id===factorId))return {data:null,error:{message:'unknown factor'}};pending=pending.filter(f=>f.id!==factorId);if(!verified.some(f=>f.id===factorId))verified.push({id:factorId,status:'verified',factor_type:'totp'});aal='aal2';return ok({});}
    }
  },async rpc(name){mock.calls.push(name);return ok(state.role==='admin'&&!!user);}};
 }};
@@ -33,9 +33,9 @@ window.supabase={createClient(){
 (async()=>{
  const browser=await chromium.launch({headless:true});
  try{
-  async function open(role,viewport={width:1000,height:800},delay=false){
+  async function open(role,viewport={width:1000,height:800},delay=false,pending=false){
     const page=await browser.newPage({viewport});
-    await page.addInitScript(({role,delay})=>{window.__fixture={role,delay};window.__violations=[];document.addEventListener('securitypolicyviolation',e=>window.__violations.push(e.blockedURI));},{role,delay});
+    await page.addInitScript(({role,delay,pending})=>{window.__fixture={role,delay,pending};window.__violations=[];document.addEventListener('securitypolicyviolation',e=>window.__violations.push(e.blockedURI));},{role,delay,pending});
     const errors=[];page.on('pageerror',e=>errors.push(e.message));
     await page.route('**/*',route=>{
       const url=new URL(route.request().url());
@@ -86,6 +86,26 @@ window.supabase={createClient(){
     });
     await page.waitForFunction(()=>window.__violations.includes('inline')&&window.__violations.some(v=>v.includes('googlesyndication.com')));
     assert.equal(await page.evaluate(()=>Boolean(window.__inlineExecuted)),false);
+    assert.deepEqual(errors,[]);
+    await page.close();
+  }
+  // Reopening setup after the key was added on the phone must not create
+  // a new factor. The SDK fixture reflects a server-side unverified factor.
+  {
+    const {page,errors}=await open('admin',{width:375,height:780},false,true);
+    await page.getByText(/Устройство добавлено, но ещё не подтверждено/).waitFor();
+    await page.reload();
+    await page.getByRole('button',{name:'Продолжить настройку',exact:true}).click();
+    const code=page.getByLabel('Код из приложения-аутентификатора');
+    await code.fill('000000');
+    await page.getByRole('button',{name:'Подтвердить',exact:true}).click();
+    await page.getByText(/Код не подтверждён/).waitFor();
+    await code.fill('123456');
+    await page.getByRole('button',{name:'Подтвердить',exact:true}).click();
+    await page.getByText('Второй фактор подтверждён в текущем сеансе.',{exact:true}).waitFor();
+    assert.equal(await page.getByText('SYNTHETIC-KEY-DO-NOT-USE').count(),0);
+    assert.equal(await page.getByRole('button',{name:'Продолжить настройку',exact:true}).count(),0);
+    assert.equal(await page.evaluate(()=>window.__mfaMock.calls.filter(c=>c==='enroll').length),0);
     assert.deepEqual(errors,[]);
     await page.close();
   }

@@ -2,11 +2,11 @@
 const test=require('node:test');
 const assert=require('node:assert/strict');
 const {controller}=require('../komi-admin-mfa.js');
-function mock({admin=true,user='owner',verified=[],aal='aal1',verifyError=false}={}){
+function mock({admin=true,user='owner',verified=[],pending=[],aal='aal1',verifyError=false}={}){
  const calls=[];
  const ok=data=>({data,error:null});
  const db={auth:{getUser:async()=>ok({user:{id:user}}),mfa:{
-  listFactors:async()=>ok({totp:verified}),
+  listFactors:async()=>ok({totp:verified,all:[...verified,...pending]}),
   getAuthenticatorAssuranceLevel:async()=>ok({currentLevel:aal}),
   enroll:async(args)=>{calls.push(['enroll',args]);return ok({id:'new-factor',totp:{secret:'TESTONLY'}});},
   challengeAndVerify:async(args)=>{calls.push(['verify',args]);if(verifyError)return {data:null,error:{message:'private response'}};aal='aal2';return ok({});}
@@ -71,4 +71,43 @@ test('isolated page only loads the pinned SDK and dedicated first-party scripts'
  assert.match(csp,/script-src 'self' https:\/\/cdn\.jsdelivr\.net;/);
  assert.match(csp,/script-src-attr 'none'/);
  assert.doesNotMatch(csp,/googlesyndication|vercel\.live|'unsafe-eval'/);
+});
+
+test('unfinished TOTP enrollment is recoverable and does not create another factor',async()=>{
+ const m=mock({pending:[{id:'existing-totp',status:'unverified',factor_type:'totp'},{id:'other-phone',status:'unverified',factor_type:'phone'}]});
+ const c=controller(m.db,'owner',()=>true);
+ const state=await c.status();
+ assert.deepEqual(state.verified,[]);
+ assert.deepEqual(state.pending.map(f=>f.id),['existing-totp']);
+ await assert.rejects(c.enroll(),/Сначала завершите/);
+ assert.equal(m.calls.length,0);
+ assert.equal((await c.verify('existing-totp','123456')).currentLevel,'aal2');
+ assert.deepEqual(m.calls,[['verify',{factorId:'existing-totp',code:'123456'}]]);
+});
+test('existing verified device requires step-up before enrolling even with pending setup',async()=>{
+ const m=mock({verified:[{id:'a',status:'verified'}],pending:[{id:'b',status:'unverified',factor_type:'totp'}]});
+ await assert.rejects(controller(m.db,'owner',()=>true).enroll(),/Сначала подтвердите вход/);
+ assert.equal(m.calls.length,0);
+});
+
+test('admin panel requires AAL2 but membership discovery still works before verification',async()=>{
+ const fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+ const app=fs.readFileSync(path.join(__dirname,'..','app-main.js'),'utf8');
+ const source=app.slice(app.indexOf('async function requireServerAdmin('),app.indexOf('let komiAdminUiLoader'));
+ assert.match(source,/membershipOnly/);
+ const redirects=[],notices=[];
+ let level='aal1',role=true,reads=0;
+ const ctx=vm.createContext({currentUser:{authUserId:'fixture'},_supabase:{rpc:async()=>({data:role,error:null}),auth:{mfa:{getAuthenticatorAssuranceLevel:async()=>{reads++;return {data:{currentLevel:level},error:null};}}}},komiAdminVerified:false,renderHeaderUser(){},alert(message){notices.push(message)},console:{warn(){}},location:{assign(url){redirects.push(url)}}});
+ vm.runInContext(source,ctx);
+ assert.equal(await ctx.requireServerAdmin(true,true),true);
+ assert.equal(reads,0);
+ assert.equal(await ctx.requireServerAdmin(),false);
+ assert.deepEqual(redirects,['/admin-security.html']);
+ assert.equal(await ctx.requireServerAdmin(true),false);
+ level='aal2';
+ assert.equal(await ctx.requireServerAdmin(),true);
+ role=false;
+ assert.equal(await ctx.requireServerAdmin(true,true),false);
+ assert.equal(await ctx.requireServerAdmin(),false);
+ assert.equal(redirects.length,1);
 });

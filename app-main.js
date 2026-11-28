@@ -4152,7 +4152,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         let komiAdminVerified = false;
-        async function requireServerAdmin(silent = false) {
+        async function requireServerAdmin(silent = false, membershipOnly = false) {
             const uid = currentUser?.authUserId;
             if (!_supabase || !uid) {
                 komiAdminVerified = false;
@@ -4166,7 +4166,16 @@ async function komiLoadCatalogPages(attempt = 0) {
                 komiAdminVerified = verified;
                 renderHeaderUser();
                 if (!verified && !silent) alert('Нет прав администратора. Права выдаёт только владелец Supabase.');
-                return verified;
+                if (!verified || membershipOnly) return verified;
+                // Membership discovery alone is not authorization to open privileged UI.
+                // The database independently enforces AAL2 for every privileged operation.
+                const assurance = await _supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+                if (currentUser?.authUserId !== uid) return false;
+                if (assurance.error || assurance.data?.currentLevel !== 'aal2') {
+                    if (!silent) location.assign('/admin-security.html');
+                    return false;
+                }
+                return true;
             } catch (error) {
                 komiAdminVerified = false;
                 renderHeaderUser();
@@ -4594,7 +4603,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 updateNotificationsUI();
                 // Show the account immediately from the same UID's verified avatar cache.
                 // Do not render the Google placeholder before reading its saved profile.
-                requireServerAdmin(true).catch(e => console.warn('Admin role restore:',e.message));
+                requireServerAdmin(true, true).catch(e => console.warn('Admin role restore:',e.message));
                 // Discard unverified local copies before loading this user's server-owned records.
                 userAnimeStatuses[username] = {};
                 userFavorites[username] = {};

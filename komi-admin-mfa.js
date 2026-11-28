@@ -1,4 +1,4 @@
-/* Optional administrator MFA enrollment. AAL2 enforcement is enabled separately. */
+/* Administrator MFA enrollment and session verification; privileged operations require AAL2 on the server. */
 (function(root){
 'use strict';
 function controller(db,uid,isCurrent){
@@ -23,11 +23,17 @@ function controller(db,uid,isCurrent){
     await guard();
     const factors=await result(db.auth.mfa.listFactors(),'Не удалось проверить устройства.');
     const level=await result(db.auth.mfa.getAuthenticatorAssuranceLevel(),'Не удалось проверить уровень входа.');
-    return {verified:(factors.totp||[]).filter(f=>f.status==='verified'),currentLevel:level.currentLevel};
+    // SDK's per-type TOTP list contains only verified factors. Its all list
+    // also contains unfinished enrollment, which must survive page reloads.
+    const all=Array.isArray(factors.all)?factors.all:[];
+    const verified=(factors.totp||[]).filter(f=>f.status==='verified'&&typeof f.id==='string');
+    const pending=all.filter(f=>f.factor_type==='totp'&&f.status==='unverified'&&typeof f.id==='string');
+    return {verified,pending,currentLevel:level.currentLevel};
   }
   async function enroll(){
     const s=await status();
     if(s.verified.length&&s.currentLevel!=='aal2')throw Error('Сначала подтвердите вход на уже подключённом устройстве.');
+    if(s.pending.length)throw Error('Сначала завершите настройку уже добавленного устройства.');
     await guard();
     const data=await result(db.auth.mfa.enroll({factorType:'totp'}),'Не удалось добавить устройство.');
     if(!data.id||!data.totp?.secret)throw Error('Не удалось получить ключ настройки.');
@@ -49,7 +55,7 @@ async function mount(content,db,back,getUid){
   const el=(tag,text,cls)=>{const node=document.createElement(tag);if(text)node.textContent=text;if(cls)node.className=cls;return node;};
   const button=(label,fn)=>{const node=el('button',label,'btn-secondary');node.type='button';node.addEventListener('click',fn);return node;};
   const heading=el('h2','Безопасность администратора');
-  const info=el('p','Настройте одноразовые коды в приложении-аутентификаторе. Обязательная серверная проверка ещё не включена.');
+  const info=el('p','Для административных действий обязательно подтвердите второй фактор. Обычный вход и просмотр аниме остаются доступными. Рекомендуем подключить резервное устройство.');
   const notice=el('p','Проверяем вход…');notice.setAttribute('role','status');notice.setAttribute('aria-live','polite');
   const actions=el('div');actions.style.cssText='display:grid;gap:10px';
   const secretBox=el('div');secretBox.style.cssText='display:grid;gap:8px;overflow-wrap:anywhere';
@@ -93,9 +99,16 @@ async function mount(content,db,back,getUid){
     actions.replaceChildren();secretBox.replaceChildren();
     if(s.currentLevel==='aal2')report('Второй фактор подтверждён в текущем сеансе.');
     else if(s.verified.length)report('Устройство подключено. Подтвердите второй фактор для текущего входа.');
+    else if(s.pending.length)report('Устройство добавлено, но ещё не подтверждено. Введите код из приложения, которое уже настроили.');
     else report('Подтверждённых устройств пока нет.');
     if(s.verified.length&&s.currentLevel!=='aal2'){
       for(const [i,f] of s.verified.entries())actions.append(button('Подтвердить устройство '+(i+1),()=>{if(!busy&&alive())challenge(f.id);}));
+    }else if(s.pending.length){
+      const resume=f=>{if(!busy&&alive()){challenge(f.id);report('Введите текущий шестизначный код из уже настроенного приложения.');}};
+      for(const [i,f] of s.pending.entries())actions.append(button(s.pending.length===1?'Продолжить настройку':'Продолжить настройку устройства '+(i+1),()=>resume(f)));
+      // A single unfinished device can be confirmed immediately; never enroll
+      // again or display its original setup secret after a refresh.
+      if(s.pending.length===1)challenge(s.pending[0].id);
     }else{
       actions.append(button(s.verified.length?'Добавить резервное устройство':'Подключить аутентификатор',()=>void run(async()=>{
         const enrolled=await service.enroll();if(!alive())return;
