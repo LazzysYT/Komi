@@ -8,7 +8,7 @@ async function route(p){
   const u=new URL(r.request().url()),f=u.pathname.slice(1);
   if(u.origin!==origin)return r.abort();
   if(f==='collection')return r.fulfill({contentType:'text/html',body:fixture});
-  if(!/^(?:komi-(?:collection(?:-art)?|collector-showcase)\.(?:js|css)|profile-studio\.css|assets\/collection\/(?:ghoul-cel|frieren|jujutsu|alchemist|deluxe-packs|ghoul-booster|deluxe-wallpapers)\/(?:locked\/)?[a-z0-9-]+\.(?:webp|svg))$/.test(f))return r.abort();
+  if(!/^(?:komi-(?:collection(?:-art)?|collector-showcase)\.(?:js|css)|profile-studio\.css|assets\/collection\/(?:ghoul-cel|frieren|jujutsu|alchemist|deluxe-packs|ghoul-booster|deluxe-wallpapers|worlds)\/(?:locked\/)?[a-z0-9-]+\.(?:webp|svg))$/.test(f))return r.abort();
   return r.fulfill({path:path.join(root,f),contentType:f.endsWith('.webp')?'image/webp':f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript'});
  });
 }
@@ -26,8 +26,8 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
     if(name==='komi_collection_journal_read'){journalLoads++;return {data:[{character_id:'fern',opened_at:'2026-11-26T04:03:02Z'},{character_id:'foreign',opened_at:'2026-11-26T01:00:00Z'}]};}
     const last=KomiCollection.seriesList.frieren.roster.at(-1);
     const slot={slot:1,rarity:last.rarity,available:true};
-    if(name==='komi_collection_pack_open')return {data:{owned:all.slice(0,-1),price:50,balance:50,offer_id:offer,pack_status:'ready',choices:[slot]}};
-    if(name==='komi_collection_pack_claim'){buys++;saved=true;return {data:{owned:all,price:50,balance:0,result:last.id,purchase_status:'ok',offer_id:offer,pack_status:'claimed',selected_slot:1,choices:[{...slot,available:false,id:last.id}]}};}
+    if(name==='komi_collection_pack_open_v3')return {data:{owned:all.slice(0,-1),price:50,balance:50,offer_id:offer,pack_status:'ready',choices:[{slot:1,available:true}]}};
+    if(name==='komi_collection_pack_claim_v3'){buys++;saved=true;return {data:{owned:all,price:50,balance:0,result:last.id,purchase_status:'ok',offer_id:offer,pack_status:'claimed',selected_slot:1,choices:[{...slot,available:false,id:last.id}]}};}
     return {data:{owned:args.p_series_id==='frieren'?(saved?all:all.slice(0,-1)):[],price:50,balance:saved?0:50}};
    }
   };window.KomiCollection.render(document.querySelector('#mainContainer'));
@@ -36,7 +36,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  const extras=p.getByRole('button',{name:'Альбом и журнал'});
  assert.equal(await extras.getAttribute('aria-expanded'),'false');
  await extras.click();
- await p.getByText('Осталось: 1 из 24 · 1 × 50 = 50 AniCoin.').waitFor();
+ await p.getByText('Осталось: 1 из 27 · 1 × 50 = 50 AniCoin.').waitFor();
  assert.ok(await p.getByText('Печать получена').count());
  assert.equal(await p.evaluate(()=>journalLoads),0);
  await p.getByRole('button',{name:'Посмотреть',exact:true}).click();
@@ -69,7 +69,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  await p.getByRole('button',{name:/Открыть карточку 1 из 1/}).click();
  await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
  await p.getByRole('region',{name:'Серия собрана'}).waitFor();
- assert.equal(await p.locator('.kc-album-finale img').count(),24);
+ assert.equal(await p.locator('.kc-album-finale img').count(),27);
  assert.equal(await p.evaluate(()=>buys),1);
  assert.equal(await p.locator('.kc-album-finale').evaluate(el=>getComputedStyle(el).animationName),width===390?'kc-finale-open':'none');
  if(width===390)await p.locator('.kc-album-finale').screenshot({path:path.join(root,'browser-test-results','deluxe-finale.png'),animations:'disabled'});
@@ -86,16 +86,19 @@ test('profile wallpaper shows only verified unlocked choices and can restore the
   document.querySelector('main').innerHTML='<div class="profile-cover" style="height:160px"><img alt="Свой баннер"></div><section class="kcs-wallpaper" hidden></section>';
   window.opts={viewer:'a',getViewer:()=> 'a',username:'Owner',isMe:true,client:{
    auth:{getSession:async()=>({data:{session:{user:{id:'a'}}}})},
-   rpc:async(name,args)=>({data:{series_id:name.endsWith('_set')?args.p_series_id:null,unlocked:['frieren']}})
+   rpc:async(name,args)=>({data:{series_id:name.endsWith('_set')?args.p_series_id:null,unlocked:['frieren','sololeveling']}})
   }};
   return window.KomiCollectorShowcase.mountWallpaper(document.querySelector('section'),document.querySelector('.profile-cover'),opts);
  });
  const select=p.getByLabel('Фон профиля');
- assert.deepEqual(await select.locator('option').allTextContents(),['Обычный фон','Карта пути']);
+ assert.deepEqual(await select.locator('option').allTextContents(),['Обычный фон','Карта пути','Двойное подземелье']);
  await select.selectOption('frieren');await p.getByRole('button',{name:'Применить'}).click();
  await p.getByText('Фон профиля обновлён.').waitFor();
  assert.equal(await p.locator('.profile-cover').getAttribute('data-kcs-wallpaper'),'frieren');
  assert.ok(await p.locator('.profile-cover img').isHidden());
+ await select.selectOption('sololeveling');await p.getByRole('button',{name:'Применить'}).click();
+ await p.waitForFunction(()=>document.querySelector('.profile-cover')?.dataset.kcsWallpaper==='sololeveling');
+ assert.match(await p.locator('.profile-cover').evaluate(el=>getComputedStyle(el).backgroundImage),/deluxe-wallpapers\/sololeveling\.webp/);
  await p.locator('main').screenshot({path:path.join(root,'browser-test-results','deluxe-wallpaper.png')});
  await select.selectOption('');await p.getByRole('button',{name:'Применить'}).click();
  await p.getByText('Обычный фон восстановлен.').waitFor();
