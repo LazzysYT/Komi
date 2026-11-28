@@ -6,11 +6,12 @@
  * iframe, never MP4/HLS files. Partner iframe display is deliberately
  * disabled until its advertising and redistribution terms have been checked.
  */
+const {readBoundedJson,discardBody}=require('./_bounded-json');
 const API = 'https://anivibe.pro';
 const SITE = 'https://komianime.online';
 const MAX_JSON = 128 * 1024;
 const HEALTH_TTL_MS = 5 * 60_000;
-const healthCache = {until:0,value:null};
+const healthCache = {until:0,value:null,pending:null};
 const recentIpRequests = new Map();
 const availabilityCache = new Map();
 const AVAILABILITY_TTL_MS = 15 * 60_000;
@@ -111,14 +112,11 @@ async function callPartner(resource, key, fetchFn = fetch, input = null) {
     redirect: 'error',
     signal: AbortSignal.timeout(8500)
   });
-  if (!response.ok) return {status: response.status, data:null};
-  const length = Number(response.headers.get('content-length'));
-  if (Number.isFinite(length) && length > MAX_JSON) throw Error('Partner response too large');
-  const text = await response.text();
-  if (text.length > MAX_JSON) throw Error('Partner response too large');
-  let data;
-  try { data = JSON.parse(text); } catch { throw Error('Invalid partner JSON'); }
-  return {status:response.status,data};
+  if (!response.ok) {
+    await discardBody(response);
+    return {status: response.status, data:null};
+  }
+  return {status:response.status,data:await readBoundedJson(response,MAX_JSON)};
 }
 async function checkPartner(key, fetchFn = fetch) {
   const me = await callPartner('/api/v1/partner/me',key,fetchFn);
@@ -171,8 +169,14 @@ async function handler(req,res) {
       try {
         const now=Date.now();
         if(healthCache.until <= now || !healthCache.value) {
-          healthCache.value=await checkPartner(key);
-          healthCache.until=now+HEALTH_TTL_MS;
+          if(!healthCache.pending){
+            healthCache.pending=checkPartner(key).then(value=>{
+              healthCache.value=value;
+              healthCache.until=Date.now()+HEALTH_TTL_MS;
+              return value;
+            }).finally(()=>{healthCache.pending=null;});
+          }
+          await healthCache.pending;
         }
         return send(res,200,{
           service:'anivibe', ...healthCache.value,

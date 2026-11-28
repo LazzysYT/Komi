@@ -22,10 +22,7 @@ test('partner credentials remain server-only and requests never redirect',async(
   let captured;
   const response=await callPartner('/api/v1/partner/me','unit-test-key',async(url,options)=>{
     captured={url,options};
-    return {
-      ok:true,status:200,headers:{get:()=>null},
-      text:async()=>JSON.stringify({ok:true,account:{private:'must-not-return'}})
-    };
+    return Response.json({ok:true,account:{private:'must-not-return'}});
   });
   assert.equal(response.status,200);
   assert.equal(captured.url,'https://anivibe.pro/api/v1/partner/me');
@@ -37,7 +34,7 @@ test('server health probe checks known safe anime only and never exposes partner
   const calls=[];
   const probe=await checkPartner('unit-test-key',async(url)=>{
     calls.push(url);
-    return {ok:true,status:200,headers:{get:()=>null},text:async()=>JSON.stringify({secret:'do-not-expose'})};
+    return Response.json({secret:'do-not-expose'});
   });
   assert.deepEqual(probe,{connection:'connected',sampleAnime:'found'});
   assert.deepEqual(calls,[
@@ -101,7 +98,7 @@ test('API checkAvailability only reads episode metadata; never fetches embed tok
   const fetched=[];
   const result=await checkAvailability(52991,'unit-test-key',async(url,options)=>{
     fetched.push({url,method:options.method});
-    return {ok:true,status:200,headers:{get:()=>null},text:async()=>JSON.stringify({data:{episodes:[{number:1}]}})};
+    return Response.json({data:{episodes:[{number:1}]}});
   });
   assert.deepEqual(fetched,[{url:'https://anivibe.pro/api/v1/anime/52991/episodes',method:'GET'}]);
   assert.equal(result.episodeCount,1);
@@ -130,4 +127,32 @@ test('enabled probe does not invoke partner API and returns disabled by default'
         if(flag===undefined)delete process.env.ANIVIBE_PARTNER_EMBED_ENABLED;
         else process.env.ANIVIBE_PARTNER_EMBED_ENABLED=flag;
     }
+});
+
+test('partner response is bounded even without Content-Length',async()=>{
+ let canceled=false;
+ const body=new ReadableStream({start(c){c.enqueue(new Uint8Array(128*1024));c.enqueue(Uint8Array.of(1));},cancel(){canceled=true;}});
+ await assert.rejects(callPartner('/api/v1/partner/me','unit-test-key',async()=>new Response(body)),/too large/);
+ assert.equal(canceled,true);
+});
+test('partner health checks coalesce simultaneous upstream requests',async()=>{
+ const oldFetch=global.fetch,key=ENV.ANIVIBE_API_KEY;
+ const calls=[];let release;
+ ENV.ANIVIBE_API_KEY='unit-test-key';
+ global.fetch=async url=>{
+  calls.push(String(url));
+  if(calls.length===1)await new Promise(r=>{release=r;});
+  return Response.json({ok:true});
+ };
+ const makeRes=()=>({setHeader(){},end(payload){this.body=JSON.parse(payload)}});
+ try{
+  const req={method:'GET',query:{check:'1'},headers:{}};
+  const results=Array.from({length:8},makeRes);
+  const pending=results.map(res=>handler(req,res));
+  assert.equal(calls.length,1);
+  release();
+  await Promise.all(pending);
+  assert.equal(calls.length,2);
+  assert.ok(results.every(res=>res.statusCode===200&&res.body.connection==='connected'));
+ }finally{global.fetch=oldFetch;if(key===undefined)delete ENV.ANIVIBE_API_KEY;else ENV.ANIVIBE_API_KEY=key;}
 });
