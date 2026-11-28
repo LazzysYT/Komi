@@ -165,6 +165,19 @@
           "value": "default-src 'none'; base-uri 'none'; object-src 'none'; frame-ancestors 'none'; form-action 'none'; script-src 'self' https://cdn.jsdelivr.net; script-src-attr 'none'; style-src 'unsafe-inline'; connect-src 'self' https://xebglnnpoutmdcgukbxf.supabase.co"
         }
       ]
+    },
+    {
+      "source": "/sitemap-brand.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        }
+      ]
     }
   ],
   "rewrites": [
