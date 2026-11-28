@@ -3,7 +3,8 @@
 'use strict';
 const PAGE_SIZE=24;
 const state={owner:null,view:'catalog',category:'all',sort:'default',query:'',affordableOnly:false,hideOwned:false,limit:PAGE_SIZE,trial:Object.create(null),sheetOpen:false,filtersOpen:false,comparison:'trial',previewMode:'profile',reactionPreview:null,busy:false,status:'',routeRead:false,routeSignature:''};
-let latestCtx=null,pendingConfirmation=null,resetPreviewScroll=false,lastTrySelector=null;
+let latestCtx=null,pendingConfirmation=null,resetPreviewScroll=false,lastTrySelector=null,activePromo=null;
+const pendingPromos=new Map();
 const catalog=()=>root.KomiShopCatalog?.items||[];
 const find=id=>root.KomiShopCatalog?.find(id)||null;
 const onSale=p=>!!p&&root.KomiShopCatalog?.isOnSale?.(p.id)===true;
@@ -266,7 +267,7 @@ function layout(ctx){
  return '<section id="shop" class="anicoin-shop komi-shop-v3 komi-shop-v4 komi-shop-v5 komi-shop-studio" data-fitting-active="'+String(hasContent)+'" aria-labelledby="anicoin-title">'+
  '<header class="sv3-topbar"><div class="sv3-heading"><h1 id="anicoin-title">Магазин оформления</h1><p>Примерь титулы, рамки и другие эффекты на своём профиле.</p></div>'+
  '<div class="sv3-top-actions"><span class="sv3-balance" aria-label="Баланс AniCoin">'+icon('coins',22)+'<span><small>Твой баланс</small><strong class="sv3-tabular">'+balanceText+' <span>AniCoin</span></strong></span></span>'+
- '<details class="sv3-earn"><summary>'+icon('plus',16)+' Как заработать</summary><div class="sv3-earn-pop"><strong>Как получить AniCoin</strong><p>За каждые 20 минут подтверждённого просмотра — 1 AniCoin. Ежедневные задания тоже приносят награды.</p><p>При активации Premium начисляется разовый бонус 500 AniCoin.</p><a href="/premium.html">Возможности Premium</a><button type="button" data-v3-promo>Есть промокод?</button></div></details></div></header>'+
+ '<details class="sv3-earn"><summary>'+icon('plus',16)+' Как заработать</summary><div class="sv3-earn-pop"><strong>Как получить AniCoin</strong><p>За каждые 20 минут подтверждённого просмотра — 1 AniCoin. Ежедневные задания тоже приносят награды.</p><p>При активации Premium начисляется разовый бонус 500 AniCoin.</p><a href="/premium.html">Возможности Premium</a></div></details><button type="button" class="sv3-promo-entry" data-v3-promo>'+icon('gift',16)+' Активировать код</button></div></header>'+
  (notice?'<p class="sv3-price-notice" role="status">'+esc(notice)+'</p>':'')+
  '<div class="sv7-toolbar" role="search" aria-label="Поиск товаров"><div class="sv7-browse-head"><div class="sv7-view-tabs" role="group" aria-label="Раздел магазина"><button type="button" data-v7-view="catalog" aria-pressed="'+String(state.view==='catalog')+'">Каталог <span>'+forSale().length+'</span></button><button type="button" data-v7-view="owned" aria-pressed="'+String(state.view==='owned')+'">Мои предметы <span>'+ownedCount+'</span></button></div>'+
  '<div class="sv7-search"><svg aria-hidden="true" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 4 4"/></svg><label class="sv7-sr-only" for="sv7Search">Найти оформление</label><input type="search" id="sv7Search" data-v7-search placeholder="'+(state.view==='owned'?'Поиск предметов':'Поиск оформления')+'" maxlength="100" autocomplete="off" value="'+esc(state.query)+'">'+(state.query?'<button type="button" data-v7-clear-search aria-label="Очистить поиск">×</button>':'')+'</div></div>'+
@@ -289,8 +290,117 @@ function layout(ctx){
  (items.length?'<div class="sv3-checkout-info"><span>'+(total===0?'Уже в коллекции':'К оплате')+'</span><strong class="sv3-tabular">'+fmt(total)+' <small>AniCoin</small></strong></div>':'<p class="sv3-empty-selection">Нажми «Примерить» на понравившемся товаре.</p>')+
  '<button class="sv3-checkout" type="button" data-v3-checkout'+(!items.length?' hidden':'')+(disabled?' disabled':'')+'>'+icon('bag',18)+' '+esc(action)+'</button>'+(items.length?'<p class="sv3-checkout-note">'+(owner&&store&&total<=Number(store.balance)?'Останется '+fmt(Number(store.balance)-total)+' AniCoin · списание после подтверждения':'Списание только после подтверждения.')+'</p>':'')+'</div></div></aside></div>'+
  (ctx.failedFor?'<button type="button" data-shop-retry class="sv3-retry">Повторить загрузку баланса и покупок</button>':'')+
- '<details class="sv7-extras"><summary>'+icon('gift',18)+' Подарки '+icon('chevron',16)+'</summary><div class="sv3-shop-extras"><div id="komiShopSocialArea" class="komi-shop-social"></div></div></details>'+
- '<dialog id="sv3PromoDialog" class="sv3-promo-dialog" aria-labelledby="sv3PromoTitle"><div class="sv3-promo-content"><h2 id="sv3PromoTitle">Промокоды Komi</h2><p>Промокоды на скидку применяются к подписке Komi Premium. Предметы в этом магазине покупаются за AniCoin.</p><a href="/premium.html">Перейти к Premium</a><button type="button" data-v3-promo-close>Закрыть</button></div></dialog></section>';
+ '<details class="sv7-extras"><summary>'+icon('gift',18)+' Подарки '+icon('chevron',16)+'</summary><div class="sv3-shop-extras"><div id="komiShopSocialArea" class="komi-shop-social"></div></div></details></section>';
+}
+// A native, body-level dialog keeps its input and focus during hydration.
+// The draft is never logged, cached or persisted.
+function promoCode(text){
+ const hex=String(text||'').normalize('NFKC').toUpperCase().replace(/[\s‐‑‒–—−-]/gu,'').replace(/^KOMI(?:AC)?/,'');
+ return /^[0-9A-F]{32}$/.test(hex)?'KOMI-AC-'+hex.match(/.{8}/g).join('-'):'';
+}
+function promoHasOwner(p){
+ const signedIn=typeof currentUser!=='undefined'?currentUser?.authUserId||'':'';
+ return state.owner===p.owner&&signedIn===p.owner;
+}
+const promoIsCurrent=p=>inShop()&&promoHasOwner(p);
+function dismissPromo(p,restore=true){
+ if(!p||activePromo!==p)return;
+ activePromo=null;p.observer?.disconnect();p.dialog.close();p.dialog.remove();
+ if(restore&&promoIsCurrent(p))focusCurrent('[data-v3-promo]');
+}
+function paintPromo(p){
+ if(activePromo!==p||!p.input)return;
+ const waiting=pendingPromos.has(p.owner);
+ p.input.readOnly=waiting;p.submit.disabled=waiting;
+ p.form.setAttribute('aria-busy',String(waiting));
+ p.submit.textContent=waiting?'Проверяем…':'Активировать';
+ p.feedback.dataset.kind=p.kind;
+ if(p.feedback.textContent!==p.message)p.feedback.textContent=p.message;
+ if(p.kind==='invalid')p.input.setAttribute('aria-invalid','true');else p.input.removeAttribute('aria-invalid');
+}
+function openPromo(owner,host){
+ if(activePromo?.owner===owner)return;
+ dismissPromo(activePromo,false);
+ const p={owner,kind:'',message:'',dialog:null};
+ if(!promoIsCurrent(p))return;
+ const shell=document.createElement('template');
+ shell.innerHTML='<dialog id="sv3PromoDialog" class="sv3-promo-dialog" aria-labelledby="sv3PromoTitle"><div class="sv3-promo-content">'+
+  '<div class="sv3-promo-kicker">'+icon('coins',18)+' Бонус AniCoin</div><h2 id="sv3PromoTitle">Активировать код</h2>'+
+  (previewOnly()?'<p>В предпросмотре коды не активируются.</p>':!owner?'<p>Войди в аккаунт Komi, чтобы получить AniCoin по коду.</p><button type="button" class="sv3-promo-submit" data-v3-promo-login autofocus>Войти</button>':
+   '<p>Введи одноразовый код. Монеты поступят на твой баланс AniCoin.</p>'+
+   '<form class="sv3-promo-form"><label for="sv3PromoCode">Код AniCoin</label><input id="sv3PromoCode" type="text" maxlength="80" autocomplete="off" autocorrect="off" autocapitalize="characters" spellcheck="false" aria-describedby="sv3PromoFeedback" autofocus required>'+
+   '<button type="submit" class="sv3-promo-submit">Активировать</button></form><p id="sv3PromoFeedback" class="sv3-promo-feedback" role="status" aria-live="polite"></p>')+
+  '<p class="sv3-promo-premium">Код на скидку подписки? <a href="/premium.html">Перейти к Premium</a></p>'+
+  '<button type="button" class="sv3-promo-close" data-v3-promo-close>Закрыть</button></div></dialog>';
+ p.dialog=shell.content.firstElementChild;
+ p.form=p.dialog.querySelector('.sv3-promo-form');
+ p.input=p.dialog.querySelector('#sv3PromoCode');
+ p.submit=p.dialog.querySelector('button[type="submit"]');
+ p.feedback=p.dialog.querySelector('#sv3PromoFeedback');
+ if(pendingPromos.has(owner))p.message='Проверяем предыдущую активацию.';
+ p.dialog.querySelector('[data-v3-promo-close]')?.addEventListener('click',()=>dismissPromo(p));
+ p.dialog.querySelector('[data-v3-promo-login]')?.addEventListener('click',()=>{
+  if(!promoIsCurrent(p))return;
+  dismissPromo(p,false);
+  if(typeof openAuthModal==='function')openAuthModal('login');
+ });
+ p.dialog.addEventListener('cancel',event=>{event.preventDefault();dismissPromo(p);});
+ p.dialog.addEventListener('close',()=>dismissPromo(p));
+ p.input?.addEventListener('input',()=>{if(p.message&&!pendingPromos.has(owner)){p.kind='';p.message='';paintPromo(p);}});
+ p.form?.addEventListener('submit',event=>{event.preventDefault();void redeemPromo(p);});
+ document.body.append(p.dialog);activePromo=p;
+ try{p.dialog.showModal();}catch{dismissPromo(p);return;}
+ if(typeof MutationObserver==='function'&&host){
+  p.observer=new MutationObserver(()=>{if(!promoIsCurrent(p)||!host.isConnected||!host.querySelector('#shop.komi-shop-v3'))dismissPromo(p,false);});
+  p.observer.observe(host,{childList:true});
+ }
+ paintPromo(p);
+}
+async function redeemPromo(p){
+ if(activePromo!==p||!p.owner||!promoIsCurrent(p)||previewOnly()||pendingPromos.has(p.owner))return;
+ const code=promoCode(p.input.value);
+ if(!code){
+  p.kind='invalid';p.message='Проверь код: скопируй его целиком и вставь снова.';paintPromo(p);p.input.focus();return;
+ }
+ pendingPromos.set(p.owner,p);
+ p.kind='';p.message='Проверяем код…';paintPromo(p);
+ const tell=(kind,message)=>{if(activePromo===p&&promoIsCurrent(p)){p.kind=kind;p.message=message;paintPromo(p);}};
+ const sessionCurrent=session=>session?.user?.id===p.owner&&typeof session.access_token==='string'&&session.access_token.length>0;
+ try{
+  if(typeof _supabase==='undefined'||!_supabase)throw Error('Unavailable');
+  const {data:auth,error:authError}=await _supabase.auth.getSession();
+  if(activePromo!==p||!promoIsCurrent(p))return;
+  const session=auth?.session;
+  if(authError||!sessionCurrent(session)){tell('error','Войди в аккаунт заново и повтори.');return;}
+  // Pin this request to the captured session, including if auth switches
+  // between the session check and the actual fetch.
+  const {data,error}=await _supabase.rpc('komi_redeem_anicoin_code',{p_code:code}).setHeader('Authorization','Bearer '+session.access_token);
+  if(!promoHasOwner(p))return;
+  const after=await _supabase.auth.getSession();
+  if(!promoHasOwner(p))return;
+  if(after.error||!sessionCurrent(after.data?.session)){tell('error','Войди в аккаунт заново и проверь баланс.');return;}
+  if(error)throw error;
+  if(data?.status==='redeemed'||data?.status==='already_redeemed'){
+   const amount=Number(data.amount),success=data.status==='redeemed';
+   const message=success?(Number.isSafeInteger(amount)&&amount>0?'Начислено '+fmt(amount)+' AniCoin.':'Бонус AniCoin начислен.'):'Этот код уже активирован на твоём аккаунте.';
+   if(activePromo===p)p.input.value='';
+   tell(success?'success':'notice',message);
+   const synced=await root.komiShopReloadStore?.(p.owner,after.data.session.access_token);
+   if(!synced)tell(success?'success':'notice',message+' Если баланс не обновился, перезагрузи магазин.');
+  }else if(data?.status==='unavailable')tell('error','Этот код больше не действует. Проверь, что используешь актуальный код.');
+  else if(data?.status==='invalid')tell('invalid','Проверь код: скопируй его целиком и вставь снова.');
+  else throw Error('Unknown response');
+ }catch{tell('error','Не удалось подтвердить активацию. Проверь соединение и попробуй снова.');}
+ finally{
+  if(pendingPromos.get(p.owner)===p)pendingPromos.delete(p.owner);
+  if(activePromo?.owner===p.owner&&promoIsCurrent(activePromo)){
+   const current=activePromo;
+   if(current!==p)current.message='Проверка завершена. Проверь баланс или введи код ещё раз.';
+   paintPromo(current);
+   if(current.kind==='invalid')current.input.focus();
+   if(current.kind==='success'&&current.dialog.contains(document.activeElement))current.dialog.querySelector('[data-v3-promo-close]')?.focus();
+  }
+ }
 }
 function refresh(selector){
  if(typeof renderAniCoinShop==='function'&&typeof currentView!=='undefined'&&currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
@@ -372,8 +482,7 @@ function mount(section,ctx){
   if(t.hasAttribute('data-v7-more')){const nextId=currentItems(ctx)[state.limit]?.id;state.limit+=PAGE_SIZE;route();refresh(nextId?'[data-v3-try="'+nextId+'"]':'[data-v7-more]');return;}
   if(t.hasAttribute('data-v3-sheet')||t.hasAttribute('data-sv14-close')){state.sheetOpen=t.hasAttribute('data-v3-sheet')&&!state.sheetOpen;refresh(!state.sheetOpen&&lastTrySelector?lastTrySelector:'[data-v3-sheet]');return;}
   if(t.hasAttribute('data-v7-login')){if(typeof openAuthModal==='function')openAuthModal('login');return;}
-  if(t.hasAttribute('data-v3-promo')){section.querySelector('#sv3PromoDialog')?.showModal();return;}
-  if(t.hasAttribute('data-v3-promo-close')){section.querySelector('#sv3PromoDialog')?.close();return;}
+  if(t.hasAttribute('data-v3-promo')){openPromo(ctx.owner||'',section.parentElement);return;}
   if(t.hasAttribute('data-v3-checkout'))await checkout(ctx);
  });
  const search=event=>{
@@ -391,7 +500,7 @@ function mount(section,ctx){
   else if(t.matches('[data-v7-affordable]')){state.affordableOnly=t.checked;filterChanged('[data-v7-affordable]');}
  });
  section.querySelector?.('.sv14-filters')?.addEventListener('toggle',event=>{if(section.isConnected)state.filtersOpen=event.currentTarget.open;});
- section.addEventListener('keydown',event=>{if(event.key==='Escape'&&state.sheetOpen&&narrow()){state.sheetOpen=false;refresh(lastTrySelector||'[data-v3-sheet]');}});
+ section.addEventListener('keydown',event=>{if(event.key==='Escape'&&!activePromo&&state.sheetOpen&&narrow()){state.sheetOpen=false;refresh(lastTrySelector||'[data-v3-sheet]');}});
 }
 function render(container,ctx){
  if(!container)return;latestCtx=ctx;
@@ -403,7 +512,7 @@ function render(container,ctx){
  const previousSearch=container.querySelector?.('#shop [data-v7-search]');
  const searchFocus=state.owner===owner&&previousSearch&&document.activeElement===previousSearch
   ?{start:previousSearch.selectionStart,end:previousSearch.selectionEnd,direction:previousSearch.selectionDirection}:null;
- if(state.owner!==owner){if(pendingConfirmation&&pendingConfirmation.owner!==owner)pendingConfirmation.cancel();state.owner=owner;state.comparison='trial';lastTrySelector=null;state.trial=Object.create(null);state.reactionPreview=null;state.previewMode='profile';state.sheetOpen=false;state.busy=false;state.status='';resetPreviewScroll=true;}
+ if(state.owner!==owner){dismissPromo(activePromo,false);if(pendingConfirmation&&pendingConfirmation.owner!==owner)pendingConfirmation.cancel();state.owner=owner;state.comparison='trial';lastTrySelector=null;state.trial=Object.create(null);state.reactionPreview=null;state.previewMode='profile';state.sheetOpen=false;state.busy=false;state.status='';resetPreviewScroll=true;}
  const previewScroll=resetPreviewScroll?0:container.querySelector?.('.sv7-fitting-scroll')?.scrollTop||0;
  resetPreviewScroll=false;
  container.innerHTML=layout(ctx);const section=container.querySelector('#shop.komi-shop-v3');
@@ -418,7 +527,7 @@ function render(container,ctx){
  }
  document.title='Магазин оформления — KomiAnime';
 }
-function routeChanged(){if(!inShop()){pendingConfirmation?.cancel();return;}route(true);refresh();}
+function routeChanged(){if(!inShop()){dismissPromo(activePromo,false);pendingConfirmation?.cancel();return;}route(true);refresh();}
 root.addEventListener?.('popstate',routeChanged);root.addEventListener?.('hashchange',routeChanged);
 root.KomiShopV3={render,priceOf,confirmPurchase,tryItem,selected:()=>selected().map(p=>p.id),reset(){state.trial=Object.create(null);state.reactionPreview=null;state.previewMode='profile';state.sheetOpen=false;state.status='';refresh();}};
 })(window);

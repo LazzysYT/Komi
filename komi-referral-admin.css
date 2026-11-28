@@ -76,3 +76,18 @@
 @media(max-width:850px){.komi-ref-admin .ra-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.komi-ref-admin .ra-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.komi-ref-admin .ra-code-grid{grid-template-columns:1fr}}
 @media(max-width:560px){#adminModalContent:has(.komi-ref-admin){padding:15px;max-height:calc(100dvh - 12px)}.komi-ref-admin .ra-header-actions{width:100%}.komi-ref-admin .ra-header-actions .ra-button{flex:1}.komi-ref-admin .ra-card{padding:14px}.komi-ref-admin .ra-fields{grid-template-columns:1fr}.komi-ref-admin .ra-stats{gap:7px}.komi-ref-admin .ra-stat{padding:12px}.komi-ref-admin .ra-code-metrics b{font-size:17px}.komi-ref-admin .ra-section-tools>input{width:100%}.komi-ref-admin .ra-table{min-width:670px}.komi-ref-admin .ra-inline-input{width:130px}}
 @media(prefers-reduced-motion:reduce){.komi-ref-admin button{transition:none}}
+
+/* One-use gifts remain separate from codes attached to Premium invoices. */
+.komi-ref-admin .ra-one-use>summary{cursor:pointer;font-size:16px;font-weight:800;color:#f5f5f7;padding:3px 0}
+.komi-ref-admin .ra-one-use>p{margin:9px 0}
+.komi-ref-admin .ra-one-use form,.komi-ref-admin .ra-one-use-new{display:flex;align-items:end;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+.komi-ref-admin .ra-one-use .ra-field{min-width:min(100%,210px)}
+.komi-ref-admin .ra-one-use-new{padding:11px;background:#17171a;border:1px solid var(--ra-border);border-radius:12px}
+.komi-ref-admin .ra-one-use-new .ra-field{flex:1;min-width:min(100%,240px)}
+.komi-ref-admin .ra-one-use-new .ra-muted{width:100%;margin:0}
+.komi-ref-admin .ra-one-use-new input{font-family:ui-monospace,monospace;font-size:13px}
+.komi-ref-admin .ra-one-use-history,.komi-ref-admin .ra-one-use-row{display:flex;align-items:center;justify-content:space-between;gap:11px;flex-wrap:wrap}
+.komi-ref-admin .ra-one-use-history h4{margin:0;font-size:14px}
+.komi-ref-admin .ra-one-use-row{padding:9px 0;border-top:1px solid var(--ra-border)}
+.komi-ref-admin .ra-one-use-row .ra-muted{display:block;margin-top:2px}
+.komi-ref-admin .ra-one-use :is(button,input,summary):focus-visible{outline:2px solid #fff;outline-offset:2px}

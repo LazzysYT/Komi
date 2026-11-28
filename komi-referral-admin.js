@@ -7,7 +7,7 @@ window.komiReferralAdminUI=async function(root,db,back){
   if(!document.getElementById('komi-referral-admin-styles')){
     const sheet=document.createElement('link');
     sheet.id='komi-referral-admin-styles';sheet.rel='stylesheet';
-    sheet.href='/komi-referral-admin.css?v=20261121a';document.head.append(sheet);
+    sheet.href='/komi-referral-admin.css?v=20261128-one-use-codes';document.head.append(sheet);
   }
   root.replaceChildren();
   const app=document.createElement('div');
@@ -18,12 +18,20 @@ window.komiReferralAdminUI=async function(root,db,back){
     '<div class="ra-header-actions"><button type="button" class="ra-button ra-quiet" id="ra-back">← Каталог</button>',
     '<button type="button" class="ra-button" id="ra-reload">↻ Обновить</button>',
     '<button type="button" class="ra-button ra-quiet" id="ra-close" aria-label="Закрыть админку">✕</button></div></header>',
+    '<details class="ra-card ra-one-use" id="ra-one-use"><summary>Одноразовые промокоды AniCoin</summary>',
+    '<p class="ra-muted">Код начисляет монеты одному аккаунту. Оплата и подписка не нужны.</p>',
+    '<form id="ra-one-use-form"><label class="ra-field">Сколько AniCoin начислить<input id="ra-one-use-amount" type="number" min="1" max="10000" step="1" value="100" required inputmode="numeric"></label>',
+    '<button class="ra-button ra-primary" id="ra-one-use-create" type="submit">Создать код</button></form>',
+    '<div class="ra-one-use-new" id="ra-one-use-new" hidden><label class="ra-field">Новый код<input id="ra-one-use-code" type="text" readonly autocomplete="off" spellcheck="false"></label>',
+    '<button class="ra-button" type="button" id="ra-one-use-copy">Скопировать</button><p class="ra-muted">Скопируй сейчас: полный код больше не показывается.</p></div>',
+    '<div class="ra-one-use-history"><h4>Последние коды</h4><button class="ra-button ra-quiet" type="button" id="ra-one-use-refresh">Обновить список</button></div>',
+    '<div id="ra-one-use-list"></div><p id="ra-one-use-msg" class="ra-message" role="status" aria-live="polite"></p></details>',
     '<div class="ra-stats" id="ra-stats" aria-live="polite"></div>',
     '<section class="ra-card"><div class="ra-card-head"><h3 id="ra-editor-title">Новый код</h3>',
     '<span class="ra-muted">Латиница, цифры, дефис и _</span></div>',
     '<div class="ra-mode" role="group" aria-label="Тип создаваемого кода">',
     '<button type="button" data-mode="referral" aria-pressed="true">Реферальный код</button>',
-    '<button type="button" data-mode="promo" aria-pressed="false">Промокод AniCoin</button>',
+    '<button type="button" data-mode="promo" aria-pressed="false">Бонус при оплате</button>',
     '<button type="button" data-mode="discount" aria-pressed="false">Скидка на Premium</button></div>',
     '<form id="ra-form" novalidate><div class="ra-fields">',
     '<label class="ra-field">Код<input id="ra-code" autocomplete="off" maxlength="40" required placeholder="Например, ANIME15" spellcheck="false"></label>',
@@ -327,6 +335,104 @@ window.komiReferralAdminUI=async function(root,db,back){
   $('ra-reload').addEventListener('click',refresh);
   $('ra-clear').addEventListener('click',clearEditor);
   app.querySelectorAll('[data-mode]').forEach(b=>b.addEventListener('click',()=>{if(edit)clearEditor();setMode(b.dataset.mode);}));
+  const coinPanel=$('ra-one-use'),coinList=$('ra-one-use-list');
+  let giftBusy=false,giftLoading=false,giftLoaded=false,giftPending=null;
+  const giftMsg=(text,error=false)=>{
+    $('ra-one-use-msg').textContent=text;$('ra-one-use-msg').dataset.error=String(error);
+  };
+  function clearGeneratedCode(){
+    $('ra-one-use-code').value='';$('ra-one-use-new').hidden=true;
+  }
+  async function readGiftCodes(){
+    if(giftLoading||!app.isConnected)return;
+    giftLoading=true;$('ra-one-use-refresh').disabled=true;
+    if(!giftLoaded)coinList.textContent='Загружаем коды…';
+    try{
+      const {data,error}=await db.rpc('komi_admin_anicoin_code_list');
+      if(!app.isConnected)return;
+      if(error||!Array.isArray(data))throw new Error('unavailable');
+      giftLoaded=true;paintGiftCodes(data);
+    }catch{
+      if(!app.isConnected)return;
+      if(!giftLoaded)coinList.textContent='';
+      giftMsg('Не удалось загрузить коды. Нажми «Обновить список».',true);
+    }finally{giftLoading=false;$('ra-one-use-refresh').disabled=false;}
+  }
+  function paintGiftCodes(rows){
+    coinList.replaceChildren();
+    if(!rows.length){coinList.append(make('p','Одноразовых кодов пока нет.','ra-muted'));return;}
+    const labels={active:'Не использован',redeemed:'Использован',revoked:'Отозван'};
+    for(const item of rows){
+      if(!item?.id||!Object.hasOwn(labels,item.status))continue;
+      const row=make('div',undefined,'ra-one-use-row'),body=make('div');
+      body.append(make('strong',String(item.hint||'—')+' · '+count(item.amount)+' AniCoin'),
+        make('span',labels[item.status]+' · '+fmtDate(item.redeemed_at||item.created_at),'ra-muted'));
+      row.append(body);
+      if(item.status==='active'){
+        const revoke=button('Отозвать','ra-quiet',()=>{
+          if(giftBusy)return;
+          if(giftPending&&giftPending!==revoke){
+            giftPending.dataset.confirm='';giftPending.textContent='Отозвать';
+          }
+          if(revoke.dataset.confirm!=='yes'){
+            giftPending=revoke;revoke.dataset.confirm='yes';revoke.textContent='Подтвердить отзыв';
+            giftMsg('После отзыва код больше не начислит монеты.');return;
+          }
+          void revokeGiftCode(item.id,revoke);
+        });
+        row.append(revoke);
+      }
+      coinList.append(row);
+    }
+  }
+  async function revokeGiftCode(id,control){
+    if(giftBusy)return;
+    giftBusy=true;control.disabled=true;$('ra-one-use-create').disabled=true;
+    try{
+      const {data,error}=await db.rpc('komi_admin_anicoin_code_revoke',{p_id:id});
+      if(!app.isConnected)return;
+      if(error||data?.status!=='revoked')throw new Error('unavailable');
+      giftMsg('Код отозван.');await readGiftCodes();
+    }catch{
+      if(app.isConnected){giftMsg('Не удалось отозвать код. Обнови список и проверь статус.',true);await readGiftCodes();}
+    }finally{
+      giftPending=null;giftBusy=false;control.disabled=false;$('ra-one-use-create').disabled=false;
+    }
+  }
+  coinPanel.addEventListener('toggle',()=>{
+    if(coinPanel.open){if(!giftLoaded)void readGiftCodes();}
+    else {clearGeneratedCode();if(giftPending){giftPending.dataset.confirm='';giftPending.textContent='Отозвать';giftPending=null;}}
+  });
+  for(const id of ['ra-close','ra-back'])$(id).addEventListener('click',()=>{coinPanel.open=false;clearGeneratedCode();},true);
+  $('ra-one-use-refresh').addEventListener('click',()=>void readGiftCodes());
+  $('ra-one-use-form').addEventListener('submit',async e=>{
+    e.preventDefault();
+    if(giftBusy)return;
+    const amount=Number($('ra-one-use-amount').value);
+    if(!Number.isSafeInteger(amount)||amount<1||amount>10000){
+      giftMsg('Укажи целое число от 1 до 10 000.',true);return;
+    }
+    giftBusy=true;$('ra-one-use-create').disabled=true;giftMsg('Создаём код…');clearGeneratedCode();
+    try{
+      const {data,error}=await db.rpc('komi_admin_anicoin_code_create',{p_amount:amount});
+      if(!app.isConnected)return;
+      if(error||typeof data?.code!=='string'||!data.code)throw new Error('unavailable');
+      if(coinPanel.open){
+        $('ra-one-use-code').value=data.code;$('ra-one-use-new').hidden=false;$('ra-one-use-copy').focus();
+        giftMsg('Код создан. Передай его только тому, кому предназначены монеты.');
+      }else giftMsg('Код создан. Полный код скрыт, потому что раздел закрыли.');
+      await readGiftCodes();
+    }catch{
+      if(app.isConnected)giftMsg('Не удалось подтвердить создание кода. Перед повтором проверь список.',true);
+    }finally{giftBusy=false;$('ra-one-use-create').disabled=false;}
+  });
+  $('ra-one-use-copy').addEventListener('click',async ()=>{
+    const input=$('ra-one-use-code'),code=input.value;
+    if(!code)return;
+    try{await navigator.clipboard.writeText(code);if(app.isConnected)giftMsg('Код скопирован.');}
+    catch{input.focus();input.select();giftMsg('Скопируй выделенный код вручную.',true);}
+  });
+
   app.querySelectorAll('[data-tab]').forEach(b=>b.addEventListener('click',()=>activateTab(b.dataset.tab)));
   $('ra-code-search').addEventListener('input',paintCodes);
   for(const id of ['ra-people-code','ra-people-status'])$(id).addEventListener('change',paintPeople);

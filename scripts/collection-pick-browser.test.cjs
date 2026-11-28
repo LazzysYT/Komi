@@ -31,19 +31,19 @@ test('the server settles one selected slot and only then reveals five portraits'
     window.currentView='collection';window.currentUser={authUserId:'qa-a'};
     window.calls=[];window.receipt=null;window.lost=false;
     const cards=KomiCollection.roster.slice(0,5);
-    const choices=cards.map((card,index)=>({slot:index+1,rarity:card.rarity,available:true}));
+    const choices=cards.map((card,index)=>({slot:index+1,available:true}));
     const base={owned:[],balance:100,price:50};
     window._supabase={
      auth:{getSession:async()=>({data:{session:{user:{id:'qa-a'}}}})},
      rpc:async(name,args)=>{
       calls.push({name,args});
-      if(name.endsWith('_pack_open'))return {data:receipt||{...base,pack_status:'ready',offer_id:offer,choices}};
+      if(name.endsWith('_pack_open_v3'))return {data:receipt||{...base,pack_status:'ready',offer_id:offer,choices}};
       if(name.endsWith('_card_number'))return {data:{serial:712,issued:1500}};
-      if(name.endsWith('_pack_claim')){
+      if(name.endsWith('_pack_claim_v3')){
        if(!receipt){
         const selected=cards[args.p_slot-1].id;
         window.receipt={...base,owned:[selected],balance:50,result:selected,purchase_status:'ok',
-         pack_status:'claimed',offer_id:offer,selected_slot:args.p_slot,choices:choices.map((c,i)=>({...c,available:false,id:cards[i].id}))};
+         pack_status:'claimed',offer_id:offer,selected_slot:args.p_slot,choices:choices.map((c,i)=>({...c,available:false,rarity:cards[i].rarity,id:cards[i].id}))};
        }
        if(!lost){
         window.lost=true;
@@ -70,14 +70,18 @@ test('the server settles one selected slot and only then reveals five portraits'
     const entering=dealing.locator('.kc-pick-card:disabled');
     assert.equal(await entering.count(),5);
     assert.equal(await entering.first().evaluate(el=>getComputedStyle(el).animationName),'kc-deal-from-foil');
+    assert.equal(await entering.first().evaluate(el=>getComputedStyle(el).animationDuration),'1.21s');
     assert.equal(await dealing.locator('.kc-pick-front,.kc-card-ambient').count(),0);
    }else assert.equal(await dealing.count(),0);
    await arena.locator('.kc-pick-card:not(:disabled)').first().waitFor();
    assert.equal(await arena.locator('.kc-pick-card:not(:disabled)').count(),5);
    assert.equal(await arena.locator('img').count(),0);
    assert.equal(await p.getByRole('button',{name:'Показать результат'}).count(),0);
-   assert.equal(await p.evaluate(()=>calls.filter(call=>call.name.endsWith('_pack_claim')).length),0);
-   assert.equal(await arena.locator('.kc-choice-legendary').count(),1);
+   assert.equal(await p.evaluate(()=>calls.filter(call=>call.name.endsWith('_pack_claim_v3')).length),0);
+   assert.equal(await arena.locator('[class*="kc-choice-"],.kc-pick-front,[class*="kc-tier-"]').count(),0);
+   assert.deepEqual(await arena.locator('.kc-pick-card').evaluateAll(cards=>cards.map(card=>card.getAttribute('aria-label'))),
+    [1,2,3,4,5].map(slot=>'Открыть карточку '+slot+' из 5'));
+   assert.equal(await arena.locator('.kc-pick-back').evaluateAll(backs=>new Set(backs.map(back=>getComputedStyle(back).borderColor)).size),1);
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    const out=process.env.KOMI_PICK_PREVIEWS;
    if(out){
@@ -90,7 +94,7 @@ test('the server settles one selected slot and only then reveals five portraits'
     await p.getByRole('button',{name:'Подтвердить · 50 AniCoin'}).click();
     await arena.waitFor();
     assert.equal(await arena.locator('.kc-pick-card:not(:disabled)').count(),5);
-    assert.equal(await p.evaluate(()=>calls.filter(call=>call.name.endsWith('_pack_open')).at(-1).args.p_offer_id),offer);
+    assert.equal(await p.evaluate(()=>calls.filter(call=>call.name.endsWith('_pack_open_v3')).at(-1).args.p_offer_id),offer);
    }
    const fourth=arena.getByRole('button',{name:/Открыть карточку 4 из 5/});
    await fourth.press('Enter');
@@ -106,6 +110,7 @@ test('the server settles one selected slot and only then reveals five portraits'
     const reveal=p.locator('.kc-pick-arena.is-revealing');
     await reveal.waitFor();
     assert.equal(await reveal.locator('.kc-pick-front').count(),5);
+    assert.equal(await reveal.locator('.kc-pick-front .kc-rarity,[class*="kc-choice-"]').count(),0);
     assert.equal(await reveal.locator('.kc-pick-front .kc-weather-flow').count(),5);
     assert.equal(await reveal.locator('.is-chosen').getAttribute('data-kc-action'),'pick-card-4');
     assert.equal(await reveal.locator('.kc-pick-card:disabled').count(),5);
@@ -118,10 +123,10 @@ test('the server settles one selected slot and only then reveals five portraits'
    await result.waitFor();
    assert.equal(await result.textContent(),'Ута');
    assert.equal(await result.evaluate(el=>document.activeElement===el),true);
-   const claims=await p.evaluate(()=>calls.filter(call=>call.name.endsWith('_pack_claim')).map(call=>call.args));
+   const claims=await p.evaluate(()=>calls.filter(call=>call.name.endsWith('_pack_claim_v3')).map(call=>call.args));
    assert.deepEqual(claims,[{p_offer_id:offer,p_slot:4},{p_offer_id:offer,p_slot:4}]);
    assert.match(await p.locator('.kc-wallet').textContent(),/Баланс: 50 AniCoin/);
-   await p.getByRole('button',{name:'В коллекцию',exact:true}).click();
+   await p.getByRole('button',{name:'На место в альбоме',exact:true}).click();
    assert.equal(await p.locator('.kc-grid .kc-card').count(),1);
    await p.locator('.kc-grid .kc-view-hero').press('Enter');
    const viewer=p.getByRole('dialog');

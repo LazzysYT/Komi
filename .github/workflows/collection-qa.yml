@@ -10,6 +10,8 @@ on:
       - 'scripts/collection-showcase*'
       - 'scripts/collection-deluxe*'
       - 'scripts/collection-pick*'
+      - 'scripts/collection-pack-*'
+      - 'komi-ui-sound.js'
       - 'scripts/collection-character-scenes*'
       - 'scripts/collection-series-expansion-db.test.cjs'
       - 'supabase/migrations/*collection*.sql'
@@ -44,7 +46,7 @@ jobs:
         run: |
           export NODE_PATH="$RUNNER_TEMP/komi-collection-qa/node_modules"
           node -e "require('playwright')"
-          node --test scripts/collection-cases-browser.test.cjs scripts/collection-worlds-browser.test.cjs scripts/collection-search-browser.test.cjs scripts/collection-showcase-browser.test.cjs scripts/collection-deluxe-browser.test.cjs scripts/collection-pick-browser.test.cjs scripts/collection-character-scenes-browser.test.cjs
+          node --test scripts/collection-cases-browser.test.cjs scripts/collection-worlds-browser.test.cjs scripts/collection-search-browser.test.cjs scripts/collection-showcase-browser.test.cjs scripts/collection-deluxe-browser.test.cjs scripts/collection-pick-browser.test.cjs scripts/collection-character-scenes-browser.test.cjs scripts/collection-pack-sheet-browser.test.cjs scripts/collection-pack-experience-browser.test.cjs
       - name: Save collection screenshots
         if: always()
         uses: actions/upload-artifact@v4

@@ -4183,7 +4183,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 if (!komiAdminUiLoader) {
                     komiAdminUiLoader = new Promise((resolve, reject) => {
                         const script = document.createElement('script');
-                        script.src = '/komi-admin-ui.js?v=20261125-v811-cinematic';
+                        script.src = '/komi-admin-ui.js?v=20261128-one-use-codes';
                         script.async = true;
                         script.onload = resolve;
                         script.onerror = () => reject(new Error('Admin UI could not load'));
@@ -4226,7 +4226,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             backup.className='btn-secondary';backup.textContent='Скачать список JSON';
             backup.onclick=()=>exportBackup();
             const referrals = document.createElement('button');
-            referrals.className='btn-secondary';referrals.textContent='Реферальные покупки';
+            referrals.className='btn-secondary';referrals.textContent='Промокоды и рефералы';
             referrals.onclick=()=>window.komiMountReferralAdmin?.(content,_supabase,openAdminPanel);
             const premium = document.createElement('button');
             premium.className='btn-secondary';premium.textContent='✦ Выдать Premium';

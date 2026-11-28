@@ -21,12 +21,13 @@ let aniCoinStatus = '';
 let aniCoinPlayer;
 let aniCoinWatchQueue = Promise.resolve();
 
-async function aniCoinRequest(action, options = {}, expectedOwner = currentUser?.authUserId) {
+async function aniCoinRequest(action, options = {}, expectedOwner = currentUser?.authUserId, accessToken = null) {
     const owner = currentUser?.authUserId;
     if (!owner || owner !== expectedOwner || !_supabase) return;
     const previousBalance = aniCoinOwner === owner && Number.isSafeInteger(Number(aniCoinWallet?.balance))
         ? Number(aniCoinWallet.balance) : null;
-    const { data, error } = await _supabase.rpc('komi_anicoin', { p_action: action, ...options });
+    const request = _supabase.rpc('komi_anicoin', { p_action: action, ...options });
+    const { data, error } = await (accessToken ? request.setHeader('Authorization', 'Bearer ' + accessToken) : request);
     if (error) throw error;
     if (currentUser?.authUserId !== owner) return;
     aniCoinOwner = owner;
@@ -148,20 +149,27 @@ async function aniCoinLoadStore(id) {
             renderAniCoinShop(document.getElementById('mainContainer'));
     }
 }
-window.komiShopReloadStore=async function(){
+window.komiShopReloadStore=async function(expectedOwner=currentUser?.authUserId,accessToken=null){
     const owner=currentUser?.authUserId;
-    if(!owner||!_supabase)return;
+    if(!owner||owner!==expectedOwner||!_supabase)return false;
     try{
-        const {data,error}=await _supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
+        const request=_supabase.rpc('komi_premium_store',{p_action:'read',p_item:null});
+        // Reconcile the very account that signed the redemption, even if
+        // browser auth changes before either of these wallet reads.
+        const {data,error}=await (accessToken?request.setHeader('Authorization','Bearer '+accessToken):request);
         if(error)throw error;
-        await window.KomiShopCatalog?.checkPricing?.(_supabase);
-        if(currentUser?.authUserId!==owner)return;
+        if(!Array.isArray(data?.owned)||data.balance==null||!Number.isSafeInteger(Number(data.balance)))throw Error('Некорректный баланс магазина.');
+        if(!accessToken)await window.KomiShopCatalog?.checkPricing?.(_supabase);
+        if(currentUser?.authUserId!==owner)return false;
         aniCoinShopWallet=data;aniCoinShopOwner=owner;
         if(currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
-        await aniCoinRequest('read',{},owner);
+        return !!await aniCoinRequest('read',{},owner,accessToken);
     }catch(error){
-        aniCoinShopStatus=error?.message||'Не удалось обновить баланс.';
-        if(currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
+        if(currentUser?.authUserId===owner&&!accessToken){
+            aniCoinShopStatus=error?.message||'Не удалось обновить баланс.';
+            if(currentView==='shop')renderAniCoinShop(document.getElementById('mainContainer'));
+        }
+        return false;
     }
 };
 // The fitting-room checkout uses a single database transaction; legacy card handlers remain intact.
