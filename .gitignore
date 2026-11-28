@@ -1,3 +1,19 @@
 node_modules/
 browser-test-results/
 premium-audit.json
+
+# Local credentials and deployment metadata
+.env
+.env.*
+!.env.example
+!.env.template
+.vercel/
+.supabase/
+supabase/.temp/
+*.pem
+*.key
+*.p12
+*.pfx
+*.sql.dump
+*.dump
+*.bak
