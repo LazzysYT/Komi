@@ -4205,6 +4205,7 @@ async function komiLoadCatalogPages(attempt = 0) {
             return window.komiMountAdminUI();
         }
 
+        let komiAdminMfaLoader=null;
         async function openAdminPanel() {
             if (!(await requireServerAdmin()) || !(await komiEnsureAdminUI())) return;
             const modal = document.getElementById('adminModal');
@@ -4231,7 +4232,30 @@ async function komiLoadCatalogPages(attempt = 0) {
             const premium = document.createElement('button');
             premium.className='btn-secondary';premium.textContent='✦ Выдать Premium';
             premium.onclick=()=>window.komiMountPremiumAdmin?.(content,_supabase,openAdminPanel);
-            actions.append(add,backup,referrals,premium);
+            const security = document.createElement('button');
+            security.type='button';security.className='btn-secondary';security.textContent='Безопасность (2FA)';
+            security.addEventListener('click',async()=>{
+                const uid=currentUser?.authUserId;
+                security.disabled=true;
+                try{
+                    if(!window.KomiAdminMfa){
+                        if(!komiAdminMfaLoader)komiAdminMfaLoader=new Promise((resolve,reject)=>{
+                            const script=document.createElement('script');
+                            script.src='/komi-admin-mfa.js?v=20261128';
+                            script.async=true;script.onload=resolve;script.onerror=reject;
+                            document.head.append(script);
+                        });
+                        await komiAdminMfaLoader;
+                    }
+                    if(!uid||currentUser?.authUserId!==uid||!content.isConnected||!content.contains(heading)||!modal.classList.contains('active'))return;
+                    if(!window.KomiAdminMfa)throw Error('MFA unavailable');
+                    await window.KomiAdminMfa.mount(content,_supabase,openAdminPanel,()=>currentUser?.authUserId);
+                }catch{
+                    komiAdminMfaLoader=null;
+                    if(content.contains(heading))alert('Не удалось открыть настройки безопасности. Повторите попытку.');
+                }finally{security.disabled=false;}
+            });
+            actions.append(add,backup,referrals,premium,security);
             const input = document.createElement('input');
             input.type='search';input.className='form-control';
             input.placeholder='Поиск по названию или Shikimori ID';
