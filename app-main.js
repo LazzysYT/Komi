@@ -1761,7 +1761,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 await leaveWatchPartyRoom();
                 if (currentUser?.authUserId !== signingOut.authUserId) return;
                 closeWatchModal();
-                await Promise.all([komiProgressWriter.flush(), window.KomiWatchStats?.flush?.(signingOut.authUserId)]);
+                await Promise.all([komiProgressWriter.flush(), globalThis.KomiWatchStats?.flush?.(signingOut.authUserId)]);
                 if (currentUser?.authUserId !== signingOut.authUserId) return;
 
                 const { data, error: sessionError } = await _supabase.auth.getSession();
