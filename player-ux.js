@@ -129,6 +129,12 @@
     function paintWatched(context) {
         const saved = new Set(readWatched(context.userId, context.animeId));
         const buttons = context.content.querySelectorAll('.komi-episode-number-grid button');
+        if (context.markButton) {
+            const slots = context.episodeSlots?.[context.index] || [context.index];
+            const done = slots.some(slot => saved.has(context.season + ':' + slot));
+            context.markButton.disabled = done;
+            context.markButton.textContent = done ? 'Серия отмечена' : 'Отметить серию просмотренной';
+        }
         for (const button of buttons) {
             const idx = Array.prototype.indexOf.call(buttons, button);
             const slots = context.episodeSlots?.[idx] || [idx];
@@ -143,7 +149,9 @@
         if (addWatched(context.userId, context.animeId, context.season, slot)) {
             paintWatched(context);
             if (activeCloudContext(context))
-                void writeCloudWatched(context,[context.season+':'+slot]).catch(()=>syncError(context));
+                void writeCloudWatched(context,[context.season+':'+slot])
+                    .then(()=>root.dispatchEvent(new CustomEvent('komi:watch-completed',{detail:context.authId})))
+                    .catch(()=>syncError(context));
         }
     }
     function showPlaybackStatus(context, text) {
@@ -367,10 +375,13 @@
                 if (active !== context) return;
                 updateSkip(context);
                 maybeAutoSkip(context);
-                if (Number.isFinite(video.duration) && video.duration > 60 &&
-                    video.currentTime / video.duration >= 0.92) markCurrentWatched(context);
+                if (!video.paused && !video.seeking && Number.isFinite(video.duration) && video.duration > 60 &&
+                    video.currentTime / video.duration >= 0.92 && root.KomiWatchStats?.completion?.(video))
+                    markCurrentWatched(context);
             }, {passive:true});
-            video.addEventListener('ended', () => markCurrentWatched(context));
+            video.addEventListener('ended', () => {
+                if (root.KomiWatchStats?.completion?.(video)) markCurrentWatched(context);
+            });
             video.addEventListener('ended', () => {
                 if (active !== context || !video.isConnected) return;
                 if (context.hasNext) nextEpisodeCountdown(context); // With autoplay off, manual action only.
@@ -421,8 +432,16 @@
         } else if (wrapper.querySelector('iframe')) {
             const notice = document.createElement('span');
             notice.className = 'komi-cinema-external-note';
-            notice.textContent = 'Внешний плеер: пауза, перемотка и горячие клавиши управляются самим провайдером.';
+            notice.textContent = 'Внешний плеер не передаёт Komi точное время и позицию. Серию можно отметить вручную.';
             bar.append(notice);
+        }
+        if (context.userId && (video || wrapper.querySelector('iframe'))) {
+            const markButton = makeButton('Отметить серию просмотренной', 'komi-cinema-mark-watched');
+            context.markButton = markButton;
+            markButton.addEventListener('click', () => {
+                if (active === context && context.content.isConnected) markCurrentWatched(context);
+            });
+            bar.append(markButton);
         }
         const note = document.createElement('p');
         note.className = 'komi-cinema-action-status';

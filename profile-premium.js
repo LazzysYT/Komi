@@ -48,9 +48,9 @@
   function viewingTime(seconds){
     if(!Number.isSafeInteger(seconds)||seconds<0)return null;
     if(seconds===0)return '0 мин';
-    if(seconds<60)return '< 1 мин';
+    if(seconds<60)return seconds+' сек';
     var mins=Math.floor(seconds/60),h=Math.floor(mins/60),m=mins%60;
-    return h?format(h)+' ч'+(m?' '+m+' мин':''):m+' мин';
+    return h?format(h)+' ч'+(m?' '+m+' мин':''):m===1?'1 минута':m+' мин';
   }
   function summary(ctx){
     var xp=Math.min(499,number(ctx.xp)),level=Math.max(1,number(ctx.level)),multiplier=Math.max(1,number(ctx.multiplier));
@@ -64,13 +64,13 @@
       '<span class="profile-xp-multiplier'+(multiplier>1?' is-premium':'')+'">×'+format(multiplier)+'</span></div>'+
       '<button type="button" class="profile-summary-item" data-profile-jump="anime"><strong>'+format(ctx.titleCount)+'</strong><span>Тайтлов в списках</span></button>'+
       '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="episodes" aria-live="polite" title="'+reason+'">'+initial+'</strong><span>Серий посмотрено</span></div>'+
-      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="hours" aria-live="polite" title="'+reason+'">'+initial+'</strong><span>Время просмотра</span>'+(ctx.canReadMetrics?'<small class="profile-time-note">По учёту AniCoin</small><button type="button" class="profile-stat-retry" data-profile-stat-retry hidden>Повторить</button>':'')+'</div>'+
+      '<div class="profile-summary-item"><strong class="is-missing" data-profile-field="hours" aria-live="polite" title="'+reason+'">'+initial+'</strong><span>Время просмотра</span>'+(ctx.canReadMetrics?'<small class="profile-time-note">Точный учёт во встроенном плеере</small><small class="profile-time-note" data-profile-watch-pending role="status" hidden>Ожидает синхронизации</small><button type="button" class="profile-stat-retry" data-profile-stat-retry hidden>Повторить</button>':'')+'</div>'+
       '<button type="button" class="profile-summary-item" data-profile-jump="friends"><strong data-profile-friends-total>'+
       (ctx.friendCount==null?'—':format(ctx.friendCount))+'</strong><span>Друзей</span></button></section>';
   }
   // Read only the authenticated owner's server-marked episodes and active time.
   // The AniCoin ledger is not a reconstruction of playback before it existed.
-  var viewingStats={owner:null,at:0,loading:false,episodes:null,seconds:null,failed:false};
+  var viewingStats={owner:null,at:0,loading:false,episodes:null,seconds:null,failed:false,pending:false};
   function profileStatsOwner(profile){
     if(!profile||profile.dataset.profileOwner!=='true'||profile.dataset.profilePreview==='true'||typeof currentUser==='undefined')return null;
     return currentUser?.username===profile.dataset.profileUser?currentUser.authUserId||null:null;
@@ -85,42 +85,51 @@
       el.classList.toggle('is-missing',!known);
       el.removeAttribute('data-profile-count');
       el.textContent=known?(key==='hours'?viewingTime(value):format(value)):state.loading?'Загрузка…':'Недоступно';
-      el.title=known?(key==='hours'?'Учтённое активное время по журналу AniCoin; просмотры до появления журнала не восстановлены.':'Количество серий, отмеченных просмотренными на сервере.')+(state.failed?' Последние подтверждённые данные.':''):state.loading?'Загрузка статистики':'Не удалось получить проверенные данные';
+      el.title=known?(key==='hours'?'Точное время встроенного плеера плюс ранее учтённое время AniCoin. Внешний плеер может не передавать точное время.':'Количество серий, отмеченных просмотренными на сервере.')+(state.failed?' Последние подтверждённые данные.':''):state.loading?'Загрузка статистики':'Не удалось получить проверенные данные';
     }
     var retry=profile.querySelector('[data-profile-stat-retry]');
-    if(retry)retry.hidden=state.loading||!state.failed;
+    if(retry)retry.hidden=state.loading||!(state.failed||state.pending);
+    var pending=profile.querySelector('[data-profile-watch-pending]');
+    if(pending)pending.hidden=!state.pending;
   }
   async function readViewingStats(profile,force=false){
     var uid=profileStatsOwner(profile);
     if(!uid||typeof _supabase==='undefined'||!_supabase)return;
-    if(viewingStats.owner!==uid)viewingStats={owner:uid,at:0,loading:false,episodes:null,seconds:null,failed:false};
+    if(viewingStats.owner!==uid)viewingStats={owner:uid,at:0,loading:false,episodes:null,seconds:null,failed:false,pending:false};
     var state=viewingStats;
     if(state.loading||(!force&&state.at&&Date.now()-state.at<45000)){paintViewingStats(profile,state);return;}
     state.loading=true;state.failed=false;paintViewingStats(profile,state);
-    var abort=new AbortController(),timer=setTimeout(()=>abort.abort(),8000);
+    var abort=new AbortController(),timer;
     try{
-      var results=await Promise.allSettled([
-        _supabase.from('komi_watched_episodes').select('anime_id',{count:'exact',head:true}).eq('user_id',uid).abortSignal(abort.signal),
-        _supabase.from('komi_anicoin_ledger').select('id',{count:'exact',head:true}).eq('user_id',uid).eq('reason','watch').eq('delta',1).abortSignal(abort.signal),
-        _supabase.rpc('komi_anicoin',{p_action:'read'}).abortSignal(abort.signal)
-      ]);
-      if(viewingStats!==state||typeof currentUser==='undefined'||currentUser?.authUserId!==uid)return;
-      var countOf=result=>result.status==='fulfilled'&&!result.value.error&&Number.isSafeInteger(result.value.count)&&result.value.count>=0?result.value.count:null;
-      var episodes=countOf(results[0]), rewards=countOf(results[1]);
-      var remainder=results[2].status==='fulfilled'&&!results[2].value.error?results[2].value.data?.seconds:null;
-      var seconds=rewards!==null&&Number.isSafeInteger(remainder)&&remainder>=0&&remainder<1200&&Number.isSafeInteger(rewards*1200+remainder)?rewards*1200+remainder:null;
-      // Recheck the ledger after reading the remainder: a coin may have been earned mid-request.
-      var recheck=await _supabase.from('komi_anicoin_ledger').select('id',{count:'exact',head:true}).eq('user_id',uid).eq('reason','watch').eq('delta',1).abortSignal(abort.signal).then(value=>countOf({status:'fulfilled',value}),()=>null);
+      await root.KomiWatchStats?.flush?.(uid);
       if(viewingStats!==state||currentUser?.authUserId!==uid)return;
-      if(episodes!==null)state.episodes=episodes;
-      if(seconds!==null&&recheck===rewards)state.seconds=seconds;
-      state.failed=episodes===null||seconds===null||recheck!==rewards;
+      timer=setTimeout(()=>abort.abort(),8000);
+      var [count,time]=await Promise.allSettled([
+        _supabase.from('komi_watched_episodes').select('anime_id',{count:'exact',head:true}).eq('user_id',uid).abortSignal(abort.signal),
+        _supabase.rpc('komi_read_profile_watch_seconds',{p_owner:uid}).abortSignal(abort.signal)
+      ]);
+      if(viewingStats!==state||currentUser?.authUserId!==uid)return;
+      var episodeValue=count.status==='fulfilled'&&!count.value.error?count.value.count:null;
+      var rawTime=time.status==='fulfilled'&&!time.value.error?time.value.data:null;
+      var seconds=rawTime==null?null:Number(rawTime);
+      var valid=value=>Number.isSafeInteger(value)&&value>=0;
+      if(valid(episodeValue))state.episodes=episodeValue;
+      if(valid(seconds))state.seconds=seconds;
+      state.pending=root.KomiWatchStats?.hasPending?.(uid)===true;
+      state.failed=!valid(episodeValue)||!valid(seconds);
     }catch(error){state.failed=true;}
     finally{
       clearTimeout(timer);state.loading=false;state.at=Date.now();
       if(viewingStats===state)paintViewingStats(document.getElementById('profile'),state);
     }
   }
+  for(const event of ['komi:watch-stats-saved','komi:watch-completed'])
+    root.addEventListener?.(event,({detail})=>{
+      if(viewingStats.owner===detail)viewingStats.at=0;
+      if(typeof currentView!=='undefined'&&currentView!=='profile')return;
+      const opening=document.getElementById('profile');
+      if(profileStatsOwner(opening)===detail)void readViewingStats(opening,true);
+    });
   function achievementWidget(username,isMe,full=false){
     var info=typeof komiAchievements==='function'?komiAchievements(username):{xp:0,achievements:[],badges:[]};
     // Backward-compatible preview for public profiles with older achievement data.

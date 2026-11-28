@@ -14,7 +14,7 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
         <div class="player-wrapper"><video id="animeVideoPlayer" style="width:640px;height:360px"></video></div>
         <div class="komi-episode-number-grid"><button>1</button><button>2</button><button>3</button></div>
       </div></div>
-      <script src="/player-ux.js"></script>
+      <script src="/komi-watch-stats.js"></script><script src="/player-ux.js"></script>
     </body></html>`
   }));
   await page.goto(new URL('/__komi_cloud_watched_fixture__',base).href,{waitUntil:'load'});
@@ -69,6 +69,15 @@ const base=process.env.KOMI_TEST_URL||'http://127.0.0.1:8765/';
   await page.evaluate(()=>{
     const video=document.getElementById('animeVideoPlayer');
     video.currentTime=935;
+    video.dispatchEvent(new Event('timeupdate'));
+  });
+  assert.equal(await page.locator('.komi-episode-watched').count(),2,'Seeking is not completion');
+  await page.evaluate(()=>{
+    const video=document.getElementById('animeVideoPlayer');
+    video.dataset.owner=window.testUsers.A;
+    video.dataset.animeId='52991'; video.dataset.season='1'; video.dataset.episode='2';
+    Object.defineProperty(video,'paused',{configurable:true,value:false});
+    Object.defineProperty(video,'played',{configurable:true,value:{length:1,start:()=>0,end:()=>930}});
     video.dispatchEvent(new Event('timeupdate'));
   });
   await page.waitForFunction(()=>KomiPlayerUX.readWatched(window.testUsers.A,'52991').length===3 &&

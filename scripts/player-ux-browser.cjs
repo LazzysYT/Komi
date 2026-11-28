@@ -17,7 +17,7 @@ const fixture=new URL('/__komi_player_ux_fixture__',origin).href;
       <div class="komi-watch-main"><div class="player-wrapper"><video id="animeVideoPlayer" style="width:640px;height:360px"></video></div>
       <div class="komi-episode-number-grid"><button type="button">1</button><button type="button">2</button></div></div>
     </div></div><input id="typeHere" aria-label="Печатать текст">
-    <script src="/player-ux.js"></script></body></html>`
+    <script src="/komi-watch-stats.js"></script><script src="/player-ux.js"></script></body></html>`
   }));
   await page.goto(fixture,{waitUntil:'load',timeout:20000});
   await page.evaluate(()=>{
@@ -81,6 +81,8 @@ const fixture=new URL('/__komi_player_ux_fixture__',origin).href;
   // Reach 92% while logged in: marker belongs only to this account.
   await page.evaluate(()=>{
    const video=document.getElementById('animeVideoPlayer');
+   Object.assign(video.dataset,{owner:'test-account',animeId:'777',season:'1',episode:'0'});
+   Object.defineProperty(video,'played',{configurable:true,value:{length:1,start:()=>0,end:()=>1110}});
    video.currentTime=1110;
    video.dispatchEvent(new Event('timeupdate'));
   });

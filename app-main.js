@@ -1728,6 +1728,7 @@ async function komiLoadCatalogPages(attempt = 0) {
         }
 
         function clearKomiAccountData(user) {
+            window.KomiWatchStats?.reset?.(user?.authUserId);
             if (!user?.authUserId) return;
             // Never retain the previous owner's watch cards after signing out
             // or switching authenticated accounts.
@@ -1760,7 +1761,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 await leaveWatchPartyRoom();
                 if (currentUser?.authUserId !== signingOut.authUserId) return;
                 closeWatchModal();
-                await komiProgressWriter.flush();
+                await Promise.all([komiProgressWriter.flush(), window.KomiWatchStats?.flush?.(signingOut.authUserId)]);
                 if (currentUser?.authUserId !== signingOut.authUserId) return;
 
                 const { data, error: sessionError } = await _supabase.auth.getSession();
@@ -6055,7 +6056,7 @@ async function komiLoadCatalogPages(attempt = 0) {
                 playSound();
                 createWatchPartyFromAnime(anime.id, '', false, sourceOrigin.index, sourceOrigin.name);
             });
-            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl, progressIndex, watchOptions?.playNative === true);
+            bindKomiPlayer(String(anime.id), activeSeason, activeIndex, activeUrl, progressIndex, watchOptions?.playNative === true, currentEp.slots[0]);
             const watchedOwner = currentUser?.authUserId || null;
             const watchedLocalOwner = watchedOwner || currentUser?.username || '';
             const watchContext = window.KomiPlayerUX?.mount({
@@ -6180,6 +6181,13 @@ async function komiLoadCatalogPages(attempt = 0) {
                 video.dataset.owner !== (currentUser.authUserId || currentUser.username)) return;
             const now = Date.now();
             if (!force && now - (video.komiLastSave || 0) < 10000) return;
+            const saved = getKomiProgress(animeId);
+            const duration = video.duration, time = video.currentTime;
+            if (!Number.isFinite(duration) || duration <= 0 || !Number.isFinite(time)) return;
+            const sameEpisode = saved?.season === Number(video.dataset.season) && saved.index === Number(video.dataset.episode);
+            // A broken/short replacement must not erase the resume point saved by the previous source.
+            if (sameEpisode && saved.time > 0 &&
+                ((!time && !video.played?.length) || (saved.time >= duration && duration < saved.duration * 0.5))) return;
             video.komiLastSave = now;
             saveKomiEpisode(animeId,Number(video.dataset.season),Number(video.dataset.episode),video.currentTime,video.duration);
         }
