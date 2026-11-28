@@ -83,7 +83,10 @@ async function assertCanonicalRoute(page,pathname,view){
         await page.locator('[data-komi-mobile-extra="collection"]').click();
         await assertCanonicalRoute(page,'/collection','collection');
         await page.locator('.kc-grid .kc-card').first().waitFor({state:'visible'});
-        assert.equal(await page.locator('.kc-grid .kc-card').count(),20);
+        const expectedCards=await page.evaluate(()=>window.KomiCollection.roster.length);
+        assert.ok(expectedCards>0,'The initial collection series must have a roster');
+        assert.equal(await page.locator('.kc-grid .kc-card.kc-locked').count(),expectedCards,
+          'Guest collection shows a locked slot for every card in the initial series');
         await page.locator('#komiMobileMoreToggle').click();
         const soundToggle=page.locator('#komiMobileSoundToggle');
         assert.equal(await soundToggle.getAttribute('aria-pressed'),'true');
