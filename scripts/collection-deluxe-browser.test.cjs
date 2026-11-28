@@ -62,6 +62,7 @@ test('deluxe: progress, stamps, safe private repeat, actual PNG and full album f
  assert.deepEqual([picture.readUInt32BE(16),picture.readUInt32BE(20)],[720,1000]);
  await viewer.getByRole('button',{name:'Закрыть просмотр'}).click();
  await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
+ if(width<=700)await p.locator('[data-kc-action=series-frieren]').click();
  await p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true}).click();
  await p.getByRole('button',{name:'Подтвердить · 50 AniCoin'}).click();
  await p.getByRole('button',{name:'Сорвать печать с бустера'}).click();

@@ -586,7 +586,13 @@ function shelfHero(id,cssClass){
 }
 function seriesPicker(){
  const busy=state?.status==='opening'||!!state?.reel,inAlbum=albumTab();
- return '<nav class="kc-shelves kc-world-shelves'+(inAlbum?' kc-album-shelves':' kc-pack-shelves')+'" aria-label="'+(inAlbum?'Коллекции':'Выбор пака')+'">'+Object.entries(seriesList).map(([id,v])=>'<button type="button" class="kc-world-window kc-theme-'+id+'" data-kc-action="series-'+id+'" aria-label="'+esc(v.title)+'" aria-pressed="'+(seriesKey===id)+'"'+(busy?' disabled':'')+'><span class="kc-window-motif" aria-hidden="true"></span>'+shelfHero(id,'kc-shelf-hero')+'<span class="kc-window-shade" aria-hidden="true"></span><span class="kc-window-copy">'+(inAlbum?'':'<img class="kc-pack-thumb" src="/assets/collection/deluxe-packs/'+id+'.webp" alt="" width="26" height="45" decoding="async">')+'<span class="kc-window-label"><strong>'+esc(v.title)+'</strong><small aria-hidden="true">'+(inAlbum?v.roster.length+' персонажей':'Серия '+v.edition)+'</small></span></span></button>').join('')+'</nav>';
+ const mobile=packPhone();
+ return '<nav class="kc-shelves kc-world-shelves'+(inAlbum?' kc-album-shelves':' kc-pack-shelves')+'" aria-label="'+(inAlbum?'Коллекции':'Выбор пака')+'">'+Object.entries(seriesList).map(([id,v])=>{
+  const selected=seriesKey===id;
+  const albumCover='<span class="kc-window-motif" aria-hidden="true"></span>'+shelfHero(id,'kc-shelf-hero')+'<span class="kc-window-shade" aria-hidden="true"></span>';
+  const packCover='<img class="kc-pack-thumb" src="/assets/collection/deluxe-packs/'+id+'.webp" alt="" width="32" height="56" decoding="async">';
+  return '<button type="button" class="kc-world-window kc-theme-'+id+'" data-kc-action="series-'+id+'" aria-label="'+esc(v.title)+'" aria-pressed="'+(selected&&(inAlbum||!mobile||packSheetOpen))+'"'+(!inAlbum&&mobile?' aria-haspopup="dialog"':'')+(busy?' disabled':'')+'>'+(inAlbum?albumCover:'')+'<span class="kc-window-copy">'+(inAlbum?'':packCover)+'<span class="kc-window-label"><strong>'+esc(v.title)+'</strong>'+(inAlbum?'<small aria-hidden="true">'+v.roster.length+' персонажей</small>':'')+'</span></span></button>';
+ }).join('')+'</nav>';
 }
 const esc=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
 function normalizePayload(data){
@@ -597,6 +603,16 @@ function normalizePayload(data){
  return {owned,result,balance,price:data.price===CASE_PRICE?CASE_PRICE:null,purchaseStatus:['ok','insufficient','complete'].includes(data.purchase_status)?data.purchase_status:null};
 }
 let state=null,observedOwner,host=null,tab='collection';
+const PACK_SHEET_MEDIA='(max-width: 700px)';
+const packPhone=()=>!!root.matchMedia?.(PACK_SHEET_MEDIA).matches;
+let packSheetOpen=false,packSheet=null;
+root.matchMedia?.(PACK_SHEET_MEDIA).addEventListener?.('change',()=>{
+ if(active()&&!albumTab()){
+  const previous=packSheet&&host.contains(document.activeElement)?focusKey(document.activeElement):null;
+  paint(previous||(packSheetOpen?'pack-title':null));
+ }
+});
+
 const albumTab=()=>tab!=='cases';
 let auraRequest=0;
 async function loadOwnedAura(id){const serial=++auraRequest;if(!id||typeof _supabase==='undefined'||!_supabase)return;try{const {data,error}=await _supabase.from('komi_premium_cosmetic_equips').select('aura_id').eq('user_id',id).maybeSingle();if(error||serial!==auraRequest||owner()!==id||!active()||state?.owner!==id)return;const p=root.KomiShopCatalog?.find(data?.aura_id);state.auraClass=p?.type==='aura'?p.cosmeticClass:'';const page=host?.querySelector('.kc-page');if(page)page.dataset.komiAura=state.auraClass;}catch{}}
@@ -814,10 +830,13 @@ function openViewer(id,trigger){
  if(!effect.hidden)playSignature(stage);
 }
 function selectSeries(id){
- if(!Object.hasOwn(seriesList,id)||seriesKey===id||state?.status==='opening'||state?.reel)return;
+ if(!Object.hasOwn(seriesList,id)||state?.status==='opening'||state?.reel)return;
+ const selectingPack=!albumTab();
+ if(selectingPack)packSheetOpen=true;
+ if(seriesKey===id){if(selectingPack)paint(packPhone()?'pack-title':'series-'+id);return;}
  closeViewer(false);
  seriesKey=id;series=seriesList[id];roster=series.roster;ids=new Set(roster.map(c=>c.id));
- state=fresh(owner());resetFilters();paint('series-'+id);
+ state=fresh(owner());resetFilters();paint(selectingPack&&packPhone()?'pack-title':'series-'+id);
  if(state.status==='idle')void request('read');
 }
 const REEL_DURATION=4400,REEL_STEP=124,REEL_WIN=23,REEL_LENGTH=29;
@@ -933,7 +952,7 @@ function revealPack(s,reel,pack){
 function closePack(s){
  const reel=s?.reel;
  if(!current(s)||!reel?.offer||reel.phase==='saving'||reel.phase==='reveal')return;
- clearTimeout(reel.timer);s.reel=null;paint('confirm-buy');
+ clearTimeout(reel.timer);s.reel=null;packSheetOpen=true;paint('confirm-buy');
 }
 async function packRequest(name,args){
  let timer;
@@ -959,7 +978,7 @@ async function claimPack(s,reel,slot){
    paint(firstChoice(reel));
   }else{
    if(pack.status==='stale')storedOffer(s,null);
-   s.reel=null;
+   s.reel=null;packSheetOpen=true;
    Object.assign(s,pack.payload,{status:'ready',purchaseStatus:pack.status,offerNeedsBalance:pack.status==='insufficient'});
    paint('confirm-buy');
   }
@@ -1006,10 +1025,10 @@ function finishReel(s,reel=s?.reel,manual=false){
  const payload=reel.payload;
  s.reel=null;
  if(reel.isReplay){s.replayResult=payload.result;paint('result');}
- else{if(reel.offer)storedOffer(s,null);Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint(manual?'result':null);if(s.journalOpen)void readJournal(s);}if(active())playSignature(host?.querySelector('.kc-result'));
+ else{packSheetOpen=false;if(reel.offer)storedOffer(s,null);Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint(manual?'result':null);if(s.journalOpen)void readJournal(s);}if(active())playSignature(host?.querySelector('.kc-result'));
 }
 function showReel(s,payload){
- if(!active()){Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint();if(s.journalOpen)void readJournal(s);return;}
+ if(!active()){packSheetOpen=false;Object.assign(s,payload,{status:'ready'});s.finalUnlock=s.owned.length===roster.length;paint();if(s.journalOpen)void readJournal(s);return;}
  const reel={payload,phase:'seal',timer:null};
  s.reel=reel;paint();
 }
@@ -1110,6 +1129,49 @@ function endSearchComposition(event){
  if(deferredPaint){deferredPaint=false;paint();}
 }
 function focusKey(el){return el?.dataset.kcFocus||el?.dataset.kcAction||null;}
+const sheetCloseIcon='<svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="m7 7 10 10m0-10L7 17"/></svg>';
+const packCheckIcon='<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.85" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4.5 12.5 4.5 4.5L19.5 7"/></svg>';
+function packDetails(s,owned,known,complete,canBuy,retryPurchase,resumeOffer){
+ const count=owned.size,total=roster.length;
+ const loading=s.status==='idle'||s.status==='loading';
+ const progress='<div class="kc-pack-progress"><div><span>Карточки в коллекции</span><strong>'+(known?count:'—')+' из '+total+'</strong></div><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+total+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+(known?100*count/total:0)+'%"></span></div></div>';
+ const status=s.status==='error'?'Не удалось проверить доступность пака.':loading?'Проверяем коллекцию…':s.status==='opening'?'Открываем бустер…':complete?'Все карточки уже в коллекции.':'';
+ const balanceText=known&&s.balance!==null?'Баланс: '+s.balance.toLocaleString('ru-RU')+' AniCoin':'Цена: '+CASE_PRICE+' AniCoin';
+ const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true})
+  :s.status==='error'?button('Повторить','retry',{primary:true})
+  :s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>'
+  :button(retryPurchase?'Повторить покупку':resumeOffer&&!s.offerNeedsBalance?'Продолжить открытие':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':loading?'Проверяем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
+ const notice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':s.purchaseStatus==='stale'?'Состав пака изменился. Откройте новый пак.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
+ const offerCopy=s.confirmBuy&&canBuy?'Выбери одну из доступных карт. Монеты спишутся после выбора.':s.status==='guest'?'Войди, чтобы сохранить полученную карту.':'';
+ return '<article class="kc-case" aria-labelledby="kc-selected-pack-title"'+(s.status==='opening'||loading?' aria-busy="true"':'')+'>'
+ +'<div class="kc-pack-detail-head"><span>Выбранный пак</span><button type="button" class="kc-sheet-close" data-kc-action="dismiss-pack-details" aria-label="Закрыть сведения о паке"'+(s.status==='opening'?' disabled':'')+'>'+sheetCloseIcon+'</button></div>'
+ +'<div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-pack-title"><span>'+esc(series.title)+'</span><h2 id="kc-selected-pack-title" data-kc-focus="pack-title" tabindex="-1">'+esc(series.pack)+'</h2></div></div>'
+ +'<div class="kc-case-copy">'+progress+(!complete?'<p class="kc-pack-guarantee">'+packCheckIcon+'Одна новая карточка, без повторов</p>':'')
+ +'<p class="kc-case-status'+(status?'':' kc-pack-sr')+'" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(status)+'</p>'
+ +(offerCopy?'<p class="kc-pack-billing">'+esc(offerCopy)+'</p>':'')
+ +(notice?'<p class="kc-pack-message" role="status">'+esc(notice)+'</p>':'')
+ +'<div class="kc-pack-wallet-row"><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(s.status==='ready'&&!complete&&!s.confirmBuy?button('Обновить доступность','retry'):'')+'</div>'
+ +'<div class="kc-case-actions">'+purchase+'</div></div></article>';
+}
+function dismissPackDetails(){
+ if(!packSheetOpen||state?.status==='opening')return;
+ state.confirmBuy=false;packSheetOpen=false;
+ paint('series-'+seriesKey);
+}
+function openPackSheet(entering){
+ const dialog=host.querySelector('dialog.kc-pack-sheet');
+ if(!dialog)return;
+ packSheet=dialog;
+ dialog.classList.toggle('kc-sheet-enter',entering);
+ dialog.addEventListener('cancel',event=>{event.preventDefault();dismissPackDetails();});
+ let backdropPointer=false;
+ dialog.addEventListener('pointerdown',event=>{backdropPointer=event.target===dialog;});
+ dialog.addEventListener('click',event=>{
+  if(backdropPointer&&event.target===dialog)dismissPackDetails();
+  backdropPointer=false;
+ });
+ if(typeof dialog.showModal==='function')dialog.showModal();else dialog.setAttribute('open','');
+}
 function paint(nextFocus=null){
  if(!active()||!state)return;
  if(searchComposing&&host.contains(document.activeElement)&&document.activeElement.matches('#kc-album-search')){deferredPaint=true;return;}
@@ -1119,31 +1181,36 @@ function paint(nextFocus=null){
  const selection=previous==='album-search'?[document.activeElement.selectionStart,document.activeElement.selectionEnd]:null;
  if(activeDialog&&(!current(activeDialog.state)||!owned.has(activeDialog.id)))closeViewer(false);
  const inAlbum=albumTab(),tabBusy=s.status==='opening'||!!s.reel;
- const header='<header class="kc-header"><div><h1>Коллекция карточек</h1></div><span class="kc-count" role="status">Собрано: '+(known?count+' / '+roster.length:'— / '+roster.length)+'</span></header>';
+ const header='<header class="kc-header"><div><h1>'+(inAlbum?'Коллекция карточек':'Паки')+'</h1></div>'+(inAlbum?'<span class="kc-count" role="status">Собрано: '+(known?count+' / '+roster.length:'— / '+roster.length)+'</span>':known&&s.balance!==null?'<span class="kc-count kc-pack-header-wallet"><span aria-hidden="true">A</span>'+s.balance.toLocaleString('ru-RU')+' AniCoin</span>':'')+'</header>';
  const tabs='<nav class="kc-tabs" aria-label="Разделы коллекции">'+[['cases','Открыть пак'],['mine','Моя коллекция'],['collection','Все карты каталога']].map(([key,label])=>button(label,key,{pressed:tab===key,unavailable:tabBusy&&tab!==key})).join('')+'</nav>';
  let body='';
  const complete=known&&count===roster.length;
  const retryPurchase=!!s.owner&&!!pending(s.owner);
  const resumeOffer=!!s.owner&&!!storedOffer(s);
  const canBuy=s.status==='ready'&&!s.reel&&s.price===CASE_PRICE&&(retryPurchase||resumeOffer&&!s.offerNeedsBalance||!complete&&s.balance>=CASE_PRICE);
- const description=complete?'Все персонажи уже собраны!':s.status==='guest'?'Войди, чтобы купить бустер.':s.status==='opening'?'Открываем бустер…':'Оплата после выбора карты.';
- const balanceText=known&&s.balance!==null?'Баланс: '+s.balance.toLocaleString('ru-RU')+' AniCoin':'Цена: 50 AniCoin';
- const purchase=s.status==='guest'?button('Купить за 50 AniCoin','login',{primary:true}):s.confirmBuy&&canBuy?'<div class="kc-buy-confirm">'+button(retryPurchase?'Повторить запрос':'Подтвердить · 50 AniCoin','buy',{primary:true})+button('Отмена','cancel-buy')+'</div>':button(retryPurchase?'Повторить покупку':resumeOffer&&!s.offerNeedsBalance?'Продолжить открытие':complete?'Коллекция собрана':s.status==='opening'?'Открываем…':'Купить за 50 AniCoin','confirm-buy',{primary:true,disabled:!canBuy});
- const purchaseNotice=s.purchaseStatus==='insufficient'||known&&!complete&&!retryPurchase&&s.balance!==null&&s.balance<CASE_PRICE?'Недостаточно AniCoin для покупки.':s.purchaseStatus==='complete'?'Коллекция уже собрана, монеты не списаны.':s.purchaseStatus==='stale'?'Состав пака изменился. Откройте новый пак.':retryPurchase?'Предыдущая покупка не подтверждена. Повтор запроса не спишет монеты дважды.':'';
- const feature='<article class="kc-case"'+(s.status==='opening'?' aria-busy="true"':'')+'><div class="kc-case-visual"><span class="kc-feature-motif" aria-hidden="true"></span>'+shelfHero(seriesKey,'kc-feature-hero')+packArt()+'<div class="kc-case-edition"><span aria-hidden="true" lang="ja">'+esc(series.script)+'</span><small>СЕРИЯ '+series.edition+'</small></div><span class="kc-case-count">'+roster.length+' персонажей</span></div><div class="kc-case-copy"><div class="kc-kicker">'+esc(series.title)+' · Коллекция '+series.edition+'</div><h2>Бустер «'+esc(series.pack)+'»</h2><p class="kc-muted">Выберите одну из пяти карт. Когда в серии осталось меньше пяти новых карт, пак содержит все оставшиеся.</p><div class="kc-rarity-legend" aria-label="Классы редкости">'+Object.keys(rarityNames).map(r=>rarityLabel({rarity:r})).join('')+'</div><p class="kc-muted kc-case-status" role="status" tabindex="-1" data-kc-focus="case-status">'+esc(description)+'</p>'+'<div class="kc-case-actions">' +purchase+'</div><p class="kc-muted kc-wallet">'+esc(balanceText)+'</p>'+(purchaseNotice?'<p class="kc-muted" role="status">'+esc(purchaseNotice)+'</p>':'')+(s.status==='ready'&&!complete?button('Обновить доступность','retry'):'')+'</div></article>';
  const prize=s.reel?null:roster.find(c=>c.id===(s.replayResult||s.result));
  const reward=prize&&known?'<div class="kc-result" role="status"'+sceneAttributes(prize,heroInfo(prize))+'>'+stageScenery(prize,heroInfo(prize))+signatureMarkup(prize)+card(prize,true,'result')+'<div class="kc-result-copy"><div class="kc-kicker">'+(s.replayResult?'Повтор сцены':'Новый персонаж')+'</div><h3 tabindex="-1" data-kc-focus="result">'+esc(prize.name)+'</h3>'+rarityLabel(prize)+(s.replayResult?button('К журналу','leave-replay'):button('В коллекцию','mine',{primary:true,focus:'result-collection'})+(canBuy?button('Открыть ещё','confirm-buy-next'):''))+'</div></div>':'';
  if(inAlbum){
   const extras='<section class="kc-extras"><button type="button" class="kc-extras-toggle" data-kc-action="album-details" aria-expanded="'+s.extrasOpen+'" aria-controls="kc-extras-body"><span>Альбом и журнал</span><svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button><div id="kc-extras-body"'+(s.extrasOpen?'':' hidden')+'>'+album(owned,known)+collectorProgress(s,owned,known)+journalMarkup(s)+'</div></section>';
-  body=albumFinalMarkup(s,owned)+'<div class="kc-series"><div class="kc-series-info"><h2>'+esc(series.title)+'</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к пакам','cases',{primary:true})+'</div>'+albumTools()+extras;
+  body=albumFinalMarkup(s,owned)+'<div class="kc-series"><div class="kc-series-info"><h2>'+esc(series.title)+'</h2><p class="kc-muted">'+(known?count+' из '+roster.length+' открыто':roster.length+' персонажей')+'</p><div class="kc-progress" role="progressbar" aria-label="Прогресс коллекции" aria-valuemin="0" aria-valuemax="'+roster.length+'"'+(known?' aria-valuenow="'+count+'"':'')+'><span style="width:'+100*count/roster.length+'%"></span></div></div>'+button('Перейти к пакам','album-packs',{primary:true})+'</div>'+albumTools()+extras;
  }else{
-  body=(s.reel||s.replayResult?'':feature)+reelMarkup(s)+reward;
+  const showDetails=!s.reel&&!s.replayResult;
+  const detail=showDetails?packDetails(s,owned,known,complete,canBuy,retryPurchase,resumeOffer):'';
+  const mobile=packPhone();
+  const panel=detail?(mobile&&packSheetOpen
+   ?'<dialog class="kc-pack-sheet" aria-labelledby="kc-selected-pack-title">'+detail+'</dialog>'
+   :'<div class="kc-pack-inline"'+(mobile?' hidden':'')+'>'+detail+'</div>'):'';
+  body=reelMarkup(s)+reward+'<div class="kc-pack-browser'+(showDetails?' kc-pack-browser-detail':'')+'">'+seriesPicker()+panel+'</div>';
  }
- const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':'')+(tab==='mine'?' kc-my-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+tabs+seriesPicker()+notice(s)+body+'</section>';
+ const markup='<section class="kc-page kc-theme-'+seriesKey+(inAlbum?' kc-clean-album':' kc-packs-page')+(tab==='mine'?' kc-my-album':'')+'" data-komi-aura="'+esc(s.auraClass||'')+'" aria-label="Коллекции и паки">'+header+tabs+(inAlbum?seriesPicker()+notice(s):'')+body+'</section>';
+ const sheetWasOpen=!!packSheet?.open;
+ if(sheetWasOpen&&typeof packSheet.close==='function')packSheet.close();
+ packSheet=null;
  if(activeDialog?.dialog.isConnected){
   const template=document.createElement('template');template.innerHTML=markup;
   host.querySelector('.kc-page').replaceWith(template.content);
  }else host.innerHTML=markup;
+ openPackSheet(!sheetWasOpen);
  bindArtwork(host);
  refreshAlbumResults();
  if(!inAlbum)cardSceneObserver?.disconnect();
@@ -1154,11 +1221,13 @@ function paint(nextFocus=null){
  // The purchase controls are replaced on each step, but do not steal focus
  // if the viewer has already moved to another control.
  let focus=nextFocus||previous;
+ if(packSheet&&(!focus||!packSheet.querySelector('[data-kc-focus="'+CSS.escape(focus)+'"],[data-kc-action="'+CSS.escape(focus)+'"]')))focus='pack-title';
  if(focus==='case-status'){
   if(s.reel)focus=s.reel.phase==='seal'?'peel':s.reel.phase==='choose'?'pick-card-1':'skip-reel';
   else if(s.status==='error')focus='retry';
   else if(prize&&known)focus='result';
   else if(canBuy)focus='confirm-buy';
+  else if(s.status==='ready')focus='pack-title';
  }else if(['skip-reel','pack-heading'].includes(focus)&&!s.reel&&prize&&known)focus='result';
  if(focus){
   const target=[...host.querySelectorAll('[data-kc-action],[data-kc-focus]')].find(el=>focusKey(el)===focus&&!el.disabled);
@@ -1217,10 +1286,24 @@ function click(event){if(!active())return;const b=event.target.closest?.('.kc-pa
  if(a==='retry-pick'){void claimPack(state,state.reel,state.reel.attempt);return;}
  if(a==='close-pack'){closePack(state);return;}
  if(a==='skip-reel'){if(!state.reel?.offer||state.reel.phase==='reveal')finishReel(state,state.reel,true);return;}
- if(a==='collection'||a==='mine'||a==='cases'){if(tab!==a){state.confirmBuy=false;state.replayResult=null;state.inspected='';resetFilters();}tab=a;paint(a);}else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
+ if(a==='dismiss-pack-details'){dismissPackDetails();return;}
+ if(a==='collection'||a==='mine'||a==='cases'||a==='album-packs'){
+  const next=a==='album-packs'?'cases':a;
+  if(tab!==next){packSheetOpen=false;state.confirmBuy=false;state.replayResult=null;state.inspected='';resetFilters();}
+  tab=next;
+  if(a==='album-packs')packSheetOpen=true;
+  paint(a==='album-packs'&&packPhone()?'pack-title':next);
+ }else if(a.startsWith('filter-')){const id=a.slice(7);if(Object.hasOwn(collectionFilters,id)){filter=id;refreshAlbumResults();}}else if(a==='clear-search'||a==='reset-album-filters'){
  const query=host.querySelector('#kc-album-search');
  if(query){if(a==='reset-album-filters')resetFilters();updateSearch(query,true);query.focus({preventScroll:true});}
- }else if(a==='login'){if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');}else if(a==='retry')void request('read');else if(a==='confirm-buy'||a==='confirm-buy-next'){state.confirmBuy=true;paint('cancel-buy');}else if(a==='cancel-buy'){cancelPurchase();}else if(a==='buy')void request('buy');}
+ }else if(a==='login'){
+  if(packSheet?.open)dismissPackDetails();
+  if(typeof openAuthModal==='function')openAuthModal('login','Войди, чтобы сохранить коллекцию персонажей.');
+ }else if(a==='retry'){if(!albumTab())host.querySelector('[data-kc-focus="case-status"]')?.focus({preventScroll:true});void request('read');}
+ else if(a==='confirm-buy'||a==='confirm-buy-next'){packSheetOpen=true;state.confirmBuy=true;paint('cancel-buy');}
+ else if(a==='cancel-buy'){cancelPurchase();}
+ else if(a==='buy')void request('buy');
+}
 function cancelPurchase(){state.confirmBuy=false;paint('confirm-buy');}
 function keydown(event){
  if(event.key!=='Escape'||event.defaultPrevented||!active()||!current(state)||
@@ -1237,7 +1320,7 @@ function keydown(event){
  const inspectButton=event.target.closest?.('.kc-inspect[aria-expanded="true"]');
  if(inspectButton){event.preventDefault();event.stopPropagation();inspect(inspectButton);return;}
  if(!state?.confirmBuy||
-    !event.target.closest?.('.kc-buy-confirm'))return;
+    !event.target.closest?.('.kc-buy-confirm,.kc-pack-sheet'))return;
  event.preventDefault();event.stopPropagation();cancelPurchase();
 }
 function render(container){

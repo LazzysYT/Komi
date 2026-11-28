@@ -118,7 +118,10 @@ function fixture(options={}){
    input(value,{composing=false,event='input'}={}){
      handlers[event]({isComposing:composing,target:{value,selectionStart:value.length,matches:selector=>selector==='[data-v7-search]'}});
    },
-   async enablePricing(){await window.KomiShopCatalog.checkPricing({rpc:async()=>({data:window.KomiShopCatalog.revision})});api.render();},
+   async enablePricing({animated=false}={}){
+    const catalog=window.KomiShopCatalog;
+    await catalog.checkPricing({rpc:async name=>({data:animated&&name==='komi_shop_animated_revision'?catalog.animatedRevision:animated&&name==='komi_shop_frame_atelier_revision'?catalog.frameAtelierRevision:catalog.revision})});api.render();
+   },
    setRoute(url){setUrl(url);},
    navigate(url,{view,event='popstate'}={}){setUrl(url);if(view)context.currentView=view;windowHandlers[event]?.();}
  };
@@ -547,4 +550,49 @@ test('shared confirmation refuses invalid quotes and prevents overlapping purcha
  assert.equal(f.dialogs.length,1);
  f.dialogs[0].choose(false);
  assert.equal(await pending,false);
+});
+
+test('compact product actions keep explicit guest, payable and owned states without routing changes',async()=>{
+ const f=fixture({ctx:{owner:'uid-a',store:{balance:1000,owned:[]}}});
+ await f.enablePricing();
+ const p=f.product('title_veteran');
+ f.input('Ветеран');
+ const article=f.html.match(/<article class="komi-coin-card[\s\S]*?<\/article>/)?.[0];
+ assert.ok(article);
+ assert.match(article,/class="sv3-item-scene"|class="komi-coin-sample sv3-item-scene"/);
+ assert.match(article,/class="komi-coin-actions sv3-item-actions">\s*<button[^>]*data-v3-try="title_veteran"/);
+ assert.match(article,/<\/button><button[^>]*data-shop-item-action="title_veteran" data-shop-operation="buy_equip"/);
+ assert.ok(article.includes('Купить · <span class="sv15-action-price">'+p.cost+' AC</span>'));
+ f.render({store:{balance:0,owned:['title_veteran']}});
+ assert.match(f.html,/data-shop-item-action="title_veteran" data-shop-operation="equip"[^>]*>Надеть<\/button>/);
+ f.render({owner:'',store:null});
+ assert.match(f.html,/data-shop-item-action="title_veteran" data-shop-operation="buy_equip"[^>]*>Войти<\/button>/);
+ assert.match(f.html,/data-sv14-category="frame"[^>]*>Рамки<\/button>/);
+ assert.match(f.html,/data-sv14-category="title"[^>]*>Титулы<\/button>/);
+ assert.match(f.html,/data-sv14-category="name"[^>]*>Ники<\/button>/);
+});
+
+test('budget showcases only complete-set quotes payable for missing items, including fully owned sets',async()=>{
+ const f=fixture({ctx:{owner:'uid-a',store:{balance:0,owned:[]}}});
+ await f.enablePricing({animated:true});
+ const set=f.window.KomiShopCatalog.animatedSets.find(row=>row.id==='anime-ghoul');
+ assert.ok(set);
+ const [first,second,last]=set.items, balance=f.product(last).cost;
+ f.render({store:{balance,owned:[first,second]}});
+ assert.match(f.html,/2 из 3 уже есть/);
+ f.change('data-v7-affordable',true);
+ assert.match(f.html,/Наборы по твоему балансу/);
+ assert.deepEqual([...f.html.matchAll(/data-animated-set="([^"]+)"/g)].map(x=>x[1]),['anime-ghoul']);
+ assert.match(f.html,new RegExp('За недостающие: '+balance+' AniCoin'));
+ await f.click('data-animated-set','anime-ghoul');
+ assert.deepEqual(sorted(f.selected),sorted(set.items));
+ f.render({store:{balance:balance-1,owned:[first,second]}});
+ assert.doesNotMatch(f.html,/data-animated-set="anime-ghoul"/);
+ f.render({store:{balance:0,owned:set.items}});
+ assert.match(f.html,/3 из 3 уже есть/);
+ assert.match(f.html,/Уже в коллекции/);
+ f.change('data-v3-hide-owned',true);
+ assert.doesNotMatch(f.html,/data-animated-set="anime-ghoul"/);
+ f.render({owner:'',store:null});
+ assert.doesNotMatch(f.html,/Наборы по твоему балансу|data-animated-set="anime-ghoul"/);
 });

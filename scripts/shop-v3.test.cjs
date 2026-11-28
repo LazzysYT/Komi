@@ -67,7 +67,7 @@ test('guest storefront shows a bounded first page, explicit prices and auth butt
  assert.equal(count,24);
  assert.match(container.innerHTML,/id="anicoin-title">Магазин оформления<\/h1>/);
  assert.match(container.innerHTML,/Войти, чтобы купить/);
- assert.equal((container.innerHTML.match(/class="komi-coin-sample sv3-item-scene sv5-preview-button"/g)||[]).length,24);
+ assert.equal((container.innerHTML.match(/class="sv15-preview-button" data-v3-try=/g)||[]).length,24);
   assert.doesNotMatch(container.innerHTML,/Рамка для твоего аватара в профиле/);
  assert.equal((container.innerHTML.match(/data-rarity="(?:common|rare|epic|legendary)"/g)||[]).length,24);
  assert.match(container.innerHTML,/Показано 24 из 44/);

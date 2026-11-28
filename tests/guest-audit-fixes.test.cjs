@@ -24,17 +24,21 @@ test('Watch Party guest sees the existing modal directly with a clear explanatio
 });
 test('shop guest label describes entering the account, not an immediate purchase',()=>{
  const c=vm.createContext({state:{trial:{}},previewOnly:()=>false,canCheckout:()=>true,fmt:String,esc:String,
-   rarityLabels:{common:'Обычный'},visual:()=>'',icon:()=>'',categoryName:()=>''});
- vm.runInContext(between('komi-shop-v3.js','function card(','function collectionCard('),c);
+   rarityLabels:{common:'Обычный'},cardArtwork:()=>'',icon:()=>'',sceneLabels:{frame:'Профиль'},onSale:()=>true});
+ vm.runInContext(between('komi-shop-v3.js','function card(','function descriptionFor('),c);
  const item={id:'frame',type:'frame',label:'Ночной бархат',cost:20};
- assert.match(c.card(item,{owner:null},'', ''),/aria-label="Войти, чтобы купить: Ночной бархат">Войти<\/button>/);
- assert.match(c.card(item,{owner:'member',store:{balance:30}},'', ''),/aria-label="Купить: Ночной бархат">Купить<\/button>/);
+ const guest=c.card(item,{owner:null},'', '');
+ assert.match(guest,/aria-label="Войти, чтобы купить: Ночной бархат">Войти<\/button>/);
+ assert.doesNotMatch(guest,/>Купить ·/);
+ const member=c.card(item,{owner:'member',store:{balance:30}},'', '');
+ assert.match(member,/data-shop-operation="buy_equip"/);
+ assert.match(member,/>Купить · <span class="sv15-action-price">20 AC<\/span>/);
 });
 test('header keyboard navigation uses actual focused buttons and returns to search on Escape',()=>{
  let active,closed=0,submits=0;
- const element=(value='')=>({value,focus(){active=this;}});
+ const element=(value='')=>({value,focus(){active=this;},getBoundingClientRect:()=>({top:20,bottom:50})});
  const input=element('аниме'),first=element(),second=element(),all=element();
- const results=[first,second,all],dropdown={classList:{contains:()=>true},contains:n=>results.includes(n),querySelectorAll:()=>results};
+ const results=[first,second,all],dropdown={classList:{contains:()=>true},contains:n=>results.includes(n),querySelectorAll:()=>results,querySelector:()=>null,getBoundingClientRect:()=>({top:0,bottom:160}),scrollTop:0};
  const c=vm.createContext({document:{getElementById:key=>key==='searchInput'?input:dropdown},window:{},
    closeSearchDropdown(){closed++;},submitKomiHeaderSearch(){submits++;}});
  vm.runInContext(between('app-main.js','function handleKomiHeaderSearchKeys(',"document.querySelector('#searchInput')"),c);

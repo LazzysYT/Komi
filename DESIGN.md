@@ -310,6 +310,12 @@ includes only game artwork, character name, series, rarity and catalogue code.
 
 The general catalog has no promotional hero before products. Quick categories show only available inventory; all categories, price filters, and sort share one native disclosure. The anime-title shelf is an optional compact preview in Titles only. Cards use the existing renderers and distinct in-context displays, not stock art. The fitting room compares confirmed equipped slots with temporary trial slots without mutating either set; reaction previews remain separate from profile cosmetics. Empty fitting rooms no longer occupy screen space. Existing checkout, ownership, gifting, inventory, CSS token ownership, and verified server prices are retained.
 
+### Shop and pack comfort refinement
+
+In the shop, keep the animated sample as the visual anchor but reduce the height of each product card. Place «Примерить» and the price-bearing purchase action next to one another, retain the full product label and item-specific accessible names, and use shorter fast categories without changing their underlying filters. The established graphite and white tokens are unchanged. Cosmetic art retains its individual colors.
+
+In «Паки», use the existing foil wrapper as the visual anchor of the selected pack, not a second decorative banner. On phones, the user opens its details immediately from the chosen tile. The bottom panel shows the wrapper, series, collection progress, and the next valid purchase action without asking them to scroll past all the other packs. On desktop, show the shelf and selected pack beside each other. Keep «Коллекции» a separate album surface. Retain existing animated reveals and the static composition when reduced motion is enabled.
+
 ### Collector foils
 
 The eleven series share dark rounded surfaces. Illustrated fronts use the existing world art and a foil edge keyed to rarity. The fullscreen inspector has four planes for the scene, transparent character art, foil and metadata. Montserrat carries the character name and Inter carries the details. The top of the frame shows the copy's issue number and the number issued so far. The dossier also shows the stable catalogue code. The collection palette uses #09090D for the canvas, #12141D for surfaces, and #9147FF and #FF454F for epic and legendary effects. These tokens live in komi-collection.css. Locked slots keep black silhouettes. Journal replays use the card already in the album.

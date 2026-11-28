@@ -1,0 +1,24 @@
+name: Payment webhook bounds
+on:
+  pull_request:
+    paths:
+      - 'supabase/functions/lava-premium-webhook/**'
+      - 'scripts/webhook-body.test.mjs'
+      - '.github/workflows/webhook-bounds.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'supabase/functions/lava-premium-webhook/**'
+      - 'scripts/webhook-body.test.mjs'
+      - '.github/workflows/webhook-bounds.yml'
+permissions:
+  contents: read
+jobs:
+  offline-webhook-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - run: node --test scripts/webhook-body.test.mjs

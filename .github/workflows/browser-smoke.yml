@@ -15,18 +15,17 @@ on:
       - 'scripts/browser-smoke.cjs'
       - 'scripts/auth-isolation-e2e.cjs'
       - '.github/workflows/browser-smoke.yml'
+permissions:
+  contents: read
 jobs:
   smoke:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
-    env:
-      KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
-      KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
-      KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
-      KOMI_TEST_PASSWORD_B: ${{ secrets.KOMI_TEST_PASSWORD_B }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: '22'
       - name: Install browser testing tools
@@ -99,8 +98,35 @@ jobs:
       - name: Check live public Supabase API exposes no private tables
         timeout-minutes: 3
         run: node scripts/live-anon-api-security.cjs
+      - name: Upload screenshots and results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: komi-browser-smoke
+          path: browser-test-results/
+          if-no-files-found: ignore
+  real-auth-e2e:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' }}
+    needs: smoke
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+      - name: Install browser without account credentials
+        run: |
+          npm install --no-save playwright@1.58.2
+          npx playwright install chromium
       - name: Require dedicated test accounts for manual Auth E2E
-        if: ${{ github.event_name == 'workflow_dispatch' }}
+        env:
+          KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
+          KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
+          KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
+          KOMI_TEST_PASSWORD_B: ${{ secrets.KOMI_TEST_PASSWORD_B }}
         shell: bash
         run: |
           for key in KOMI_TEST_EMAIL_A KOMI_TEST_PASSWORD_A KOMI_TEST_EMAIL_B KOMI_TEST_PASSWORD_B; do
@@ -110,19 +136,18 @@ jobs:
             fi
           done
       - name: Run real two-account email auth and RLS E2E
-        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           KOMI_TEST_URL: https://komianime.online/
+          KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
+          KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
+          KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
+          KOMI_TEST_PASSWORD_B: ${{ secrets.KOMI_TEST_PASSWORD_B }}
         run: node scripts/auth-isolation-e2e.cjs
       - name: Run real two-account private Watch Party E2E
-        if: ${{ github.event_name == 'workflow_dispatch' }}
         env:
           KOMI_TEST_URL: https://komianime.online/
+          KOMI_TEST_EMAIL_A: ${{ secrets.KOMI_TEST_EMAIL_A }}
+          KOMI_TEST_PASSWORD_A: ${{ secrets.KOMI_TEST_PASSWORD_A }}
+          KOMI_TEST_EMAIL_B: ${{ secrets.KOMI_TEST_EMAIL_B }}
+          KOMI_TEST_PASSWORD_B: ${{ secrets.KOMI_TEST_PASSWORD_B }}
         run: node scripts/party-real-auth-e2e.cjs
-      - name: Upload screenshots and results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: komi-browser-smoke
-          path: browser-test-results/
-          if-no-files-found: ignore
