@@ -40,3 +40,18 @@ test('CSP admits Turnstile on main site but not on admin security page',()=>{
  const admin=c.headers.find(x=>x.source==='/admin-security.html').headers.find(x=>x.key==='Content-Security-Policy').value;
  assert.doesNotMatch(admin,/challenges\.cloudflare\.com/);
 });
+
+test('public reporting pages remain linked and do not expose internal legal drafts',()=>{
+ const fs=require('node:fs'),path=require('node:path'),root=path.join(__dirname,'..');
+ const html=fs.readFileSync(path.join(root,'index.html'),'utf8'),config=require('../vercel.json');
+ for(const route of ['security','copyright']){
+  assert.ok(html.includes('href="/'+route+'"'));
+  assert.ok(config.rewrites.some(r=>r.source==='/'+route&&r.destination==='/'+route+'.html'));
+  const page=fs.readFileSync(path.join(root,route+'.html'),'utf8');
+  assert.ok(page.includes('href="/contacts"'));
+  assert.doesNotMatch(page,/<script\b|<form\b|ПІДТВЕРДИТИ/i);
+ }
+ const ignore=fs.readFileSync(path.join(root,'.vercelignore'),'utf8');
+ assert.ok(ignore.split(/\r?\n/).includes('docs/security/'));
+ assert.ok(ignore.split(/\r?\n/).includes('docs/legal-review.md'));
+});

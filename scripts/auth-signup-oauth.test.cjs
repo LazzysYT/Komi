@@ -3,15 +3,16 @@ const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 const path=require('node:path');
+const {makeRunner}=require('../komi-auth-captcha.js');
 const html=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8') + '\n' + fs.readFileSync(path.join(__dirname,'../app-main.js'),'utf8');
 function slice(a,b){const i=html.indexOf(a),j=html.indexOf(b,i);assert.ok(i>=0&&j>i,a);return html.slice(i,j)}
 const helpers=slice('function komiReservedAccountName(', '        function applySavedKomiProfile(');
 const register=slice('async function handleRegisterSubmit(', '        const komiFavoritePending = new Set();');
 const google=slice('async function showGoogleAuthInfo(', '        function komiReservedAccountName(');
 
-function scenario(handle='Admin'){
+function scenario(handle='Admin',{sitekey='',verify=async()=> 'synthetic-token'}={}){
  const messages=[],signups=[],oauth=[],fields={
-  regUsername:{value:handle},regEmail:{value:'qa-user@example.test'},regPassword:{value:'good-password-123'}
+  registerFormContainer:{},regUsername:{value:handle},regEmail:{value:'qa-user@example.test'},regPassword:{value:'good-password-123'}
  };
  let closed=0,restored=0;
  const context=vm.createContext({
@@ -20,7 +21,7 @@ function scenario(handle='Admin'){
    async signUp(payload){signups.push(payload);return {data:{session:null},error:null}},
    async signInWithOAuth(payload){oauth.push(payload);return {error:null}}
   }},
-  window:{location:{origin:'https://komianime.online',pathname:'/'}},
+  window:{location:{origin:'https://komianime.online',pathname:'/'},KomiAuthCaptcha:makeRunner({keyFor:()=>sitekey,verify,isVisible:form=>form===fields.registerFormContainer,setBusy(){}})},
   alert:message=>messages.push(message),console:{error(){}},
   closeAuthModal(){closed++},async queueKomiSessionRestore(){restored++},
   currentUser:null,Error
@@ -44,6 +45,7 @@ test('normal signup only sends explicit email, password and requested nickname',
  assert.equal(x.signups.length,1);
  assert.equal(x.signups[0].email,'qa-user@example.test');
  assert.equal(x.signups[0].options.data.username,'NormalNickname');
+ assert.equal(Object.hasOwn(x.signups[0].options,'captchaToken'),false);
  assert.equal(x.signups[0].options.emailRedirectTo,'https://komianime.online/');
  assert.equal(x.state().closed,1);
  assert.equal(x.state().restored,0);
@@ -90,4 +92,19 @@ test('legacy Vercel homepage redirects to Komi, without redirecting anime SEO pa
  assert.equal(rule.permanent,true);
  assert.ok(!config.redirects.some(r=>r.source==='/:path*'&&r.has?.some(h=>String(h.value).includes('komi-six'))),
    'anime detail routes must remain accessible on legacy mirror for SEO testing');
+});
+
+test('configured CAPTCHA token is sent to Supabase in the real registration handler',async()=>{
+ const x=scenario('NormalNickname',{sitekey:'fixture-key'});
+ await x.runSignup();
+ assert.equal(x.signups.length,1);
+ assert.equal(x.signups[0].options.captchaToken,'synthetic-token');
+ assert.equal(x.signups[0].options.data.username,'NormalNickname');
+});
+test('failed CAPTCHA stops the real signup handler before network request',async()=>{
+ const x=scenario('NormalNickname',{sitekey:'fixture-key',verify:async()=>{throw Error('Challenge failed');}});
+ await x.runSignup();
+ assert.equal(x.signups.length,0);
+ assert.equal(x.state().closed,0);
+ assert.equal(x.messages.at(-1),'Challenge failed');
 });

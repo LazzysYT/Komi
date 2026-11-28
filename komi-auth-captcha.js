@@ -2,7 +2,7 @@
 (function(root){
 'use strict';
 const publicKey=()=>document.querySelector('meta[name="komi-turnstile-sitekey"]')?.content?.trim()||'';
-let sdkPromise=null,active=null;
+let sdkPromise=null;
 function getSDK(){
  if(root.turnstile?.render)return Promise.resolve(root.turnstile);
  if(!sdkPromise){
@@ -79,7 +79,7 @@ function makeRunner({keyFor,verify,isVisible,setBusy}){
 }
 if(typeof module==='object'&&module.exports){module.exports={makeRunner};return;}
 root.KomiAuthCaptcha=makeRunner({keyFor:publicKey,verify:challenge,isVisible:visible,setBusy(form,busy){
- for(const b of form.querySelectorAll('button[type="submit"]'))b.disabled=busy;
+ for(const b of form.querySelectorAll('button[type="submit"], input:not([type="hidden"])'))b.disabled=busy;
  form.setAttribute('aria-busy',String(busy));
 }});
 })(globalThis);
