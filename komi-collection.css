@@ -1683,3 +1683,15 @@
  .kc-slot-previous{display:none}
 }
 @media(forced-colors:active){.kc-world-opening{display:none}}
+
+.kc-page .kc-collection-navigation{
+ display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-block-end:16px;
+}
+.kc-page .kc-collection-navigation .kc-tabs{margin:0}
+.kc-page .kc-live-scenes-link{
+ display:inline-flex;align-items:center;min-height:44px;padding:0 14px;
+ border:1px solid var(--kc-border);border-radius:999px;background:#242429;
+ color:#f7f7f8;font-size:13px;font-weight:700;text-decoration:none;
+}
+.kc-page .kc-live-scenes-link:hover,.kc-page .kc-live-scenes-link:active{background:#303035}
+.kc-page .kc-live-scenes-link:focus-visible{outline:2px solid #fff;outline-offset:3px}
