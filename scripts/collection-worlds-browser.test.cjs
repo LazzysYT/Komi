@@ -3,9 +3,9 @@ const {test}=require('node:test'),assert=require('node:assert/strict'),fs=requir
 let chromium;try{({chromium}=require('playwright'));}catch{}
 const source=path.resolve(__dirname,'..'),origin='http://localhost:8767';
 const fixture='<!doctype html><html lang="ru"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="stylesheet" href="/komi-collection.css"><body style="background:#09090b"><main id="mainContainer"></main><script src="/komi-collection-art.js"></script><script src="/komi-collection.js"></script></body></html>';
-const wanted={ghoul:['kaneki',24,'Токийский гуль'],jujutsu:['itadori',24,'Печати проклятий'],frieren:['frieren',24,'Дневник пути'],alchemist:['edward',24,'Архив Аместриса'],demon:['tanjiro',24,'Дыхание воды'],aot:['eren',24,'За стеной'],naruto:['naruto',20,'Путь шиноби'],bleach:['ichigo',20,'Лунный разрез'],onepiece:['luffy',20,'Капитанский журнал'],chainsaw:['denji',20,'Кассета Бюро'],hunter:['gon',20,'Лицензия охотника']};
+const wanted={ghoul:['kaneki',27,'Токийский гуль'],jujutsu:['itadori',27,'Печати проклятий'],frieren:['frieren',27,'Дневник пути'],alchemist:['edward',27,'Архив Аместриса'],demon:['tanjiro',27,'Дыхание воды'],aot:['eren',27,'За стеной'],naruto:['naruto',23,'Путь шиноби'],bleach:['ichigo',23,'Лунный разрез'],onepiece:['luffy',23,'Капитанский журнал'],chainsaw:['denji',23,'Кассета Бюро'],hunter:['gon',24,'Лицензия охотника'],deathnote:['light',12,'Чёрный переплёт'],heroacademia:['deku',12,'Стадион Юэй'],sololeveling:['jinwoo',12,'Врата теней']};
 
-test('eleven worlds: separate album, full-body view, one-time reveal and safe purchase', {skip:!chromium,timeout:75000},async()=>{
+test('fourteen worlds: separate album, full-body view, one-time reveal and safe purchase', {skip:!chromium,timeout:105000},async()=>{
  const b=await chromium.launch({headless:true,executablePath:process.env.KOMI_CHROMIUM||undefined});
  try{for(const width of [1440,390,320]){
   const p=await b.newPage({viewport:{width,height:850},reducedMotion:width===320?'reduce':'no-preference'}),errors=[];
@@ -14,7 +14,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    const u=new URL(r.request().url()),f=u.pathname.slice(1);
    if(u.origin!==origin)return r.abort();
    if(f==='collection')return r.fulfill({contentType:'text/html',body:fixture});
-   if(!/^(?:komi-collection(?:-art)?\.(?:js|css)|assets\/collection\/(?:ghoul-cel|ghoul-booster|deluxe-packs|deluxe-wallpapers|jujutsu|frieren|alchemist|demon|aot|naruto|bleach|onepiece|chainsaw|hunter)\/(?:locked\/)?[a-z0-9-]+\.(?:webp|svg))$/.test(f))return r.abort();
+   if(!/^(?:komi-collection(?:-art)?\.(?:js|css)|assets\/collection\/(?:ghoul-cel|ghoul-booster|deluxe-packs|deluxe-wallpapers|jujutsu|frieren|alchemist|demon|aot|naruto|bleach|onepiece|chainsaw|hunter|deathnote|heroacademia|sololeveling|worlds)\/(?:locked\/)?[a-z0-9-]+\.(?:webp|svg))$/.test(f))return r.abort();
    const dest=path.join(source,f);
    if(!fs.existsSync(dest))return r.abort();
    return r.fulfill({path:dest,contentType:f.endsWith('.webp')?'image/webp':f.endsWith('.svg')?'image/svg+xml':f.endsWith('.css')?'text/css':'application/javascript'});
@@ -26,13 +26,16 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
     auth:{getSession:async()=>({data:{session:{user:{id:window.currentUser?.authUserId}}}})},
     rpc:async(name,args)=>{
      window.calls.push({name,args,owner:window.currentUser?.authUserId});
-     const series=args.p_series_id||'ghoul',first={ghoul:'kaneki',jujutsu:'itadori',frieren:'frieren',alchemist:'edward',demon:'tanjiro',aot:'eren',naruto:'naruto',bleach:'ichigo',onepiece:'luffy',chainsaw:'denji',hunter:'gon'}[series];
+     const series=args.p_series_id||'ghoul',first=KomiCollection.seriesList[series]?.roster[0].id;
      if(series===window.holdSeries&&name.endsWith('_read')) await new Promise(resolve=>{window.finishHeld=resolve;});
-     if(name==='komi_collection_pack_open'||name==='komi_collection_pack_claim'){
+     if(name==='komi_collection_pack_open_v3'||name==='komi_collection_pack_claim_v3'){
       const offer='10000000-0000-4000-8000-000000000001';
-      const choices=KomiCollection.seriesList.frieren.roster.slice(1,6).map((c,i)=>({slot:i+1,rarity:c.rarity,available:true,id:c.id}));
-      if(name.endsWith('_open'))return {data:{owned:['frieren'],balance:50,price:50,offer_id:offer,pack_status:'ready',choices:choices.map(({id,...choice})=>choice)}};
-      return {data:{owned:['frieren','fern'],result:'fern',balance:0,price:50,purchase_status:'ok',offer_id:offer,pack_status:'claimed',selected_slot:1,choices:choices.map(x=>({...x,available:false}))}};
+      if(name.endsWith('_open_v3'))window.activePackWorld=series;
+      const [lead,...rest]=KomiCollection.seriesList[window.activePackWorld].roster;
+      const choices=rest.slice(0,5).map((c,i)=>({slot:i+1,rarity:c.rarity,available:true,id:c.id}));
+      if(name.endsWith('_open_v3'))return {data:{owned:[lead.id],balance:50,price:50,offer_id:offer,pack_status:'ready',choices:choices.map(({slot,available})=>({slot,available}))}};
+      const result=choices[args.p_slot-1].id;
+      return {data:{owned:[lead.id,result],result,balance:0,price:50,purchase_status:'ok',offer_id:offer,pack_status:'claimed',selected_slot:args.p_slot,choices:choices.map(x=>({...x,available:false}))}};
      }
      return {data:{owned:window.currentUser?.authUserId==='qa-a'?[first]:[],balance:50,price:50,result:null}};
     }
@@ -44,12 +47,12 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    await p.waitForFunction(id=>document.querySelector('.kc-grid [data-kc-card="'+id+'"].kc-owned'),id);
    assert.equal(await p.locator('.kc-case').count(),0);
    const windows=p.locator('.kc-world-shelves .kc-world-window');
-   assert.equal(await windows.count(),11);
-   assert.equal(await windows.locator('.kc-shelf-hero[aria-hidden="true"]').count(),11);
+   assert.equal(await windows.count(),14);
+   assert.equal(await windows.locator('.kc-shelf-hero[aria-hidden="true"]').count(),14);
    await p.waitForFunction(()=>[...document.querySelectorAll('.kc-shelf-hero')].every(img=>img.naturalWidth>0));
    assert.equal(await p.locator('.kc-world-window[aria-pressed=true]').getAttribute('data-kc-action'),'series-'+series);
    const motifs=await windows.locator('.kc-window-motif').evaluateAll(els=>els.map(el=>getComputedStyle(el).backgroundImage));
-   assert.equal(new Set(motifs).size,11,'each world retains its own art effect when another is selected');
+   assert.equal(new Set(motifs).size,14,'each world retains its own art effect when another is selected');
    assert.ok(await windows.evaluateAll(els=>els.every(el=>{const a=el.getBoundingClientRect(),b=el.querySelector('.kc-window-copy').getBoundingClientRect();return b.left>=a.left&&b.right<=a.right+1&&b.bottom<=a.bottom+1;})),'world labels fit within windows');
    assert.ok(await windows.first().evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius)>=18));
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
@@ -71,7 +74,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    if(width<=700)await p.locator('[data-kc-action=series-'+series+']').click();
    assert.equal(await p.locator('.kc-case h2').textContent(),title);
    assert.equal(await p.locator('.kc-album,.kc-grid').count(),0);
-   assert.equal(await p.locator('.kc-world-shelves .kc-pack-thumb').count(),11);
+   assert.equal(await p.locator('.kc-world-shelves .kc-pack-thumb').count(),14);
    await p.waitForFunction(()=>document.querySelector('.kc-feature-hero')?.naturalWidth>0);
    assert.ok(await p.locator('.kc-case').evaluate(el=>parseFloat(getComputedStyle(el).borderTopLeftRadius)>=20));
    if(series==='ghoul'&&(width===1440||width===390)){
@@ -99,6 +102,7 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    assert.ok(await viewer.locator('.kc-view-meta .kc-rarity').isVisible());
    assert.equal(await viewer.locator('.kc-view-signature').isVisible(),width!==320);
    if(width!==320){await viewer.getByRole('button',{name:'Показать эффект'}).click();assert.equal(await viewer.locator('.kc-signature-play').count(),1);}
+   assert.ok(await viewer.locator('.kc-inspect-scene .kc-world-backdrop').evaluate((el,key)=>getComputedStyle(el).backgroundImage.includes('/worlds/'+key+'.webp'),series));
    assert.ok(await viewer.evaluate(el=>{const a=el.querySelector('.kc-hero-stage').getBoundingClientRect(),b=el.querySelector('.kc-hero-info').getBoundingClientRect();return innerWidth>650?a.right<=b.left+1:a.bottom<=b.top+1;}));
    assert.ok(await p.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
    if((width===1440&&series==='ghoul')||(width===390&&series==='frieren')){
@@ -115,11 +119,15 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
   await p.waitForFunction(()=>document.querySelector('.kc-grid [data-kc-card="frieren"].kc-owned'));
   await p.evaluate(()=>window.finishHeld());
   assert.equal(await p.locator('.kc-grid [data-kc-card="itadori"]').count(),0);
+  if(width===390){
+   await p.locator('[data-kc-action="series-sololeveling"]').click();
+   await p.locator('.kc-grid [data-kc-card="jinwoo"].kc-owned').waitFor();
+  }
   await p.getByRole('button',{name:'Открыть пак',exact:true}).click();
-  if(width<=700)await p.locator('[data-kc-action=series-frieren]').click();
+  if(width<=700)await p.locator('[data-kc-action=series-'+(width===390?'sololeveling':'frieren')+']').click();
   const buy=p.getByRole('button',{name:'Купить за 50 AniCoin',exact:true});
   await buy.click();await p.getByRole('button',{name:'Отмена'}).click();
-  assert.equal(await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_pack_claim')).length),0);
+  assert.equal(await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_pack_claim_v3')).length),0);
   await buy.click();await p.getByRole('button',{name:'Подтвердить · 50 AniCoin'}).click();
   {
    await p.getByRole('button',{name:'Сорвать печать с бустера'}).waitFor();
@@ -129,9 +137,9 @@ test('eleven worlds: separate album, full-body view, one-time reveal and safe pu
    await p.getByRole('button',{name:'Сорвать печать с бустера'}).click();
    await p.getByRole('button',{name:/Открыть карточку 1 из 5/}).click();
   }
-  await p.waitForFunction(()=>document.querySelector('.kc-result h3')?.textContent==='Ферн');
+  await p.waitForFunction(name=>document.querySelector('.kc-result h3')?.textContent===name,width===390?'Чха Хэин':'Ферн');
   assert.equal(await p.locator('.kc-result .kc-signature-play').count(),width===320?0:1);
-  const purchases=await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_pack_claim')));
+  const purchases=await p.evaluate(()=>window.calls.filter(x=>x.name.endsWith('_pack_claim_v3')));
   assert.equal(purchases.length,1);assert.equal(purchases[0].args.p_slot,1);
   assert.match(purchases[0].args.p_offer_id,/^[0-9a-f-]+$/);
   await p.locator('.kc-result .kc-view-hero').click();
